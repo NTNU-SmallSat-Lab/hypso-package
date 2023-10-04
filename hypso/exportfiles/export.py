@@ -6,7 +6,7 @@ import json
 from datetime import datetime, timezone
 
 
-def write_h1data_as_geojson(sat_object, path_to_save: str) -> None:
+def write_geojson(sat_object, path_to_save: str) -> None:
     # check if file ends with .geojson
     if not path_to_save.endswith('.geojson'):
         path_to_save = path_to_save + '.geojson'
@@ -15,7 +15,7 @@ def write_h1data_as_geojson(sat_object, path_to_save: str) -> None:
         f.write(get_geojson_str(sat_object))
 
 
-def write_h1data_as_NetCDF4(sat_object, path_to_save: str) -> None:
+def write_NetCDF4(sat_object, path_to_save: str) -> None:
     DEBUG = True
     """
     Write the HYPSO-1 data as a NetCDF4 file.
