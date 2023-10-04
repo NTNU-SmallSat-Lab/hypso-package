@@ -61,7 +61,7 @@ Used for:
 from hypso import Satellite
 
 # HYPSO Image Directory
-hypso_dir = r"/Users/alvaroflores/Documents/florida_2023-01-07_1524Z"
+hypso_dir = r"/Users/alvaroflores/Documents/mjosa-06-15_0948Z"
 
 # Create Satellite Object
 satobj = SatelliteClass(hypso_dir)
@@ -69,8 +69,10 @@ satobj = SatelliteClass(hypso_dir)
 from hypso.plot import show_rgb_map
 
 # Show RGB on top of Map
-show_rgb_map(satobj, plotTitle="Florida 15-062023 09:48AM",dpi_input=250)
+show_rgb_map(satobj, plotTitle="Mjosa 15-062023 09:48AM",dpi_input=250)
 ```
+![output](https://github.com/NTNU-SmallSat-Lab/hypso-package/assets/87340855/44f939bb-9435-4688-9194-6b08b172fc36)
+
 
 ## Authors
 
