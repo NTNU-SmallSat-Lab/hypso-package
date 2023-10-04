@@ -615,6 +615,7 @@ def generate_geotiff(satObj):
     grid_data_all_bands_minimal = np.zeros(
         [grid_dims_minimal[1], grid_dims_minimal[0], band_count])
     resampling_method = 'nearest'
+    #resampling_method = 'linear'
 
     geotiff_info = (
         grid_dims,
@@ -771,23 +772,34 @@ def interpolate_geotiff(band_number, cube_data, pixel_coords_map_list, grid_poin
     cube_data_single_band = cube_data[:, :, band_number]
     cube_data_single_band.shape = [data_lines * data_samples]
 
+
+
     grid_data_single_band = si.griddata(pixel_coords_map_list, cube_data_single_band, grid_points,
                                         method=resampling_method, rescale=False)
+
+    
+    
     # cube_data_single_band.shape = [data_lines, data_samples]
 
     # grid_data_single_band_minimal = si.griddata(pixel_coords_map_list, cube_data_single_band, grid_points_minimal, method=resampling_method, rescale=False)
     # grid_data_single_band_minimal.shape = [grid_dims_minimal[1], grid_dims_minimal[0]]
     # grid_data_all_bands_minimal[:,:,band_number] = grid_data_single_band_minimal
 
+     
     grid_data_single_band[np.invert(contain_mask)] = 0
     grid_data_single_band.shape = [geotiff_info[0][1], geotiff_info[0][0]]
     grid_data_single_band = grid_data_single_band[:, ::-1]
     grid_data_all_bands[:, :, band_number] = grid_data_single_band
 
+
+
     if cube_data.shape[2] != 1:  # For single band export does not export this band
         # export_single_band_geotiff(filename, raster_data, grid_dims, grid_res, grid_epsg):
+        # export_single_band_geotiff(f'{geotiff_info[4]}{band_number}.tif', grid_data_single_band,
+        #                            geotiff_info[0], geotiff_info[1], geotiff_info[2], geotiff_info[3])
         export_single_band_geotiff(f'{geotiff_info[4]}{band_number}.tif', grid_data_single_band,
                                    geotiff_info[0], geotiff_info[1], geotiff_info[2], geotiff_info[3])
+        
     print(f'      Done with band {band_number}')
 
 

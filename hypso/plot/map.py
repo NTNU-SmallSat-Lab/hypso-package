@@ -74,9 +74,7 @@ def tick_log_formatter(y, pos):
         formatstring = '{:2.1e}'.format(y)
         return formatstring
 
-
-def write_rgb_map(satellite_obj, plotTitle="RGB Image"):
-
+def get_cartopy_axis(satellite_obj,dpi_input):
     lat = satellite_obj.info["lat"]
     lon = satellite_obj.info["lon"]
 
@@ -91,7 +89,7 @@ def write_rgb_map(satellite_obj, plotTitle="RGB Image"):
     crs = ccrs.PlateCarree()
 
     # Now we will create axes object having specific projection
-    fig = plt.figure(figsize=(10, 10), dpi=450, facecolor="white")
+    fig = plt.figure(figsize=(10, 10), dpi=dpi_input, facecolor="white")
     fig.patch.set_alpha(1)
     ax = fig.add_subplot(projection=projection, frameon=True)
 
@@ -112,137 +110,100 @@ def write_rgb_map(satellite_obj, plotTitle="RGB Image"):
     gl.xlabel_style = {"size": 7}
     gl.ylabel_style = {"size": 7}
 
-    # TODO: Warnings are disabled as a rounding error with shapely causes an "no intersection warning". New version of GDAL might solve it
     # To plot borders and coastlines, we can use cartopy feature
-    warnings.filterwarnings('ignore')
-    warnings.simplefilter('ignore')
-
     ax.add_feature(cf.COASTLINE.with_scale("10m"), lw=0.5)
     ax.add_feature(cf.BORDERS.with_scale("10m"), lw=0.3)
     ax.add_feature(cf.LAKES.with_scale('10m'), lw=0.3, alpha=0.2, zorder=100)
     ax.add_feature(cf.OCEAN.with_scale('10m'), lw=0.3, alpha=0.2, zorder=100)
     # ax.add_feature(cf.RIVERS.with_scale('10m'), lw=0.3, alpha=0.5)
-#     ax.add_feature(cf.LAND, zorder=100, edgecolor='k')  # Covers Data in land
-
-    # Plot Image
-    # todo:Extract Image From Hypercube Created by the GeoTIFF file
-    rgb_array = satellite_obj.projection_metadata["rgba_data"][:3, :, :]
-    # plot_rgb = create_rgb(sat_obj=satellite_obj)
-
-    plot_rgb = np.ma.masked_where(rgb_array == 0, rgb_array)
-
-    ax.imshow(
-        np.rot90(plot_rgb.transpose((1, 2, 0)), k=2),
-        # np.rot90(plot_rgb, k=2),
-        # plot_rgb,
-        origin="upper",
-        extent=transformed_img_extent,
-        transform=projection_img,
-        zorder=1,
-    )
-
-    plt.title(plotTitle)
-    plt.show()
-
-    warnings.resetwarnings()
-
-
-def plot_chlorophyll(satellite_obj, chl_array, plotTitle="Chlorophyll Concentration"):
-    MAXCHL = 100
-    MINCHL = 0.01
-
-    lat = satellite_obj.info["lat"]
-    lon = satellite_obj.info["lon"]
-
-    # Create Axis Transformation
-    inproj = satellite_obj.projection_metadata["inproj"]
-    extent_lon_min, extent_lon_max, extent_lat_min, extent_lat_max = axis_extent(
-        lat, lon)
-    transformed_img_extent, projection_img = image_extent(inproj, lat, lon)
-
-    # crs is PlateCarree -> we are explicitly telling axes, that we are creating bounds that are in degrees
-    projection = ccrs.Mercator()
-    crs = ccrs.PlateCarree()
-
-    fig = plt.figure(figsize=(10, 10), dpi=450, facecolor="white")
-    fig.patch.set_alpha(1)
-    ax = fig.add_subplot(projection=projection, frameon=True)
-
-    # Draw gridlines in degrees over Mercator map
-    gl = ax.gridlines(
-        draw_labels=True, linewidth=0.6, color="gray", alpha=0.5, linestyle="-."
-    )
-    gl.xlabel_style = {"size": 7}
-    gl.ylabel_style = {"size": 7}
-
-    # TODO: Warnings are disabled as a rounding error with shapely causes an "no intersection warning". New version of GDAL might solve it
-    # To plot borders and coastlines, we can use cartopy feature
-    warnings.filterwarnings('ignore')
-    warnings.simplefilter('ignore')
-
-    ax.add_feature(cf.COASTLINE.with_scale("10m"), lw=0.5)
-    ax.add_feature(cf.BORDERS.with_scale("10m"), lw=0.3)
-    ax.add_feature(cf.LAKES.with_scale('10m'), lw=0.3, alpha=0.2, zorder=100)
-    ax.add_feature(cf.OCEAN.with_scale('10m'), lw=0.3, alpha=0.2, zorder=100)
     # ax.add_feature(cf.LAND, zorder=100, edgecolor='k')  # Covers Data in land
 
-    ax.set_extent(
-        [
-            extent_lon_min / PLOTZOOM,
-            extent_lon_max * PLOTZOOM,
-            extent_lat_min / PLOTZOOM,
-            extent_lat_max * PLOTZOOM,
-        ],
-        crs=crs,
-    )
-
-    min_chlr_val = np.nanmin(chl_array)
-    lower_limit_chl = MINCHL if min_chlr_val < MINCHL else min_chlr_val
-
-    max_chlr_val = np.nanmax(chl_array)
-    upper_limit_chl = MAXCHL if max_chlr_val > MAXCHL else max_chlr_val
-
-    # Set Range to next full log
-    for i in range(-2, 3):
-        full_log = 10**i
-        if full_log < lower_limit_chl:
-            lower_limit_chl = full_log
-    for i in range(2, -3, -1):
-        full_log = 10**i
-        if full_log > upper_limit_chl:
-            upper_limit_chl = full_log
-
-    chl_range = [lower_limit_chl, upper_limit_chl]
-
-    print("Chl Range: ", chl_range)
-
-    # Log Normalize Color Bar colors
-    norm = colors.LogNorm(chl_range[0], chl_range[1])
-    im = ax.pcolormesh(
-        lon,
-        lat,
-        chl_array,
-        cmap=plt.cm.jet,
-        transform=ccrs.PlateCarree(),
-        norm=norm,
-        zorder=0,
-    )
-
-    # Colourmap with axes to match figure size
-    cbar = plt.colorbar(im, location="bottom", shrink=1, ax=ax, pad=0.05)
-
-    cbar.ax.yaxis.set_major_formatter(ticker.FuncFormatter(tick_log_formatter))
-    cbar.ax.xaxis.set_major_formatter(ticker.FuncFormatter(tick_log_formatter))
-
-    # cbar.ax.yaxis.set_minor_formatter(mticker.ScalarFormatter(useMathText=False, useOffset=False))
-    # cbar.ax.xaxis.set_minor_formatter(mticker.ScalarFormatter(useMathText=False, useOffset=False))
-
-    cbar.set_label(f" Chlorophyll Concentration [mg m^-3]")
-    plt.title(plotTitle)
-
-    plt.show()
 
     warnings.resetwarnings()
+
+    return ax,transformed_img_extent,projection_img,lat,lon
+
+def show_rgb_map(satellite_obj, plotTitle="RGB Image", dpi_input=450):
+
+    # TODO: Warnings are disabled as a rounding error with shapely causes an "no intersection warning". New version of GDAL might solve it
+    with np.errstate(all="ignore"): 
+        # Get Axis for Map
+        ax,transformed_img_extent,projection_img,lat,lon= get_cartopy_axis(satellite_obj,dpi_input)
+
+        # Extract Image
+        rgb_array = satellite_obj.projection_metadata["rgba_data"][:3, :, :]
+        plot_rgb = np.ma.masked_where(rgb_array == 0, rgb_array)
+
+        ax.imshow(
+            np.rot90(plot_rgb.transpose((1, 2, 0)), k=2),
+            # np.rot90(plot_rgb, k=2),
+            # plot_rgb,
+            origin="upper",
+            extent=transformed_img_extent,
+            transform=projection_img,
+            zorder=1,
+        )
+
+        plt.title(plotTitle)
+        plt.show()
+
+
+
+def plot_array_overlay(satellite_obj, plot_array, plotTitle="2D Array",cbar_title=" Chlorophyll Concentration [mg m^-3]",dpi_input=450,min_value=0.01,max_value=100):
+    MAXARRAY = max_value
+    MINARRAY = min_value
+
+
+    # TODO: Warnings are disabled as a rounding error with shapely causes an "no intersection warning". New version of GDAL might solve it
+    with np.errstate(all="ignore"):
+
+        # Get Axis for Map
+        ax,transformed_img_extent,projection_img,lat,lon= get_cartopy_axis(satellite_obj,dpi_input)
+
+        # Set Color
+        min_actual_val = np.nanmin(plot_array)
+        lower_limit = MINARRAY if min_actual_val < MINARRAY else min_actual_val
+
+        max_actual_val = np.nanmax(plot_array)
+        upper_limit = MAXARRAY if max_actual_val > MAXARRAY else max_actual_val
+
+        # Set Range to next full log
+        for i in range(-2, 3):
+            full_log = 10**i
+            if full_log < lower_limit:
+                lower_limit = full_log
+        for i in range(2, -3, -1):
+            full_log = 10**i
+            if full_log > upper_limit:
+                upper_limit = full_log
+
+        array_range = [lower_limit, upper_limit]
+
+        print("2D Array Plot Range: ", array_range)
+
+        # Log Normalize Color Bar colors
+        norm = colors.LogNorm(array_range[0], array_range[1])
+        im = ax.pcolormesh(
+            lon,
+            lat,
+            plot_array,
+            cmap=plt.cm.jet,
+            transform=ccrs.PlateCarree(),
+            norm=norm,
+            zorder=0,
+        )
+
+        # Colourmap with axes to match figure size
+        cbar = plt.colorbar(im, location="bottom", shrink=1, ax=ax, pad=0.05)
+
+        cbar.ax.yaxis.set_major_formatter(ticker.FuncFormatter(tick_log_formatter))
+        cbar.ax.xaxis.set_major_formatter(ticker.FuncFormatter(tick_log_formatter))
+
+        cbar.set_label(cbar_title)
+        plt.title(plotTitle)
+
+        plt.show()
+
 
 
 def auto_adjust_img(img: np.ndarray) -> np.ndarray:
@@ -285,7 +246,7 @@ def auto_adjust_img(img: np.ndarray) -> np.ndarray:
     return np.array(pil_image)/255.0
 
 
-def create_rgb(sat_obj,
+def get_rgb(sat_obj,
                R_wl: float = 650,
                G_wl: float = 550,
                B_wl: float = 450) -> Image:
@@ -299,13 +260,13 @@ def create_rgb(sat_obj,
         B_wl (float, optional): The wavelength for the blue channel. Defaults to 450.
     """
 
-    R = np.argmin(abs(sat_obj.spectral_coefficients - R_wl))
-    G = np.argmin(abs(sat_obj.spectral_coefficients - G_wl))
-    B = np.argmin(abs(sat_obj.spectral_coefficients - B_wl))
+    # R = np.argmin(abs(sat_obj.spectral_coefficients - R_wl))
+    # G = np.argmin(abs(sat_obj.spectral_coefficients - G_wl))
+    # B = np.argmin(abs(sat_obj.spectral_coefficients - B_wl))
 
     # get the rgb image
-    rgb = sat_obj.l1b_cube[:, :, [R, G, B]]
-    rgb_img = auto_adjust_img(rgb)
+    # rgb = sat_obj.l1b_cube[:, :, [R, G, B]]
+    # rgb_img = auto_adjust_img(rgb)
 
     rgb_array = sat_obj.projection_metadata["rgba_data"][:3, :, :]
     # plot_rgb = create_rgb(sat_obj=satellite_obj)
@@ -317,21 +278,18 @@ def create_rgb(sat_obj,
     return rgb_img
 
 
-def write_rgb(
+def write_rgb_to_png(
         sat_obj,
         path_to_save: str,
 ) -> Image:
 
-    rgb_img = create_rgb(sat_obj)
+    rgb_img = get_rgb(sat_obj)
 
     # check if file ends with .jpg
     if not path_to_save.endswith('.png'):
         path_to_save = path_to_save + '.png'
 
-    import matplotlib.pyplot as plt
 
     fig = plt.figure(dpi=350, facecolor="white")
     plt.imshow(rgb_img, vmin=0, vmax=1.0)
     plt.savefig(path_to_save)
-
-    return rgb_img

@@ -19,7 +19,7 @@ name="hypso"
 authors = [
   { name="Alvaro Flores", email="alvaro.f.romero@ntnu.no" },
 ]
-description = "HYPSO Visualization tool"
+description = "HYPSO Toolbox For Satellite Image Processing"
 readme = "README.md"
 license = { text = "MIT" }
 classifiers = [

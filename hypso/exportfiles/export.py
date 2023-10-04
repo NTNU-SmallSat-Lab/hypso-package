@@ -80,9 +80,9 @@ def write_h1data_as_NetCDF4(sat_object, path_to_save: str) -> None:
         f.publisher_url = "https://hypso.space"
         # f.publisher_contact = "smallsat@ntnu.no"
         f.processing_level = "L1B"
-        f.radiometric_file = str(h1.correction_coeffs_file_dict["radiometric"])
-        f.smile_file = str(h1.correction_coeffs_file_dict["smile"])
-        f.destriping_file = str(h1.correction_coeffs_file_dict["destriping"])
+        f.radiometric_file = str(h1.calibration_coeffs_file_dict["radiometric"])
+        f.smile_file = str(h1.calibration_coeffs_file_dict["smile"])
+        f.destriping_file = str(h1.calibration_coeffs_file_dict["destriping"])
         f.spectral_file = str(h1.spectral_coeff_file)
         # Create dimensions
         f.createDimension('frames', frames)
