@@ -46,6 +46,10 @@ class Satellite:
         self.projection_metadata = self.get_projection_metadata(
             top_folder_name)
 
+        # Before Generating new Geotiff we check if .points file exists
+        self.info["lat"], self.info["lon"] = start_coordinate_correction(
+            top_folder_name, self.info, self.projection_metadata)
+
         # Create Geotiff (L1C) and Correct Coordinate if .points file exists to get cube corrected
         # WARNING: Old RGB and RGBa should not be used for Lat and Lon as they are wrong
         self.projection_metadata = self.generate_full_geotiff(
@@ -249,10 +253,6 @@ class Satellite:
         return info
 
     def generate_full_geotiff(self, top_folder_name: str):
-        # Before Generating new Geotiff we check if .points file exists
-        self.info["lat"], self.info["lon"] = start_coordinate_correction(
-            top_folder_name, self.info, self.projection_metadata)
-
         tiff_name = "geotiff_full"
 
         geotiff_dir = [
