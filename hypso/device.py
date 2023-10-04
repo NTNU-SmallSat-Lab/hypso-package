@@ -25,7 +25,7 @@ class Satellite:
             "wide": 1092  # Along image_height (row_count)
         }
         self.info = self.get_metainfo(top_folder_name)
-
+        self.units = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
         self.rawcube = self.get_raw_cube(top_folder_name)
 
         # Correction Coefficients ----------------------------------------
@@ -383,7 +383,7 @@ class Satellite:
             'hypso.calibration').joinpath(f'data/{csv_file}')
         return wl_file
 
-    def get_spectra(self, position: list, postype: str = 'coord', multiplier=1, filename=None):
+    def get_spectra(self, position: list, postype: str = 'coord', multiplier=1, filename=None, plot=True):
         '''
         files_path: Works with a directorie with GeoTiff files. Uses the metadata, and integrated CRS
         position:
@@ -408,6 +408,8 @@ class Satellite:
 
         posX = None
         posY = None
+        lat = None
+        lon = None
         # Open the raster
         with rasterio.open(self.geotiffFilePath) as dataset:
             dataset_crs = dataset.crs
@@ -471,14 +473,24 @@ class Satellite:
         # spectra_data = [transformed_lat,
         #                 transformed_lon, posX, posY] + list(spectra_data)
 
-        spectra_data = [lat,
-                        lon, posX, posY] + list(spectra_data)
+        expanded_spectra_data = list([lat,
+                        lon, posX, posY] + list(spectra_data))
 
         # Get Dataframe to Store
-        df_band = pd.DataFrame([list(spectra_data)], columns=cols)
+        df_band = pd.DataFrame([expanded_spectra_data], columns=cols)
 
         if filename != None:
             df_band.to_csv(filename, index=False)
+
+        if plot:
+            import matplotlib.pyplot as plt
+            plt.figure(figsize=(10,5))
+            plt.plot(self.wavelengths, spectra_data)
+            plt.ylabel(self.units)
+            plt.xlabel("Wavelength (nm)")
+            plt.title(f"(lat, lon) -→ (X, Y) : ({lat}, {lon}) -→ ({posX}, {posY})")
+            plt.grid(True)
+            plt.show()
 
         return df_band
 
