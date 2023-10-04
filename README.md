@@ -25,7 +25,7 @@ mamba install hypso
 7. Calibration and Correction of Cube to get L1B (Radiometric -> Smile -> Destriping) `get_calibrated_and_corrected_cube()`
 8. Get Projection metadata from GeoTiff `get_projection_metadata()`
 9. Coordinate Correction using the `"*.points*"`file (if exists) `start_coordinate_correction()` (Steps to do it manually are at the bottom of this README)
-10. Georeference and create 120 bands GeoTiff (L1C) `generate_full_geotiff()`
+10. Georeference and create 120 bands GeoTiff (L1C) in a new "geotiff_full" directory `generate_full_geotiff()`
 
 **NOTE:** If corrections are made to the `"*.points"` file, delete the "geotiff_full" directory and run the script again to create the GeoTiffs again.
 
