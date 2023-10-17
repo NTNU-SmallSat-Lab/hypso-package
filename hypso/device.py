@@ -136,18 +136,23 @@ class Satellite:
         timetamp_file = os.path.join(
             top_folder_name, raw_folder, "timestamps.txt")
 
-        with open(timetamp_file, "r") as f:
-            lines = f.readlines()
-            for line in lines:
-                if "." not in line:
-                    continue
-                s_part = line.split(".")[0]
-                if s_part.strip().isnumeric():
-                    info["unixtime"] = int(s_part) + 20
-                    info["iso_time"] = datetime.utcfromtimestamp(
-                        info["unixtime"]
-                    ).isoformat()
-                    break
+        try:
+            with open(timetamp_file, "r") as f:
+                lines = f.readlines()
+                for line in lines:
+                    if "." not in line:
+                        continue
+                    s_part = line.split(".")[0]
+                    if s_part.strip().isnumeric():
+                        info["unixtime"] = int(s_part) + 20
+                        info["iso_time"] = datetime.utcfromtimestamp(
+                            info["unixtime"]
+                        ).isoformat()
+                        break
+        except:
+            print("No timestamps.txt file. Necessary for atmospheric correction.")
+            info["unixtime"] = None
+            info["iso_time"]=None
 
         # find local_angle_csv file with substring "local-angles.csv" or throw error
         for file in os.listdir(top_folder_name):
