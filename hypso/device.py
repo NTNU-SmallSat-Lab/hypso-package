@@ -253,7 +253,7 @@ class Satellite:
         return info
 
     def generate_full_geotiff(self, top_folder_name: str):
-        tiff_name = "geotiff_full"
+        tiff_name = "geotiff-full"
 
         geotiff_dir = [
             f.path
@@ -281,7 +281,7 @@ class Satellite:
         self.geotiffFilePath = [
             join(geotiff_dir, f)
             for f in listdir(geotiff_dir)
-            if (isfile(join(geotiff_dir, f)) and ("-full" in f))
+            if (isfile(join(geotiff_dir, f)) and ("-full" in f)and f.endswith('.tif'))
         ][0]
 
         # Load GeoTiff Metadata with gdal
@@ -311,7 +311,7 @@ class Satellite:
         geotiff_dir = [
             f.path
             for f in os.scandir(top_folder_name)
-            if (f.is_dir() and (tiff_name in os.path.basename(os.path.normpath(f))) and ("geotiff_full" not in os.path.basename(os.path.normpath(f))))
+            if (f.is_dir() and (tiff_name in os.path.basename(os.path.normpath(f))) and ("geotiff-full" not in os.path.basename(os.path.normpath(f))))
         ]
 
         if len(geotiff_dir) != 0:

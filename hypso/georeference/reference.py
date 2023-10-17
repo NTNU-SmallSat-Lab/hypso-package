@@ -22,6 +22,7 @@ import glob
 # import georef as gref
 from hypso.georeference import georef as gref
 
+tiff_name = "_geotiff-full"
 
 def start_coordinate_correction(top_folder_name: str, satinfo: dict, proj_metadata: dict):
     point_file = glob.glob(top_folder_name + '/*.points')
@@ -213,8 +214,6 @@ def array_to_geotiff(satObj, single_frame_array, file_name='custom_band'):
     pixels_lon.shape = (frame_count, hypso_height)
 
     dir_basename = str(os.path.basename(cube_path))
-
-    tiff_name = "-geotiff_full"
 
     output_path_tif = os.path.join(
         os.path.abspath(cube_path), dir_basename + tiff_name+'/'+dir_basename+'-'+file_name+'.tif')
@@ -418,7 +417,6 @@ def generate_geotiff(satObj):
 
     dir_basename = str(os.path.basename(cube_path))
 
-    tiff_name = "-geotiff_full"
 
     geotiff_folder_path = os.path.join(os.path.abspath(
         cube_path), dir_basename + tiff_name+'/')
