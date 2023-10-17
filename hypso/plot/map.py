@@ -293,3 +293,4 @@ def write_rgb_to_png(
     fig = plt.figure(dpi=350, facecolor="white")
     plt.imshow(rgb_img, vmin=0, vmax=1.0)
     plt.savefig(path_to_save)
+
