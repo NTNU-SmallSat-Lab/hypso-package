@@ -74,7 +74,7 @@ def get_coefficients_from_dict(coeff_dict: str) -> np.ndarray:
     """
     coeffs = coeff_dict.copy()
     for k in coeff_dict:
-        if isinstance(coeff_dict[k], pathlib.PurePath):
+        if isinstance(coeff_dict[k], pathlib.PurePath) or isinstance(coeff_dict[k], str):
             coeffs[k] = get_coefficients_from_file(coeff_dict[k])
         else:
             coeffs[k]=coeff_dict[k]

@@ -403,15 +403,23 @@ class Satellite:
                 bin_x)
             
             # Destriping ---------------------------------
+            rows_img = self.info["frame_count"]  # Due to way image is captured
+            cols_img = self.info["image_height"]
+
+            if (rows_img < self.standardDimensions["nominal"]):
+                self.info["capture_type"] = "nominal"
+
+            elif (cols_img == self.standardDimensions["wide"]):
+                self.info["capture_type"] = "wide"
             csv_file_destriping = None
 
 
-        rad_coeff_file = csv_file_radiometric if not isinstance(csv_file_radiometric, pathlib.PurePath) else files(
+        rad_coeff_file = csv_file_radiometric if not isinstance(csv_file_radiometric, str) else files(
             'hypso.calibration').joinpath(f'data/{csv_file_radiometric}')
 
-        smile_coeff_file = csv_file_smile if not isinstance(csv_file_smile, pathlib.PurePath) else files(
+        smile_coeff_file = csv_file_smile if not isinstance(csv_file_smile, str) else files(
             'hypso.calibration').joinpath(f'data/{csv_file_smile}')
-        destriping_coeff_file = csv_file_destriping if not isinstance(csv_file_destriping, pathlib.PurePath) else files(
+        destriping_coeff_file = csv_file_destriping if not isinstance(csv_file_destriping, str) else files(
             'hypso.calibration').joinpath(f'data/{csv_file_destriping}')
 
         coeff_dict = {"radiometric": rad_coeff_file,
@@ -553,7 +561,7 @@ class Satellite:
         Assumes all coefficients has been adjusted to the frame size (cropped and
         binned), and that the data cube contains 12-bit values.
         '''
-
+        
         # Radiometric calibration
         cube_calibrated = calibrate_cube(
             self.info, self.rawcube, self.calibration_coefficients_dict)
