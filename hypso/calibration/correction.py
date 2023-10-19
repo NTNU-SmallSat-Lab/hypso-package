@@ -3,6 +3,7 @@ import copy
 import os
 from scipy import interpolate
 import csv
+import pathlib
 
 def crop_and_bin_matrix(matrix, x_start, x_stop, y_start, y_stop, bin_x=1, bin_y=1):
     ''' Crops matrix to AOI. Bins matrix so that the average value in the bin_x 
@@ -73,7 +74,7 @@ def get_coefficients_from_dict(coeff_dict: str) -> np.ndarray:
     """
     coeffs = coeff_dict.copy()
     for k in coeff_dict:
-        if type(coeff_dict[k]) is str:
+        if isinstance(coeff_dict[k], pathlib.PurePath):
             coeffs[k] = get_coefficients_from_file(coeff_dict[k])
         else:
             coeffs[k]=coeff_dict[k]
