@@ -487,24 +487,17 @@ class Satellite:
                 # Get pixel coordinates from map coordinates
                 posY, posX = dataset.index(
                     transformed_lon, transformed_lat)
-                # Print Coordinate and Pixel Matching
-                print("(lat, lon) -→ (X, Y) : (%s, %s) -→ (%s, %s)" %
-                      (lat, lon, posX, posY))
 
             elif postype == 'pix':
                 posX = int(position[0])
                 posY = int(position[1])
 
-                lon = dataset.xy(posX, posY)[0]
-                lat = dataset.xy(posX, posY)[1]
+                transformed_lon = dataset.xy(posX, posY)[0]
+                transformed_lat = dataset.xy(posX, posY)[1]
 
                 # Transform from the GeoTiff CRS
-                transformed_lon, transformed_lat = dataset_proj(
-                    lon, lat, inverse=True)
-
-                # Print Coordinate and Pixel Matching
-                print("(lat, lon) -→ (X, Y) : (%s, %s) -→ (%s, %s)" %
-                      (transformed_lat, transformed_lon, posX, posY))
+                lon, lat = dataset_proj(
+                    transformed_lon, transformed_lat, inverse=True)
 
             # Window size is 1 for a Single Pixel
             N = 1
@@ -527,8 +520,13 @@ class Satellite:
         #                 transformed_lon, posX, posY] + list(spectra_data)
 
         if posX<0 or posY<0 or self.projection_metadata["rgba_data"][3,posY,posX]==0:
+            print("Location not covered by image.")
             return None
         
+        # Print Coordinate and Pixel Matching
+        print("(lat, lon) -→ (X, Y) : (%s, %s) -→ (%s, %s)" %
+                (lat, lon, posX, posY))
+            
         expanded_spectra_data = list([lat,
                         lon, posX, posY] + list(spectra_data))
 
