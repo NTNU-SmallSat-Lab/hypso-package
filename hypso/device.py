@@ -11,10 +11,11 @@ import netCDF4 as nc
 import rasterio
 import cartopy.crs as ccrs
 import pyproj as prj
-
-from .calibration import calibrate_cube, get_coefficients_from_dict, get_coefficients_from_file, smile_correct_cube, destriping_correct_cube
+import pathlib
+from .calibration import crop_and_bin_matrix, calibrate_cube, get_coefficients_from_dict, get_coefficients_from_file, smile_correct_cube, destriping_correct_cube
 from .georeference import start_coordinate_correction, generate_geotiff
 
+EXPERIMENTAL_FEATURES=True
 
 class Satellite:
     def __init__(self, top_folder_name) -> None:
@@ -202,7 +203,11 @@ class Satellite:
         elif (cols_img == self.standardDimensions["wide"]):
             info["capture_type"] = "wide"
         else:
-            raise Exception("Number of Rows (AKA frame_count) Is Not Standard")
+            if EXPERIMENTAL_FEATURES:
+                print("Number of Rows (AKA frame_count) Is Not Standard")
+                info["capture_type"] = "custom"
+            else:
+                raise Exception("Number of Rows (AKA frame_count) Is Not Standard")
 
         self.spatialDim = (rows_img, cols_img)
 
@@ -367,13 +372,46 @@ class Satellite:
             csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_wide_v1.csv"
             csv_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.csv"
             csv_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.csv"
+            
+        elif self.info["capture_type"] == "custom":
+            bin_x = self.info["bin_factor"]
 
-        rad_coeff_file = files(
+            # Radiometric ---------------------------------
+            full_coeff=get_coefficients_from_file(files('hypso.calibration').joinpath(
+                f'data/{"radiometric_calibration_matrix_HYPSO-1_full_v1.csv"}'),
+                )
+            
+
+            csv_file_radiometric = crop_and_bin_matrix(
+                full_coeff,
+                self.info["x_start"],
+                self.info["x_stop"],
+                self.info["y_start"],
+                self.info["y_stop"],
+                bin_x)
+            
+            # Smile ---------------------------------
+            full_coeff=get_coefficients_from_file(files('hypso.calibration').joinpath(
+                f'data/{"spectral_calibration_matrix_HYPSO-1_full_v1.csv"}'),
+                )
+            csv_file_smile = crop_and_bin_matrix(
+                full_coeff,
+                self.info["x_start"],
+                self.info["x_stop"],
+                self.info["y_start"],
+                self.info["y_stop"],
+                bin_x)
+            
+            # Destriping ---------------------------------
+            csv_file_destriping = None
+
+
+        rad_coeff_file = csv_file_radiometric if not isinstance(csv_file_radiometric, pathlib.PurePath) else files(
             'hypso.calibration').joinpath(f'data/{csv_file_radiometric}')
 
-        smile_coeff_file = files(
+        smile_coeff_file = csv_file_smile if not isinstance(csv_file_smile, pathlib.PurePath) else files(
             'hypso.calibration').joinpath(f'data/{csv_file_smile}')
-        destriping_coeff_file = files(
+        destriping_coeff_file = csv_file_destriping if not isinstance(csv_file_destriping, pathlib.PurePath) else files(
             'hypso.calibration').joinpath(f'data/{csv_file_destriping}')
 
         coeff_dict = {"radiometric": rad_coeff_file,
@@ -415,6 +453,8 @@ class Satellite:
         posY = None
         lat = None
         lon = None
+        transformed_lon=None
+        transformed_lat=None
         # Open the raster
         with rasterio.open(self.geotiffFilePath) as dataset:
             dataset_crs = dataset.crs
@@ -478,6 +518,9 @@ class Satellite:
         # spectra_data = [transformed_lat,
         #                 transformed_lon, posX, posY] + list(spectra_data)
 
+        if posX<0 or posY<0 or self.projection_metadata["rgba_data"][3,posY,posX]==0:
+            return None
+        
         expanded_spectra_data = list([lat,
                         lon, posX, posY] + list(spectra_data))
 

@@ -4,6 +4,47 @@ import os
 from scipy import interpolate
 import csv
 
+def crop_and_bin_matrix(matrix, x_start, x_stop, y_start, y_stop, bin_x=1, bin_y=1):
+    ''' Crops matrix to AOI. Bins matrix so that the average value in the bin_x 
+    number of pixels is stored.
+    '''
+    # Crop to selected AOI
+    new_matrix = matrix[y_start:y_stop, x_start:x_stop]
+    height, width = new_matrix.shape
+
+    # If bin is set to 0 or negative we assume this means no binning, aka bin=1
+    if bin_x < 1:
+        bin_x = 1
+    if bin_y < 1:
+        bin_y = 1
+
+    # Bin spectral direction
+    if bin_x != 1:
+        width_binned = int(width/bin_x)
+        matrix_cropped_and_binned = np.zeros((height,width_binned))
+        for i in range(width_binned):
+            this_pixel_sum = 0
+            for j in range(bin_x):
+                this_pixel_value = new_matrix[:,i*bin_x+j]
+                this_pixel_sum += this_pixel_value
+            average_pixel_value = this_pixel_sum/bin_x
+            matrix_cropped_and_binned[:,i] = average_pixel_value
+        new_matrix = matrix_cropped_and_binned
+
+    # Bin spatial direction
+    if bin_y != 1:
+        height_binned = int(height/bin_y)
+        matrix_binned_spatial = np.zeros((height_binned,width_binned))
+        for i in range(height_binned):
+            this_pixel_sum = 0
+            for j in range(bin_y):
+                this_pixel_value = new_matrix[i*bin_y+j,:]
+                this_pixel_sum += this_pixel_value
+            average_pixel_value = this_pixel_sum/bin_y
+            matrix_binned_spatial[i,:] = average_pixel_value/bin_y
+        new_matrix = matrix_binned_spatial
+
+    return new_matrix
 
 def get_coefficients_from_file(coeff_path: str) -> np.ndarray:
     coefficients = None
@@ -32,7 +73,10 @@ def get_coefficients_from_dict(coeff_dict: str) -> np.ndarray:
     """
     coeffs = coeff_dict.copy()
     for k in coeff_dict:
-        coeffs[k] = get_coefficients_from_file(coeff_dict[k])
+        if type(coeff_dict[k]) is str:
+            coeffs[k] = get_coefficients_from_file(coeff_dict[k])
+        else:
+            coeffs[k]=coeff_dict[k]
 
     return coeffs
 
@@ -40,6 +84,11 @@ def get_coefficients_from_dict(coeff_dict: str) -> np.ndarray:
 def calibrate_cube(info_sat: dict, raw_cube: np.ndarray, correction_coefficients_dict: dict) -> np.ndarray:
     """Calibrate the raw data cube."""
     DEBUG = False
+
+    if correction_coefficients_dict["radiometric"] is None:
+        return raw_cube.copy()
+
+    print("Radiometric Correction Ongoing")
 
     background_value = info_sat['background_value']
     exp = info_sat['exp']
@@ -123,6 +172,12 @@ def smile_correct_cube(cube, correction_coefficients_dict: dict):
     ''' Run smile correction on each frame in a cube, using the center row in 
     the frame as the reference wavelength/band for smile correction.
     '''
+
+    if correction_coefficients_dict["smile"] is None:
+        return cube.copy()
+    
+    print("Smile Correction Ongoing")
+
     spectral_band_matrix = correction_coefficients_dict["smile"]
     num_frames, image_height, image_width = cube.shape
     cube_smile_corrected = np.zeros([num_frames, image_height, image_width])
@@ -136,6 +191,12 @@ def smile_correct_cube(cube, correction_coefficients_dict: dict):
 
 def destriping_correct_cube(cube, correction_coefficients_dict):
     ''' Apply destriping correction matrix. '''
+
+    if correction_coefficients_dict["destriping"] is None:
+        return cube.copy()
+    
+    print("Destriping Correction Ongoing")
+
     destriping_correction_matrix = correction_coefficients_dict["destriping"]
     # print(destriping_correction_matrix.shape)
     # print(cube.shape)

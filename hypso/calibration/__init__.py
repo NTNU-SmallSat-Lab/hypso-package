@@ -1,1 +1,1 @@
-from .correction import calibrate_cube, get_coefficients_from_dict, get_coefficients_from_file, smile_correct_cube, destriping_correct_cube
+from .correction import crop_and_bin_matrix, calibrate_cube, get_coefficients_from_dict, get_coefficients_from_file, smile_correct_cube, destriping_correct_cube

@@ -123,6 +123,31 @@ def get_cartopy_axis(satellite_obj,dpi_input):
 
     return ax,transformed_img_extent,projection_img,lat,lon
 
+def point_rgb_map(satellite_obj, plotTitle="RGB Image", dpi_input=450,lon_plot=None,lat_plot=None,r_plot=5,path_to_save=None):
+
+    # TODO: Warnings are disabled as a rounding error with shapely causes an "no intersection warning". New version of GDAL might solve it
+    with np.errstate(all="ignore"): 
+        # Get Axis for Map
+        ax,transformed_img_extent,projection_img,lat,lon= get_cartopy_axis(satellite_obj,dpi_input)
+
+        ax.imshow(
+            get_rgb(satellite_obj),
+            origin="upper",
+            extent=transformed_img_extent,
+            transform=projection_img,
+            zorder=1,
+        )
+
+        from matplotlib.patches import Circle
+        cc=Circle(xy=(lon_plot, lat_plot), radius=r_plot,color='red',transform=ccrs.PlateCarree(), zorder=30)
+        ax.add_patch(cc)
+
+        plt.title(plotTitle)
+        
+        if path_to_save is not None:
+            plt.savefig(path_to_save)
+        plt.show()
+        
 def show_rgb_map(satellite_obj, plotTitle="RGB Image", dpi_input=450):
 
     # TODO: Warnings are disabled as a rounding error with shapely causes an "no intersection warning". New version of GDAL might solve it
@@ -130,14 +155,8 @@ def show_rgb_map(satellite_obj, plotTitle="RGB Image", dpi_input=450):
         # Get Axis for Map
         ax,transformed_img_extent,projection_img,lat,lon= get_cartopy_axis(satellite_obj,dpi_input)
 
-        # Extract Image
-        rgb_array = satellite_obj.projection_metadata["rgba_data"][:3, :, :]
-        plot_rgb = np.ma.masked_where(rgb_array == 0, rgb_array)
-
         ax.imshow(
-            np.rot90(plot_rgb.transpose((1, 2, 0)), k=2),
-            # np.rot90(plot_rgb, k=2),
-            # plot_rgb,
+            get_rgb(satellite_obj),
             origin="upper",
             extent=transformed_img_extent,
             transform=projection_img,
