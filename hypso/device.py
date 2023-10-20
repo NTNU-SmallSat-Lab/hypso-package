@@ -514,13 +514,10 @@ class Satellite:
             # Multiplier for Values like Sentinel 2 which need 1/10000
             spectra_data = clip * multiplier
 
-        # print(spectra_data)
-        # # Add Lat, Lon, PosX and PosY to spectra data List
-        # spectra_data = [transformed_lat,
-        #                 transformed_lon, posX, posY] + list(spectra_data)
 
+        # Return None if outside of boundaries or alpha channel is 0
         if posX<0 or posY<0 or self.projection_metadata["rgba_data"][3,posY,posX]==0:
-            print("Location not covered by image.")
+            print("Location not covered by image --------------------------\n")
             return None
         
         # Print Coordinate and Pixel Matching
