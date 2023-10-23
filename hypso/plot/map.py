@@ -124,7 +124,7 @@ def get_cartopy_axis(satellite_obj,dpi_input):
 
     return ax,transformed_img_extent,projection_img,lat,lon
 
-def point_rgb_map(satellite_obj, plotTitle="RGB Image", dpi_input=450,lon_plot=None,lat_plot=None,r_plot=5,path_to_save=None):
+def point_rgb_map(satellite_obj, plotTitle="RGB Image", dpi_input=450,patch_dict=None,r_plot=0.007,path_to_save=None):
 
     # TODO: Warnings are disabled as a rounding error with shapely causes an "no intersection warning". New version of GDAL might solve it
     with np.errstate(all="ignore"): 
@@ -140,9 +140,13 @@ def point_rgb_map(satellite_obj, plotTitle="RGB Image", dpi_input=450,lon_plot=N
         )
 
         from matplotlib.patches import Circle
-        cc=Circle(xy=(lon_plot, lat_plot), radius=r_plot,color='red',transform=ccrs.PlateCarree(), zorder=30)
-        ax.add_patch(cc)
+        patches_list=[]
+        for key in patch_dict:
+            cc=Circle(xy=(patch_dict[key]["lon"], patch_dict[key]["lat"]), radius=r_plot,color=patch_dict[key]["color"],transform=ccrs.PlateCarree(), zorder=30,label=key)
+            patches_list.append(cc)
+            ax.add_patch(cc)
 
+        plt.legend(handles=patches_list)
         plt.title(plotTitle)
         
         if path_to_save is not None:

@@ -47,7 +47,8 @@ dependencies=[
   "py6s >=1.9.2",
   "scipy >=1.11.2",
   "pillow",
-  "shapely >=2.0.1"
+  "shapely >=2.0.1",
+  "pysftp >=0.2.9"
 ]
 
 # dynamic properties set by tools

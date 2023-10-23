@@ -434,7 +434,7 @@ class Satellite:
             'hypso.calibration').joinpath(f'data/{csv_file}')
         return wl_file
 
-    def get_spectra(self, position: list, postype: str = 'coord', multiplier=1, filename=None, plot=True):
+    def get_spectra(self, position_dict: dict, postype: str = 'coord', multiplier=1, filename=None, plot=True):
         '''
         files_path: Works with a directorie with GeoTiff files. Uses the metadata, and integrated CRS
         position:
@@ -480,7 +480,9 @@ class Satellite:
 
             if postype == 'coord':
                 # Get list to two variables
-                lat, lon = position
+                lat=position_dict["lat"]
+                lon=position_dict["lon"]
+                #lat, lon = position
                 # Transform Coordinates to Image CRS
                 transformed_lon, transformed_lat = dataset_proj(
                     lon, lat, inverse=False)
@@ -489,8 +491,13 @@ class Satellite:
                     transformed_lon, transformed_lat)
 
             elif postype == 'pix':
-                posX = int(position[0])
-                posY = int(position[1])
+                posX=int(position_dict["X"])
+                posY=int(position_dict["Y"])
+
+                #posX = int(position[0])
+                #posY = int(position[1])
+
+
 
                 transformed_lon = dataset.xy(posX, posY)[0]
                 transformed_lat = dataset.xy(posX, posY)[1]

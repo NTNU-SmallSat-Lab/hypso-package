@@ -22,6 +22,7 @@ __author__ = "Alvaro Flores <alvaro.f.romero@ntnu.no>"
 __credits__ = "Norwegian University of Science and Technology"
 
 from .device import Satellite
+from .download import download_directory
 
 try:
     from ._version import __version__  # noqa
