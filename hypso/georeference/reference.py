@@ -138,7 +138,7 @@ def coordinate_correction_matrix(filename, projection_metadata,correction_type):
     if correction_type=="polynomial":
         # 2nd Order skimage
         M = skimage.transform.PolynomialTransform()
-        M.estimate(hypso_src, hypso_dst, order=3)
+        M.estimate(hypso_src, hypso_dst, order=2)
 
 
     elif correction_type=="homography": 
