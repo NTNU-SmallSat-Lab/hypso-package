@@ -25,7 +25,7 @@ from hypso.georeference import georef as gref
 
 tiff_name = "_geotiff-full"
 
-def start_coordinate_correction(top_folder_name: str, satinfo: dict, proj_metadata: dict,correction_type="second-deg"):
+def start_coordinate_correction(top_folder_name: str, satinfo: dict, proj_metadata: dict,correction_type="affine"):
     point_file = glob.glob(top_folder_name + '/*.points')
 
     if len(point_file) == 0:
@@ -131,11 +131,22 @@ def coordinate_correction_matrix(filename, projection_metadata,correction_type):
     # M, mask = cv2.estimateAffinePartial2D(
     # hypso_src, hypso_dst, refineIters=50)  # Good Results!
 
+    M=None
+
     if correction_type=="second-deg":
         # 2nd Order
         M = skimage.transform.estimate_transform('polynomial', hypso_src, hypso_dst, 2)
 
-        return {correction_type:M}
+    elif correction_type=="homography": 
+        M = skimage.transform.ProjectiveTransform()
+        M.estimate(hypso_src, hypso_dst)
+
+    elif correction_type=="affine": 
+        # [[a0  a1  a2]
+        # [b0  b1  b2]
+        # [0   0    1]]
+        M = skimage.transform.AffineTransform()
+        M.estimate(hypso_src, hypso_dst)
 
     elif correction_type=="lstsq":
         # Using Numpy Least Squares ( Good Results!)
@@ -151,7 +162,7 @@ def coordinate_correction_matrix(filename, projection_metadata,correction_type):
         m, c = np.linalg.lstsq(A, y, rcond=None)[0]
         M.append([m, c])
 
-        return {correction_type:M}  # lat_coeff, lon_coeff
+    return {correction_type:M}  # lat_coeff, lon_coeff
 
 def calculate_poly_geo_coords_skimage(X, Y, lat_c, lon_c):
     
@@ -189,18 +200,6 @@ def coordinate_correction(point_file, projection_metadata, originalLat, original
 
             modifiedLat = None
             modifiedLon=None
-            # Affine Matrix
-            # current_coord = np.array([[X], [Y], [1]])
-            # res_mult = np.matmul(M, current_coord)
-            # newLon = res_mult[0]
-            # newLat = res_mult[1]
-
-            # estimateAffinePartial2D
-
-            # current_coord = np.array([[X], [Y], [1]])
-            # res_mult = np.matmul(M, current_coord)
-            # newLon = res_mult[0]
-            # newLat = res_mult[1]
 
             # Second Degree Polynomial (Scikit)
             if M_type=="second-deg":
@@ -208,6 +207,10 @@ def coordinate_correction(point_file, projection_metadata, originalLat, original
                 lat_coeff = M.params[1]
                 modifiedLat, modifiedLon = calculate_poly_geo_coords_skimage(X, Y, lat_coeff, lon_coeff)
 
+            elif M_type=="affine" or M_type=="homography":
+                result=M.params @ np.array([[X],[Y],[1]]).ravel()
+                modifiedLon=result[0]
+                modifiedLat=result[1]
 
             # Np lin alg
             elif M_type=="lstsq":

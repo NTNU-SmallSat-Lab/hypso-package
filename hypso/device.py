@@ -276,6 +276,7 @@ class Satellite:
         if force_reload and len(geotiff_dir) != 0:
             path=geotiff_dir[0]
             if os.path.exists(path):
+                print("Forcing Reload: Deleting geotiff-full Directory...")
                 import shutil
                 shutil.rmtree(path, ignore_errors=True)
             geotiff_dir=[]
