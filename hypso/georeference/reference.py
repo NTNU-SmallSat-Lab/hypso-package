@@ -9,6 +9,7 @@ import matplotlib.path as mplpath
 import shapely.geometry as sg
 import matplotlib.pyplot as plt
 from osgeo import gdal
+import skimage
 from osgeo import osr
 # GIS
 import cartopy.crs as ccrs
@@ -24,7 +25,7 @@ from hypso.georeference import georef as gref
 
 tiff_name = "_geotiff-full"
 
-def start_coordinate_correction(top_folder_name: str, satinfo: dict, proj_metadata: dict):
+def start_coordinate_correction(top_folder_name: str, satinfo: dict, proj_metadata: dict,correction_type="second-deg"):
     point_file = glob.glob(top_folder_name + '/*.points')
 
     if len(point_file) == 0:
@@ -34,12 +35,12 @@ def start_coordinate_correction(top_folder_name: str, satinfo: dict, proj_metada
         print("Doing manual coordinate correction with .points file")
         lat, lon = coordinate_correction(
             point_file[0], proj_metadata,
-            satinfo["lat"], satinfo["lon"])
+            satinfo["lat"], satinfo["lon"],correction_type)
 
         return lat, lon
 
 
-def coordinate_correction_matrix(filename, projection_metadata):
+def coordinate_correction_matrix(filename, projection_metadata,correction_type):
     # Hypso CRS
     inproj = projection_metadata['inproj']
     # Convert WKT projection information into a cartopy projection
@@ -130,28 +131,53 @@ def coordinate_correction_matrix(filename, projection_metadata):
     # M, mask = cv2.estimateAffinePartial2D(
     # hypso_src, hypso_dst, refineIters=50)  # Good Results!
 
-    # 2nd Order
-    # M = skimage.transform.estimate_transform('polynomial', hypso_src, hypso_dst, 2)
+    if correction_type=="second-deg":
+        # 2nd Order
+        M = skimage.transform.estimate_transform('polynomial', hypso_src, hypso_dst, 2)
 
-    # Using Numpy Least Squares ( Good Results!)
-    M = []
-    x = hypso_src[:, 0]
-    y = hypso_dst[:, 0]
-    A = np.vstack([x, np.ones(len(x))]).T
-    m, c = np.linalg.lstsq(A, y, rcond=None)[0]
-    M.append([m, c])
-    x = hypso_src[:, 1]
-    y = hypso_dst[:, 1]
-    A = np.vstack([x, np.ones(len(x))]).T
-    m, c = np.linalg.lstsq(A, y, rcond=None)[0]
-    M.append([m, c])
+        return {correction_type:M}
 
-    return M  # lat_coeff, lon_coeff
+    elif correction_type=="lstsq":
+        # Using Numpy Least Squares ( Good Results!)
+        M = []
+        x = hypso_src[:, 0]
+        y = hypso_dst[:, 0]
+        A = np.vstack([x, np.ones(len(x))]).T
+        m, c = np.linalg.lstsq(A, y, rcond=None)[0]
+        M.append([m, c])
+        x = hypso_src[:, 1]
+        y = hypso_dst[:, 1]
+        A = np.vstack([x, np.ones(len(x))]).T
+        m, c = np.linalg.lstsq(A, y, rcond=None)[0]
+        M.append([m, c])
 
+        return {correction_type:M}  # lat_coeff, lon_coeff
 
-def coordinate_correction(point_file, projection_metadata, originalLat, originalLon):
+def calculate_poly_geo_coords_skimage(X, Y, lat_c, lon_c):
+    
+    #X = sum[j=0:order]( sum[i=0:j]( a_ji * x**(j - i) * y**i ))
+
+    #x.T = [a00 a10 a11 a20 a21 a22 ... ann
+    #   b00 b10 b11 b20 b21 b22 ... bnn c3]
+
+    #X = (( a_00 * x**(0 - 0) * y**0 ))
+    #(( a_10 * x**(1 - 0) * y**0 ))  +  (( a_11 * x**(1 - 1) * y**1 ))
+    #(( a_20 * x**(2 - 0) * y**0 ))  +  (( a_21 * x**(2 - 1) * y**1 )) 
+    #                                +  (( a_22 * x**(2 - 2) * y**2 ))
+   
+    c = lat_c
+    lat= c[0] + c[1]*X + c[2]*Y + c[3]*X**2 + c[4]*X*Y + c[5]*Y**2
+
+    c = lon_c
+    lon = c[0] + c[1]*X + c[2]*Y + c[3]*X**2 + c[4]*X*Y + c[5]*Y**2
+
+    return (lat, lon)
+
+def coordinate_correction(point_file, projection_metadata, originalLat, originalLon, correction_type):
     # Use Utility File to Extract M
-    M = coordinate_correction_matrix(point_file, projection_metadata)
+    M_dict = coordinate_correction_matrix(point_file, projection_metadata,correction_type)
+    M_type=list(M_dict.keys())[0]
+    M=M_dict[M_type]
 
     finalLat = originalLat.copy()
     finalLon = originalLon.copy()
@@ -160,6 +186,9 @@ def coordinate_correction(point_file, projection_metadata, originalLat, original
         for j in range(originalLat.shape[1]):
             X = originalLon[i, j]
             Y = originalLat[i, j]
+
+            modifiedLat = None
+            modifiedLon=None
             # Affine Matrix
             # current_coord = np.array([[X], [Y], [1]])
             # res_mult = np.matmul(M, current_coord)
@@ -174,16 +203,20 @@ def coordinate_correction(point_file, projection_metadata, originalLat, original
             # newLat = res_mult[1]
 
             # Second Degree Polynomial (Scikit)
-            # lon_coeff = M.params[0]
-            # lat_coeff = M.params[1]
-            # newLat, newLon = reference_correction.calculate_poly_geo_coords_skimage(X, Y, lon_coeff, lat_coeff)
+            if M_type=="second-deg":
+                lon_coeff = M.params[0]
+                lat_coeff = M.params[1]
+                modifiedLat, modifiedLon = calculate_poly_geo_coords_skimage(X, Y, lat_coeff, lon_coeff)
+
 
             # Np lin alg
-            LonM = M[0]
-            modifiedLon = LonM[0] * X + LonM[1]
+            elif M_type=="lstsq":
+                LonM = M[0]
+                modifiedLon = LonM[0] * X + LonM[1]
 
-            LatM = M[1]
-            modifiedLat = LatM[0] * Y + LatM[1]
+                LatM = M[1]
+                modifiedLat = LatM[0] * Y + LatM[1]
+
 
             finalLat[i, j] = modifiedLat
             finalLon[i, j] = modifiedLon

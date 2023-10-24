@@ -18,7 +18,7 @@ from .georeference import start_coordinate_correction, generate_geotiff
 EXPERIMENTAL_FEATURES=True
 
 class Satellite:
-    def __init__(self, top_folder_name) -> None:
+    def __init__(self, top_folder_name, force_reload=False) -> None:
         self.DEBUG = False
         self.spatialDim = (956, 684)  # 1092 x variable
         self.standardDimensions = {
@@ -54,7 +54,7 @@ class Satellite:
         # Create Geotiff (L1C) and Correct Coordinate if .points file exists to get cube corrected
         # WARNING: Old RGB and RGBa should not be used for Lat and Lon as they are wrong
         self.projection_metadata = self.generate_full_geotiff(
-            top_folder_name)
+            top_folder_name, force_reload)
 
         self.l2a_cube = None
 
@@ -262,7 +262,8 @@ class Satellite:
 
         return info
 
-    def generate_full_geotiff(self, top_folder_name: str):
+    def generate_full_geotiff(self, top_folder_name: str, force_reload=False):
+        
         tiff_name = "geotiff-full"
 
         geotiff_dir = [
@@ -271,9 +272,19 @@ class Satellite:
             if (f.is_dir() and (tiff_name in os.path.basename(os.path.normpath(f))))
         ]
 
+        # Force Reload by deleting Dir
+        if force_reload and len(geotiff_dir) != 0:
+            path=geotiff_dir[0]
+            if os.path.exists(path):
+                import shutil
+                shutil.rmtree(path, ignore_errors=True)
+            geotiff_dir=[]
+
+        # If directory exists, use it, if not reload it
         if len(geotiff_dir) != 0:
             geotiff_dir = geotiff_dir[0]
         else:
+
 
             # Nowe we generate the geotiff with corrected lon and lat
             generate_geotiff(self)
