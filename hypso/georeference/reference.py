@@ -1,6 +1,7 @@
 import numpy as np
 from importlib.resources import files
 import os
+from tqdm import tqdm
 import csv
 import pyproj as prj
 import pandas as pd
@@ -16,6 +17,7 @@ import cartopy.crs as ccrs
 import math as m
 import threading
 import scipy.interpolate as si
+from sklearn.preprocessing import PolynomialFeatures
 import glob
 # Custom library
 # lib_path = os.path.join(os.path.dirname(sys.argv[0]), 'hsi-postprocessing/lib')
@@ -25,7 +27,7 @@ from hypso.georeference import georef as gref
 
 tiff_name = "_geotiff-full"
 
-def start_coordinate_correction(top_folder_name: str, satinfo: dict, proj_metadata: dict,correction_type="affine"):
+def start_coordinate_correction(top_folder_name: str, satinfo: dict, proj_metadata: dict,correction_type="lstsq"):
     point_file = glob.glob(top_folder_name + '/*.points')
 
     if len(point_file) == 0:
@@ -133,9 +135,11 @@ def coordinate_correction_matrix(filename, projection_metadata,correction_type):
 
     M=None
 
-    if correction_type=="second-deg":
-        # 2nd Order
-        M = skimage.transform.estimate_transform('polynomial', hypso_src, hypso_dst, 2)
+    if correction_type=="polynomial":
+        # 2nd Order skimage
+        M = skimage.transform.PolynomialTransform()
+        M.estimate(hypso_src, hypso_dst, order=3)
+
 
     elif correction_type=="homography": 
         M = skimage.transform.ProjectiveTransform()
@@ -164,25 +168,6 @@ def coordinate_correction_matrix(filename, projection_metadata,correction_type):
 
     return {correction_type:M}  # lat_coeff, lon_coeff
 
-def calculate_poly_geo_coords_skimage(X, Y, lat_c, lon_c):
-    
-    #X = sum[j=0:order]( sum[i=0:j]( a_ji * x**(j - i) * y**i ))
-
-    #x.T = [a00 a10 a11 a20 a21 a22 ... ann
-    #   b00 b10 b11 b20 b21 b22 ... bnn c3]
-
-    #X = (( a_00 * x**(0 - 0) * y**0 ))
-    #(( a_10 * x**(1 - 0) * y**0 ))  +  (( a_11 * x**(1 - 1) * y**1 ))
-    #(( a_20 * x**(2 - 0) * y**0 ))  +  (( a_21 * x**(2 - 1) * y**1 )) 
-    #                                +  (( a_22 * x**(2 - 2) * y**2 ))
-   
-    c = lat_c
-    lat= c[0] + c[1]*X + c[2]*Y + c[3]*X**2 + c[4]*X*Y + c[5]*Y**2
-
-    c = lon_c
-    lon = c[0] + c[1]*X + c[2]*Y + c[3]*X**2 + c[4]*X*Y + c[5]*Y**2
-
-    return (lat, lon)
 
 def coordinate_correction(point_file, projection_metadata, originalLat, originalLon, correction_type):
     # Use Utility File to Extract M
@@ -202,10 +187,26 @@ def coordinate_correction(point_file, projection_metadata, originalLat, original
             modifiedLon=None
 
             # Second Degree Polynomial (Scikit)
-            if M_type=="second-deg":
+            if M_type=="polynomial":
+                # SK Image polynomial -----------------------------------------------
+
                 lon_coeff = M.params[0]
                 lat_coeff = M.params[1]
-                modifiedLat, modifiedLon = calculate_poly_geo_coords_skimage(X, Y, lat_coeff, lon_coeff)
+
+                deg = None
+                if len(lon_coeff)==10:
+                    deg=3
+                elif len(lon_coeff)==6:
+                    deg=2
+                
+                def apply_poly(X,Y,coeff,deg):
+                    if deg==2:
+                         return coeff[0] + coeff[1]*X + coeff[2]*Y + coeff[3]*X**2 + coeff[4]*X*Y + coeff[5]*Y**2 
+                    elif deg==3:
+                         return coeff[0] + coeff[1]*X + coeff[2]*Y + coeff[3]*X**2 + coeff[4]*X*Y + coeff[5]*Y**2 + coeff[6]*X**3 + coeff[7]*(X**2)*(Y) + coeff[8]*(X)*(Y**2) + coeff[9]*Y**3
+                        
+                modifiedLat= apply_poly(X,Y,lat_coeff,deg=deg)
+                modifiedLon= apply_poly(X,Y,lon_coeff,deg=deg)
 
             elif M_type=="affine" or M_type=="homography":
                 result=M.params @ np.array([[X],[Y],[1]]).ravel()
@@ -416,18 +417,18 @@ def array_to_geotiff(satObj, single_frame_array, file_name='custom_band'):
 
 
 def generate_geotiff(satObj):
-    print('Generating Geotiff')
-    print('  This script requires three arguments:')
-    print('    1. path to a pixels latitude numpy file')
-    print('    2. path to a pixels longitude numpy file')
-    print('    3. path to a decompressed hypso cube file')
-    print('  Followed by up to six optional arguments in order:')
-    print('    4. frames/lines in the cube (default 956)')
-    print('    5. pixels/samples in a frame/line (default 684)')
-    print('    6. bands in a pixel/sample (default 120)')
-    print('    7. r band index (default 75 for 650nm)')
-    print('    8. g band index (default 46 for 550nm)')
-    print('    9. b band index (default 18 for 450nm)')
+    print('Generating Geotiff ************************************')
+    # print('  This script requires three arguments:')
+    # print('    1. path to a pixels latitude numpy file')
+    # print('    2. path to a pixels longitude numpy file')
+    # print('    3. path to a decompressed hypso cube file')
+    # print('  Followed by up to six optional arguments in order:')
+    # print('    4. frames/lines in the cube (default 956)')
+    # print('    5. pixels/samples in a frame/line (default 684)')
+    # print('    6. bands in a pixel/sample (default 120)')
+    # print('    7. r band index (default 75 for 650nm)')
+    # print('    8. g band index (default 46 for 550nm)')
+    # print('    9. b band index (default 18 for 450nm)')
 
     # Setting some default values
 
@@ -659,22 +660,29 @@ def generate_geotiff(satObj):
         destination_epsg,
         output_path_band_tif_base
     )
-    threads_list = []
-    for band_number in bands:
+    MULTI_THREAD=True
+    if MULTI_THREAD:
+        threads_list = []
+        for band_number in bands:
 
-        # Multithreading in python info
-        # https://www.tutorialspoint.com/python/python_multithreading.htm
-        # https://realpython.com/intro-to-python-threading/
+            # Multithreading in python info
+            # https://www.tutorialspoint.com/python/python_multithreading.htm
+            # https://realpython.com/intro-to-python-threading/
 
-        args = (band_number, cube_data, pixel_coords_map_list, grid_points,
-                resampling_method, contain_mask, geotiff_info, grid_data_all_bands)
-        x = threading.Thread(target=interpolate_geotiff, args=args)
-        x.start()
-        threads_list.append(x)
+            args = (band_number, cube_data, pixel_coords_map_list, grid_points,
+                    resampling_method, contain_mask, geotiff_info, grid_data_all_bands)
+            x = threading.Thread(target=interpolate_geotiff, args=args)
+            x.start()
+            threads_list.append(x)
 
-    # Waiting until all threads are done
-    for t in threads_list:
-        t.join()
+        # Waiting until all threads are done
+        for t in threads_list:
+            t.join()
+    else:
+        for ii in tqdm (range (len(bands)), desc="Loading Bands..."):
+            band_number=bands[ii]
+            interpolate_geotiff(band_number, cube_data, pixel_coords_map_list, grid_points,
+                    resampling_method, contain_mask, geotiff_info, grid_data_all_bands)
 
     max_value_rgb = 0.0
     for rgb_band_index in rgb_band_indices:
@@ -798,7 +806,7 @@ def generate_geotiff(satObj):
 def interpolate_geotiff(band_number, cube_data, pixel_coords_map_list, grid_points,
                         resampling_method, contain_mask, geotiff_info, grid_data_all_bands):
 
-    print(f'      Starting band {band_number}')
+    #print(f'      Starting band {band_number}')
 
     data_lines = cube_data.shape[0]
     data_samples = cube_data.shape[1]
@@ -807,11 +815,9 @@ def interpolate_geotiff(band_number, cube_data, pixel_coords_map_list, grid_poin
     cube_data_single_band.shape = [data_lines * data_samples]
 
 
-
     grid_data_single_band = si.griddata(pixel_coords_map_list, cube_data_single_band, grid_points,
                                         method=resampling_method, rescale=False)
 
-    
     
     # cube_data_single_band.shape = [data_lines, data_samples]
 

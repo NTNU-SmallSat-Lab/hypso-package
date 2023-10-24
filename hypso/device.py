@@ -518,8 +518,8 @@ class Satellite:
                 lon, lat = dataset_proj(
                     transformed_lon, transformed_lat, inverse=True)
 
-            # Window size is 1 for a Single Pixel
-            N = 1
+            # Window size is 1 for a Single Pixel or 3 for a 3x3 windowd
+            N = 3
             # Build an NxN window
             window = rasterio.windows.Window(
                 posX - (N // 2), posY - (N // 2), N, N)
@@ -527,7 +527,11 @@ class Satellite:
             # Read the data in the window
             # clip is a nbands * N * N numpy array
             clip = dataset.read(window=window)
+            if N != 1:
+                clip=np.mean(clip, axis=(1,2))
+
             clip = np.squeeze(clip)
+
 
             # Append data to Array
             # Multiplier for Values like Sentinel 2 which need 1/10000
