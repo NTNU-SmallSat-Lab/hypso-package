@@ -6,13 +6,16 @@ Technology (NTNU) for Python >3.9
 ## How to Install
 It is recommended to use mamba as it is less prone to errors in dependency management than the default conda terminal (see https://mamba.readthedocs.io/en/latest/mamba-installation.html#mamba-install)
 
+if conda installed:
 ```
-conda install hypso
+conda install -c conda-forge conda-libmamba-solver 
+conda config --set solver libmamba
+conda install -c conda-forge hypso
 ```
 
 if mamba installed:
 ```
-mamba install hypso
+mamba install -c conda-forge hypso
 ```
 
 ## Pipeline (on Load)
