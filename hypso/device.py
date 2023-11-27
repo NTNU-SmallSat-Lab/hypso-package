@@ -21,6 +21,7 @@ from .georeference import start_coordinate_correction, generate_full_geotiff, ge
 from .reading import load_nc, load_directory
 from hypso.utils import find_dir, find_file
 from .atmospheric import run_py6s
+
 EXPERIMENTAL_FEATURES = True
 
 
@@ -33,6 +34,9 @@ class Satellite:
             "wide": 1092  # Along image_height (row_count)
         }
         self.units = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
+        self.rgbGeotiffFilePath = None
+        self.l1cgeotiffFilePath = None
+        self.l2geotiffFilePath = None
 
         # Make absolute path
         hypso_path = Path(hypso_path).absolute()
@@ -59,11 +63,26 @@ class Satellite:
             self.spectral_coeff_file)
         self.wavelengths = self.spectral_coefficients
 
-        # Calibrate and Correct Cube ----------------------------------------
-        self.l1b_cube = self.get_calibrated_and_corrected_cube()
+        # Calibrate and Correct Cube Variables ----------------------------------------
+        self.l1b_cube = None
         self.l2a_cube = None
 
-        # Generate L1C ----------------------------------------
+        # Generated afterwards
+        self.waterMask = None
+
+        # Get Projection Metadata from created geotiff
+        self.projection_metadata = self.get_projection_metadata(self.info["top_folder_name"])
+
+    def get_geotiff(self, product="L2", force_reload=False, py6s_dict=None):
+        if product != "L2" and product != "L1C":
+            raise Exception("Wrong product")
+
+        if product == "L2" and py6s_dict is None:
+            raise Exception("Py6S Dictionary is needed")
+
+        # Calibrate and Correct Cube ----------------------------------------
+        self.l1b_cube = self.get_calibrated_and_corrected_cube()
+
         if force_reload:
             # Delete geotiff dir and generate a new rgba one
             self.delete_geotiff_dir(self.info["top_folder_name"])
@@ -87,7 +106,7 @@ class Satellite:
         # }
         # TODO: Try to read L1B/L2B from geotiff to save time
         #
-        if py6s_dict is not None:
+        if py6s_dict is not None and product == "L2":
             self.l2a_cube = run_py6s(self.wavelengths, self.l1b_cube, self.info, self.info["lat"], self.info["lon"],
                                      py6s_dict, time_capture=parser.parse(self.info['iso_time']))
 
@@ -97,32 +116,28 @@ class Satellite:
 
         # Generate RGBA/RGBA and Full Geotiff with corrected metadata and L2A if exists (if not L1B)
         generate_rgb_geotiff(self)
-        generate_full_geotiff(self)
+        generate_full_geotiff(self, product=product)
 
         # Get Projection Metadata from created geotiff
         self.projection_metadata = self.get_projection_metadata(self.info["top_folder_name"])
-
-        # Generated afterwards
-        self.waterMask = None
 
     def delete_geotiff_dir(self, top_folder_name: Path):
         tiff_name = "geotiff"
         geotiff_dir = find_dir(top_folder_name, tiff_name)
 
         self.rgbGeotiffFilePath = None
-        self.geotiffFilePath = None
+        self.l1cgeotiffFilePath = None
+        self.l2geotiffFilePath = None
 
         if geotiff_dir is not None:
             print("Forcing Reload: Deleting geotiff Directory...")
             import shutil
             shutil.rmtree(geotiff_dir, ignore_errors=True)
 
-
     def find_geotiffs(self, top_folder_name: Path):
         self.rgbGeotiffFilePath = find_file(top_folder_name, "rgba_8bit", ".tif")
-        self.geotiffFilePath = find_file(top_folder_name, "-full", ".tif")
-
-
+        self.l1cgeotiffFilePath = find_file(top_folder_name, "-full_L1C", ".tif")
+        self.l2geotiffFilePath = find_file(top_folder_name, "-full_L2", ".tif")
 
     def get_projection_metadata(self, top_folder_name: Path) -> dict:
 
@@ -135,7 +150,7 @@ class Satellite:
         # Get geotiff data for rgba first    ------------------------------
         # -----------------------------------------------------------------
         if self.rgbGeotiffFilePath is not None:
-            print("RGBA Tif Path: ",self.rgbGeotiffFilePath)
+            print("RGBA Tif Path: ", self.rgbGeotiffFilePath)
             # Load GeoTiff Metadata with gdal
             ds = gdal.Open(str(self.rgbGeotiffFilePath))
             data = ds.ReadAsArray()
@@ -159,19 +174,24 @@ class Satellite:
                 "crs": str(crs).lower()
             }
 
-
         # -----------------------------------------------------------------
         # Get geotiff data for full second   ------------------------------
         # -----------------------------------------------------------------
-        if self.geotiffFilePath is not None:
-            print("Full Tif Path: ", self.geotiffFilePath)
+        full_path = None
+        if self.l2geotiffFilePath is not None:
             # Load GeoTiff Metadata with gdal
-            ds = gdal.Open(str(self.geotiffFilePath))
+            ds = gdal.Open(str(self.l2geotiffFilePath))
+            data = ds.ReadAsArray()
+            current_project["data"] = data
+        elif self.l1cgeotiffFilePath is not None:
+            # Load GeoTiff Metadata with gdal
+            ds = gdal.Open(str(self.l1cgeotiffFilePath))
             data = ds.ReadAsArray()
             current_project["data"] = data
 
-        return current_project
+        print("Full Tif Path: ", self.l1cgeotiffFilePath)
 
+        return current_project
 
     def get_calibration_coefficients_path(self) -> dict:
         csv_file_radiometric = None
@@ -246,7 +266,8 @@ class Satellite:
             'hypso.calibration').joinpath(f'data/{csv_file}')
         return wl_file
 
-    def get_spectra(self, position_dict: dict, postype: str = 'coord', multiplier=1, filename=None, plot=True):
+    def get_spectra(self, position_dict: dict, product: str = "L2", postype: str = 'coord', multiplier=1, filename=None,
+                    plot=True):
         '''
         files_path: Works with a directorie with GeoTiff files. Uses the metadata, and integrated CRS
         position:
@@ -271,10 +292,27 @@ class Satellite:
         self.find_geotiffs(self.info["top_folder_name"])
 
         # Check if full (120 band) tiff exists
-        if self.geotiffFilePath is None:
+        if self.l1cgeotiffFilePath is None and self.l2geotiffFilePath is None:
             raise Exception("No Full-Band GeoTiff, Force Restart")
 
-        with rasterio.open(str(self.geotiffFilePath)) as dataset:
+        path_to_read = None
+        cols = []
+        if product == "L2":
+            if self.l2geotiffFilePath is None:
+                raise Exception("L2 product does not exist.")
+            elif self.l2geotiffFilePath is not None:
+                path_to_read = self.l2geotiffFilePath
+                cols = ["wl", "rrs"]
+        elif product == "L1C":
+            if self.l1cgeotiffFilePath is None:
+                raise Exception("L1C product does not exist.")
+            elif self.l1cgeotiffFilePath is not None:
+                path_to_read = self.l1cgeotiffFilePath
+                cols = ["wl", "radiance"]
+        else:
+            raise Exception("Wrong product type.")
+
+        with rasterio.open(str(path_to_read)) as dataset:
             dataset_crs = dataset.crs
             print("Dataset CRS: ", dataset_crs)
 
@@ -341,17 +379,6 @@ class Satellite:
         print("(lat, lon) -→ (X, Y) : (%s, %s) -→ (%s, %s)" %
               (lat, lon, posX, posY))
 
-        # expanded_spectra_data = list([lat,
-        #                               lon, posX, posY] + list(spectra_data))
-        #
-        # # Get Dataframe to Store
-        # df_band = pd.DataFrame([expanded_spectra_data], columns=cols)
-
-        if self.l2a_cube is None:
-            cols = ["wl","radiance"]
-        else:
-            cols = ["wl", "rrs"]
-
         df_band = pd.DataFrame(np.column_stack((self.wavelengths, spectra_data)), columns=cols)
         df_band["lat"] = lat
         df_band["lon"] = lon
@@ -365,9 +392,9 @@ class Satellite:
             import matplotlib.pyplot as plt
             plt.figure(figsize=(10, 5))
             plt.plot(self.wavelengths, spectra_data)
-            if self.l2a_cube is None:
+            if product == "L1C":
                 plt.ylabel(self.units)
-            else:
+            elif product == "L2":
                 plt.ylabel("Rrs [0,1]")
                 plt.ylim([0, 1])
             plt.xlabel("Wavelength (nm)")

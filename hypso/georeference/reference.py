@@ -105,20 +105,30 @@ def generate_rgb_geotiff(satObj):
 
     print('Done RGB/RGBA Geotiff')
 
-def generate_full_geotiff(satObj):
-    if find_file(satObj.info["top_folder_name"],"-full",".tif") is not None:
+def generate_full_geotiff(satObj, product):
+    # Find L1C and L2 product files
+    l1cgeotiffFilePath = find_file(satObj.info["top_folder_name"], "-full_L1C", ".tif")
+    l2geotiffFilePath = find_file(satObj.info["top_folder_name"], "-full_L2", ".tif")
+
+    # If we request the one that exists, done run it
+    if product == "L2" and l2geotiffFilePath is not None:
         return
+    if product == "L1C" and l1cgeotiffFilePath is not None:
+        return
+
     # GeoTiff Output ------------------------------------------------------------------------
     top_folder_name = satObj.info["top_folder_name"]
     capture_name = str(satObj.info["capture_name"])
     geotiff_folder_path = Path(top_folder_name, "geotiff")
 
-
     # L2A is priority, if we dont have it, use L1B ---------------------------------------------------
-    cube_data = satObj.l2a_cube
-    output_path_full_tif = Path(geotiff_folder_path, capture_name + '-full_L2.tif')
-    if satObj.l2a_cube is None:
-        cube_data=satObj.l1b_cube
+    cube_data = None
+    output_path_full_tif = None
+    if product == "L2":
+        cube_data = satObj.l2a_cube
+        output_path_full_tif = Path(geotiff_folder_path, capture_name + '-full_L2.tif')
+    elif product == "L1C":
+        cube_data = satObj.l1b_cube
         output_path_full_tif = Path(geotiff_folder_path, capture_name + '-full_L1C.tif')
 
     bands = [i for i in range(120)]
