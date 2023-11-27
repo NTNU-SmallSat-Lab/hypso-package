@@ -25,7 +25,7 @@ from hypso.georeference import georef as gref
 from hypso.utils import find_file, HSI2RGB
 
 DEBUG=False
-EXPORT_SINGLE_BANDS = True
+EXPORT_SINGLE_BANDS = False
 
 r_band_index = 61  # Old 59 (120-59=61)
 g_band_index = 50  # Old 70 (120-70=50)
