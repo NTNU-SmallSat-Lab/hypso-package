@@ -49,7 +49,9 @@ dependencies=[
   "pillow",
   "shapely >=2.0.1",
   "pysftp >=0.2.9",
-  "tqdm >=4.66.1"
+  "tqdm >=4.66.1",
+  "astropy >=5.3.4",
+  "pyorbital >=1.8.0"
 ]
 
 # dynamic properties set by tools

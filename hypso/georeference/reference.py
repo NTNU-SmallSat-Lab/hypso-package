@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from osgeo import gdal
 import skimage
 from osgeo import osr
+from pathlib import Path
 # GIS
 import cartopy.crs as ccrs
 import math as m
@@ -24,19 +25,23 @@ import glob
 # sys.path.insert(0, lib_path)
 # import georef as gref
 from hypso.georeference import georef as gref
+from hypso.utils import find_file, HSI2RGB
 
 tiff_name = "_geotiff-full"
 
-def start_coordinate_correction(top_folder_name: str, satinfo: dict, proj_metadata: dict,correction_type="lstsq"):
-    point_file = glob.glob(top_folder_name + '/*.points')
 
-    if len(point_file) == 0:
+def start_coordinate_correction(top_folder_name: Path, satinfo: dict, proj_metadata: dict,correction_type="lstsq"):
+
+    #point_file = glob.glob(top_folder_name + '/*.points')
+
+    point_file = find_file(top_folder_name, ".points")
+    if point_file is None:
         print("Points File Was Not Found. No Correction done.")
         return satinfo["lat"], satinfo["lon"]
     else:
         print("Doing manual coordinate correction with .points file")
         lat, lon = coordinate_correction(
-            point_file[0], proj_metadata,
+            point_file, proj_metadata,
             satinfo["lat"], satinfo["lon"],correction_type)
 
         return lat, lon
@@ -124,14 +129,6 @@ def coordinate_correction_matrix(filename, projection_metadata,correction_type):
     print("Hypso Destination\n",
           gcps[["transformed_mapLon", "transformed_mapLat"]])
     print('--------------------------------')
-
-    # Get Affine Matrix
-    # M = cv2.getAffineTransform(hypso_src[:3, :], hypso_dst[:3, :])  # Affine requires only 3 points
-
-    # Estimate Affine 2D
-    # M, mask = cv2.estimateAffine2D(hypso_src, hypso_dst, refineIters=50)
-    # M, mask = cv2.estimateAffinePartial2D(
-    # hypso_src, hypso_dst, refineIters=50)  # Good Results!
 
     M=None
 
@@ -415,8 +412,7 @@ def array_to_geotiff(satObj, single_frame_array, file_name='custom_band'):
     dst_ds_single.GetRasterBand(2).WriteArray(alpha_mask)
     dst_ds_single.FlushCache()                  # write to disk
 
-
-def generate_geotiff(satObj):
+def generate_geotiff(satObj, full_cube=False):
     print('Generating Geotiff ************************************')
     # print('  This script requires three arguments:')
     # print('    1. path to a pixels latitude numpy file')
@@ -439,9 +435,34 @@ def generate_geotiff(satObj):
     hypso_width = 120
     hypso_width_sensor = 1936
 
-    r_band_index = 75  # Old 59
-    g_band_index = 46  # Old 70
-    b_band_index = 18  # Old 89
+    band_count = hypso_width
+
+    # TODO: Fullcube usar l2a y solo l1b para el resto
+
+    cube_data = satObj.l1b_cube
+    if satObj.l2a_cube is None:
+        R_wl = 600
+        G_wl = 555
+        B_wl = 480
+        r_band_index = np.argmin(abs(satObj.spectral_coefficients - R_wl))
+        g_band_index = np.argmin(abs(satObj.spectral_coefficients - G_wl))
+        b_band_index = np.argmin(abs(satObj.spectral_coefficients - B_wl))
+    else:
+        r_band_index = 75  # Old 59
+        g_band_index = 46  # Old 70
+        b_band_index = 18  # Old 89
+
+        r_band_index = 66  # Old 59
+        g_band_index = 46  # Old 70
+        b_band_index = 30  # Old 89
+
+
+    # cube_data=np.fromfile(cube_path, dtype='uint16')
+    #cube_data.shape = [frame_count, hypso_height, hypso_width]
+
+
+
+
 
     # HAndling arguments
     pixels_lat = satObj.info["lat"]
@@ -631,10 +652,8 @@ def generate_geotiff(satObj):
 
     print('  Registration, aka rectification, aka resampling, aka gridding ...')
 
-    band_count = hypso_width
-    cube_data = satObj.l1b_cube  # could be rawcube
-    # cube_data=np.fromfile(cube_path, dtype='uint16')
-    # cube_data.shape = [frame_count, hypso_height, hypso_width]
+
+
 
     try:
         os.mkdir(geotiff_folder_path)
@@ -643,8 +662,10 @@ def generate_geotiff(satObj):
 
     extra_band_index = (g_band_index-4)//4
 
-    # bands = [extra_band_index, r_band_index, g_band_index, b_band_index]
-    bands = [i for i in range(120)]
+    bands = [extra_band_index, r_band_index, g_band_index, b_band_index]
+
+    if full_cube:
+        bands = [i for i in range(120)]
     rgb_band_indices = [r_band_index, g_band_index, b_band_index]
     grid_data_all_bands = np.zeros([grid_dims[1], grid_dims[0], band_count])
     grid_data_all_bands_minimal = np.zeros(
@@ -660,31 +681,30 @@ def generate_geotiff(satObj):
         destination_epsg,
         output_path_band_tif_base
     )
-    MULTI_THREAD=True
-    if MULTI_THREAD:
-        threads_list = []
-        for band_number in bands:
 
-            # Multithreading in python info
-            # https://www.tutorialspoint.com/python/python_multithreading.htm
-            # https://realpython.com/intro-to-python-threading/
+    threads_list = []
+    for band_number in bands:
 
-            args = (band_number, cube_data, pixel_coords_map_list, grid_points,
-                    resampling_method, contain_mask, geotiff_info, grid_data_all_bands)
-            x = threading.Thread(target=interpolate_geotiff, args=args)
-            x.start()
-            threads_list.append(x)
+        # Multithreading in python info
+        # https://www.tutorialspoint.com/python/python_multithreading.htm
+        # https://realpython.com/intro-to-python-threading/
 
-        # Waiting until all threads are done
-        for t in threads_list:
-            t.join()
-    else:
-        for ii in tqdm (range (len(bands)), desc="Loading Bands..."):
-            band_number=bands[ii]
-            interpolate_geotiff(band_number, cube_data, pixel_coords_map_list, grid_points,
-                    resampling_method, contain_mask, geotiff_info, grid_data_all_bands)
+        args = (band_number, cube_data, pixel_coords_map_list, grid_points,
+                resampling_method, contain_mask, geotiff_info, grid_data_all_bands)
+        x = threading.Thread(target=interpolate_geotiff, args=args)
+        x.start()
+        threads_list.append(x)
+
+    # Waiting until all threads are done
+    for t in threads_list:
+        t.join()
+
 
     max_value_rgb = 0.0
+    max_value_r = np.max(grid_data_all_bands[:, :, r_band_index])
+    max_value_g = np.max(grid_data_all_bands[:, :, g_band_index])
+    max_value_b = np.max(grid_data_all_bands[:, :, b_band_index])
+    max_value_list = [max_value_r, max_value_g, max_value_b]
     for rgb_band_index in rgb_band_indices:
         max_current_band = grid_data_all_bands[:, :, rgb_band_index].max()
         if max_current_band > max_value_rgb:
@@ -709,12 +729,14 @@ def generate_geotiff(satObj):
 
     # dst_ds_minimal = gdal.GetDriverByName('GTiff').Create('myGeoTIFF_minimal.tif', grid_dims_minimal[0], grid_dims_minimal[1], 3, gdal.GDT_UInt16)
     dst_ds = gdal.GetDriverByName('GTiff').Create(
-        output_path_rgb_tif, grid_dims[0], grid_dims[1], 3, gdal.GDT_UInt16)
+        output_path_rgb_tif, grid_dims[0], grid_dims[1], 3, gdal.GDT_Byte) # Old: GDT_UInt16
+
     dst_ds_alpha_channel = gdal.GetDriverByName('GTiff').Create(
         output_path_rgba_tif, grid_dims[0], grid_dims[1], 4, gdal.GDT_Byte)
 
-    dst_ds_full = gdal.GetDriverByName('GTiff').Create(
-        output_path_full_tif, grid_dims[0], grid_dims[1], 120, gdal.GDT_Float64)
+    if full_cube:
+        dst_ds_full = gdal.GetDriverByName('GTiff').Create(
+            output_path_full_tif, grid_dims[0], grid_dims[1], 120, gdal.GDT_Float64)
 
     # xmin, ymin, xmax, ymax = [min(grid_points_minimal[:,0]), min(grid_points_minimal[:,1]), max(grid_points_minimal[:,0]), max(grid_points_minimal[:,1])]
     # xres = (xmax - xmin) / float(grid_dims_minimal[0])
@@ -756,14 +778,23 @@ def generate_geotiff(satObj):
     geotransform = (bbox[1], -across_track_mean_gsd*resolution_scaling_across,
                     0, bbox[2], 0, along_track_mean_gsd*resolution_scaling_along)
 
+    np.save("/Users/alvaroflores/Desktop/grid_data_all_bands.npy", grid_data_all_bands)
     # RGB ------------------------------------------------------
     dst_ds.SetGeoTransform(geotransform)    # specify coords
     srs = osr.SpatialReference()            # establish encoding
     srs.ImportFromEPSG(destination_epsg)
     dst_ds.SetProjection(srs.ExportToWkt())  # export coords to file
     for i, rgb_band_index in enumerate(rgb_band_indices):
-        dst_ds.GetRasterBand(
-            i+1).WriteArray(grid_data_all_bands[:, :, rgb_band_index])
+
+        if full_cube:
+            rgb_composite = 255.0 * HSI2RGB(list(satObj.wavelengths), grid_data_all_bands)
+            rgb_composite = rgb_composite.astype(np.uint8)
+
+            dst_ds.GetRasterBand(
+                i + 1).WriteArray(rgb_composite[:, :, i])
+        else:
+            dst_ds.GetRasterBand(
+                i+1).WriteArray(grid_data_all_bands[:, :, rgb_band_index])
     dst_ds.FlushCache()                  # write to disk
 
     # RGBA -------------------------------------------------------
@@ -781,24 +812,36 @@ def generate_geotiff(satObj):
         srs.ExportToWkt())  # export coords to file
 
     for i, rgb_band_index in enumerate(rgb_band_indices):
-        dst_ds_alpha_channel.GetRasterBand(
-            i+1).WriteArray(255.0*grid_data_all_bands[:, :, rgb_band_index] / max_value_rgb)
+        max_val = max_value_list[i]
+        # dst_ds_alpha_channel.GetRasterBand(
+        #     i+1).WriteArray(255.0*grid_data_all_bands[:, :, rgb_band_index] / max_value_rgb)
 
+        # dst_ds_alpha_channel.GetRasterBand(
+        #     i + 1).WriteArray(255.0 * grid_data_all_bands[:, :, rgb_band_index] / max_val)
+        if full_cube:
+            rgb_composite = 255.0*HSI2RGB(list(satObj.wavelengths), grid_data_all_bands)
+            rgb_composite = rgb_composite.astype(np.uint8)
+            dst_ds_alpha_channel.GetRasterBand(
+                i + 1).WriteArray(rgb_composite[:, :, i])
+        else:
+            dst_ds_alpha_channel.GetRasterBand(
+                i + 1).WriteArray(255.0 * grid_data_all_bands[:, :, rgb_band_index] / max_val)
     dst_ds_alpha_channel.GetRasterBand(4).WriteArray(alpha_mask)
     dst_ds_alpha_channel.FlushCache()                  # write to disk
 
     # Full Band Tiff --------------------------------
-    dst_ds_full.SetGeoTransform(geotransform)    # specify coords
-    srs = osr.SpatialReference()            # establish encoding
-    srs.ImportFromEPSG(destination_epsg)
-    dst_ds_full.SetProjection(
-        srs.ExportToWkt())  # export coords to file
+    if full_cube:
+        dst_ds_full.SetGeoTransform(geotransform)    # specify coords
+        srs = osr.SpatialReference()            # establish encoding
+        srs.ImportFromEPSG(destination_epsg)
+        dst_ds_full.SetProjection(
+            srs.ExportToWkt())  # export coords to file
 
-    for i, band_index in enumerate(bands):
-        dst_ds_full.GetRasterBand(
-            i+1).WriteArray(grid_data_all_bands[:, :, band_index])
+        for i, band_index in enumerate(bands):
+            dst_ds_full.GetRasterBand(
+                i+1).WriteArray(grid_data_all_bands[:, :, band_index])
 
-    dst_ds_full.FlushCache()                  # write to disk
+        dst_ds_full.FlushCache()                  # write to disk
 
     print('Done')
 
@@ -806,7 +849,7 @@ def generate_geotiff(satObj):
 def interpolate_geotiff(band_number, cube_data, pixel_coords_map_list, grid_points,
                         resampling_method, contain_mask, geotiff_info, grid_data_all_bands):
 
-    #print(f'      Starting band {band_number}')
+    print(f'      Starting band {band_number}')
 
     data_lines = cube_data.shape[0]
     data_samples = cube_data.shape[1]
