@@ -60,8 +60,8 @@ dynamic = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/DevAlvaroF/HYPSO-Reading"
-"Bug Tracker" = "https://github.com/DevAlvaroF/HYPSO-Reading/issues"
+"Homepage" = "https://github.com/NTNU-SmallSat-Lab/hypso-package"
+"Bug Tracker" = "https://github.com/NTNU-SmallSat-Lab/hypso-package/issues"
 
 [tool.setuptools]
 license-files = [ "LICENSE" ]
