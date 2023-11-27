@@ -1,8 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from osgeo import osr
 from .base import MeanDEM
-import xml.dom.minidom
+from osgeo import gdal, osr
 import os
 import pandas as pd
 import dateutil.parser
@@ -10,6 +9,7 @@ import Py6S
 from tqdm import tqdm
 import math
 from scipy.interpolate import interp1d
+from hypso.utils import find_file
 
 
 
@@ -478,6 +478,12 @@ def get_corrected_radiance(radiance_band, py6s_results):
 
 
 def run_py6s(wavelengths, hypercube_L1, hypso_info, lat_2d_array, lon_2d_array, py6s_dict, time_capture):
+    # Search for Full Geotiff
+    potential_L2 = find_file(hypso_info["top_folder_name"],"-full_L2",".tif")
+    if potential_L2 is not None:
+        ds = gdal.Open(str(potential_L2))
+        data = ds.ReadAsArray()
+        return data
     print("\n-------  Py6S Atmospheric Correction  ----------")
 
     # Original units mW  (m^{-2} sr^{-1} nm^{-1})

@@ -114,6 +114,13 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions) -> dict:
     """
 
     info = {}
+    nc_name = nc_file_path.stem
+    temp_dir = Path(nc_file_path.parent.absolute(), nc_name + "_tmp")
+    info["tmp_dir"] = temp_dir
+    # Add file name
+    info["capture_name"] = nc_file_path.stem
+
+    temp_dir.mkdir(parents=True, exist_ok=True)
     # ------------------------------------------------------------------------
     # Capture info -----------------------------------------------------------
     # ------------------------------------------------------------------------
@@ -129,8 +136,7 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions) -> dict:
                     info[attrname] = float(value)
             except BaseException:
                 info[attrname] = value
-        # Add file name
-    info["capture_name"] = nc_file_path.stem
+
 
     # ------------------------------------------------------------------------
     # Timestamps -------------------------------------------------------------

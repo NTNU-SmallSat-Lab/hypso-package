@@ -32,7 +32,6 @@ def download_nc_files(filename_list: list, output_dir="",
     for f in filename_list:
         dwnld_url = urllib.parse.urljoin(server_url, f)
         output_filename = Path(output_dir, f)
-        #print(f"Downloading {f}")
         try:
             urllib.request.urlretrieve(url=dwnld_url,
                                        filename=output_filename,

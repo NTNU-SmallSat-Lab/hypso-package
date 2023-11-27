@@ -3,12 +3,8 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-def create_adcs_timestamps_files(nc_path,nc_info, temp_dir="_tmp"):
-    nc_name = nc_path.stem
-    temp_dir=Path(nc_path.parent.absolute(),nc_name+temp_dir)
-    nc_info["tmp_dir"]=temp_dir
-    nc_info["tmp_dir"] = temp_dir
-    temp_dir.mkdir(parents=True, exist_ok=True)
+def create_adcs_timestamps_files(nc_path,nc_info):
+    temp_dir = nc_info["tmp_dir"]
 
     # Step 1: ADCS Dat----------------------------------------------
     with nc.Dataset(nc_path, format="NETCDF4") as f:

@@ -17,7 +17,7 @@ import pyproj as prj
 import pathlib
 from .calibration import crop_and_bin_matrix, calibrate_cube, get_coefficients_from_dict, get_coefficients_from_file, \
     smile_correct_cube, destriping_correct_cube
-from .georeference import start_coordinate_correction, generate_geotiff
+from .georeference import start_coordinate_correction, generate_full_geotiff, generate_rgb_geotiff
 from .reading import load_nc, load_directory
 from hypso.utils import find_dir, find_file
 from .atmospheric import run_py6s
@@ -68,8 +68,8 @@ class Satellite:
             # Delete geotiff dir and generate a new rgba one
             self.delete_geotiff_dir(self.info["top_folder_name"])
 
-        # Generate geotiff to get metadata from there
-        self.generate_geotiff(self.info["top_folder_name"], full_cube=False)
+        # Generate RGB/RGBA Geotiff with Projection metadata and L1B
+        generate_rgb_geotiff(self)
 
         # Get Projection Metadata from created geotiff
         self.projection_metadata = self.get_projection_metadata(self.info["top_folder_name"])
@@ -85,17 +85,19 @@ class Satellite:
         #     'aot550': 0.01
         #     # 'aeronet': r"C:\Users\alvar\Downloads\070101_151231_Autilla.dubovik"
         # }
+        # TODO: Try to read L1B/L2B from geotiff to save time
+        #
         if py6s_dict is not None:
             self.l2a_cube = run_py6s(self.wavelengths, self.l1b_cube, self.info, self.info["lat"], self.info["lon"],
                                      py6s_dict, time_capture=parser.parse(self.info['iso_time']))
 
-        # With the new corrected coordinates we generate a new RGBA and Full Geotiff
-        # We force reload always here to delete the old RGBA with previous lat and lon
         if force_reload:
             # Delete geotiff dir and generate a new rgba one
             self.delete_geotiff_dir(self.info["top_folder_name"])
-            
-        self.generate_geotiff(self.info["top_folder_name"], full_cube=True)
+
+        # Generate RGBA/RGBA and Full Geotiff with corrected metadata and L2A if exists (if not L1B)
+        generate_rgb_geotiff(self)
+        generate_full_geotiff(self)
 
         # Get Projection Metadata from created geotiff
         self.projection_metadata = self.get_projection_metadata(self.info["top_folder_name"])
@@ -104,24 +106,17 @@ class Satellite:
         self.waterMask = None
 
     def delete_geotiff_dir(self, top_folder_name: Path):
-        tiff_name = "geotiff-full"
+        tiff_name = "geotiff"
         geotiff_dir = find_dir(top_folder_name, tiff_name)
 
+        self.rgbGeotiffFilePath = None
+        self.geotiffFilePath = None
+
         if geotiff_dir is not None:
-            print("Forcing Reload: Deleting geotiff-full Directory...")
+            print("Forcing Reload: Deleting geotiff Directory...")
             import shutil
             shutil.rmtree(geotiff_dir, ignore_errors=True)
 
-    def generate_geotiff(self, top_folder_name: Path, full_cube=False):
-
-        tiff_name = "geotiff-full"
-        geotiff_dir = find_dir(top_folder_name, tiff_name)
-
-        if geotiff_dir is not None:
-            print("Did not create Full L1C, GeoTiff Directory Found")
-        else:
-            # Now we generate the geotiff with corrected lon and lat
-            generate_geotiff(self, full_cube)
 
     def find_geotiffs(self, top_folder_name: Path):
         self.rgbGeotiffFilePath = find_file(top_folder_name, "rgba_8bit", ".tif")
@@ -370,7 +365,11 @@ class Satellite:
             import matplotlib.pyplot as plt
             plt.figure(figsize=(10, 5))
             plt.plot(self.wavelengths, spectra_data)
-            plt.ylabel(self.units)
+            if self.l2a_cube is None:
+                plt.ylabel(self.units)
+            else:
+                plt.ylabel("Rrs [0,1]")
+                plt.ylim([0, 1])
             plt.xlabel("Wavelength (nm)")
             plt.title(f"(lat, lon) -→ (X, Y) : ({lat}, {lon}) -→ ({posX}, {posY})")
             plt.grid(True)

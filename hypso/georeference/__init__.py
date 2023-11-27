@@ -1,4 +1,5 @@
-from .reference import coordinate_correction, generate_geotiff, start_coordinate_correction, array_to_geotiff
+from .reference import generate_rgb_geotiff, generate_full_geotiff
 from .create_adcs_timestamps_files import create_adcs_timestamps_files
 from .interpolate_at_frame import interpolate_at_frame
 from .georef_plots import geometry_computation
+from .coordinate_correction import start_coordinate_correction
