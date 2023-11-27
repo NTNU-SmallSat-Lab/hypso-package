@@ -3,8 +3,9 @@
 images taken by the HYPSO mission from the Norwegian University of Science and
 Technology (NTNU) for Python >3.9
 
-Anaconda URL: https://anaconda.org/conda-forge/hypso
-Anaconda Github Feedstock: https://github.com/conda-forge/hypso-feedstock
+- Anaconda URL: https://anaconda.org/conda-forge/hypso
+
+- Anaconda Github Feedstock: https://github.com/conda-forge/hypso-feedstock
 
 ## How to Install
 It is recommended to use mamba as it is less prone to errors in dependency management than the default conda terminal (see https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html)
