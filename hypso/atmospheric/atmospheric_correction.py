@@ -479,11 +479,13 @@ def get_corrected_radiance(radiance_band, py6s_results):
 
 def run_py6s(wavelengths, hypercube_L1, hypso_info, lat_2d_array, lon_2d_array, py6s_dict, time_capture):
     # Search for Full Geotiff
-    potential_L2 = find_file(hypso_info["top_folder_name"],"-full_L2",".tif")
-    if potential_L2 is not None:
-        ds = gdal.Open(str(potential_L2))
-        data = ds.ReadAsArray()
-        return np.rot90(data.transpose((1, 2, 0)), k=2)
+    # TODO; At least for now, always do the atmospheric correction
+    # potential_L2 = find_file(hypso_info["top_folder_name"],"-full_L2",".tif")
+    # if potential_L2 is not None:
+    #     ds = gdal.Open(str(potential_L2))
+    #     data_mask = ds.ReadAsArray()
+    #     data = np.ma.masked_where(data_mask == 0, data_mask)
+    #     return np.rot90(data.transpose((1, 2, 0)), k=2)
     print("\n-------  Py6S Atmospheric Correction  ----------")
 
     # Original units mW  (m^{-2} sr^{-1} nm^{-1})

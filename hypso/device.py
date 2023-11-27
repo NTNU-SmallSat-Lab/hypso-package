@@ -68,7 +68,7 @@ class Satellite:
         self.wavelengths = self.spectral_coefficients
 
         # Calibrate and Correct Cube Variables ----------------------------------------
-        self.l1b_cube = None
+        self.l1b_cube = self.get_calibrated_and_corrected_cube()
         self.l2a_cube = None
 
         # Generated afterwards
@@ -86,9 +86,6 @@ class Satellite:
 
         if product == "L2" and py6s_dict is None:
             raise Exception("Py6S Dictionary is needed")
-
-        # Calibrate and Correct Cube ----------------------------------------
-        self.l1b_cube = self.get_calibrated_and_corrected_cube()
 
         if force_reload:
             # Delete geotiff dir and generate a new rgba one

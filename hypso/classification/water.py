@@ -18,13 +18,22 @@ def ndwi_watermask(sat_obj, product_to_use="L1C"):
     cube_selected = None
     if product_to_use == "L2":
         ds = gdal.Open(str(sat_obj.l2geotiffFilePath))
-        data = ds.ReadAsArray()
+        data_mask = ds.ReadAsArray()
+        data = np.ma.masked_where(data_mask == 0, data_mask)
         cube_selected = np.rot90(data.transpose((1, 2, 0)), k=2)
 
     elif product_to_use == "L1C" or product_to_use == "L1B":
         ds = gdal.Open(str(sat_obj.l1cgeotiffFilePath))
-        data = ds.ReadAsArray()
+        data_mask = ds.ReadAsArray()
+        data = np.ma.masked_where(data_mask == 0, data_mask)
         cube_selected = np.rot90(data.transpose((1, 2, 0)), k=2)
+
+        cube_selected = sat_obj.l1b_cube
+
+
+        # TODO: Check which one is better geotiff or from netcdf
+        # We can read the geotiff or just use l1b from the netcdf without masking
+        #cube_selected = sat_obj.l1b_cube
 
 
     print("\n\n-------  Naive-Bayes Water Mask Detector  ----------")
