@@ -1,36 +1,45 @@
-def download_directory(usereu,passeu,hostname="129.241.2.147",download_list=[],local_path=None):
-    from stat import S_ISDIR, S_ISREG
-    import os
-    from urllib.parse import urlparse
-    import pysftp
-    cnopts = pysftp.CnOpts()
-    cnopts.hostkeys = None
+from pathlib import Path
+import urllib.parse
+import urllib.request
+import progressbar
 
-    with pysftp.Connection(host = hostname, username = usereu, password = passeu, cnopts = cnopts) as sftp:
-
-        def get_r_portable(sftp, remotedir, localdir, preserve_mtime=False):
-            for entry in sftp.listdir(remotedir):
-                if entry != "database-folder":
-                    remotepath = remotedir + "/" + entry
-                    localpath = os.path.join(localdir, entry)
-                    mode = sftp.stat(remotepath).st_mode
-                    if S_ISDIR(mode):
-                        try:
-                            os.mkdir(localpath)
-                        except OSError:     
-                            pass
-                        get_r_portable(sftp, remotepath, localpath, preserve_mtime)
-                    elif S_ISREG(mode):
-                        sftp.get(remotepath, localpath, preserve_mtime=preserve_mtime)
+class MyProgressBar():
+    def __init__(self,text_prefix):
+        self.pbar = None
+        self.text_prefix=text_prefix
 
 
-        for f in download_list:
+    def __call__(self, block_num, block_size, total_size):
+        if not self.pbar:
+            self.pbar=progressbar.ProgressBar(maxval=total_size,
+                                              widgets=[progressbar.Bar('=', f'Downloading: {self.text_prefix} [', ']',), ' ', progressbar.Percentage(),],)
+            #self.pbar = progressbar.Percentage()
+            self.pbar.start()
 
-            rem_path=os.path.join("/home/hypso/hypso-1_data/processed",urlparse(f).path[1:-1])
-            print(rem_path)
-            
-            local_sup_path=os.path.join(local_path,rem_path.split("/")[-1])
-            os.mkdir(local_sup_path)
+        downloaded = block_num * block_size
+        if downloaded < total_size:
+            self.pbar.update(downloaded)
+        else:
+            self.pbar.finish()
 
-        
-            get_r_portable(sftp, rem_path, local_sup_path, preserve_mtime=False)
+def download_nc_files(filename_list: list, output_dir="",
+                      server_url="http://web.hypso.ies.ntnu.no/data/HYPSO-1_L1A/"):
+    # Create Output Dir
+    output_dir = Path(output_dir).absolute()
+    output_dir.mkdir(exist_ok=True, parents=True)
+
+    # Download Files
+    for f in filename_list:
+        dwnld_url = urllib.parse.urljoin(server_url, f)
+        output_filename = Path(output_dir, f)
+        #print(f"Downloading {f}")
+        try:
+            urllib.request.urlretrieve(url=dwnld_url,
+                                       filename=output_filename,
+                                       reporthook= MyProgressBar(f))
+
+        except Exception as err:
+            print(f"Download Failed. {err}")
+            print(f"Deleting {f}")
+            # If fail, delete
+            output_filename.unlink(missing_ok=True)
