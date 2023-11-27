@@ -483,7 +483,7 @@ def run_py6s(wavelengths, hypercube_L1, hypso_info, lat_2d_array, lon_2d_array, 
     if potential_L2 is not None:
         ds = gdal.Open(str(potential_L2))
         data = ds.ReadAsArray()
-        return data
+        return np.rot90(data.transpose((1, 2, 0)), k=2)
     print("\n-------  Py6S Atmospheric Correction  ----------")
 
     # Original units mW  (m^{-2} sr^{-1} nm^{-1})

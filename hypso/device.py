@@ -26,7 +26,7 @@ EXPERIMENTAL_FEATURES = True
 
 
 class Satellite:
-    def __init__(self, hypso_path, force_reload=False, py6s_dict=None) -> None:
+    def __init__(self, hypso_path, points_path=None) -> None:
         self.DEBUG = False
         self.spatialDim = (956, 684)  # 1092 x variable
         self.standardDimensions = {
@@ -37,6 +37,10 @@ class Satellite:
         self.rgbGeotiffFilePath = None
         self.l1cgeotiffFilePath = None
         self.l2geotiffFilePath = None
+        if points_path is not None:
+            self.pointsPath = Path(points_path)
+        else:
+            self.pointsPath = points_path
 
         # Make absolute path
         hypso_path = Path(hypso_path).absolute()
@@ -70,6 +74,9 @@ class Satellite:
         # Generated afterwards
         self.waterMask = None
 
+        # Flag to Lat Lon Already Corrected
+        self.coordCorrectionFlag = False
+
         # Get Projection Metadata from created geotiff
         self.projection_metadata = self.get_projection_metadata(self.info["top_folder_name"])
 
@@ -95,7 +102,7 @@ class Satellite:
 
         # Before Generating new Geotiff we check if .points file exists and update 2D coord
         self.info["lat"], self.info["lon"] = start_coordinate_correction(
-            self.info["top_folder_name"], self.info, self.projection_metadata)
+            self.pointsPath, self.info, self.projection_metadata)
 
         # Py6S Atmospheric Correction
         # aot value: https://neo.gsfc.nasa.gov/view.php?datasetId=MYDAL2_D_AER_OD&date=2023-01-01
@@ -150,7 +157,7 @@ class Satellite:
         # Get geotiff data for rgba first    ------------------------------
         # -----------------------------------------------------------------
         if self.rgbGeotiffFilePath is not None:
-            print("RGBA Tif Path: ", self.rgbGeotiffFilePath)
+            print("RGBA Tif File: ", self.rgbGeotiffFilePath.name)
             # Load GeoTiff Metadata with gdal
             ds = gdal.Open(str(self.rgbGeotiffFilePath))
             data = ds.ReadAsArray()
@@ -183,13 +190,15 @@ class Satellite:
             ds = gdal.Open(str(self.l2geotiffFilePath))
             data = ds.ReadAsArray()
             current_project["data"] = data
+            print("Full L2 Tif File: ", self.l2geotiffFilePath.name)
         elif self.l1cgeotiffFilePath is not None:
             # Load GeoTiff Metadata with gdal
             ds = gdal.Open(str(self.l1cgeotiffFilePath))
             data = ds.ReadAsArray()
             current_project["data"] = data
+            print("Full L1C Tif File: ", self.l1cgeotiffFilePath.name)
 
-        print("Full Tif Path: ", self.l1cgeotiffFilePath)
+
 
         return current_project
 

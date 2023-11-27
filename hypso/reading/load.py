@@ -81,6 +81,10 @@ def get_lat_lon_2d(latitude_dataPath, longitude_dataPath, info, spatialDim):
     info["lon"] = np.fromfile(longitude_dataPath, dtype="float32")
     info["lon"] = info["lon"].reshape(spatialDim)
 
+    # Original Lat in case manual georeference is used
+    info["lat_original"] = info["lat"]
+    info["lon_original"] = info["lon"]
+
     return info
 def get_local_angles(local_angle_path, info):
 

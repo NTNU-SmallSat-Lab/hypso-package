@@ -1,19 +1,31 @@
 # Modified from pip to have as local directory
 from .WaterDetect import waterdetect as wd
-import os
+from osgeo import gdal, osr
 import numpy as np
 from importlib.resources import files
 
 
-def ndwi_watermask(sat_obj):
+def ndwi_watermask(sat_obj, product_to_use="L1C"):
+
+    # TODO: Confirm why L1C gives better results than L2
+    # Check if full (120 band) tiff exists
+    if sat_obj.l1cgeotiffFilePath is None and (product_to_use == "L1C" or product_to_use == "L1B"):
+        raise Exception("No Full-Band L1C GeoTiff")
+
+    if sat_obj.l2geotiffFilePath is None and product_to_use == "L2":
+        raise Exception("No Full-Band L2 GeoTiff")
 
     cube_selected = None
-    if sat_obj.l2a_cube is None:
-        print("L2 Atmospheric Correction Cube Not Found. L1B will be used")
-        cube_selected = sat_obj.l1b_cube
+    if product_to_use == "L2":
+        ds = gdal.Open(str(sat_obj.l2geotiffFilePath))
+        data = ds.ReadAsArray()
+        cube_selected = np.rot90(data.transpose((1, 2, 0)), k=2)
 
-    else:
-        cube_selected = sat_obj.l2a_cube
+    elif product_to_use == "L1C" or product_to_use == "L1B":
+        ds = gdal.Open(str(sat_obj.l1cgeotiffFilePath))
+        data = ds.ReadAsArray()
+        cube_selected = np.rot90(data.transpose((1, 2, 0)), k=2)
+
 
     print("\n\n-------  Naive-Bayes Water Mask Detector  ----------")
 

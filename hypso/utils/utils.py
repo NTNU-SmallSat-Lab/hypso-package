@@ -1,5 +1,6 @@
 from pathlib import Path
 import numpy as np
+import netCDF4 as nc
 import scipy.io as spio
 from scipy.interpolate import PchipInterpolator
 from bisect import bisect
@@ -167,3 +168,43 @@ def is_integer_num(n) -> bool:
     if isinstance(n, float):
         return n.is_integer()
     return False
+
+
+def print_nc(nc_file_path):
+    recursive_print_nc(nc.Dataset(nc_file_path, format="NETCDF4"))
+
+
+def recursive_print_nc(nc_file, path='', depth=0):
+
+    indent = ''
+    for i in range(depth):
+        indent += '  '
+
+    print(indent, '--- GROUP: "', path + nc_file.name, '" ---', sep='')
+
+    print(indent, 'DIMENSIONS: ', sep='', end='')
+    for d in nc_file.dimensions.keys():
+        print(d, end=', ')
+    print('')
+    print(indent, 'VARIABLES: ', sep='', end='')
+    for v in nc_file.variables.keys():
+        print(v, end=', ')
+    print('')
+
+    print(indent, 'ATTRIBUTES: ', sep='', end='')
+    for a in nc_file.ncattrs():
+        print(a, end=', ')
+    print('')
+
+    print(indent, 'SUB-GROUPS: ', sep='', end='')
+    for g in nc_file.groups.keys():
+        print(g, end=', ')
+    print('')
+    print('')
+
+    for g in nc_file.groups.keys():
+        if nc_file.name == '/':
+            newname = path + nc_file.name
+        else:
+            newname = path + nc_file.name + '/'
+        recursive_print_nc(nc_file.groups[g], path=newname, depth=depth + 1)

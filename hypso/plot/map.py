@@ -154,6 +154,8 @@ def point_rgb_map(satellite_obj, plotTitle="RGB Image", dpi_input=450,patch_dict
         plt.show()
         
 def show_rgb_map(satellite_obj, plotTitle="RGB Image", dpi_input=450):
+    # Refresh the Projection
+    satellite_obj.find_geotiffs(satellite_obj.info["top_folder_name"])
 
     # TODO: Warnings are disabled as a rounding error with shapely causes an "no intersection warning". New version of GDAL might solve it
     with np.errstate(all="ignore"): 

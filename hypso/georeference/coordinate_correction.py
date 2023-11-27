@@ -29,18 +29,16 @@ import glob
 from hypso.georeference import georef as gref
 from hypso.utils import find_file, HSI2RGB
 
-def start_coordinate_correction(top_folder_name: Path, satinfo: dict, proj_metadata: dict, correction_type="lstsq"):
-    # point_file = glob.glob(top_folder_name + '/*.points')
-
-    point_file = find_file(top_folder_name, ".points")
-    if point_file is None:
+def start_coordinate_correction(points_path: Path, satinfo: dict, proj_metadata: dict, correction_type="lstsq"):
+    #point_file = find_file(top_folder_name, ".points")
+    if points_path is None:
         print("Points File Was Not Found. No Correction done.")
-        return satinfo["lat"], satinfo["lon"]
+        return satinfo["lat_original"], satinfo["lon_original"]
     else:
         print("Doing manual coordinate correction with .points file")
         lat, lon = coordinate_correction(
-            point_file, proj_metadata,
-            satinfo["lat"], satinfo["lon"], correction_type)
+            points_path, proj_metadata,
+            satinfo["lat_original"], satinfo["lon_original"], correction_type)
 
         return lat, lon
 
