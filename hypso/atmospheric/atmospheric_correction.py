@@ -532,6 +532,4 @@ def run_py6s(wavelengths, hypercube_L1, hypso_info, lat_2d_array, lon_2d_array, 
 
             final_output[i, j, :] = interp_spectra
 
-
-
     return final_output

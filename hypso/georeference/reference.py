@@ -105,7 +105,7 @@ def generate_rgb_geotiff(satObj):
 
     print('Done RGB/RGBA Geotiff')
 
-def generate_full_geotiff(satObj, product):
+def generate_full_geotiff(satObj, product, L2_key=None):
     # Find L1C and L2 product files
     l1cgeotiffFilePath = find_file(satObj.info["top_folder_name"], "-full_L1C", ".tif")
     l2geotiffFilePath = find_file(satObj.info["top_folder_name"], "-full_L2", ".tif")
@@ -125,7 +125,7 @@ def generate_full_geotiff(satObj, product):
     cube_data = None
     output_path_full_tif = None
     if product == "L2":
-        cube_data = satObj.l2a_cube
+        cube_data = satObj.l2a_cube[L2_key]
         output_path_full_tif = Path(geotiff_folder_path, capture_name + '-full_L2.tif')
     elif product == "L1C":
         cube_data = satObj.l1b_cube
@@ -142,7 +142,7 @@ def generate_full_geotiff(satObj, product):
     # https://gis.stackexchange.com/questions/275125/expressing-raster-rotation-with-gdal-geotransform-python
 
     dst_ds_full = gdal.GetDriverByName('GTiff').Create(
-        str(output_path_full_tif), grid_dims[0], grid_dims[1], 120, gdal.GDT_Float64)
+        str(output_path_full_tif), grid_dims[0], grid_dims[1], 120, gdal.GDT_Float64) # Used to be 64
 
     # Full Band Tiff --------------------------------
     dst_ds_full.SetGeoTransform(geotransform)  # specify coords
@@ -387,9 +387,6 @@ def generate_geotiff(satObj, bands, cube_data):
     return grid_dims, geotransform, destination_epsg, grid_data_all_bands, contain_mask
 
 
-def call_geotiff_interpolation():
-    pass
-
 def interpolate_geotiff(band_number, cube_data, pixel_coords_map_list, grid_points,
                         resampling_method, contain_mask, geotiff_info, grid_data_all_bands):
 
@@ -420,13 +417,15 @@ def interpolate_geotiff(band_number, cube_data, pixel_coords_map_list, grid_poin
 
 def export_single_band_geotiff(filename, raster_data, grid_dims, grid_origin, grid_res, grid_epsg):
     dst_ds = gdal.GetDriverByName('GTiff').Create(
-        str(filename), grid_dims[0], grid_dims[1], 1, gdal.GDT_UInt16)
+        str(filename), grid_dims[0], grid_dims[1], 1, gdal.GDT_Float64)
     geotransform = (grid_origin[0], -grid_res[0],
                     0.0, grid_origin[1], 0.0, grid_res[1])
     dst_ds.SetGeoTransform(geotransform)    # specify coords
     srs = osr.SpatialReference()            # establish encoding
     srs.ImportFromEPSG(grid_epsg)
     dst_ds.SetProjection(srs.ExportToWkt())  # export coords to file
+    # dst_ds.GetRasterBand(1).WriteArray(
+    #     65535.0*raster_data / raster_data.max())   # write band to the raster
     dst_ds.GetRasterBand(1).WriteArray(
-        65535.0*raster_data / raster_data.max())   # write band to the raster
+        raster_data)
     dst_ds.FlushCache()                  # write to disk

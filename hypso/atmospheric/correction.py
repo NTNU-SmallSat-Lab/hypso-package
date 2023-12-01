@@ -1,7 +1,11 @@
 import xarray as xr
 import numpy as np
-
-
+from importlib.resources import files
+from urllib.parse import urlparse, unquote
+from hypso.utils import MyProgressBar
+import urllib.request
+import tarfile
+from pathlib import Path
 def add_acolite(self, nc_path, overlapSatImg=False):
     print("\n\n-------  Loading L2 Acolite Cube  ----------")
     # Extract corrected hypercube
@@ -29,3 +33,28 @@ def add_acolite(self, nc_path, overlapSatImg=False):
     print("Done Importing Acolite L2 Data")
 
     return self.hypercube['L2']
+
+def get_acolite_repo():
+    github_url = r"https://github.com/acolite/acolite/archive/refs/tags/20231023.0.tar.gz"
+    filename = unquote(urlparse(github_url).path.split("/")[-1])
+
+    output_filename=files(
+        'hypso.atmospheric').joinpath(f'data/{filename}')
+
+    try:
+        urllib.request.urlretrieve(url=github_url,
+                                   filename=output_filename,
+                                   reporthook = MyProgressBar(filename))
+
+    except Exception as err:
+        print(f"Download Failed. {err}")
+        print(f"Deleting {filename}")
+        # If fail, delete
+        output_filename.unlink(missing_ok=True)
+
+    # Uncompress
+    tar = tarfile.open(output_filename, 'r:gz')
+    dst_path = files(
+        'hypso.atmospheric').joinpath(f'data/')
+    tar.extractall(dst_path)
+    tar.close()

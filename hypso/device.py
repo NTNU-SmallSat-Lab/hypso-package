@@ -1,25 +1,18 @@
-import glob
-import os
-from os import listdir
-from os.path import isfile, join
+from typing import Union
 from osgeo import gdal, osr
 import numpy as np
 import pandas as pd
-from datetime import datetime
 from importlib.resources import files
-import netCDF4 as nc
 import rasterio
-import cartopy.crs as ccrs
 from pathlib import Path
 from dateutil import parser
 
 import pyproj as prj
-import pathlib
 from .calibration import crop_and_bin_matrix, calibrate_cube, get_coefficients_from_dict, get_coefficients_from_file, \
     smile_correct_cube, destriping_correct_cube
 from .georeference import start_coordinate_correction, generate_full_geotiff, generate_rgb_geotiff
 from .reading import load_nc, load_directory
-from hypso.utils import find_dir, find_file
+from hypso.utils import find_dir, find_file, find_all_files
 from .atmospheric import run_py6s
 
 EXPERIMENTAL_FEATURES = True
@@ -67,25 +60,23 @@ class Satellite:
             self.spectral_coeff_file)
         self.wavelengths = self.spectral_coefficients
 
-        # Calibrate and Correct Cube Variables ----------------------------------------
+        # Calibrate and Correct Cube Variables and load existing L2 Cube  ----------------------------------------
         self.l1b_cube = self.get_calibrated_and_corrected_cube()
-        self.l2a_cube = None
+        self.l2a_cube = self.find_existing_l2_cube()
 
         # Generated afterwards
         self.waterMask = None
 
-        # Flag to Lat Lon Already Corrected
-        self.coordCorrectionFlag = False
-
         # Get Projection Metadata from created geotiff
         self.projection_metadata = self.get_projection_metadata(self.info["top_folder_name"])
 
-    def get_geotiff(self, product="L2", force_reload=False, py6s_dict=None):
+    def get_geotiff(self, product="L2", force_reload=False, atmos_dict=None):
+
         if product != "L2" and product != "L1C":
             raise Exception("Wrong product")
 
-        if product == "L2" and py6s_dict is None:
-            raise Exception("Py6S Dictionary is needed")
+        if product == "L2" and atmos_dict is None:
+            raise Exception("Atmospheric Dictionary is needed")
 
         if force_reload:
             # Delete geotiff dir and generate a new rgba one
@@ -101,18 +92,37 @@ class Satellite:
         self.info["lat"], self.info["lon"] = start_coordinate_correction(
             self.pointsPath, self.info, self.projection_metadata)
 
-        # Py6S Atmospheric Correction
-        # aot value: https://neo.gsfc.nasa.gov/view.php?datasetId=MYDAL2_D_AER_OD&date=2023-01-01
-        # alternative: https://giovanni.gsfc.nasa.gov/giovanni/
-        # py6s_params = {
-        #     'aot550': 0.01
-        #     # 'aeronet': r"C:\Users\alvar\Downloads\070101_151231_Autilla.dubovik"
-        # }
-        # TODO: Try to read L1B/L2B from geotiff to save time
-        #
-        if py6s_dict is not None and product == "L2":
-            self.l2a_cube = run_py6s(self.wavelengths, self.l1b_cube, self.info, self.info["lat"], self.info["lon"],
-                                     py6s_dict, time_capture=parser.parse(self.info['iso_time']))
+        atmos_corrected_cube=None
+        atmos_model = None
+
+        # TODO: Add Acolite
+        if product == "L2":
+            atmos_model = atmos_dict["model"].upper()
+            try:
+                atmos_corrected_cube = self.l2a_cube[atmos_model]
+            except:
+                if atmos_model == "6SV1":
+                    # Py6S Atmospheric Correction
+                    # aot value: https://neo.gsfc.nasa.gov/view.php?datasetId=MYDAL2_D_AER_OD&date=2023-01-01
+                    # alternative: https://giovanni.gsfc.nasa.gov/giovanni/
+                    # atmos_dict = {
+                    #     'model': '6sv1',
+                    #     'aot550': 0.01,
+                    #     # 'aeronet': r"C:\Users\alvar\Downloads\070101_151231_Autilla.dubovik"
+                    # }
+                     atmos_corrected_cube = run_py6s(self.wavelengths, self.l1b_cube, self.info, self.info["lat"], self.info["lon"],
+                                             atmos_dict, time_capture=parser.parse(self.info['iso_time']))
+                elif atmos_model == "ACOLITE":
+                    pass
+
+            # Store the l2a_cube just generated
+            if self.l2a_cube is None:
+                self.l2a_cube = {}
+
+            self.l2a_cube[atmos_model] = atmos_corrected_cube
+
+            with open(Path(self.info["top_folder_name"], "geotiff",f'L2_{atmos_model}.npy'), 'wb') as f:
+                np.save(f, atmos_corrected_cube)
 
         if force_reload:
             # Delete geotiff dir and generate a new rgba one
@@ -120,7 +130,7 @@ class Satellite:
 
         # Generate RGBA/RGBA and Full Geotiff with corrected metadata and L2A if exists (if not L1B)
         generate_rgb_geotiff(self)
-        generate_full_geotiff(self, product=product)
+        generate_full_geotiff(self, product=product, L2_key=atmos_model)
 
         # Get Projection Metadata from created geotiff
         self.projection_metadata = self.get_projection_metadata(self.info["top_folder_name"])
@@ -142,6 +152,30 @@ class Satellite:
         self.rgbGeotiffFilePath = find_file(top_folder_name, "rgba_8bit", ".tif")
         self.l1cgeotiffFilePath = find_file(top_folder_name, "-full_L1C", ".tif")
         self.l2geotiffFilePath = find_file(top_folder_name, "-full_L2", ".tif")
+
+    def find_existing_l2_cube(self) -> Union[dict, None]:
+        found_l2_npy = find_all_files(path= Path(self.info["top_folder_name"],"geotiff"),
+                  str_in_file="L2",
+                  suffix=".npy")
+
+        if found_l2_npy is None:
+            return None
+
+        dict_L2 = None
+        # Save Generated Cube as "npy" (for faster loading
+        for l2_file in found_l2_npy:
+            correction_model = str(l2_file.stem).split("_")[1]
+            correction_model = correction_model.upper()
+            l2_cube=None
+            with open(l2_file, 'rb') as f:
+                print(f"Found {l2_file.name}")
+                l2_cube = np.load(f)
+
+            if dict_L2 is None:
+                dict_L2 = {}
+            dict_L2[correction_model] = l2_cube
+
+        return dict_L2
 
     def get_projection_metadata(self, top_folder_name: Path) -> dict:
 
@@ -188,7 +222,7 @@ class Satellite:
             data = ds.ReadAsArray()
             current_project["data"] = data
             print("Full L2 Tif File: ", self.l2geotiffFilePath.name)
-        elif self.l1cgeotiffFilePath is not None:
+        if self.l1cgeotiffFilePath is not None:
             # Load GeoTiff Metadata with gdal
             ds = gdal.Open(str(self.l1cgeotiffFilePath))
             data = ds.ReadAsArray()
@@ -436,3 +470,5 @@ class Satellite:
             cube_smile_corrected, self.calibration_coefficients_dict)
 
         return cube_destriped
+
+

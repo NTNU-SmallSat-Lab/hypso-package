@@ -240,7 +240,9 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions) -> dict:
 def get_raw_cube_from_nc_file(nc_file_path) -> np.ndarray:
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
         group = f.groups["products"]
-        raw_cube = np.array(group.variables["Lt"][:])
+        # 16-bit according to Original Data Capture
+        raw_cube = np.array(group.variables["Lt"][:], dtype='uint16')
+
         return raw_cube
 
 def get_metainfo_from_directory(top_folder_name: Path, standardDimensions) -> dict:
