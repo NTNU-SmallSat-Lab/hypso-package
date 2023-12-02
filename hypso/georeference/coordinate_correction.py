@@ -78,7 +78,7 @@ def coordinate_correction_matrix(filename, projection_metadata, correction_type)
             else:
                 gcps = np.row_stack((gcps, gcp))
 
-        # Convert Data to Dataframe
+        # Convert data to Dataframe
 
         gcps = pd.DataFrame(gcps, columns=column_names)
         gcps.rename(columns={"mapX": "mapLon",

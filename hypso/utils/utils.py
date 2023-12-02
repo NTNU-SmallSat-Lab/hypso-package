@@ -5,6 +5,8 @@ import scipy.io as spio
 from scipy.interpolate import PchipInterpolator
 from bisect import bisect
 from importlib.resources import files
+from math import asin, cos, radians, sin, sqrt
+import progressbar
 
 def HSI2RGB(wY, HSI, d=65, threshold=0.002):
     # wY: wavelengths in nm
@@ -129,6 +131,47 @@ def HSI2RGB(wY, HSI, d=65, threshold=0.002):
 
     return np.dstack((R, G, B))
 
+class MyProgressBar():
+    def __init__(self,text_prefix):
+        self.pbar = None
+        self.text_prefix=text_prefix
+
+
+    def __call__(self, block_num, block_size, total_size):
+        if not self.pbar:
+            self.pbar=progressbar.ProgressBar(maxval=total_size,
+                                              widgets=[progressbar.Bar('=', f'Downloading: {self.text_prefix} [', ']',), ' ', progressbar.Percentage(),],)
+            #self.pbar = progressbar.Percentage()
+            self.pbar.start()
+
+        downloaded = block_num * block_size
+        if downloaded < total_size:
+            self.pbar.update(downloaded)
+        else:
+            self.pbar.finish()
+
+def find_all_files(path: Path, str_in_file: str, suffix=None, type="partial"):
+    all_files=[]
+    for subpath in path.rglob("*"):
+        if subpath.is_file():
+            if type == "partial":
+                if suffix is not None:
+                    if str_in_file in subpath.name and subpath.suffix == suffix:
+                        all_files.append(subpath.absolute())
+                elif suffix is None:
+                    if str_in_file in subpath.name:
+                        all_files.append(subpath.absolute())
+
+            elif type == "exact":
+                if suffix is not None:
+                    if str_in_file == subpath.name and subpath.suffix == suffix:
+                        all_files.append(subpath.absolute())
+                elif suffix is None:
+                    if str_in_file == subpath.name:
+                        all_files.append(subpath.absolute())
+
+    return all_files
+
 def find_file(path:Path,str_in_file:str, suffix=None, type="partial"):
     for subpath in path.rglob("*"):
         if subpath.is_file():
@@ -208,3 +251,86 @@ def recursive_print_nc(nc_file, path='', depth=0):
         else:
             newname = path + nc_file.name + '/'
         recursive_print_nc(nc_file.groups[g], path=newname, depth=depth + 1)
+
+
+
+def pseudo_convolution(cube, watermask, center=[], size=5):
+    total_spectra = None
+
+    start_row = center[0] - size // 2
+    start_col = center[1] - size // 2
+    for i in range(size):
+        current_row = start_row + (i + 1)
+        for j in range(size):
+            current_col = start_col + (j + 1)
+            if watermask[current_row, current_col] == True:
+                if total_spectra is None:
+                    total_spectra = cube[current_row, current_col, :]
+                else:
+                    total_spectra = np.column_stack((total_spectra, cube[current_row, current_col, :]))
+
+    if len(total_spectra.shape) == 1:
+        return total_spectra
+
+    else:
+        return np.mean(total_spectra, axis=1)
+
+
+def find_closest_water_lat_lon_match(lat_2d: np.array, lon_2d: np.array, waterMask: np.array, target_lat, target_lon):
+    if np.nanmax(lat_2d) > target_lat > np.nanmin(lat_2d) and np.nanmax(lon_2d) > target_lon > np.nanmin(lon_2d):
+
+        water_pix = waterMask.flatten()
+
+        coordinates = [c for c in zip(lat_2d.flatten()[water_pix], lon_2d.flatten()[water_pix])]
+
+        xy = (target_lat, target_lon)
+
+        # Closest distance with Pithagoras --------------
+        dist = lambda x, y: (x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2
+        closest_existing_coord = min(coordinates, key=lambda co: dist(co, xy))
+        lat_found = closest_existing_coord[0]
+        lon_found = closest_existing_coord[1]
+
+        found_idx = np.argwhere(np.logical_and(
+            lat_2d == lat_found,
+            lon_2d == lon_found,
+        ))[0]
+
+        try:
+            row = found_idx[0]
+            col = found_idx[1]
+
+            dist_to_target_from_sat = haversine(lon_found, lat_found, target_lon, target_lat)
+
+            print(
+                f"Satellite (Lat:Lon)  : {closest_existing_coord[1]} for  \n desired Lat: {target_lat} - Lon {target_lon} found at Row {row}:Col {col}")
+            print(f"Distance (Km) from Satellite coordinate to Target:"
+                  f"{dist_to_target_from_sat}"
+                  )
+        except:
+            raise Exception("Lat and Lon not found")
+
+        # e.g.
+        # l1b_cube[found[0],found[1],:]
+
+        return row, col, dist_to_target_from_sat
+
+    else:
+        raise Exception("Lat and Lon not within Capture 2D Array Lat/Lon values")
+
+
+def haversine(lon1, lat1, lon2, lat2):
+    """
+    Calculate the great circle distance between two points
+    on the earth (specified in decimal degrees)
+    """
+    # convert decimal degrees to radians
+    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+    # haversine formula
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+    c = 2 * asin(sqrt(a))
+    # Radius of earth in kilometers is 6371
+    km = 6371 * c
+    return km

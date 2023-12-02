@@ -177,7 +177,7 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions) -> dict:
     info["start_timestamp_adcs"] = info["start_timestamp_capture"] - time_margin_start
     info["end_timestamp_adcs"] = info["end_timestamp_capture"] + time_margin_end
 
-    # Data for geotiff processing -----------------------------------------------
+    # data for geotiff processing -----------------------------------------------
 
     info["unixtime"] = info["start_timestamp_capture"]
     info["iso_time"] = datetime.utcfromtimestamp(
@@ -240,7 +240,9 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions) -> dict:
 def get_raw_cube_from_nc_file(nc_file_path) -> np.ndarray:
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
         group = f.groups["products"]
-        raw_cube = np.array(group.variables["Lt"][:])
+        # 16-bit according to Original data Capture
+        raw_cube = np.array(group.variables["Lt"][:], dtype='uint16')
+
         return raw_cube
 
 def get_metainfo_from_directory(top_folder_name: Path, standardDimensions) -> dict:

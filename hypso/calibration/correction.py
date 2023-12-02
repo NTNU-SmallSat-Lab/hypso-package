@@ -50,8 +50,9 @@ def crop_and_bin_matrix(matrix, x_start, x_stop, y_start, y_stop, bin_x=1, bin_y
 def get_coefficients_from_file(coeff_path: str) -> np.ndarray:
     coefficients = None
     try:
+        # Processing should be Float 32
         coefficients = np.genfromtxt(
-            coeff_path, delimiter=',')
+            coeff_path, delimiter=',', dtype="float64")
         # coefficients = readCsvFile(coeff_path)
     except BaseException:
         coefficients = None
