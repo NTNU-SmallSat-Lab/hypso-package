@@ -39,16 +39,13 @@ class Satellite:
         hypso_path = Path(hypso_path).absolute()
 
         # Check if file or directory passed
-        if hypso_path.is_dir():
-            self.info, self.rawcube, self.spatialDim = load_directory(hypso_path, self.standardDimensions)
-            self.info["top_folder_name"] = hypso_path
-        elif hypso_path.suffix == '.nc':
+        if hypso_path.suffix == '.nc':
             # Obtain metadata from files
             self.info, self.rawcube, self.spatialDim = load_nc(hypso_path, self.standardDimensions)
             self.info["top_folder_name"] = self.info["tmp_dir"]
             self.info["nc_file"] = hypso_path
         else:
-            raise Exception("Incorrect HYPSO Path")
+            raise Exception("Incorrect HYPSO Path. Only .nc files supported")
 
         # Correction Coefficients ----------------------------------------
         self.calibration_coeffs_file_dict = self.get_calibration_coefficients_path()

@@ -1,1 +1,1 @@
-from .load import load_directory, load_nc
+from .load import load_nc
