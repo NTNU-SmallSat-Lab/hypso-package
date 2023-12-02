@@ -41,7 +41,7 @@ def generate_rgb_geotiff(satObj):
     output_path_rgb_tif = Path(geotiff_folder_path, capture_name + '-rgb.tif')
     output_path_rgba_tif = Path(geotiff_folder_path, capture_name + '-rgba_8bit.tif')
 
-    # Select Data for RGB GeoTiff --------------------------------------------------------
+    # Select data for RGB GeoTiff --------------------------------------------------------
     cube_data=satObj.l1b_cube
 
     # Define bands to export and RGB Bands (Need to be the same to interpolate) ---------------
@@ -108,7 +108,7 @@ def generate_rgb_geotiff(satObj):
 def generate_full_geotiff(satObj, product, L2_key=None):
     # Find L1C and L2 product files
     l1cgeotiffFilePath = find_file(satObj.info["top_folder_name"], "-full_L1C", ".tif")
-    l2geotiffFilePath = find_file(satObj.info["top_folder_name"], "-full_L2", ".tif")
+    l2geotiffFilePath = find_file(satObj.info["top_folder_name"], f"-full_L2_{L2_key}", ".tif")
 
     # If we request the one that exists, done run it
     if product == "L2" and l2geotiffFilePath is not None:
@@ -126,7 +126,7 @@ def generate_full_geotiff(satObj, product, L2_key=None):
     output_path_full_tif = None
     if product == "L2":
         cube_data = satObj.l2a_cube[L2_key]
-        output_path_full_tif = Path(geotiff_folder_path, capture_name + '-full_L2.tif')
+        output_path_full_tif = Path(geotiff_folder_path, capture_name + f'-full_L2_{L2_key}.tif')
     elif product == "L1C":
         cube_data = satObj.l1b_cube
         output_path_full_tif = Path(geotiff_folder_path, capture_name + '-full_L1C.tif')

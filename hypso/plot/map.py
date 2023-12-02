@@ -117,7 +117,7 @@ def get_cartopy_axis(satellite_obj,dpi_input):
     ax.add_feature(cf.LAKES.with_scale('10m'), lw=0.3, alpha=0.2, zorder=100)
     ax.add_feature(cf.OCEAN.with_scale('10m'), lw=0.3, alpha=0.2, zorder=100)
     # ax.add_feature(cf.RIVERS.with_scale('10m'), lw=0.3, alpha=0.5)
-    # ax.add_feature(cf.LAND, zorder=100, edgecolor='k')  # Covers Data in land
+    # ax.add_feature(cf.LAND, zorder=100, edgecolor='k')  # Covers data in land
 
 
     warnings.resetwarnings()

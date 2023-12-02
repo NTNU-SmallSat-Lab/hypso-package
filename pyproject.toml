@@ -52,6 +52,10 @@ dependencies=[
   "astropy >=5.3.4",
   "pyorbital >=1.8.0",
   "progressbar >=2.5",
+  "h5py >=3.8.0",
+  "pyhdf >=0.11.3",
+  "pyresample >=1.27.1",
+  "pygrib >=2.1.4"
 ]
 
 # dynamic properties set by tools

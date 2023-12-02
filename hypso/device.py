@@ -6,14 +6,14 @@ from importlib.resources import files
 import rasterio
 from pathlib import Path
 from dateutil import parser
-
+import netCDF4 as nc
 import pyproj as prj
 from .calibration import crop_and_bin_matrix, calibrate_cube, get_coefficients_from_dict, get_coefficients_from_file, \
     smile_correct_cube, destriping_correct_cube
 from .georeference import start_coordinate_correction, generate_full_geotiff, generate_rgb_geotiff
 from .reading import load_nc, load_directory
 from hypso.utils import find_dir, find_file, find_all_files
-from .atmospheric import run_py6s
+from .atmospheric import run_py6s, run_acolite
 
 EXPERIMENTAL_FEATURES = True
 
@@ -46,6 +46,7 @@ class Satellite:
             # Obtain metadata from files
             self.info, self.rawcube, self.spatialDim = load_nc(hypso_path, self.standardDimensions)
             self.info["top_folder_name"] = self.info["tmp_dir"]
+            self.info["nc_file"] = hypso_path
         else:
             raise Exception("Incorrect HYPSO Path")
 
@@ -60,6 +61,9 @@ class Satellite:
             self.spectral_coeff_file)
         self.wavelengths = self.spectral_coefficients
 
+        # Modify .netcdf for ACOLITE ---------------------------------------
+        self.modify_netcdf_for_acolite(hypso_path)
+
         # Calibrate and Correct Cube Variables and load existing L2 Cube  ----------------------------------------
         self.l1b_cube = self.get_calibrated_and_corrected_cube()
         self.l2a_cube = self.find_existing_l2_cube()
@@ -69,6 +73,159 @@ class Satellite:
 
         # Get Projection Metadata from created geotiff
         self.projection_metadata = self.get_projection_metadata(self.info["top_folder_name"])
+
+    def modify_netcdf_for_acolite(self, nc_path):
+        def get_nav_and_view():
+            is_nav_data_available = False
+            path = self.info["top_folder_name"]
+            for subpath in path.rglob("*"):
+                if subpath.is_file():
+                    if "sat-azimuth.dat" in subpath.name:
+                        sata = np.fromfile(subpath, dtype=np.float32)
+                        is_nav_data_available = True
+                    elif "sat-zenith.dat" in subpath.name:
+                        satz = np.fromfile(subpath, dtype=np.float32)
+                    elif "sun-azimuth.dat" in subpath.name:
+                        suna = np.fromfile(subpath, dtype=np.float32)
+                    elif "sun-zenith.dat" in subpath.name:
+                        sunz = np.fromfile(subpath, dtype=np.float32)
+                    elif "latitudes.dat" in subpath.name:
+                        lat = np.fromfile(subpath, dtype=np.float32)
+                    elif "longitudes.dat" in subpath.name:
+                        lon = np.fromfile(subpath, dtype=np.float32)
+            return sata, satz, suna, sunz, lat, lon
+
+        lines = self.info["frame_count"]  # AKA Frames AKA Rows
+        # samples = self.info["image_height"] # AKA Cols
+        bands = self.info["image_width"]
+
+        sata, satz, suna, sunz, lat, lon = get_nav_and_view()
+
+        with nc.Dataset(nc_path, "r+", format="NETCDF4") as netfile:
+
+            # Update Lt ------------------------------------------------------
+            netfile.createGroup('products')
+            group = netfile.groups["products"]
+            # 16-bit according to Original data Capture
+            Lt = group.variables["Lt"]
+
+            Lt.units = "W/m^2/micrometer/sr"
+            Lt.long_name = "Top of Atmosphere Measured Radiance"
+            Lt.wavelength_units = "nanometers"
+            Lt.fwhm = [5.5] * bands
+            Lt.wavelengths = np.around(self.spectral_coefficients, 1)
+            Lt[:] = self.rawcube
+
+            # create NAvigation ----------------------------------------------
+            navigation_group = netfile.createGroup('navigation')
+
+            navigation_group.iso8601time = self.info["iso_time"] + "Z"
+
+            try:
+                time = netfile.createVariable('navigation/unixtime', 'u8', ('lines',))
+                frametime_pose_file = find_file(self.info["top_folder_name"], "frametime-pose", ".csv")
+                df = pd.read_csv(frametime_pose_file)
+                time[:] = df["timestamp"].values
+            except Exception as erro:
+                print(f"Time Unixtime Already Exists {erro}")
+
+            try:
+                sensor_z = netfile.createVariable(
+                    'navigation/sensor_zenith', 'f4', ('lines', 'samples'),
+                    # compression=COMP_SCHEME,
+                    # complevel=COMP_LEVEL,
+                    # shuffle=COMP_SHUFFLE,
+                )
+                sensor_z[:] = satz.reshape(self.spatialDim)
+                sensor_z.long_name = "Sensor Zenith Angle"
+                sensor_z.units = "degrees"
+                # sensor_z.valid_range = [-180, 180]
+                sensor_z.valid_min = -180
+                sensor_z.valid_max = 180
+            except Exception as erro:
+                print(f"Sensor Z Already Exists {erro}")
+
+            try:
+                sensor_a = netfile.createVariable(
+                    'navigation/sensor_azimuth', 'f4', ('lines', 'samples'),
+                    # compression=COMP_SCHEME,
+                    # complevel=COMP_LEVEL,
+                    # shuffle=COMP_SHUFFLE,
+                )
+                sensor_a[:] = sata.reshape(self.spatialDim)
+                sensor_a.long_name = "Sensor Azimuth Angle"
+                sensor_a.units = "degrees"
+                # sensor_a.valid_range = [-180, 180]
+                sensor_a.valid_min = -180
+                sensor_a.valid_max = 180
+            except Exception as erro:
+                print(f"Sensor A Already Exists {erro}")
+
+            try:
+                solar_z = netfile.createVariable(
+                    'navigation/solar_zenith', 'f4', ('lines', 'samples'),
+                    # compression=COMP_SCHEME,
+                    # complevel=COMP_LEVEL,
+                    # shuffle=COMP_SHUFFLE,
+                )
+                solar_z[:] = sunz.reshape(self.spatialDim)
+                solar_z.long_name = "Solar Zenith Angle"
+                solar_z.units = "degrees"
+                # solar_z.valid_range = [-180, 180]
+                solar_z.valid_min = -180
+                solar_z.valid_max = 180
+            except Exception as erro:
+                print(f"Solar Z Already Exists {erro}")
+
+            try:
+                solar_a = netfile.createVariable(
+                    'navigation/solar_azimuth', 'f4', ('lines', 'samples'),
+                    # compression=COMP_SCHEME,
+                    # complevel=COMP_LEVEL,
+                    # shuffle=COMP_SHUFFLE,
+                )
+                solar_a[:] = suna.reshape(self.spatialDim)
+                solar_a.long_name = "Solar Azimuth Angle"
+                solar_a.units = "degrees"
+                # solar_a.valid_range = [-180, 180]
+                solar_a.valid_min = -180
+                solar_a.valid_max = 180
+            except Exception as erro:
+                print(f"Solar A Already Exists {erro}")
+
+            try:
+                latitude = netfile.createVariable(
+                    'navigation/latitude', 'f4', ('lines', 'samples'),
+                    # compression=COMP_SCHEME,
+                    # complevel=COMP_LEVEL,
+                    # shuffle=COMP_SHUFFLE,
+                )
+                # latitude[:] = lat.reshape(frames, lines)
+                latitude[:] = self.info["lat"]
+                latitude.long_name = "Latitude"
+                latitude.units = "degrees"
+                # latitude.valid_range = [-180, 180]
+                latitude.valid_min = -180
+                latitude.valid_max = 180
+            except Exception as erro:
+                print(f"Latitude Already Exists {erro}")
+
+            try:
+                longitude = netfile.createVariable(
+                    'navigation/longitude', 'f4', ('lines', 'samples'),
+                    # compression=COMP_SCHEME,
+                    # complevel=COMP_LEVEL,
+                    # shuffle=COMP_SHUFFLE,
+                )
+                # longitude[:] = lon.reshape(frames, lines)
+                longitude[:] = self.info["lon"]
+                longitude.long_name = "Longitude"
+                longitude.units = "degrees"
+                # longitude.valid_range = [-180, 180]
+                longitude.valid_min = -180
+                longitude.valid_max = 180
+            except Exception as erro:
+                print(f"Longitude Already Exists {erro}")
 
     def get_geotiff(self, product="L2", force_reload=False, atmos_dict=None):
 
@@ -92,15 +249,14 @@ class Satellite:
         self.info["lat"], self.info["lon"] = start_coordinate_correction(
             self.pointsPath, self.info, self.projection_metadata)
 
-        atmos_corrected_cube=None
+        atmos_corrected_cube = None
         atmos_model = None
 
-        # TODO: Add Acolite
         if product == "L2":
             atmos_model = atmos_dict["model"].upper()
             try:
                 atmos_corrected_cube = self.l2a_cube[atmos_model]
-            except:
+            except Exception as err:
                 if atmos_model == "6SV1":
                     # Py6S Atmospheric Correction
                     # aot value: https://neo.gsfc.nasa.gov/view.php?datasetId=MYDAL2_D_AER_OD&date=2023-01-01
@@ -110,10 +266,12 @@ class Satellite:
                     #     'aot550': 0.01,
                     #     # 'aeronet': r"C:\Users\alvar\Downloads\070101_151231_Autilla.dubovik"
                     # }
-                     atmos_corrected_cube = run_py6s(self.wavelengths, self.l1b_cube, self.info, self.info["lat"], self.info["lon"],
-                                             atmos_dict, time_capture=parser.parse(self.info['iso_time']))
+                    atmos_corrected_cube = run_py6s(self.wavelengths, self.l1b_cube, self.info, self.info["lat"],
+                                                    self.info["lon"],
+                                                    atmos_dict, time_capture=parser.parse(self.info['iso_time']))
                 elif atmos_model == "ACOLITE":
-                    pass
+                    print("Getting ACOLITE L2")
+                    atmos_corrected_cube = run_acolite(self.info, atmos_dict)
 
             # Store the l2a_cube just generated
             if self.l2a_cube is None:
@@ -121,7 +279,7 @@ class Satellite:
 
             self.l2a_cube[atmos_model] = atmos_corrected_cube
 
-            with open(Path(self.info["top_folder_name"], "geotiff",f'L2_{atmos_model}.npy'), 'wb') as f:
+            with open(Path(self.info["top_folder_name"], "geotiff", f'L2_{atmos_model}.npy'), 'wb') as f:
                 np.save(f, atmos_corrected_cube)
 
         if force_reload:
@@ -154,9 +312,9 @@ class Satellite:
         self.l2geotiffFilePath = find_file(top_folder_name, "-full_L2", ".tif")
 
     def find_existing_l2_cube(self) -> Union[dict, None]:
-        found_l2_npy = find_all_files(path= Path(self.info["top_folder_name"],"geotiff"),
-                  str_in_file="L2",
-                  suffix=".npy")
+        found_l2_npy = find_all_files(path=Path(self.info["top_folder_name"], "geotiff"),
+                                      str_in_file="L2",
+                                      suffix=".npy")
 
         if found_l2_npy is None:
             return None
@@ -166,7 +324,7 @@ class Satellite:
         for l2_file in found_l2_npy:
             correction_model = str(l2_file.stem).split("_")[1]
             correction_model = correction_model.upper()
-            l2_cube=None
+            l2_cube = None
             with open(l2_file, 'rb') as f:
                 print(f"Found {l2_file.name}")
                 l2_cube = np.load(f)
@@ -228,8 +386,6 @@ class Satellite:
             data = ds.ReadAsArray()
             current_project["data"] = data
             print("Full L1C Tif File: ", self.l1cgeotiffFilePath.name)
-
-
 
         return current_project
 
@@ -317,7 +473,7 @@ class Satellite:
             'coord' assumes latitude and longitude are passed.
             'pix' receives X and Y values
         '''
-        # To Store Data
+        # To Store data
         spectra_data = []
 
         posX = None
@@ -470,5 +626,3 @@ class Satellite:
             cube_smile_corrected, self.calibration_coefficients_dict)
 
         return cube_destriped
-
-
