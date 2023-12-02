@@ -1,14 +1,15 @@
 import os
 from osgeo import gdal
 import numpy as np
+from importlib.resources import files
 
 def MeanDEM(pointUL, pointDR):
     '''
     Calculate the average elevation of the area where the image is located.
     '''
-    script_path = os.path.split(os.path.realpath(__file__))[0]
-    print(script_path)
-    dem_path = os.path.join(script_path, "GMTED2km.tif")
+
+    dem_path = files(
+        'hypso.atmospheric').joinpath(f'GMTED2km.tif')
 
     try:
         DEMIDataSet = gdal.Open(dem_path)
