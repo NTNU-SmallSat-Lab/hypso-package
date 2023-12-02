@@ -2,7 +2,6 @@ import os
 from osgeo import gdal
 import numpy as np
 
-
 def MeanDEM(pointUL, pointDR):
     '''
     Calculate the average elevation of the area where the image is located.

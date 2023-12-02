@@ -2,9 +2,7 @@
 import numpy as np
 import pyproj
 from matplotlib import colors
-
 import warnings
-
 import matplotlib.pyplot as plt
 from matplotlib import ticker
 
@@ -12,8 +10,6 @@ from matplotlib import ticker
 # GIS
 import cartopy.crs as ccrs
 import cartopy.feature as cf
-import geopandas as gpd
-import rasterio as rio
 
 from PIL import Image, ImageOps
 

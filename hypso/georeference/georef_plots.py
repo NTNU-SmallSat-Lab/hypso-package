@@ -1,24 +1,15 @@
-from mpl_toolkits import mplot3d # 3D plotting
-
-#%matplotlib notebook
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.path as mplPath # for mplPath.Path() and its contains_points() method
 import math as m
 import pandas as pd
 import datetime
-import sys
 import os
 from pathlib import Path
-from pyorbital import astronomy # for solar zenith angles
 
 #import astropy
 import astropy.coordinates
 import astropy.units
 import astropy.time
-#import astropy.units as u
-#from astropy.coordinates import AltAz, EarthLocation, SkyCoord
-#from astropy.time import Time
 
 import scipy.interpolate as si
 

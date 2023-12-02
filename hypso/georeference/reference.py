@@ -1,25 +1,15 @@
 import numpy as np
-from importlib.resources import files
-import os
-from tqdm import tqdm
-import csv
 import pyproj as prj
-import pandas as pd
-# for mplpath.Path() and its contains_points() method
 import matplotlib.path as mplpath
 import shapely.geometry as sg
 import matplotlib.pyplot as plt
 from osgeo import gdal
-import skimage
 from osgeo import osr
 from pathlib import Path
 # GIS
-import cartopy.crs as ccrs
 import math as m
 import threading
 import scipy.interpolate as si
-from sklearn.preprocessing import PolynomialFeatures
-import glob
 
 from hypso.georeference import georef as gref
 from hypso.utils import find_file, HSI2RGB

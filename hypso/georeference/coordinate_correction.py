@@ -1,33 +1,13 @@
-from pathlib import Path
-from hypso.utils import find_file
 import numpy as np
-from importlib.resources import files
-import os
-from tqdm import tqdm
 import csv
 import pyproj as prj
 import pandas as pd
-# for mplpath.Path() and its contains_points() method
-import matplotlib.path as mplpath
-import shapely.geometry as sg
-import matplotlib.pyplot as plt
-from osgeo import gdal
+
 import skimage
-from osgeo import osr
 from pathlib import Path
 # GIS
 import cartopy.crs as ccrs
-import math as m
-import threading
-import scipy.interpolate as si
-from sklearn.preprocessing import PolynomialFeatures
-import glob
-# Custom library
-# lib_path = os.path.join(os.path.dirname(sys.argv[0]), 'hsi-postprocessing/lib')
-# sys.path.insert(0, lib_path)
-# import georef as gref
-from hypso.georeference import georef as gref
-from hypso.utils import find_file, HSI2RGB
+
 
 def start_coordinate_correction(points_path: Path, satinfo: dict, proj_metadata: dict, correction_type="lstsq"):
     #point_file = find_file(top_folder_name, ".points")

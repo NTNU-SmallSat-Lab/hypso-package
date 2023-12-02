@@ -1,8 +1,5 @@
 import numpy as np
-import copy
-import os
 from scipy import interpolate
-import csv
 import pathlib
 
 def crop_and_bin_matrix(matrix, x_start, x_stop, y_start, y_stop, bin_x=1, bin_y=1):

@@ -1,4 +1,3 @@
-import xarray as xr
 import numpy as np
 from importlib.resources import files
 from urllib.parse import urlparse, unquote

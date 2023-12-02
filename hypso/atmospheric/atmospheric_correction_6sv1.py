@@ -1,19 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from .base import MeanDEM
-from osgeo import gdal, osr
-import os
-import pandas as pd
 import dateutil.parser
 import Py6S
 from tqdm import tqdm
 import math
-from scipy.interpolate import interp1d
-from hypso.utils import find_file
-from importlib.resources import files
-from pathlib import Path
-import tarfile
-
 
 def BasicParameters(wavelengths, hypercube_L1, hypso_info, lat_2d_array, lon_2d_array, time_capture):
     '''

@@ -1,8 +1,7 @@
 import numpy as np
-import os
+
 from datetime import datetime
 import pandas as pd
-import glob
 import netCDF4 as nc
 from hypso import georeference
 from pathlib import Path
@@ -175,7 +174,7 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions) -> dict:
             target_lat=target_coords[0]
             target_lon=target_coords[1]
 
-    info["latc"] =target_lat
+    info["latc"] = target_lat
     info["lonc"] = target_lon
 
     info["background_value"] = 8 * info["bin_factor"]
