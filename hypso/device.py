@@ -11,7 +11,7 @@ import pyproj as prj
 from .calibration import crop_and_bin_matrix, calibrate_cube, get_coefficients_from_dict, get_coefficients_from_file, \
     smile_correct_cube, destriping_correct_cube
 from .georeference import start_coordinate_correction, generate_full_geotiff, generate_rgb_geotiff
-from .reading import load_nc, load_directory
+from .reading import load_nc
 from hypso.utils import find_dir, find_file, find_all_files
 from .atmospheric import run_py6s, run_acolite
 
