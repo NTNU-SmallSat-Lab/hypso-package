@@ -12,9 +12,9 @@ def MeanDEM(pointUL, pointDR):
         'hypso.atmospheric').joinpath(f'GMTED2km.tif')
 
     try:
-        DEMIDataSet = gdal.Open(dem_path)
+        DEMIDataSet = gdal.Open(str(dem_path))
     except Exception as e:
-        pass
+        raise e
 
     DEMBand = DEMIDataSet.GetRasterBand(1)
     geotransform = DEMIDataSet.GetGeoTransform()
