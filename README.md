@@ -7,7 +7,7 @@ Technology (NTNU) for Python >3.9
 
 - Anaconda Github Feedstock: https://github.com/conda-forge/hypso-feedstock
 
-## How to Install
+## How to Install (or Update)
 It is recommended to use mamba as it is less prone to errors in dependency management than the default conda terminal (see https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html)
 
 if conda installed:
@@ -20,6 +20,12 @@ conda install -c conda-forge hypso
 if mamba installed:
 ```
 mamba install -c conda-forge hypso
+```
+
+To update to the most recent version it is suggested to run the following code (change "mamba" for "conda" if needed):
+```
+mamba search -c conda-forge hypso
+mamba update hypso
 ```
 
 ## Pipeline (on Load)
