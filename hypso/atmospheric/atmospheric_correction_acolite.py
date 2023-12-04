@@ -34,41 +34,101 @@ def get_acolite_repo():
     tar.extractall(dst_path)
     tar.close()
 
+def reset_config_file(path):
+    # Reset config file for password and
+    with open(path, 'r') as file:
+        # read a list of lines into data
+        data = file.readlines()
 
-def run_acolite(hypso_info, atmos_dict):
+    # now change the 2nd line, note that you have to add a newline
+    data[61] = "EARTHDATA_u=\n"
+    data[62] = "EARTHDATA_p==\n"
+
+    # and write everything back
+    with open(path, 'w') as file:
+        file.writelines(data)
+
+def run_acolite(hypso_info, atmos_dict, nc_file_acoliteready):
+
+    # File and Dir Paths ---------------------------------------------------------------
+
+    atmospheric_pkg_path = str(files(
+        'hypso.atmospheric'))
+
     # Settings file
-    settings_path = files(
-        'hypso.atmospheric').joinpath(f'data/acolite_settings.txt')
+    settings_path = Path(
+        atmospheric_pkg_path,"data","acolite_settings.txt")
+
 
     # Dir to decompress tar file
-    acolite_dir = Path(files(
-        'hypso.atmospheric').joinpath(f'data/acolite-20231023.0/'))
+    acolite_dir = Path(atmospheric_pkg_path,"acolite_main")
 
     # Path for acolite tar (for decompression)
-    acolite_tar = acolite_dir = Path(files(
-        'hypso.atmospheric').joinpath(f'data/20231023.0.tar.gz'))
+    acolite_tar = Path(atmospheric_pkg_path,"data","20231023.0.tar.gz")
 
     # Script that starts acolite
-    launch_acolite_path = str(files(
-        'hypso.atmospheric').joinpath(f'data/acolite-20231023.0/launch_acolite.py'))
+    launch_acolite_path = Path(atmospheric_pkg_path,"acolite_main","launch_acolite.py")
 
     # Create Dir for the output
     acolite_output_dir = Path(hypso_info["top_folder_name"], "geotiff", "acolite-output")
-
     acolite_output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Uncompress ACOLITE if not done
+    # Uncompress ACOLITE if not done and change a file to avoid creating a log
     if not acolite_dir.is_dir():
-        # Uncompress
+        # 1) Uncompress ---------------------------------------------
         tar = tarfile.open(acolite_tar, 'r:gz')
-        dst_path = files(
-            'hypso.atmospheric').joinpath(f'data/')
+        dst_path = atmospheric_pkg_path
         tar.extractall(dst_path)
         tar.close()
 
+
+        # Rename
+        dst_path=Path(dst_path,"acolite-20231023.0")
+        dst_path.rename(Path(acolite_dir))
+
+        # 2) Add __init__ ---------------------------------------------
+        Path(acolite_dir,"__init__.py").touch()
+
+        # 3) Change path to comply with package output ---------------------------------------------
+        file_to_change = Path(acolite_dir,"acolite","acolite","acolite_run.py")
+
+        with open(file_to_change, 'r') as file:
+            # read a list of lines into data
+            data = file.readlines()
+
+            # now change the 2nd line, note that you have to add a newline
+            data[53] = "# " + data[53]
+            data[297] = "# " + data[297]
+        # and write everything back
+        with open(file_to_change, 'w') as file:
+            file.writelines(data)
+
+        # Change ------------------------------------------------------------------
+        file_to_change = Path(acolite_dir,"acolite","__init__.py")
+
+        with open(file_to_change, 'r') as file:
+            # read a list of lines into data
+            data = file.readlines()
+
+            for idx,d in enumerate(data):
+                data[idx] = d.replace("from acolite","from hypso.atmospheric.acolite_main.acolite")
+
+            # now change the 2nd line, note that you have to add a newline
+            data[9] = "from pathlib import Path\n"
+            data[43] = "from importlib.resources import files\n"
+            data[54] = 'code_path = os.path.dirname(str(Path(files("hypso.atmospheric"),"acolite_main","acolite","__init__.py")))\n'
+            data[67] = 'cfile = str(Path(files("hypso.atmospheric"),"acolite_main","config","config.txt"))\n'
+
+        # and write everything back
+        with open(file_to_change, 'w') as file:
+            file.writelines(data)
+
     # If user and password for NASA earthdata provided, updated file ---------------
-    user_pwd_file = Path(files(
-        'hypso.atmospheric').joinpath(f'data/acolite-20231023.0/config/config.txt'))
+    user_pwd_file = Path(acolite_dir,"config","config.txt")
+
+    reset_config_file(user_pwd_file)
+
+    # Read User and password if exists -----------------------------
     try:
         user_earthdata = atmos_dict["user"]
         pwd_earthdata = atmos_dict["password"]
@@ -87,17 +147,55 @@ def run_acolite(hypso_info, atmos_dict):
         with open(user_pwd_file, 'w') as file:
             file.writelines(data)
     except Exception as err:
-        raise Exception(f"No EARTH DATA user or pwd provided in the dictionary. {err}")
+        print("No EARTH DATA user or pwd provided in the dictionary")
+        print("Considering creating an account for better data")
+
+    # Import changes ------------------------------------------------
+    import_modfication_files = ["launch_acolite.py"]
+
+    for f in import_modfication_files:
+        file_to_change = Path(acolite_dir, f)
+        with open(file_to_change, 'r') as file:
+            # read a list of lines into data
+            data = file.readlines()
+
+            for idx, d in enumerate(data):
+                data[idx] = d.replace("import acolite as", "import hypso.atmospheric.acolite_main.acolite as")
+
+        # and write everything back
+        with open(file_to_change, 'w') as file:
+            file.writelines(data)
+
+    # Recursive Changes ---------------------------------------------
+    import_modfication_files = []
+    recursive_path = Path(acolite_dir, "acolite")
+    for subpath in recursive_path.rglob("*.py"):
+        if subpath.is_file():
+            import_modfication_files.append(subpath)
+
+    for f in import_modfication_files:
+        with open(f, 'r') as file:
+            # read a list of lines into data
+            data = file.readlines()
+
+            for idx, d in enumerate(data):
+                data[idx] = d.replace("import acolite as", "import hypso.atmospheric.acolite_main.acolite as")
+
+        # and write everything back
+        with open(f, 'w') as file:
+            file.writelines(data)
 
     # Call ACOLITE Script -----------------------------------------------------------
     import subprocess
     try:
-        subprocess.run(["python", launch_acolite_path, '--cli',
-                         '--inputfile', hypso_info["nc_file"],
-                         '--output', acolite_output_dir,
-                         '--settings', settings_path],
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.STDOUT)
+        res = subprocess.run(["python", launch_acolite_path, '--cli',
+                              '--inputfile', nc_file_acoliteready,
+                              '--output', acolite_output_dir,
+                              '--settings', settings_path],
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT)
+
+        print(res.stdout.decode())
 
     except Exception as e:
         raise Exception(e)
@@ -111,11 +209,6 @@ def run_acolite(hypso_info, atmos_dict):
     with nc.Dataset(acolite_l2_file, format="NETCDF4") as f:
         group = f
         keys = [i for i in f.variables.keys()]
-        try:
-            keys.remove('lat')
-            keys.remove('lon')
-        except:
-            print("Couldn't find lat and lon keys on Acolite .nc")
 
         toa_keys = [k for k in keys if 'rhos' not in k]
         surface_keys = [kk for kk in keys if 'rhot' not in kk]
@@ -130,17 +223,16 @@ def run_acolite(hypso_info, atmos_dict):
 
             final_acolite_l2[:, :, i] = current_channel
 
+        # TODO: Confirm if zeros should be appended at the beginning or end
+        # ACOLITE returns 118 bands
+        # If number of bands less that 120, append zeros to the end
+        delta = int(120 - final_acolite_l2.shape[2])
+        if delta > 0:
+            for _ in range(delta):
+                zeros_arr = np.zeros((final_acolite_l2.shape[0], final_acolite_l2.shape[1]), dtype=float)
+                final_acolite_l2 = np.dstack((final_acolite_l2, zeros_arr))
+
     # Recover config.txt file -----------------------------------------------
-    with open(user_pwd_file, 'r') as file:
-        # read a list of lines into data
-        data = file.readlines()
-
-    # now change the 2nd line, note that you have to add a newline
-    data[61] = "EARTHDATA_u=\n"
-    data[62] = "EARTHDATA_p==\n"
-
-    # and write everything back
-    with open(user_pwd_file, 'w') as file:
-        file.writelines(data)
+    reset_config_file(user_pwd_file)
 
     return final_acolite_l2

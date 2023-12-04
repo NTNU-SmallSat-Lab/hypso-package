@@ -58,11 +58,13 @@ class Satellite:
             self.spectral_coeff_file)
         self.wavelengths = self.spectral_coefficients
 
-        # Modify .netcdf for ACOLITE ---------------------------------------
-        self.modify_netcdf_for_acolite(hypso_path)
+
 
         # Calibrate and Correct Cube Variables and load existing L2 Cube  ----------------------------------------
         self.l1b_cube = self.get_calibrated_and_corrected_cube()
+
+        self.create_acolite_netcdf(hypso_path) # Modify .netcdf for ACOLITE ---------------------------------------
+
         self.l2a_cube = self.find_existing_l2_cube()
 
         # Generated afterwards
@@ -71,7 +73,8 @@ class Satellite:
         # Get Projection Metadata from created geotiff
         self.projection_metadata = self.get_projection_metadata(self.info["top_folder_name"])
 
-    def modify_netcdf_for_acolite(self, nc_path):
+    def create_acolite_netcdf(self, nc_path):
+        # TODO: Make this as part of the pipeline and remove from the package
         def get_nav_and_view():
             is_nav_data_available = False
             path = self.info["top_folder_name"]
@@ -92,137 +95,168 @@ class Satellite:
                         lon = np.fromfile(subpath, dtype=np.float32)
             return sata, satz, suna, sunz, lat, lon
 
-        lines = self.info["frame_count"]  # AKA Frames AKA Rows
-        # samples = self.info["image_height"] # AKA Cols
+        lines = self.info["frame_count"]  # AKA Frames AKA Rows AKA Lines
+        frames = self.info["frame_count"]  # AKA Frames AKA Rows AKA Lines
+
+        samples = self.info["image_height"] # AKA Cols
         bands = self.info["image_width"]
+
 
         sata, satz, suna, sunz, lat, lon = get_nav_and_view()
 
-        with nc.Dataset(nc_path, "r+", format="NETCDF4") as netfile:
+        # Copy File and change name
+        import shutil
+        parent, name = nc_path.parent, nc_path.name
+        new_name = name.replace(".nc","_ACOLITEREADY_INPUT.nc")
+        new_nc_dir = Path(self.info["top_folder_name"],"geotiff","acolite-output")
+        new_nc_dir.mkdir(parents=True, exist_ok=True)
 
-            # Update Lt ------------------------------------------------------
-            netfile.createGroup('products')
-            group = netfile.groups["products"]
-            # 16-bit according to Original data Capture
-            Lt = group.variables["Lt"]
+        new_nc_path = Path(new_nc_dir, new_name)
 
+        # Create a new NetCDF file
+        with nc.Dataset(new_nc_path, 'w', format='NETCDF4') as f:
+
+            # Create variables
+            COMP_SCHEME = 'zlib'  # Default: zlib
+            COMP_LEVEL = 4  # Default (when scheme != none): 4
+            COMP_SHUFFLE = True  # Default (when scheme != none): True
+
+            f.instrument = "HYPSO-1 Hyperspectral Imager"
+            f.institution = "Norwegian University of Science and Technology"
+            f.resolution = "N/A"
+            f.location_description = name
+            f.license = "MIT"
+            f.naming_authority = "NTNU SmallSat Lab"
+            f.date_aquired = self.info["iso_time"] + "Z"
+            f.publisher_name = "NTNU SmallSat Lab"
+            f.publisher_url = "https://hypso.space"
+            # f.publisher_contact = "smallsat@ntnu.no"
+            f.processing_level = "L1B"
+            f.radiometric_file = self.calibration_coeffs_file_dict["radiometric"].name
+            f.smile_file = self.calibration_coeffs_file_dict["smile"].name
+            f.destriping_file = self.calibration_coeffs_file_dict["destriping"].name
+            f.spectral_file = self.spectral_coeff_file.name
+            # Create dimensions
+            f.createDimension('frames', frames)
+            f.createDimension('samples', samples)
+            f.createDimension('lines', lines)
+            f.createDimension('bands', bands)
+
+            f.createGroup('products')
+            Lt = f.createVariable('products/Lt', 'f4',
+                                  ('frames', 'samples', 'bands'),
+                                  compression=COMP_SCHEME,
+                                  complevel=COMP_LEVEL,
+                                  shuffle=COMP_SHUFFLE,
+                                  # least_significant_digit=5, #Truncate data for extra compression. At 12 bits, 5 sigdigs should suffice?
+                                  )  # Default: lvl 4 w/ shuffling
             Lt.units = "W/m^2/micrometer/sr"
             Lt.long_name = "Top of Atmosphere Measured Radiance"
             Lt.wavelength_units = "nanometers"
             Lt.fwhm = [5.5] * bands
             Lt.wavelengths = np.around(self.spectral_coefficients, 1)
-            Lt[:] = self.rawcube
+            Lt[:] = self.l1b_cube
 
-            # create NAvigation ----------------------------------------------
-            navigation_group = netfile.createGroup('navigation')
+            # create groups
+            navigation_group = f.createGroup('navigation')
 
             navigation_group.iso8601time = self.info["iso_time"] + "Z"
 
-            try:
-                time = netfile.createVariable('navigation/unixtime', 'u8', ('lines',))
-                frametime_pose_file = find_file(self.info["top_folder_name"], "frametime-pose", ".csv")
-                df = pd.read_csv(frametime_pose_file)
-                time[:] = df["timestamp"].values
-            except Exception as erro:
-                print(f"Time Unixtime Already Exists {erro}")
+            # Unix time -----------------------
+            time = f.createVariable('navigation/unixtime', 'u8', ('lines',))
+            frametime_pose_file = find_file(self.info["top_folder_name"], "frametime-pose", ".csv")
+            df = pd.read_csv(frametime_pose_file)
+            time[:] = df["timestamp"].values
 
-            try:
-                sensor_z = netfile.createVariable(
-                    'navigation/sensor_zenith', 'f4', ('lines', 'samples'),
-                    # compression=COMP_SCHEME,
-                    # complevel=COMP_LEVEL,
-                    # shuffle=COMP_SHUFFLE,
-                )
-                sensor_z[:] = satz.reshape(self.spatialDim)
-                sensor_z.long_name = "Sensor Zenith Angle"
-                sensor_z.units = "degrees"
-                # sensor_z.valid_range = [-180, 180]
-                sensor_z.valid_min = -180
-                sensor_z.valid_max = 180
-            except Exception as erro:
-                print(f"Sensor Z Already Exists {erro}")
+            # Sensor Zenith --------------------------
+            sensor_z = f.createVariable(
+                'navigation/sensor_zenith', 'f4', ('lines', 'samples'),
+                # compression=COMP_SCHEME,
+                # complevel=COMP_LEVEL,
+                # shuffle=COMP_SHUFFLE,
+            )
+            sensor_z[:] = satz.reshape(self.spatialDim)
+            sensor_z.long_name = "Sensor Zenith Angle"
+            sensor_z.units = "degrees"
+            # sensor_z.valid_range = [-180, 180]
+            sensor_z.valid_min = -180
+            sensor_z.valid_max = 180
 
-            try:
-                sensor_a = netfile.createVariable(
-                    'navigation/sensor_azimuth', 'f4', ('lines', 'samples'),
-                    # compression=COMP_SCHEME,
-                    # complevel=COMP_LEVEL,
-                    # shuffle=COMP_SHUFFLE,
-                )
-                sensor_a[:] = sata.reshape(self.spatialDim)
-                sensor_a.long_name = "Sensor Azimuth Angle"
-                sensor_a.units = "degrees"
-                # sensor_a.valid_range = [-180, 180]
-                sensor_a.valid_min = -180
-                sensor_a.valid_max = 180
-            except Exception as erro:
-                print(f"Sensor A Already Exists {erro}")
+            # Sensor Azimuth ---------------------------
+            sensor_a = f.createVariable(
+                'navigation/sensor_azimuth', 'f4', ('lines', 'samples'),
+                # compression=COMP_SCHEME,
+                # complevel=COMP_LEVEL,
+                # shuffle=COMP_SHUFFLE,
+            )
+            sensor_a[:] = sata.reshape(self.spatialDim)
+            sensor_a.long_name = "Sensor Azimuth Angle"
+            sensor_a.units = "degrees"
+            # sensor_a.valid_range = [-180, 180]
+            sensor_a.valid_min = -180
+            sensor_a.valid_max = 180
 
-            try:
-                solar_z = netfile.createVariable(
-                    'navigation/solar_zenith', 'f4', ('lines', 'samples'),
-                    # compression=COMP_SCHEME,
-                    # complevel=COMP_LEVEL,
-                    # shuffle=COMP_SHUFFLE,
-                )
-                solar_z[:] = sunz.reshape(self.spatialDim)
-                solar_z.long_name = "Solar Zenith Angle"
-                solar_z.units = "degrees"
-                # solar_z.valid_range = [-180, 180]
-                solar_z.valid_min = -180
-                solar_z.valid_max = 180
-            except Exception as erro:
-                print(f"Solar Z Already Exists {erro}")
+            # Solar Zenith ----------------------------------------
+            solar_z = f.createVariable(
+                'navigation/solar_zenith', 'f4', ('lines', 'samples'),
+                # compression=COMP_SCHEME,
+                # complevel=COMP_LEVEL,
+                # shuffle=COMP_SHUFFLE,
+            )
+            solar_z[:] = sunz.reshape(self.spatialDim)
+            solar_z.long_name = "Solar Zenith Angle"
+            solar_z.units = "degrees"
+            # solar_z.valid_range = [-180, 180]
+            solar_z.valid_min = -180
+            solar_z.valid_max = 180
 
-            try:
-                solar_a = netfile.createVariable(
-                    'navigation/solar_azimuth', 'f4', ('lines', 'samples'),
-                    # compression=COMP_SCHEME,
-                    # complevel=COMP_LEVEL,
-                    # shuffle=COMP_SHUFFLE,
-                )
-                solar_a[:] = suna.reshape(self.spatialDim)
-                solar_a.long_name = "Solar Azimuth Angle"
-                solar_a.units = "degrees"
-                # solar_a.valid_range = [-180, 180]
-                solar_a.valid_min = -180
-                solar_a.valid_max = 180
-            except Exception as erro:
-                print(f"Solar A Already Exists {erro}")
+            # Solar Azimuth ---------------------------------------
+            solar_a = f.createVariable(
+                'navigation/solar_azimuth', 'f4', ('lines', 'samples'),
+                # compression=COMP_SCHEME,
+                # complevel=COMP_LEVEL,
+                # shuffle=COMP_SHUFFLE,
+            )
+            solar_a[:] = suna.reshape(self.spatialDim)
+            solar_a.long_name = "Solar Azimuth Angle"
+            solar_a.units = "degrees"
+            # solar_a.valid_range = [-180, 180]
+            solar_a.valid_min = -180
+            solar_a.valid_max = 180
 
-            try:
-                latitude = netfile.createVariable(
-                    'navigation/latitude', 'f4', ('lines', 'samples'),
-                    # compression=COMP_SCHEME,
-                    # complevel=COMP_LEVEL,
-                    # shuffle=COMP_SHUFFLE,
-                )
-                # latitude[:] = lat.reshape(frames, lines)
-                latitude[:] = self.info["lat"]
-                latitude.long_name = "Latitude"
-                latitude.units = "degrees"
-                # latitude.valid_range = [-180, 180]
-                latitude.valid_min = -180
-                latitude.valid_max = 180
-            except Exception as erro:
-                print(f"Latitude Already Exists {erro}")
+            # Latitude ---------------------------------
+            latitude = f.createVariable(
+                'navigation/latitude', 'f4', ('lines', 'samples'),
+                # compression=COMP_SCHEME,
+                # complevel=COMP_LEVEL,
+                # shuffle=COMP_SHUFFLE,
+            )
+            # latitude[:] = lat.reshape(frames, lines)
+            latitude[:] = self.info["lat"]
+            latitude.long_name = "Latitude"
+            latitude.units = "degrees"
+            # latitude.valid_range = [-180, 180]
+            latitude.valid_min = -180
+            latitude.valid_max = 180
 
-            try:
-                longitude = netfile.createVariable(
-                    'navigation/longitude', 'f4', ('lines', 'samples'),
-                    # compression=COMP_SCHEME,
-                    # complevel=COMP_LEVEL,
-                    # shuffle=COMP_SHUFFLE,
-                )
-                # longitude[:] = lon.reshape(frames, lines)
-                longitude[:] = self.info["lon"]
-                longitude.long_name = "Longitude"
-                longitude.units = "degrees"
-                # longitude.valid_range = [-180, 180]
-                longitude.valid_min = -180
-                longitude.valid_max = 180
-            except Exception as erro:
-                print(f"Longitude Already Exists {erro}")
+            # Longitude ----------------------------------
+            longitude = f.createVariable(
+                'navigation/longitude', 'f4', ('lines', 'samples'),
+                # compression=COMP_SCHEME,
+                # complevel=COMP_LEVEL,
+                # shuffle=COMP_SHUFFLE,
+            )
+            # longitude[:] = lon.reshape(frames, lines)
+            longitude[:] = self.info["lon"]
+            longitude.long_name = "Longitude"
+            longitude.units = "degrees"
+            # longitude.valid_range = [-180, 180]
+            longitude.valid_min = -180
+            longitude.valid_max = 180
+
+    def delete_acolite_netcdf(self):
+        acolite_netcdf = find_file(self.info["top_folder_name"],"ACOLITEREADY",".nc")
+        acolite_netcdf.unlink(missing_ok=True)
 
     def get_geotiff(self, product="L2", force_reload=False, atmos_dict=None):
 
@@ -268,7 +302,11 @@ class Satellite:
                                                     atmos_dict, time_capture=parser.parse(self.info['iso_time']))
                 elif atmos_model == "ACOLITE":
                     print("Getting ACOLITE L2")
-                    atmos_corrected_cube = run_acolite(self.info, atmos_dict)
+                    nc_file_acoliteready = find_file(self.info["top_folder_name"],"ACOLITEREADY",".nc")
+                    if nc_file_acoliteready is None:
+                        raise Exception("No ACOLITEREADY.nc file found")
+                    print(f"Found {nc_file_acoliteready.name}")
+                    atmos_corrected_cube = run_acolite(self.info, atmos_dict, nc_file_acoliteready)
 
             # Store the l2a_cube just generated
             if self.l2a_cube is None:
@@ -299,14 +337,21 @@ class Satellite:
         self.l2geotiffFilePath = None
 
         if geotiff_dir is not None:
-            print("Forcing Reload: Deleting geotiff Directory...")
+            print("Deleting geotiff Directory...")
             import shutil
             shutil.rmtree(geotiff_dir, ignore_errors=True)
 
     def find_geotiffs(self, top_folder_name: Path):
         self.rgbGeotiffFilePath = find_file(top_folder_name, "rgba_8bit", ".tif")
         self.l1cgeotiffFilePath = find_file(top_folder_name, "-full_L1C", ".tif")
-        self.l2geotiffFilePath = find_file(top_folder_name, "-full_L2", ".tif")
+
+        L2_dict = {}
+        L2_files = find_all_files(top_folder_name, "-full_L2", ".tif")
+        if len(L2_files) > 0:
+            for f in find_all_files(top_folder_name, "-full_L2", ".tif"):
+                key = str(f.stem).split("_")[-1]
+                L2_dict[key] = f
+            self.l2geotiffFilePath = L2_dict
 
     def find_existing_l2_cube(self) -> Union[dict, None]:
         found_l2_npy = find_all_files(path=Path(self.info["top_folder_name"], "geotiff"),
@@ -373,10 +418,12 @@ class Satellite:
         full_path = None
         if self.l2geotiffFilePath is not None:
             # Load GeoTiff Metadata with gdal
-            ds = gdal.Open(str(self.l2geotiffFilePath))
+            first_key = list(self.l2geotiffFilePath)[0]
+            path_found = self.l2geotiffFilePath[first_key]
+            ds = gdal.Open(str(path_found))
             data = ds.ReadAsArray()
             current_project["data"] = data
-            print("Full L2 Tif File: ", self.l2geotiffFilePath.name)
+            print("Full L2 Tif File: ", path_found.name)
         if self.l1cgeotiffFilePath is not None:
             # Load GeoTiff Metadata with gdal
             ds = gdal.Open(str(self.l1cgeotiffFilePath))
@@ -460,7 +507,7 @@ class Satellite:
         return wl_file
 
     def get_spectra(self, position_dict: dict, product: str = "L2", postype: str = 'coord', multiplier=1, filename=None,
-                    plot=True):
+                    plot=True, L2_engine="6SV1"):
         '''
         files_path: Works with a directorie with GeoTiff files. Uses the metadata, and integrated CRS
         position:
@@ -494,8 +541,13 @@ class Satellite:
             if self.l2geotiffFilePath is None:
                 raise Exception("L2 product does not exist.")
             elif self.l2geotiffFilePath is not None:
-                path_to_read = self.l2geotiffFilePath
+                try:
+                    path_to_read = self.l2geotiffFilePath[L2_engine.upper()]
+                except:
+                    raise Exception(f"There is no L2 Geotiff for {L2_engine.upper()}")
+
                 cols = ["wl", "rrs"]
+
         elif product == "L1C":
             if self.l1cgeotiffFilePath is None:
                 raise Exception("L1C product does not exist.")

@@ -97,7 +97,10 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions) -> dict:
     temp_dir = Path(nc_file_path.parent.absolute(), nc_name + "_tmp")
     info["tmp_dir"] = temp_dir
     # Add file name
-    info["capture_name"] = nc_file_path.stem
+    capture_name = nc_file_path.stem
+    if "-l1a" in capture_name:
+        capture_name = capture_name.replace("-l1a","")
+    info["capture_name"] = capture_name
 
     temp_dir.mkdir(parents=True, exist_ok=True)
     # ------------------------------------------------------------------------
