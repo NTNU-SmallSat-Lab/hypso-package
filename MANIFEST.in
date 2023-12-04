@@ -1,6 +1,7 @@
 global-include *.csv
 global-include *.ini
 global-include *.dat
+global-include *.tif
 global-include *.txt
 global-include *.xls
 global-include *.xlsx
