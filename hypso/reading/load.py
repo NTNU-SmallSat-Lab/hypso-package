@@ -168,14 +168,20 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions) -> dict:
     # ------------------------------------------------------------------------
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
         group = f
-        target_coords = getattr(group, "target_coords")
-        if target_coords is None:
+        try:
+            # returns string 'False' if doesnt exist
+            target_coords = getattr(group, "target_coords")
+            if target_coords == 'False':
+                target_lat = "-"
+                target_lon = "-"
+            else:
+                target_coords = target_coords.split(" ")
+                target_lat=target_coords[0]
+                target_lon=target_coords[1]
+        except AttributeError:
             target_lat = "-"
             target_lon = "-"
-        else:
-            target_coords = target_coords.split(" ")
-            target_lat=target_coords[0]
-            target_lon=target_coords[1]
+
 
     info["latc"] = target_lat
     info["lonc"] = target_lon

@@ -670,12 +670,16 @@ class DWImageClustering:
         # create data bunch only with the bands used for clustering
         split_train_data_as_columns = self.split_data_by_bands(train_data_as_columns, self.bands_keys)
         split_data_as_columns = self.split_data_by_bands(self.data_as_columns, self.bands_keys)
+
         # find the best clustering solution (k = number of clusters)
         self.best_k = self.find_best_k(split_train_data_as_columns)
+
         # apply the clusterization algorithm and return labels and train dataset
         train_clusters_labels = self.apply_cluster(split_train_data_as_columns)
+
         # calc statistics for each cluster
         self.clusters_params = self.calc_clusters_params(train_data_as_columns, train_clusters_labels)
+
         # detect the water cluster
         self.water_cluster = self.identify_water_cluster()
         # if we are dealing with aglomerative cluster or other diff from kmeans, we have only a sample of labels

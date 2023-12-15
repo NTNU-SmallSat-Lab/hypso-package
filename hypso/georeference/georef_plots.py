@@ -568,7 +568,7 @@ def geometry_computation(framepose_data_path, hypso_height=684):
     for az in range(0,360,20):
         ax.view_init(elev=elevation_plot, azim=az)
         #ax.axis('equal')
-        plt.tight_layout()
+        #plt.tight_layout()
         svg_save_path=str(Path(output_path_plots_svg, f'view_geometry_az{az}_el{elevation_plot}.svg'))
         png_save_path=str(Path(output_path_plots_png, f'view_geometry_az{az}_el{elevation_plot}.png'))
         fig.savefig(svg_save_path)
