@@ -21,9 +21,9 @@ def BasicParameters(wavelengths, hypercube_L1, hypso_info, lat_2d_array, lon_2d_
     SixsParameters['wavelengths'] = wavelengths
     SixsParameters['radiance_cube'] = hypercube_L1
 
-    # Solar zenith angle, azimuth
-    SixsParameters["SolarZenithAngle"] = hypso_info['solar_zenith_angle']
-    SixsParameters["SolarAzimuthAngle"] = hypso_info['solar_azimuth_angle']
+    # Solar zenith angle, azimuth (average)
+    SixsParameters["SolarZenithAngle"] = np.mean(hypso_info['solar_zenith_angle'])
+    SixsParameters["SolarAzimuthAngle"] = np.mean(hypso_info['solar_azimuth_angle'])
 
     # -------------------------------------------------
     #               Satellite Parameters
@@ -32,11 +32,10 @@ def BasicParameters(wavelengths, hypercube_L1, hypso_info, lat_2d_array, lon_2d_
     ViewZeniths = dict()
     ViewAzimuths = dict()
     # Make an 120 array with the average zenith and azimuth angle for every band
-    # Ideally the average should be per band
+    # Ideally the average should be per band but we only have one 2D array so we use the same for every one
     for i in range(120):
-        # Each band has the average value
-        ViewZeniths[i] = hypso_info['sat_zenith_angle']
-        ViewAzimuths[i] = hypso_info['sat_azimuth_angle']
+        ViewZeniths[i] = np.mean(hypso_info['sat_zenith_angle'])
+        ViewAzimuths[i] = np.mean(hypso_info['sat_azimuth_angle'])
 
     SixsParameters["SatZenithAngles"] = ViewZeniths
     SixsParameters["SatAzimuthAngles"] = ViewAzimuths

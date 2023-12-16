@@ -10,33 +10,33 @@ from pathlib import Path
 def interpolate_at_frame(pos_csv_path,quat_csv_path,flash_csv_path,additional_time_offset=0.0,framerate = -1.0,
                          exposure = -1.0):
 
-    print('This script requires paths to three files:', \
-          '\n  1. a satellite position timeseries .csv file', \
-          '\n  2. a satellite attitude quaternion timeseries .csv file', \
-          '\n  3. a frame timestamps file (either timestamps.txt or timestamps_services.txt)', \
-          '\n  as first, second and third arg in this order.\n')
-
-    print('  Optionally provide a frame timestamp offset in seconds, the capture')
-    print('  framerate and exposure time in ms as fourth, fifth and sixth argument.')
-    print('  Providing framerate and exposure time extrapolates the timestamps, as')
-    print('  opposed to using the timestamps file.\n')
-
-    print('  (framerate and exposure time must be specified BOTH, at the same')
-    print('  time, if only framerate is given, it is ignored)')
-
-
-    '''
-    The position timeseries .csv file shall look like
-    time, eci x [m], eci y [m], eci z [m]
-    1648507140.0, 5050500, -1800000, 4545454
-    
-    The quaternion timeseries .csv file shall look like (q1 is scalar part)
-    time, q1, q2, q3, q4
-    1648507140.0, 0.9, 0.03, 0.06, 0.3
-    
-    And the frame timestamps file shall be taken
-    from the metadata of an hsi capture, either 'timestamps.txt' or 'timestamps_services.txt'
-    '''
+    # print('This script requires paths to three files:', \
+    #       '\n  1. a satellite position timeseries .csv file', \
+    #       '\n  2. a satellite attitude quaternion timeseries .csv file', \
+    #       '\n  3. a frame timestamps file (either timestamps.txt or timestamps_services.txt)', \
+    #       '\n  as first, second and third arg in this order.\n')
+    #
+    # print('  Optionally provide a frame timestamp offset in seconds, the capture')
+    # print('  framerate and exposure time in ms as fourth, fifth and sixth argument.')
+    # print('  Providing framerate and exposure time extrapolates the timestamps, as')
+    # print('  opposed to using the timestamps file.\n')
+    #
+    # print('  (framerate and exposure time must be specified BOTH, at the same')
+    # print('  time, if only framerate is given, it is ignored)')
+    #
+    #
+    # '''
+    # The position timeseries .csv file shall look like
+    # time, eci x [m], eci y [m], eci z [m]
+    # 1648507140.0, 5050500, -1800000, 4545454
+    #
+    # The quaternion timeseries .csv file shall look like (q1 is scalar part)
+    # time, q1, q2, q3, q4
+    # 1648507140.0, 0.9, 0.03, 0.06, 0.3
+    #
+    # And the frame timestamps file shall be taken
+    # from the metadata of an hsi capture, either 'timestamps.txt' or 'timestamps_services.txt'
+    # '''
 
     print(f'  Position timeseries path:',\
           f'\n    {pos_csv_path}',\

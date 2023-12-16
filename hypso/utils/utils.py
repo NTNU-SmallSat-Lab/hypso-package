@@ -216,6 +216,25 @@ def is_integer_num(n) -> bool:
 def print_nc(nc_file_path):
     recursive_print_nc(nc.Dataset(nc_file_path, format="NETCDF4"))
 
+def list_array_1d_to_string(arr):
+    var_str = ''
+    end_var_str = ''
+    if isinstance(arr, np.ndarray) or isinstance(arr, list):
+        var_str = '['
+        end_var_str = ']'
+    elif isinstance(arr, tuple):
+        var_str = '('
+        end_var_str = ')'
+    else: # if int or float or not a list
+        return arr
+
+    for ss in arr:
+        var_str += str(ss).replace("'", '')
+        var_str += ', '
+    var_str = ''.join(var_str.rsplit(', ', 1))
+    var_str += end_var_str
+
+    return var_str
 
 def recursive_print_nc(nc_file, path='', depth=0):
 
@@ -227,18 +246,52 @@ def recursive_print_nc(nc_file, path='', depth=0):
 
     print(indent, 'DIMENSIONS: ', sep='', end='')
     for d in nc_file.dimensions.keys():
-        print(d, end=', ')
-    print('')
-    print(indent, 'VARIABLES: ', sep='', end='')
-    for v in nc_file.variables.keys():
-        print(v, end=', ')
+        print(f"{d} ({nc_file.dimensions[d].size})", end=', ')
     print('')
 
-    print(indent, 'ATTRIBUTES: ', sep='', end='')
+    print(indent, 'GROUP ATTRIBUTES: ', sep='', end='')
     for a in nc_file.ncattrs():
         print(a, end=', ')
     print('')
 
+    print(indent, 'VARIABLES: ', sep='', end='')
+    for v in nc_file.variables.keys():
+        var_str_tmp = nc_file[v].dimensions
+        var_str = list_array_1d_to_string(var_str_tmp)
+
+        print(v,f"{var_str}", end=', ')
+    print('')
+
+    # Variable Attributes ------------------------------------------------
+    var_str = nc_file.variables.keys()
+    curr_var_atrr=[]
+    for v in var_str:
+        try:
+            attrs = nc_file[v].ncattrs()
+            curr_var_atrr.append(attrs)
+        except AttributeError:
+            pass
+    print(indent, 'VAR ATTRIBUTES: ', sep='')
+    if len(curr_var_atrr) > 0:
+
+        for v, attr_list in zip(var_str,curr_var_atrr):
+            if len(attr_list) > 0:
+                print('')
+                print(indent,indent, v)
+                for a in attr_list:
+                    attr_tmp = nc_file[v].getncattr(a)
+                    attr_string = list_array_1d_to_string(attr_tmp)
+                    if isinstance(attr_tmp, np.ndarray):
+                        print(indent, indent, f"---{a.strip()} {attr_tmp.shape}: {attr_string}")
+                    elif isinstance(attr_tmp, list) or isinstance(attr_tmp, tuple):
+                        print(indent, indent, f"---{a.strip()} {len(attr_tmp)}: {attr_string}")
+                    else:
+                        attr_string = str(attr_tmp)
+                        print(indent, indent, f"---{a.strip()}: {attr_string}")
+
+        print('')
+
+    # Sub Groups ---------------------------------------------------------
     print(indent, 'SUB-GROUPS: ', sep='', end='')
     for g in nc_file.groups.keys():
         print(g, end=', ')

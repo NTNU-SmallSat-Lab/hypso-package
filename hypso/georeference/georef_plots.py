@@ -271,9 +271,9 @@ def add_grid(axes, lat_center, lon_center, seg_lat, seg_lon, size_lat_deg, size_
 def geometry_computation(framepose_data_path, hypso_height=684):
     print('Geometric Computations')
 
-    print('  This script requires:')
-    print('    a path to a \'frametime pose file\'')
-    print('    optional the data height in pixels (default 684)')
+    # print('  This script requires:')
+    # print('    a path to a \'frametime pose file\'')
+    # print('    optional the data height in pixels (default 684)')
     # This is a kind of "east-west offset"
     # the north south offset is in "interpolate_at_frame.py" (as of october 2022)
     additional_time_offset = -650.0*0.0 + 0.0
