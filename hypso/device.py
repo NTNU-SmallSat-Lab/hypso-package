@@ -79,7 +79,7 @@ class Satellite:
         self.waterMask = None
 
         # Get Projection Metadata from created geotiff
-        self.projection_metadata = self.get_projection_metadata(self.info["top_folder_name"])
+        self.get_projection_metadata()
 
     # TODO: Replace L1A with the same but only the rawcube instead of L1B
     def create_l1b_nc_file(self, hypso_nc_path):
@@ -670,8 +670,8 @@ class Satellite:
 
         return dict_L2
 
-    def get_projection_metadata(self, top_folder_name: Path) -> dict:
-
+    def get_projection_metadata(self) -> dict:
+        top_folder_name = self.info["top_folder_name"]
         current_project = {}
 
         # Find Geotiffs
@@ -724,7 +724,7 @@ class Satellite:
             current_project["data"] = data
             print("Full L1C Tif File: ", self.l1cgeotiffFilePath.name)
 
-        return current_project
+        self.projection_metadata = current_project
 
     def get_calibration_coefficients_path(self) -> dict:
         csv_file_radiometric = None

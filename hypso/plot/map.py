@@ -5,7 +5,7 @@ from matplotlib import colors
 import warnings
 import matplotlib.pyplot as plt
 from matplotlib import ticker
-
+from hypso.georeference import generate_rgb_geotiff
 
 # GIS
 import cartopy.crs as ccrs
@@ -71,7 +71,8 @@ def tick_log_formatter(y, pos):
         formatstring = '{:2.1e}'.format(y)
         return formatstring
 
-def get_cartopy_axis(satellite_obj,dpi_input):
+
+def get_cartopy_axis(satellite_obj, dpi_input):
     lat = satellite_obj.info["lat"]
     lon = satellite_obj.info["lon"]
 
@@ -115,17 +116,21 @@ def get_cartopy_axis(satellite_obj,dpi_input):
     # ax.add_feature(cf.RIVERS.with_scale('10m'), lw=0.3, alpha=0.5)
     # ax.add_feature(cf.LAND, zorder=100, edgecolor='k')  # Covers data in land
 
-
     warnings.resetwarnings()
 
-    return ax,transformed_img_extent,projection_img,lat,lon
+    return ax, transformed_img_extent, projection_img, lat, lon
 
-def point_rgb_map(satellite_obj, plotTitle="RGB Image", dpi_input=450,patch_dict=None,r_plot=0.007,path_to_save=None):
+
+def point_rgb_map(satellite_obj, plotTitle="RGB Image", dpi_input=450, patch_dict=None, r_plot=0.007,
+                  path_to_save=None):
+
+    # Check if projection geotiff exists, get data if needed
+    check_projection_geotiff(satellite_obj)
 
     # TODO: Warnings are disabled as a rounding error with shapely causes an "no intersection warning". New version of GDAL might solve it
-    with np.errstate(all="ignore"): 
+    with np.errstate(all="ignore"):
         # Get Axis for Map
-        ax,transformed_img_extent,projection_img,lat,lon= get_cartopy_axis(satellite_obj,dpi_input)
+        ax, transformed_img_extent, projection_img, lat, lon = get_cartopy_axis(satellite_obj, dpi_input)
 
         ax.imshow(
             get_rgb(satellite_obj),
@@ -136,27 +141,29 @@ def point_rgb_map(satellite_obj, plotTitle="RGB Image", dpi_input=450,patch_dict
         )
 
         from matplotlib.patches import Circle
-        patches_list=[]
+        patches_list = []
         for key in patch_dict:
-            cc=Circle(xy=(patch_dict[key]["lon"], patch_dict[key]["lat"]), radius=r_plot,color=patch_dict[key]["color"],transform=ccrs.PlateCarree(), zorder=30,label=key)
+            cc = Circle(xy=(patch_dict[key]["lon"], patch_dict[key]["lat"]), radius=r_plot,
+                        color=patch_dict[key]["color"], transform=ccrs.PlateCarree(), zorder=30, label=key)
             patches_list.append(cc)
             ax.add_patch(cc)
 
         plt.legend(handles=patches_list)
         plt.title(plotTitle)
-        
+
         if path_to_save is not None:
             plt.savefig(path_to_save)
         plt.show()
-        
+
+
 def show_rgb_map(satellite_obj, plotTitle="RGB Image", dpi_input=450):
-    # Refresh the Projection
-    satellite_obj.find_geotiffs(satellite_obj.info["top_folder_name"])
+    # Check if projection geotiff exists, get data if needed
+    check_projection_geotiff(satellite_obj)
 
     # TODO: Warnings are disabled as a rounding error with shapely causes an "no intersection warning". New version of GDAL might solve it
-    with np.errstate(all="ignore"): 
+    with np.errstate(all="ignore"):
         # Get Axis for Map
-        ax,transformed_img_extent,projection_img,lat,lon= get_cartopy_axis(satellite_obj,dpi_input)
+        ax, transformed_img_extent, projection_img, lat, lon = get_cartopy_axis(satellite_obj, dpi_input)
 
         ax.imshow(
             get_rgb(satellite_obj),
@@ -170,17 +177,19 @@ def show_rgb_map(satellite_obj, plotTitle="RGB Image", dpi_input=450):
         plt.show()
 
 
-
-def plot_array_overlay(satellite_obj, plot_array, plotTitle="2D Array",cbar_title=" Chlorophyll Concentration [mg m^-3]",dpi_input=450,min_value=0.01,max_value=100):
+def plot_array_overlay(satellite_obj, plot_array, plotTitle="2D Array",
+                       cbar_title=" Chlorophyll Concentration [mg m^-3]", dpi_input=450, min_value=0.01, max_value=100):
     MAXARRAY = max_value
     MINARRAY = min_value
 
+    # Check if projection geotiff exists, get data if needed
+    check_projection_geotiff(satellite_obj)
 
     # TODO: Warnings are disabled as a rounding error with shapely causes an "no intersection warning". New version of GDAL might solve it
     with np.errstate(all="ignore"):
 
         # Get Axis for Map
-        ax,transformed_img_extent,projection_img,lat,lon= get_cartopy_axis(satellite_obj,dpi_input)
+        ax, transformed_img_extent, projection_img, lat, lon = get_cartopy_axis(satellite_obj, dpi_input)
 
         # Set Color
         min_actual_val = np.nanmin(plot_array)
@@ -191,11 +200,11 @@ def plot_array_overlay(satellite_obj, plot_array, plotTitle="2D Array",cbar_titl
 
         # Set Range to next full log
         for i in range(-2, 3):
-            full_log = 10**i
+            full_log = 10 ** i
             if full_log < lower_limit:
                 lower_limit = full_log
         for i in range(2, -3, -1):
-            full_log = 10**i
+            full_log = 10 ** i
             if full_log > upper_limit:
                 upper_limit = full_log
 
@@ -225,7 +234,6 @@ def plot_array_overlay(satellite_obj, plot_array, plotTitle="2D Array",cbar_titl
         plt.title(plotTitle)
 
         plt.show()
-
 
 
 def auto_adjust_img(img: np.ndarray) -> np.ndarray:
@@ -265,13 +273,13 @@ def auto_adjust_img(img: np.ndarray) -> np.ndarray:
     # Merge channels and return result
     pil_image = Image.merge(img.mode, tuple(adjusted_channels))
 
-    return np.array(pil_image)/255.0
+    return np.array(pil_image) / 255.0
 
 
 def get_rgb(sat_obj,
-               R_wl: float = 650,
-               G_wl: float = 550,
-               B_wl: float = 450) -> Image:
+            R_wl: float = 650,
+            G_wl: float = 550,
+            B_wl: float = 450) -> Image:
     """
     Write the RGB image.
 
@@ -300,10 +308,20 @@ def get_rgb(sat_obj,
     return rgb_img
 
 
-def write_rgb_to_png(
-        sat_obj,
-        path_to_save: str,
-) -> Image:
+def check_projection_geotiff(satobj):
+    # Refresh the Projection
+    satobj.find_geotiffs(satobj.info["top_folder_name"])
+
+    if satobj.rgbGeotiffFilePath is None and satobj.l1cgeotiffFilePath is None:
+        generate_rgb_geotiff(satobj)
+
+    satobj.get_projection_metadata()
+
+
+def write_rgb_to_png(sat_obj, path_to_save: str) -> Image:
+
+    # Check if projection geotiff exists, get data if needed
+    check_projection_geotiff(sat_obj)
 
     rgb_img = get_rgb(sat_obj)
 
@@ -311,8 +329,6 @@ def write_rgb_to_png(
     if not path_to_save.endswith('.png'):
         path_to_save = path_to_save + '.png'
 
-
     fig = plt.figure(dpi=350, facecolor="white")
     plt.imshow(rgb_img, vmin=0, vmax=1.0)
     plt.savefig(path_to_save)
-
