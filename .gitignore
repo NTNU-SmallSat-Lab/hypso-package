@@ -6,5 +6,6 @@ __pycache__/
 hypso/ignore/
 test.ipynb
 dev.ipynb
+compare_nc.ipynb
 dev2.ipynb
 /hypso/atmospheric/acolite_main/

@@ -7,6 +7,78 @@ from bisect import bisect
 from importlib.resources import files
 from math import asin, cos, radians, sin, sqrt
 import progressbar
+import pandas as pd
+
+
+def flatten_dict(nested_dict):
+    res = {}
+    if isinstance(nested_dict, dict):
+        for k in nested_dict:
+            flattened_dict = flatten_dict(nested_dict[k])
+            for key, val in flattened_dict.items():
+                key = list(key)
+                key.insert(0, k)
+                res[tuple(key)] = val
+    else:
+        res[()] = nested_dict
+    return res
+
+
+def nested_dict_to_df(values_dict):
+    flat_dict = flatten_dict(values_dict)
+    df = pd.DataFrame.from_dict(flat_dict, orient="index")
+    # df.index = pd.MultiIndex.from_tuples(df.index)
+    # df = df.unstack(level=-1)
+    # df.columns = df.columns.map("{0[1]}".format)
+    return df
+
+
+def compare_netcdf_files(file1, file2):
+    file1 = Path(file1).absolute()
+    file2 = Path(file2).absolute()
+    file1_structure = navigate_recursive_nc(nc.Dataset(str(file1), format="NETCDF4"))
+    file2_structure = navigate_recursive_nc(nc.Dataset(str(file2), format="NETCDF4"))
+
+    df1 = nested_dict_to_df(file1_structure)
+    df1.rename(columns={0: file1.name}, inplace=True)
+    df1['label'] = df1.index
+    df1.reset_index(inplace=True, drop=True)
+
+    df2 = nested_dict_to_df(file2_structure)
+    df2.rename(columns={0: file2.name}, inplace=True)
+    df2['label'] = df2.index
+    df2.reset_index(inplace=True, drop=True)
+
+    # Merged on Column and Indicate which label is in both dataframes
+    d = {"left_only": f"Only present in {file1.name}",
+         "right_only": f"Only present in {file2.name}",
+         "both": "Present in Both"}
+
+    merged = pd.merge(df1, df2, on="label", how="outer", indicator=True)
+    merged['_merge'] = merged['_merge'].map(d)
+
+    merged.rename(columns={'_merge': "presence"}, inplace=True)
+
+    # Validate if values are equal or differente
+    merged["validator"] = "N/A"
+
+    validator_res = []
+    for idx, row in merged.iterrows():
+        try:
+            if np.all(row[file1.name] == row[file2.name]):
+                validator_res.append("equal")
+            else:
+                validator_res.append("different")
+        except Exception as e:
+            validator_res.append("different")
+
+    merged['validator'] = pd.Series(validator_res)
+
+    # Change Column Order
+    merged = merged[['label', 'presence', 'validator', file1.name, file2.name]]
+
+    return merged
+
 
 def HSI2RGB(wY, HSI, d=65, threshold=0.002):
     # wY: wavelengths in nm
@@ -93,7 +165,7 @@ def HSI2RGB(wY, HSI, d=65, threshold=0.002):
         """
     gamma = ((sRGB + 0.055) / 1.055) ** 2.4
     scale = sRGB / 12.92
-    sRGB =  np.where(sRGB > 0.04045, gamma, scale)
+    sRGB = np.where(sRGB > 0.04045, gamma, scale)
 
     # gamma_map = sRGB > 0.0031308
     # sRGB[gamma_map] = 1.055 * np.power(sRGB[gamma_map], (1. / 2.4)) - 0.055
@@ -131,17 +203,19 @@ def HSI2RGB(wY, HSI, d=65, threshold=0.002):
 
     return np.dstack((R, G, B))
 
-class MyProgressBar():
-    def __init__(self,text_prefix):
-        self.pbar = None
-        self.text_prefix=text_prefix
 
+class MyProgressBar():
+    def __init__(self, text_prefix):
+        self.pbar = None
+        self.text_prefix = text_prefix
 
     def __call__(self, block_num, block_size, total_size):
         if not self.pbar:
-            self.pbar=progressbar.ProgressBar(maxval=total_size,
-                                              widgets=[progressbar.Bar('=', f'Downloading: {self.text_prefix} [', ']',), ' ', progressbar.Percentage(),],)
-            #self.pbar = progressbar.Percentage()
+            self.pbar = progressbar.ProgressBar(maxval=total_size,
+                                                widgets=[
+                                                    progressbar.Bar('=', f'Downloading: {self.text_prefix} [', ']', ),
+                                                    ' ', progressbar.Percentage(), ], )
+            # self.pbar = progressbar.Percentage()
             self.pbar.start()
 
         downloaded = block_num * block_size
@@ -150,8 +224,9 @@ class MyProgressBar():
         else:
             self.pbar.finish()
 
+
 def find_all_files(path: Path, str_in_file: str, suffix=None, type="partial"):
-    all_files=[]
+    all_files = []
     for subpath in path.rglob("*"):
         if subpath.is_file():
             if type == "partial":
@@ -172,7 +247,8 @@ def find_all_files(path: Path, str_in_file: str, suffix=None, type="partial"):
 
     return all_files
 
-def find_file(path:Path,str_in_file:str, suffix=None, type="partial"):
+
+def find_file(path: Path, str_in_file: str, suffix=None, type="partial"):
     for subpath in path.rglob("*"):
         if subpath.is_file():
             if type == "partial":
@@ -193,7 +269,8 @@ def find_file(path:Path,str_in_file:str, suffix=None, type="partial"):
 
     return None
 
-def find_dir(path:Path,str_in_dir:str,type="partial"):
+
+def find_dir(path: Path, str_in_dir: str, type="partial"):
     for subpath in path.rglob("*"):
         if subpath.is_dir():
             if type == "partial":
@@ -205,6 +282,7 @@ def find_dir(path:Path,str_in_dir:str,type="partial"):
 
     return None
 
+
 def is_integer_num(n) -> bool:
     if isinstance(n, int):
         return True
@@ -213,8 +291,65 @@ def is_integer_num(n) -> bool:
     return False
 
 
+def navigate_recursive_nc(nc_file, path='', depth=0):
+    label = path + nc_file.name
+    tree_structure = {
+        label: {}
+    }
+    # Dimensions -----------------------------------
+    tree_structure[label]["dimensions"] = {}
+    group_dims = list(nc_file.dimensions.keys())
+    for gd in group_dims:
+        tree_structure[label]["dimensions"][gd] = nc_file.dimensions[gd].size
+
+    # Group Attributes --------------------------------------------------------
+    tree_structure[label]["group_attributes"] = {}
+    group_attrs = nc_file.ncattrs()
+    for ga in group_attrs:
+        tree_structure[label]["group_attributes"][ga] = nc_file.getncattr(ga)
+
+    # Variables -------------------------------------------------------------
+    group_variables = nc_file.variables
+    tree_structure[label]["variables"] = {}
+    for gv in group_variables:
+        tree_structure[label]["variables"][gv] = {}
+        tree_structure[label]["variables"][gv]["dimensions"] = group_variables[gv].dimensions
+        tree_structure[label]["variables"][gv]["value"] = group_variables[gv][:]
+
+    # Variable Attributes -----------------------------------------------
+    tree_structure[label]["variables_attributes"] = {}
+    variables = nc_file.variables.keys()
+    variables_attributes = []
+    for v in variables:
+        try:
+            attrs = nc_file[v].ncattrs()
+            variables_attributes.append(attrs)
+        except AttributeError:
+            pass
+    for v, attr_list in zip(variables, variables_attributes):
+        for a in attr_list:
+            attr_tmp = nc_file[v].getncattr(a)  # Get attribute
+            tree_structure[label]["variables_attributes"][v + "-" + a] = attr_tmp
+
+    # Sub groups -----------------------------------------------------------
+    tree_structure[label]["subgroups"] = list(nc_file.groups.keys())
+
+    for g in nc_file.groups.keys():
+        if nc_file.name == '/':
+            newname = path + nc_file.name
+        else:
+            newname = path + nc_file.name + '/'
+        recursive_dict = navigate_recursive_nc(nc_file.groups[g], path=newname, depth=depth + 1)
+        recursive_keys = list(recursive_dict.keys())
+        for k in recursive_keys:
+            tree_structure[k] = recursive_dict[k]
+
+    return tree_structure
+
+
 def print_nc(nc_file_path):
     recursive_print_nc(nc.Dataset(nc_file_path, format="NETCDF4"))
+
 
 def list_array_1d_to_string(arr):
     var_str = ''
@@ -225,7 +360,7 @@ def list_array_1d_to_string(arr):
     elif isinstance(arr, tuple):
         var_str = '('
         end_var_str = ')'
-    else: # if int or float or not a list
+    else:  # if int or float or not a list
         return arr
 
     for ss in arr:
@@ -236,8 +371,8 @@ def list_array_1d_to_string(arr):
 
     return var_str
 
-def recursive_print_nc(nc_file, path='', depth=0):
 
+def recursive_print_nc(nc_file, path='', depth=0):
     indent = ''
     for i in range(depth):
         indent += '  '
@@ -259,12 +394,12 @@ def recursive_print_nc(nc_file, path='', depth=0):
         var_str_tmp = nc_file[v].dimensions
         var_str = list_array_1d_to_string(var_str_tmp)
 
-        print(v,f"{var_str}", end=', ')
+        print(v, f"{var_str}", end=', ')
     print('')
 
     # Variable Attributes ------------------------------------------------
     var_str = nc_file.variables.keys()
-    curr_var_atrr=[]
+    curr_var_atrr = []
     for v in var_str:
         try:
             attrs = nc_file[v].ncattrs()
@@ -274,10 +409,10 @@ def recursive_print_nc(nc_file, path='', depth=0):
     print(indent, 'VAR ATTRIBUTES: ', sep='')
     if len(curr_var_atrr) > 0:
 
-        for v, attr_list in zip(var_str,curr_var_atrr):
+        for v, attr_list in zip(var_str, curr_var_atrr):
             if len(attr_list) > 0:
                 print('')
-                print(indent,indent, v)
+                print(indent, indent, v)
                 for a in attr_list:
                     attr_tmp = nc_file[v].getncattr(a)
                     attr_string = list_array_1d_to_string(attr_tmp)
@@ -304,7 +439,6 @@ def recursive_print_nc(nc_file, path='', depth=0):
         else:
             newname = path + nc_file.name + '/'
         recursive_print_nc(nc_file.groups[g], path=newname, depth=depth + 1)
-
 
 
 def pseudo_convolution(cube, watermask, center=[], size=5):

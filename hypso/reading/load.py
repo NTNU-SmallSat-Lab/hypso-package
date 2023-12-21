@@ -26,8 +26,8 @@ def load_nc(nc_file_path, standardDimensions):
     local_angles_csv_path = Path(nc_info["tmp_dir"], "local-angles.csv")
     sat_azimuth_path = Path(nc_info["tmp_dir"], "sat-azimuth.dat")
     sat_zenith_path = Path(nc_info["tmp_dir"], "sat-zenith.dat")
-    sun_azimuth_path = Path(nc_info["tmp_dir"], "sun-azimuth.dat")
-    sun_zenith_path = Path(nc_info["tmp_dir"], "sun-zenith.dat")
+    solar_azimuth_path = Path(nc_info["tmp_dir"], "sun-azimuth.dat")
+    solar_zenith_path = Path(nc_info["tmp_dir"], "sun-zenith.dat")
 
     latitude_dataPath = Path(nc_info["tmp_dir"], "latitudes.dat")
     longitude_dataPath = Path(nc_info["tmp_dir"], "longitudes.dat")
@@ -45,7 +45,7 @@ def load_nc(nc_file_path, standardDimensions):
                                           hypso_height=nc_info["row_count"])  # frame_height = row_count
 
     nc_info = get_local_angles(sat_azimuth_path, sat_zenith_path,
-                               sun_azimuth_path, sun_zenith_path,
+                               solar_azimuth_path, solar_zenith_path,
                                nc_info, spatialDim)
 
     nc_info = get_lat_lon_2d(latitude_dataPath, longitude_dataPath, nc_info, spatialDim)
@@ -71,11 +71,11 @@ def get_lat_lon_2d(latitude_dataPath, longitude_dataPath, info, spatialDim):
 
 
 def get_local_angles(sat_azimuth_path, sat_zenith_path,
-                     sun_azimuth_path, sun_zenith_path, info, spatialDim):
-    info["solar_zenith_angle"] = np.fromfile(sun_zenith_path, dtype="float32")
+                     solar_azimuth_path, solar_zenith_path, info, spatialDim):
+    info["solar_zenith_angle"] = np.fromfile(solar_zenith_path, dtype="float32")
     info["solar_zenith_angle"] = info["solar_zenith_angle"].reshape(spatialDim)
 
-    info["solar_azimuth_angle"] = np.fromfile(sun_azimuth_path, dtype="float32")
+    info["solar_azimuth_angle"] = np.fromfile(solar_azimuth_path, dtype="float32")
     info["solar_azimuth_angle"] = info["solar_azimuth_angle"].reshape(spatialDim)
 
     info["sat_zenith_angle"] = np.fromfile(sat_zenith_path, dtype="float32")
@@ -191,6 +191,8 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions) -> dict:
 
     info["latc"] = target_lat
     info["lonc"] = target_lon
+    info['target_area'] = target_lat+' '+target_lon
+
 
     info["background_value"] = 8 * info["bin_factor"]
 

@@ -2,7 +2,7 @@
 
 [tool.setuptools_scm]
 write_to = "hypso/_version.py"
-fallback_version = "1.8.1"
+fallback_version = "1.8.2"
 
 [build-system]
 requires=[

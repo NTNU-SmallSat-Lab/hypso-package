@@ -71,7 +71,7 @@ class Satellite:
         self.l1b_cube = self.get_calibrated_and_corrected_cube()
 
         # Create L1B .nc File
-        self.create_l1b_nc_file(hypso_path) # Input for ACOLITE
+        self.create_l1b_nc_file(hypso_path)  # Input for ACOLITE
 
         self.l2a_cube = self.find_existing_l2_cube()
 
@@ -81,6 +81,7 @@ class Satellite:
         # Get Projection Metadata from created geotiff
         self.projection_metadata = self.get_projection_metadata(self.info["top_folder_name"])
 
+    # TODO: Replace L1A with the same but only the rawcube instead of L1B
     def create_l1b_nc_file(self, hypso_nc_path):
         old_nc = nc.Dataset(hypso_nc_path, 'r', format='NETCDF4')
         new_path = hypso_nc_path
@@ -92,29 +93,33 @@ class Satellite:
             return
 
         # Create a new NetCDF file
-        with nc.Dataset(new_path, 'w', format='NETCDF4') as netfile:
+        with (nc.Dataset(new_path, 'w', format='NETCDF4') as netfile):
             bands = self.info["image_width"]
             lines = self.info["frame_count"]  # AKA Frames AKA Rows
             samples = self.info["image_height"]  # AKA Cols
 
-            # Set top level metadata
-            netfile.instrument = "HYPSO-1 Hyperspectral Imager"
-            netfile.institution = "Norwegian University of Science and Technology"
-            netfile.resolution = "N/A"
-            netfile.location_description = self.info["capture_region"]
-            netfile.license = "MIT"
-            netfile.naming_authority = "NTNU SmallSat Lab"
-            netfile.date_processed = old_nc.getncattr("date_processed")
-            netfile.date_acquired = self.info["iso_time"] + "Z"
-            netfile.publisher_name = "NTNU SmallSat Lab"
-            netfile.publisher_url = "https://hypso.space"
-            netfile.processing_level = "L1B"
-            netfile.target_coords = self.info['latc'] + ', ' + self.info['lonc']
-            netfile.radiometric_file = str(self.calibration_coeffs_file_dict["radiometric"])
-            netfile.spectral_file = str(self.spectral_coeff_file)
-            netfile.md5sum = old_nc.getncattr("md5sum")
-            netfile.byte_size_compressed_cube = old_nc.getncattr("byte_size_compressed_cube")
-            netfile.warnings = old_nc.getncattr("warnings")
+            # Set top level attributes -------------------------------------------------
+            for md in old_nc.ncattrs():
+                set_or_create_attr(netfile,
+                                   md,
+                                   old_nc.getncattr(md))
+
+            # Manual Replacement
+            set_or_create_attr(netfile,
+                               attr_name="radiometric_file",
+                               attr_value=str(Path(self.calibration_coeffs_file_dict["radiometric"]).name))
+
+            set_or_create_attr(netfile,
+                               attr_name="smile_file",
+                               attr_value=str(Path(self.calibration_coeffs_file_dict["smile"]).name))
+
+            set_or_create_attr(netfile,
+                               attr_name="destriping",
+                               attr_value=str(Path(self.calibration_coeffs_file_dict["destriping"]).name))
+
+            set_or_create_attr(netfile, attr_name="spectral_file", attr_value=str(Path(self.spectral_coeff_file).name))
+
+            set_or_create_attr(netfile, attr_name="processing_level", attr_value="L1B")
 
             # Create dimensions
             netfile.createDimension('lines', lines)
@@ -190,7 +195,6 @@ class Satellite:
             Lt.fwhm = [5.5] * bands
             Lt.wavelengths = np.around(self.spectral_coefficients, 1)
             Lt[:] = self.l1b_cube
-
 
             # ADCS Timestamps ----------------------------------------------------
             len_timestamps = old_nc.dimensions["adcssamples"].size
