@@ -111,7 +111,7 @@ def HSI2RGB(wY, HSI, d=65, threshold=0.002):
 
     # Load reference illuminant
     illuminant_path = files('hypso.utils').joinpath('data/D_illuminants.mat')
-    D = spio.loadmat(illuminant_path)
+    D = spio.loadmat(str(illuminant_path))
     w = D['wxyz'][:, 0]
     x = D['wxyz'][:, 1]
     y = D['wxyz'][:, 2]

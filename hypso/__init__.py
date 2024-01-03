@@ -21,7 +21,7 @@
 __author__ = "Alvaro Flores <alvaro.f.romero@ntnu.no>"
 __credits__ = "Norwegian University of Science and Technology"
 
-from .device import Satellite
+from .device import Hypso
 from .download import download_nc_files
 
 try:

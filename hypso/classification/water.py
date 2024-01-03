@@ -7,6 +7,8 @@ from importlib.resources import files
 
 def ndwi_watermask(sat_obj, product_to_use="L1C"):
 
+    sat_obj.find_geotiffs()
+
     # TODO: Confirm why L1C gives better results than L2
     # Check if full (120 band) tiff exists
     if sat_obj.l1cgeotiffFilePath is None and (product_to_use == "L1C" or product_to_use == "L1B"):

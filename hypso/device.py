@@ -27,8 +27,9 @@ def set_or_create_attr(var, attr_name, attr_value):
     return
 
 
-class Satellite:
+class Hypso:
     def __init__(self, hypso_path, points_path=None) -> None:
+        self.projection_metadata = None
         self.DEBUG = False
         self.spatialDim = (956, 684)  # 1092 x variable
         self.standardDimensions = {
@@ -78,8 +79,72 @@ class Satellite:
         # Generated afterwards
         self.waterMask = None
 
-        # Get Projection Metadata from created geotiff
-        self.get_projection_metadata()
+        # Get SRF
+        self.srf = self.get_srf()
+
+        # Generate RGB/RGBA Geotiff with Projection metadata and L1B
+        # If points file used, run twice to use correct coordinates
+        message_list = ["Getting Projection Data without lat/lon correction =========================================",
+                        "Getting Projection Data with coordinate correction ========================================="]
+        range_correction = 1
+        if points_path is not None:
+            range_correction = 2
+        for i in range(range_correction):
+            print(message_list[i])
+            generate_rgb_geotiff(self, overwrite=True)
+            # Get Projection Metadata from created geotiff
+            self.projection_metadata = self.get_projection_metadata()
+            # Before Generating new Geotiff we check if .points file exists and update 2D coord
+            if i == 0:
+                self.info["lat"], self.info["lon"] = start_coordinate_correction(
+                    self.pointsPath, self.info, self.projection_metadata)
+
+    def get_srf(self):
+        fwhm_nm = 3.33
+        sigma_nm = fwhm_nm / (2 * np.sqrt(2 * np.log(2)))
+
+        srf = []
+        for band in self.wavelengths:
+            center_lambda_nm = band
+            start_lambda_nm = np.round(center_lambda_nm - (3 * sigma_nm), 4)
+            soft_end_lambda_nm = np.round(center_lambda_nm + (3 * sigma_nm), 4)
+
+            srf_wl = [center_lambda_nm]
+            lower_wl = []
+            upper_wl = []
+            for ele in self.wavelengths:
+                if start_lambda_nm < ele < center_lambda_nm:
+                    lower_wl.append(ele)
+                elif center_lambda_nm < ele < soft_end_lambda_nm:
+                    upper_wl.append(ele)
+
+            # Make symmetric
+            while len(lower_wl) > len(upper_wl):
+                lower_wl.pop(0)
+            while len(upper_wl) > len(lower_wl):
+                upper_wl.pop(-1)
+
+            srf_wl = lower_wl + srf_wl + upper_wl
+
+            good_idx = [(True if ele in srf_wl else False) for ele in self.wavelengths]
+
+            # Delta based on Hypso Sampling (Wavelengths)
+            gx = None
+            if len(srf_wl) == 1:
+                gx = [0]
+            else:
+                gx = np.linspace(-3 * sigma_nm, 3 * sigma_nm, len(srf_wl))
+            gaussian_srf = np.exp(
+                -(gx / sigma_nm) ** 2 / 2)  # Not divided by the sum, because we want peak to 1.0
+
+            # Get final wavelength and SRF
+            srf_wl_single = self.wavelengths
+            srf_single = np.zeros_like(srf_wl_single)
+            srf_single[good_idx] = gaussian_srf
+
+            srf.append([srf_wl_single, srf_single])
+
+        return srf
 
     # TODO: Replace L1A with the same but only the rawcube instead of L1B
     def create_l1b_nc_file(self, hypso_nc_path):
@@ -551,7 +616,7 @@ class Satellite:
         # Update
         self.info["nc_file"] = Path(new_path)
 
-    def get_geotiff(self, product="L2", force_reload=False, atmos_dict=None):
+    def create_geotiff(self, product="L2", force_reload=False, atmos_dict=None):
 
         if product != "L2" and product != "L1C":
             raise Exception("Wrong product")
@@ -563,15 +628,11 @@ class Satellite:
             # Delete geotiff dir and generate a new rgba one
             self.delete_geotiff_dir(self.info["top_folder_name"])
 
-        # Generate RGB/RGBA Geotiff with Projection metadata and L1B
-        generate_rgb_geotiff(self)
+            # Generate RGB/RGBA Geotiff with Projection metadata and L1B
+            generate_rgb_geotiff(self)
 
-        # Get Projection Metadata from created geotiff
-        self.projection_metadata = self.get_projection_metadata(self.info["top_folder_name"])
-
-        # Before Generating new Geotiff we check if .points file exists and update 2D coord
-        self.info["lat"], self.info["lon"] = start_coordinate_correction(
-            self.pointsPath, self.info, self.projection_metadata)
+            # Get Projection Metadata from created geotiff
+            self.projection_metadata = self.get_projection_metadata()
 
         atmos_corrected_cube = None
         atmos_model = None
@@ -592,7 +653,8 @@ class Satellite:
                     # }
                     atmos_corrected_cube = run_py6s(self.wavelengths, self.l1b_cube, self.info, self.info["lat"],
                                                     self.info["lon"],
-                                                    atmos_dict, time_capture=parser.parse(self.info['iso_time']))
+                                                    atmos_dict, time_capture=parser.parse(self.info['iso_time']),
+                                                    srf=self.srf)
                 elif atmos_model == "ACOLITE":
                     print("Getting ACOLITE L2")
                     if not self.info["nc_file"].is_file():
@@ -610,16 +672,8 @@ class Satellite:
             with open(Path(self.info["top_folder_name"], "geotiff", f'L2_{atmos_model}.npy'), 'wb') as f:
                 np.save(f, atmos_corrected_cube)
 
-        if force_reload:
-            # Delete geotiff dir and generate a new rgba one
-            self.delete_geotiff_dir(self.info["top_folder_name"])
-
         # Generate RGBA/RGBA and Full Geotiff with corrected metadata and L2A if exists (if not L1B)
-        generate_rgb_geotiff(self)
         generate_full_geotiff(self, product=product, L2_key=atmos_model)
-
-        # Get Projection Metadata from created geotiff
-        self.projection_metadata = self.get_projection_metadata(self.info["top_folder_name"])
 
     def delete_geotiff_dir(self, top_folder_name: Path):
         tiff_name = "geotiff"
@@ -634,7 +688,8 @@ class Satellite:
             import shutil
             shutil.rmtree(geotiff_dir, ignore_errors=True)
 
-    def find_geotiffs(self, top_folder_name: Path):
+    def find_geotiffs(self):
+        top_folder_name = self.info["top_folder_name"]
         self.rgbGeotiffFilePath = find_file(top_folder_name, "rgba_8bit", ".tif")
         self.l1cgeotiffFilePath = find_file(top_folder_name, "-full_L1C", ".tif")
 
@@ -675,7 +730,7 @@ class Satellite:
         current_project = {}
 
         # Find Geotiffs
-        self.find_geotiffs(top_folder_name)
+        self.find_geotiffs()
 
         # -----------------------------------------------------------------
         # Get geotiff data for rgba first    ------------------------------
@@ -724,7 +779,7 @@ class Satellite:
             current_project["data"] = data
             print("Full L1C Tif File: ", self.l1cgeotiffFilePath.name)
 
-        self.projection_metadata = current_project
+        return current_project
 
     def get_calibration_coefficients_path(self) -> dict:
         csv_file_radiometric = None
@@ -744,8 +799,8 @@ class Satellite:
             bin_x = self.info["bin_factor"]
 
             # Radiometric ---------------------------------
-            full_coeff = get_coefficients_from_file(files('hypso.calibration').joinpath(
-                f'data/{"radiometric_calibration_matrix_HYPSO-1_full_v1.csv"}'),
+            full_coeff = get_coefficients_from_file(str(files('hypso.calibration').joinpath(
+                f'data/{"radiometric_calibration_matrix_HYPSO-1_full_v1.csv"}'))
             )
 
             csv_file_radiometric = crop_and_bin_matrix(
@@ -757,8 +812,8 @@ class Satellite:
                 bin_x)
 
             # Smile ---------------------------------
-            full_coeff = get_coefficients_from_file(files('hypso.calibration').joinpath(
-                f'data/{"spectral_calibration_matrix_HYPSO-1_full_v1.csv"}'),
+            full_coeff = get_coefficients_from_file(str(files('hypso.calibration').joinpath(
+                f'data/{"spectral_calibration_matrix_HYPSO-1_full_v1.csv"}'))
             )
             csv_file_smile = crop_and_bin_matrix(
                 full_coeff,
@@ -797,7 +852,7 @@ class Satellite:
         csv_file = "spectral_bands_HYPSO-1_v1.csv"
         wl_file = files(
             'hypso.calibration').joinpath(f'data/{csv_file}')
-        return wl_file
+        return str(wl_file)
 
     def get_spectra(self, position_dict: dict, product: str = "L2", postype: str = 'coord', multiplier=1, filename=None,
                     plot=True, L2_engine="6SV1"):
@@ -822,7 +877,7 @@ class Satellite:
         # Open the raster
 
         # Find Geotiffs
-        self.find_geotiffs(self.info["top_folder_name"])
+        self.find_geotiffs()
 
         # Check if full (120 band) tiff exists
         if self.l1cgeotiffFilePath is None and self.l2geotiffFilePath is None:
@@ -923,7 +978,7 @@ class Satellite:
         df_band["X"] = posX
         df_band["Y"] = posY
 
-        if filename != None:
+        if filename is not None:
             df_band.to_csv(filename, index=False)
 
         if plot:
@@ -943,7 +998,7 @@ class Satellite:
         return df_band
 
     def get_calibrated_and_corrected_cube(self):
-        ''' Calibrate cube.
+        """ Calibrate cube.
 
         Includes:
         - Radiometric calibration
@@ -952,7 +1007,7 @@ class Satellite:
 
         Assumes all coefficients has been adjusted to the frame size (cropped and
         binned), and that the data cube contains 12-bit values.
-        '''
+        """
 
         # Radiometric calibration
         # TODO: The factor by 10 is to fix a bug in which the coeff have a factor of 10
@@ -968,3 +1023,54 @@ class Satellite:
             cube_smile_corrected, self.calibration_coefficients_dict)
 
         return cube_destriped
+
+    def toa_reflectance_from_toa_radiance(self):
+        # Get Local variables
+        srf = self.srf
+        toa_radiance = self.l1b_cube
+
+        scene_date = parser.isoparse(self.info['iso_time'])
+        julian_day = scene_date.timetuple().tm_yday
+        solar_zenith = self.info['solar_zenith_angle']
+
+        # Read Solar Data
+        solar_data_path = str(files('hypso.atmospheric').joinpath("Solar_irradiance_Thuillier_2002.csv"))
+        solar_df = pd.read_csv(solar_data_path)
+
+        # Create new solar X with a new delta
+        solar_array = np.array(solar_df)
+        current_num = solar_array[0, 0]
+        delta = 0.01
+        new_solar_x = [solar_array[0, 0]]
+        while current_num <= solar_array[-1, 0]:
+            current_num = current_num + delta
+            new_solar_x.append(current_num)
+
+        # Interpolate for Y with original solar data
+        new_solar_y = np.interp(new_solar_x, solar_array[:, 0], solar_array[:, 1])
+
+        # Replace solar Dataframe
+        solar_df = pd.DataFrame(np.column_stack((new_solar_x, new_solar_y)), columns=solar_df.columns)
+
+        # Estimation of TOA Reflectance
+        band_number = 0
+        toa_reflectance = np.empty_like(toa_radiance)
+        for single_wl, single_srf in srf:
+            # Resample HYPSO SRF to new solar wavelength
+            resamp_srf = np.interp(new_solar_x, single_wl, single_srf)
+            weights_srf = resamp_srf / np.sum(resamp_srf)
+            ESUN = np.sum(solar_df['mW/m2/nm'].values * weights_srf)  # units matche HYPSO from device.py
+
+            # Earth-Sun distance (from day of year) using julian date
+            # http://physics.stackexchange.com/questions/177949/earth-sun-distance-on-a-given-day-of-the-year
+            distance_sun = 1 - 0.01672 * np.cos(0.9856 * (
+                    julian_day - 4))
+
+            # Get toa_reflectance
+            solar_angle_correction = np.cos(np.radians(solar_zenith))
+            multiplier = (ESUN * solar_angle_correction) / (np.pi * distance_sun ** 2)
+            toa_reflectance[:, :, band_number] = toa_radiance[:, :, band_number] / multiplier
+
+            band_number = band_number + 1
+
+        return toa_reflectance

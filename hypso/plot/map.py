@@ -127,7 +127,8 @@ def point_rgb_map(satellite_obj, plotTitle="RGB Image", dpi_input=450, patch_dic
     # Check if projection geotiff exists, get data if needed
     check_projection_geotiff(satellite_obj)
 
-    # TODO: Warnings are disabled as a rounding error with shapely causes an "no intersection warning". New version of GDAL might solve it
+    # TODO: Warnings are disabled as a rounding error with shapely causes an "no intersection warning". New version
+    #  of GDAL might solve it
     with np.errstate(all="ignore"):
         # Get Axis for Map
         ax, transformed_img_extent, projection_img, lat, lon = get_cartopy_axis(satellite_obj, dpi_input)
@@ -276,10 +277,7 @@ def auto_adjust_img(img: np.ndarray) -> np.ndarray:
     return np.array(pil_image) / 255.0
 
 
-def get_rgb(sat_obj,
-            R_wl: float = 650,
-            G_wl: float = 550,
-            B_wl: float = 450) -> Image:
+def get_rgb(sat_obj) -> Image:
     """
     Write the RGB image.
 
@@ -288,6 +286,7 @@ def get_rgb(sat_obj,
         R_wl (float, optional): The wavelength for the red channel. Defaults to 650.
         G_wl (float, optional): The wavelength for the green channel. Defaults to 550.
         B_wl (float, optional): The wavelength for the blue channel. Defaults to 450.
+        :param sat_obj:
     """
 
     # R = np.argmin(abs(sat_obj.spectral_coefficients - R_wl))
@@ -310,12 +309,12 @@ def get_rgb(sat_obj,
 
 def check_projection_geotiff(satobj):
     # Refresh the Projection
-    satobj.find_geotiffs(satobj.info["top_folder_name"])
+    satobj.find_geotiffs()
 
     if satobj.rgbGeotiffFilePath is None and satobj.l1cgeotiffFilePath is None:
         generate_rgb_geotiff(satobj)
 
-    satobj.get_projection_metadata()
+    satobj.projection_metadata = satobj.get_projection_metadata()
 
 
 def write_rgb_to_png(sat_obj, path_to_save: str) -> Image:

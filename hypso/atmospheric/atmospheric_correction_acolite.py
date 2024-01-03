@@ -18,7 +18,7 @@ def get_acolite_repo():
 
     try:
         urllib.request.urlretrieve(url=github_url,
-                                   filename=output_filename,
+                                   filename=str(output_filename),
                                    reporthook=MyProgressBar(filename))
 
     except Exception as err:

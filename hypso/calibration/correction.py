@@ -2,11 +2,13 @@ import numpy as np
 from scipy import interpolate
 import pathlib
 
+
 def crop_and_bin_matrix(matrix, x_start, x_stop, y_start, y_stop, bin_x=1, bin_y=1):
-    ''' Crops matrix to AOI. Bins matrix so that the average value in the bin_x 
+    """ Crops matrix to AOI. Bins matrix so that the average value in the bin_x
     number of pixels is stored.
-    '''
+    """
     # Crop to selected AOI
+    width_binned = None
     new_matrix = matrix[y_start:y_stop, x_start:x_stop]
     height, width = new_matrix.shape
 
@@ -18,31 +20,32 @@ def crop_and_bin_matrix(matrix, x_start, x_stop, y_start, y_stop, bin_x=1, bin_y
 
     # Bin spectral direction
     if bin_x != 1:
-        width_binned = int(width/bin_x)
-        matrix_cropped_and_binned = np.zeros((height,width_binned))
+        width_binned = int(width / bin_x)
+        matrix_cropped_and_binned = np.zeros((height, width_binned))
         for i in range(width_binned):
             this_pixel_sum = 0
             for j in range(bin_x):
-                this_pixel_value = new_matrix[:,i*bin_x+j]
+                this_pixel_value = new_matrix[:, i * bin_x + j]
                 this_pixel_sum += this_pixel_value
-            average_pixel_value = this_pixel_sum/bin_x
-            matrix_cropped_and_binned[:,i] = average_pixel_value
+            average_pixel_value = this_pixel_sum / bin_x
+            matrix_cropped_and_binned[:, i] = average_pixel_value
         new_matrix = matrix_cropped_and_binned
 
     # Bin spatial direction
     if bin_y != 1:
-        height_binned = int(height/bin_y)
-        matrix_binned_spatial = np.zeros((height_binned,width_binned))
+        height_binned = int(height / bin_y)
+        matrix_binned_spatial = np.zeros((height_binned, width_binned))
         for i in range(height_binned):
             this_pixel_sum = 0
             for j in range(bin_y):
-                this_pixel_value = new_matrix[i*bin_y+j,:]
+                this_pixel_value = new_matrix[i * bin_y + j, :]
                 this_pixel_sum += this_pixel_value
-            average_pixel_value = this_pixel_sum/bin_y
-            matrix_binned_spatial[i,:] = average_pixel_value/bin_y
+            average_pixel_value = this_pixel_sum / bin_y
+            matrix_binned_spatial[i, :] = average_pixel_value / bin_y
         new_matrix = matrix_binned_spatial
 
     return new_matrix
+
 
 def get_coefficients_from_file(coeff_path: str) -> np.ndarray:
     coefficients = None
@@ -58,7 +61,7 @@ def get_coefficients_from_file(coeff_path: str) -> np.ndarray:
     return coefficients
 
 
-def get_coefficients_from_dict(coeff_dict: str) -> np.ndarray:
+def get_coefficients_from_dict(coeff_dict: dict) -> dict:
     """Get the coefficients from the csv file.
 
     Args:
@@ -68,6 +71,7 @@ def get_coefficients_from_dict(coeff_dict: str) -> np.ndarray:
 
     Returns:
         np.ndarray: The coefficients.
+        :param coeff_dict:
 
     """
     coeffs = coeff_dict.copy()
@@ -75,7 +79,7 @@ def get_coefficients_from_dict(coeff_dict: str) -> np.ndarray:
         if isinstance(coeff_dict[k], pathlib.PurePath) or isinstance(coeff_dict[k], str):
             coeffs[k] = get_coefficients_from_file(coeff_dict[k])
         else:
-            coeffs[k]=coeff_dict[k]
+            coeffs[k] = coeff_dict[k]
 
     return coeffs
 
@@ -155,7 +159,7 @@ def smile_correction_one_frame(frame, spectral_band_matrix):
     the reference wavelength/band for smile correction.
     '''
     image_height, image_width = frame.shape
-    center_row_no = int(image_height/2)
+    center_row_no = int(image_height / 2)
     w_ref = spectral_band_matrix[center_row_no]
     frame_smile_corrected = np.zeros([image_height, image_width])
     for i in range(image_height):  # For each row
@@ -174,7 +178,7 @@ def smile_correct_cube(cube, correction_coefficients_dict: dict):
 
     if correction_coefficients_dict["smile"] is None:
         return cube.copy()
-    
+
     print("Smile Correction Ongoing")
 
     spectral_band_matrix = correction_coefficients_dict["smile"]
@@ -193,7 +197,7 @@ def destriping_correct_cube(cube, correction_coefficients_dict):
 
     if correction_coefficients_dict["destriping"] is None:
         return cube.copy()
-    
+
     print("Destriping Correction Ongoing")
 
     destriping_correction_matrix = correction_coefficients_dict["destriping"]

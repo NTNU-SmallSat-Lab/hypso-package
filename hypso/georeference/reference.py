@@ -14,16 +14,22 @@ import scipy.interpolate as si
 from hypso.georeference import georef as gref
 from hypso.utils import find_file, HSI2RGB
 
-DEBUG=False
+DEBUG = False
 EXPORT_SINGLE_BANDS = False
 
 r_band_index = 61  # Old 59 (120-59=61)
 g_band_index = 50  # Old 70 (120-70=50)
 b_band_index = 31  # Old 89 (120-89=31)
 
-def generate_rgb_geotiff(satObj):
-    if find_file(satObj.info["top_folder_name"],"-rgb",".tif") is not None:
-        return
+
+def generate_rgb_geotiff(satObj, overwrite=False):
+    existing_rgb_geotiff = find_file(satObj.info["top_folder_name"], "-rgb", ".tif")
+
+    if existing_rgb_geotiff is not None:
+        if overwrite:
+            existing_rgb_geotiff.unlink(missing_ok=True)
+        else:
+            return
     # GeoTiff Output ------------------------------------------------------------------------
     top_folder_name = satObj.info["top_folder_name"]
     capture_name = str(satObj.info["capture_name"])
@@ -32,7 +38,7 @@ def generate_rgb_geotiff(satObj):
     output_path_rgba_tif = Path(geotiff_folder_path, capture_name + '-rgba_8bit.tif')
 
     # Select data for RGB GeoTiff --------------------------------------------------------
-    cube_data=satObj.l1b_cube
+    cube_data = satObj.l1b_cube
 
     # Define bands to export and RGB Bands (Need to be the same to interpolate) ---------------
     extra_band_index = (g_band_index - 4) // 4
@@ -40,7 +46,8 @@ def generate_rgb_geotiff(satObj):
     rgb_band_indices = [r_band_index, g_band_index, b_band_index]
 
     # Get Geometric Information----------------------------------------------------------------
-    grid_dims,geotransform,destination_epsg, grid_data_all_bands, contain_mask = generate_geotiff(satObj, bands, cube_data)
+    grid_dims, geotransform, destination_epsg, grid_data_all_bands, contain_mask = generate_geotiff(satObj, bands,
+                                                                                                    cube_data)
 
     # Max Value RGB To Normalize Images -------------------------------------------------------
     max_value_rgb = 0.0
@@ -89,11 +96,12 @@ def generate_rgb_geotiff(satObj):
         #     i + 1).WriteArray(255.0 * grid_data_all_bands[:, :, rgb_band_index] / max_value_rgb)
 
         dst_ds_alpha_channel.GetRasterBand(
-              i + 1).WriteArray(255.0 * grid_data_all_bands[:, :, rgb_band_index] / max_value_rgb)
+            i + 1).WriteArray(255.0 * grid_data_all_bands[:, :, rgb_band_index] / max_value_rgb)
     dst_ds_alpha_channel.GetRasterBand(4).WriteArray(alpha_mask)
     dst_ds_alpha_channel.FlushCache()  # write to disk
 
     print('Done RGB/RGBA Geotiff')
+
 
 def generate_full_geotiff(satObj, product, L2_key=None):
     # Find L1C and L2 product files
@@ -124,7 +132,7 @@ def generate_full_geotiff(satObj, product, L2_key=None):
     bands = [i for i in range(120)]
 
     # Get Geometric Information----------------------------------------------------------------
-    grid_dims,geotransform,destination_epsg, grid_data_all_bands, _ = generate_geotiff(satObj, bands, cube_data)
+    grid_dims, geotransform, destination_epsg, grid_data_all_bands, _ = generate_geotiff(satObj, bands, cube_data)
 
     # Geotiff Objects ------------------------------------------------------------------------------------------
     # some Geotiff reference info:
@@ -132,7 +140,7 @@ def generate_full_geotiff(satObj, product, L2_key=None):
     # https://gis.stackexchange.com/questions/275125/expressing-raster-rotation-with-gdal-geotransform-python
 
     dst_ds_full = gdal.GetDriverByName('GTiff').Create(
-        str(output_path_full_tif), grid_dims[0], grid_dims[1], 120, gdal.GDT_Float64) # Used to be 64
+        str(output_path_full_tif), grid_dims[0], grid_dims[1], 120, gdal.GDT_Float64)  # Used to be 64
 
     # Full Band Tiff --------------------------------
     dst_ds_full.SetGeoTransform(geotransform)  # specify coords
@@ -148,6 +156,7 @@ def generate_full_geotiff(satObj, product, L2_key=None):
     dst_ds_full.FlushCache()  # write to disk
 
     print('Done Full Geotiff')
+
 
 def generate_geotiff(satObj, bands, cube_data):
     print('Generating Geotiff ************************************')
@@ -167,10 +176,9 @@ def generate_geotiff(satObj, bands, cube_data):
     # Setup Paths -----------------------------------------------------------
     top_folder_name = satObj.info["top_folder_name"]
     capture_name = str(satObj.info["capture_name"])
-    geotiff_folder_path = Path(top_folder_name,"geotiff")
-    geotiff_folder_path.mkdir(parents=True,exist_ok=True)
-    output_path_geo_info = Path(top_folder_name, capture_name+'-geometric-meta-info-full.txt')
-
+    geotiff_folder_path = Path(top_folder_name, "geotiff")
+    geotiff_folder_path.mkdir(parents=True, exist_ok=True)
+    output_path_geo_info = Path(top_folder_name, capture_name + '-geometric-meta-info-full.txt')
 
     # rojecting pixel geodetic to ma --------------------------------------------
     print('  Projecting pixel geodetic to map ...')
@@ -182,7 +190,7 @@ def generate_geotiff(satObj, bands, cube_data):
                                                        west_lon_degree=bbox_geodetic[2],
                                                        south_lat_degree=bbox_geodetic[0],
                                                        east_lon_degree=bbox_geodetic[3],
-                                                       north_lat_degree=bbox_geodetic[1],)
+                                                       north_lat_degree=bbox_geodetic[1], )
                                                    )
     print(f'    using UTM map: ' +
           utm_crs_list[0].name, 'EPSG:', utm_crs_list[0].code)
@@ -202,7 +210,7 @@ def generate_geotiff(satObj, bands, cube_data):
                 pixels_lat[i, j], pixels_lon[i, j])
 
     dg_bounding_path = np.concatenate(
-        (pixel_coords_map[:, 0, :], pixel_coords_map[::-1, (hypso_height-1), :]))
+        (pixel_coords_map[:, 0, :], pixel_coords_map[::-1, (hypso_height - 1), :]))
 
     # Direct Georeferencing outline --------------------------------------------------------
     boundingpath = mplpath.Path(dg_bounding_path)
@@ -210,27 +218,28 @@ def generate_geotiff(satObj, bands, cube_data):
 
     with open(output_path_geo_info, 'a') as f:
         f.write(
-            f'Imaged area (square kilometers): {boundingpath_area/1000000.0:09.5f}\n')
+            f'Imaged area (square kilometers): {boundingpath_area / 1000000.0:09.5f}\n')
     print(
-        f'    Area covered by image: {boundingpath_area} m^2 = {boundingpath_area/1000000.0} km^2')
+        f'    Area covered by image: {boundingpath_area} m^2 = {boundingpath_area / 1000000.0} km^2')
 
     if DEBUG:
-        plt.scatter(pixels_lon[:,0], pixels_lat[:,0], label='bot')
-        plt.scatter(pixels_lon[:,(hypso_height//2-1)], pixels_lat[:,(hypso_height//2-1)], label='mid')
-        plt.scatter(pixels_lon[:,(hypso_height-1)], pixels_lat[:,(hypso_height-1)], label='top')
-        plt.scatter(pixels_lon[0,:], pixels_lat[0,:], label='first frame')
-        plt.scatter(pixels_lon[955,:], pixels_lat[955,:], label='last frame')
+        plt.scatter(pixels_lon[:, 0], pixels_lat[:, 0], label='bot')
+        plt.scatter(pixels_lon[:, (hypso_height // 2 - 1)], pixels_lat[:, (hypso_height // 2 - 1)], label='mid')
+        plt.scatter(pixels_lon[:, (hypso_height - 1)], pixels_lat[:, (hypso_height - 1)], label='top')
+        plt.scatter(pixels_lon[0, :], pixels_lat[0, :], label='first frame')
+        plt.scatter(pixels_lon[955, :], pixels_lat[955, :], label='last frame')
         plt.grid()
         plt.legend()
         plt.show()
         # time lines
-        plt.scatter(pixel_coords_map[:,0,0], pixel_coords_map[:,0,1], label='bot')
-        plt.scatter(pixel_coords_map[:,(hypso_height//2-1),0], pixel_coords_map[:,(hypso_height//2-1),1], label='mid')
-        plt.scatter(pixel_coords_map[:,(hypso_height-1),0], pixel_coords_map[:,(hypso_height-1),1], label='top')
+        plt.scatter(pixel_coords_map[:, 0, 0], pixel_coords_map[:, 0, 1], label='bot')
+        plt.scatter(pixel_coords_map[:, (hypso_height // 2 - 1), 0], pixel_coords_map[:, (hypso_height // 2 - 1), 1],
+                    label='mid')
+        plt.scatter(pixel_coords_map[:, (hypso_height - 1), 0], pixel_coords_map[:, (hypso_height - 1), 1], label='top')
         # detector lines
-        plt.scatter(pixel_coords_map[0,:,0], pixel_coords_map[0,:,1], label='first frame')
-        plt.scatter(pixel_coords_map[477,:,0], pixel_coords_map[477,:,1], label='middle frame')
-        plt.scatter(pixel_coords_map[955,:,0], pixel_coords_map[955,:,1], label='last frame')
+        plt.scatter(pixel_coords_map[0, :, 0], pixel_coords_map[0, :, 1], label='first frame')
+        plt.scatter(pixel_coords_map[477, :, 0], pixel_coords_map[477, :, 1], label='middle frame')
+        plt.scatter(pixel_coords_map[955, :, 0], pixel_coords_map[955, :, 1], label='last frame')
         plt.grid()
         plt.legend()
         plt.axis('equal')
@@ -239,21 +248,21 @@ def generate_geotiff(satObj, bands, cube_data):
     # Determining resample resolutions --------------------------------------------------------
 
     # time line x and y differences
-    a = np.diff(pixel_coords_map[:, hypso_height//2, 0])
-    b = np.diff(pixel_coords_map[:, hypso_height//2, 1])
-    along_track_gsd = np.sqrt(a*a + b*b)
+    a = np.diff(pixel_coords_map[:, hypso_height // 2, 0])
+    b = np.diff(pixel_coords_map[:, hypso_height // 2, 1])
+    along_track_gsd = np.sqrt(a * a + b * b)
     along_track_mean_gsd = np.mean(along_track_gsd)
 
     # detector line x and y differences
-    a = np.diff(pixel_coords_map[frame_count//2, :, 0])
-    b = np.diff(pixel_coords_map[frame_count//2, :, 1])
-    across_track_gsd = np.sqrt(a*a + b*b)
+    a = np.diff(pixel_coords_map[frame_count // 2, :, 0])
+    b = np.diff(pixel_coords_map[frame_count // 2, :, 1])
+    across_track_gsd = np.sqrt(a * a + b * b)
     across_track_mean_gsd = np.mean(across_track_gsd)
 
     # adjust resolutions
     resolution_scaling = 0.75  # lower value, higher res
-    resolution_scaling_along = 0.9*resolution_scaling
-    resolution_scaling_across = 1.0*resolution_scaling
+    resolution_scaling_along = 0.9 * resolution_scaling
+    resolution_scaling_across = 1.0 * resolution_scaling
 
     plt.figure()
     plt.plot(along_track_gsd, label=f'Along track {along_track_mean_gsd:.3f}')
@@ -264,7 +273,7 @@ def generate_geotiff(satObj, bands, cube_data):
     plt.legend()
     plt.xlabel('Pixel index')
     plt.ylabel('Distance [m]')
-    plot_save_path = Path(geotiff_folder_path,capture_name+'-gsd.svg')
+    plot_save_path = Path(geotiff_folder_path, capture_name + '-gsd.svg')
     plt.savefig(plot_save_path)
 
     # Finding bounding box and generating grid -----------------------------------------------------
@@ -272,19 +281,19 @@ def generate_geotiff(satObj, bands, cube_data):
 
     # printing input data corner coords of as lat lons and as map projection coordinates
     if DEBUG:
-        print(pixels_lat[0,0], pixels_lon[0,0])
-        print(pixels_lat[0,-1], pixels_lon[0,-1])
-        print(pixels_lat[-1,0], pixels_lon[-1,0])
-        print(pixels_lat[-1,-1], pixels_lon[-1,-1])
+        print(pixels_lat[0, 0], pixels_lon[0, 0])
+        print(pixels_lat[0, -1], pixels_lon[0, -1])
+        print(pixels_lat[-1, 0], pixels_lon[-1, 0])
+        print(pixels_lat[-1, -1], pixels_lon[-1, -1])
         print('')
-        print(pixel_coords_map[0,0,0], pixel_coords_map[0,0,1])
-        print(pixel_coords_map[0,-1,0], pixel_coords_map[0,-1,1])
-        print(pixel_coords_map[-1,0,0], pixel_coords_map[-1,0,1])
-        print(pixel_coords_map[-1,-1,0], pixel_coords_map[-1,-1,1])
+        print(pixel_coords_map[0, 0, 0], pixel_coords_map[0, 0, 1])
+        print(pixel_coords_map[0, -1, 0], pixel_coords_map[0, -1, 1])
+        print(pixel_coords_map[-1, 0, 0], pixel_coords_map[-1, 0, 1])
+        print(pixel_coords_map[-1, -1, 0], pixel_coords_map[-1, -1, 1])
         print('')
 
     pixel_coords_map_list = pixel_coords_map.reshape(
-        frame_count*hypso_height, 2)
+        frame_count * hypso_height, 2)
     bbox = [np.min(pixel_coords_map_list[:, 0]), np.max(pixel_coords_map_list[:, 0]), np.min(
         pixel_coords_map_list[:, 1]), np.max(pixel_coords_map_list[:, 1])]
     min_area_bbox = gref.minimum_bounding_rectangle(pixel_coords_map_list)
@@ -292,12 +301,13 @@ def generate_geotiff(satObj, bands, cube_data):
     # print(min_area_bbox)
 
     grid_points, grid_dims = gref.gen_resample_grid(
-        across_track_mean_gsd*resolution_scaling_across, along_track_mean_gsd*resolution_scaling_along, bbox)
+        across_track_mean_gsd * resolution_scaling_across, along_track_mean_gsd * resolution_scaling_along, bbox)
     # print(grid_points.shape)
     # print(grid_points)
 
     grid_points_minimal, grid_dims_minimal = gref.gen_resample_grid_bbox_min(
-        across_track_mean_gsd*resolution_scaling_across, along_track_mean_gsd*resolution_scaling_along, min_area_bbox)
+        across_track_mean_gsd * resolution_scaling_across, along_track_mean_gsd * resolution_scaling_along,
+        min_area_bbox)
 
     # TODO make the grid points appear in the same "order" (e.g. from top left to bottom right)
     # for both north aligned and minimal grid
@@ -318,16 +328,15 @@ def generate_geotiff(satObj, bands, cube_data):
     # plt.grid()
     # plt.show()
 
-    grid_points_minimal.shape = (grid_dims_minimal[1]*grid_dims_minimal[0], 2)
-    grid_points.shape = [grid_dims[1]*grid_dims[0], 2]
+    grid_points_minimal.shape = (grid_dims_minimal[1] * grid_dims_minimal[0], 2)
+    grid_points.shape = [grid_dims[1] * grid_dims[0], 2]
 
     # Get Grid points inside bounding polygon -------------------------------------------------------
     print('  Grid points inside bounding polygon ...')
     # contain mask to set some datapoints to zero
     contain_mask = boundingpath.contains_points(grid_points)
     print(
-        f'    Points inside boundary: {np.sum(contain_mask)} / {grid_dims[1]*grid_dims[0]}')
-
+        f'    Points inside boundary: {np.sum(contain_mask)} / {grid_dims[1] * grid_dims[0]}')
 
     # Get Geo Transform ----------------------------------------------------------------------------
     angle = 180 * m.pi / 180.0
@@ -339,26 +348,22 @@ def generate_geotiff(satObj, bands, cube_data):
     geotransform = (bbox[1], -across_track_mean_gsd * resolution_scaling_across,
                     0, bbox[2], 0, along_track_mean_gsd * resolution_scaling_along)
 
-
-
     # Registration, aka rectification, aka resampling, aka gridding -------------------------------------
     print('  Registration, aka rectification, aka resampling, aka gridding ...')
     grid_data_all_bands = np.zeros([grid_dims[1], grid_dims[0], band_count])
     resampling_method = 'nearest'  # 'linear' is slower
 
-
     geotiff_info = (
         grid_dims,
         [bbox[1], bbox[2]],
-        [across_track_mean_gsd*resolution_scaling_across,
-            along_track_mean_gsd*resolution_scaling_along],
+        [across_track_mean_gsd * resolution_scaling_across,
+         along_track_mean_gsd * resolution_scaling_along],
         destination_epsg,
         geotiff_folder_path
     )
 
     threads_list = []
     for band_number in bands:
-
         # Multithreading in python info
         # https://www.tutorialspoint.com/python/python_multithreading.htm
         # https://realpython.com/intro-to-python-threading/
@@ -373,13 +378,11 @@ def generate_geotiff(satObj, bands, cube_data):
     for t in threads_list:
         t.join()
 
-
     return grid_dims, geotransform, destination_epsg, grid_data_all_bands, contain_mask
 
 
 def interpolate_geotiff(band_number, cube_data, pixel_coords_map_list, grid_points,
                         resampling_method, contain_mask, geotiff_info, grid_data_all_bands):
-
     print(f'      Starting band {band_number}')
 
     data_lines = cube_data.shape[0]
@@ -388,10 +391,8 @@ def interpolate_geotiff(band_number, cube_data, pixel_coords_map_list, grid_poin
     cube_data_single_band = cube_data[:, :, band_number]
     cube_data_single_band.shape = [data_lines * data_samples]
 
-
     grid_data_single_band = si.griddata(pixel_coords_map_list, cube_data_single_band, grid_points,
                                         method=resampling_method, rescale=False)
-
 
     grid_data_single_band[np.invert(contain_mask)] = 0
     grid_data_single_band.shape = [geotiff_info[0][1], geotiff_info[0][0]]
@@ -399,9 +400,9 @@ def interpolate_geotiff(band_number, cube_data, pixel_coords_map_list, grid_poin
     grid_data_all_bands[:, :, band_number] = grid_data_single_band
 
     if EXPORT_SINGLE_BANDS:  # For single band export does not export this band
-        export_single_band_geotiff(Path(geotiff_info[4],f'band_{band_number}.tif'), grid_data_single_band,
+        export_single_band_geotiff(Path(geotiff_info[4], f'band_{band_number}.tif'), grid_data_single_band,
                                    geotiff_info[0], geotiff_info[1], geotiff_info[2], geotiff_info[3])
-        
+
     print(f'      Done with band {band_number}')
 
 
@@ -410,12 +411,12 @@ def export_single_band_geotiff(filename, raster_data, grid_dims, grid_origin, gr
         str(filename), grid_dims[0], grid_dims[1], 1, gdal.GDT_Float64)
     geotransform = (grid_origin[0], -grid_res[0],
                     0.0, grid_origin[1], 0.0, grid_res[1])
-    dst_ds.SetGeoTransform(geotransform)    # specify coords
-    srs = osr.SpatialReference()            # establish encoding
+    dst_ds.SetGeoTransform(geotransform)  # specify coords
+    srs = osr.SpatialReference()  # establish encoding
     srs.ImportFromEPSG(grid_epsg)
     dst_ds.SetProjection(srs.ExportToWkt())  # export coords to file
     # dst_ds.GetRasterBand(1).WriteArray(
     #     65535.0*raster_data / raster_data.max())   # write band to the raster
     dst_ds.GetRasterBand(1).WriteArray(
         raster_data)
-    dst_ds.FlushCache()                  # write to disk
+    dst_ds.FlushCache()  # write to disk

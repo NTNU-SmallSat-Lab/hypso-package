@@ -277,17 +277,21 @@ def BasicParameters(wavelengths, hypercube_L1, hypso_info, lat_2d_array, lon_2d_
 
     return SixsParameters
 
-
-def get_srf(fwhm, BandId, SixSParams):
-    wavelengths = np.round(SixSParams['wavelengths'] / 1000, 4)  # to micrometers
-    center_lambda = wavelengths[BandId]
-    # From fwhm to sigma
-    sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
-
-    start_lambda = np.round(center_lambda - (3 * sigma), 4)
-    soft_end_lambda = np.round(center_lambda + (3 * sigma), 4)
+def clip_srf(single_wl,single_srf):
     # Interval of 2.5nm from Py6S requirements
     delta = 2.5 / 1000  # nm to um
+
+    # From fwhm to sigma
+    fwhm = 3.33 / 1000 # nm to um (based on studies for Hypso)
+    sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
+
+    center_lambda_arg = np.argmax(single_srf)
+    center_lambda_nm = single_wl[center_lambda_arg]
+    center_lambda_um = np.round(center_lambda_nm / 1000, 4)  # to micrometers
+
+    start_lambda = np.round(center_lambda_um - (3 * sigma), 4)
+    soft_end_lambda = np.round(center_lambda_um + (3 * sigma), 4)
+
     lambda_py6s = [start_lambda]
     while np.max(lambda_py6s) < soft_end_lambda:
         lambda_py6s = np.append(lambda_py6s, np.max(lambda_py6s) + delta)
@@ -307,10 +311,10 @@ def get_srf(fwhm, BandId, SixSParams):
 
 
 # 6s Atmospheric correction
-def AtmosphericCorrection(BandId, SixsInputParameter, py6s_dict):
-    '''
+def AtmosphericCorrection(BandId, SixsInputParameter, py6s_dict, srf):
+    """
     Call the 6s model and assign values to the parameters to obtain the atmospheric correction parameters
-    '''
+    """
     # 6S Models
     s = Py6S.SixS()
 
@@ -356,9 +360,9 @@ def AtmosphericCorrection(BandId, SixsInputParameter, py6s_dict):
     # SRF needs to be provided
     # for hypso a Gaussian of FWHM of 5nm is assumed
 
-    fwhm = 5 / 1000  # micrometers need to be sent
-    fwhm = 3.33 / 1000
-    lambda_py6s, srf = get_srf(fwhm, BandId, SixsInputParameter)
+    # center_lambda_nm = SixsInputParameter['wavelengths'][BandId]
+    current_band_wl, current_band_srf = srf[BandId] # wl ouput in um
+    lambda_py6s, srf = clip_srf(single_wl=current_band_wl, single_srf=current_band_srf)
     s.wavelength = Py6S.Wavelength(start_wavelength=lambda_py6s[0], end_wavelength=lambda_py6s[-1], filter=srf)
 
     # TOA Approach without SRF *****************************************************************
@@ -429,33 +433,6 @@ def get_surface_reflectance(radiance_band, py6s_results):
     return ref
 
 
-#
-# def toa_reflectance_from_toa_radiance(wl, srf, radiance):
-#     solar_df = pd.read_csv(r"Solar_irradiance_Thuillier_2002.csv")
-#
-#     solar_array = np.array(solar_df)
-#     current_num = solar_array[0, 0]
-#     delta = 0.01
-#     new_x = [solar_array[0, 0]]
-#     while current_num <= solar_array[-1, 0]:
-#         current_num = current_num + delta
-#         new_x.append(current_num)
-#
-#     new_y = np.interp(new_x, solar_array[:, 0], solar_array[:, 1])
-#
-#     solar_df = pd.DataFrame(np.column_stack((new_x, new_y)), columns=solar_df.columns)
-#
-#     resamp_srf = np.interp(new_x, wl, srf)
-#     weights_srf = resamp_srf / np.sum(resamp_srf)
-#     ESUN = np.sum(solar_df['mW/m2/nm'].values * weights_srf)
-#
-#     # Earth-Sun distance (from day of year)
-#     doy = scene_date.timetuple().tm_yday  # julian date
-#     distance_sun = 1 - 0.01672 * math.cos(0.9856 * (
-#             doy - 4))  # http://physics.stackexchange.com/questions/177949/earth-sun-distance-on-a-given-day-of-the-year
-#     TOA_ref = (np.pi * radiance * (distance_sun ** 2)) / (ESUN * np.cos(solar_zenith))
-#     return TOA_ref
-
 
 def get_corrected_radiance(radiance_band, py6s_results):
     coeff_a = py6s_results['coeff_a']
@@ -469,7 +446,7 @@ def get_corrected_radiance(radiance_band, py6s_results):
     return radiance_corr_band
 
 
-def run_py6s(wavelengths, hypercube_L1, hypso_info, lat_2d_array, lon_2d_array, py6s_dict, time_capture):
+def run_py6s(wavelengths, hypercube_L1, hypso_info, lat_2d_array, lon_2d_array, py6s_dict, time_capture, srf):
     # Search for Full Geotiff
     # TODO; At least for now, always do the atmospheric correction
     # potential_L2 = find_file(hypso_info["top_folder_name"],"-full_L2",".tif")
@@ -493,7 +470,7 @@ def run_py6s(wavelengths, hypercube_L1, hypso_info, lat_2d_array, lon_2d_array, 
 
     for BandId in tqdm(range(120)):
         # Atmospheric correction for Zenith and Azimuth Band Values
-        py6s_results = AtmosphericCorrection(BandId, init_parameters, py6s_dict)
+        py6s_results = AtmosphericCorrection(BandId, init_parameters, py6s_dict,srf)
 
         # Get Radiance Uncorrected Band
         uncorrected_radiance_band = radiance_hypercube[:, :, BandId]
