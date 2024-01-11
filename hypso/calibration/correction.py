@@ -61,7 +61,7 @@ def get_coefficients_from_file(coeff_path: str) -> np.ndarray:
     return coefficients
 
 
-def get_coefficients_from_dict(coeff_dict: dict) -> dict:
+def get_coefficients_from_dict(coeff_dict: dict, satobj) -> dict:
     """Get the coefficients from the csv file.
 
     Args:
@@ -76,10 +76,23 @@ def get_coefficients_from_dict(coeff_dict: dict) -> dict:
     """
     coeffs = coeff_dict.copy()
     for k in coeff_dict:
-        if isinstance(coeff_dict[k], pathlib.PurePath) or isinstance(coeff_dict[k], str):
+        # Coefficients Custom (needs trimming)
+        if "full" in str(coeff_dict[k]):
+            bin_x = satobj.info["bin_factor"]
+            full_coeff = get_coefficients_from_file(coeff_dict[k])
+            coeffs[k] = crop_and_bin_matrix(
+                full_coeff,
+                satobj.info["x_start"],
+                satobj.info["x_stop"],
+                satobj.info["y_start"],
+                satobj.info["y_stop"],
+                bin_x)
+        # Just read coefficients
+        elif "nominal" in str(coeff_dict[k]) or "wide" in str(coeff_dict[k]):
             coeffs[k] = get_coefficients_from_file(coeff_dict[k])
+
         else:
-            coeffs[k] = coeff_dict[k]
+            coeff_dict[k] = None
 
     return coeffs
 

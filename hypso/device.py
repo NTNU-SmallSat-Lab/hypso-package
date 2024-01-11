@@ -60,7 +60,7 @@ class Hypso:
         # Correction Coefficients ----------------------------------------
         self.calibration_coeffs_file_dict = self.get_calibration_coefficients_path()
         self.calibration_coefficients_dict = get_coefficients_from_dict(
-            self.calibration_coeffs_file_dict)
+            self.calibration_coeffs_file_dict, self)
 
         # Wavelengths -----------------------------------------------------
         self.spectral_coeff_file = self.get_spectral_coefficients_path()
@@ -178,9 +178,15 @@ class Hypso:
                                attr_name="smile_file",
                                attr_value=str(Path(self.calibration_coeffs_file_dict["smile"]).name))
 
-            set_or_create_attr(netfile,
-                               attr_name="destriping",
-                               attr_value=str(Path(self.calibration_coeffs_file_dict["destriping"]).name))
+            # Destriping Path is the only one which can be None
+            if self.calibration_coeffs_file_dict["destriping"] is None:
+                set_or_create_attr(netfile,
+                                   attr_name="destriping",
+                                   attr_value="No-File")
+            else:
+                set_or_create_attr(netfile,
+                                   attr_name="destriping",
+                                   attr_value=str(Path(self.calibration_coeffs_file_dict["destriping"]).name))
 
             set_or_create_attr(netfile, attr_name="spectral_file", attr_value=str(Path(self.spectral_coeff_file).name))
 
@@ -786,7 +792,22 @@ class Hypso:
         csv_file_smile = None
         csv_file_destriping = None
 
-        if self.info["capture_type"] == "nominal":
+        if self.info["capture_type"] == "custom":
+
+            # Radiometric ---------------------------------
+            full_rad_coeff_file = files('hypso.calibration').joinpath(f'data/{"radiometric_calibration_matrix_HYPSO-1_full_v1.csv"}')
+
+            # Smile ---------------------------------
+            full_smile_coeff_file = files('hypso.calibration').joinpath(f'data/{"spectral_calibration_matrix_HYPSO-1_full_v1.csv"}')
+
+            # Destriping (not available for custom)
+            full_destripig_coeff_file = None
+
+            return {"radiometric": full_smile_coeff_file,
+                    "smile": full_smile_coeff_file,
+                    "destriping": full_destripig_coeff_file}
+
+        elif self.info["capture_type"] == "nominal":
             csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_nominal_v1.csv"
             csv_file_smile = "smile_correction_matrix_HYPSO-1_nominal_v1.csv"
             csv_file_destriping = "destriping_matrix_HYPSO-1_nominal_v1.csv"
@@ -795,52 +816,12 @@ class Hypso:
             csv_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.csv"
             csv_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.csv"
 
-        elif self.info["capture_type"] == "custom":
-            bin_x = self.info["bin_factor"]
 
-            # Radiometric ---------------------------------
-            full_coeff = get_coefficients_from_file(str(files('hypso.calibration').joinpath(
-                f'data/{"radiometric_calibration_matrix_HYPSO-1_full_v1.csv"}'))
-            )
 
-            csv_file_radiometric = crop_and_bin_matrix(
-                full_coeff,
-                self.info["x_start"],
-                self.info["x_stop"],
-                self.info["y_start"],
-                self.info["y_stop"],
-                bin_x)
+        rad_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_radiometric}')
 
-            # Smile ---------------------------------
-            full_coeff = get_coefficients_from_file(str(files('hypso.calibration').joinpath(
-                f'data/{"spectral_calibration_matrix_HYPSO-1_full_v1.csv"}'))
-            )
-            csv_file_smile = crop_and_bin_matrix(
-                full_coeff,
-                self.info["x_start"],
-                self.info["x_stop"],
-                self.info["y_start"],
-                self.info["y_stop"],
-                bin_x)
-
-            # Destriping ---------------------------------
-            rows_img = self.info["frame_count"]  # Due to way image is captured
-            cols_img = self.info["image_height"]
-
-            if (rows_img < self.standardDimensions["nominal"]):
-                self.info["capture_type"] = "nominal"
-
-            elif (cols_img == self.standardDimensions["wide"]):
-                self.info["capture_type"] = "wide"
-            csv_file_destriping = None
-
-        rad_coeff_file = csv_file_radiometric if not isinstance(csv_file_radiometric, str) else files(
-            'hypso.calibration').joinpath(f'data/{csv_file_radiometric}')
-
-        smile_coeff_file = csv_file_smile if not isinstance(csv_file_smile, str) else files(
-            'hypso.calibration').joinpath(f'data/{csv_file_smile}')
-        destriping_coeff_file = csv_file_destriping if not isinstance(csv_file_destriping, str) else files(
-            'hypso.calibration').joinpath(f'data/{csv_file_destriping}')
+        smile_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_smile}')
+        destriping_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_destriping}')
 
         coeff_dict = {"radiometric": rad_coeff_file,
                       "smile": smile_coeff_file,

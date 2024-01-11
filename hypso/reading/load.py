@@ -99,7 +99,7 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions) -> dict:
 
     info = {}
     nc_name = nc_file_path.stem
-    temp_dir = Path(nc_file_path.parent.absolute(), nc_name.replace("-l1a","") + "_tmp")
+    temp_dir = Path(nc_file_path.parent.absolute(), nc_name.replace("-l1a", "") + "_tmp")
     info["tmp_dir"] = temp_dir
     # Add file name
     capture_name = nc_file_path.stem
@@ -168,8 +168,6 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions) -> dict:
         info["unixtime"]
     ).isoformat()
 
-
-
     # ------------------------------------------------------------------------
     # Target Lat Lon ---------------------------------------------------------
     # ------------------------------------------------------------------------
@@ -191,8 +189,7 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions) -> dict:
 
     info["latc"] = target_lat
     info["lonc"] = target_lon
-    info['target_area'] = target_lat+' '+target_lon
-
+    info['target_area'] = target_lat + ' ' + target_lon
 
     info["background_value"] = 8 * info["bin_factor"]
 
@@ -210,10 +207,10 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions) -> dict:
     rows_img = info["frame_count"]  # Due to way image is captured
     cols_img = info["image_height"]
 
-    if (rows_img == standardDimensions["nominal"]):
+    if rows_img == standardDimensions["nominal"]:
         info["capture_type"] = "nominal"
 
-    elif (cols_img == standardDimensions["wide"]):
+    elif cols_img == standardDimensions["wide"]:
         info["capture_type"] = "wide"
     else:
         if EXPERIMENTAL_FEATURES:
