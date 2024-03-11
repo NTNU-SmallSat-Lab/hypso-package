@@ -1,18 +1,37 @@
-name: Deploy Sphinx documentation to Pages
+name: Sphinx docs to gh-pages
 
 on:
   push:
-    branches: [main] # branch to trigger deployment
+    branches:
+      - main
+
+# workflow_dispatch:        # Un comment line if you also want to trigger action manually
 
 jobs:
-  pages:
-    runs-on: ubuntu-20.04
+  sphinx_docs_to_gh-pages:
+    runs-on: ubuntu-latest
+    name: Sphinx docs to gh-pages
     steps:
-    - id: deployment
-      uses: sphinx-notes/pages@v3
-      with:
-        publish: false
-    - uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ${{ steps.deployment.outputs.artifact }}
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Make conda environment
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          python-version: 3.10    # Python version to build the html sphinx documentation
+          environment-file: docs/requirements.txt    # Path to the documentation conda environment
+          auto-update-conda: false
+          auto-activate-base: false
+          show-channel-urls: true
+      - name: Installing the library
+        shell: bash -l {0}
+        run: |
+          python setup.py install
+      - name: Running the Sphinx to gh-pages Action
+        uses: uibcdf/action-sphinx-docs-to-gh-pages@v2.1.0
+        with:
+          branch: main
+          dir_docs: docs
+          sphinx-apidoc-opts: '--separate -o . ../'
+          sphinx-apidoc-exclude: '../*setup* ../*.ipynb'
+          sphinx-opts: ''
