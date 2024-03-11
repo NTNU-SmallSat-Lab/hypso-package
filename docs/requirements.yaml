@@ -6,3 +6,4 @@ dependencies:
   - sphinx
   - sphinx-rtd-theme
   - sphinx-autoapi
+  - hypso
