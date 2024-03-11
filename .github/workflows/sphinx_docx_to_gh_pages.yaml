@@ -19,7 +19,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: 3.10    # Python version to build the html sphinx documentation
-          environment-file: .pyproject.toml    # Path to the documentation conda environment
+          environment-file: pyproject.toml    # Path to the documentation conda environment
           auto-update-conda: false
           auto-activate-base: false
           show-channel-urls: true
