@@ -4,4 +4,4 @@ channels:
 dependencies:
   - python
   - sphinx
-  - sphinx_rtd_theme
+  - sphinx-rtd-theme
