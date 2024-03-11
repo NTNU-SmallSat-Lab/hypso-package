@@ -76,3 +76,12 @@ include = [
   "hypso*",
 ]
 
+[project.optional-dependencies]
+docs = [
+  "sphinx",
+  "Rmyst_parser",
+  "pydata_sphinx_theme",
+  "sphinx_markdown_tables",
+  "sphinx_rtd_theme",
+  "sphinxcontrib-mermaid"
+]
