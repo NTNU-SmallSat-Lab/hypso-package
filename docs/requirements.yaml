@@ -2,6 +2,5 @@ name: docs-env
 channels:
   - defaults 
 dependencies:
-  - python
   - sphinx
   - sphinx-rtd-theme
