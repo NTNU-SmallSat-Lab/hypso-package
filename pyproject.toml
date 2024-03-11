@@ -55,7 +55,9 @@ dependencies=[
   "scikit-learn >=1.3.2",
   "packaging",
   "sphinx",
-  "sphinx_rtd_theme"
+  "sphinx_rtd_theme",
+  "sphinx-autoapi",
+  
 ]
 
 # dynamic properties set by tools
@@ -74,14 +76,4 @@ include-package-data=true
 [tool.setuptools.packages.find]
 include = [
   "hypso*",
-]
-
-[project.optional-dependencies]
-docs = [
-  "sphinx",
-  "myst_parser",
-  "pydata_sphinx_theme",
-  "sphinx_markdown_tables",
-  "sphinx_rtd_theme",
-  "sphinxcontrib-mermaid"
 ]
