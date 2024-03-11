@@ -11,7 +11,6 @@ dependencies:
   # This list is just an example
   - python=3.10
   - sphinx
-  - sphinx-api
   - sphinx_rtd_theme
   - sphinxcontrib-bibtex
   - nbsphinx
