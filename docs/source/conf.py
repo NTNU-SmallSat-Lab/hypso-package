@@ -26,7 +26,8 @@ extensions = [
     'sphinx.ext.autodoc', # Core library for html generation from docstrings
     'sphinx.ext.doctest',
     'sphinx.ext.autosummary',  # Create neat summary tables
-    'autoapi.extension'
+    'autoapi.extension',
+    'sphinx.ext.githubpages'
 ]
 exclude_patterns = []
 
