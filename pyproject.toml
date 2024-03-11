@@ -2,7 +2,7 @@
 
 [tool.setuptools_scm]
 write_to = "hypso/_version.py"
-fallback_version = "1.9.1"
+fallback_version = "1.9.2"
 
 [build-system]
 requires=[
@@ -54,10 +54,7 @@ dependencies=[
   "python-dateutil",
   "scikit-learn >=1.3.2",
   "packaging",
-  "sphinx",
-  "sphinx_rtd_theme",
-  "sphinx-autoapi",
-  
+
 ]
 
 # dynamic properties set by tools
