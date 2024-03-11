@@ -3,9 +3,8 @@ name: docs-env
 channels:
   - conda-forge
   - defaults
-
+  - nodefaults
 dependencies:
-
   - python
   - sphinx
   - sphinx_rtd_theme
