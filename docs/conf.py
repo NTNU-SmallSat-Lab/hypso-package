@@ -6,12 +6,6 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here.
-import pathlib
-import sys
-sys.path.insert(0, pathlib.Path(__file__).parents[2].resolve().as_posix())
-
 project = 'Hypso Package'
 copyright = 'Norwegian University of Science and Technology (NTNU)'
 author = 'Alvaro Flores-Romero'
@@ -33,7 +27,7 @@ exclude_patterns = []
 
 autodoc_typehints = 'description'
 extensions.append('autoapi.extension')
-autoapi_dirs = ['../../hypso']
+autoapi_dirs = ['../hypso']
 autoapi_template_dir = "_templates/autoapi"
 
 
