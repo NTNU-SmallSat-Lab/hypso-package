@@ -1,0 +1,24 @@
+:py:mod:`hypso.classification.WaterDetect`
+==========================================
+
+.. py:module:: hypso.classification.WaterDetect
+
+
+Subpackages
+-----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+
+   waterdetect/index.rst
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   runWaterDetect/index.rst
+
+

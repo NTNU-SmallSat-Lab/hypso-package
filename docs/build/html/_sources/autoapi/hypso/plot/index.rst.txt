@@ -1,0 +1,56 @@
+:py:mod:`hypso.plot`
+====================
+
+.. py:module:: hypso.plot
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   map/index.rst
+
+
+Package Contents
+----------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.plot.show_rgb_map
+   hypso.plot.write_rgb_to_png
+   hypso.plot.plot_array_overlay
+   hypso.plot.get_rgb
+   hypso.plot.point_rgb_map
+
+
+
+.. py:function:: show_rgb_map(satellite_obj, plotTitle='RGB Image', dpi_input=450)
+
+
+.. py:function:: write_rgb_to_png(sat_obj, path_to_save)
+
+
+.. py:function:: plot_array_overlay(satellite_obj, plot_array, plotTitle='2D Array', cbar_title=' Chlorophyll Concentration [mg m^-3]', dpi_input=450, min_value=0.01, max_value=100)
+
+
+.. py:function:: get_rgb(sat_obj)
+
+   Write the RGB image.
+
+   Args:
+       path_to_save (str): The path to save the RGB image.
+       R_wl (float, optional): The wavelength for the red channel. Defaults to 650.
+       G_wl (float, optional): The wavelength for the green channel. Defaults to 550.
+       B_wl (float, optional): The wavelength for the blue channel. Defaults to 450.
+       :param sat_obj:
+
+
+.. py:function:: point_rgb_map(satellite_obj, plotTitle='RGB Image', dpi_input=450, patch_dict=None, r_plot=0.007, path_to_save=None)
+
+

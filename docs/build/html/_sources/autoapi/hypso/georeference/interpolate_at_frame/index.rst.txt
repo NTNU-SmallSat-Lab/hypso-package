@@ -1,0 +1,22 @@
+:py:mod:`hypso.georeference.interpolate_at_frame`
+=================================================
+
+.. py:module:: hypso.georeference.interpolate_at_frame
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.georeference.interpolate_at_frame.interpolate_at_frame
+
+
+
+.. py:function:: interpolate_at_frame(pos_csv_path, quat_csv_path, flash_csv_path, additional_time_offset=0.0, framerate=-1.0, exposure=-1.0)
+
+

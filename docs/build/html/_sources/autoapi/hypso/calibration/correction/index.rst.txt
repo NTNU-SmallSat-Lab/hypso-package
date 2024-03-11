@@ -1,0 +1,89 @@
+:py:mod:`hypso.calibration.correction`
+======================================
+
+.. py:module:: hypso.calibration.correction
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.calibration.correction.crop_and_bin_matrix
+   hypso.calibration.correction.get_coefficients_from_file
+   hypso.calibration.correction.get_coefficients_from_dict
+   hypso.calibration.correction.calibrate_cube
+   hypso.calibration.correction.apply_radiometric_calibration
+   hypso.calibration.correction.smile_correction_one_row
+   hypso.calibration.correction.smile_correction_one_frame
+   hypso.calibration.correction.smile_correct_cube
+   hypso.calibration.correction.destriping_correct_cube
+
+
+
+.. py:function:: crop_and_bin_matrix(matrix, x_start, x_stop, y_start, y_stop, bin_x=1, bin_y=1)
+
+   Crops matrix to AOI. Bins matrix so that the average value in the bin_x
+   number of pixels is stored.
+
+
+.. py:function:: get_coefficients_from_file(coeff_path)
+
+
+.. py:function:: get_coefficients_from_dict(coeff_dict, satobj)
+
+   Get the coefficients from the csv file.
+
+   Args:
+       path (str, optional): Path to the radiometric coefficients csv file. Defaults to None.
+       sets the rad_file attribute to the path.
+       if no path is given, the rad_file path is used.
+
+   Returns:
+       np.ndarray: The coefficients.
+       :param coeff_dict:
+
+
+
+.. py:function:: calibrate_cube(info_sat, raw_cube, correction_coefficients_dict)
+
+   Calibrate the raw data cube.
+
+
+.. py:function:: apply_radiometric_calibration(frame, exp, background_value, radiometric_calibration_coefficients)
+
+   Assumes input is 12-bit values, and that the radiometric calibration
+   coefficients are the same size as the input image.
+
+   Note: radiometric calibration coefficients have original size (684,1080),
+   matching the "normal" AOI of the HYPSO-1 data (with no binning).
+
+
+.. py:function:: smile_correction_one_row(row, w, w_ref)
+
+   Use cubic spline interpolation to resample one row onto the correct
+   wavelengths/bands from a reference wavelength/band array to correct for
+   the smile effect.
+
+
+.. py:function:: smile_correction_one_frame(frame, spectral_band_matrix)
+
+   Run smile correction on each row in a frame, using the center row as 
+   the reference wavelength/band for smile correction.
+
+
+.. py:function:: smile_correct_cube(cube, correction_coefficients_dict)
+
+   Run smile correction on each frame in a cube, using the center row in 
+   the frame as the reference wavelength/band for smile correction.
+
+
+.. py:function:: destriping_correct_cube(cube, correction_coefficients_dict)
+
+   Apply destriping correction matrix. 
+
+

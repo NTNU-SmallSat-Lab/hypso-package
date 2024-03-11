@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hypso.georeference.georef.geometric &mdash; Hypso Package 1.9.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=eafc0fe6" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../_static/documentation_options.js?v=60b3a732"></script>
+        <script src="../../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+    <link rel="next" title="hypso.georeference.georef.gmaps" href="../gmaps/index.html" />
+    <link rel="prev" title="hypso.georeference.georef" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            Hypso Package
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../../index.html">Documentation Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso</span></code></a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../../index.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../../../atmospheric/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.atmospheric</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../calibration/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.calibration</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../classification/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.classification</span></code></a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.georeference</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../plot/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.plot</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reading/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.reading</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.utils</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../index.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../index.html#package-contents">Package Contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">Hypso Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Documentation Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso</span></code></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.georeference</span></code></a></li>
+          <li class="breadcrumb-item"><a href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.georeference.georef</span></code></a></li>
+      <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.georeference.georef.geometric</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../../_sources/autoapi/hypso/georeference/georef/geometric/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-hypso.georeference.georef.geometric">
+<span id="hypso-georeference-georef-geometric"></span><h1><a class="reference internal" href="#module-hypso.georeference.georef.geometric" title="hypso.georeference.georef.geometric"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.georeference.georef.geometric</span></code></a><a class="headerlink" href="#module-hypso.georeference.georef.geometric" title="Link to this heading"></a></h1>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<section id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.georeference.georef.geometric.minimum_bounding_rectangle" title="hypso.georeference.georef.geometric.minimum_bounding_rectangle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">minimum_bounding_rectangle</span></code></a>(points)</p></td>
+<td><p>Find the smallest bounding rectangle for a set of points.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.georeference.georef.geometric.mat_from_quat" title="hypso.georeference.georef.geometric.mat_from_quat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mat_from_quat</span></code></a>(quat)</p></td>
+<td><p>quat must be a four element list of numbers or 4 element nump array</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.georeference.georef.geometric.rotate_axis_angle" title="hypso.georeference.georef.geometric.rotate_axis_angle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rotate_axis_angle</span></code></a>(vec, axis, angle)</p></td>
+<td><p>Rotates vector vec around axis axis by angle angle</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.georeference.georef.geometric.ecef_to_lat_lon_alt" title="hypso.georeference.georef.geometric.ecef_to_lat_lon_alt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ecef_to_lat_lon_alt</span></code></a>(pos)</p></td>
+<td><p>input pos has to be Nx3, and units in meters</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.georeference.georef.geometric.eci_to_lat_loneci_alt" title="hypso.georeference.georef.geometric.eci_to_lat_loneci_alt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eci_to_lat_loneci_alt</span></code></a>(pos)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.georeference.georef.geometric.eci_lon_to_ecef_lon" title="hypso.georeference.georef.geometric.eci_lon_to_ecef_lon"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eci_lon_to_ecef_lon</span></code></a>(datetime_utc, lon, time_offset)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.georeference.georef.geometric.eci_to_lat_lon_alt" title="hypso.georeference.georef.geometric.eci_to_lat_lon_alt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eci_to_lat_lon_alt</span></code></a>(pos, times, time_offset)</p></td>
+<td><p>pos needs to be Nx3</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.georeference.georef.geometric.pos_ecef_to_lat_lon_alt" title="hypso.georeference.georef.geometric.pos_ecef_to_lat_lon_alt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pos_ecef_to_lat_lon_alt</span></code></a>(pos)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.georeference.georef.geometric.lat_lon_alt_to_ecef" title="hypso.georeference.georef.geometric.lat_lon_alt_to_ecef"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lat_lon_alt_to_ecef</span></code></a>(lla)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.georeference.georef.geometric.ellipsoid_line_intersection" title="hypso.georeference.georef.geometric.ellipsoid_line_intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ellipsoid_line_intersection</span></code></a>(point, direction)</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Link to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id4" title="hypso.georeference.georef.geometric.R_eq"><code class="xref py py-obj docutils literal notranslate"><span class="pre">R_eq</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id5" title="hypso.georeference.georef.geometric.f"><code class="xref py py-obj docutils literal notranslate"><span class="pre">f</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id4" title="hypso.georeference.georef.geometric.R_eq"><code class="xref py py-obj docutils literal notranslate"><span class="pre">R_eq</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id5" title="hypso.georeference.georef.geometric.f"><code class="xref py py-obj docutils literal notranslate"><span class="pre">f</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id4" title="hypso.georeference.georef.geometric.R_eq"><code class="xref py py-obj docutils literal notranslate"><span class="pre">R_eq</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id5" title="hypso.georeference.georef.geometric.f"><code class="xref py py-obj docutils literal notranslate"><span class="pre">f</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id4" title="hypso.georeference.georef.geometric.R_eq"><code class="xref py py-obj docutils literal notranslate"><span class="pre">R_eq</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#id5" title="hypso.georeference.georef.geometric.f"><code class="xref py py-obj docutils literal notranslate"><span class="pre">f</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.georeference.georef.geometric.e_2" title="hypso.georeference.georef.geometric.e_2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">e_2</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.georeference.georef.geometric.R_pl" title="hypso.georeference.georef.geometric.R_pl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">R_pl</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.minimum_bounding_rectangle">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">minimum_bounding_rectangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.geometric.minimum_bounding_rectangle" title="Link to this definition"></a></dt>
+<dd><p>Find the smallest bounding rectangle for a set of points.
+Returns a set of points representing the corners of the bounding box.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>points</strong> – an nx2 matrix of coordinates</p>
+</dd>
+<dt class="field-even">Rval<span class="colon">:</span></dt>
+<dd class="field-even"><p>a 4x2 matrix of bounding box corner coordinates</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.mat_from_quat">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">mat_from_quat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quat</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.geometric.mat_from_quat" title="Link to this definition"></a></dt>
+<dd><p>quat must be a four element list of numbers or 4 element nump array
+returns a 3x3 numpy array containing the rotation matrix</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.rotate_axis_angle">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">rotate_axis_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.geometric.rotate_axis_angle" title="Link to this definition"></a></dt>
+<dd><p>Rotates vector vec around axis axis by angle angle
+Both vec, axis, and vec_rot are column vectors. axis is a
+unit vector, angle is in radians</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.R_eq">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">R_eq</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6378137.0</span></em><a class="headerlink" href="#hypso.georeference.georef.geometric.R_eq" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.f">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">f</span></span><a class="headerlink" href="#hypso.georeference.georef.geometric.f" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">R_eq</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6378388.0</span></em><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">f</span></span><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">R_eq</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6378137.0</span></em><a class="headerlink" href="#id2" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">f</span></span><a class="headerlink" href="#id3" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">R_eq</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6378137.0</span></em><a class="headerlink" href="#id4" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="id5">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">f</span></span><a class="headerlink" href="#id5" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.e_2">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">e_2</span></span><a class="headerlink" href="#hypso.georeference.georef.geometric.e_2" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.R_pl">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">R_pl</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6356752.0</span></em><a class="headerlink" href="#hypso.georeference.georef.geometric.R_pl" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.ecef_to_lat_lon_alt">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">ecef_to_lat_lon_alt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.geometric.ecef_to_lat_lon_alt" title="Link to this definition"></a></dt>
+<dd><p>input pos has to be Nx3, and units in meters
+returns lat lon (with respect to ECI axes) and altitude in degrees and meters</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.eci_to_lat_loneci_alt">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">eci_to_lat_loneci_alt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.geometric.eci_to_lat_loneci_alt" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.eci_lon_to_ecef_lon">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">eci_lon_to_ecef_lon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datetime_utc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_offset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.geometric.eci_lon_to_ecef_lon" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.eci_to_lat_lon_alt">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">eci_to_lat_lon_alt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">times</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_offset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.geometric.eci_to_lat_lon_alt" title="Link to this definition"></a></dt>
+<dd><p>pos needs to be Nx3
+times needs to be N
+time_offset is a float</p>
+<blockquote>
+<div><p>time_offset is an additional time offset to adjust georeferencing</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.pos_ecef_to_lat_lon_alt">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">pos_ecef_to_lat_lon_alt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.geometric.pos_ecef_to_lat_lon_alt" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.lat_lon_alt_to_ecef">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">lat_lon_alt_to_ecef</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lla</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.geometric.lat_lon_alt_to_ecef" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.ellipsoid_line_intersection">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">ellipsoid_line_intersection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.geometric.ellipsoid_line_intersection" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="hypso.georeference.georef" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../gmaps/index.html" class="btn btn-neutral float-right" title="hypso.georeference.georef.gmaps" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Norwegian University of Science and Technology (NTNU).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

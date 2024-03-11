@@ -1,0 +1,36 @@
+:py:mod:`hypso.georeference.georef.utils`
+=========================================
+
+.. py:module:: hypso.georeference.georef.utils
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.georeference.georef.utils.gen_resample_grid
+   hypso.georeference.georef.utils.gen_resample_grid_bbox_min
+
+
+
+.. py:function:: gen_resample_grid(grid_res_x, grid_res_y, bbox_coord_limits)
+
+   bbox_coord_limits is expected to be a list or tuple with 4 elements as follows:
+       [xmin, xmax, ymin, ymax]
+
+
+.. py:function:: gen_resample_grid_bbox_min(grid_res_x, grid_res_y, bbox_minimal)
+
+   @bbox_minimal shall have has shape [4,2] and consists of four points
+   describing the corner of the minimal bounding box.
+   The width of the box is taken as the distance between point [0,:] and [3,:].
+   The height of the box is taken as the distance between point [2,:] and [3,:].
+   The x direction is taken as the direction going from point [3,:] to point [0,:].
+   The y direction is taken as the direction going from point [3,:] to point [2,:].
+
+

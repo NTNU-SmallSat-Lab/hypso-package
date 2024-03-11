@@ -1,0 +1,41 @@
+:py:mod:`hypso.atmospheric`
+===========================
+
+.. py:module:: hypso.atmospheric
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   atmospheric_correction_6sv1/index.rst
+   atmospheric_correction_acolite/index.rst
+   base/index.rst
+
+
+Package Contents
+----------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.atmospheric.run_py6s
+   hypso.atmospheric.run_acolite
+   hypso.atmospheric.get_acolite_repo
+
+
+
+.. py:function:: run_py6s(wavelengths, hypercube_L1, hypso_info, lat_2d_array, lon_2d_array, py6s_dict, time_capture, srf)
+
+
+.. py:function:: run_acolite(hypso_info, atmos_dict, nc_file_acoliteready)
+
+
+.. py:function:: get_acolite_repo()
+
+

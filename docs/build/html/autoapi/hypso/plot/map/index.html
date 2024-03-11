@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hypso.plot.map &mdash; Hypso Package 1.9.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=eafc0fe6" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=60b3a732"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="hypso.reading" href="../../reading/index.html" />
+    <link rel="prev" title="hypso.plot" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            Hypso Package
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">Documentation Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso</span></code></a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../index.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../../atmospheric/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.atmospheric</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../calibration/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.calibration</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../classification/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.classification</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../georeference/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.georeference</span></code></a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.plot</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reading/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.reading</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.utils</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../index.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../index.html#package-contents">Package Contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Hypso Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Documentation Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso</span></code></a></li>
+          <li class="breadcrumb-item"><a href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.plot</span></code></a></li>
+      <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.plot.map</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/autoapi/hypso/plot/map/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-hypso.plot.map">
+<span id="hypso-plot-map"></span><h1><a class="reference internal" href="#module-hypso.plot.map" title="hypso.plot.map"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.plot.map</span></code></a><a class="headerlink" href="#module-hypso.plot.map" title="Link to this heading"></a></h1>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<section id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.plot.map.axis_extent" title="hypso.plot.map.axis_extent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">axis_extent</span></code></a>(lat, lon)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.plot.map.image_extent" title="hypso.plot.map.image_extent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">image_extent</span></code></a>(inproj_value, lat, lon)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.plot.map.tick_log_formatter" title="hypso.plot.map.tick_log_formatter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tick_log_formatter</span></code></a>(y, pos)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.plot.map.get_cartopy_axis" title="hypso.plot.map.get_cartopy_axis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_cartopy_axis</span></code></a>(satellite_obj, dpi_input)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.plot.map.point_rgb_map" title="hypso.plot.map.point_rgb_map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">point_rgb_map</span></code></a>(satellite_obj[, plotTitle, dpi_input, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.plot.map.show_rgb_map" title="hypso.plot.map.show_rgb_map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">show_rgb_map</span></code></a>(satellite_obj[, plotTitle, dpi_input])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.plot.map.plot_array_overlay" title="hypso.plot.map.plot_array_overlay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_array_overlay</span></code></a>(satellite_obj, plot_array[, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.plot.map.auto_adjust_img" title="hypso.plot.map.auto_adjust_img"><code class="xref py py-obj docutils literal notranslate"><span class="pre">auto_adjust_img</span></code></a>(img)</p></td>
+<td><p>Adjust image contrast using histogram equalization.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.plot.map.get_rgb" title="hypso.plot.map.get_rgb"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_rgb</span></code></a>(sat_obj)</p></td>
+<td><p>Write the RGB image.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.plot.map.check_projection_geotiff" title="hypso.plot.map.check_projection_geotiff"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_projection_geotiff</span></code></a>(satobj)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.plot.map.write_rgb_to_png" title="hypso.plot.map.write_rgb_to_png"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_rgb_to_png</span></code></a>(sat_obj, path_to_save)</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Link to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.plot.map.PLOTZOOM" title="hypso.plot.map.PLOTZOOM"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PLOTZOOM</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py data">
+<dt class="sig sig-object py" id="hypso.plot.map.PLOTZOOM">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.map.</span></span><span class="sig-name descname"><span class="pre">PLOTZOOM</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></em><a class="headerlink" href="#hypso.plot.map.PLOTZOOM" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.map.axis_extent">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.map.</span></span><span class="sig-name descname"><span class="pre">axis_extent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.map.axis_extent" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.map.image_extent">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.map.</span></span><span class="sig-name descname"><span class="pre">image_extent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inproj_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.map.image_extent" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.map.tick_log_formatter">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.map.</span></span><span class="sig-name descname"><span class="pre">tick_log_formatter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.map.tick_log_formatter" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.map.get_cartopy_axis">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.map.</span></span><span class="sig-name descname"><span class="pre">get_cartopy_axis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi_input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.map.get_cartopy_axis" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.map.point_rgb_map">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.map.</span></span><span class="sig-name descname"><span class="pre">point_rgb_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plotTitle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RGB</span> <span class="pre">Image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">450</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patch_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.007</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_to_save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.map.point_rgb_map" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.map.show_rgb_map">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.map.</span></span><span class="sig-name descname"><span class="pre">show_rgb_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plotTitle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RGB</span> <span class="pre">Image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">450</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.map.show_rgb_map" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.map.plot_array_overlay">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.map.</span></span><span class="sig-name descname"><span class="pre">plot_array_overlay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plotTitle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'2D</span> <span class="pre">Array'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cbar_title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">Chlorophyll</span> <span class="pre">Concentration</span> <span class="pre">[mg</span> <span class="pre">m^-3]'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">450</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.map.plot_array_overlay" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.map.auto_adjust_img">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.map.</span></span><span class="sig-name descname"><span class="pre">auto_adjust_img</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.map.auto_adjust_img" title="Link to this definition"></a></dt>
+<dd><p>Adjust image contrast using histogram equalization.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>img: Image to adjust.</p>
+</dd>
+<dt>Returns:</dt><dd><p>Adjusted image.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>img</strong> (<em>numpy.ndarray</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.map.get_rgb">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.map.</span></span><span class="sig-name descname"><span class="pre">get_rgb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sat_obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.map.get_rgb" title="Link to this definition"></a></dt>
+<dd><p>Write the RGB image.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>path_to_save (str): The path to save the RGB image.
+R_wl (float, optional): The wavelength for the red channel. Defaults to 650.
+G_wl (float, optional): The wavelength for the green channel. Defaults to 550.
+B_wl (float, optional): The wavelength for the blue channel. Defaults to 450.
+:param sat_obj:</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>PIL.Image</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.map.check_projection_geotiff">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.map.</span></span><span class="sig-name descname"><span class="pre">check_projection_geotiff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satobj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.map.check_projection_geotiff" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.map.write_rgb_to_png">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.map.</span></span><span class="sig-name descname"><span class="pre">write_rgb_to_png</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sat_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_to_save</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.map.write_rgb_to_png" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path_to_save</strong> (<em>str</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>PIL.Image</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="hypso.plot" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../reading/index.html" class="btn btn-neutral float-right" title="hypso.reading" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Norwegian University of Science and Technology (NTNU).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

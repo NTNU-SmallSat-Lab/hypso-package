@@ -1,0 +1,96 @@
+:py:mod:`hypso.utils.utils`
+===========================
+
+.. py:module:: hypso.utils.utils
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   hypso.utils.utils.MyProgressBar
+
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.utils.utils.flatten_dict
+   hypso.utils.utils.nested_dict_to_df
+   hypso.utils.utils.compare_netcdf_files
+   hypso.utils.utils.HSI2RGB
+   hypso.utils.utils.find_all_files
+   hypso.utils.utils.find_file
+   hypso.utils.utils.find_dir
+   hypso.utils.utils.is_integer_num
+   hypso.utils.utils.navigate_recursive_nc
+   hypso.utils.utils.print_nc
+   hypso.utils.utils.list_array_1d_to_string
+   hypso.utils.utils.recursive_print_nc
+   hypso.utils.utils.pseudo_convolution
+   hypso.utils.utils.find_closest_water_lat_lon_match
+   hypso.utils.utils.haversine
+
+
+
+.. py:function:: flatten_dict(nested_dict)
+
+
+.. py:function:: nested_dict_to_df(values_dict)
+
+
+.. py:function:: compare_netcdf_files(file1, file2)
+
+
+.. py:function:: HSI2RGB(wY, HSI, d=65, threshold=0.002)
+
+
+.. py:class:: MyProgressBar(text_prefix)
+
+
+   .. py:method:: __call__(block_num, block_size, total_size)
+
+
+
+.. py:function:: find_all_files(path, str_in_file, suffix=None, type='partial')
+
+
+.. py:function:: find_file(path, str_in_file, suffix=None, type='partial')
+
+
+.. py:function:: find_dir(path, str_in_dir, type='partial')
+
+
+.. py:function:: is_integer_num(n)
+
+
+.. py:function:: navigate_recursive_nc(nc_file, path='', depth=0)
+
+
+.. py:function:: print_nc(nc_file_path)
+
+
+.. py:function:: list_array_1d_to_string(arr)
+
+
+.. py:function:: recursive_print_nc(nc_file, path='', depth=0)
+
+
+.. py:function:: pseudo_convolution(cube, watermask, center=[], size=5)
+
+
+.. py:function:: find_closest_water_lat_lon_match(lat_2d, lon_2d, waterMask, target_lat, target_lon)
+
+
+.. py:function:: haversine(lon1, lat1, lon2, lat2)
+
+   Calculate the great circle distance between two points
+   on the earth (specified in decimal degrees)
+
+

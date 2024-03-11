@@ -1,0 +1,30 @@
+:py:mod:`hypso.georeference.coordinate_correction`
+==================================================
+
+.. py:module:: hypso.georeference.coordinate_correction
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.georeference.coordinate_correction.start_coordinate_correction
+   hypso.georeference.coordinate_correction.coordinate_correction_matrix
+   hypso.georeference.coordinate_correction.coordinate_correction
+
+
+
+.. py:function:: start_coordinate_correction(points_path, satinfo, proj_metadata, correction_type='affine')
+
+
+.. py:function:: coordinate_correction_matrix(filename, projection_metadata, correction_type)
+
+
+.. py:function:: coordinate_correction(point_file, projection_metadata, originalLat, originalLon, correction_type)
+
+

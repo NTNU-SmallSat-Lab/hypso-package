@@ -9,7 +9,7 @@ from pathlib import Path
 import cartopy.crs as ccrs
 
 
-def start_coordinate_correction(points_path: Path, satinfo: dict, proj_metadata: dict, correction_type="lstsq"):
+def start_coordinate_correction(points_path: Path, satinfo: dict, proj_metadata: dict, correction_type="affine"):
     #point_file = find_file(top_folder_name, ".points")
     if points_path is None:
         print("Points File Was Not Found. No Correction done.")

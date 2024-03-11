@@ -1,0 +1,31 @@
+:py:mod:`hypso.reading`
+=======================
+
+.. py:module:: hypso.reading
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   load/index.rst
+
+
+Package Contents
+----------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.reading.load_nc
+
+
+
+.. py:function:: load_nc(nc_file_path, standardDimensions)
+
+

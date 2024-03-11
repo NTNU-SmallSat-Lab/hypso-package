@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hypso.classification.WaterDetect.waterdetect.Glint &mdash; Hypso Package 1.9.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/graphviz.css?v=eafc0fe6" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../_static/documentation_options.js?v=60b3a732"></script>
+        <script src="../../../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" />
+    <link rel="next" title="hypso.classification.WaterDetect.waterdetect.Image" href="../Image/index.html" />
+    <link rel="prev" title="hypso.classification.WaterDetect.waterdetect.External_mask" href="../External_mask/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../index.html" class="icon icon-home">
+            Hypso Package
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../../../../index.html">Documentation Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../../../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso</span></code></a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../../../../index.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../../../../atmospheric/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.atmospheric</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../calibration/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.calibration</span></code></a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="../../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.classification</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../georeference/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.georeference</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../plot/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.plot</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reading/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.reading</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.utils</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../index.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../index.html#package-contents">Package Contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../index.html">Hypso Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../index.html">Documentation Reference</a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso</span></code></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.classification</span></code></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.classification.WaterDetect</span></code></a></li>
+          <li class="breadcrumb-item"><a href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.classification.WaterDetect.waterdetect</span></code></a></li>
+      <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.classification.WaterDetect.waterdetect.Glint</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../../../_sources/autoapi/hypso/classification/WaterDetect/waterdetect/Glint/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-hypso.classification.WaterDetect.waterdetect.Glint">
+<span id="hypso-classification-waterdetect-waterdetect-glint"></span><h1><a class="reference internal" href="#module-hypso.classification.WaterDetect.waterdetect.Glint" title="hypso.classification.WaterDetect.waterdetect.Glint"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.classification.WaterDetect.waterdetect.Glint</span></code></a><a class="headerlink" href="#module-hypso.classification.WaterDetect.waterdetect.Glint" title="Link to this heading"></a></h1>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading"></a></h2>
+<section id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor" title="hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DWGlintProcessor</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hypso.classification.WaterDetect.waterdetect.Glint.</span></span><span class="sig-name descname"><span class="pre">DWGlintProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit_angle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor" title="Link to this definition"></a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.supported_products">
+<span class="sig-name descname"><span class="pre">supported_products</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['S2_S2COR',</span> <span class="pre">'S2_THEIA',</span> <span class="pre">'S2_PLANETARY']</span></em><a class="headerlink" href="#hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.supported_products" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.create">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit_angle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.create" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.get_grid_values_from_xml">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_grid_values_from_xml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree_node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xpath_str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.get_grid_values_from_xml" title="Link to this definition"></a></dt>
+<dd><p>Receives a XML tree node and a XPath parsing string and search for children matching the string.
+Then, extract the VALUES in &lt;values&gt; v1 v2 v3 &lt;/values&gt; &lt;values&gt; v4 v5 v6 &lt;/values&gt; format as numpy array
+Loop through the arrays to compute the mean.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.create_glint_array">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_glint_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xml_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.create_glint_array" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.create_annotated_heatmap">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_annotated_heatmap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'magma'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.create_annotated_heatmap" title="Link to this definition"></a></dt>
+<dd><p>Create an annotated heatmap. Parameter img is an optional background img to be blended</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.nn_interpolate">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nn_interpolate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.nn_interpolate" title="Link to this definition"></a></dt>
+<dd><p>Vectorized Nearest Neighbor Interpolation
+From post: <a class="reference external" href="https://gist.github.com/KeremTurgutlu/68feb119c9dd148285be2e247267a203">https://gist.github.com/KeremTurgutlu/68feb119c9dd148285be2e247267a203</a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.create_glint_heatmap">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_glint_heatmap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rgb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">glint_arr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit_angle</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.create_glint_heatmap" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.save_heatmap">
+<span class="sig-name descname"><span class="pre">save_heatmap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'glint_heatmap.pdf'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">brightness</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.save_heatmap" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.create_multiplication_coefs">
+<span class="sig-name descname"><span class="pre">create_multiplication_coefs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_glint_multiplier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.create_multiplication_coefs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.show_multiplication_coefs">
+<span class="sig-name descname"><span class="pre">show_multiplication_coefs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.show_multiplication_coefs" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.glint_adjusted_threshold">
+<span class="sig-name descname"><span class="pre">glint_adjusted_threshold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">band</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_glint_multiplier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.glint_adjusted_threshold" title="Link to this definition"></a></dt>
+<dd><p>Create an array with the image resolution, with the threshold adjusted for the GLINT
+thresh_type can be SUP or INF</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.__repr__">
+<span class="sig-name descname"><span class="pre">__repr__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetect.waterdetect.Glint.DWGlintProcessor.__repr__" title="Link to this definition"></a></dt>
+<dd><p>Return repr(self).</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../External_mask/index.html" class="btn btn-neutral float-left" title="hypso.classification.WaterDetect.waterdetect.External_mask" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../Image/index.html" class="btn btn-neutral float-right" title="hypso.classification.WaterDetect.waterdetect.Image" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Norwegian University of Science and Technology (NTNU).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

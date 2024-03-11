@@ -1,0 +1,59 @@
+:py:mod:`hypso.reading.load`
+============================
+
+.. py:module:: hypso.reading.load
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.reading.load.load_nc
+   hypso.reading.load.get_lat_lon_2d
+   hypso.reading.load.get_local_angles
+   hypso.reading.load.get_metainfo_from_nc_file
+   hypso.reading.load.get_raw_cube_from_nc_file
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.reading.load.EXPERIMENTAL_FEATURES
+
+
+.. py:data:: EXPERIMENTAL_FEATURES
+   :value: True
+
+   
+
+.. py:function:: load_nc(nc_file_path, standardDimensions)
+
+
+.. py:function:: get_lat_lon_2d(latitude_dataPath, longitude_dataPath, info, spatialDim)
+
+
+.. py:function:: get_local_angles(sat_azimuth_path, sat_zenith_path, solar_azimuth_path, solar_zenith_path, info, spatialDim)
+
+
+.. py:function:: get_metainfo_from_nc_file(nc_file_path, standardDimensions)
+
+   Get the metadata from the top folder of the data.
+
+   Args:
+       top_folder_name (str): The name of the top folder of the data.
+
+   Returns:
+       dict: The metadata.
+
+
+.. py:function:: get_raw_cube_from_nc_file(nc_file_path)
+
+
