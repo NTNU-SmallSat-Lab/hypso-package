@@ -1,9 +1,6 @@
 name: docs-env
-
 channels:
-  - conda-forge
-  - defaults
-  - nodefaults
+  - defaults 
 dependencies:
   - python
   - sphinx
