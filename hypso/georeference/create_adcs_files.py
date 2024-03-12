@@ -3,7 +3,14 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-def create_adcs_timestamps_files(nc_path,nc_info):
+
+def create_adcs_timestamps_files(nc_path, nc_info):
+    """
+    Creates timestamps for files
+    :param nc_path:
+    :param nc_info:
+    :return:
+    """
     temp_dir = nc_info["tmp_dir"]
 
     # Step 1: ADCS Dat----------------------------------------------
@@ -32,30 +39,30 @@ def create_adcs_timestamps_files(nc_path,nc_info):
         quat_array = np.column_stack((timestamps, quat_s, quat_x, quat_y, quat_z, control_error))
         quat_df = pd.DataFrame(quat_array, columns=quaternion_headers)
 
-        position_path=Path(temp_dir, "position.csv")
+        position_path = Path(temp_dir, "position.csv")
         position_df.to_csv(position_path, index=False)
 
-        quaternion_path=Path(temp_dir, "quaternion.csv")
+        quaternion_path = Path(temp_dir, "quaternion.csv")
         quat_df.to_csv(quaternion_path, index=False)
 
     # Step 2: Timestamps dat----------------------------------------
-    capture_start=nc_info["start_timestamp_capture"]
-    capture_end=nc_info["end_timestamp_capture"]
+    capture_start = nc_info["start_timestamp_capture"]
+    capture_end = nc_info["end_timestamp_capture"]
 
-    file_txt=['Services system time timestamps\n',
-              f'Capture start: {capture_start}\n',
-              f'Capture   end: {capture_end}\n',
-              '\n',
-              'Frames:\n']
+    file_txt = ['Services system time timestamps\n',
+                f'Capture start: {capture_start}\n',
+                f'Capture   end: {capture_end}\n',
+                '\n',
+                'Frames:\n']
     with nc.Dataset(nc_path, format="NETCDF4") as f:
         group = f.groups["metadata"]["timing"]
         timestamps_srv = np.array(group.variables["timestamps_srv"][:])
-        for idx,stamp in enumerate(timestamps_srv):
-            current_txt='{:4d}'.format(idx)+', '+str(stamp)+'\n'
+        for idx, stamp in enumerate(timestamps_srv):
+            current_txt = '{:4d}'.format(idx) + ', ' + str(stamp) + '\n'
             file_txt.append(current_txt)
 
-    timestamps_srv_path=Path(temp_dir,"timestamps_services.txt")
-    with open(timestamps_srv_path, "w") as f:# write mode
+    timestamps_srv_path = Path(temp_dir, "timestamps_services.txt")
+    with open(timestamps_srv_path, "w") as f:  # write mode
         for line in file_txt:
             f.write(line)
 

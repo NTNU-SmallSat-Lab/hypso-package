@@ -3,7 +3,8 @@
 import os
 from pathlib import Path
 import argparse
-import waterdetect
+import hypso.classification.WaterDetect.waterdetect as waterdetect
+#import waterdetect
 
 """
 Author: Mauricio Cordeiro
