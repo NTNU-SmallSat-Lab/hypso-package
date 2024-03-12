@@ -837,15 +837,25 @@ class Hypso:
 
     def get_spectra(self, position_dict: dict, product: str = "L2", postype: str = 'coord', multiplier=1, filename=None,
                     plot=True, L2_engine="6SV1"):
-        '''
-        files_path: Works with a directorie with GeoTiff files. Uses the metadata, and integrated CRS
-        position:
+        """
+
+        :param position_dict:
             [lat, lon] if postype=='coord'
             [X, Y| if postype == 'pix'
-        postye:
+
+        :param product:
+        :param postype:
             'coord' assumes latitude and longitude are passed.
             'pix' receives X and Y values
-        '''
+
+        :param multiplier:
+        :param filename:
+        :param plot:
+        :param L2_engine:
+
+        :return:
+        """
+
         # To Store data
         spectra_data = []
 
@@ -978,16 +988,13 @@ class Hypso:
 
         return df_band
 
-    def get_calibrated_and_corrected_cube(self):
-        """ Calibrate cube.
+    def get_calibrated_and_corrected_cube(self) -> np.ndarray:
+        """
+        Get calibrated and corrected cube. Includes Radiometric, Smile and Destriping Correction.
+            Assumes all coefficients has been adjusted to the frame size (cropped and
+            binned), and that the data cube contains 12-bit values.
 
-        Includes:
-        - Radiometric calibration
-        - Smile correction
-        - Destriping
-
-        Assumes all coefficients has been adjusted to the frame size (cropped and
-        binned), and that the data cube contains 12-bit values.
+        :return: Numpy Array with corrected cub
         """
 
         # Radiometric calibration

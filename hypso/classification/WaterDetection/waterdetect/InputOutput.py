@@ -4,7 +4,8 @@ import numpy as np
 from pathlib import Path
 import re
 from .Common import DWutils
-from . import gdal, DWProducts
+from osgeo import gdal
+from .products import DWProducts
 import xml.etree.ElementTree as etree
 
 

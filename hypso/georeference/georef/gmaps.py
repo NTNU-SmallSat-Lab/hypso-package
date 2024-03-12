@@ -15,49 +15,58 @@ import io
 
 def pixel_to_latlon(px_x, px_y, tl_x, tl_y, zoom_level):
     """
-        px_x, px_y: Pixel coordinates of google maps image (can be float)
-        tl_x, tl_y: tile indices of top left (noth-western) corner (must be int)
-        zoom_level: zoom level of the image (also must be int)
+    Pixel to Lat Lon
 
-        returns: lat,lon
+    :param px_x: Pixel coordinates of google maps image (can be float)
+    :param px_y: Pixel coordinates of google maps image (can be float)
+    :param tl_x: tile indices of top left (noth-western) corner (must be int)
+    :param tl_y: tile indices of top left (noth-western) corner (must be int)
+    :param zoom_level: zoom level of the image (also must be int)
+
+    :return: lat,lon
     """
+
     # background:
     # https://developers.google.com/maps/documentation/javascript/coordinates
     # https://en.wikipedia.org/wiki/Web_Mercator_projection
 
     tile_size = 256
 
-    world_coord_x = (tile_size*tl_x + px_x) / (1 << int(zoom_level))
-    world_coord_y = (tile_size*tl_y + px_y) / (1 << int(zoom_level))
+    world_coord_x = (tile_size * tl_x + px_x) / (1 << int(zoom_level))
+    world_coord_y = (tile_size * tl_y + px_y) / (1 << int(zoom_level))
 
-    lon = (2.0*math.pi*world_coord_x / 256.0 - math.pi) * 180.0 / math.pi
-    lat = (2.0*math.atan(math.e**math.pi * math.e**(- 2.0*math.pi*world_coord_y / 256.0)) - math.pi/2.0) * 180.0 / math.pi
+    lon = (2.0 * math.pi * world_coord_x / 256.0 - math.pi) * 180.0 / math.pi
+    lat = (2.0 * math.atan(
+        math.e ** math.pi * math.e ** (- 2.0 * math.pi * world_coord_y / 256.0)) - math.pi / 2.0) * 180.0 / math.pi
 
-    return lat,lon
+    return lat, lon
+
 
 class GoogleMapsLayers:
-  ROADMAP = "v"
-  TERRAIN = "p"
-  ALTERED_ROADMAP = "r"
-  SATELLITE = "s"
-  TERRAIN_ONLY = "t"
-  HYBRID = "y"
+    ROADMAP = "v"
+    TERRAIN = "p"
+    ALTERED_ROADMAP = "r"
+    SATELLITE = "s"
+    TERRAIN_ONLY = "t"
+    HYBRID = "y"
+
 
 class GoogleMapDownloader:
     """
-        A class which generates high resolution google maps images given
+    A class which generates high resolution google maps images given
         a longitude, latitude and zoom level
     """
 
     def __init__(self, lat, lng, zoom=12, layer=GoogleMapsLayers.SATELLITE):
         """
-            GoogleMapDownloader Constructor
-            Args:
-                lat:    The latitude of the location required
-                lng:    The longitude of the location required
-                zoom:   The zoom level of the location required, ranges from 0 - 23
-                        defaults to 12
+        GoogleMapDownloader Constructor
+
+        :param lat: The latitude of the location required
+        :param lng: The longitude of the location required
+        :param zoom: The zoom level of the location required, ranges from 0 - 23. Defaults to 12
+        :param layer: Default to GoogleMapsLayers.Satellite
         """
+
         self._lat = lat
         self._lng = lng
         self._zoom = zoom
@@ -65,9 +74,9 @@ class GoogleMapDownloader:
 
     def latlon_to_tileXY(self):
         """
-            Generates an X,Y tile coordinate based on the latitude, longitude
-            and zoom level
-            Returns:    An X,Y tile coordinate
+        Generates an X,Y tile coordinate based on the latitude, longitude and zoom level
+
+        :return: An X,Y tile coordinate
         """
 
         tile_size = 256
@@ -84,22 +93,21 @@ class GoogleMapDownloader:
 
         # Calulate the y coorindate
         point_y = ((tile_size / 2) + 0.5 * math.log((1 + sin_y) / (1 - sin_y)) * -(
-        tile_size / (2 * math.pi))) * numTiles // tile_size
+                tile_size / (2 * math.pi))) * numTiles // tile_size
 
         return int(point_x), int(point_y)
 
-
     def generateImage(self, **kwargs):
         """
-            Generates an image by stitching a number of google map tiles together.
-            Args:
-                center_tile_x:  The center tile x coordinate
-                center_tile_y:  The center tile y coordinate
-                tile_count_x:   The number of tiles wide the image should be
-                tile_count_y:   The number of tiles high the image should be
-            Returns:
-                A high-resolution Goole Map image, and the tile coordinates of
-                the top left tile in the image.
+        Generates an image by stitching a number of google map tiles together.
+
+        :param kwargs:
+            center_tile_x:  The center tile x coordinate
+            center_tile_y:  The center tile y coordinate
+            tile_count_x:   The number of tiles wide the image should be
+            tile_count_y:   The number of tiles high the image should be
+
+        :return: A high-resolution Goole Map image, and the tile coordinates of the top left tile in the image.
         """
 
         center_tile_x = kwargs.get('center_tile_x', None)
@@ -117,25 +125,27 @@ class GoogleMapDownloader:
         map_img = Image.new('RGB', (width, height))
 
         j = 1
-        for x in range((-tile_count_x)//2, tile_count_x//2):
-            for y in range((-tile_count_y)//2, tile_count_y//2):
+        for x in range((-tile_count_x) // 2, tile_count_x // 2):
+            for y in range((-tile_count_y) // 2, tile_count_y // 2):
                 tile_coord_x = center_tile_x + x
                 tile_coord_y = center_tile_y + y
 
                 # https://mt0.google.com/vt?lyrs=s&x=280&y=54&z=9
-                url =  f'https://mt0.google.com/vt?lyrs={self._layer}&x={tile_coord_x}&y={tile_coord_y}&z={self._zoom}'
+                url = f'https://mt0.google.com/vt?lyrs={self._layer}&x={tile_coord_x}&y={tile_coord_y}&z={self._zoom}'
 
                 if tile_coord_x >= 0 and tile_coord_y >= 0:
                     response = requests.get(url, stream=True)
 
                     data = response.raw.read()
-                    if data[0] == 60: # 60 is ascii code for '<', meaning an html response was given, meaning no image data
+                    if data[
+                        0] == 60:  # 60 is ascii code for '<', meaning an html response was given, meaning no image data
                         continue
 
                     current_tile_pseudofile = io.BytesIO(data)
                     im = Image.open(current_tile_pseudofile, formats=('JPEG',))
-                    map_img.paste(im, ((x+math.ceil(tile_count_x/2)) * 256, (y+math.ceil(tile_count_y/2)) * 256))
-        tile_coords_corner = center_tile_x-tile_count_x//2, center_tile_y-tile_count_y//2
+                    map_img.paste(im,
+                                  ((x + math.ceil(tile_count_x / 2)) * 256, (y + math.ceil(tile_count_y / 2)) * 256))
+        tile_coords_corner = center_tile_x - tile_count_x // 2, center_tile_y - tile_count_y // 2
         return map_img, (tile_coords_corner)
 
 

@@ -5,7 +5,10 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.neural_network import MLPClassifier
 from sklearn.svm import LinearSVC
 from .Common import DWConfig, DWutils
-from . import calinski_harabasz_score
+from sklearn.metrics import calinski_harabasz_score
+from sklearn.model_selection import cross_val_score, GridSearchCV
+from sklearn.mixture import GaussianMixture as GMM
+
 
 
 class DWImageClustering:
@@ -173,6 +176,7 @@ class DWImageClustering:
         if self.config.clustering_method == 'kmeans':
             cluster_model = cluster.KMeans(n_clusters=self.best_k, init='k-means++')
         elif self.config.clustering_method == 'gauss_mixture':
+
             cluster_model = GMM(n_components=self.best_k, covariance_type='full')
         else:
             cluster_model = cluster.AgglomerativeClustering(n_clusters=self.best_k, linkage=self.config.linkage)

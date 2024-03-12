@@ -1,6 +1,6 @@
 from pathlib import Path
 from .Common import DWutils
-from . import gdal
+from osgeo import gdal
 from typing import Union
 import numpy as np
 from skimage.morphology import binary_dilation

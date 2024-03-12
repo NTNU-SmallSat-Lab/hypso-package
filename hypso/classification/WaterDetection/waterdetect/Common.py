@@ -5,7 +5,11 @@ import ast
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, RobustScaler
 from sklearn.preprocessing import QuantileTransformer
-from . import DWProducts, gdal
+
+from hypso.classification.WaterDetection.waterdetect.products import DWProducts
+from osgeo import gdal
+
+# from . import DWProducts, gdal
 # from lxml import etree
 import xml.etree.ElementTree as etree
 from PIL import Image, ImageDraw, ImageFont
@@ -24,6 +28,9 @@ def test_ini():
 
 
 class DWBaseConfig:
+    """
+    Base class for
+    """
     _defaults = {}
 
     _units = {'turb-dogliotti': 'FNU',
@@ -33,12 +40,21 @@ class DWBaseConfig:
               'aCDOM-brezonik': 'Absorption Coef'}
 
     def __init__(self, config_file=None):
+        """
+        Initialization of Class
+        :param config_file:
+        """
 
         self.config = self.load_config_file(config_file)
 
         return
 
     def load_config_file(self, config_file):
+        """
+        Load config file
+        :param config_file:
+        :return:
+        """
 
         if config_file:
             self._config_file = config_file
@@ -53,6 +69,12 @@ class DWBaseConfig:
         return config
 
     def return_defaults(self, section, key):
+        """
+        Return default values
+        :param section:
+        :param key:
+        :return:
+        """
 
         default_value = self._defaults[key]
 
@@ -62,6 +84,13 @@ class DWBaseConfig:
         return default_value
 
     def get_option(self, section, key, evaluate: bool):
+        """
+        Get option value
+        :param section:
+        :param key:
+        :param evaluate:
+        :return:
+        """
 
         try:
             str_value = self.config.get(section, key)
@@ -79,6 +108,9 @@ class DWBaseConfig:
 
 
 class DWConfig(DWBaseConfig):
+    """
+    Configuration for
+    """
     _config_file = 'WaterDetect.ini'
     _defaults = {'reference_band': 'Red',
                  'maximum_invalid': '0.8',
@@ -105,30 +137,58 @@ class DWConfig(DWBaseConfig):
 
     @property
     def reference_band(self):
+        """
+        Returns the reference band
+        :return:
+        """
         return self.get_option('General', 'reference_band', evaluate=False)
 
     @property
     def create_composite(self):
+        """
+        Returns the composite
+        :return:
+        """
         return self.get_option('General', 'create_composite', evaluate=True)
 
     @property
     def pdf_reports(self):
+        """
+        Returns the pdf report
+        :return:
+        """
         return self.get_option('General', 'pdf_reports', evaluate=True)
 
     @property
     def calc_glint(self):
+        """
+        Returns calculated glint
+        :return:
+        """
         return self.get_option('General', 'calc_glint', evaluate=True)
 
     @property
     def glint_mode(self):
+        """
+        Returns glint mode
+        :return:
+        """
         return self.get_option('General', 'glint_mode', evaluate=True)
 
     @property
     def min_glint_multiplier(self):
+        """
+        Returns minimum glint multiplier
+        :return:
+        """
         return self.get_option('General', 'min_glint_multiplier', evaluate=True)
 
     @property
     def pdf_resolution(self):
+        """
+        Returns pdf resolution
+        :return:
+        """
         return self.get_option('General', 'pdf_resolution', evaluate=True)
 
     @property
@@ -306,13 +366,23 @@ class DWutils:
 
     @staticmethod
     def parse_sat_name(folder, img_type='S2_THEIA'):
+        """
+        Function To
+        :param folder:
+        :param img_type:
+
+        :return:
+        """
         img = Path(folder)
         if img_type == 'S2_THEIA':
             return DWutils.parse_maja_name(img.stem)
+
         elif img_type == 'S2_S2COR':
             return DWutils.parse_s2cor_name(img.stem)
+
         elif img_type == 'S2_PLANETARY':
             return DWutils.parse_planetary_name(img.stem)
+
         else:
             raise Exception('Only MAJA type is supported')
 
@@ -320,8 +390,8 @@ class DWutils:
     def parse_planetary_name(name: str):
         """
         Get the string with a MS PLANETARY name and extract the useful information from it.
-        @param name: Image name
-        @return: Dictionary with the values.
+        :param name: Image name
+        :return: Dictionary with the values.
         """
 
         # ignore extension
@@ -346,8 +416,8 @@ class DWutils:
     def parse_maja_name(name: str):
         """
         Get the string with a MAJA img name (THEIA format) and extract the useful information from it.
-        @param name: Image name
-        @return: Dictionary with the values.
+        :param name: Image name
+        :return: Dictionary with the values.
         """
 
         # ignore extension
@@ -366,15 +436,17 @@ class DWutils:
                       month=date[4:6],
                       day=date[6:]
                       )
+
         return result
 
     @staticmethod
-    def parse_s2cor_name(name: str):
+    def parse_s2cor_name(name: str) -> dict:
         """
         Get the string with a S2COR name (.SAFE format) and extract the useful information from it.
-        @param name: Image name
-        @return: Dictionary with the values.
+        :param name: Image name
+        :return: Dictionary with the values.
         """
+
         # ignore extension
         name = name.split('.')[0]
 
@@ -481,7 +553,7 @@ class DWutils:
             min_values <= 0, -min_values + 0.001, 0) + compress_cte
 
         nd = ((img1 + min_values) - (img2 + min_values)) / \
-            ((img1 + min_values) + (img2 + min_values))
+             ((img1 + min_values) + (img2 + min_values))
 
         # # VERSION WITH JUST 1 CONSTANT
         # if mask is not None:
@@ -532,7 +604,7 @@ class DWutils:
         else:
             min_cte = 0
         mbwi = factor * (bands['Green'] + min_cte) - (bands['Red'] + min_cte) - (bands['Nir'] + min_cte) \
-            - (bands['Mir'] + min_cte) - (bands['Mir2'] + min_cte)
+               - (bands['Mir'] + min_cte) - (bands['Mir2'] + min_cte)
         mbwi[~mask] = RobustScaler(copy=False).fit_transform(
             mbwi[~mask].reshape(-1, 1)).reshape(-1)
         mbwi[~mask] = MinMaxScaler(feature_range=(-1, 1), copy=False).fit_transform(mbwi[~mask].reshape(-1, 1)) \
@@ -782,7 +854,13 @@ class DWutils:
 
     @staticmethod
     def tif_2_pdf(tif_file, resolution=600, scale=2000):
-        """Convert a TIF image into a PDF given a resolution"""
+        """
+        Convert a TIF image into a PDF given a resolution
+        :param tif_file:
+        :param resolution:
+        :param scale:
+        :return:
+        """
 
         pdf_file = tif_file[:-4] + '.pdf'
 
@@ -912,7 +990,7 @@ class DWutils:
 
             # create the graph filename
             graph_name = file_name + '_Graph_' + \
-                bands_names[0] + bands_names[1]
+                         bands_names[0] + bands_names[1]
 
             # create the graph options dictionary
             graph_options = {'title': graph_title + ':' + bands_names[0] + 'x' + bands_names[1],
@@ -924,7 +1002,7 @@ class DWutils:
 
             # first, we will create the valid data array
             data = np.c_[x_values[~invalid_mask],
-                         y_values[~invalid_mask], labels_array[~invalid_mask]]
+            y_values[~invalid_mask], labels_array[~invalid_mask]]
 
             plot_data, _ = DWutils.get_train_test_data(
                 data, train_size=1, min_train_size=0, max_train_size=max_points)
@@ -1053,8 +1131,6 @@ class DWutils:
     @staticmethod
     def extract_angles_from_xml(xml):
         """
-        Function to extract Zenith and Azimuth angles values from an xml Sentinel 2 file
-
         Parameters
         ----------
         xml : TYPE xml file
@@ -1066,10 +1142,13 @@ class DWutils:
         -------
         SZA : TYPE float
             DESCRIPTION. Sun zenith angle
+
         SazA : TYPE float
             DESCRIPTION. Sun azimuth angle
+
         zenith_angle : TYPE list of strings
             DESCRIPTION. Mean_Viewing_Incidence_Angle_List for all the bands
+
         azimuth_angle : TYPE list of strings
             DESCRIPTION. Mean_Viewing_Incidence_Angle_List for all the bands
 
@@ -1107,7 +1186,7 @@ class DWutils:
             phi = np.deg2rad((SazA - float(azimuth_angle[i])))
 
             Tetag = np.cos(viewA) * np.cos(SZA) - \
-                np.sin(viewA) * np.sin(SZA) * np.cos(phi)
+                    np.sin(viewA) * np.sin(SZA) * np.cos(phi)
             # Convert result to degrees
             g.append(np.degrees(np.arccos(Tetag)))
 
@@ -1135,10 +1214,14 @@ class DWutils:
         ----------
         xml : TYPE xml file
             DESCRIPTION Filepath of the metadata file from L2A Sentinel 2 data: example "SENTINEL2A_20200328-104846-345_L2A_T31TFJ_C_V2-2_MTD_ALL.xml"
-        current_imagename : getting current image name
+
+        name_img : getting current image name
+
         output_folder: filepath of the output folder
+
         g: TYPE list
             DESCRIPTION list with glint values for each band of the Sentinel 2 product
+
         pdf_merger: function to add an element to a pdf
 
         """
@@ -1196,6 +1279,7 @@ class DWutils:
                 shift - shift each band by its minimum value, so every band has only positive values;
                 shift_all - shift each band by the minimum value of all bands. All bands will be shifted up by the
                 same amount
+
         :return: nd arrays without negatives values
         """
 

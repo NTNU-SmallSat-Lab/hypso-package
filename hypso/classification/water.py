@@ -1,12 +1,13 @@
 # Modified from pip to have as local directory
-from .WaterDetect import waterdetect as wd
+from hypso.classification.WaterDetection.waterdetect.Common import DWConfig
+from hypso.classification.WaterDetection.waterdetect.Image import DWImageClustering
+# from .WaterDetect import waterdetect as wd
 from osgeo import gdal, osr
 import numpy as np
 from importlib.resources import files
 
 
 def ndwi_watermask(sat_obj, product_to_use="L1C"):
-
     sat_obj.find_geotiffs()
 
     # TODO: Confirm why L1C gives better results than L2
@@ -32,18 +33,16 @@ def ndwi_watermask(sat_obj, product_to_use="L1C"):
 
         cube_selected = sat_obj.l1b_cube
 
-
         # TODO: Check which one is better geotiff or from netcdf
         # We can read the geotiff or just use l1b from the netcdf without masking
-        #cube_selected = sat_obj.l1b_cube
-
+        # cube_selected = sat_obj.l1b_cube
 
     print("\n\n-------  Naive-Bayes Water Mask Detector  ----------")
 
     water_config_file = files(
-        'hypso.classification').joinpath('WaterDetect/WaterDetect.ini')
+        'hypso.classification').joinpath('WaterDetection/WaterDetect.ini')
 
-    config = wd.DWConfig(config_file=water_config_file)
+    config = DWConfig(config_file=water_config_file)
     print(config.clustering_bands)
     print(config.detect_water_cluster)
 
@@ -57,7 +56,7 @@ def ndwi_watermask(sat_obj, product_to_use="L1C"):
 
     # Division by 10000 may not be needed
     bands = {'Green': b3, 'Nir': nir}
-    wmask = wd.DWImageClustering(bands=bands, bands_keys=[
+    wmask = DWImageClustering(bands=bands, bands_keys=[
         'Nir', 'ndwi'], invalid_mask=None, config=config)
 
     mask = wmask.run_detect_water()

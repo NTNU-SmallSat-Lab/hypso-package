@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 import argparse
-import hypso.classification.WaterDetect.waterdetect as waterdetect
+import hypso.classification.WaterDetection.waterdetect as waterdetect
 #import waterdetect
 
 """

@@ -4,7 +4,8 @@ from .InputOutput import DWSaver, DWLoader
 from .Common import DWConfig, DWutils
 from .Image import DWImageClustering
 from .Glint import DWGlintProcessor
-from . import jaccard_score, gdal
+from osgeo import gdal
+from sklearn.metrics import jaccard_score
 from . import __version__ as wd_version
 
 import numpy as np
@@ -63,7 +64,9 @@ class DWWaterDetect:
     def necessary_bands(self, include_rgb):
         """
         Return all the necessary bands, based on the bands used for the graphics and the clustering
+
         :param include_rgb: Specifies if RGB bands are necessary for creating composite, for example
+
         :return: All necessary bands in a list
         """
 
@@ -87,10 +90,12 @@ class DWWaterDetect:
     def calc_nd_index(self, index_name, band1, band2, save_index=False):
         """
         Calculates a normalized difference index, adds it to the bands dict and update the mask in loader
+
         :param save_index: Indicate if we should save this index to a raster image
         :param index_name: name of index to be used as key in the dictionary
         :param band1: first band to be used in the normalized difference
         :param band2: second band to be used in the normalized difference
+
         :return: index array
         """
 
@@ -110,12 +115,14 @@ class DWWaterDetect:
         """
         Calculates a modified normalized difference index, adds it to the bands dict and update the mask in loader.
         Proposed by Dhalton. It uses the maximum of visible and the minimum of Nir/Swir
+
         :param save_index: Inidicate if we should save this index to a raster image
         :param index_name: name of index to be used as key in the dictionary
         :param band1: first band to be used in the normalized difference
         :param band2: second option for the first band to be used in the normalized difference
         :param band3: second band to be used in the normalized difference
         :param band4: second option for the second band to be used in the normalized difference
+
         :return: index array
         """
 
@@ -137,9 +144,11 @@ class DWWaterDetect:
     def calc_mbwi(self, bands, factor=3, save_index=False):
         """
         Calculates the Multi band Water Index and adds it to the bands dictionary
+
         :param save_index: Inform if the index should be saved as array in the output folder
         :param bands: Bands dictionary with the raster bands
         :param factor: Factor to multiply the Green band as proposed in the original paper
+
         :return: mbwi array
         """
 
@@ -160,12 +169,14 @@ class DWWaterDetect:
     def calc_awei(self, bands, save_index=False):
         """
         Calculates the AWEI Water Index and adds it to the bands dictionary
+
         :param save_index: Inform if the index should be saved as array in the output folder
         :param bands: Bands dictionary with the raster bands
+
         :return: mbwi array
         """
         awei = bands['Blue'] + 2.5 * bands['Green'] - 1.5 * \
-            (bands['Nir'] + bands['Mir']) - 0.25 * bands['Mir2']
+               (bands['Nir'] + bands['Mir']) - 0.25 * bands['Mir2']
 
         awei = RobustScaler(copy=False).fit_transform(awei)
         awei = MinMaxScaler(feature_range=(-1, 1),
@@ -189,18 +200,20 @@ class DWWaterDetect:
                          config_file=None, pekel=None, post_callback=None, **kwargs):
         """
         Main function to launch the water detect algorithm processing. This is the function called from the script.
-        @param input_folder: If single_mode=True, this is the uncompressed image product. If single_mode=False, this
-        is the folder that contains all uncompressed images.
-        @param output_folder: Output directory
-        @param single_mode: For batch processing (multiple images at a time), single_mode should be set to False
-        @param shape_file: Shape file to clip the image (optional).
-        @param product: The product to be processed (S2_THEIA, L8_USGS, S2_L1C or S2_S2COR)
-        @param config_file: Configuration .ini file. If not specified WaterDetect.ini from current dir and used as
-                            default
-        @param pekel: Optional path for an occurrence base map like Pekel
-        @param post_callback: Used for the WaterQuality add-on package
-        @param kwargs: Additional parameters.
-        @return: DWWaterDetect instance with the generated mask.
+
+        :param input_folder: If single_mode=True, this is the uncompressed image product. If single_mode=False, this
+            is the folder that contains all uncompressed images.
+        :param output_folder: Output directory
+        :param single_mode: For batch processing (multiple images at a time), single_mode should be set to False
+        :param shape_file: Shape file to clip the image (optional).
+        :param product: The product to be processed (S2_THEIA, L8_USGS, S2_L1C or S2_S2COR)
+        :param config_file: Configuration .ini file. If not specified WaterDetect.ini from current dir and used as
+            default
+        :param pekel: Optional path for an occurrence base map like Pekel
+        :param post_callback: Used for the WaterQuality add-on package
+        :param kwargs: Additional parameters.
+
+        :return: DWWaterDetect instance with the generated mask.
         """
 
         wd = cls(input_folder=input_folder,
@@ -216,12 +229,15 @@ class DWWaterDetect:
 
         return wd
 
-    def _detect_water(self, post_callback=None):
+    def _detect_water(self, post_callback=None) -> None:
         """
-        Run batch is intended for multi processing of various images and bands combinations.
-        It Loops through all unzipped images in input folder, extract water pixels and save results to output folder
-        ATT: The input folder is not a satellite image itself. It should be the parent folder containing all images.
-        For single detection, use run() method.
+        Run batch is intended for multiprocessing of various images and bands combinations.
+            It Loops through all unzipped images in input folder, extract water pixels and save results to output folder
+            ATT: The input folder is not a satellite image itself. It should be the parent folder containing all images.
+            For single detection, use run() method.
+
+        :param post_callback: None
+
         :return: None
         """
 
@@ -279,7 +295,7 @@ class DWWaterDetect:
 
                 # calc the necessary indices and update the image's mask
                 self.calc_indexes(image, indexes_list=[
-                                  'mndwi', 'ndwi', 'mbwi'], save_index=self.config.save_indices)
+                    'mndwi', 'ndwi', 'mbwi'], save_index=self.config.save_indices)
 
                 # create a composite R G B in the output folder
                 if self.config.create_composite or self.config.pdf_reports:
@@ -311,9 +327,6 @@ class DWWaterDetect:
                             'Calculating clusters for the following combination of bands:')
                         print(band_combination)
 
-                        dw_image = self.create_mask_report(image, band_combination, composite_name,
-                                                           pdf_merger, post_callback)
-
                     except Exception as err:
                         print('**** ERROR DURING CLUSTERING ****')
                         # todo: should we close the pdf merger in case of error?
@@ -323,19 +336,20 @@ class DWWaterDetect:
                 print('****** ERROR ********')
                 print(err)
 
-        if pdf_merger is not None and dw_image is not None:
-            if len(self.config.clustering_bands) == 1:
-                report_name = 'FullReport_' + dw_image.product_name
-            else:
-                report_name = 'FullReport'
-
-            self.save_report(report_name, pdf_merger, self.saver.base_output_folder.joinpath(
-                self.saver.area_name))
-
         self.dw_image = dw_image
+
         return dw_image
 
     def test_pekel(self, image, dw_image, pdf_merger_image):
+        """
+        Test Pekel Function
+
+        :param image:
+        :param dw_image:
+        :param pdf_merger_image:
+
+        :return:
+        """
 
         water_mask = dw_image.water_mask.copy()
         pekel_mask = gdal.Open(self.pekel).ReadAsArray(buf_xsize=image.x_size,
@@ -367,53 +381,6 @@ class DWWaterDetect:
             pdf_name, text, size=(300, 100), position=(50, 15), font_color=color))
         return result
 
-    # def create_mask_report(self, image, band_combination, composite_name, pdf_merger, post_callback):
-    #     # if pdf_reports, create a FileMerger for this specific band combination
-    #     if self.config.pdf_reports & (pdf_merger is not None):
-    #         pdf_merger_image = PdfMerger()
-    #         pdf_merger_image.append(composite_name + '.pdf')
-    #         # pdf_merger_image.append(invalid_mask_name)
-    #     else:
-    #         pdf_merger_image = None
-
-    #     # calculate the sun glint rejection and add it to the pdf report
-    #     # the glint will be passed to the
-    #     if self.config.calc_glint:
-    #         glint_processor = DWGlintProcessor.create(image)
-
-    #         # if there is a valid glint_processor, save the heatmap
-    #         if glint_processor is not None:
-    #             pdf_merger_image.append(
-    #                 glint_processor.save_heatmap(self.saver.output_folder))
-    #         else:
-    #             print(
-    #                 f'Glint_mode is On but no Glint Processor is available for this product')
-
-    #     else:
-    #         glint_processor = None
-
-    #     # create a dw_image object with the water mask and all the results
-    #     dw_image = self.create_water_mask(
-    #         band_combination, pdf_merger_image, glint_processor=glint_processor)
-
-    #     # if there is a post processing callback, call it passing the mask and the pdf_merger_image
-    #     if post_callback is not None:
-    #         post_callback(self, dw_image=dw_image, pdf_merger=pdf_merger_image)
-
-    #     # Check the discrepancy of the water mask and pekel occurrence
-    #     if self.pekel:
-    #         self.test_pekel(image, dw_image, pdf_merger_image)
-
-    #     # save the graphs
-    #     if self.config.plot_graphs:
-    #         self.save_graphs(dw_image, pdf_merger_image)
-    #     # append the pdf report of this image
-    #     if self.config.pdf_reports & (pdf_merger is not None):
-    #         pdf_merger.append(self.save_report('ImageReport' + '_' + dw_image.product_name,
-    #                                            pdf_merger_image,
-    #                                            self.saver.output_folder))
-    #     return dw_image
-
     # save the report and return the full path as posix
     @staticmethod
     def save_report(report_name, pdf_merger, folder):
@@ -435,7 +402,7 @@ class DWWaterDetect:
         # for the PDF writer, we need to pass all the information needed for the title
         # so, we will produce the graph title = Area + Date + Product
         graph_title = self.saver.area_name + ' ' + \
-            self.saver.base_name + dw_image.product_name
+                      self.saver.base_name + dw_image.product_name
 
         DWutils.plot_graphs(self.loader.raster_bands, self.config.graphs_bands, dw_image.cluster_matrix,
                             graph_basename, graph_title, self.loader.invalid_mask, 1000, pdf_merger_image)
@@ -476,21 +443,6 @@ class DWWaterDetect:
                                                                 transps=[0, 0.7]))
 
         return dw_image
-
-    # def calc_glint(self, image, output_folder, pdf_merger_image):
-    #     """
-    #     Calculate the sun glint rejection using the angle Tetag between vectors pointing in the surface-to-satellite
-    #     and specular reflection directions
-    #     Also, checks if there are reports, then add the risk of glint to it.
-    #     """
-    #     xml = str(self.loader.metadata)
-    #     # check the path of the metadata file
-    #     DWutils.check_path(xml)
-    #     # extract angles from the metadata and make the glint calculation from it
-    #     glint = DWutils.extract_angles_from_xml(xml)
-    #
-    #     # create a pdf file that indicate if there is glint on the image and add it to the final pdf report
-    #     DWutils.create_glint_pdf(xml, self.loader.glint_name, output_folder, glint, pdf_merger_image)
 
     def create_colorbar_pdf(self, param_name, colormap, min_value, max_value, units=''):
 
