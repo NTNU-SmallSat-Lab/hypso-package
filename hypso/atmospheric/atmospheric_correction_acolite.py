@@ -34,6 +34,7 @@ def get_acolite_repo():
     tar.extractall(dst_path)
     tar.close()
 
+
 def reset_config_file(path):
     # Reset config file for password and
     with open(path, 'r') as file:
@@ -48,8 +49,8 @@ def reset_config_file(path):
     with open(path, 'w') as file:
         file.writelines(data)
 
-def run_acolite(hypso_info, atmos_dict, nc_file_acoliteready):
 
+def run_acolite(hypso_info, atmos_dict, nc_file_acoliteready):
     # File and Dir Paths ---------------------------------------------------------------
 
     atmospheric_pkg_path = str(files(
@@ -57,21 +58,25 @@ def run_acolite(hypso_info, atmos_dict, nc_file_acoliteready):
 
     # Settings file
     settings_path = Path(
-        atmospheric_pkg_path,"data","acolite_settings.txt")
-
+        atmospheric_pkg_path, "data", "acolite_settings.txt")
 
     # Dir to decompress tar file
-    acolite_dir = Path(atmospheric_pkg_path,"acolite_main")
+    acolite_dir = Path(atmospheric_pkg_path, "acolite_main")
 
     # Path for acolite tar (for decompression)
-    acolite_tar = Path(atmospheric_pkg_path,"data","20231023.0.tar.gz")
+    acolite_tar = Path(atmospheric_pkg_path, "data", "20231023.0.tar.gz")
 
     # Script that starts acolite
-    launch_acolite_path = Path(atmospheric_pkg_path,"acolite_main","launch_acolite.py")
+    launch_acolite_path = Path(atmospheric_pkg_path, "acolite_main", "launch_acolite.py")
 
     # Create Dir for the output
     acolite_output_dir = Path(hypso_info["top_folder_name"], "geotiff", "acolite-output")
     acolite_output_dir.mkdir(parents=True, exist_ok=True)
+
+    # If directory exists but empty, delete it, it happend on a pull from github
+    is_acolite_dir_empty = not any(acolite_dir.iterdir())
+    if is_acolite_dir_empty:
+        acolite_dir.rmdir()
 
     # Uncompress ACOLITE if not done and change a file to avoid creating a log
     if not acolite_dir.is_dir():
@@ -81,16 +86,15 @@ def run_acolite(hypso_info, atmos_dict, nc_file_acoliteready):
         tar.extractall(dst_path)
         tar.close()
 
-
         # Rename
-        dst_path=Path(dst_path,"acolite-20231023.0")
+        dst_path = Path(dst_path, "acolite-20231023.0")
         dst_path.rename(Path(acolite_dir))
 
         # 2) Add __init__ ---------------------------------------------
-        Path(acolite_dir,"__init__.py").touch()
+        Path(acolite_dir, "__init__.py").touch()
 
         # 3) Change path to comply with package output ---------------------------------------------
-        file_to_change = Path(acolite_dir,"acolite","acolite","acolite_run.py")
+        file_to_change = Path(acolite_dir, "acolite", "acolite", "acolite_run.py")
 
         with open(file_to_change, 'r') as file:
             # read a list of lines into data
@@ -104,19 +108,20 @@ def run_acolite(hypso_info, atmos_dict, nc_file_acoliteready):
             file.writelines(data)
 
         # Change ------------------------------------------------------------------
-        file_to_change = Path(acolite_dir,"acolite","__init__.py")
+        file_to_change = Path(acolite_dir, "acolite", "__init__.py")
 
         with open(file_to_change, 'r') as file:
             # read a list of lines into data
             data = file.readlines()
 
-            for idx,d in enumerate(data):
-                data[idx] = d.replace("from acolite","from hypso.atmospheric.acolite_main.acolite")
+            for idx, d in enumerate(data):
+                data[idx] = d.replace("from acolite", "from hypso.atmospheric.acolite_main.acolite")
 
             # now change the 2nd line, note that you have to add a newline
             data[9] = "from pathlib import Path\n"
             data[43] = "from importlib.resources import files\n"
-            data[54] = 'code_path = os.path.dirname(str(Path(files("hypso.atmospheric"),"acolite_main","acolite","__init__.py")))\n'
+            data[
+                54] = 'code_path = os.path.dirname(str(Path(files("hypso.atmospheric"),"acolite_main","acolite","__init__.py")))\n'
             data[67] = 'cfile = str(Path(files("hypso.atmospheric"),"acolite_main","config","config.txt"))\n'
 
         # and write everything back
@@ -124,7 +129,7 @@ def run_acolite(hypso_info, atmos_dict, nc_file_acoliteready):
             file.writelines(data)
 
     # If user and password for NASA earthdata provided, updated file ---------------
-    user_pwd_file = Path(acolite_dir,"config","config.txt")
+    user_pwd_file = Path(acolite_dir, "config", "config.txt")
 
     reset_config_file(user_pwd_file)
 
