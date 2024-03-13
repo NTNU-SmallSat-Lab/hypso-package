@@ -101,18 +101,12 @@ References:
 """
 
 import numpy as np
-import os
 import matplotlib.pyplot as plt
-from natsort import natsorted
 from matplotlib import ticker
 from matplotlib import colors
 import cartopy.crs as ccrs
 import cartopy.feature as cf
-import geopandas as gpd
-import rasterio as rio
-from osgeo import gdal, osr
-import pyproj
-from pyproj import CRS, Transformer
+
 
 
 ### The band index that is closes to the required value
