@@ -53,7 +53,7 @@ dependencies=[
   "requests",
   "python-dateutil",
   "scikit-learn >=1.4",
-  "py-xgboost"
+  "py-xgboost-cpu"
 ]
 
 # dynamic properties set by tools
