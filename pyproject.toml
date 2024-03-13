@@ -2,7 +2,7 @@
 
 [tool.setuptools_scm]
 write_to = "hypso/_version.py"
-fallback_version = "1.9.6"
+fallback_version = "1.9.7"
 
 [build-system]
 requires=[
@@ -53,7 +53,7 @@ dependencies=[
   "requests",
   "python-dateutil",
   "scikit-learn >=1.4",
-  "py-xgboost-cpu"
+  "py-xgboost"
 ]
 
 # dynamic properties set by tools
