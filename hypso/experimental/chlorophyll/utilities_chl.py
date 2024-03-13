@@ -1,5 +1,6 @@
 import numpy as np
 
+
 # def safe_div(x, y):
 #     c = np.empty_like(y)
 #     c[:] = np.nan
@@ -22,18 +23,20 @@ import numpy as np
 #     return np.exp(data)
 
 def convolve2d(slab, kernel, max_missing=0.5, verbose=True):
-    '''2D convolution with missings ignored
+    """
+    2D convolution with missings ignored
 
-    <slab>: 2d array. Input array to convolve. Can have numpy.nan or masked values.
-    <kernel>: 2d array, convolution kernel, must have sizes as odd numbers.
-    <max_missing>: float in (0,1), max percentage of missing in each convolution
-                   window is tolerated before a missing is placed in the result.
+    :param slab: 2d array. Input array to convolve. Can have numpy.nan or masked values.
+    :param kernel: 2d array, convolution kernel, must have sizes as odd numbers.
+    :param max_missing: float in (0,1), max percentage of missing in each convolution
+        window is tolerated before a missing is placed in the result.
+    :param verbose: Default to True.
 
-    Return <result>: 2d array, convolution result. Missings are represented as
-                     numpy.nans if they are in <slab>, or masked if they are masked
-                     in <slab>.
+    :return: 2d array, convolution result. Missings are represented as
+        numpy.nans if they are in <slab>, or masked if they are masked
+        in <slab>.
+    """
 
-    '''
 
     from scipy.ndimage import convolve as sciconvolve
     import numpy as np
