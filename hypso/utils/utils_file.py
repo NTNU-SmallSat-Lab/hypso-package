@@ -10,7 +10,14 @@ import progressbar
 import pandas as pd
 
 
-def flatten_dict(nested_dict):
+def flatten_dict(nested_dict:dict) -> dict:
+    """
+    Flatten a nested dictionary into a single level dictionary
+
+    :param nested_dict: Nested dictionary to flatten
+    
+    :return: Single level dictionary with keys corresponding to the previous nested levels
+    """
     res = {}
     if isinstance(nested_dict, dict):
         for k in nested_dict:
