@@ -3,6 +3,8 @@
 images taken by the HYPSO mission from the Norwegian University of Science and
 Technology (NTNU) for Python >3.9
 
+- Documentation: https://ntnu-smallsat-lab.github.io/hypso-package/
+  
 - Anaconda URL: https://anaconda.org/conda-forge/hypso
 
 - Anaconda Github Feedstock: https://github.com/conda-forge/hypso-feedstock
@@ -28,47 +30,6 @@ mamba search -c conda-forge hypso
 mamba update hypso
 ```
 
-## Pipeline (on Load)
-1. Load metadata from existing files `get_metainfo()`
-2. Gets "Raw Cube" (L1A) `get_raw_cube()`
-3. Gets Calibration Coefficients (radiometric, smile and striping) Path depending on the image size `get_calibration_coefficients_path()`
-4. Extracts Coefficients `get_coefficients_from_dict()`
-5. Gets Spectral Coefficients Path (wavelengths) `get_spectral_coefficients_path()`
-6. Extracts Spectral Coefficients `get_coefficients_from_file()`
-7. Calibration and Correction of Cube to get L1B (Radiometric -> Smile -> Destriping) `get_calibrated_and_corrected_cube()`
-8. Get Projection metadata from GeoTiff `get_projection_metadata()`
-9. Coordinate Correction using the `"*.points*"`file (if exists) `start_coordinate_correction()` (Steps to do it manually are at the bottom of this README)
-10. Georeference and create 120 bands GeoTiff (L1C) in a new "geotiff_full" directory `generate_full_geotiff()`
-
-**NOTE:** If corrections are made to the `"*.points"` file, delete the "geotiff_full" directory and run the script again to create the GeoTiffs again.
-
-WARNING: Do not extract the LAT and LON values from files in the "geotiff" folder, use the GeoTiffs in the "geotiff_full" directory instead because they are corrected.
-        
-
-## Sub-Modules (Alphabetical Order)
-
-### a) calibration
--Radiometric correction as well as smile and destriping process
-### b) classification
-- Water mask is generated as a binary file here (original method from https://github.com/cordmaur/WaterDetect/)
-- Further implementations of on-board classification (To Be Implemented)
-### c) experimental
-New features to be tested
-- Atmospheric Correction 6SV1 (To be Implemented)
-- Atmospheric Correction ACOLITE (To Be Implemented)
-
-### d) exportfiles
-- Export of .nc files
-- Print attributes and groups of .nc files
-### e) georeference
-Used for:
-- Creating 120-band GeoTiff
-- Correction of latitude and longitude with `"*.points"` file
-
-### f) plot
-- Show RGB image on Map
-- Export .png rgb
-- Plot 2D array in same coordinates as image (to visualize results of any algorithm)
 ## Usage (see demo.ipynb for expanded version)
 ```
 from hypso import Hypso
@@ -86,8 +47,18 @@ from hypso.plot import show_rgb_map
 # Show Image on top of map
 show_rgb_map(satobj, plotTitle="Mjøsa 15-062023 09:48AM",dpi_input=250)
 ```
-![output](https://github.com/NTNU-SmallSat-Lab/hypso-package/assets/87340855/44f939bb-9435-4688-9194-6b08b172fc36)
+![image](https://github.com/NTNU-SmallSat-Lab/hypso-package/assets/87340855/d5cf9416-7843-47fc-b262-93227882d9f0)
 
+```
+from hypso.experimental.chlorophyll import start_chl_estimation
+
+start_chl_estimation(sat_obj=satobj, model_path="/Users/alvaroflores/Documents/model_6sv1_aqua_tuned.joblib")
+
+from hypso.plot import plot_array_overlay
+# Plot Array on Map
+plot_array_overlay(satobj,satobj.chl, plotTitle="6SV1 Estimation",cbar_title="Chlorophyll Values Sample 0 to 100", min_value=0.01, max_value=100)
+```
+![image](https://github.com/NTNU-SmallSat-Lab/hypso-package/assets/87340855/e5e905b3-8cd6-490d-9c66-50cfa0fa948c)
 
 ## Authors
 
