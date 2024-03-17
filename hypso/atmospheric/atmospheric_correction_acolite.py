@@ -7,9 +7,15 @@ import tarfile
 from pathlib import Path
 from hypso.utils import find_file
 import netCDF4 as nc
+import shutil
 
 
-def get_acolite_repo():
+def get_acolite_repo() -> None:
+    """
+    Download the ACOLITE Repo as a tar archive
+
+    :return: No return.
+    """
     github_url = r"https://github.com/acolite/acolite/archive/refs/tags/20231023.0.tar.gz"
     filename = unquote(urlparse(github_url).path.split("/")[-1])
 
@@ -35,7 +41,14 @@ def get_acolite_repo():
     tar.close()
 
 
-def reset_config_file(path):
+def reset_config_file(path: Path) -> None:
+    """
+    Reset the config file used for ACOLITE so that the user and password can be included if changed
+
+    :param path: Absolute path of the config file
+
+    :return: No return
+    """
     # Reset config file for password and
     with open(path, 'r') as file:
         # read a list of lines into data
@@ -50,7 +63,16 @@ def reset_config_file(path):
         file.writelines(data)
 
 
-def run_acolite(hypso_info, atmos_dict, nc_file_acoliteready):
+def run_acolite(hypso_info: dict, atmos_dict: dict, nc_file_acoliteready: Path) -> np.ndarray:
+    """
+    Run the ACOLITE correction model. Adjustments of the original files are made to ensure they work for HYPSO
+
+    :param hypso_info: Dictionary containing the hypso capture information
+    :param atmos_dict: Dictionary containing the information required for the atmospheric correction
+    :param nc_file_acoliteready: Absolute path for the .nc file for ACOLITE (L1B)
+
+    :return: Returns surface reflectanc corrected spectral image
+    """
     # File and Dir Paths ---------------------------------------------------------------
 
     atmospheric_pkg_path = str(files(
@@ -74,9 +96,14 @@ def run_acolite(hypso_info, atmos_dict, nc_file_acoliteready):
     acolite_output_dir.mkdir(parents=True, exist_ok=True)
 
     # If directory exists but empty, delete it, it happend on a pull from github
-    is_acolite_dir_empty = not any(acolite_dir.iterdir())
-    if is_acolite_dir_empty:
-        acolite_dir.rmdir()
+    if acolite_dir.is_dir():
+        list_elements = []
+        for ff in acolite_dir.iterdir():
+            if "__pycache__" not in ff.stem:
+                list_elements.append(ff)
+        # If empty
+        if len(list_elements) == 0:
+            shutil.rmtree(str(acolite_dir))
 
     # Uncompress ACOLITE if not done and change a file to avoid creating a log
     if not acolite_dir.is_dir():

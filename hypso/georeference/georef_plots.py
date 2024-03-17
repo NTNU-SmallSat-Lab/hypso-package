@@ -11,7 +11,7 @@ import astropy.units
 import astropy.time
 
 import scipy.interpolate as si
-
+from typing import Tuple, List
 from hypso.georeference import georef as gref
 
 # PARAMETERS ----------------------------------------------------------------------
@@ -31,16 +31,31 @@ R_pl = 6356752.0
 hypso_height_sensor = 1216
 
 
-def numpy_norm(np_array):
+def numpy_norm(np_array) -> float:
+    """
+    Gets the norm of an array
+
+    :param np_array: Numpy array to get the norm
+
+    :return: Float of the norm of the array
+    """
     summ = 0.0
     for i in range(np_array.shape[0]):
         summ += np_array[i] ** 2
     return m.sqrt(summ)
 
 
-def compute_elevation_angle(image_pos, sat_pos):
+def compute_elevation_angle(image_pos, sat_pos) -> float:
+    """
+    Computes the elevation angle
+
+    :param image_pos:
+    :param sat_pos:
+
+    :return: Float number of the elevation angle
+    """
     viewpoint_mid_latlon_geocentric = np.array(
-        [m.atan2(R_eq * image_pos[2], R_pl * m.sqrt(image_pos[0] ** 2 + image_pos[1] ** 2)), \
+        [m.atan2(R_eq * image_pos[2], R_pl * m.sqrt(image_pos[0] ** 2 + image_pos[1] ** 2)),
          m.atan2(image_pos[1], image_pos[0])])
     lat = viewpoint_mid_latlon_geocentric[0]
     lon = viewpoint_mid_latlon_geocentric[1]
@@ -52,8 +67,8 @@ def compute_elevation_angle(image_pos, sat_pos):
     vp_mid_normal = np.cross(east, north)
 
     pos_itrf_vp_to_sat = sat_pos - image_pos
-    pos_ENU_vp_to_sat = np.array([np.dot(east, pos_itrf_vp_to_sat), \
-                                  np.dot(north, pos_itrf_vp_to_sat), \
+    pos_ENU_vp_to_sat = np.array([np.dot(east, pos_itrf_vp_to_sat),
+                                  np.dot(north, pos_itrf_vp_to_sat),
                                   np.dot(vp_mid_normal, pos_itrf_vp_to_sat)])
     elevation_angle = m.atan2(pos_ENU_vp_to_sat[2], m.sqrt(pos_ENU_vp_to_sat[0] ** 2 + pos_ENU_vp_to_sat[1] ** 2))
 
@@ -73,14 +88,32 @@ def compute_elevation_angle(image_pos, sat_pos):
     return elevation_angle
 
 
-def compute_off_nadir_angle(image_pos, sat_pos):
+def compute_off_nadir_angle(image_pos, sat_pos) -> float:
+    """
+    Compute the off-nadir angle between the image and the satellite position
+
+    :param image_pos:
+    :param sat_pos:
+
+    :return: The off-nadir angle float value
+    """
     pos_itrf_vp_to_sat = sat_pos - image_pos
     off_nadir_angle = m.acos(np.dot(pos_itrf_vp_to_sat / numpy_norm(pos_itrf_vp_to_sat), sat_pos / numpy_norm(sat_pos)))
     # print("Off nadir angle:", off_nadir_angle*180.0/m.pi)
     return off_nadir_angle
 
 
-def pixel_index_to_angle(index, aoi_offset, fov_full, pixels_full):
+def pixel_index_to_angle(index, aoi_offset, fov_full, pixels_full) -> float:
+    """
+    Get the pixel to angle
+
+    :param index:
+    :param aoi_offset:
+    :param fov_full:
+    :param pixels_full:
+
+    :return:
+    """
     # return angle in radians units
     full_index = index + aoi_offset
 
@@ -102,7 +135,16 @@ def pixel_index_to_angle(index, aoi_offset, fov_full, pixels_full):
 # https://pyorbital.readthedocs.io/en/latest/#computing-astronomical-parameters
 # -> from pyorbital import astronomy
 # Function verifies using: https://gml.noaa.gov/grad/antuv/SolarCalc.jsp
-def compute_local_angles(times, pos_teme, latlons):
+def compute_local_angles(times, pos_teme, latlons) -> np.ndarray:
+    """
+    Compute the local angles on the capture
+
+    :param times:
+    :param pos_teme:
+    :param latlons:
+
+    :return: Numpy array with the local angles
+    """
     if times.shape[0] != latlons.shape[0]:
         print(f'Size of time array not the same as size of latlons!: {times.shape[0]} != {latlons.shape[0]}')
         return None
@@ -143,7 +185,18 @@ def compute_local_angles(times, pos_teme, latlons):
 # https://pyorbital.readthedocs.io/en/latest/#computing-astronomical-parameters
 # -> from pyorbital import astronomy
 # Function verified using: https://gml.noaa.gov/grad/antuv/SolarCalc.jsp
-def compute_local_angles_2(times, pos_teme, lats, lons, indices):
+def compute_local_angles_2(times, pos_teme, lats, lons, indices) -> Tuple[np.ndarray, List[np.ndarray]]:
+    """
+    Compute the Local Angles of the Capture (Second Variation)
+
+    :param times:
+    :param pos_teme:
+    :param lats:
+    :param lons:
+    :param indices:
+
+    :return: Returns array of local angles, and a list of numpy arrays of the satellite and sun zenith and azimuth pos
+    """
     if times.shape[0] != lats.shape[0]:
         print(f'Size of time array not the same as size of latlons!: {times.shape[0]} != {lats.shape[0]}')
         return None
@@ -197,7 +250,7 @@ def compute_local_angles_2(times, pos_teme, lats, lons, indices):
     return local_angles_and_more, [sun_azi_full, sun_zen_full, sat_azi_full, sat_zen_full]
 
 
-def get_wkt(top_latlon, bot_latlon):
+def get_wkt(top_latlon, bot_latlon) -> str:
     """
     Gets WKT
 
@@ -221,7 +274,18 @@ def get_wkt(top_latlon, bot_latlon):
     return string
 
 
-def get_wkt_points(latlon_top, latlon_mid_top, latlon_mid, latlon_mid_bot, latlon_bot):
+def get_wkt_points(latlon_top, latlon_mid_top, latlon_mid, latlon_mid_bot, latlon_bot) -> str:
+    """
+    Get WKT Points in a string readable format
+
+    :param latlon_top:
+    :param latlon_mid_top:
+    :param latlon_mid:
+    :param latlon_mid_bot:
+    :param latlon_bot:
+
+    :return: String of the WKT points
+    """
     string = ''
     for i in range(latlon_top.shape[0]):
         # string = '"POINT('
@@ -238,7 +302,20 @@ def get_wkt_points(latlon_top, latlon_mid_top, latlon_mid, latlon_mid_bot, latlo
 
 # PLOTTING FUNCTIONS
 
-def add_grid(axes, lat_center, lon_center, seg_lat, seg_lon, size_lat_deg, size_lon_deg):
+def add_grid(axes, lat_center, lon_center, seg_lat, seg_lon, size_lat_deg, size_lon_deg) -> None:
+    """
+    Adds a grid for plotting based on the lat and lon
+
+    :param axes:
+    :param lat_center:
+    :param lon_center:
+    :param seg_lat:
+    :param seg_lon:
+    :param size_lat_deg:
+    :param size_lon_deg:
+
+    :return: No return.
+    """
     grid_size_lat_rad = size_lat_deg * m.pi / 180;
     grid_latmin = m.floor(lat_center / grid_size_lat_rad) * grid_size_lat_rad - grid_size_lat_rad;
     grid_latmax = grid_latmin + 3 * grid_size_lat_rad;
@@ -273,7 +350,15 @@ def add_grid(axes, lat_center, lon_center, seg_lat, seg_lon, size_lat_deg, size_
                   color='#7777DD')
 
 
-def geometry_computation(framepose_data_path, hypso_height=684):
+def geometry_computation(framepose_data_path, hypso_height=684) -> None:
+    """
+    Compute geometry using the framepose data
+
+    :param framepose_data_path:
+    :param hypso_height: Height of the Hypso capture
+
+    :return: No return.
+    """
     print('Geometric Computations')
 
     # print('  This script requires:')
@@ -334,17 +419,17 @@ def geometry_computation(framepose_data_path, hypso_height=684):
 
     # new method
     # computing five points of ground locations (geo codes) along each detector line 
-    latlon_top = np.zeros([frame_count, 2]);
-    latlon_mid_top = np.zeros([frame_count, 2]);
-    latlon_mid = np.zeros([frame_count, 2]);
-    latlon_mid_bot = np.zeros([frame_count, 2]);
-    latlon_bot = np.zeros([frame_count, 2]);
+    latlon_top = np.zeros([frame_count, 2])
+    latlon_mid_top = np.zeros([frame_count, 2])
+    latlon_mid = np.zeros([frame_count, 2])
+    latlon_mid_bot = np.zeros([frame_count, 2])
+    latlon_bot = np.zeros([frame_count, 2])
 
-    impos_mid_itrs = np.zeros([frame_count, 3]);
+    impos_mid_itrs = np.zeros([frame_count, 3])
 
-    campos_itrs = np.zeros([frame_count, 3]);
-    body_x_itrs = np.zeros([frame_count, 3]);
-    body_z_itrs = np.zeros([frame_count, 3]);
+    campos_itrs = np.zeros([frame_count, 3])
+    body_x_itrs = np.zeros([frame_count, 3])
+    body_z_itrs = np.zeros([frame_count, 3])
 
     print(f'Spatial dimensions: {frame_count} frames/lines, {hypso_height} pixels/samples')
 
@@ -474,16 +559,16 @@ def geometry_computation(framepose_data_path, hypso_height=684):
             print(
                 f'JD number: {gref.get_julian_day_number(dt)} + {(3600 * dt.hour + 60 * dt.minute + dt.second) / ((24 * 3600))}')
             print(f'GMST radians: {2 * m.pi * gref.get_greenwich_mean_sidereal_time_seconds(dt) / (24 * 3600)}')
-            print(f'campos TEME: [{pos_teme[i, 0]}, {pos_teme[i, 1]}, {pos_teme[i, 2]}]');
-            print(f'campos ITRF: [{campos_itrs[i, 0]}, {campos_itrs[i, 1]}, {campos_itrs[i, 2]}]');
+            print(f'campos TEME: [{pos_teme[i, 0]}, {pos_teme[i, 1]}, {pos_teme[i, 2]}]')
+            print(f'campos ITRF: [{campos_itrs[i, 0]}, {campos_itrs[i, 1]}, {campos_itrs[i, 2]}]')
 
-            print(f'view dir top: [{view_dir_top[0]}, {view_dir_top[1]}, {view_dir_top[2]}]');
-            print(f'view dir bot: [{view_dir_bot[0]}, {view_dir_bot[1]}, {view_dir_bot[2]}]');
+            print(f'view dir top: [{view_dir_top[0]}, {view_dir_top[1]}, {view_dir_top[2]}]')
+            print(f'view dir bot: [{view_dir_bot[0]}, {view_dir_bot[1]}, {view_dir_bot[2]}]')
 
             print(
-                f'ellipsoid pos top: [{pos_itrs_viewpoint_top[0]}, {pos_itrs_viewpoint_top[1]}, {pos_itrs_viewpoint_top[2]}]');
+                f'ellipsoid pos top: [{pos_itrs_viewpoint_top[0]}, {pos_itrs_viewpoint_top[1]}, {pos_itrs_viewpoint_top[2]}]')
             print(
-                f'ellipsoid pos bot: [{pos_itrs_viewpoint_bot[0]}, {pos_itrs_viewpoint_bot[1]}, {pos_itrs_viewpoint_bot[2]}]');
+                f'ellipsoid pos bot: [{pos_itrs_viewpoint_bot[0]}, {pos_itrs_viewpoint_bot[1]}, {pos_itrs_viewpoint_bot[2]}]')
 
             print(f'latlon top: {latlon_top[i, 0]}, {latlon_top[i, 1]}')
             print(f'latlon bot: {latlon_bot[i, 0]}, {latlon_bot[i, 1]}')

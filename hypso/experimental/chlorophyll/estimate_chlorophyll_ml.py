@@ -5,15 +5,28 @@ import numpy as np
 from warnings import simplefilter
 from sklearn.exceptions import ConvergenceWarning
 from hypso.experimental.chlorophyll.utilities_chl import convolve2d
-from hypso.experimental.chlorophyll.chl_algorithms import modis_aqua_ocx, sentinel_ocx, closest_index
 from hypso.experimental.chlorophyll.indices import *
 from importlib.resources import files
 from joblib import dump, load
+from typing import Tuple
 
 simplefilter("ignore", category=ConvergenceWarning)
 
 
-def get_best_features(X_train_rrs, y_train_rrs, X_test_rrs, y_test_rrs, dataset_name):
+def get_best_features(X_train_rrs: np.ndarray, y_train_rrs: np.ndarray, X_test_rrs: np.ndarray, y_test_rrs: np.ndarray,
+                      dataset_name: str = "hypso") -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Compute the optimal features based on the findings of the Master thesis "Improving Ocean Chlorophyll Estimation in
+    Satellite Hyperspectral Images Using Ensemble Machine Learning" by Flores-Romero Alvaro
+
+    :param X_train_rrs: Surface reflectance values for training
+    :param y_train_rrs: Surface chlorophyll values for training
+    :param X_test_rrs: Surface reflectance values for testing
+    :param y_test_rrs: Surface chlorophyll values for testing
+    :param dataset_name: Dataset name to estimate values. Defaults to "hypso"
+
+    :return: Returns the features for training and testing
+    """
     hypso_optimal_dict = {
         "tbvi": [["Rrs_701", "Rrs_460"], ["Rrs_569", "Rrs_489"]],
         "tbm": [["Rrs_503", "Rrs_601", "Rrs_801"]],
@@ -173,10 +186,15 @@ def get_best_features(X_train_rrs, y_train_rrs, X_test_rrs, y_test_rrs, dataset_
     return tmp_train_features, tmp_test_features
 
 
+def start_chl_estimation(sat_obj, model_path=None) -> None:
+    """
+    Estimates the chlorophyll using a trained ML Scikit-Learn Model
 
+    :param sat_obj: Hypso satellite object
+    :param model_path: Absolute path for the pre-trained Scikit-Learn model
 
-
-def start_chl_estimation(sat_obj, model_path=None):
+    :return: No return.
+    """
     # Load Mode -----------------------------------------------------
     if model_path is None:
         raise Exception("Please specify the model path")

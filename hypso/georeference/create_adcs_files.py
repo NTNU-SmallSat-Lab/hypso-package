@@ -4,12 +4,14 @@ import pandas as pd
 from pathlib import Path
 
 
-def create_adcs_timestamps_files(nc_path, nc_info):
+def create_adcs_timestamps_files(nc_path: Path, nc_info: dict) -> dict:
     """
     Creates timestamps for files
-    :param nc_path:
-    :param nc_info:
-    :return:
+
+    :param nc_path: Absolute patth of the netCDF4 file
+    :param nc_info: Dictionary containing the capture data and the temporary folder with generated files.
+
+    :return: Dictionary used with no modification
     """
     temp_dir = nc_info["tmp_dir"]
 

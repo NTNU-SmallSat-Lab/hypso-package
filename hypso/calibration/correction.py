@@ -1,9 +1,8 @@
 import numpy as np
 from scipy import interpolate
-import pathlib
+from pathlib import Path
 
-
-def crop_and_bin_matrix(matrix, x_start, x_stop, y_start, y_stop, bin_x=1, bin_y=1):
+def crop_and_bin_matrix(matrix, x_start, x_stop, y_start, y_stop, bin_x=1, bin_y=1) -> np.ndarray:
     """ Crops matrix to AOI. Bins matrix so that the average value in the bin_x
     number of pixels is stored.
     """
@@ -48,6 +47,13 @@ def crop_and_bin_matrix(matrix, x_start, x_stop, y_start, y_stop, bin_x=1, bin_y
 
 
 def get_coefficients_from_file(coeff_path: str) -> np.ndarray:
+    """
+    Get correction coefficients from file
+
+    :param coeff_path: Coefficient path to read (.csv)
+
+    :return: 2D array of coefficients
+    """
     coefficients = None
     try:
         # Processing should be Float 32
@@ -62,18 +68,15 @@ def get_coefficients_from_file(coeff_path: str) -> np.ndarray:
 
 
 def get_coefficients_from_dict(coeff_dict: dict, satobj) -> dict:
-    """Get the coefficients from the csv file.
-
-    Args:
-        path (str, optional): Path to the radiometric coefficients csv file. Defaults to None.
-        sets the rad_file attribute to the path.
-        if no path is given, the rad_file path is used.
-
-    Returns:
-        np.ndarray: The coefficients.
-        :param coeff_dict:
-
     """
+    Get the coefficients from the csv files contained in a dictionary.
+
+    :param coeff_dict: Dictionary containing the paths of the csv files to read
+    :param satobj: Hypso satellite object
+
+    :return: Dictionary containing the 2D coefficients read from the csv files
+    """
+
     coeffs = coeff_dict.copy()
     for k in coeff_dict:
         # Coefficients Custom (needs trimming)
@@ -98,7 +101,16 @@ def get_coefficients_from_dict(coeff_dict: dict, satobj) -> dict:
 
 
 def calibrate_cube(info_sat: dict, raw_cube: np.ndarray, correction_coefficients_dict: dict) -> np.ndarray:
-    """Calibrate the raw data cube."""
+    """
+    Radiometrically Calibrate the Raw Cube (digital counts) to Radiance
+
+    :param info_sat: Dictionary containing capture information
+    :param raw_cube: Numpy array containing digital countes 3-channel cube
+    :param correction_coefficients_dict: Dictionary containing the 2D coefficients for correction
+
+    :return: Corrected 3-channel cube
+    """
+
     DEBUG = False
 
     if correction_coefficients_dict["radiometric"] is None:
@@ -134,15 +146,22 @@ def calibrate_cube(info_sat: dict, raw_cube: np.ndarray, correction_coefficients
 
 
 def apply_radiometric_calibration(
-        frame,
-        exp,
-        background_value,
-        radiometric_calibration_coefficients):
-    ''' Assumes input is 12-bit values, and that the radiometric calibration
-    coefficients are the same size as the input image.
+        frame: np.ndarray,
+        exp: float,
+        background_value: float,
+        radiometric_calibration_coefficients: np.ndarray):
+    """
+    Applies radiometric calibration. Assumes input is 12-bit values, and that the radiometric calibration
+    coefficients are the same size as the input image. Note: radiometric calibration coefficients have original
+    size (684,1080), matching the "normal" AOI of the HYPSO-1 data (with no binning).
 
-    Note: radiometric calibration coefficients have original size (684,1080),
-    matching the "normal" AOI of the HYPSO-1 data (with no binning).'''
+    :param frame: 2D frame to apply radiometric calibration
+    :param exp: Exposure value
+    :param background_value: Background value
+    :param radiometric_calibration_coefficients: 2D array of radio calibration coefficients
+
+    :return: Calibrated frame 2D array
+    """
 
     frame = frame - background_value
     frame_calibrated = frame * radiometric_calibration_coefficients / exp
@@ -150,11 +169,18 @@ def apply_radiometric_calibration(
     return frame_calibrated
 
 
-def smile_correction_one_row(row, w, w_ref):
-    ''' Use cubic spline interpolation to resample one row onto the correct
-    wavelengths/bands from a reference wavelength/band array to correct for
-    the smile effect.
-    '''
+def smile_correction_one_row(row, w, w_ref) -> np.ndarray:
+    """
+    Applies smile correction. Use cubic spline interpolation to resample one row onto the correct
+    wavelengths/bands from a reference wavelength/band array to correct for the smile effect.
+
+    :param row: Data row to apply smile correction
+    :param w:
+    :param w_ref:
+
+    :return: Row corrected for smile effect
+    """
+
     row_interpolated = interpolate.splrep(w, row)
     row_corrected = interpolate.splev(w_ref, row_interpolated)
     # Set values for wavelengths below 400 nm to zero
@@ -167,10 +193,17 @@ def smile_correction_one_row(row, w, w_ref):
     return row_corrected
 
 
-def smile_correction_one_frame(frame, spectral_band_matrix):
-    ''' Run smile correction on each row in a frame, using the center row as 
-    the reference wavelength/band for smile correction.
-    '''
+def smile_correction_one_frame(frame, spectral_band_matrix) -> np.ndarray:
+    """
+    Run smile correction on each row in a frame, using the center row as the reference wavelength/band for
+    smile correction.
+
+    :param frame: 2D frame on which to apply smile correction
+    :param spectral_band_matrix: Spectral coefficients (Wavelength)
+
+    :return: Corrected frame after smile correction
+    """
+
     image_height, image_width = frame.shape
     center_row_no = int(image_height / 2)
     w_ref = spectral_band_matrix[center_row_no]
@@ -184,10 +217,15 @@ def smile_correction_one_frame(frame, spectral_band_matrix):
     return frame_smile_corrected
 
 
-def smile_correct_cube(cube, correction_coefficients_dict: dict):
-    ''' Run smile correction on each frame in a cube, using the center row in 
-    the frame as the reference wavelength/band for smile correction.
-    '''
+def smile_correct_cube(cube, correction_coefficients_dict: dict) -> np.ndarray:
+    """
+    Run smile correction on each frame in a cube, using the center row in the frame as the reference wavelength/band
+    for smile correction.
+
+    :param cube: 3-channel spectral cube
+    :param correction_coefficients_dict: Dictionary containing the coefficients for smile correction
+    :return:
+    """
 
     if correction_coefficients_dict["smile"] is None:
         return cube.copy()
@@ -205,8 +243,16 @@ def smile_correct_cube(cube, correction_coefficients_dict: dict):
     return cube_smile_corrected
 
 
-def destriping_correct_cube(cube, correction_coefficients_dict):
-    ''' Apply destriping correction matrix. '''
+def destriping_correct_cube(cube, correction_coefficients_dict) -> np.ndarray:
+    """
+    Apply destriping correction matrix.
+
+    :param cube: 3-channel spectral cube
+    :param correction_coefficients_dict: Dictionary containing the 2D coefficients for destriping
+
+    :return: 3-channel array for destriping correction
+    """
+
 
     if correction_coefficients_dict["destriping"] is None:
         return cube.copy()

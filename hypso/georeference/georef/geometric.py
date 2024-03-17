@@ -1,12 +1,14 @@
 import math as m
 import numpy as np
 import scipy.spatial as ss
-#from .time_process import get_greenwich_mean_sidereal_time_seconds
+# from .time_process import get_greenwich_mean_sidereal_time_seconds
 import hypso.georeference.georef as gref
 import datetime
+from typing import Tuple
+
 
 # source: https://stackoverflow.com/questions/13542855/algorithm-to-find-the-minimum-area-rectangle-for-given-points-in-order-to-comput/33619018#33619018
-def minimum_bounding_rectangle(points):
+def minimum_bounding_rectangle(points) -> np.ndarray:
     """
     Find the smallest bounding rectangle for a set of points. Rval is a 4x2 matrix of bounding box corner coordinates
 
@@ -73,7 +75,7 @@ def minimum_bounding_rectangle(points):
     return rval  # corner points of bbox
 
 
-def mat_from_quat(quat):
+def mat_from_quat(quat) -> np.ndarray:
     """
     Matrix from Quaternion
 
@@ -115,11 +117,10 @@ def mat_from_quat(quat):
     return mat
 
 
-def rotate_axis_angle(vec, axis, angle):
+def rotate_axis_angle(vec, axis, angle) -> np.ndarray:
     """
-    Rotates vector vec around axis axis by angle angle
-        Both vec, axis, and vec_rot are column vectors. axis is a
-        unit vector, angle is in radians
+    Rotates vector vec around axis axis by angle angle Both vec, axis, and vec_rot are column vectors. axis is a
+    unit vector, angle is in radians
 
     :param vec:
     :param axis:
@@ -161,13 +162,16 @@ f = 1.0 / 298.257223563
 e_2 = f * (2 - f)  # eccentricity squared
 R_pl = 6356752.0
 
+
 # ---------------------------------------------------------
 
 
-def ecef_to_lat_lon_alt(pos):
+def ecef_to_lat_lon_alt(pos) -> np.ndarray:
     """
-    input pos has to be Nx3, and units in meters
+    Input pos has to be Nx3, and units in meters
+
     :param pos:
+
     :return: lat lon (with respect to ECI axes) and altitude in degrees and meters
     """
 
@@ -207,17 +211,32 @@ def ecef_to_lat_lon_alt(pos):
     return output_lat_lon_alt
 
 
-def eci_to_lat_loneci_alt(pos):
+def eci_to_lat_loneci_alt(pos) -> np.ndarray:
+    """
+    ECI to latitude and longitude and altitude
+
+    :param pos:
+
+    :return:
+    """
     return ecef_to_lat_lon_alt(pos)
 
 
-def eci_lon_to_ecef_lon(datetime_utc, lon, time_offset):
+def eci_lon_to_ecef_lon(datetime_utc, lon, time_offset) -> float:
+    """
+    ECI to longitude to ECEF Longitude conversion
+    :param datetime_utc:
+    :param lon:
+    :param time_offset:
+
+    :return:
+    """
     s_sdrl = gref.get_greenwich_mean_sidereal_time_seconds(datetime_utc) + time_offset
     sdrl_rad = s_sdrl * 2.0 * m.pi / (24 * 3600)
     return lon - sdrl_rad
 
 
-def eci_to_lat_lon_alt(pos, times, time_offset):
+def eci_to_lat_lon_alt(pos, times, time_offset) -> np.ndarray:
     """
     ECI to Lat/Lon Altitude
 
@@ -225,7 +244,7 @@ def eci_to_lat_lon_alt(pos, times, time_offset):
     :param times: needs to be N
     :param time_offset: is a float. is an additional time offset to adjust georeferencing
 
-    :return:
+    :return: Numpy array with pseudo latitude and longitude and altitude
     """
 
     if len(pos.shape) != 2:
@@ -241,16 +260,26 @@ def eci_to_lat_lon_alt(pos, times, time_offset):
     for i in range(pseudo_lat_lon_alt.shape[0]):
         dt = datetime.datetime.fromtimestamp(times[i], tz=datetime.timezone.utc)
         pseudo_lat_lon_alt[i, 1] = (eci_lon_to_ecef_lon(dt, pseudo_lat_lon_alt[i, 1], time_offset) + m.pi) % (
-                    2 * m.pi) - m.pi
+                2 * m.pi) - m.pi
         pseudo_lat_lon_alt[i, 0] = pseudo_lat_lon_alt[i, 0]
     return pseudo_lat_lon_alt
 
 
-def pos_ecef_to_lat_lon_alt(pos):
+def pos_ecef_to_lat_lon_alt(pos) -> np.ndarray:
+    """
+    Coverts POS ECEF to latitude and longitude and altitude
+    :param pos:
+    :return:
+    """
     return eci_to_lat_loneci_alt(pos)
 
 
-def lat_lon_alt_to_ecef(lla):
+def lat_lon_alt_to_ecef(lla) -> np.ndarray:
+    """
+    Converts latitude and longitude ALT to ECEF
+    :param lla:
+    :return:
+    """
     pos_ecef = np.zeros(lla.shape)
     for i in range(lla.shape[0]):
         slat = m.sin(lla[i][0])
@@ -264,7 +293,15 @@ def lat_lon_alt_to_ecef(lla):
     return pos_ecef
 
 
-def ellipsoid_line_intersection(point, direction):
+def ellipsoid_line_intersection(point, direction) -> Tuple[float, float]:
+    """
+    Calculates the ellipsodie and line intersection
+
+    :param point:
+    :param direction:
+
+    :return:
+    """
     # x^2 + y^2 +f_*z^2 = a^2
 
     f_ = 1.0 / ((1.0 - f) ** 2)

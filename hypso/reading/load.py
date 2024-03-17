@@ -1,16 +1,24 @@
 import numpy as np
-
 from datetime import datetime
-import pandas as pd
 import netCDF4 as nc
 from hypso import georeference
 from pathlib import Path
-from hypso.utils import is_integer_num, find_file
+from hypso.utils import is_integer_num
+from typing import Tuple
 
 EXPERIMENTAL_FEATURES = True
 
 
-def load_nc(nc_file_path, standardDimensions):
+def load_nc(nc_file_path: Path, standardDimensions: dict) -> Tuple[dict, np.ndarray, tuple]:
+    """
+    Load l1a.nc Hypso Capture file
+
+    :param nc_file_path: Absolute path to the l1a.nc file
+    :param standardDimensions: Dictionary with Standard Hypso allowed dimensions
+
+    :return: "info" Dictionary with Hypso capture information, raw cube numpy array (digital counts) and capture spatial
+        dimensions
+    """
     # Get metadata
     nc_info, spatialDim = get_metainfo_from_nc_file(nc_file_path, standardDimensions)
 
@@ -55,7 +63,17 @@ def load_nc(nc_file_path, standardDimensions):
     return nc_info, nc_rawcube, spatialDim
 
 
-def get_lat_lon_2d(latitude_dataPath, longitude_dataPath, info, spatialDim):
+def get_lat_lon_2d(latitude_dataPath: Path, longitude_dataPath: Path, info: dict, spatialDim: tuple) -> dict:
+    """
+    Load Latitude and Longitude 2D arrays from generated tmp files
+
+    :param latitude_dataPath: Absolute path to Latitude .dat file
+    :param longitude_dataPath: Absolute path to Longitude .dat file
+    :param info: Info Dictionary to mutate with new information
+    :param spatialDim: Spatial dimension of the Hypso capture
+
+    :return: Updated "info" dictionary with the latitude and longitude 2D arrays
+    """
     # Load Latitude
     info["lat"] = np.fromfile(latitude_dataPath, dtype="float32")
     info["lat"] = info["lat"].reshape(spatialDim)
@@ -70,8 +88,21 @@ def get_lat_lon_2d(latitude_dataPath, longitude_dataPath, info, spatialDim):
     return info
 
 
-def get_local_angles(sat_azimuth_path, sat_zenith_path,
-                     solar_azimuth_path, solar_zenith_path, info, spatialDim):
+def get_local_angles(sat_azimuth_path: Path, sat_zenith_path: Path,
+                     solar_azimuth_path: Path, solar_zenith_path: Path, info: dict, spatialDim: tuple) -> dict:
+    """
+    Load Satellite and Solar Angles from generated tmp files
+
+    :param sat_azimuth_path: Absolute path to Satellite (Viewing) Azimuth .dat file
+    :param sat_zenith_path: Absolute path to Satellite (Viewing) Zenith .dat file
+    :param solar_azimuth_path: Absolute path to Solar Azimuth .dat file
+    :param solar_zenith_path: Absolute path to Solar Zenith .dat file
+    :param info: Info Dictionary to mutate with new information
+    :param spatialDim: Spatial dimension of the Hypso capture
+
+    :return: Updated "info" dictionary with the Arrays of the solar and satellite (viewing) angles
+    """
+
     info["solar_zenith_angle"] = np.fromfile(solar_zenith_path, dtype="float32")
     info["solar_zenith_angle"] = info["solar_zenith_angle"].reshape(spatialDim)
 
@@ -87,14 +118,14 @@ def get_local_angles(sat_azimuth_path, sat_zenith_path,
     return info
 
 
-def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions) -> dict:
-    """Get the metadata from the top folder of the data.
+def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions: dict) -> Tuple[dict, tuple]:
+    """
+    Get the metadata from the top folder of the data.
 
-    Args:
-        top_folder_name (str): The name of the top folder of the data.
+    :param nc_file_path: Path to the name of the tmp folder
+    :param standardDimensions: Dictionary with Hypso standard dimensions
 
-    Returns:
-        dict: The metadata.
+    :return: "info" dictionary with the data and a tuple with spatial dimensions
     """
 
     info = {}
@@ -164,9 +195,7 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions) -> dict:
     # data for geotiff processing -----------------------------------------------
 
     info["unixtime"] = info["start_timestamp_capture"]
-    info["iso_time"] = datetime.utcfromtimestamp(
-        info["unixtime"]
-    ).isoformat()
+    info["iso_time"] = datetime.utcfromtimestamp(info["unixtime"]).isoformat()
 
     # ------------------------------------------------------------------------
     # Target Lat Lon ---------------------------------------------------------
@@ -227,7 +256,14 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions) -> dict:
     return info, spatialDim
 
 
-def get_raw_cube_from_nc_file(nc_file_path) -> np.ndarray:
+def get_raw_cube_from_nc_file(nc_file_path: Path) -> np.ndarray:
+    """
+    Get Raw Cube from Hypso l1a.nc File
+
+    :param nc_file_path: Absolute path to l1a.nc file
+
+    :return: Numpy array with raw Cube (digital counts) extracted from nc file
+    """
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
         group = f.groups["products"]
         # 16-bit according to Original data Capture

@@ -13,6 +13,7 @@ import scipy.interpolate as si
 
 from hypso.georeference import georef as gref
 from hypso.utils import find_file, HSI2RGB
+from typing import Literal, List
 
 DEBUG = False
 EXPORT_SINGLE_BANDS = False
@@ -22,7 +23,15 @@ g_band_index = 50  # Old 70 (120-70=50)
 b_band_index = 31  # Old 89 (120-89=31)
 
 
-def generate_rgb_geotiff(satObj, overwrite=False):
+def generate_rgb_geotiff(satObj, overwrite: bool = False) -> None:
+    """
+    Generate RGB GeoTiff image
+
+    :param satObj: Hypso satellite object.
+    :param overwrite: If true, overwrite the previously generated RGB GeoTiff image
+
+    :return: No return
+    """
     existing_rgb_geotiff = find_file(satObj.info["top_folder_name"], "-rgb", ".tif")
 
     if existing_rgb_geotiff is not None:
@@ -103,16 +112,15 @@ def generate_rgb_geotiff(satObj, overwrite=False):
     print('Done RGB/RGBA Geotiff')
 
 
-def generate_full_geotiff(satObj, product, L2_key=None):
-    # Find L1C and L2 product files
-    l1cgeotiffFilePath = find_file(satObj.info["top_folder_name"], "-full_L1C", ".tif")
-    l2geotiffFilePath = find_file(satObj.info["top_folder_name"], f"-full_L2_{L2_key}", ".tif")
+def generate_full_geotiff(satObj, product: Literal["L1C", "L2-6SV1", "L2-ACOLITE"] = "L1C") -> None:
+    """
+    Generate Full 120 Band GeoTiff image
 
-    # If we request the one that exists, done run it
-    if product == "L2" and l2geotiffFilePath is not None:
-        return
-    if product == "L1C" and l1cgeotiffFilePath is not None:
-        return
+    :param satObj: Hypso satellite object.
+    :param product: Product to generate it can be either "L1C", "L2-6SV1", "L2-ACOLITE"
+
+    :return: No return
+    """
 
     # GeoTiff Output ------------------------------------------------------------------------
     top_folder_name = satObj.info["top_folder_name"]
@@ -122,10 +130,27 @@ def generate_full_geotiff(satObj, product, L2_key=None):
     # L2A is priority, if we dont have it, use L1B ---------------------------------------------------
     cube_data = None
     output_path_full_tif = None
-    if product == "L2":
+    if "L2" in product:
+        try:
+            L2_key = product.split("-")[1].upper()
+        except IndexError:
+            L2_key = None
+
+        # Find L2 product file, if exists, dont run the entire process again
+        l2geotiffFilePath = find_file(satObj.info["top_folder_name"], f"-full_L2_{L2_key}", ".tif")
+        if l2geotiffFilePath is not None:
+            return
+
+        # If we dont have it, create the new path
         cube_data = satObj.l2a_cube[L2_key]
         output_path_full_tif = Path(geotiff_folder_path, capture_name + f'-full_L2_{L2_key}.tif')
     elif product == "L1C":
+        # Find L1C product file, if exists, dont run the entire process again
+        l1cgeotiffFilePath = find_file(satObj.info["top_folder_name"], "-full_L1C", ".tif")
+        if l1cgeotiffFilePath is not None:
+            return
+
+        # If we dont have it, create the new path
         cube_data = satObj.l1b_cube
         output_path_full_tif = Path(geotiff_folder_path, capture_name + '-full_L1C.tif')
 
@@ -158,7 +183,16 @@ def generate_full_geotiff(satObj, product, L2_key=None):
     print('Done Full Geotiff')
 
 
-def generate_geotiff(satObj, bands, cube_data):
+def generate_geotiff(satObj, bands: list, cube_data: np.ndarray) -> None:
+    """
+    Generate geotiff (RGB or Full 120 bands)
+
+    :param satObj: Hypso Satellite object
+    :param bands: List of band indices
+    :param cube_data: Numpy array of the cube array to include in the GeoTiff
+
+    :return: No return
+    """
     print('Generating Geotiff ************************************')
 
     # Setting some default values -------------------------------------------------
@@ -381,8 +415,23 @@ def generate_geotiff(satObj, bands, cube_data):
     return grid_dims, geotransform, destination_epsg, grid_data_all_bands, contain_mask
 
 
-def interpolate_geotiff(band_number, cube_data, pixel_coords_map_list, grid_points,
-                        resampling_method, contain_mask, geotiff_info, grid_data_all_bands):
+def interpolate_geotiff(band_number: int, cube_data: np.ndarray, pixel_coords_map_list: np.ndarray,
+                        grid_points: np.ndarray, resampling_method: str, contain_mask: np.ndarray, geotiff_info: tuple,
+                        grid_data_all_bands: np.ndarray) -> None:
+    """
+    Interplate Each band of the data cube before saving it to a GeoTiff
+
+    :param band_number: Band number to interpolate
+    :param cube_data: Numpy array of data cube
+    :param pixel_coords_map_list:
+    :param grid_points:
+    :param resampling_method: Resampling method. Default is "nearest". Linear is better but slower.
+    :param contain_mask:
+    :param geotiff_info:
+    :param grid_data_all_bands:
+
+    :return: No return
+    """
     print(f'      Starting band {band_number}')
 
     data_lines = cube_data.shape[0]
@@ -406,7 +455,20 @@ def interpolate_geotiff(band_number, cube_data, pixel_coords_map_list, grid_poin
     print(f'      Done with band {band_number}')
 
 
-def export_single_band_geotiff(filename, raster_data, grid_dims, grid_origin, grid_res, grid_epsg):
+def export_single_band_geotiff(filename: Path, raster_data: np.ndarray, grid_dims: List[int], grid_origin: list,
+                               grid_res: int, grid_epsg: int) -> None:
+    """
+    Export Single Band as individual channel GeoTiff
+
+    :param filename: Absolute path to save GeoTiff
+    :param raster_data: Numpy array of the data to save in the GeoTiff
+    :param grid_dims:
+    :param grid_origin:
+    :param grid_res:
+    :param grid_epsg:
+
+    :return: No return.
+    """
     dst_ds = gdal.GetDriverByName('GTiff').Create(
         str(filename), grid_dims[0], grid_dims[1], 1, gdal.GDT_Float64)
     geotransform = (grid_origin[0], -grid_res[0],

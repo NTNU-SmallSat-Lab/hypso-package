@@ -1,7 +1,14 @@
 import datetime
 
 
-def get_julian_day_number(date_time):
+def get_julian_day_number(date_time) -> float:
+    """
+    Get Julian Day Number from Date Time
+
+    :param date_time: Date Time
+
+    :return: Julian day as float
+    """
     Y = date_time.year
     M = date_time.month
     D = date_time.day
@@ -16,7 +23,7 @@ def get_julian_day_number(date_time):
     return JD
 
 
-def get_greenwich_mean_sidereal_time_seconds(date_time):
+def get_greenwich_mean_sidereal_time_seconds(date_time) -> float:
     """
     Gets Greenwich mean sidereal time in seconds
 

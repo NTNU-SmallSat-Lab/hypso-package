@@ -22,7 +22,7 @@ import numpy as np
 # def untransformation(data):
 #     return np.exp(data)
 
-def convolve2d(slab, kernel, max_missing=0.5, verbose=True):
+def convolve2d(slab, kernel: np.ndarray, max_missing: float = 0.5, verbose: bool = True) -> np.ndarray:
     """
     2D convolution with missings ignored
 

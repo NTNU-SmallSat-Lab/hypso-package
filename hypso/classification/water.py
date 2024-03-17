@@ -1,13 +1,22 @@
 # Modified from pip to have as local directory
 from hypso.classification.WaterDetection.waterdetect.Common import DWConfig
 from hypso.classification.WaterDetection.waterdetect.Image import DWImageClustering
-# from .WaterDetect import waterdetect as wd
 from osgeo import gdal, osr
 import numpy as np
 from importlib.resources import files
+from typing import Literal
 
 
-def ndwi_watermask(sat_obj, product_to_use="L1C"):
+def ndwi_watermask(sat_obj, product_to_use: Literal["L1C", "L1B", "L2-ACOLITE", "L2-6SV1"] = "L1C") -> None:
+    """
+    Compute the Water Mask using the Normalized Difference Water Index (NDWI). This method was originally developed by
+    Mauricio Cordeiro (https://github.com/cordmaur/WaterDetect)
+
+    :param sat_obj: Hypso satellite object
+    :param product_to_use: String of product to use for calculating the water mask. Default and recommended: "L1C"
+
+    :return: No Return
+    """
     sat_obj.find_geotiffs()
 
     # TODO: Confirm why L1C gives better results than L2
@@ -19,7 +28,7 @@ def ndwi_watermask(sat_obj, product_to_use="L1C"):
         raise Exception("No Full-Band L2 GeoTiff")
 
     cube_selected = None
-    if product_to_use == "L2":
+    if "L2" in product_to_use:
         ds = gdal.Open(str(sat_obj.l2geotiffFilePath))
         data_mask = ds.ReadAsArray()
         data = np.ma.masked_where(data_mask == 0, data_mask)
@@ -71,7 +80,14 @@ def ndwi_watermask(sat_obj, product_to_use="L1C"):
     sat_obj.waterMask = boolMask
 
 
-def threshold_watermask(sat_obj, threshold_val=2.9):
+def threshold_watermask(sat_obj, threshold_val: float = 2.9) -> None:
+    """
+    Simple Threshold WaterMask
+
+    :param sat_obj: Hypso satellite object
+    :param threshold_val: Threshold value for pixel contrast. Default is 2.9
+    :return:
+    """
     # # TODO: Improve Water Map Selection (Non threshold dependant)
     def get_is_water_map(cube, wl, binary_threshold=threshold_val):
         C1 = np.argmin(abs(wl - 460))

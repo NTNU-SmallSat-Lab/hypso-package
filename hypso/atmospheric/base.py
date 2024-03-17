@@ -3,10 +3,16 @@ from osgeo import gdal
 import numpy as np
 from importlib.resources import files
 
-def MeanDEM(pointUL, pointDR):
-    '''
+
+def MeanDEM(pointUL, pointDR) -> float:
+    """
     Calculate the average elevation of the area where the image is located.
-    '''
+
+    :param pointUL: Upper left corner of the lat/lon array
+    :param pointDR: Lower right corner of the lat/lon array
+
+    :return: Mean elevation of the area where the image was captured
+    """
 
     dem_path = files(
         'hypso.atmospheric').joinpath(f'GMTED2km.tif')

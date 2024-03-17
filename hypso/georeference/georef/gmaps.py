@@ -8,12 +8,16 @@
 # high resolution google map
 # Find the associated blog post at: http://blog.eskriett.com/2013/07/19/downloading-google-maps/
 
-from PIL import Image
+import PIL
+
+from PIL.Image import Image
 import math, shutil, requests, os
 import io
+from typing import Tuple
+import numpy as np
 
 
-def pixel_to_latlon(px_x, px_y, tl_x, tl_y, zoom_level):
+def pixel_to_latlon(px_x, px_y, tl_x, tl_y, zoom_level) -> Tuple[float, float]:
     """
     Pixel to Lat Lon
 
@@ -43,6 +47,9 @@ def pixel_to_latlon(px_x, px_y, tl_x, tl_y, zoom_level):
 
 
 class GoogleMapsLayers:
+    """
+    Google Maps Layers Class
+    """
     ROADMAP = "v"
     TERRAIN = "p"
     ALTERED_ROADMAP = "r"
@@ -53,8 +60,7 @@ class GoogleMapsLayers:
 
 class GoogleMapDownloader:
     """
-    A class which generates high resolution google maps images given
-        a longitude, latitude and zoom level
+    A class which generates high resolution google maps images given a longitude, latitude and zoom level
     """
 
     def __init__(self, lat, lng, zoom=12, layer=GoogleMapsLayers.SATELLITE):
@@ -72,7 +78,7 @@ class GoogleMapDownloader:
         self._zoom = zoom
         self._layer = layer
 
-    def latlon_to_tileXY(self):
+    def latlon_to_tileXY(self) -> Tuple[float, float]:
         """
         Generates an X,Y tile coordinate based on the latitude, longitude and zoom level
 
@@ -97,7 +103,7 @@ class GoogleMapDownloader:
 
         return int(point_x), int(point_y)
 
-    def generateImage(self, **kwargs):
+    def generateImage(self, **kwargs) -> Tuple[Image,tuple]:
         """
         Generates an image by stitching a number of google map tiles together.
 
@@ -122,7 +128,7 @@ class GoogleMapDownloader:
         # Determine the size of the image
         width, height = 256 * tile_count_x, 256 * tile_count_y
         # Create a new image of the size require
-        map_img = Image.new('RGB', (width, height))
+        map_img = PIL.Image.new('RGB', (width, height))
 
         j = 1
         for x in range((-tile_count_x) // 2, tile_count_x // 2):
@@ -142,14 +148,19 @@ class GoogleMapDownloader:
                         continue
 
                     current_tile_pseudofile = io.BytesIO(data)
-                    im = Image.open(current_tile_pseudofile, formats=('JPEG',))
+                    im = PIL.Image.open(current_tile_pseudofile, formats=('JPEG',))
                     map_img.paste(im,
                                   ((x + math.ceil(tile_count_x / 2)) * 256, (y + math.ceil(tile_count_y / 2)) * 256))
         tile_coords_corner = center_tile_x - tile_count_x // 2, center_tile_y - tile_count_y // 2
         return map_img, (tile_coords_corner)
 
 
-def main():
+def main() -> None:
+    """
+    Main entry point
+
+    :return:
+    """
     # usage example
 
     lat = 63.4163724

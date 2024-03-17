@@ -2,15 +2,27 @@ import numpy as np
 import csv
 import pyproj as prj
 import pandas as pd
-
+from typing import Tuple, Literal
 import skimage
 from pathlib import Path
 # GIS
 import cartopy.crs as ccrs
 
 
-def start_coordinate_correction(points_path: Path, satinfo: dict, proj_metadata: dict, correction_type="affine"):
-    #point_file = find_file(top_folder_name, ".points")
+def start_coordinate_correction(points_path: Path, satinfo: dict, proj_metadata: dict,
+                                correction_type: Literal["affine", "homography",
+                                "polynomial", "lstsq"] = "affine") -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Start coordinate correction process
+
+    :param points_path: Path of the .points file generated with QGIS software
+    :param satinfo: Dictionary containing capture information
+    :param proj_metadata: Dictionary containing projection metadata of the capture
+    :param correction_type: String with the method out of "affine", "homography", polynomial" and "lstsq"
+
+    :return: Corrected lat and lon coordinate 2D arrays
+    """
+    # point_file = find_file(top_folder_name, ".points")
     if points_path is None:
         print("Points File Was Not Found. No Correction done.")
         return satinfo["lat_original"], satinfo["lon_original"]
@@ -23,7 +35,18 @@ def start_coordinate_correction(points_path: Path, satinfo: dict, proj_metadata:
         return lat, lon
 
 
-def coordinate_correction_matrix(filename, projection_metadata, correction_type):
+def coordinate_correction_matrix(filename: Path, projection_metadata: dict, correction_type: Literal["affine", "homography",
+                                "polynomial", "lstsq"]) -> dict:
+    """
+    Generate the coordinate correction matrix
+
+    :param filename: Absolute path for the .points file generated with QGIS
+    :param projection_metadata: Dictionary containing projection metadata of hypso capture
+    :param correction_type: String indicating the correction type. Options are "affine", "homography", polynomial"
+        and "lstsq"
+
+    :return: Dictionary with the correction matrix
+    """
     # Hypso CRS
     inproj = projection_metadata['inproj']
     # Convert WKT projection information into a cartopy projection
@@ -142,7 +165,20 @@ def coordinate_correction_matrix(filename, projection_metadata, correction_type)
     return {correction_type: M}  # lat_coeff, lon_coeff
 
 
-def coordinate_correction(point_file, projection_metadata, originalLat, originalLon, correction_type):
+def coordinate_correction(point_file: Path, projection_metadata: dict, originalLat: np.ndarray, originalLon: np.ndarray,
+                          correction_type: Literal["affine", "homography", "polynomial", "lstsq"]) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Correct the coordinates of the latitude and longitude 2D arrays
+
+    :param point_file: Absolute path to the .points file generated with QGIS
+    :param projection_metadata: Dictionary containing the projection information of the capture
+    :param originalLat: 2D latitude array
+    :param originalLon: 2D longitude array
+    :param correction_type: String indicate the correction type. Options are "affine", "homography", polynomial"
+        and "lstsq"
+
+    :return: The corrected latitude 2D array and the corrected longitude 2D array
+    """
     # Use Utility File to Extract M
     M_dict = coordinate_correction_matrix(point_file, projection_metadata, correction_type)
     M_type = list(M_dict.keys())[0]
@@ -201,4 +237,3 @@ def coordinate_correction(point_file, projection_metadata, originalLat, original
             finalLon[i, j] = modifiedLon
 
     return finalLat, finalLon
-

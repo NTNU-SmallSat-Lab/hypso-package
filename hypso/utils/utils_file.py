@@ -8,14 +8,16 @@ from importlib.resources import files
 from math import asin, cos, radians, sin, sqrt
 import progressbar
 import pandas as pd
+from typing import Literal, Union, Tuple
+from numbers import Number
 
 
-def flatten_dict(nested_dict:dict) -> dict:
+def flatten_dict(nested_dict: dict) -> dict:
     """
     Flatten a nested dictionary into a single level dictionary
 
     :param nested_dict: Nested dictionary to flatten
-    
+
     :return: Single level dictionary with keys corresponding to the previous nested levels
     """
     res = {}
@@ -31,7 +33,15 @@ def flatten_dict(nested_dict:dict) -> dict:
     return res
 
 
-def nested_dict_to_df(values_dict):
+def nested_dict_to_df(values_dict: dict) -> pd.DataFrame:
+    """
+    Convert nested dictionary to DataFrame.
+
+    :param values_dict: Nested dictionary
+
+    :return: Dataframe where the nested level are displayed as a column.
+    """
+
     flat_dict = flatten_dict(values_dict)
     df = pd.DataFrame.from_dict(flat_dict, orient="index")
     # df.index = pd.MultiIndex.from_tuples(df.index)
@@ -40,7 +50,16 @@ def nested_dict_to_df(values_dict):
     return df
 
 
-def compare_netcdf_files(file1, file2):
+def compare_netcdf_files(file1: str, file2: str) -> pd.DataFrame:
+    """
+    Compare two .nc files and returns a pandas DataFrame where each attribute, variable and values are compared side
+    by side.
+
+    :param file1: Absolute path to file 1
+    :param file2: Absolute path to file 2
+
+    :return: Dataframe with the compared characteristics
+    """
     file1 = Path(file1).absolute()
     file2 = Path(file2).absolute()
     file1_structure = navigate_recursive_nc(nc.Dataset(str(file1), format="NETCDF4"))
@@ -87,31 +106,30 @@ def compare_netcdf_files(file1, file2):
     return merged
 
 
-def HSI2RGB(wY, HSI, d=65, threshold=0.002):
-    # wY: wavelengths in nm
-    # Y : HSI as a (#pixels x #bands) matrix,
-    # dims: x & y dimension of image
-    # d: 50, 55, 65, 75, determines the illuminant used, if in doubt use d65
-    # thresholdRGB : True if thesholding should be done to increase contrast
-    #
-    #
-    # If you use this method, please cite the following paper:
-    #  M. Magnusson, J. Sigurdsson, S. E. Armansson, M. O. Ulfarsson,
-    #  H. Deborah and J. R. Sveinsson,
-    #  "Creating RGB Images from Hyperspectral Images Using a Color Matching Function",
-    #  IEEE International Geoscience and Remote Sensing Symposium, Virtual Symposium, 2020
-    #
-    #  @INPROCEEDINGS{hsi2rgb,
-    #  author={M. {Magnusson} and J. {Sigurdsson} and S. E. {Armansson}
-    #  and M. O. {Ulfarsson} and H. {Deborah} and J. R. {Sveinsson}},
-    #  booktitle={IEEE International Geoscience and Remote Sensing Symposium},
-    #  title={Creating {RGB} Images from Hyperspectral Images using a Color Matching Function},
-    #  year={2020}, volume={}, number={}, pages={}}
-    #
-    # Paper is available at
-    # https://www.researchgate.net/profile/Jakob_Sigurdsson
-    #
-    #
+def HSI2RGB(wY, HSI, d: Literal[50, 55, 65, 75] = 65, threshold=0.002) -> np.ndarray:
+    """
+    Calculate a colore accurate RGB image with HSI values. Original function used for the paper
+    "Creating RGB Images from Hyperspectral Images Using a Color Matching Function" by
+    M. Magnusson, J. Sigurdsson, S. E. Armansson, M. O. Ulfarsson, H. Deborah and J. R. Sveinsson,
+
+    If you use this method, please cite the following paper:
+    @INPROCEEDINGS{hsi2rgb,
+    author={M. {Magnusson} and J. {Sigurdsson} and S. E. {Armansson}
+    and M. O. {Ulfarsson} and H. {Deborah} and J. R. {Sveinsson}},
+    booktitle={IEEE International Geoscience and Remote Sensing Symposium},
+    title={Creating {RGB} Images from Hyperspectral Images using a Color Matching Function},
+    year={2020}, volume={}, number={}, pages={}}
+
+    Paper is available at
+    https://www.researchgate.net/profile/Jakob_Sigurdsson
+
+    :param wY: Wavelengths in nm
+    :param HSI: Hyperspectral Image as a (#pixels x #bands) matrix,
+    :param d: Determines the illuminant used, if in doubt use d65. Values of  50, 55, 65, 75
+    :param threshold: True if RGB thesholding should be done to increase contrast
+
+    :return: RGB Image array
+    """
 
     (ydim, xdim, zdim) = HSI.shape
     HSI = np.reshape(HSI, [-1, zdim]) / np.nanmax(HSI)
@@ -211,7 +229,11 @@ def HSI2RGB(wY, HSI, d=65, threshold=0.002):
     return np.dstack((R, G, B))
 
 
-class MyProgressBar():
+class MyProgressBar:
+    """
+    Class used to display a progress bar on the screen for bulk downloading.
+    """
+
     def __init__(self, text_prefix):
         self.pbar = None
         self.text_prefix = text_prefix
@@ -232,7 +254,19 @@ class MyProgressBar():
             self.pbar.finish()
 
 
-def find_all_files(path: Path, str_in_file: str, suffix=None, type="partial"):
+def find_all_files(path: Path, str_in_file: str, suffix: Union[str, None] = None,
+                   type: Literal["partial", "exact"] = "partial") -> list:
+    """
+    Find recursively all files in a specified directory.
+
+    :param path: Directory path on which to look for files.
+    :param str_in_file: Check if this string is in the file name
+    :param suffix: Check if file extension matches the suffix provided
+    :param type: Type of comparisson of "str_in_file". If "partial", then "str_in_file" will be checked to be in the filename,
+        otherwise "exact" will check if the filename matches exactly the string provided.
+
+    :return: List of file paths
+    """
     all_files = []
     for subpath in path.rglob("*"):
         if subpath.is_file():
@@ -255,7 +289,19 @@ def find_all_files(path: Path, str_in_file: str, suffix=None, type="partial"):
     return all_files
 
 
-def find_file(path: Path, str_in_file: str, suffix=None, type="partial"):
+def find_file(path: Path, str_in_file: str, suffix: Union[str, None] = None,
+              type: Literal["partial", "exact"] = "partial") -> Union[Path, None]:
+    """
+    Find recursively a single file (or first occurance) in a specified directory.
+
+    :param path: Directory path on which to look for files.
+    :param str_in_file: Check if this string is in the file name
+    :param suffix: Check if file extension matches the suffix provided
+    :param type: Type of comparisson of "str_in_file". If "partial", then "str_in_file" will be checked to be in the filename,
+        otherwise "exact" will check if the filename matches exactly the string provided.
+
+    :return: Path of the file or None if no file found
+    """
     for subpath in path.rglob("*"):
         if subpath.is_file():
             if type == "partial":
@@ -277,7 +323,18 @@ def find_file(path: Path, str_in_file: str, suffix=None, type="partial"):
     return None
 
 
-def find_dir(path: Path, str_in_dir: str, type="partial"):
+def find_dir(path: Path, str_in_dir: str, type: Literal["partial", "exact"] = "partial") -> Union[Path, None]:
+    """
+    Find recursively a directory (or first occurance) in a specified directory.
+
+    :param path: Directory path on which to look for files.
+    :param str_in_dir: Check if this string is in the directory name
+    :param type: Type of comparisson of "str_in_file". If "partial", then "str_in_file" will be checked to be in the filename,
+        otherwise "exact" will check if the filename matches exactly the string provided.
+
+    :return: Path of the file or None if no file found
+    """
+
     for subpath in path.rglob("*"):
         if subpath.is_dir():
             if type == "partial":
@@ -291,6 +348,12 @@ def find_dir(path: Path, str_in_dir: str, type="partial"):
 
 
 def is_integer_num(n) -> bool:
+    """
+    Check if a number is an integer
+
+    :param n: Number to check
+    :return: Boolean value indicating whether or not the number is an integer
+    """
     if isinstance(n, int):
         return True
     if isinstance(n, float):
@@ -298,7 +361,17 @@ def is_integer_num(n) -> bool:
     return False
 
 
-def navigate_recursive_nc(nc_file, path='', depth=0):
+def navigate_recursive_nc(nc_file: nc.Dataset, path: str = '', depth: int = 0) -> dict:
+    """
+    Navigate recursively the structure of a .nc file and return the dictionary structure. The function will call
+    itself to navigate recursively.
+
+    :param nc_file: Open .nc Dataset file
+    :param path: Relative path to append to recursivness
+    :param depth: Depth at which we are navigating
+
+    :return: Dictionary of dictionaries containing the structure of the .nc file
+    """
     label = path + nc_file.name
     tree_structure = {
         label: {}
@@ -354,11 +427,24 @@ def navigate_recursive_nc(nc_file, path='', depth=0):
     return tree_structure
 
 
-def print_nc(nc_file_path):
+def print_nc(nc_file_path: str) -> None:
+    """
+    Print the contents of a .nc file
+    :param nc_file_path: Absolute path to a .nc file
+
+    :return: No return
+    """
     recursive_print_nc(nc.Dataset(nc_file_path, format="NETCDF4"))
 
 
-def list_array_1d_to_string(arr):
+def list_array_1d_to_string(arr: Union[np.ndarray, list, tuple]) -> Union[tuple, str, Number]:
+    """
+    Converts 1D numpy array to string
+
+    :param arr: 1D numpy array of numbers or strings to convert to string
+
+    :return: String of combined values or the same value if not a list
+    """
     var_str = ''
     end_var_str = ''
     if isinstance(arr, np.ndarray) or isinstance(arr, list):
@@ -379,7 +465,18 @@ def list_array_1d_to_string(arr):
     return var_str
 
 
-def recursive_print_nc(nc_file, path='', depth=0):
+def recursive_print_nc(nc_file: nc.Dataset, path: str = '', depth: int = 0) -> None:
+    """
+    Navigate recursively the structure of a .nc file and print the structure. The function will call
+    itself to navigate recursively.
+
+    :param nc_file: Open .nc Dataset file
+    :param path: Relative path to append to recursivness
+    :param depth: Depth at which we are navigating
+
+    :return: No return.
+    """
+
     indent = ''
     for i in range(depth):
         indent += '  '
@@ -448,34 +545,32 @@ def recursive_print_nc(nc_file, path='', depth=0):
         recursive_print_nc(nc_file.groups[g], path=newname, depth=depth + 1)
 
 
-def pseudo_convolution(cube, watermask, center=[], size=5):
-    total_spectra = None
+def find_closest_water_lat_lon_match(sat_obj, target_lat: float, target_lon: float, water_pixel_filter:bool=False) -> Tuple[int, int, float]:
+    """
+    Find the closest Image lat and lon to the targat specificed that is also a water pixel.
 
-    start_row = center[0] - size // 2
-    start_col = center[1] - size // 2
-    for i in range(size):
-        current_row = start_row + (i + 1)
-        for j in range(size):
-            current_col = start_col + (j + 1)
-            if watermask[current_row, current_col] == True:
-                if total_spectra is None:
-                    total_spectra = cube[current_row, current_col, :]
-                else:
-                    total_spectra = np.column_stack((total_spectra, cube[current_row, current_col, :]))
+    :param water_pixel_filter: If true, the closest pixel should also be classified as water pixel.
+    :param sat_obj: Hypso satellite object
+    :param target_lat: Target latitude
+    :param target_lon: Target longitude
 
-    if len(total_spectra.shape) == 1:
-        return total_spectra
+    :return: Row, col and dist_to_target in km from the closes water pixel
+    """
 
-    else:
-        return np.mean(total_spectra, axis=1)
+    lat_2d = sat_obj.info["lat"]
+    lon_2d = sat_obj.info["lon"]
+    waterMask = sat_obj.waterMask
+    row = 0
+    col = 0
+    dist_to_target_from_sat = 0.0
 
-
-def find_closest_water_lat_lon_match(lat_2d: np.array, lon_2d: np.array, waterMask: np.array, target_lat, target_lon):
     if np.nanmax(lat_2d) > target_lat > np.nanmin(lat_2d) and np.nanmax(lon_2d) > target_lon > np.nanmin(lon_2d):
 
-        water_pix = waterMask.flatten()
-
-        coordinates = [c for c in zip(lat_2d.flatten()[water_pix], lon_2d.flatten()[water_pix])]
+        if water_pixel_filter:
+            water_pix_mask = waterMask.flatten()
+            coordinates = [c for c in zip(lat_2d.flatten()[water_pix_mask], lon_2d.flatten()[water_pix_mask])]
+        else:
+            coordinates = [c for c in zip(lat_2d.flatten(), lon_2d.flatten())]
 
         xy = (target_lat, target_lon)
 
@@ -515,9 +610,17 @@ def find_closest_water_lat_lon_match(lat_2d: np.array, lon_2d: np.array, waterMa
 
 def haversine(lon1, lat1, lon2, lat2):
     """
-    Calculate the great circle distance between two points
-    on the earth (specified in decimal degrees)
+    Calculate the great circle distance between two points on the earth (specified in decimal degrees).
+    Source: https://stackoverflow.com/a/4913653
+
+    :param lon1: Longitude of first point
+    :param lat1: Latitude of first point
+    :param lon2: Longitude of second point
+    :param lat2: Latitude of second point
+
+    :return: Distance in km between two points on earth
     """
+
     # convert decimal degrees to radians
     lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
     # haversine formula

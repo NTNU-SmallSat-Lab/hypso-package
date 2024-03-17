@@ -1,15 +1,27 @@
-import matplotlib.pyplot as plt
 import numpy as np
 from .base import MeanDEM
 import dateutil.parser
 import Py6S
 from tqdm import tqdm
 import math
+import datetime
+from typing import Tuple
 
-def BasicParameters(wavelengths, hypercube_L1, hypso_info, lat_2d_array, lon_2d_array, time_capture):
-    '''
+
+def BasicParameters(wavelengths: np.ndarray, hypercube_L1: np.ndarray, hypso_info: dict, lat_2d_array: np.ndarray,
+                    lon_2d_array: np.ndarray, time_capture: datetime) -> dict:
+    """
     Get the parameters you need for 6s atmospheric correction
-    '''
+
+    :param wavelengths: Wavelengths corresponding to the spectral image
+    :param hypercube_L1: Hypercube of the spectral image L1B
+    :param hypso_info: Dictionary containing the information of the spectral image
+    :param lat_2d_array: 2D latitude array of the spectral image
+    :param lon_2d_array: 2D longitude array of the spectral image
+    :param time_capture: Time of the capture
+
+    :return: Dictionary of the Basic Paramters for the PY6SV1 correction method
+    """
 
     # -------------------------------------------------
     #               Solar Parameters
@@ -277,12 +289,21 @@ def BasicParameters(wavelengths, hypercube_L1, hypso_info, lat_2d_array, lon_2d_
 
     return SixsParameters
 
-def clip_srf(single_wl,single_srf):
+
+def clip_srf(single_wl, single_srf) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Trim and clip Spectral Response Function (SRF) to the 6SV1 requirements
+
+    :param single_wl: Wavelengths for the SRF
+    :param single_srf: Single band SRF [0, 1]
+
+    :return: Returns the wavelength of the SRF adjusted for 6SV1 and the SRF for the 6SV1 model [0, 1]
+    """
     # Interval of 2.5nm from Py6S requirements
     delta = 2.5 / 1000  # nm to um
 
     # From fwhm to sigma
-    fwhm = 3.33 / 1000 # nm to um (based on studies for Hypso)
+    fwhm = 3.33 / 1000  # nm to um (based on studies for Hypso)
     sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
 
     center_lambda_arg = np.argmax(single_srf)
@@ -311,10 +332,17 @@ def clip_srf(single_wl,single_srf):
 
 
 # 6s Atmospheric correction
-def AtmosphericCorrection(BandId, SixsInputParameter, py6s_dict, srf):
+def AtmosphericCorrection(BandId: int, SixsInputParameter: dict, srf: list) -> dict:
     """
-    Call the 6s model and assign values to the parameters to obtain the atmospheric correction parameters
+    Call the 6s model and assign values to the parameters to obtain the atmospheric correction coefficients
+
+    :param BandId: ID of the band being corrected
+    :param SixsInputParameter: Basic Parmeters used for the correction
+    :param srf: Spectral response functions for Hypso
+
+    :return:
     """
+
     # 6S Models
     s = Py6S.SixS()
 
@@ -340,15 +368,15 @@ def AtmosphericCorrection(BandId, SixsInputParameter, py6s_dict, srf):
     # Aerosol Profile
     s.aero_profile = SixsInputParameter["AeroProfile"]  # Aerosol Type (Maritime Here)
 
-    if py6s_dict is None:
+    if 'aot550' in SixsInputParameter.keys():
+        s.aot550 = SixsInputParameter['aot550']
+        # Update AOT and Aero_profile if data provided
+    elif 'aeronet' in SixsInputParameter.keys():
+        s = Py6S.SixSHelpers.Aeronet.import_aeronet_data(s, SixsInputParameter['aeronet'], SixsInputParameter['time'])
+    else:
         # Use Default Values
         s.aot550 = 0.14497  # Value checked from website for scene
-    else:
-        if 'aot550' in py6s_dict.keys():
-            s.aot550 = py6s_dict['aot550']
-            # Update AOT and Aero_profile if data provided
-        elif 'aeronet' in py6s_dict.keys():
-            s = Py6S.SixSHelpers.Aeronet.import_aeronet_data(s, py6s_dict['aeronet'], SixsInputParameter['time'])
+
 
     # Study area altitude, satellite sensor orbit altitude
     s.altitudes = Py6S.Altitudes()
@@ -361,7 +389,7 @@ def AtmosphericCorrection(BandId, SixsInputParameter, py6s_dict, srf):
     # for hypso a Gaussian of FWHM of 5nm is assumed
 
     # center_lambda_nm = SixsInputParameter['wavelengths'][BandId]
-    current_band_wl, current_band_srf = srf[BandId] # wl ouput in um
+    current_band_wl, current_band_srf = srf[BandId]  # wl ouput in um
     lambda_py6s, srf = clip_srf(single_wl=current_band_wl, single_srf=current_band_srf)
     s.wavelength = Py6S.Wavelength(start_wavelength=lambda_py6s[0], end_wavelength=lambda_py6s[-1], filter=srf)
 
@@ -416,16 +444,20 @@ def AtmosphericCorrection(BandId, SixsInputParameter, py6s_dict, srf):
     return results_dict
 
 
+def get_surface_reflectance(radiance_band: np.ndarray, py6s_results: dict) -> np.ndarray:
+    """
+    Calculate surface reflectance from at-sensor radiance given waveband name and the 6SV1 coefficients
 
-def get_surface_reflectance(radiance_band, py6s_results):
+    :param radiance_band: Radiance band to calculate surface reflectance (2D array)
+    :param py6s_results: Dictionary containing the results of the correction
+
+    :return: Surface reflectance for a single band
     """
-    Calculate surface reflectance from at-sensor radiance given waveband name
-    """
+
     Lp = py6s_results['path_radiance']
     tau = py6s_results['tau']
     Edir = py6s_results['direct_solar_irradiance']
     Edif = py6s_results['diffuse_solar_irradiance']
-
 
     ref = np.subtract(radiance_band, Lp) * math.pi / (tau * (Edir + Edif))
     # ref = radiance_band.subtract(Lp).multiply(math.pi).divide(tau*(Edir+Edif))
@@ -433,8 +465,15 @@ def get_surface_reflectance(radiance_band, py6s_results):
     return ref
 
 
+def get_corrected_radiance(radiance_band: np.ndarray, py6s_results) -> np.ndarray:
+    """
+    Alternative NOT USED method to correct based on the coefficients a, b and c
 
-def get_corrected_radiance(radiance_band, py6s_results):
+    :param radiance_band: Radiance band to calculate surface reflectance (2D array)
+    :param py6s_results: Dictionary containing the results of the correction
+
+    :return: Surface reflectance for a single band
+    """
     coeff_a = py6s_results['coeff_a']
     coeff_b = py6s_results['coeff_b']
     coeff_c = py6s_results['coeff_c']
@@ -446,7 +485,22 @@ def get_corrected_radiance(radiance_band, py6s_results):
     return radiance_corr_band
 
 
-def run_py6s(wavelengths, hypercube_L1, hypso_info, lat_2d_array, lon_2d_array, py6s_dict, time_capture, srf):
+def run_py6s(wavelengths: np.ndarray, hypercube_L1: np.ndarray, hypso_info: dict, lat_2d_array: np.ndarray,
+             lon_2d_array: np.ndarray, py6s_dict: dict, time_capture: datetime, srf: list) -> np.ndarray:
+    """
+    Run the PY6S atmospheric correction on the Hypso spectral image
+
+    :param wavelengths: Wavelengths corresponding to the spectral image
+    :param hypercube_L1: Hypercube of the spectral image L1B
+    :param hypso_info: Dictionary containing the information of the spectral image
+    :param lat_2d_array: 2D latitude array of the spectral image
+    :param lon_2d_array: 2D longitude array of the spectral image
+    :param py6s_dict: Dictionary containing the PY6S information for atmospheric correction
+    :param time_capture: Time of the capture
+    :param srf: Spectral response function for each of the 120 bands
+
+    :return: Return 3-channel surface reflectance spectral image
+    """
     # Search for Full Geotiff
     # TODO; At least for now, always do the atmospheric correction
     # potential_L2 = find_file(hypso_info["top_folder_name"],"-full_L2",".tif")
@@ -459,10 +513,13 @@ def run_py6s(wavelengths, hypercube_L1, hypso_info, lat_2d_array, lon_2d_array, 
 
     # Original units mW  (m^{-2} sr^{-1} nm^{-1})
     # hypercube_L1 = hypercube_L1 / 1000 # mW to W -> W  (m^{-2} sr^{-1} nm^{-1})
-    #hypercube_L1 = hypercube_L1 / 0.001
+    # hypercube_L1 = hypercube_L1 / 0.001
 
     init_parameters = BasicParameters(wavelengths, hypercube_L1,
                                       hypso_info, lat_2d_array, lon_2d_array, time_capture)
+
+    # Combining two dictionaries into init_parameters
+    init_parameters.update(py6s_dict)
 
     # Get Pre-Correction Cube
     radiance_hypercube = init_parameters['radiance_cube']
@@ -470,14 +527,14 @@ def run_py6s(wavelengths, hypercube_L1, hypso_info, lat_2d_array, lon_2d_array, 
 
     for BandId in tqdm(range(120)):
         # Atmospheric correction for Zenith and Azimuth Band Values
-        py6s_results = AtmosphericCorrection(BandId, init_parameters, py6s_dict,srf)
+        py6s_results = AtmosphericCorrection(BandId, init_parameters, srf)
 
         # Get Radiance Uncorrected Band
         uncorrected_radiance_band = radiance_hypercube[:, :, BandId]
 
         # Get Radiance-Corrected Band (We don't use it but it's an option)
         # I'm not really sure what the coefficients used here do
-        #radiance_corr_band = get_corrected_radiance(uncorrected_radiance_band, py6s_results)
+        # radiance_corr_band = get_corrected_radiance(uncorrected_radiance_band, py6s_results)
 
         # Get surface reflectance of Band (Method with SRF)
         reflectance_band = get_surface_reflectance(uncorrected_radiance_band, py6s_results)

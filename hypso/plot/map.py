@@ -2,6 +2,7 @@
 import numpy as np
 import pyproj
 from matplotlib import colors
+from matplotlib.axes import Axes
 import warnings
 import matplotlib.pyplot as plt
 from matplotlib import ticker
@@ -10,13 +11,25 @@ from hypso.georeference import generate_rgb_geotiff
 # GIS
 import cartopy.crs as ccrs
 import cartopy.feature as cf
+from cartopy._epsg import _EPSGProjection
 
 from PIL import Image, ImageOps
+from typing import List, Tuple
 
 PLOTZOOM = 1.0
 
+from osgeo.osr import SpatialReference
 
-def axis_extent(lat, lon):
+
+def axis_extent(lat: np.ndarray, lon: np.ndarray) -> List[float]:
+    """
+    Calculate the axis extent of the capture using the latitude and longitude arrays
+
+    :param lat: 2D array of latitudes
+    :param lon: 2D array of longitudes
+
+    :return: List with the [lon_min, lon_max, lat_min, lat_max]
+    """
     # Transform Current lon and lat limits to another
     extent_lon_min = np.nanmin(lon)
     extent_lon_max = np.nanmax(lon)
@@ -27,7 +40,17 @@ def axis_extent(lat, lon):
     return [extent_lon_min, extent_lon_max, extent_lat_min, extent_lat_max]
 
 
-def image_extent(inproj_value, lat, lon):
+def image_extent(inproj_value: SpatialReference, lat: np.ndarray, lon: np.ndarray) -> Tuple[tuple, _EPSGProjection]:
+    """
+    Calculate the image extent of the capture using the latitude and longitude arrays to plot capture on a map.
+
+    :param inproj_value: Spatial reference projection value
+    :param lat: 2D array of latitudes
+    :param lon: 2D array of longitudes
+
+    :return: Returns two values, the image extent of the capture transformed into an EPSG projection and the projection
+        into a cartopy projection
+    """
     # Convert WKT projection information into a cartopy projection
     projcs = inproj_value.GetAuthorityCode("PROJCS")
     projection_img = ccrs.epsg(projcs)
@@ -60,6 +83,14 @@ def image_extent(inproj_value, lat, lon):
 
 
 def tick_log_formatter(y, pos):
+    """
+    Matplotlib Image tick formatter
+
+    :param pos: Axis position
+    :param y: Y-axis object
+
+    :return: Formatted axis to log format
+    """
     # Find the number of decimal places required
     decimalplaces = int(np.maximum(-np.log10(y), 0))  # =0 for numbers >=1
     if decimalplaces == 0:
@@ -72,7 +103,18 @@ def tick_log_formatter(y, pos):
         return formatstring
 
 
-def get_cartopy_axis(satellite_obj, dpi_input):
+def get_cartopy_axis(satellite_obj, dpi_input: int) -> Tuple[
+    Axes, tuple[float, float, float, float], _EPSGProjection, np.ndarray, np.ndarray]:
+    """
+    Get cartopy axis adjusted to the projection of the Hypso capture focused on the map area defined by the latitude
+    and longitude arrays.
+
+    :param satellite_obj: Hypso satellite object
+    :param dpi_input: DPI Resolution for the plot
+
+    :return: Matplotlib axes object adjusted to the Hypso image, the image extent tuple, the project RPSG and the
+        latitude and longitude array.
+    """
     lat = satellite_obj.info["lat"]
     lon = satellite_obj.info["lon"]
 
@@ -122,7 +164,21 @@ def get_cartopy_axis(satellite_obj, dpi_input):
 
 
 def point_rgb_map(satellite_obj, plotTitle="RGB Image", dpi_input=450, patch_dict=None, r_plot=0.007,
-                  path_to_save=None):
+                  path_to_save=None) -> None:
+    """
+    Function to add points to overlay on the RGB Map of the Hypso image
+
+    :param satellite_obj: Hypso satellite object
+    :param plotTitle: Title for the plot
+    :param dpi_input: Resolution in DPI´s. Default 450.
+    :param patch_dict: Dictionary containing the location and color of the points to plot
+        ``{"Point 1":{"lat":60.7776, "lon":11.0895, "color":"red"},
+        "Point 2":{"lat":60.5, "lon":10.4, "color":"orange"}}``
+    :param r_plot: Radius of the plotted points. Default: 0.007.
+    :param path_to_save: Absolute Path to save the plot image.
+
+    :return: No return.
+    """
 
     # Check if projection geotiff exists, get data if needed
     check_projection_geotiff(satellite_obj)
@@ -157,7 +213,16 @@ def point_rgb_map(satellite_obj, plotTitle="RGB Image", dpi_input=450, patch_dic
         plt.show()
 
 
-def show_rgb_map(satellite_obj, plotTitle="RGB Image", dpi_input=450):
+def show_rgb_map(satellite_obj, plotTitle="RGB Image", dpi_input=450) -> None:
+    """
+    Show RGB overlay of the Hypso image on a map.
+
+    :param satellite_obj: Hypso satellite object
+    :param plotTitle: Title for the plot
+    :param dpi_input: Resolution in DPI´s. Default 450.
+
+    :return: No return.
+    """
     # Check if projection geotiff exists, get data if needed
     check_projection_geotiff(satellite_obj)
 
@@ -179,7 +244,21 @@ def show_rgb_map(satellite_obj, plotTitle="RGB Image", dpi_input=450):
 
 
 def plot_array_overlay(satellite_obj, plot_array, plotTitle="2D Array",
-                       cbar_title=" Chlorophyll Concentration [mg m^-3]", dpi_input=450, min_value=0.01, max_value=100):
+                       cbar_title=" Chlorophyll Concentration [mg m^-3]", dpi_input=450, min_value=0.01,
+                       max_value=100) -> None:
+    """
+    Plot a 2D array overlayed on a RGB Hypso Capture on a Map.
+
+    :param satellite_obj: Hypso satellite object
+    :param plot_array: 2D array to plot. Should be of the same size of the Hypso capture Lat/Lon arrays
+    :param plotTitle: Tile for the plot
+    :param cbar_title: Tile for the colorbar
+    :param dpi_input: Resolution in DPI´s. Default 450.
+    :param min_value: Minimum value for the Colorbar
+    :param max_value: Maximum value for the Colorbar
+
+    :return: No return.
+    """
     MAXARRAY = max_value
     MINARRAY = min_value
 
@@ -238,13 +317,12 @@ def plot_array_overlay(satellite_obj, plot_array, plotTitle="2D Array",
 
 
 def auto_adjust_img(img: np.ndarray) -> np.ndarray:
-    """ Adjust image contrast using histogram equalization.
+    """
+    Automatically adjust the image contracts using histogram equalization.
 
-    Args:
-        img: Image to adjust.
+    :param img: Image to adjust as a numpy array.
 
-    Returns:
-        Adjusted image.
+    :return: Adjusted image as a numpy array.
     """
 
     img = Image.fromarray(np.uint8(img * 255 / np.max(img)))
@@ -277,37 +355,44 @@ def auto_adjust_img(img: np.ndarray) -> np.ndarray:
     return np.array(pil_image) / 255.0
 
 
-def get_rgb(sat_obj) -> Image:
+def get_rgb(sat_obj, R_wl=650, G_wl=550, B_wl=450) -> np.ndarray:
     """
-    Write the RGB image.
+    Write an RGB Image from specified Bands. Optional parameters are
 
-    Args:
-        path_to_save (str): The path to save the RGB image.
-        R_wl (float, optional): The wavelength for the red channel. Defaults to 650.
-        G_wl (float, optional): The wavelength for the green channel. Defaults to 550.
-        B_wl (float, optional): The wavelength for the blue channel. Defaults to 450.
-        :param sat_obj:
+    :param R_wl: The wavelength for the red channel. Defaults to 650.
+    :param G_wl: The wavelength for the green channel. Defaults to 550.
+    :param B_wl: The wavelength for the blue channel. Defaults to 450.
+    :param sat_obj: Hypso satellite object
+
+    :return: PIL Image object
     """
 
-    # R = np.argmin(abs(sat_obj.spectral_coefficients - R_wl))
-    # G = np.argmin(abs(sat_obj.spectral_coefficients - G_wl))
-    # B = np.argmin(abs(sat_obj.spectral_coefficients - B_wl))
+    # Option 1) Use specific bands -------------------------------------
+    R = np.argmin(abs(sat_obj.spectral_coefficients - R_wl))
+    G = np.argmin(abs(sat_obj.spectral_coefficients - G_wl))
+    B = np.argmin(abs(sat_obj.spectral_coefficients - B_wl))
 
     # get the rgb image
-    # rgb = sat_obj.l1b_cube[:, :, [R, G, B]]
-    # rgb_img = auto_adjust_img(rgb)
+    rgb = sat_obj.l1b_cube[:, :, [R, G, B]]
+    rgb_img = auto_adjust_img(rgb)
+
+    # Option 2) Use RGBA from the RGBA GeoTiff -------------------------
 
     rgb_array = sat_obj.projection_metadata["rgba_data"][:3, :, :]
-    # plot_rgb = create_rgb(sat_obj=satellite_obj)
-
     plot_rgb = np.ma.masked_where(rgb_array == 0, rgb_array)
-
     rgb_img = np.rot90(plot_rgb.transpose((1, 2, 0)), k=2)
 
     return rgb_img
 
 
-def check_projection_geotiff(satobj):
+def check_projection_geotiff(satobj) -> None:
+    """
+    Check and generate the projection metadata from GeoTiff. Generates GeoTiff if none is found.
+
+    :param satobj: Hypso satellite object
+
+    :return:
+    """
     # Refresh the Projection
     satobj.find_geotiffs()
 
@@ -317,8 +402,15 @@ def check_projection_geotiff(satobj):
     satobj.projection_metadata = satobj.get_projection_metadata()
 
 
-def write_rgb_to_png(sat_obj, path_to_save: str) -> Image:
+def write_rgb_to_png(sat_obj, path_to_save: str) -> None:
+    """
+    Write the RGB image to a .png file
 
+    :param sat_obj: Hypso Satellite object
+    :param path_to_save: Path to save the .png image. Should include the file extension.
+
+    :return: No return.
+    """
     # Check if projection geotiff exists, get data if needed
     check_projection_geotiff(sat_obj)
 

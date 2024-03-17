@@ -8,27 +8,27 @@ from pathlib import Path
 from dateutil import parser
 import netCDF4 as nc
 import pyproj as prj
-from .calibration import crop_and_bin_matrix, calibrate_cube, get_coefficients_from_dict, get_coefficients_from_file, \
+from hypso.calibration import calibrate_cube, get_coefficients_from_dict, get_coefficients_from_file, \
     smile_correct_cube, destriping_correct_cube
-from .georeference import start_coordinate_correction, generate_full_geotiff, generate_rgb_geotiff
-from .reading import load_nc
+from hypso.georeference import start_coordinate_correction, generate_full_geotiff, generate_rgb_geotiff
+from hypso.reading import load_nc
 from hypso.utils import find_dir, find_file, find_all_files
-from .atmospheric import run_py6s, run_acolite
+from hypso.atmospheric import run_py6s, run_acolite
+from typing import Literal, Union
 
 EXPERIMENTAL_FEATURES = True
 
 
-def set_or_create_attr(var, attr_name, attr_value):
-    if attr_name in var.ncattrs():
-        var.setncattr(attr_name, attr_value)
-        return
-    var.UnusedNameAttribute = attr_value
-    var.renameAttribute("UnusedNameAttribute", attr_name)
-    return
-
-
 class Hypso:
-    def __init__(self, hypso_path, points_path=None) -> None:
+    def __init__(self, hypso_path: str, points_path: Union[str, None] = None) -> None:
+        """
+        Initialization of HYPSO Class.
+
+        :param hypso_path: Absolute path to "L1a.nc" file
+        :param points_path: Absolute path to the corresponding ".points" files generated with QGIS for manual geo
+            referencing. (Optional. Default=None)
+
+        """
         self.projection_metadata = None
         self.DEBUG = False
         self.spatialDim = (956, 684)  # 1092 x variable
@@ -43,17 +43,17 @@ class Hypso:
         if points_path is not None:
             self.pointsPath = Path(points_path)
         else:
-            self.pointsPath = points_path
+            self.pointsPath = None
 
         # Make absolute path
-        hypso_path = Path(hypso_path).absolute()
+        self.hypso_path = Path(hypso_path).absolute()
 
         # Check if file or directory passed
-        if hypso_path.suffix == '.nc':
+        if self.hypso_path.suffix == '.nc':
             # Obtain metadata from files
-            self.info, self.rawcube, self.spatialDim = load_nc(hypso_path, self.standardDimensions)
+            self.info, self.rawcube, self.spatialDim = load_nc(self.hypso_path, self.standardDimensions)
             self.info["top_folder_name"] = self.info["tmp_dir"]
-            self.info["nc_file"] = hypso_path
+            self.info["nc_file"] = self.hypso_path
         else:
             raise Exception("Incorrect HYPSO Path. Only .nc files supported")
 
@@ -72,12 +72,15 @@ class Hypso:
         self.l1b_cube = self.get_calibrated_and_corrected_cube()
 
         # Create L1B .nc File
-        self.create_l1b_nc_file(hypso_path)  # Input for ACOLITE
+        self.create_l1b_nc_file()  # Input for ACOLITE
 
         self.l2a_cube = self.find_existing_l2_cube()
 
         # Generated afterwards
         self.waterMask = None
+
+        # To store Chlorophyll estimation
+        self.chl = None
 
         # Get SRF
         self.srf = self.get_srf()
@@ -87,7 +90,7 @@ class Hypso:
         message_list = ["Getting Projection Data without lat/lon correction =========================================",
                         "Getting Projection Data with coordinate correction ========================================="]
         range_correction = 1
-        if points_path is not None:
+        if self.pointsPath is not None:
             range_correction = 2
         for i in range(range_correction):
             print(message_list[i])
@@ -99,7 +102,13 @@ class Hypso:
                 self.info["lat"], self.info["lon"] = start_coordinate_correction(
                     self.pointsPath, self.info, self.projection_metadata)
 
-    def get_srf(self):
+    def get_srf(self) -> list:
+        """
+        Get Spectral Response Functions (SRF) from HYPSO for each of the 120 bands. Theoretical FWHM of 3.33nm is
+        used to estimate Sigma for an assumed gaussian distribution of each SRF per band.
+
+        :return: List of SRF
+        """
         fwhm_nm = 3.33
         sigma_nm = fwhm_nm / (2 * np.sqrt(2 * np.log(2)))
 
@@ -146,8 +155,14 @@ class Hypso:
 
         return srf
 
-    # TODO: Replace L1A with the same but only the rawcube instead of L1B
-    def create_l1b_nc_file(self, hypso_nc_path):
+    def create_l1b_nc_file(self) -> None:
+        """
+        Create a l1b.nc file using the radiometrically corrected data. Same structure from the original l1a.nc file
+        is used. Required to run ACOLITE as the input is a radiometrically corrected .nc file.
+
+        :return: Nothing.
+        """
+        hypso_nc_path = self.hypso_path
         old_nc = nc.Dataset(hypso_nc_path, 'r', format='NETCDF4')
         new_path = hypso_nc_path
         new_path = str(new_path).replace('l1a.nc', 'l1b.nc')
@@ -622,17 +637,33 @@ class Hypso:
         # Update
         self.info["nc_file"] = Path(new_path)
 
-    def create_geotiff(self, product="L2", force_reload=False, atmos_dict=None):
+    def create_geotiff(self, product: Literal["L2-ACOLITE", "L2-6SV1", "L1C"] = "L2-ACOLITE", force_reload: bool = False,
+                       atmos_dict: Union[dict, None] = None) -> None:
+        """
+        Create a GeoTIFF file for either the L1C or L2 products.
 
-        if product != "L2" and product != "L1C":
+        :param product: Product to be used to create the GeoTIFF file
+        :param force_reload: When True, deletes the file if it exists and forces the generation of a new one.
+        :param atmos_dict: Dictionary of parameters if the L2 product is selected.\n\n
+            *** For ACOLITE *** \n
+            ``{'user':'alvarof', 'password':'nwz7xmu8dak.UDG9kqz'}`` \n
+            *(user and password from https://urs.earthdata.nasa.gov/profile)*\n
+            *** For 6SV1 **** \n
+            ``{'aot550': 0.0580000256}`` \n
+            *(AOT550 parameter gotten from: https://giovanni.gsfc.nasa.gov/giovanni/)*
+
+        :return: No return.
+        """
+
+        if product != "L2-ACOLITE" and product != "L2-6SV1" and product != "L1C":
             raise Exception("Wrong product")
 
-        if product == "L2" and atmos_dict is None:
+        if np.logical_or(product == "L2-ACOLITE", product == "L2-6SV1") and atmos_dict is None:
             raise Exception("Atmospheric Dictionary is needed")
 
         if force_reload:
             # Delete geotiff dir and generate a new rgba one
-            self.delete_geotiff_dir(self.info["top_folder_name"])
+            self.delete_geotiff_dir()
 
             # Generate RGB/RGBA Geotiff with Projection metadata and L1B
             generate_rgb_geotiff(self)
@@ -643,8 +674,8 @@ class Hypso:
         atmos_corrected_cube = None
         atmos_model = None
 
-        if product == "L2":
-            atmos_model = atmos_dict["model"].upper()
+        if "L2" in product:
+            atmos_model = product.split("-")[1].upper()
             try:
                 atmos_corrected_cube = self.l2a_cube[atmos_model]
             except Exception as err:
@@ -653,7 +684,6 @@ class Hypso:
                     # aot value: https://neo.gsfc.nasa.gov/view.php?datasetId=MYDAL2_D_AER_OD&date=2023-01-01
                     # alternative: https://giovanni.gsfc.nasa.gov/giovanni/
                     # atmos_dict = {
-                    #     'model': '6sv1',
                     #     'aot550': 0.01,
                     #     # 'aeronet': r"C:\Users\alvar\Downloads\070101_151231_Autilla.dubovik"
                     # }
@@ -679,9 +709,15 @@ class Hypso:
                 np.save(f, atmos_corrected_cube)
 
         # Generate RGBA/RGBA and Full Geotiff with corrected metadata and L2A if exists (if not L1B)
-        generate_full_geotiff(self, product=product, L2_key=atmos_model)
+        generate_full_geotiff(self, product=product)
 
-    def delete_geotiff_dir(self, top_folder_name: Path):
+    def delete_geotiff_dir(self) -> None:
+        """
+        Delete the GeoTiff directory. Used when force_reload is set to True in the "create_geotiff" method.
+
+        :return: No return.
+        """
+        top_folder_name = self.info["top_folder_name"]
         tiff_name = "geotiff"
         geotiff_dir = find_dir(top_folder_name, tiff_name)
 
@@ -694,7 +730,14 @@ class Hypso:
             import shutil
             shutil.rmtree(geotiff_dir, ignore_errors=True)
 
-    def find_geotiffs(self):
+    def find_geotiffs(self) -> None:
+        """
+        Recursively find GeoTiffs inside the "top_folder_name" directory in the "info" dictionary from the Hypso
+        class. GeoTiffs paths are stored in the Hypso object attribures, rgbGeotiffFilePath, l1cgeotiffFilePath and
+        l2geotiffFilePath.
+
+        :return: No return.
+        """
         top_folder_name = self.info["top_folder_name"]
         self.rgbGeotiffFilePath = find_file(top_folder_name, "rgba_8bit", ".tif")
         self.l1cgeotiffFilePath = find_file(top_folder_name, "-full_L1C", ".tif")
@@ -708,6 +751,14 @@ class Hypso:
             self.l2geotiffFilePath = L2_dict
 
     def find_existing_l2_cube(self) -> Union[dict, None]:
+        """
+        Recursively find the .npy files corresponding to previous runs of the atmospheric correction process. This saves
+        time by loading the .npy files instead of correction again.
+
+        :return: The dictionary containing all .npy containing atmospherically corrected BOA reflectance. Could be
+            either ACOLITE or 6SV1. Returns None if no .npy found.
+        """
+
         found_l2_npy = find_all_files(path=Path(self.info["top_folder_name"], "geotiff"),
                                       str_in_file="L2",
                                       suffix=".npy")
@@ -732,6 +783,12 @@ class Hypso:
         return dict_L2
 
     def get_projection_metadata(self) -> dict:
+        """
+        Returns the projection metadata dictionary. This is either extracted from the RGBA, L1 or L1C GeoTiff
+
+        :return: Dictionary containing the projection information for the capture.
+        """
+
         top_folder_name = self.info["top_folder_name"]
         current_project = {}
 
@@ -788,6 +845,13 @@ class Hypso:
         return current_project
 
     def get_calibration_coefficients_path(self) -> dict:
+        """
+        Get the absolute ath for the calibration coefficients included in the package. This includes radiometric,
+        smile and destriping correction.
+
+        :return: Dictionary with paths for radiometric, smil and destriping correction.
+        """
+
         csv_file_radiometric = None
         csv_file_smile = None
         csv_file_destriping = None
@@ -795,10 +859,12 @@ class Hypso:
         if self.info["capture_type"] == "custom":
 
             # Radiometric ---------------------------------
-            full_rad_coeff_file = files('hypso.calibration').joinpath(f'data/{"radiometric_calibration_matrix_HYPSO-1_full_v1.csv"}')
+            full_rad_coeff_file = files('hypso.calibration').joinpath(
+                f'data/{"radiometric_calibration_matrix_HYPSO-1_full_v1.csv"}')
 
             # Smile ---------------------------------
-            full_smile_coeff_file = files('hypso.calibration').joinpath(f'data/{"spectral_calibration_matrix_HYPSO-1_full_v1.csv"}')
+            full_smile_coeff_file = files('hypso.calibration').joinpath(
+                f'data/{"spectral_calibration_matrix_HYPSO-1_full_v1.csv"}')
 
             # Destriping (not available for custom)
             full_destripig_coeff_file = None
@@ -816,8 +882,6 @@ class Hypso:
             csv_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.csv"
             csv_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.csv"
 
-
-
         rad_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_radiometric}')
 
         smile_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_smile}')
@@ -830,35 +894,48 @@ class Hypso:
         return coeff_dict
 
     def get_spectral_coefficients_path(self) -> str:
+        """
+        Get the absolute path for the spectral coefficients (wavelengths).
+
+        :return: Absolute path for the spectral coefficients (wavelengths)
+        """
+
         csv_file = "spectral_bands_HYPSO-1_v1.csv"
         wl_file = files(
             'hypso.calibration').joinpath(f'data/{csv_file}')
+
         return str(wl_file)
 
-    def get_spectra(self, position_dict: dict, product: str = "L2", postype: str = 'coord', multiplier=1, filename=None,
-                    plot=True, L2_engine="6SV1"):
+    def get_spectra(self, position_dict: dict, product: Literal["L1C", "L2-6SV1", "L2-ACOLITE"] = "L1C",
+                    filename: Union[str, None] = None, plot: bool = True) -> Union[pd.DataFrame, None]:
+        """
+        Get spectra values from the indicated coordinated or pixel.
+
+        :param position_dict: Dictionary with the inputs required.\n
+            *** If Coordinates are Input *** \n
+            ``{"lat":59.5,"lon":10}``\n
+            *** If pixel location passed *** \n
+            ``{"X":200,"Y":83}``
+        :param product: Product of which to retrieve the spectral signal. Can either be "L1C", "L2-ACOLITE" or "L2-6SV1"
+        :param filename: Path on which to save the spectra as a .csv file. Filename should contain the ".csv" extension.
+            Example: "/Documents/export_signal.csv". If None, the spectral signal won´t be saved as a file.
+        :param plot: If True, the spectral signal will be plotted.
+
+        :return: None if the coordinates/pixel location are not withing the captured image. Otherwise, a pandas dataframe
+            containing the spectral signal is returned.
         """
 
-        :param position_dict:
-            [lat, lon] if postype=='coord'
-            [X, Y| if postype == 'pix'
-
-        :param product:
-        :param postype:
-            'coord' assumes latitude and longitude are passed.
-            'pix' receives X and Y values
-
-        :param multiplier:
-        :param filename:
-        :param plot:
-        :param L2_engine:
-
-        :return:
-        """
+        position_keys = list(position_dict.keys())
+        if "lat" in position_keys or "lon" in position_keys:
+            postype = "coord"
+        elif "X" in position_keys or "Y" in position_keys:
+            postype = "pix"
+        else:
+            raise Exception("Keys of ")
 
         # To Store data
         spectra_data = []
-
+        multiplier = 1  # Multiplier for the signal. In case signal is compressed differently.
         posX = None
         posY = None
         lat = None
@@ -876,23 +953,24 @@ class Hypso:
 
         path_to_read = None
         cols = []
-        if product == "L2":
-            if self.l2geotiffFilePath is None:
-                raise Exception("L2 product does not exist.")
-            elif self.l2geotiffFilePath is not None:
-                try:
-                    path_to_read = self.l2geotiffFilePath[L2_engine.upper()]
-                except:
-                    raise Exception(f"There is no L2 Geotiff for {L2_engine.upper()}")
-
-                cols = ["wl", "rrs"]
-
-        elif product == "L1C":
+        if product == "L1C":
             if self.l1cgeotiffFilePath is None:
                 raise Exception("L1C product does not exist.")
             elif self.l1cgeotiffFilePath is not None:
                 path_to_read = self.l1cgeotiffFilePath
                 cols = ["wl", "radiance"]
+        elif "L2" in product:
+            l2_engine = product.split("-")[1]
+            if self.l2geotiffFilePath is None:
+                raise Exception("L2 product does not exist.")
+            elif self.l2geotiffFilePath is not None:
+                try:
+                    path_to_read = self.l2geotiffFilePath[l2_engine.upper()]
+                except:
+                    raise Exception(f"There is no L2 Geotiff for {l2_engine.upper()}")
+
+                cols = ["wl", "rrs"]
+
         else:
             raise Exception("Wrong product type.")
 
@@ -978,7 +1056,7 @@ class Hypso:
             plt.plot(self.wavelengths, spectra_data)
             if product == "L1C":
                 plt.ylabel(self.units)
-            elif product == "L2":
+            elif "L2" in product:
                 plt.ylabel("Rrs [0,1]")
                 plt.ylim([0, 1])
             plt.xlabel("Wavelength (nm)")
@@ -994,7 +1072,7 @@ class Hypso:
             Assumes all coefficients has been adjusted to the frame size (cropped and
             binned), and that the data cube contains 12-bit values.
 
-        :return: Numpy Array with corrected cub
+        :return: Corrected Hyperspectral Cube as a Numpy Array
         """
 
         # Radiometric calibration
@@ -1012,7 +1090,12 @@ class Hypso:
 
         return cube_destriped
 
-    def toa_reflectance_from_toa_radiance(self):
+    def get_toa_reflectance(self) -> np.ndarray:
+        """
+        Convert Top Of Atmosphere (TOA) Radiance to TOA Reflectance.
+
+        :return: Array with TOA Reflectance.
+        """
         # Get Local variables
         srf = self.srf
         toa_radiance = self.l1b_cube
@@ -1062,3 +1145,22 @@ class Hypso:
             band_number = band_number + 1
 
         return toa_reflectance
+
+
+def set_or_create_attr(var, attr_name, attr_value) -> None:
+    """
+    Set or create an attribute on ".nc" file.
+
+    :param var: Variable on to which assign the attribute
+    :param attr_name: Attribute name
+    :param attr_value: Attribute value
+
+    :return: No return value
+    """
+
+    if attr_name in var.ncattrs():
+        var.setncattr(attr_name, attr_value)
+        return
+    var.UnusedNameAttribute = attr_value
+    var.renameAttribute("UnusedNameAttribute", attr_name)
+    return

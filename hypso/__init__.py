@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with hypso.  If not, see <http://www.gnu.org/licenses/>.
 
-"""A python package for satellite image processing
+"""
+A python package form NTNU HYPSO Hyperspectral Image Processing
 """
 
 __author__ = "Alvaro Flores <alvaro.f.romero@ntnu.no>"
