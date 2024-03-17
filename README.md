@@ -71,18 +71,20 @@ Used for:
 - Plot 2D array in same coordinates as image (to visualize results of any algorithm)
 ## Usage (see demo.ipynb for expanded version)
 ```
-from hypso import Satellite
+from hypso import Hypso
 
-# HYPSO Image Directory
-hypso_dir = r"/Users/alvaroflores/Documents/mjosa-06-15_0948Z"
+# Define HYPSO Image File and the .points from QGIS (if available)
+hypso_file_path="/Documents/mjosa_2023-06-15_0948Z-l1a.nc"
+points_path = "/Documents/mjosa_2023-06-15_0948Z-rgba_8bit.tif.points" #georeferencing
 
 # Create Satellite Object
-satobj = SatelliteClass(hypso_dir)
+# l1b.nc is Generated when loading l1a.nc for the first time
+satobj = Hypso(hypso_file_path, points_path=points_path)
 
 from hypso.plot import show_rgb_map
 
-# Show RGB on top of Map
-show_rgb_map(satobj, plotTitle="Mjosa 15-062023 09:48AM",dpi_input=250)
+# Show Image on top of map
+show_rgb_map(satobj, plotTitle="Mjøsa 15-062023 09:48AM",dpi_input=250)
 ```
 ![output](https://github.com/NTNU-SmallSat-Lab/hypso-package/assets/87340855/44f939bb-9435-4688-9194-6b08b172fc36)
 
