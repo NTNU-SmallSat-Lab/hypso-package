@@ -16,11 +16,15 @@ if conda installed:
 ```
 conda install -c conda-forge conda-libmamba-solver 
 conda config --set solver libmamba
+conda create -n hypsoenv python=3.9
+conda activate hypsoenv
 conda install -c conda-forge hypso
 ```
 
 if mamba installed:
 ```
+mamba create -n hypsoenv python=3.9
+mamba activate hypsoenv
 mamba install -c conda-forge hypso
 ```
 
