@@ -1,0 +1,41 @@
+:py:mod:`hypso.experimental.chlorophyll`
+========================================
+
+.. py:module:: hypso.experimental.chlorophyll
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   chl_algorithms/index.rst
+   estimate_chlorophyll_ml/index.rst
+   indices/index.rst
+   utilities_chl/index.rst
+
+
+Package Contents
+----------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.experimental.chlorophyll.start_chl_estimation
+
+
+
+.. py:function:: start_chl_estimation(sat_obj, model_path=None)
+
+   Estimates the chlorophyll using a trained ML Scikit-Learn Model
+
+   :param sat_obj: Hypso satellite object
+   :param model_path: Absolute path for the pre-trained Scikit-Learn model
+
+   :return: No return.
+
+

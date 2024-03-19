@@ -1,0 +1,7 @@
+hypso.atmospheric.atmospheric\_correction\_6sv1 module
+======================================================
+
+.. automodule:: hypso.atmospheric.atmospheric_correction_6sv1
+   :members:
+   :undoc-members:
+   :show-inheritance:

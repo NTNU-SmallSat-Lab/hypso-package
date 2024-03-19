@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hypso.georeference.georef.geometric module &mdash; Hypso Package 1.9.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Hypso Package
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Hypso Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">hypso.georeference.georef.geometric module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/hypso.georeference.georef.geometric.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-hypso.georeference.georef.geometric">
+<span id="hypso-georeference-georef-geometric-module"></span><h1>hypso.georeference.georef.geometric module<a class="headerlink" href="#module-hypso.georeference.georef.geometric" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.ecef_to_lat_lon_alt">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">ecef_to_lat_lon_alt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.geometric.ecef_to_lat_lon_alt" title="Permalink to this definition"></a></dt>
+<dd><p>Input pos has to be Nx3, and units in meters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pos</strong> – </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>lat lon (with respect to ECI axes) and altitude in degrees and meters</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.eci_lon_to_ecef_lon">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">eci_lon_to_ecef_lon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datetime_utc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_offset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.geometric.eci_lon_to_ecef_lon" title="Permalink to this definition"></a></dt>
+<dd><p>ECI to longitude to ECEF Longitude conversion
+:param datetime_utc:
+:param lon:
+:param time_offset:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.eci_to_lat_lon_alt">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">eci_to_lat_lon_alt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">times</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_offset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.geometric.eci_to_lat_lon_alt" title="Permalink to this definition"></a></dt>
+<dd><p>ECI to Lat/Lon Altitude</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pos</strong> – needs to be Nx3</p></li>
+<li><p><strong>times</strong> – needs to be N</p></li>
+<li><p><strong>time_offset</strong> – is a float. is an additional time offset to adjust georeferencing</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Numpy array with pseudo latitude and longitude and altitude</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.eci_to_lat_loneci_alt">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">eci_to_lat_loneci_alt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.geometric.eci_to_lat_loneci_alt" title="Permalink to this definition"></a></dt>
+<dd><p>ECI to latitude and longitude and altitude</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pos</strong> – </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.ellipsoid_line_intersection">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">ellipsoid_line_intersection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.geometric.ellipsoid_line_intersection" title="Permalink to this definition"></a></dt>
+<dd><p>Calculates the ellipsodie and line intersection</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>point</strong> – </p></li>
+<li><p><strong>direction</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Tuple</em>[float, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.lat_lon_alt_to_ecef">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">lat_lon_alt_to_ecef</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lla</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.geometric.lat_lon_alt_to_ecef" title="Permalink to this definition"></a></dt>
+<dd><p>Converts latitude and longitude ALT to ECEF
+:param lla:
+:return:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.mat_from_quat">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">mat_from_quat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quat</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.geometric.mat_from_quat" title="Permalink to this definition"></a></dt>
+<dd><p>Matrix from Quaternion</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>quat</strong> – must be a four element list of numbers or 4 element nump array</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>ndarray</em></p>
+</dd>
+</dl>
+<p>:return:a 3x3 numpy array containing the rotation matrix</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.minimum_bounding_rectangle">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">minimum_bounding_rectangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.geometric.minimum_bounding_rectangle" title="Permalink to this definition"></a></dt>
+<dd><p>Find the smallest bounding rectangle for a set of points. Rval is a 4x2 matrix of bounding box corner coordinates</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>points</strong> – nx2 matrix of coordinates</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a set of points representing the corners of the bounding box.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.pos_ecef_to_lat_lon_alt">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">pos_ecef_to_lat_lon_alt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.geometric.pos_ecef_to_lat_lon_alt" title="Permalink to this definition"></a></dt>
+<dd><p>Coverts POS ECEF to latitude and longitude and altitude
+:param pos:
+:return:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.geometric.rotate_axis_angle">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.geometric.</span></span><span class="sig-name descname"><span class="pre">rotate_axis_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.geometric.rotate_axis_angle" title="Permalink to this definition"></a></dt>
+<dd><p>Rotates vector vec around axis axis by angle angle Both vec, axis, and vec_rot are column vectors. axis is a
+unit vector, angle is in radians</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vec</strong> – </p></li>
+<li><p><strong>axis</strong> – </p></li>
+<li><p><strong>angle</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Norwegian University of Science and Technology (NTNU).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

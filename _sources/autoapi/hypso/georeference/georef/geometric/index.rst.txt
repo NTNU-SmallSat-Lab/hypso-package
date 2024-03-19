@@ -1,0 +1,150 @@
+:py:mod:`hypso.georeference.georef.geometric`
+=============================================
+
+.. py:module:: hypso.georeference.georef.geometric
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.georeference.georef.geometric.minimum_bounding_rectangle
+   hypso.georeference.georef.geometric.mat_from_quat
+   hypso.georeference.georef.geometric.rotate_axis_angle
+   hypso.georeference.georef.geometric.ecef_to_lat_lon_alt
+   hypso.georeference.georef.geometric.eci_to_lat_loneci_alt
+   hypso.georeference.georef.geometric.eci_lon_to_ecef_lon
+   hypso.georeference.georef.geometric.eci_to_lat_lon_alt
+   hypso.georeference.georef.geometric.pos_ecef_to_lat_lon_alt
+   hypso.georeference.georef.geometric.lat_lon_alt_to_ecef
+   hypso.georeference.georef.geometric.ellipsoid_line_intersection
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.georeference.georef.geometric.R_eq
+   hypso.georeference.georef.geometric.f
+   hypso.georeference.georef.geometric.e_2
+   hypso.georeference.georef.geometric.R_pl
+
+
+.. py:function:: minimum_bounding_rectangle(points)
+
+   Find the smallest bounding rectangle for a set of points. Rval is a 4x2 matrix of bounding box corner coordinates
+
+   :param points: nx2 matrix of coordinates
+
+   :return: a set of points representing the corners of the bounding box.
+
+
+.. py:function:: mat_from_quat(quat)
+
+   Matrix from Quaternion
+
+   :param quat: must be a four element list of numbers or 4 element nump array
+
+   :return:a 3x3 numpy array containing the rotation matrix
+
+
+.. py:function:: rotate_axis_angle(vec, axis, angle)
+
+   Rotates vector vec around axis axis by angle angle Both vec, axis, and vec_rot are column vectors. axis is a
+   unit vector, angle is in radians
+
+   :param vec:
+   :param axis:
+   :param angle:
+
+   :return:
+
+
+.. py:data:: R_eq
+   :value: 6378137.0
+
+   
+
+.. py:data:: f
+
+   
+
+.. py:data:: e_2
+
+   
+
+.. py:data:: R_pl
+   :value: 6356752.0
+
+   
+
+.. py:function:: ecef_to_lat_lon_alt(pos)
+
+   Input pos has to be Nx3, and units in meters
+
+   :param pos:
+
+   :return: lat lon (with respect to ECI axes) and altitude in degrees and meters
+
+
+.. py:function:: eci_to_lat_loneci_alt(pos)
+
+   ECI to latitude and longitude and altitude
+
+   :param pos:
+
+   :return:
+
+
+.. py:function:: eci_lon_to_ecef_lon(datetime_utc, lon, time_offset)
+
+   ECI to longitude to ECEF Longitude conversion
+   :param datetime_utc:
+   :param lon:
+   :param time_offset:
+
+   :return:
+
+
+.. py:function:: eci_to_lat_lon_alt(pos, times, time_offset)
+
+   ECI to Lat/Lon Altitude
+
+   :param pos: needs to be Nx3
+   :param times: needs to be N
+   :param time_offset: is a float. is an additional time offset to adjust georeferencing
+
+   :return: Numpy array with pseudo latitude and longitude and altitude
+
+
+.. py:function:: pos_ecef_to_lat_lon_alt(pos)
+
+   Coverts POS ECEF to latitude and longitude and altitude
+   :param pos:
+   :return:
+
+
+.. py:function:: lat_lon_alt_to_ecef(lla)
+
+   Converts latitude and longitude ALT to ECEF
+   :param lla:
+   :return:
+
+
+.. py:function:: ellipsoid_line_intersection(point, direction)
+
+   Calculates the ellipsodie and line intersection
+
+   :param point:
+   :param direction:
+
+   :return:
+
+

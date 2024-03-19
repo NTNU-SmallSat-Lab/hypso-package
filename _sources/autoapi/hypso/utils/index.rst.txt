@@ -1,0 +1,153 @@
+:py:mod:`hypso.utils`
+=====================
+
+.. py:module:: hypso.utils
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   utils_file/index.rst
+
+
+Package Contents
+----------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   hypso.utils.MyProgressBar
+
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.utils.find_file
+   hypso.utils.is_integer_num
+   hypso.utils.find_dir
+   hypso.utils.HSI2RGB
+   hypso.utils.print_nc
+   hypso.utils.find_all_files
+   hypso.utils.compare_netcdf_files
+   hypso.utils.find_closest_water_lat_lon_match
+
+
+
+.. py:function:: find_file(path, str_in_file, suffix = None, type = 'partial')
+
+   Find recursively a single file (or first occurance) in a specified directory.
+
+   :param path: Directory path on which to look for files.
+   :param str_in_file: Check if this string is in the file name
+   :param suffix: Check if file extension matches the suffix provided
+   :param type: Type of comparisson of "str_in_file". If "partial", then "str_in_file" will be checked to be in the filename,
+       otherwise "exact" will check if the filename matches exactly the string provided.
+
+   :return: Path of the file or None if no file found
+
+
+.. py:function:: is_integer_num(n)
+
+   Check if a number is an integer
+
+   :param n: Number to check
+   :return: Boolean value indicating whether or not the number is an integer
+
+
+.. py:function:: find_dir(path, str_in_dir, type = 'partial')
+
+   Find recursively a directory (or first occurance) in a specified directory.
+
+   :param path: Directory path on which to look for files.
+   :param str_in_dir: Check if this string is in the directory name
+   :param type: Type of comparisson of "str_in_file". If "partial", then "str_in_file" will be checked to be in the filename,
+       otherwise "exact" will check if the filename matches exactly the string provided.
+
+   :return: Path of the file or None if no file found
+
+
+.. py:function:: HSI2RGB(wY, HSI, d = 65, threshold=0.002)
+
+   Calculate a colore accurate RGB image with HSI values. Original function used for the paper
+   "Creating RGB Images from Hyperspectral Images Using a Color Matching Function" by
+   M. Magnusson, J. Sigurdsson, S. E. Armansson, M. O. Ulfarsson, H. Deborah and J. R. Sveinsson,
+
+   If you use this method, please cite the following paper:
+   @INPROCEEDINGS{hsi2rgb,
+   author={M. {Magnusson} and J. {Sigurdsson} and S. E. {Armansson}
+   and M. O. {Ulfarsson} and H. {Deborah} and J. R. {Sveinsson}},
+   booktitle={IEEE International Geoscience and Remote Sensing Symposium},
+   title={Creating {RGB} Images from Hyperspectral Images using a Color Matching Function},
+   year={2020}, volume={}, number={}, pages={}}
+
+   Paper is available at
+   https://www.researchgate.net/profile/Jakob_Sigurdsson
+
+   :param wY: Wavelengths in nm
+   :param HSI: Hyperspectral Image as a (#pixels x #bands) matrix,
+   :param d: Determines the illuminant used, if in doubt use d65. Values of  50, 55, 65, 75
+   :param threshold: True if RGB thesholding should be done to increase contrast
+
+   :return: RGB Image array
+
+
+.. py:function:: print_nc(nc_file_path)
+
+   Print the contents of a .nc file
+   :param nc_file_path: Absolute path to a .nc file
+
+   :return: No return
+
+
+.. py:function:: find_all_files(path, str_in_file, suffix = None, type = 'partial')
+
+   Find recursively all files in a specified directory.
+
+   :param path: Directory path on which to look for files.
+   :param str_in_file: Check if this string is in the file name
+   :param suffix: Check if file extension matches the suffix provided
+   :param type: Type of comparisson of "str_in_file". If "partial", then "str_in_file" will be checked to be in the filename,
+       otherwise "exact" will check if the filename matches exactly the string provided.
+
+   :return: List of file paths
+
+
+.. py:class:: MyProgressBar(text_prefix)
+
+   Class used to display a progress bar on the screen for bulk downloading.
+
+   .. py:method:: __call__(block_num, block_size, total_size)
+
+
+
+.. py:function:: compare_netcdf_files(file1, file2)
+
+   Compare two .nc files and returns a pandas DataFrame where each attribute, variable and values are compared side
+   by side.
+
+   :param file1: Absolute path to file 1
+   :param file2: Absolute path to file 2
+
+   :return: Dataframe with the compared characteristics
+
+
+.. py:function:: find_closest_water_lat_lon_match(sat_obj, target_lat, target_lon, water_pixel_filter = False)
+
+   Find the closest Image lat and lon to the targat specificed that is also a water pixel.
+
+   :param water_pixel_filter: If true, the closest pixel should also be classified as water pixel.
+   :param sat_obj: Hypso satellite object
+   :param target_lat: Target latitude
+   :param target_lon: Target longitude
+
+   :return: Row, col and dist_to_target in km from the closes water pixel
+
+

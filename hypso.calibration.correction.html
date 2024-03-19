@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hypso.calibration.correction module &mdash; Hypso Package 1.9.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Hypso Package
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Hypso Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">hypso.calibration.correction module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/hypso.calibration.correction.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-hypso.calibration.correction">
+<span id="hypso-calibration-correction-module"></span><h1>hypso.calibration.correction module<a class="headerlink" href="#module-hypso.calibration.correction" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.calibration.correction.apply_radiometric_calibration">
+<span class="sig-prename descclassname"><span class="pre">hypso.calibration.correction.</span></span><span class="sig-name descname"><span class="pre">apply_radiometric_calibration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">background_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radiometric_calibration_coefficients</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.calibration.correction.apply_radiometric_calibration" title="Permalink to this definition"></a></dt>
+<dd><p>Applies radiometric calibration. Assumes input is 12-bit values, and that the radiometric calibration
+coefficients are the same size as the input image. Note: radiometric calibration coefficients have original
+size (684,1080), matching the “normal” AOI of the HYPSO-1 data (with no binning).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>frame</strong> (<em>ndarray</em>) – 2D frame to apply radiometric calibration</p></li>
+<li><p><strong>exp</strong> (<em>float</em>) – Exposure value</p></li>
+<li><p><strong>background_value</strong> (<em>float</em>) – Background value</p></li>
+<li><p><strong>radiometric_calibration_coefficients</strong> (<em>ndarray</em>) – 2D array of radio calibration coefficients</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Calibrated frame 2D array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.calibration.correction.calibrate_cube">
+<span class="sig-prename descclassname"><span class="pre">hypso.calibration.correction.</span></span><span class="sig-name descname"><span class="pre">calibrate_cube</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">info_sat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw_cube</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correction_coefficients_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.calibration.correction.calibrate_cube" title="Permalink to this definition"></a></dt>
+<dd><p>Radiometrically Calibrate the Raw Cube (digital counts) to Radiance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>info_sat</strong> (<em>dict</em>) – Dictionary containing capture information</p></li>
+<li><p><strong>raw_cube</strong> (<em>ndarray</em>) – Numpy array containing digital countes 3-channel cube</p></li>
+<li><p><strong>correction_coefficients_dict</strong> (<em>dict</em>) – Dictionary containing the 2D coefficients for correction</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Corrected 3-channel cube</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.calibration.correction.crop_and_bin_matrix">
+<span class="sig-prename descclassname"><span class="pre">hypso.calibration.correction.</span></span><span class="sig-name descname"><span class="pre">crop_and_bin_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_stop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_stop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bin_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bin_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.calibration.correction.crop_and_bin_matrix" title="Permalink to this definition"></a></dt>
+<dd><p>Crops matrix to AOI. Bins matrix so that the average value in the bin_x
+number of pixels is stored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.calibration.correction.destriping_correct_cube">
+<span class="sig-prename descclassname"><span class="pre">hypso.calibration.correction.</span></span><span class="sig-name descname"><span class="pre">destriping_correct_cube</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cube</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correction_coefficients_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.calibration.correction.destriping_correct_cube" title="Permalink to this definition"></a></dt>
+<dd><p>Apply destriping correction matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cube</strong> – 3-channel spectral cube</p></li>
+<li><p><strong>correction_coefficients_dict</strong> – Dictionary containing the 2D coefficients for destriping</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>3-channel array for destriping correction</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.calibration.correction.get_coefficients_from_dict">
+<span class="sig-prename descclassname"><span class="pre">hypso.calibration.correction.</span></span><span class="sig-name descname"><span class="pre">get_coefficients_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coeff_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">satobj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.calibration.correction.get_coefficients_from_dict" title="Permalink to this definition"></a></dt>
+<dd><p>Get the coefficients from the csv files contained in a dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coeff_dict</strong> (<em>dict</em>) – Dictionary containing the paths of the csv files to read</p></li>
+<li><p><strong>satobj</strong> – Hypso satellite object</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing the 2D coefficients read from the csv files</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.calibration.correction.get_coefficients_from_file">
+<span class="sig-prename descclassname"><span class="pre">hypso.calibration.correction.</span></span><span class="sig-name descname"><span class="pre">get_coefficients_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coeff_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.calibration.correction.get_coefficients_from_file" title="Permalink to this definition"></a></dt>
+<dd><p>Get correction coefficients from file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coeff_path</strong> (<em>str</em>) – Coefficient path to read (.csv)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>2D array of coefficients</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.calibration.correction.smile_correct_cube">
+<span class="sig-prename descclassname"><span class="pre">hypso.calibration.correction.</span></span><span class="sig-name descname"><span class="pre">smile_correct_cube</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cube</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correction_coefficients_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.calibration.correction.smile_correct_cube" title="Permalink to this definition"></a></dt>
+<dd><p>Run smile correction on each frame in a cube, using the center row in the frame as the reference wavelength/band
+for smile correction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cube</strong> – 3-channel spectral cube</p></li>
+<li><p><strong>correction_coefficients_dict</strong> (<em>dict</em>) – Dictionary containing the coefficients for smile correction</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.calibration.correction.smile_correction_one_frame">
+<span class="sig-prename descclassname"><span class="pre">hypso.calibration.correction.</span></span><span class="sig-name descname"><span class="pre">smile_correction_one_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spectral_band_matrix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.calibration.correction.smile_correction_one_frame" title="Permalink to this definition"></a></dt>
+<dd><p>Run smile correction on each row in a frame, using the center row as the reference wavelength/band for
+smile correction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>frame</strong> – 2D frame on which to apply smile correction</p></li>
+<li><p><strong>spectral_band_matrix</strong> – Spectral coefficients (Wavelength)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Corrected frame after smile correction</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.calibration.correction.smile_correction_one_row">
+<span class="sig-prename descclassname"><span class="pre">hypso.calibration.correction.</span></span><span class="sig-name descname"><span class="pre">smile_correction_one_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w_ref</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.calibration.correction.smile_correction_one_row" title="Permalink to this definition"></a></dt>
+<dd><p>Applies smile correction. Use cubic spline interpolation to resample one row onto the correct
+wavelengths/bands from a reference wavelength/band array to correct for the smile effect.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>row</strong> – Data row to apply smile correction</p></li>
+<li><p><strong>w</strong> – </p></li>
+<li><p><strong>w_ref</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Row corrected for smile effect</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Norwegian University of Science and Technology (NTNU).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,7 @@
+hypso.georeference.interpolate\_frame module
+============================================
+
+.. automodule:: hypso.georeference.interpolate_frame
+   :members:
+   :undoc-members:
+   :show-inheritance:

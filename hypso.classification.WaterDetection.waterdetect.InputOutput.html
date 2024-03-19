@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hypso.classification.WaterDetection.waterdetect.InputOutput module &mdash; Hypso Package 1.9.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Hypso Package
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Hypso Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">hypso.classification.WaterDetection.waterdetect.InputOutput module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/hypso.classification.WaterDetection.waterdetect.InputOutput.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-hypso.classification.WaterDetection.waterdetect.InputOutput">
+<span id="hypso-classification-waterdetection-waterdetect-inputoutput-module"></span><h1>hypso.classification.WaterDetection.waterdetect.InputOutput module<a class="headerlink" href="#module-hypso.classification.WaterDetection.waterdetect.InputOutput" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLandsatMaskProcessor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hypso.classification.WaterDetection.waterdetect.InputOutput.</span></span><span class="sig-name descname"><span class="pre">DWLandsatMaskProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLandsatMaskProcessor" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLandsatMaskProcessor.LandsatMaskDict">
+<span class="sig-name descname"><span class="pre">LandsatMaskDict</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'cirrus_conf1':</span> <span class="pre">256,</span> <span class="pre">'cirrus_conf2':</span> <span class="pre">512,</span> <span class="pre">'clear':</span> <span class="pre">2,</span> <span class="pre">'cloud':</span> <span class="pre">32,</span> <span class="pre">'cloud_conf1':</span> <span class="pre">64,</span> <span class="pre">'cloud_conf2':</span> <span class="pre">128,</span> <span class="pre">'cloud_shadow':</span> <span class="pre">8,</span> <span class="pre">'fill':</span> <span class="pre">1,</span> <span class="pre">'snow':</span> <span class="pre">16,</span> <span class="pre">'terrain_occlusion':</span> <span class="pre">1024,</span> <span class="pre">'water':</span> <span class="pre">4}</span></em><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLandsatMaskProcessor.LandsatMaskDict" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLandsatMaskProcessor.get_combined_masks">
+<span class="sig-name descname"><span class="pre">get_combined_masks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">masks_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLandsatMaskProcessor.get_combined_masks" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLandsatMaskProcessor.open_gdal_masks">
+<span class="sig-name descname"><span class="pre">open_gdal_masks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp_dir</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLandsatMaskProcessor.open_gdal_masks" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLandsatMaskProcessor.open_mask">
+<span class="sig-name descname"><span class="pre">open_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp_dir</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLandsatMaskProcessor.open_mask" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hypso.classification.WaterDetection.waterdetect.InputOutput.</span></span><span class="sig-name descname"><span class="pre">DWLoader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'S2_THEIA'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_band</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Red'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">single_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.area_name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">area_name</span></span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.area_name" title="Permalink to this definition"></a></dt>
+<dd><p>Extracts the name of the area based on the shapefile name
+:return: name of the area</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.band_ids">
+<span class="sig-name descname"><span class="pre">band_ids</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'Blue':</span> <span class="pre">1,</span> <span class="pre">'Green':</span> <span class="pre">2,</span> <span class="pre">'Mir':</span> <span class="pre">11,</span> <span class="pre">'Mir2':</span> <span class="pre">12,</span> <span class="pre">'Nir':</span> <span class="pre">7,</span> <span class="pre">'Nir2':</span> <span class="pre">8,</span> <span class="pre">'Red':</span> <span class="pre">3,</span> <span class="pre">'RedEdg1':</span> <span class="pre">4,</span> <span class="pre">'RedEdg2':</span> <span class="pre">5,</span> <span class="pre">'RedEdg3':</span> <span class="pre">6}</span></em><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.band_ids" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.bands_path">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bands_path</span></span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.bands_path" title="Permalink to this definition"></a></dt>
+<dd><p>Return the directory of the bands depending on the product
+:return: PosixPath of the directory containing the bands</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.clip_bands">
+<span class="sig-name descname"><span class="pre">clip_bands</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bands_to_clip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_band</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp_dir</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.clip_bands" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.current_image_folder">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">current_image_folder</span></span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.current_image_folder" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the full path folder of current (selected) image
+:return: Posixpath of current image</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.current_image_name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">current_image_name</span></span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.current_image_name" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the name of the current (selected) image
+:return: String name of the current (selected) image</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.geo_transform">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">geo_transform</span></span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.geo_transform" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.get_bands_files">
+<span class="sig-name descname"><span class="pre">get_bands_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.get_bands_files" title="Permalink to this definition"></a></dt>
+<dd><p>Retrieve the full path of bands saved for the current image, according to the product
+:return: Posix_path of bands files</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.get_offset">
+<span class="sig-name descname"><span class="pre">get_offset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">band</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.get_offset" title="Permalink to this definition"></a></dt>
+<dd><p>Get the offset value to be applied to the band. This offset exists in the Sen2Cor images after 25 January 2022.
+<a class="reference external" href="https://sentinels.copernicus.eu/documents/247904/4830984/OMPC.CS.DQR.002.07-2022%20-%20i52r0%20-%20MSI%20L2A%20DQR%20August%202022.pdf/36edbb04-0c6c-fba3-5c34-0ba3be82e91c">https://sentinels.copernicus.eu/documents/247904/4830984/OMPC.CS.DQR.002.07-2022%20-%20i52r0%20-%20MSI%20L2A%20DQR%20August%202022.pdf/36edbb04-0c6c-fba3-5c34-0ba3be82e91c</a>
+&#64;param band: Reflectance band
+&#64;return: Value to be added to the loaded band</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.glint_name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">glint_name</span></span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.glint_name" title="Permalink to this definition"></a></dt>
+<dd><p>”
+Name of the glint image for the report</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.granule_metadata">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">granule_metadata</span></span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.granule_metadata" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the full path folder of the image’s granule metadata
+:return: Posixpath of current image’s granule metadata</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.load_masks">
+<span class="sig-name descname"><span class="pre">load_masks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product_masks_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">external_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_valid_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_invalid_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.load_masks" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.load_raster_bands">
+<span class="sig-name descname"><span class="pre">load_raster_bands</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bands_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.load_raster_bands" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>bands_list</strong> (<em>list</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.metadata">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">metadata</span></span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.metadata" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the full path folder of the image’s metadata
+:return: Posixpath of current image’s metadata</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.open_current_image">
+<span class="sig-name descname"><span class="pre">open_current_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref_band_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Red'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.open_current_image" title="Permalink to this definition"></a></dt>
+<dd><p>Load a bands list, given a image_list and a dictionary of Keys(BandName) and identifiers to parse the filename
+ex. {‘Green’:’B3’, ‘Red’:’B4’…}
+The result, will be a dictionary with Keys(BandName) and GdalDatasets as values</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.open_gdal_image">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">open_gdal_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bands_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">desired_band</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.open_gdal_image" title="Permalink to this definition"></a></dt>
+<dd><p>Get the image in the list corresponding to the informed Band.
+Return the image opened with GDAL as a RasterImage object
+If cant find the band return None
+If is more than 1 image, raise exception</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.product_dict">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">product_dict</span></span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.product_dict" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.projection">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">projection</span></span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.projection" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.satellite_Dict">
+<span class="sig-name descname"><span class="pre">satellite_Dict</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'L8_L1C':</span> <span class="pre">{'bands_names':</span> <span class="pre">{'Aero':</span> <span class="pre">'band1',</span> <span class="pre">'Blue':</span> <span class="pre">'band2',</span> <span class="pre">'Green':</span> <span class="pre">'band3',</span> <span class="pre">'Mir':</span> <span class="pre">'band6',</span> <span class="pre">'Mir2':</span> <span class="pre">'band7',</span> <span class="pre">'Nir':</span> <span class="pre">'band5',</span> <span class="pre">'Red':</span> <span class="pre">'band4'},</span> <span class="pre">'recursive':</span> <span class="pre">False,</span> <span class="pre">'string':</span> <span class="pre">'sr_band',</span> <span class="pre">'suffix':</span> <span class="pre">'.tif'},</span> <span class="pre">'L8_USGS':</span> <span class="pre">{'bands_names':</span> <span class="pre">{'Green':</span> <span class="pre">'B3',</span> <span class="pre">'Mir':</span> <span class="pre">'B6',</span> <span class="pre">'Nir':</span> <span class="pre">'B5',</span> <span class="pre">'Red':</span> <span class="pre">'B4'}},</span> <span class="pre">'S2_L1C':</span> <span class="pre">{'bands_names':</span> <span class="pre">{'Blue':</span> <span class="pre">'B02',</span> <span class="pre">'Green':</span> <span class="pre">'B03',</span> <span class="pre">'Mir':</span> <span class="pre">'B11',</span> <span class="pre">'Mir2':</span> <span class="pre">'B12',</span> <span class="pre">'Nir':</span> <span class="pre">'B08',</span> <span class="pre">'Nir2':</span> <span class="pre">'B8A',</span> <span class="pre">'Red':</span> <span class="pre">'B04',</span> <span class="pre">'RedEdg1':</span> <span class="pre">'B05',</span> <span class="pre">'RedEdg2':</span> <span class="pre">'B06',</span> <span class="pre">'RedEdg3':</span> <span class="pre">'B07'},</span> <span class="pre">'granule_metadata':</span> <span class="pre">'*MTD_TL.xml',</span> <span class="pre">'recursive':</span> <span class="pre">False,</span> <span class="pre">'string':</span> <span class="pre">'',</span> <span class="pre">'subdir':</span> <span class="pre">'GRANULE/*/IMG_DATA',</span> <span class="pre">'suffix':</span> <span class="pre">'.jp2'},</span> <span class="pre">'S2_PLANETARY':</span> <span class="pre">{'bands_names':</span> <span class="pre">{'Blue':</span> <span class="pre">'B02_10m',</span> <span class="pre">'Green':</span> <span class="pre">'B03_10m',</span> <span class="pre">'Mir':</span> <span class="pre">'B11_20m',</span> <span class="pre">'Mir2':</span> <span class="pre">'B12_20m',</span> <span class="pre">'Nir':</span> <span class="pre">'B08_10m',</span> <span class="pre">'Nir2':</span> <span class="pre">'B8A_20m',</span> <span class="pre">'Red':</span> <span class="pre">'B04_10m',</span> <span class="pre">'RedEdg1':</span> <span class="pre">'B05_20m',</span> <span class="pre">'RedEdg2':</span> <span class="pre">'B06_20m',</span> <span class="pre">'RedEdg3':</span> <span class="pre">'B07_20m'},</span> <span class="pre">'granule_metadata':</span> <span class="pre">'*MTD_TL.xml',</span> <span class="pre">'recursive':</span> <span class="pre">False,</span> <span class="pre">'string':</span> <span class="pre">'',</span> <span class="pre">'suffix':</span> <span class="pre">'.tif'},</span> <span class="pre">'S2_S2COR':</span> <span class="pre">{'bands_names':</span> <span class="pre">{'Blue':</span> <span class="pre">'B02_10m',</span> <span class="pre">'Green':</span> <span class="pre">'B03_10m',</span> <span class="pre">'Mir':</span> <span class="pre">'B11_20m',</span> <span class="pre">'Mir2':</span> <span class="pre">'B12_20m',</span> <span class="pre">'Nir':</span> <span class="pre">'B08_10m',</span> <span class="pre">'Nir2':</span> <span class="pre">'B8A_20m',</span> <span class="pre">'Red':</span> <span class="pre">'B04_10m',</span> <span class="pre">'RedEdg1':</span> <span class="pre">'B05_20m',</span> <span class="pre">'RedEdg2':</span> <span class="pre">'B06_20m',</span> <span class="pre">'RedEdg3':</span> <span class="pre">'B07_20m'},</span> <span class="pre">'granule_metadata':</span> <span class="pre">'*MTD_TL.xml',</span> <span class="pre">'metadata':</span> <span class="pre">'MTD_MSIL2A.xml',</span> <span class="pre">'recursive':</span> <span class="pre">True,</span> <span class="pre">'string':</span> <span class="pre">'',</span> <span class="pre">'subdir':</span> <span class="pre">'GRANULE/*/IMG_DATA',</span> <span class="pre">'suffix':</span> <span class="pre">'.jp2'},</span> <span class="pre">'S2_THEIA':</span> <span class="pre">{'bands_names':</span> <span class="pre">{'Blue':</span> <span class="pre">'B2',</span> <span class="pre">'Green':</span> <span class="pre">'B3',</span> <span class="pre">'Mir':</span> <span class="pre">'B11',</span> <span class="pre">'Mir2':</span> <span class="pre">'B12',</span> <span class="pre">'Nir':</span> <span class="pre">'B8',</span> <span class="pre">'Nir2':</span> <span class="pre">'B8A',</span> <span class="pre">'Red':</span> <span class="pre">'B4',</span> <span class="pre">'RedEdg1':</span> <span class="pre">'B5',</span> <span class="pre">'RedEdg2':</span> <span class="pre">'B6',</span> <span class="pre">'RedEdg3':</span> <span class="pre">'B7'},</span> <span class="pre">'granule_metadata':</span> <span class="pre">'*MTD_ALL.xml',</span> <span class="pre">'recursive':</span> <span class="pre">False,</span> <span class="pre">'string':</span> <span class="pre">'SRE',</span> <span class="pre">'suffix':</span> <span class="pre">'.tif'}}</span></em><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.satellite_Dict" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.update_mask">
+<span class="sig-name descname"><span class="pre">update_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mask</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.update_mask" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.x_size">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">x_size</span></span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.x_size" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.y_size">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">y_size</span></span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWLoader.y_size" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWS2CORMaskProcessor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hypso.classification.WaterDetection.waterdetect.InputOutput.</span></span><span class="sig-name descname"><span class="pre">DWS2CORMaskProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWS2CORMaskProcessor" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWS2CORMaskProcessor.Sen2CorMaskList">
+<span class="sig-name descname"><span class="pre">Sen2CorMaskList</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'CLOUD_HIGH_PROBABILITY':</span> <span class="pre">9,</span> <span class="pre">'CLOUD_MEDIUM_PROBABILITY':</span> <span class="pre">8,</span> <span class="pre">'CLOUD_SHADOWS':</span> <span class="pre">3,</span> <span class="pre">'DARK_AREA_PIXELS':</span> <span class="pre">2,</span> <span class="pre">'NOT_VEGETATED':</span> <span class="pre">5,</span> <span class="pre">'NO_DATA':</span> <span class="pre">0,</span> <span class="pre">'SATURATED_OR_DEFECTIVE':</span> <span class="pre">1,</span> <span class="pre">'SNOW':</span> <span class="pre">11,</span> <span class="pre">'THIN_CIRRUS':</span> <span class="pre">10,</span> <span class="pre">'UNCLASSIFIED':</span> <span class="pre">7,</span> <span class="pre">'VEGETATION':</span> <span class="pre">4,</span> <span class="pre">'WATER':</span> <span class="pre">6}</span></em><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWS2CORMaskProcessor.Sen2CorMaskList" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWS2CORMaskProcessor.get_combined_masks">
+<span class="sig-name descname"><span class="pre">get_combined_masks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">masks_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWS2CORMaskProcessor.get_combined_masks" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWS2CORMaskProcessor.open_gdal_masks">
+<span class="sig-name descname"><span class="pre">open_gdal_masks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp_dir</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWS2CORMaskProcessor.open_gdal_masks" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWS2CORMaskProcessor.open_mask">
+<span class="sig-name descname"><span class="pre">open_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp_dir</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWS2CORMaskProcessor.open_mask" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWSaver">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hypso.classification.WaterDetection.waterdetect.InputOutput.</span></span><span class="sig-name descname"><span class="pre">DWSaver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">area_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWSaver" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWSaver.area_name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">area_name</span></span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWSaver.area_name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWSaver.create_base_name">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_base_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWSaver.create_base_name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWSaver.create_output_folder">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_output_folder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">area_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWSaver.create_output_folder" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWSaver.save_array">
+<span class="sig-name descname"><span class="pre">save_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt_relative_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_data_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWSaver.save_array" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWSaver.save_multiband">
+<span class="sig-name descname"><span class="pre">save_multiband</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt_relative_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_data_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWSaver.save_multiband" title="Permalink to this definition"></a></dt>
+<dd><p>Save a multilayer array</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>array</strong> – array with all bands wanted</p></li>
+<li><p><strong>name</strong> – name of the output</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the complete filename</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWSaver.save_rgb_array">
+<span class="sig-name descname"><span class="pre">save_rgb_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">red</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">green</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt_relative_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWSaver.save_rgb_array" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWSaver.set_output_folder">
+<span class="sig-name descname"><span class="pre">set_output_folder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geo_transform</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWSaver.set_output_folder" title="Permalink to this definition"></a></dt>
+<dd><p>For each image, the saver has to prepare the specific output directory, and saving parameters.
+The output directory is based on the base_output_folder, the area name and the image name
+:param image_name: name of the image being processed
+:param geo_transform: geo transformation to save rasters
+:param projection: projection to save rasters
+:return: Nothing</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWSaver.temp_dir">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">temp_dir</span></span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWSaver.temp_dir" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWSaver.update_geo_transform">
+<span class="sig-name descname"><span class="pre">update_geo_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geo_transform</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWSaver.update_geo_transform" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWTheiaMaskProcessor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hypso.classification.WaterDetection.waterdetect.InputOutput.</span></span><span class="sig-name descname"><span class="pre">DWTheiaMaskProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWTheiaMaskProcessor" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWTheiaMaskProcessor.TheiaCLMDict">
+<span class="sig-name descname"><span class="pre">TheiaCLMDict</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'clm_all_clouds':</span> <span class="pre">2,</span> <span class="pre">'clm_all_clouds_and_shadows':</span> <span class="pre">1,</span> <span class="pre">'clm_cloud_shadows':</span> <span class="pre">32,</span> <span class="pre">'clm_clouds_blue_band':</span> <span class="pre">4,</span> <span class="pre">'clm_clouds_multi_temporal':</span> <span class="pre">8,</span> <span class="pre">'clm_high_clouds':</span> <span class="pre">128,</span> <span class="pre">'clm_other_shadows':</span> <span class="pre">64,</span> <span class="pre">'clm_thin_clouds':</span> <span class="pre">16}</span></em><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWTheiaMaskProcessor.TheiaCLMDict" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWTheiaMaskProcessor.TheiaMG2Dict">
+<span class="sig-name descname"><span class="pre">TheiaMG2Dict</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'mg2_all_clouds':</span> <span class="pre">2,</span> <span class="pre">'mg2_cloud_shadows':</span> <span class="pre">8,</span> <span class="pre">'mg2_other_shadows':</span> <span class="pre">16,</span> <span class="pre">'mg2_snow':</span> <span class="pre">4,</span> <span class="pre">'mg2_sun_tangent':</span> <span class="pre">128,</span> <span class="pre">'mg2_sun_too_low':</span> <span class="pre">64,</span> <span class="pre">'mg2_terrain_mask':</span> <span class="pre">32,</span> <span class="pre">'mg2_water':</span> <span class="pre">1}</span></em><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWTheiaMaskProcessor.TheiaMG2Dict" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWTheiaMaskProcessor.TheiaMaskDict">
+<span class="sig-name descname"><span class="pre">TheiaMaskDict</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'CLM':</span> <span class="pre">'*_CLM_R1.tif',</span> <span class="pre">'EDG':</span> <span class="pre">'*_EDG_R1.tif',</span> <span class="pre">'MG2':</span> <span class="pre">'*_MG2_R1.tif',</span> <span class="pre">'SAT1':</span> <span class="pre">'*_SAT_R1.tif',</span> <span class="pre">'SAT2':</span> <span class="pre">'*_SAT_R2.tif'}</span></em><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWTheiaMaskProcessor.TheiaMaskDict" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWTheiaMaskProcessor.get_combined_masks">
+<span class="sig-name descname"><span class="pre">get_combined_masks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">masks_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWTheiaMaskProcessor.get_combined_masks" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWTheiaMaskProcessor.open_gdal_masks">
+<span class="sig-name descname"><span class="pre">open_gdal_masks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp_dir</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWTheiaMaskProcessor.open_gdal_masks" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.InputOutput.DWTheiaMaskProcessor.open_masks">
+<span class="sig-name descname"><span class="pre">open_masks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp_dir</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.InputOutput.DWTheiaMaskProcessor.open_masks" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Norwegian University of Science and Technology (NTNU).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

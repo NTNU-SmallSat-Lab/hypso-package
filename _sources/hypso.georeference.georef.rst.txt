@@ -1,0 +1,21 @@
+hypso.georeference.georef package
+=================================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hypso.georeference.georef.geometric
+   hypso.georeference.georef.gmaps
+   hypso.georeference.georef.time_process
+   hypso.georeference.georef.utils
+
+Module contents
+---------------
+
+.. automodule:: hypso.georeference.georef
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hypso.utils.utils_file module &mdash; Hypso Package 1.9.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Hypso Package
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Hypso Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">hypso.utils.utils_file module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/hypso.utils.utils_file.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-hypso.utils.utils_file">
+<span id="hypso-utils-utils-file-module"></span><h1>hypso.utils.utils_file module<a class="headerlink" href="#module-hypso.utils.utils_file" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.utils.utils_file.HSI2RGB">
+<span class="sig-prename descclassname"><span class="pre">hypso.utils.utils_file.</span></span><span class="sig-name descname"><span class="pre">HSI2RGB</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">HSI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">65</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.002</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.utils_file.HSI2RGB" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate a colore accurate RGB image with HSI values. Original function used for the paper
+“Creating RGB Images from Hyperspectral Images Using a Color Matching Function” by
+M. Magnusson, J. Sigurdsson, S. E. Armansson, M. O. Ulfarsson, H. Deborah and J. R. Sveinsson,</p>
+<p>If you use this method, please cite the following paper:
+&#64;INPROCEEDINGS{hsi2rgb,
+author={M. {Magnusson} and J. {Sigurdsson} and S. E. {Armansson}
+and M. O. {Ulfarsson} and H. {Deborah} and J. R. {Sveinsson}},
+booktitle={IEEE International Geoscience and Remote Sensing Symposium},
+title={Creating {RGB} Images from Hyperspectral Images using a Color Matching Function},
+year={2020}, volume={}, number={}, pages={}}</p>
+<p>Paper is available at
+<a class="reference external" href="https://www.researchgate.net/profile/Jakob_Sigurdsson">https://www.researchgate.net/profile/Jakob_Sigurdsson</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wY</strong> – Wavelengths in nm</p></li>
+<li><p><strong>HSI</strong> – Hyperspectral Image as a (#pixels x #bands) matrix,</p></li>
+<li><p><strong>d</strong> (<em>Literal</em><em>[</em><em>50</em><em>, </em><em>55</em><em>, </em><em>65</em><em>, </em><em>75</em><em>]</em>) – Determines the illuminant used, if in doubt use d65. Values of  50, 55, 65, 75</p></li>
+<li><p><strong>threshold</strong> – True if RGB thesholding should be done to increase contrast</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>RGB Image array</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hypso.utils.utils_file.MyProgressBar">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hypso.utils.utils_file.</span></span><span class="sig-name descname"><span class="pre">MyProgressBar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text_prefix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.utils_file.MyProgressBar" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class used to display a progress bar on the screen for bulk downloading.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.utils.utils_file.compare_netcdf_files">
+<span class="sig-prename descclassname"><span class="pre">hypso.utils.utils_file.</span></span><span class="sig-name descname"><span class="pre">compare_netcdf_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.utils_file.compare_netcdf_files" title="Permalink to this definition"></a></dt>
+<dd><p>Compare two .nc files and returns a pandas DataFrame where each attribute, variable and values are compared side
+by side.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file1</strong> (<em>str</em>) – Absolute path to file 1</p></li>
+<li><p><strong>file2</strong> (<em>str</em>) – Absolute path to file 2</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dataframe with the compared characteristics</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>DataFrame</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.utils.utils_file.find_all_files">
+<span class="sig-prename descclassname"><span class="pre">hypso.utils.utils_file.</span></span><span class="sig-name descname"><span class="pre">find_all_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_in_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'partial'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.utils_file.find_all_files" title="Permalink to this definition"></a></dt>
+<dd><p>Find recursively all files in a specified directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>Path</em>) – Directory path on which to look for files.</p></li>
+<li><p><strong>str_in_file</strong> (<em>str</em>) – Check if this string is in the file name</p></li>
+<li><p><strong>suffix</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Check if file extension matches the suffix provided</p></li>
+<li><p><strong>type</strong> (<em>Literal</em><em>[</em><em>'partial'</em><em>, </em><em>'exact'</em><em>]</em>) – Type of comparisson of “str_in_file”. If “partial”, then “str_in_file” will be checked to be in the filename,
+otherwise “exact” will check if the filename matches exactly the string provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of file paths</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.utils.utils_file.find_closest_water_lat_lon_match">
+<span class="sig-prename descclassname"><span class="pre">hypso.utils.utils_file.</span></span><span class="sig-name descname"><span class="pre">find_closest_water_lat_lon_match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sat_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">water_pixel_filter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.utils_file.find_closest_water_lat_lon_match" title="Permalink to this definition"></a></dt>
+<dd><p>Find the closest Image lat and lon to the targat specificed that is also a water pixel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>water_pixel_filter</strong> (<em>bool</em>) – If true, the closest pixel should also be classified as water pixel.</p></li>
+<li><p><strong>sat_obj</strong> – Hypso satellite object</p></li>
+<li><p><strong>target_lat</strong> (<em>float</em>) – Target latitude</p></li>
+<li><p><strong>target_lon</strong> (<em>float</em>) – Target longitude</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Row, col and dist_to_target in km from the closes water pixel</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Tuple</em>[int, int, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.utils.utils_file.find_dir">
+<span class="sig-prename descclassname"><span class="pre">hypso.utils.utils_file.</span></span><span class="sig-name descname"><span class="pre">find_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_in_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'partial'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.utils_file.find_dir" title="Permalink to this definition"></a></dt>
+<dd><p>Find recursively a directory (or first occurance) in a specified directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>Path</em>) – Directory path on which to look for files.</p></li>
+<li><p><strong>str_in_dir</strong> (<em>str</em>) – Check if this string is in the directory name</p></li>
+<li><p><strong>type</strong> (<em>Literal</em><em>[</em><em>'partial'</em><em>, </em><em>'exact'</em><em>]</em>) – Type of comparisson of “str_in_file”. If “partial”, then “str_in_file” will be checked to be in the filename,
+otherwise “exact” will check if the filename matches exactly the string provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Path of the file or None if no file found</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Optional</em>[<em>Path</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.utils.utils_file.find_file">
+<span class="sig-prename descclassname"><span class="pre">hypso.utils.utils_file.</span></span><span class="sig-name descname"><span class="pre">find_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_in_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'partial'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.utils_file.find_file" title="Permalink to this definition"></a></dt>
+<dd><p>Find recursively a single file (or first occurance) in a specified directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>Path</em>) – Directory path on which to look for files.</p></li>
+<li><p><strong>str_in_file</strong> (<em>str</em>) – Check if this string is in the file name</p></li>
+<li><p><strong>suffix</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Check if file extension matches the suffix provided</p></li>
+<li><p><strong>type</strong> (<em>Literal</em><em>[</em><em>'partial'</em><em>, </em><em>'exact'</em><em>]</em>) – Type of comparisson of “str_in_file”. If “partial”, then “str_in_file” will be checked to be in the filename,
+otherwise “exact” will check if the filename matches exactly the string provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Path of the file or None if no file found</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Optional</em>[<em>Path</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.utils.utils_file.flatten_dict">
+<span class="sig-prename descclassname"><span class="pre">hypso.utils.utils_file.</span></span><span class="sig-name descname"><span class="pre">flatten_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nested_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.utils_file.flatten_dict" title="Permalink to this definition"></a></dt>
+<dd><p>Flatten a nested dictionary into a single level dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>nested_dict</strong> (<em>dict</em>) – Nested dictionary to flatten</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Single level dictionary with keys corresponding to the previous nested levels</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.utils.utils_file.haversine">
+<span class="sig-prename descclassname"><span class="pre">hypso.utils.utils_file.</span></span><span class="sig-name descname"><span class="pre">haversine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.utils_file.haversine" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate the great circle distance between two points on the earth (specified in decimal degrees).
+Source: <a class="reference external" href="https://stackoverflow.com/a/4913653">https://stackoverflow.com/a/4913653</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lon1</strong> – Longitude of first point</p></li>
+<li><p><strong>lat1</strong> – Latitude of first point</p></li>
+<li><p><strong>lon2</strong> – Longitude of second point</p></li>
+<li><p><strong>lat2</strong> – Latitude of second point</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Distance in km between two points on earth</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.utils.utils_file.is_integer_num">
+<span class="sig-prename descclassname"><span class="pre">hypso.utils.utils_file.</span></span><span class="sig-name descname"><span class="pre">is_integer_num</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.utils_file.is_integer_num" title="Permalink to this definition"></a></dt>
+<dd><p>Check if a number is an integer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>n</strong> – Number to check</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Boolean value indicating whether or not the number is an integer</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.utils.utils_file.list_array_1d_to_string">
+<span class="sig-prename descclassname"><span class="pre">hypso.utils.utils_file.</span></span><span class="sig-name descname"><span class="pre">list_array_1d_to_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.utils_file.list_array_1d_to_string" title="Permalink to this definition"></a></dt>
+<dd><p>Converts 1D numpy array to string</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arr</strong> (<em>Union</em><em>[</em><em>ndarray</em><em>, </em><em>list</em><em>, </em><em>tuple</em><em>]</em>) – 1D numpy array of numbers or strings to convert to string</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>String of combined values or the same value if not a list</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Union</em>[tuple, str, <em>Number</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.utils.utils_file.navigate_recursive_nc">
+<span class="sig-prename descclassname"><span class="pre">hypso.utils.utils_file.</span></span><span class="sig-name descname"><span class="pre">navigate_recursive_nc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nc_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.utils_file.navigate_recursive_nc" title="Permalink to this definition"></a></dt>
+<dd><p>Navigate recursively the structure of a .nc file and return the dictionary structure. The function will call
+itself to navigate recursively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nc_file</strong> (<em>Dataset</em>) – Open .nc Dataset file</p></li>
+<li><p><strong>path</strong> (<em>str</em>) – Relative path to append to recursivness</p></li>
+<li><p><strong>depth</strong> (<em>int</em>) – Depth at which we are navigating</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary of dictionaries containing the structure of the .nc file</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.utils.utils_file.nested_dict_to_df">
+<span class="sig-prename descclassname"><span class="pre">hypso.utils.utils_file.</span></span><span class="sig-name descname"><span class="pre">nested_dict_to_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.utils_file.nested_dict_to_df" title="Permalink to this definition"></a></dt>
+<dd><p>Convert nested dictionary to DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>values_dict</strong> (<em>dict</em>) – Nested dictionary</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dataframe where the nested level are displayed as a column.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>DataFrame</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.utils.utils_file.print_nc">
+<span class="sig-prename descclassname"><span class="pre">hypso.utils.utils_file.</span></span><span class="sig-name descname"><span class="pre">print_nc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nc_file_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.utils_file.print_nc" title="Permalink to this definition"></a></dt>
+<dd><p>Print the contents of a .nc file
+:param nc_file_path: Absolute path to a .nc file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>No return</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>nc_file_path</strong> (<em>str</em>) – </p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.utils.utils_file.recursive_print_nc">
+<span class="sig-prename descclassname"><span class="pre">hypso.utils.utils_file.</span></span><span class="sig-name descname"><span class="pre">recursive_print_nc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nc_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.utils_file.recursive_print_nc" title="Permalink to this definition"></a></dt>
+<dd><p>Navigate recursively the structure of a .nc file and print the structure. The function will call
+itself to navigate recursively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nc_file</strong> (<em>Dataset</em>) – Open .nc Dataset file</p></li>
+<li><p><strong>path</strong> (<em>str</em>) – Relative path to append to recursivness</p></li>
+<li><p><strong>depth</strong> (<em>int</em>) – Depth at which we are navigating</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>No return.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Norwegian University of Science and Technology (NTNU).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

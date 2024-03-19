@@ -1,0 +1,30 @@
+hypso.georeference package
+==========================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hypso.georeference.georef
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hypso.georeference.coordinate_correction
+   hypso.georeference.create_adcs_files
+   hypso.georeference.georef_plots
+   hypso.georeference.interpolate_frame
+   hypso.georeference.reference
+
+Module contents
+---------------
+
+.. automodule:: hypso.georeference
+   :members:
+   :undoc-members:
+   :show-inheritance:

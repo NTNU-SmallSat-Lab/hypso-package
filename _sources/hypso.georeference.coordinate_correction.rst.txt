@@ -1,0 +1,7 @@
+hypso.georeference.coordinate\_correction module
+================================================
+
+.. automodule:: hypso.georeference.coordinate_correction
+   :members:
+   :undoc-members:
+   :show-inheritance:

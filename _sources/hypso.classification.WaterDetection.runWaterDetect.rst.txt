@@ -1,0 +1,7 @@
+hypso.classification.WaterDetection.runWaterDetect module
+=========================================================
+
+.. automodule:: hypso.classification.WaterDetection.runWaterDetect
+   :members:
+   :undoc-members:
+   :show-inheritance:

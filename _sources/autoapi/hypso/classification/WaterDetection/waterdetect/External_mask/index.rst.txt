@@ -1,0 +1,59 @@
+:py:mod:`hypso.classification.WaterDetection.waterdetect.External_mask`
+=======================================================================
+
+.. py:module:: hypso.classification.WaterDetection.waterdetect.External_mask
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.classification.WaterDetection.waterdetect.External_mask.search_mask
+   hypso.classification.WaterDetection.waterdetect.External_mask.set_mask_flags
+   hypso.classification.WaterDetection.waterdetect.External_mask.process_mask
+   hypso.classification.WaterDetection.waterdetect.External_mask.prepare_external_masks
+
+
+
+.. py:function:: search_mask(img_path, masks_path, img_type = 'S2_S2COR', msk_type = 'S2_S2COR')
+
+   Given an image and a path for masks, find the correct mask for the image, otherwise return None.
+   The match is done by name. The mask name has to contain the images name.
+   :param img_path: path to an image
+   :param masks_path: path to mask images
+   :param img_type: image naming convention. 'S2_S2COR', 'S2_THEIA' and 'S2_PLANETARY' are currently supported.
+   :param msk_type: mask naming convention. 'S2_S2COR', 'S2_THEIA' and 'S2_PLANETARY' are currently supported.
+   :return: The mask path or None
+
+
+.. py:function:: set_mask_flags(mask, flags, dilation = 0)
+
+   Given a mask, set the pixels that have flag values as True and others as False.
+   Return this boolean array.
+   @param mask: path to a geotiff with the mask
+   @param flags: values of the mask that shall be set to True
+   @param dilation: Applies a dilation on the True pixels. Default=0 (no dilation)
+   @return: boolean array
+
+
+.. py:function:: process_mask(mask, img, flags, valid_value=0, invalid_value=255, dilation=0)
+
+   Given a mask path and the satellite image path, set the pixels with values in the flags list to invalid value
+   and remaining pixels to valid_value. At the end, the processed mask will be saved to the image directory.
+   @param mask: path to the mask geotiff
+   @param img: path to the image directory, where the mask will be copied into.
+   @param flags: flags on the mask image that should be masked (set to True)
+   @param valid_value: value to be assigned to valid pixels
+   @param invalid_value: value to be assigned to invalid pixels
+   @param dilation: Size of the kernel (square) to be applied in the dilation processing
+   @return: Nothing
+
+
+.. py:function:: prepare_external_masks(imgs_dir, masks_dir, flags, img_type = 'S2_S2COR', msk_type = 'S2_S2COR', dilation=0)
+
+

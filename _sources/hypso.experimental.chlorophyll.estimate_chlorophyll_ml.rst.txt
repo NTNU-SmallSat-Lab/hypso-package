@@ -1,0 +1,7 @@
+hypso.experimental.chlorophyll.estimate\_chlorophyll\_ml module
+===============================================================
+
+.. automodule:: hypso.experimental.chlorophyll.estimate_chlorophyll_ml
+   :members:
+   :undoc-members:
+   :show-inheritance:

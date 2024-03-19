@@ -1,0 +1,66 @@
+:py:mod:`hypso.atmospheric`
+===========================
+
+.. py:module:: hypso.atmospheric
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   atmospheric_correction_6sv1/index.rst
+   atmospheric_correction_acolite/index.rst
+   base/index.rst
+
+
+Package Contents
+----------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.atmospheric.run_py6s
+   hypso.atmospheric.run_acolite
+   hypso.atmospheric.get_acolite_repo
+
+
+
+.. py:function:: run_py6s(wavelengths, hypercube_L1, hypso_info, lat_2d_array, lon_2d_array, py6s_dict, time_capture, srf)
+
+   Run the PY6S atmospheric correction on the Hypso spectral image
+
+   :param wavelengths: Wavelengths corresponding to the spectral image
+   :param hypercube_L1: Hypercube of the spectral image L1B
+   :param hypso_info: Dictionary containing the information of the spectral image
+   :param lat_2d_array: 2D latitude array of the spectral image
+   :param lon_2d_array: 2D longitude array of the spectral image
+   :param py6s_dict: Dictionary containing the PY6S information for atmospheric correction
+   :param time_capture: Time of the capture
+   :param srf: Spectral response function for each of the 120 bands
+
+   :return: Return 3-channel surface reflectance spectral image
+
+
+.. py:function:: run_acolite(hypso_info, atmos_dict, nc_file_acoliteready)
+
+   Run the ACOLITE correction model. Adjustments of the original files are made to ensure they work for HYPSO
+
+   :param hypso_info: Dictionary containing the hypso capture information
+   :param atmos_dict: Dictionary containing the information required for the atmospheric correction
+   :param nc_file_acoliteready: Absolute path for the .nc file for ACOLITE (L1B)
+
+   :return: Returns surface reflectanc corrected spectral image
+
+
+.. py:function:: get_acolite_repo()
+
+   Download the ACOLITE Repo as a tar archive
+
+   :return: No return.
+
+

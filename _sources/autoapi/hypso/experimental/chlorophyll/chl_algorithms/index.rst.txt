@@ -1,0 +1,149 @@
+:py:mod:`hypso.experimental.chlorophyll.chl_algorithms`
+=======================================================
+
+.. py:module:: hypso.experimental.chlorophyll.chl_algorithms
+
+.. autoapi-nested-parse::
+
+   Created on Wed June 12, 2019
+
+   This module contains a functions to calculate the tropical Pacific chlorophyll algorithm (TPCA) concentrations for the satellite sensors; SeaWiFS, MODIS-Aqua and MERIS
+   Developed for Pittman et al., 2019. JGR: Oceans (2019JC015498)
+
+   Notes:
+       Numpy has been used over pure python or the math library for more efficient implementations. For increased efficiency, dask (dask.array) can be used instead of numpy.
+       These functions are designed for Level 3 Mapped products, which may not precisely reproduce the implementations available on the NASA website (https://oceandata.sci.gsfc.nasa.gov/). 
+
+   General functions include: 
+       blended_chl
+       calculate_chl_ocx
+       calculate_chl_ci
+       
+   Sensor specific functions include:
+       calculate_seawifs_chl
+       calcuate_modis_chl
+       calculate_meris_chl
+
+   @author: Nicholas.Pittman
+   @email: Nic.Pittman@utas.edu.au
+   @position: PhD Candidate; Biogeochemistry, remote sensing, oceanography, Tropical Pacific
+   @affiliation1: Institute of Marine and Antarctic Studies, University of Tasmania
+   @affiliation2: Australian Research Council Centre of Excellence for Climate Extremes.
+
+   References:
+       Tropical Pacific Chlorophyll Algorithm (2019JC015498)
+       'An assessment and improvement of satellite ocean color algorithms for the tropical Pacific Ocean'
+       Pittman, N., Strutton, P., Matear, R., Johnson, R., (2019)
+       Submitted: Journal of Geophysical Research: Oceans
+       
+       CI and blending window
+       Hu, C., Lee, Z., and Franz, B. (2012). 
+       Chlorophyll a algorithms for oligotrophic oceans: A novel approach based on three-band reflectance difference.
+       Journal of Geophysical Research: Oceans 117.
+       
+       Traditional OCx Algorithm
+       O’Reilly, J.E., Maritorena, S., Mitchell, B.G., Siegel, D.A., 
+       Carder, K.L., Garver, S.A., Kahru, M., and McClain, C. (1998).
+       Ocean color chlorophyll algorithms for SeaWiFS. 
+       Journal of Geophysical Research: Oceans 103, 24937–24953.
+
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.experimental.chlorophyll.chl_algorithms.closest_index
+   hypso.experimental.chlorophyll.chl_algorithms.blended_chl
+   hypso.experimental.chlorophyll.chl_algorithms.calculate_chl_ocx
+   hypso.experimental.chlorophyll.chl_algorithms.calculate_chl_ci
+   hypso.experimental.chlorophyll.chl_algorithms.modis_aqua_ocx
+   hypso.experimental.chlorophyll.chl_algorithms.sentinel_ocx
+
+
+
+.. py:function:: closest_index(input_list, lookup_value)
+
+   Find the closest index to lookup_value
+
+   :param input_list: List up to look on the value
+   :param lookup_value: Value to lookup
+
+   :return: Closest indext to the loookup_value
+
+
+.. py:function:: blended_chl(chl_ci, chl_ocx, t1, t2)
+
+   A general Chl algorithm blending function between Chl_CI to Chl_OCx
+
+   :param chl_ci:
+   :param chl_ocx:
+   :param t1:
+   :param t2:
+   :return:
+
+
+.. py:function:: calculate_chl_ocx(ocx_poly, lmbr)
+
+   A general Chl_OCx algorithm for fourth order polynomials (O'Reilly et al., 1998)
+
+   :param ocx_poly:
+   :param lmbr:
+   :return:
+
+
+.. py:function:: calculate_chl_ci(ci_poly, CI)
+
+   A general Chl_CI algorithm for a linear polynomial (Hu et al., 2012)
+
+   :param ci_poly:
+   :param CI:
+   :return:
+
+
+.. py:function:: modis_aqua_ocx(wl, hypercube, ocx_version)
+
+   Calculate the MODIS AQUA OCX for Chlorophyll estimation
+
+   :param wl:
+   :param hypercube:
+   :param ocx_version:
+   :return:
+
+
+.. py:function:: sentinel_ocx(wl, hypercube, ocx_version)
+
+   Calculate chlorophyll using the Sentinel OCX Polynomial.
+
+   **Given:**
+
+   ------ MODIS-Aqua RRS values for 443,488,547,667
+
+   ------ OCx: Polynomial
+
+   ------ CI: Polynomial
+
+   ------ l: Low blending cutoff
+
+   ------ h: High blending cutoff
+
+   **Calculate:**
+
+   ------ Calculate Chl OCx
+
+   ------ Calculate Chl CI
+
+   ------ Return blended chlorophyll esimate (Default product is the Pittman et al., 2019 TPCA)
+
+
+   :param wl:
+   :param hypercube:
+   :param ocx_version:
+   :return:
+
+

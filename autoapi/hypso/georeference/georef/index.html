@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hypso.georeference.georef &mdash; Hypso Package 1.9.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            Hypso Package
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Hypso Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.georeference.georef</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/autoapi/hypso/georeference/georef/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-hypso.georeference.georef">
+<span id="hypso-georeference-georef"></span><h1><a class="reference internal" href="../../../../hypso.georeference.georef.html#module-hypso.georeference.georef" title="hypso.georeference.georef"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.georeference.georef</span></code></a><a class="headerlink" href="#module-hypso.georeference.georef" title="Permalink to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="geometric/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.georeference.georef.geometric</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="gmaps/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.georeference.georef.gmaps</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="time_process/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.georeference.georef.time_process</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.georeference.georef.utils</span></code></a></li>
+</ul>
+</div>
+</section>
+<section id="package-contents">
+<h2>Package Contents<a class="headerlink" href="#package-contents" title="Permalink to this heading"></a></h2>
+<section id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.georeference.georef.GoogleMapsLayers" title="hypso.georeference.georef.GoogleMapsLayers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GoogleMapsLayers</span></code></a></p></td>
+<td><p>Google Maps Layers Class</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.georeference.georef.GoogleMapDownloader" title="hypso.georeference.georef.GoogleMapDownloader"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GoogleMapDownloader</span></code></a></p></td>
+<td><p>A class which generates high resolution google maps images given a longitude, latitude and zoom level</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.georeference.georef.gen_resample_grid" title="hypso.georeference.georef.gen_resample_grid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gen_resample_grid</span></code></a>(grid_res_x, grid_res_y, ...)</p></td>
+<td><p>Generate resample grid to the bbox coordinate limits</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.georeference.georef.gen_resample_grid_bbox_min" title="hypso.georeference.georef.gen_resample_grid_bbox_min"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gen_resample_grid_bbox_min</span></code></a>(grid_res_x, grid_res_y, ...)</p></td>
+<td><p>Generate resample grid bbox minimum</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.georeference.georef.get_julian_day_number" title="hypso.georeference.georef.get_julian_day_number"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_julian_day_number</span></code></a>(date_time)</p></td>
+<td><p>Get Julian Day Number from Date Time</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.georeference.georef.get_greenwich_mean_sidereal_time_seconds" title="hypso.georeference.georef.get_greenwich_mean_sidereal_time_seconds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_greenwich_mean_sidereal_time_seconds</span></code></a>(date_time)</p></td>
+<td><p>Gets Greenwich mean sidereal time in seconds</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.georeference.georef.minimum_bounding_rectangle" title="hypso.georeference.georef.minimum_bounding_rectangle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">minimum_bounding_rectangle</span></code></a>(points)</p></td>
+<td><p>Find the smallest bounding rectangle for a set of points. Rval is a 4x2 matrix of bounding box corner coordinates</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.georeference.georef.mat_from_quat" title="hypso.georeference.georef.mat_from_quat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mat_from_quat</span></code></a>(quat)</p></td>
+<td><p>Matrix from Quaternion</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.georeference.georef.rotate_axis_angle" title="hypso.georeference.georef.rotate_axis_angle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rotate_axis_angle</span></code></a>(vec, axis, angle)</p></td>
+<td><p>Rotates vector vec around axis axis by angle angle Both vec, axis, and vec_rot are column vectors. axis is a</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.georeference.georef.ecef_to_lat_lon_alt" title="hypso.georeference.georef.ecef_to_lat_lon_alt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ecef_to_lat_lon_alt</span></code></a>(pos)</p></td>
+<td><p>Input pos has to be Nx3, and units in meters</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.georeference.georef.eci_to_lat_loneci_alt" title="hypso.georeference.georef.eci_to_lat_loneci_alt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eci_to_lat_loneci_alt</span></code></a>(pos)</p></td>
+<td><p>ECI to latitude and longitude and altitude</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.georeference.georef.eci_lon_to_ecef_lon" title="hypso.georeference.georef.eci_lon_to_ecef_lon"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eci_lon_to_ecef_lon</span></code></a>(datetime_utc, lon, time_offset)</p></td>
+<td><p>ECI to longitude to ECEF Longitude conversion</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.georeference.georef.eci_to_lat_lon_alt" title="hypso.georeference.georef.eci_to_lat_lon_alt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eci_to_lat_lon_alt</span></code></a>(pos, times, time_offset)</p></td>
+<td><p>ECI to Lat/Lon Altitude</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.georeference.georef.pos_ecef_to_lat_lon_alt" title="hypso.georeference.georef.pos_ecef_to_lat_lon_alt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pos_ecef_to_lat_lon_alt</span></code></a>(pos)</p></td>
+<td><p>Coverts POS ECEF to latitude and longitude and altitude</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.georeference.georef.lat_lon_alt_to_ecef" title="hypso.georeference.georef.lat_lon_alt_to_ecef"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lat_lon_alt_to_ecef</span></code></a>(lla)</p></td>
+<td><p>Converts latitude and longitude ALT to ECEF</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.georeference.georef.ellipsoid_line_intersection" title="hypso.georeference.georef.ellipsoid_line_intersection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ellipsoid_line_intersection</span></code></a>(point, direction)</p></td>
+<td><p>Calculates the ellipsodie and line intersection</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.georeference.georef.pixel_to_latlon" title="hypso.georeference.georef.pixel_to_latlon"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pixel_to_latlon</span></code></a>(px_x, px_y, tl_x, tl_y, zoom_level)</p></td>
+<td><p>Pixel to Lat Lon</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.georeference.georef.main" title="hypso.georeference.georef.main"><code class="xref py py-obj docutils literal notranslate"><span class="pre">main</span></code></a>()</p></td>
+<td><p>Main entry point</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.georeference.georef.R_eq" title="hypso.georeference.georef.R_eq"><code class="xref py py-obj docutils literal notranslate"><span class="pre">R_eq</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.georeference.georef.f" title="hypso.georeference.georef.f"><code class="xref py py-obj docutils literal notranslate"><span class="pre">f</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.georeference.georef.e_2" title="hypso.georeference.georef.e_2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">e_2</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.georeference.georef.R_pl" title="hypso.georeference.georef.R_pl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">R_pl</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.gen_resample_grid">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.</span></span><span class="sig-name descname"><span class="pre">gen_resample_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_res_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_res_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bbox_coord_limits</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.gen_resample_grid" title="Permalink to this definition"></a></dt>
+<dd><p>Generate resample grid to the bbox coordinate limits</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>grid_res_x</strong> – </p></li>
+<li><p><strong>grid_res_y</strong> – </p></li>
+<li><p><strong>bbox_coord_limits</strong> – is expected to be a list or tuple with 4 elements as follows: [xmin, xmax, ymin, ymax]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[numpy.ndarray, list]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.gen_resample_grid_bbox_min">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.</span></span><span class="sig-name descname"><span class="pre">gen_resample_grid_bbox_min</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_res_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_res_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bbox_minimal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.gen_resample_grid_bbox_min" title="Permalink to this definition"></a></dt>
+<dd><p>Generate resample grid bbox minimum</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>grid_res_x</strong> – </p></li>
+<li><p><strong>grid_res_y</strong> – </p></li>
+<li><p><strong>bbox_minimal</strong> – <p>shall have has shape [4,2] and consists of four points describing the corner of the minimal
+bounding box.</p>
+<p>The width of the box is taken as the distance between point [0,:] and [3,:].</p>
+<p>The height of the box is taken as the distance between point [2,:] and [3,:].</p>
+<p>The x direction is taken as the direction going from point [3,:] to point [0,:].</p>
+<p>The y direction is taken as the direction going from point [3,:] to point [2,:].</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[numpy.ndarray, list]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.get_julian_day_number">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.</span></span><span class="sig-name descname"><span class="pre">get_julian_day_number</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date_time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.get_julian_day_number" title="Permalink to this definition"></a></dt>
+<dd><p>Get Julian Day Number from Date Time</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>date_time</strong> – Date Time</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Julian day as float</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.get_greenwich_mean_sidereal_time_seconds">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.</span></span><span class="sig-name descname"><span class="pre">get_greenwich_mean_sidereal_time_seconds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date_time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.get_greenwich_mean_sidereal_time_seconds" title="Permalink to this definition"></a></dt>
+<dd><p>Gets Greenwich mean sidereal time in seconds</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>date_time</strong> – </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>seconds since last midnight of a sidereal day</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.minimum_bounding_rectangle">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.</span></span><span class="sig-name descname"><span class="pre">minimum_bounding_rectangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.minimum_bounding_rectangle" title="Permalink to this definition"></a></dt>
+<dd><p>Find the smallest bounding rectangle for a set of points. Rval is a 4x2 matrix of bounding box corner coordinates</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>points</strong> – nx2 matrix of coordinates</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a set of points representing the corners of the bounding box.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.mat_from_quat">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.</span></span><span class="sig-name descname"><span class="pre">mat_from_quat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quat</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.mat_from_quat" title="Permalink to this definition"></a></dt>
+<dd><p>Matrix from Quaternion</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>quat</strong> – must be a four element list of numbers or 4 element nump array</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>numpy.ndarray</p>
+</dd>
+</dl>
+<p>:return:a 3x3 numpy array containing the rotation matrix</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.rotate_axis_angle">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.</span></span><span class="sig-name descname"><span class="pre">rotate_axis_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.rotate_axis_angle" title="Permalink to this definition"></a></dt>
+<dd><p>Rotates vector vec around axis axis by angle angle Both vec, axis, and vec_rot are column vectors. axis is a
+unit vector, angle is in radians</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vec</strong> – </p></li>
+<li><p><strong>axis</strong> – </p></li>
+<li><p><strong>angle</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="hypso.georeference.georef.R_eq">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.</span></span><span class="sig-name descname"><span class="pre">R_eq</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6378137.0</span></em><a class="headerlink" href="#hypso.georeference.georef.R_eq" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="hypso.georeference.georef.f">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.</span></span><span class="sig-name descname"><span class="pre">f</span></span><a class="headerlink" href="#hypso.georeference.georef.f" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="hypso.georeference.georef.e_2">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.</span></span><span class="sig-name descname"><span class="pre">e_2</span></span><a class="headerlink" href="#hypso.georeference.georef.e_2" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="hypso.georeference.georef.R_pl">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.</span></span><span class="sig-name descname"><span class="pre">R_pl</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6356752.0</span></em><a class="headerlink" href="#hypso.georeference.georef.R_pl" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.ecef_to_lat_lon_alt">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.</span></span><span class="sig-name descname"><span class="pre">ecef_to_lat_lon_alt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.ecef_to_lat_lon_alt" title="Permalink to this definition"></a></dt>
+<dd><p>Input pos has to be Nx3, and units in meters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pos</strong> – </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>lat lon (with respect to ECI axes) and altitude in degrees and meters</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.eci_to_lat_loneci_alt">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.</span></span><span class="sig-name descname"><span class="pre">eci_to_lat_loneci_alt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.eci_to_lat_loneci_alt" title="Permalink to this definition"></a></dt>
+<dd><p>ECI to latitude and longitude and altitude</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pos</strong> – </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.eci_lon_to_ecef_lon">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.</span></span><span class="sig-name descname"><span class="pre">eci_lon_to_ecef_lon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datetime_utc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_offset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.eci_lon_to_ecef_lon" title="Permalink to this definition"></a></dt>
+<dd><p>ECI to longitude to ECEF Longitude conversion
+:param datetime_utc:
+:param lon:
+:param time_offset:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.eci_to_lat_lon_alt">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.</span></span><span class="sig-name descname"><span class="pre">eci_to_lat_lon_alt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">times</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_offset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.eci_to_lat_lon_alt" title="Permalink to this definition"></a></dt>
+<dd><p>ECI to Lat/Lon Altitude</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pos</strong> – needs to be Nx3</p></li>
+<li><p><strong>times</strong> – needs to be N</p></li>
+<li><p><strong>time_offset</strong> – is a float. is an additional time offset to adjust georeferencing</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Numpy array with pseudo latitude and longitude and altitude</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.pos_ecef_to_lat_lon_alt">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.</span></span><span class="sig-name descname"><span class="pre">pos_ecef_to_lat_lon_alt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.pos_ecef_to_lat_lon_alt" title="Permalink to this definition"></a></dt>
+<dd><p>Coverts POS ECEF to latitude and longitude and altitude
+:param pos:
+:return:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.lat_lon_alt_to_ecef">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.</span></span><span class="sig-name descname"><span class="pre">lat_lon_alt_to_ecef</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lla</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.lat_lon_alt_to_ecef" title="Permalink to this definition"></a></dt>
+<dd><p>Converts latitude and longitude ALT to ECEF
+:param lla:
+:return:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.ellipsoid_line_intersection">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.</span></span><span class="sig-name descname"><span class="pre">ellipsoid_line_intersection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.ellipsoid_line_intersection" title="Permalink to this definition"></a></dt>
+<dd><p>Calculates the ellipsodie and line intersection</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>point</strong> – </p></li>
+<li><p><strong>direction</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[float, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.pixel_to_latlon">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.</span></span><span class="sig-name descname"><span class="pre">pixel_to_latlon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">px_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">px_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tl_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tl_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zoom_level</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.pixel_to_latlon" title="Permalink to this definition"></a></dt>
+<dd><p>Pixel to Lat Lon</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>px_x</strong> – Pixel coordinates of google maps image (can be float)</p></li>
+<li><p><strong>px_y</strong> – Pixel coordinates of google maps image (can be float)</p></li>
+<li><p><strong>tl_x</strong> – tile indices of top left (noth-western) corner (must be int)</p></li>
+<li><p><strong>tl_y</strong> – tile indices of top left (noth-western) corner (must be int)</p></li>
+<li><p><strong>zoom_level</strong> – zoom level of the image (also must be int)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>lat,lon</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[float, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hypso.georeference.georef.GoogleMapsLayers">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.</span></span><span class="sig-name descname"><span class="pre">GoogleMapsLayers</span></span><a class="headerlink" href="#hypso.georeference.georef.GoogleMapsLayers" title="Permalink to this definition"></a></dt>
+<dd><p>Google Maps Layers Class</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hypso.georeference.georef.GoogleMapsLayers.ROADMAP">
+<span class="sig-name descname"><span class="pre">ROADMAP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'v'</span></em><a class="headerlink" href="#hypso.georeference.georef.GoogleMapsLayers.ROADMAP" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hypso.georeference.georef.GoogleMapsLayers.TERRAIN">
+<span class="sig-name descname"><span class="pre">TERRAIN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'p'</span></em><a class="headerlink" href="#hypso.georeference.georef.GoogleMapsLayers.TERRAIN" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hypso.georeference.georef.GoogleMapsLayers.ALTERED_ROADMAP">
+<span class="sig-name descname"><span class="pre">ALTERED_ROADMAP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'r'</span></em><a class="headerlink" href="#hypso.georeference.georef.GoogleMapsLayers.ALTERED_ROADMAP" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hypso.georeference.georef.GoogleMapsLayers.SATELLITE">
+<span class="sig-name descname"><span class="pre">SATELLITE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'s'</span></em><a class="headerlink" href="#hypso.georeference.georef.GoogleMapsLayers.SATELLITE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hypso.georeference.georef.GoogleMapsLayers.TERRAIN_ONLY">
+<span class="sig-name descname"><span class="pre">TERRAIN_ONLY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'t'</span></em><a class="headerlink" href="#hypso.georeference.georef.GoogleMapsLayers.TERRAIN_ONLY" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hypso.georeference.georef.GoogleMapsLayers.HYBRID">
+<span class="sig-name descname"><span class="pre">HYBRID</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'y'</span></em><a class="headerlink" href="#hypso.georeference.georef.GoogleMapsLayers.HYBRID" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hypso.georeference.georef.GoogleMapDownloader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.</span></span><span class="sig-name descname"><span class="pre">GoogleMapDownloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zoom</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">GoogleMapsLayers.SATELLITE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.GoogleMapDownloader" title="Permalink to this definition"></a></dt>
+<dd><p>A class which generates high resolution google maps images given a longitude, latitude and zoom level</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.georeference.georef.GoogleMapDownloader.latlon_to_tileXY">
+<span class="sig-name descname"><span class="pre">latlon_to_tileXY</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.GoogleMapDownloader.latlon_to_tileXY" title="Permalink to this definition"></a></dt>
+<dd><p>Generates an X,Y tile coordinate based on the latitude, longitude and zoom level</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An X,Y tile coordinate</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple[float, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.georeference.georef.GoogleMapDownloader.generateImage">
+<span class="sig-name descname"><span class="pre">generateImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.GoogleMapDownloader.generateImage" title="Permalink to this definition"></a></dt>
+<dd><p>Generates an image by stitching a number of google map tiles together.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kwargs</strong> – center_tile_x:  The center tile x coordinate
+center_tile_y:  The center tile y coordinate
+tile_count_x:   The number of tiles wide the image should be
+tile_count_y:   The number of tiles high the image should be</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A high-resolution Goole Map image, and the tile coordinates of the top left tile in the image.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[PIL.Image.Image, tuple]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef.main">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef.main" title="Permalink to this definition"></a></dt>
+<dd><p>Main entry point</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Norwegian University of Science and Technology (NTNU).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,152 @@
+:py:mod:`hypso.classification.WaterDetection.waterdetect.WaterDetect`
+=====================================================================
+
+.. py:module:: hypso.classification.WaterDetection.waterdetect.WaterDetect
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   hypso.classification.WaterDetection.waterdetect.WaterDetect.DWWaterDetect
+
+
+
+
+.. py:class:: DWWaterDetect(input_folder, output_folder, shape_file, product, config_file, pekel=None, single_mode=False, *args, **kwargs)
+
+   .. py:property:: water_mask
+
+
+   .. py:property:: cluster_matrix
+
+
+   .. py:method:: __repr__()
+
+      Return repr(self).
+
+
+   .. py:method:: necessary_bands(include_rgb)
+
+      Return all the necessary bands, based on the bands used for the graphics and the clustering
+
+      :param include_rgb: Specifies if RGB bands are necessary for creating composite, for example
+
+      :return: All necessary bands in a list
+
+
+   .. py:method:: calc_nd_index(index_name, band1, band2, save_index=False)
+
+      Calculates a normalized difference index, adds it to the bands dict and update the mask in loader
+
+      :param save_index: Indicate if we should save this index to a raster image
+      :param index_name: name of index to be used as key in the dictionary
+      :param band1: first band to be used in the normalized difference
+      :param band2: second band to be used in the normalized difference
+
+      :return: index array
+
+
+   .. py:method:: calc_m_nd_index(index_name, band1, band2, band3, band4, save_index=False)
+
+      Calculates a modified normalized difference index, adds it to the bands dict and update the mask in loader.
+      Proposed by Dhalton. It uses the maximum of visible and the minimum of Nir/Swir
+
+      :param save_index: Inidicate if we should save this index to a raster image
+      :param index_name: name of index to be used as key in the dictionary
+      :param band1: first band to be used in the normalized difference
+      :param band2: second option for the first band to be used in the normalized difference
+      :param band3: second band to be used in the normalized difference
+      :param band4: second option for the second band to be used in the normalized difference
+
+      :return: index array
+
+
+   .. py:method:: calc_mbwi(bands, factor=3, save_index=False)
+
+      Calculates the Multi band Water Index and adds it to the bands dictionary
+
+      :param save_index: Inform if the index should be saved as array in the output folder
+      :param bands: Bands dictionary with the raster bands
+      :param factor: Factor to multiply the Green band as proposed in the original paper
+
+      :return: mbwi array
+
+
+   .. py:method:: calc_awei(bands, save_index=False)
+
+      Calculates the AWEI Water Index and adds it to the bands dictionary
+
+      :param save_index: Inform if the index should be saved as array in the output folder
+      :param bands: Bands dictionary with the raster bands
+
+      :return: mbwi array
+
+
+   .. py:method:: run_water_detect(input_folder, output_folder, single_mode, shape_file=None, product='S2_THEIA', config_file=None, pekel=None, post_callback=None, **kwargs)
+      :classmethod:
+
+      Main function to launch the water detect algorithm processing. This is the function called from the script.
+
+      :param input_folder: If single_mode=True, this is the uncompressed image product. If single_mode=False, this
+          is the folder that contains all uncompressed images.
+      :param output_folder: Output directory
+      :param single_mode: For batch processing (multiple images at a time), single_mode should be set to False
+      :param shape_file: Shape file to clip the image (optional).
+      :param product: The product to be processed (S2_THEIA, L8_USGS, S2_L1C or S2_S2COR)
+      :param config_file: Configuration .ini file. If not specified WaterDetect.ini from current dir and used as
+          default
+      :param pekel: Optional path for an occurrence base map like Pekel
+      :param post_callback: Used for the WaterQuality add-on package
+      :param kwargs: Additional parameters.
+
+      :return: DWWaterDetect instance with the generated mask.
+
+
+   .. py:method:: _detect_water(post_callback=None)
+
+      Run batch is intended for multiprocessing of various images and bands combinations.
+          It Loops through all unzipped images in input folder, extract water pixels and save results to output folder
+          ATT: The input folder is not a satellite image itself. It should be the parent folder containing all images.
+          For single detection, use run() method.
+
+      :param post_callback: None
+
+      :return: None
+
+
+   .. py:method:: test_pekel(image, dw_image, pdf_merger_image)
+
+      Test Pekel Function
+
+      :param image:
+      :param dw_image:
+      :param pdf_merger_image:
+
+      :return:
+
+
+   .. py:method:: save_report(report_name, pdf_merger, folder)
+      :staticmethod:
+
+
+   .. py:method:: save_graphs(dw_image, pdf_merger_image)
+
+
+   .. py:method:: create_water_mask(band_combination, pdf_merger_image, glint_processor=None)
+
+
+   .. py:method:: create_colorbar_pdf(param_name, colormap, min_value, max_value, units='')
+
+
+   .. py:method:: create_rgb_burn_in_pdf(product_name, burn_in_arrays, colors=None, min_value=None, max_value=None, fade=None, opt_relative_path=None, colormap='viridis', uniform_distribution=False, no_data_value=0, valid_value=1, transps=None, bright=5.0)
+
+
+   .. py:method:: calc_indexes(image, indexes_list, save_index=False)
+
+
+

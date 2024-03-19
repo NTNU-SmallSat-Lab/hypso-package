@@ -1,0 +1,7 @@
+hypso.experimental.chlorophyll.chl\_algorithms module
+=====================================================
+
+.. automodule:: hypso.experimental.chlorophyll.chl_algorithms
+   :members:
+   :undoc-members:
+   :show-inheritance:

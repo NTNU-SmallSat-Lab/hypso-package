@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hypso.utils &mdash; Hypso Package 1.9.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Hypso Package
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Hypso Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.utils</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/autoapi/hypso/utils/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-hypso.utils">
+<span id="hypso-utils"></span><h1><a class="reference internal" href="../../../hypso.utils.html#module-hypso.utils" title="hypso.utils"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.utils</span></code></a><a class="headerlink" href="#module-hypso.utils" title="Permalink to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="utils_file/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.utils.utils_file</span></code></a></li>
+</ul>
+</div>
+</section>
+<section id="package-contents">
+<h2>Package Contents<a class="headerlink" href="#package-contents" title="Permalink to this heading"></a></h2>
+<section id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.utils.MyProgressBar" title="hypso.utils.MyProgressBar"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MyProgressBar</span></code></a></p></td>
+<td><p>Class used to display a progress bar on the screen for bulk downloading.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.utils.find_file" title="hypso.utils.find_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_file</span></code></a>(path, str_in_file[, suffix, type])</p></td>
+<td><p>Find recursively a single file (or first occurance) in a specified directory.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.utils.is_integer_num" title="hypso.utils.is_integer_num"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_integer_num</span></code></a>(n)</p></td>
+<td><p>Check if a number is an integer</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.utils.find_dir" title="hypso.utils.find_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_dir</span></code></a>(path, str_in_dir[, type])</p></td>
+<td><p>Find recursively a directory (or first occurance) in a specified directory.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.utils.HSI2RGB" title="hypso.utils.HSI2RGB"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HSI2RGB</span></code></a>(wY, HSI[, d, threshold])</p></td>
+<td><p>Calculate a colore accurate RGB image with HSI values. Original function used for the paper</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.utils.print_nc" title="hypso.utils.print_nc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_nc</span></code></a>(nc_file_path)</p></td>
+<td><p>Print the contents of a .nc file</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.utils.find_all_files" title="hypso.utils.find_all_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_all_files</span></code></a>(path, str_in_file[, suffix, type])</p></td>
+<td><p>Find recursively all files in a specified directory.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.utils.compare_netcdf_files" title="hypso.utils.compare_netcdf_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compare_netcdf_files</span></code></a>(file1, file2)</p></td>
+<td><p>Compare two .nc files and returns a pandas DataFrame where each attribute, variable and values are compared side</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.utils.find_closest_water_lat_lon_match" title="hypso.utils.find_closest_water_lat_lon_match"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_closest_water_lat_lon_match</span></code></a>(sat_obj, target_lat, ...)</p></td>
+<td><p>Find the closest Image lat and lon to the targat specificed that is also a water pixel.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.utils.find_file">
+<span class="sig-prename descclassname"><span class="pre">hypso.utils.</span></span><span class="sig-name descname"><span class="pre">find_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_in_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'partial'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.find_file" title="Permalink to this definition"></a></dt>
+<dd><p>Find recursively a single file (or first occurance) in a specified directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>pathlib.Path</em>) – Directory path on which to look for files.</p></li>
+<li><p><strong>str_in_file</strong> (<em>str</em>) – Check if this string is in the file name</p></li>
+<li><p><strong>suffix</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>None</em><em>]</em>) – Check if file extension matches the suffix provided</p></li>
+<li><p><strong>type</strong> (<em>Literal</em><em>[</em><em>partial</em><em>, </em><em>exact</em><em>]</em>) – Type of comparisson of “str_in_file”. If “partial”, then “str_in_file” will be checked to be in the filename,
+otherwise “exact” will check if the filename matches exactly the string provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Path of the file or None if no file found</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Union[pathlib.Path, None]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.utils.is_integer_num">
+<span class="sig-prename descclassname"><span class="pre">hypso.utils.</span></span><span class="sig-name descname"><span class="pre">is_integer_num</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.is_integer_num" title="Permalink to this definition"></a></dt>
+<dd><p>Check if a number is an integer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>n</strong> – Number to check</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Boolean value indicating whether or not the number is an integer</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.utils.find_dir">
+<span class="sig-prename descclassname"><span class="pre">hypso.utils.</span></span><span class="sig-name descname"><span class="pre">find_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_in_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'partial'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.find_dir" title="Permalink to this definition"></a></dt>
+<dd><p>Find recursively a directory (or first occurance) in a specified directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>pathlib.Path</em>) – Directory path on which to look for files.</p></li>
+<li><p><strong>str_in_dir</strong> (<em>str</em>) – Check if this string is in the directory name</p></li>
+<li><p><strong>type</strong> (<em>Literal</em><em>[</em><em>partial</em><em>, </em><em>exact</em><em>]</em>) – Type of comparisson of “str_in_file”. If “partial”, then “str_in_file” will be checked to be in the filename,
+otherwise “exact” will check if the filename matches exactly the string provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Path of the file or None if no file found</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Union[pathlib.Path, None]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.utils.HSI2RGB">
+<span class="sig-prename descclassname"><span class="pre">hypso.utils.</span></span><span class="sig-name descname"><span class="pre">HSI2RGB</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">HSI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">65</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.002</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.HSI2RGB" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate a colore accurate RGB image with HSI values. Original function used for the paper
+“Creating RGB Images from Hyperspectral Images Using a Color Matching Function” by
+M. Magnusson, J. Sigurdsson, S. E. Armansson, M. O. Ulfarsson, H. Deborah and J. R. Sveinsson,</p>
+<p>If you use this method, please cite the following paper:
+&#64;INPROCEEDINGS{hsi2rgb,
+author={M. {Magnusson} and J. {Sigurdsson} and S. E. {Armansson}
+and M. O. {Ulfarsson} and H. {Deborah} and J. R. {Sveinsson}},
+booktitle={IEEE International Geoscience and Remote Sensing Symposium},
+title={Creating {RGB} Images from Hyperspectral Images using a Color Matching Function},
+year={2020}, volume={}, number={}, pages={}}</p>
+<p>Paper is available at
+<a class="reference external" href="https://www.researchgate.net/profile/Jakob_Sigurdsson">https://www.researchgate.net/profile/Jakob_Sigurdsson</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wY</strong> – Wavelengths in nm</p></li>
+<li><p><strong>HSI</strong> – Hyperspectral Image as a (#pixels x #bands) matrix,</p></li>
+<li><p><strong>d</strong> (<em>Literal</em><em>[</em><em>50</em><em>, </em><em>55</em><em>, </em><em>65</em><em>, </em><em>75</em><em>]</em>) – Determines the illuminant used, if in doubt use d65. Values of  50, 55, 65, 75</p></li>
+<li><p><strong>threshold</strong> – True if RGB thesholding should be done to increase contrast</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>RGB Image array</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.utils.print_nc">
+<span class="sig-prename descclassname"><span class="pre">hypso.utils.</span></span><span class="sig-name descname"><span class="pre">print_nc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nc_file_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.print_nc" title="Permalink to this definition"></a></dt>
+<dd><p>Print the contents of a .nc file
+:param nc_file_path: Absolute path to a .nc file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>No return</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>nc_file_path</strong> (<em>str</em>) – </p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.utils.find_all_files">
+<span class="sig-prename descclassname"><span class="pre">hypso.utils.</span></span><span class="sig-name descname"><span class="pre">find_all_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_in_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'partial'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.find_all_files" title="Permalink to this definition"></a></dt>
+<dd><p>Find recursively all files in a specified directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>pathlib.Path</em>) – Directory path on which to look for files.</p></li>
+<li><p><strong>str_in_file</strong> (<em>str</em>) – Check if this string is in the file name</p></li>
+<li><p><strong>suffix</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>None</em><em>]</em>) – Check if file extension matches the suffix provided</p></li>
+<li><p><strong>type</strong> (<em>Literal</em><em>[</em><em>partial</em><em>, </em><em>exact</em><em>]</em>) – Type of comparisson of “str_in_file”. If “partial”, then “str_in_file” will be checked to be in the filename,
+otherwise “exact” will check if the filename matches exactly the string provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of file paths</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hypso.utils.MyProgressBar">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hypso.utils.</span></span><span class="sig-name descname"><span class="pre">MyProgressBar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text_prefix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.MyProgressBar" title="Permalink to this definition"></a></dt>
+<dd><p>Class used to display a progress bar on the screen for bulk downloading.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.utils.MyProgressBar.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">block_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.MyProgressBar.__call__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.utils.compare_netcdf_files">
+<span class="sig-prename descclassname"><span class="pre">hypso.utils.</span></span><span class="sig-name descname"><span class="pre">compare_netcdf_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.compare_netcdf_files" title="Permalink to this definition"></a></dt>
+<dd><p>Compare two .nc files and returns a pandas DataFrame where each attribute, variable and values are compared side
+by side.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file1</strong> (<em>str</em>) – Absolute path to file 1</p></li>
+<li><p><strong>file2</strong> (<em>str</em>) – Absolute path to file 2</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dataframe with the compared characteristics</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.utils.find_closest_water_lat_lon_match">
+<span class="sig-prename descclassname"><span class="pre">hypso.utils.</span></span><span class="sig-name descname"><span class="pre">find_closest_water_lat_lon_match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sat_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">water_pixel_filter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.utils.find_closest_water_lat_lon_match" title="Permalink to this definition"></a></dt>
+<dd><p>Find the closest Image lat and lon to the targat specificed that is also a water pixel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>water_pixel_filter</strong> (<em>bool</em>) – If true, the closest pixel should also be classified as water pixel.</p></li>
+<li><p><strong>sat_obj</strong> – Hypso satellite object</p></li>
+<li><p><strong>target_lat</strong> (<em>float</em>) – Target latitude</p></li>
+<li><p><strong>target_lon</strong> (<em>float</em>) – Target longitude</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Row, col and dist_to_target in km from the closes water pixel</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[int, int, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Norwegian University of Science and Technology (NTNU).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

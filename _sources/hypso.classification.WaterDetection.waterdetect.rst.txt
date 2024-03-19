@@ -1,0 +1,24 @@
+hypso.classification.WaterDetection.waterdetect package
+=======================================================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hypso.classification.WaterDetection.waterdetect.Common
+   hypso.classification.WaterDetection.waterdetect.External_mask
+   hypso.classification.WaterDetection.waterdetect.Glint
+   hypso.classification.WaterDetection.waterdetect.Image
+   hypso.classification.WaterDetection.waterdetect.InputOutput
+   hypso.classification.WaterDetection.waterdetect.WaterDetect
+   hypso.classification.WaterDetection.waterdetect.products
+
+Module contents
+---------------
+
+.. automodule:: hypso.classification.WaterDetection.waterdetect
+   :members:
+   :undoc-members:
+   :show-inheritance:

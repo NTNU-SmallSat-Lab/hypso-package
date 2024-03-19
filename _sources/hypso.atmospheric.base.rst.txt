@@ -1,0 +1,7 @@
+hypso.atmospheric.base module
+=============================
+
+.. automodule:: hypso.atmospheric.base
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,92 @@
+:py:mod:`hypso.reading.load`
+============================
+
+.. py:module:: hypso.reading.load
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.reading.load.load_nc
+   hypso.reading.load.get_lat_lon_2d
+   hypso.reading.load.get_local_angles
+   hypso.reading.load.get_metainfo_from_nc_file
+   hypso.reading.load.get_raw_cube_from_nc_file
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.reading.load.EXPERIMENTAL_FEATURES
+
+
+.. py:data:: EXPERIMENTAL_FEATURES
+   :value: True
+
+   
+
+.. py:function:: load_nc(nc_file_path, standardDimensions)
+
+   Load l1a.nc Hypso Capture file
+
+   :param nc_file_path: Absolute path to the l1a.nc file
+   :param standardDimensions: Dictionary with Standard Hypso allowed dimensions
+
+   :return: "info" Dictionary with Hypso capture information, raw cube numpy array (digital counts) and capture spatial
+       dimensions
+
+
+.. py:function:: get_lat_lon_2d(latitude_dataPath, longitude_dataPath, info, spatialDim)
+
+   Load Latitude and Longitude 2D arrays from generated tmp files
+
+   :param latitude_dataPath: Absolute path to Latitude .dat file
+   :param longitude_dataPath: Absolute path to Longitude .dat file
+   :param info: Info Dictionary to mutate with new information
+   :param spatialDim: Spatial dimension of the Hypso capture
+
+   :return: Updated "info" dictionary with the latitude and longitude 2D arrays
+
+
+.. py:function:: get_local_angles(sat_azimuth_path, sat_zenith_path, solar_azimuth_path, solar_zenith_path, info, spatialDim)
+
+   Load Satellite and Solar Angles from generated tmp files
+
+   :param sat_azimuth_path: Absolute path to Satellite (Viewing) Azimuth .dat file
+   :param sat_zenith_path: Absolute path to Satellite (Viewing) Zenith .dat file
+   :param solar_azimuth_path: Absolute path to Solar Azimuth .dat file
+   :param solar_zenith_path: Absolute path to Solar Zenith .dat file
+   :param info: Info Dictionary to mutate with new information
+   :param spatialDim: Spatial dimension of the Hypso capture
+
+   :return: Updated "info" dictionary with the Arrays of the solar and satellite (viewing) angles
+
+
+.. py:function:: get_metainfo_from_nc_file(nc_file_path, standardDimensions)
+
+   Get the metadata from the top folder of the data.
+
+   :param nc_file_path: Path to the name of the tmp folder
+   :param standardDimensions: Dictionary with Hypso standard dimensions
+
+   :return: "info" dictionary with the data and a tuple with spatial dimensions
+
+
+.. py:function:: get_raw_cube_from_nc_file(nc_file_path)
+
+   Get Raw Cube from Hypso l1a.nc File
+
+   :param nc_file_path: Absolute path to l1a.nc file
+
+   :return: Numpy array with raw Cube (digital counts) extracted from nc file
+
+

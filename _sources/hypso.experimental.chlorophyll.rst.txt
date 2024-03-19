@@ -1,0 +1,21 @@
+hypso.experimental.chlorophyll package
+======================================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hypso.experimental.chlorophyll.chl_algorithms
+   hypso.experimental.chlorophyll.estimate_chlorophyll_ml
+   hypso.experimental.chlorophyll.indices
+   hypso.experimental.chlorophyll.utilities_chl
+
+Module contents
+---------------
+
+.. automodule:: hypso.experimental.chlorophyll
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,18 @@
+hypso.utils package
+===================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hypso.utils.utils_file
+
+Module contents
+---------------
+
+.. automodule:: hypso.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:

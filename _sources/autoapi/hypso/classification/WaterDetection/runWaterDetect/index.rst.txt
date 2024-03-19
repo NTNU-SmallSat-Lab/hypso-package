@@ -1,0 +1,40 @@
+:py:mod:`hypso.classification.WaterDetection.runWaterDetect`
+============================================================
+
+.. py:module:: hypso.classification.WaterDetection.runWaterDetect
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.classification.WaterDetection.runWaterDetect.main
+   hypso.classification.WaterDetection.runWaterDetect.debug
+   hypso.classification.WaterDetection.runWaterDetect.debug_path
+   hypso.classification.WaterDetection.runWaterDetect.process_ext_masks
+
+
+
+.. py:function:: main()
+
+   The main function is just a wrapper to create a entry point script called waterdetect.
+   With the package installed you can just call waterdetect -h in the command prompt to see the options.
+
+
+.. py:function:: debug(args)
+
+
+.. py:function:: debug_path(path, name, list_files=False)
+
+
+.. py:function:: process_ext_masks()
+
+   The External_mask main function is the script entry point to process an external mask and prepare it to be
+   consumed by the WaterDetect.
+
+

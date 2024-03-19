@@ -1,0 +1,112 @@
+:py:mod:`hypso.georeference`
+============================
+
+.. py:module:: hypso.georeference
+
+
+Subpackages
+-----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+
+   georef/index.rst
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   coordinate_correction/index.rst
+   create_adcs_files/index.rst
+   georef_plots/index.rst
+   interpolate_frame/index.rst
+   reference/index.rst
+
+
+Package Contents
+----------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.georeference.generate_rgb_geotiff
+   hypso.georeference.generate_full_geotiff
+   hypso.georeference.create_adcs_timestamps_files
+   hypso.georeference.interpolate_at_frame
+   hypso.georeference.geometry_computation
+   hypso.georeference.start_coordinate_correction
+
+
+
+.. py:function:: generate_rgb_geotiff(satObj, overwrite = False)
+
+   Generate RGB GeoTiff image
+
+   :param satObj: Hypso satellite object.
+   :param overwrite: If true, overwrite the previously generated RGB GeoTiff image
+
+   :return: No return
+
+
+.. py:function:: generate_full_geotiff(satObj, product = 'L1C')
+
+   Generate Full 120 Band GeoTiff image
+
+   :param satObj: Hypso satellite object.
+   :param product: Product to generate it can be either "L1C", "L2-6SV1", "L2-ACOLITE"
+
+   :return: No return
+
+
+.. py:function:: create_adcs_timestamps_files(nc_path, nc_info)
+
+   Creates timestamps for files
+
+   :param nc_path: Absolute patth of the netCDF4 file
+   :param nc_info: Dictionary containing the capture data and the temporary folder with generated files.
+
+   :return: Dictionary used with no modification
+
+
+.. py:function:: interpolate_at_frame(pos_csv_path, quat_csv_path, flash_csv_path, additional_time_offset=0.0, framerate=-1.0, exposure=-1.0)
+
+   Function to interpolate at the frame based on the quaternion, position and timestamps
+
+   :param pos_csv_path:
+   :param quat_csv_path:
+   :param flash_csv_path:
+   :param additional_time_offset:
+   :param framerate:
+   :param exposure:
+
+   :return:
+
+
+.. py:function:: geometry_computation(framepose_data_path, hypso_height=684)
+
+   Compute geometry using the framepose data
+
+   :param framepose_data_path:
+   :param hypso_height: Height of the Hypso capture
+
+   :return: No return.
+
+
+.. py:function:: start_coordinate_correction(points_path, satinfo, proj_metadata, correction_type = 'affine')
+
+   Start coordinate correction process
+
+   :param points_path: Path of the .points file generated with QGIS software
+   :param satinfo: Dictionary containing capture information
+   :param proj_metadata: Dictionary containing projection metadata of the capture
+   :param correction_type: String with the method out of "affine", "homography", polynomial" and "lstsq"
+
+   :return: Corrected lat and lon coordinate 2D arrays
+
+

@@ -1,0 +1,44 @@
+:py:mod:`hypso.experimental.chlorophyll.estimate_chlorophyll_ml`
+================================================================
+
+.. py:module:: hypso.experimental.chlorophyll.estimate_chlorophyll_ml
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.experimental.chlorophyll.estimate_chlorophyll_ml.get_best_features
+   hypso.experimental.chlorophyll.estimate_chlorophyll_ml.start_chl_estimation
+
+
+
+.. py:function:: get_best_features(X_train_rrs, y_train_rrs, X_test_rrs, y_test_rrs, dataset_name = 'hypso')
+
+   Compute the optimal features based on the findings of the Master thesis "Improving Ocean Chlorophyll Estimation in
+   Satellite Hyperspectral Images Using Ensemble Machine Learning" by Flores-Romero Alvaro
+
+   :param X_train_rrs: Surface reflectance values for training
+   :param y_train_rrs: Surface chlorophyll values for training
+   :param X_test_rrs: Surface reflectance values for testing
+   :param y_test_rrs: Surface chlorophyll values for testing
+   :param dataset_name: Dataset name to estimate values. Defaults to "hypso"
+
+   :return: Returns the features for training and testing
+
+
+.. py:function:: start_chl_estimation(sat_obj, model_path=None)
+
+   Estimates the chlorophyll using a trained ML Scikit-Learn Model
+
+   :param sat_obj: Hypso satellite object
+   :param model_path: Absolute path for the pre-trained Scikit-Learn model
+
+   :return: No return.
+
+

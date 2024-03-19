@@ -1,0 +1,7 @@
+hypso-package
+=============
+
+.. toctree::
+   :maxdepth: 4
+
+   hypso

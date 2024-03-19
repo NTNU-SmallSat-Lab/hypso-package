@@ -1,0 +1,7 @@
+hypso.plot.map module
+=====================
+
+.. automodule:: hypso.plot.map
+   :members:
+   :undoc-members:
+   :show-inheritance:

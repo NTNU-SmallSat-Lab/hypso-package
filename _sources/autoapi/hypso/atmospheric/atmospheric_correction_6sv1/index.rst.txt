@@ -1,0 +1,95 @@
+:py:mod:`hypso.atmospheric.atmospheric_correction_6sv1`
+=======================================================
+
+.. py:module:: hypso.atmospheric.atmospheric_correction_6sv1
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.atmospheric.atmospheric_correction_6sv1.BasicParameters
+   hypso.atmospheric.atmospheric_correction_6sv1.clip_srf
+   hypso.atmospheric.atmospheric_correction_6sv1.AtmosphericCorrection
+   hypso.atmospheric.atmospheric_correction_6sv1.get_surface_reflectance
+   hypso.atmospheric.atmospheric_correction_6sv1.get_corrected_radiance
+   hypso.atmospheric.atmospheric_correction_6sv1.run_py6s
+
+
+
+.. py:function:: BasicParameters(wavelengths, hypercube_L1, hypso_info, lat_2d_array, lon_2d_array, time_capture)
+
+   Get the parameters you need for 6s atmospheric correction
+
+   :param wavelengths: Wavelengths corresponding to the spectral image
+   :param hypercube_L1: Hypercube of the spectral image L1B
+   :param hypso_info: Dictionary containing the information of the spectral image
+   :param lat_2d_array: 2D latitude array of the spectral image
+   :param lon_2d_array: 2D longitude array of the spectral image
+   :param time_capture: Time of the capture
+
+   :return: Dictionary of the Basic Paramters for the PY6SV1 correction method
+
+
+.. py:function:: clip_srf(single_wl, single_srf)
+
+   Trim and clip Spectral Response Function (SRF) to the 6SV1 requirements
+
+   :param single_wl: Wavelengths for the SRF
+   :param single_srf: Single band SRF [0, 1]
+
+   :return: Returns the wavelength of the SRF adjusted for 6SV1 and the SRF for the 6SV1 model [0, 1]
+
+
+.. py:function:: AtmosphericCorrection(BandId, SixsInputParameter, srf)
+
+   Call the 6s model and assign values to the parameters to obtain the atmospheric correction coefficients
+
+   :param BandId: ID of the band being corrected
+   :param SixsInputParameter: Basic Parmeters used for the correction
+   :param srf: Spectral response functions for Hypso
+
+   :return:
+
+
+.. py:function:: get_surface_reflectance(radiance_band, py6s_results)
+
+   Calculate surface reflectance from at-sensor radiance given waveband name and the 6SV1 coefficients
+
+   :param radiance_band: Radiance band to calculate surface reflectance (2D array)
+   :param py6s_results: Dictionary containing the results of the correction
+
+   :return: Surface reflectance for a single band
+
+
+.. py:function:: get_corrected_radiance(radiance_band, py6s_results)
+
+   Alternative NOT USED method to correct based on the coefficients a, b and c
+
+   :param radiance_band: Radiance band to calculate surface reflectance (2D array)
+   :param py6s_results: Dictionary containing the results of the correction
+
+   :return: Surface reflectance for a single band
+
+
+.. py:function:: run_py6s(wavelengths, hypercube_L1, hypso_info, lat_2d_array, lon_2d_array, py6s_dict, time_capture, srf)
+
+   Run the PY6S atmospheric correction on the Hypso spectral image
+
+   :param wavelengths: Wavelengths corresponding to the spectral image
+   :param hypercube_L1: Hypercube of the spectral image L1B
+   :param hypso_info: Dictionary containing the information of the spectral image
+   :param lat_2d_array: 2D latitude array of the spectral image
+   :param lon_2d_array: 2D longitude array of the spectral image
+   :param py6s_dict: Dictionary containing the PY6S information for atmospheric correction
+   :param time_capture: Time of the capture
+   :param srf: Spectral response function for each of the 120 bands
+
+   :return: Return 3-channel surface reflectance spectral image
+
+

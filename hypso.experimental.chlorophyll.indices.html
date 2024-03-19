@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hypso.experimental.chlorophyll.indices module &mdash; Hypso Package 1.9.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Hypso Package
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Hypso Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">hypso.experimental.chlorophyll.indices module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/hypso.experimental.chlorophyll.indices.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-hypso.experimental.chlorophyll.indices">
+<span id="hypso-experimental-chlorophyll-indices-module"></span><h1>hypso.experimental.chlorophyll.indices module<a class="headerlink" href="#module-hypso.experimental.chlorophyll.indices" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.experimental.chlorophyll.indices.BDIFF">
+<span class="sig-prename descclassname"><span class="pre">hypso.experimental.chlorophyll.indices.</span></span><span class="sig-name descname"><span class="pre">BDIFF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.experimental.chlorophyll.indices.BDIFF" title="Permalink to this definition"></a></dt>
+<dd><p>Band Difference</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>refl</strong> (<em>ndarray</em>) – Numpy array with reflectances per column</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Features calculated either a single value or a 1D array</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Union</em>[<em>ndarray</em>, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.experimental.chlorophyll.indices.BDIFF_LOG">
+<span class="sig-prename descclassname"><span class="pre">hypso.experimental.chlorophyll.indices.</span></span><span class="sig-name descname"><span class="pre">BDIFF_LOG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.experimental.chlorophyll.indices.BDIFF_LOG" title="Permalink to this definition"></a></dt>
+<dd><p>Log of Band Difference</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>refl</strong> (<em>ndarray</em>) – Numpy array with reflectances per column</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Features calculated either a single value or a 1D array</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Union</em>[<em>ndarray</em>, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.experimental.chlorophyll.indices.BDRATIO">
+<span class="sig-prename descclassname"><span class="pre">hypso.experimental.chlorophyll.indices.</span></span><span class="sig-name descname"><span class="pre">BDRATIO</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.experimental.chlorophyll.indices.BDRATIO" title="Permalink to this definition"></a></dt>
+<dd><p>Band Difference Ratio</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>refl</strong> (<em>ndarray</em>) – Numpy array with reflectances per column</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Features calculated either a single value or a 1D array</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Union</em>[<em>ndarray</em>, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.experimental.chlorophyll.indices.BR">
+<span class="sig-prename descclassname"><span class="pre">hypso.experimental.chlorophyll.indices.</span></span><span class="sig-name descname"><span class="pre">BR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.experimental.chlorophyll.indices.BR" title="Permalink to this definition"></a></dt>
+<dd><p>Band Ratio Feature</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>refl</strong> (<em>ndarray</em>) – Numpy array with reflectances per column</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Features calculated either a single value or a 1D array</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Union</em>[<em>ndarray</em>, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.experimental.chlorophyll.indices.BR_DIFF">
+<span class="sig-prename descclassname"><span class="pre">hypso.experimental.chlorophyll.indices.</span></span><span class="sig-name descname"><span class="pre">BR_DIFF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.experimental.chlorophyll.indices.BR_DIFF" title="Permalink to this definition"></a></dt>
+<dd><p>Band Ratio Difference</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>refl</strong> (<em>ndarray</em>) – Numpy array with reflectances per column</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Features calculated either a single value or a 1D array</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Union</em>[<em>ndarray</em>, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.experimental.chlorophyll.indices.BR_DIFF_LOG">
+<span class="sig-prename descclassname"><span class="pre">hypso.experimental.chlorophyll.indices.</span></span><span class="sig-name descname"><span class="pre">BR_DIFF_LOG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.experimental.chlorophyll.indices.BR_DIFF_LOG" title="Permalink to this definition"></a></dt>
+<dd><p>Log of Band Ratio Difference</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>refl</strong> (<em>ndarray</em>) – Numpy array with reflectances per column</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Features calculated either a single value or a 1D array</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Union</em>[<em>ndarray</em>, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.experimental.chlorophyll.indices.BR_LOG">
+<span class="sig-prename descclassname"><span class="pre">hypso.experimental.chlorophyll.indices.</span></span><span class="sig-name descname"><span class="pre">BR_LOG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.experimental.chlorophyll.indices.BR_LOG" title="Permalink to this definition"></a></dt>
+<dd><p>Log of Band Ratio</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>refl</strong> (<em>ndarray</em>) – Numpy array with reflectances per column</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Features calculated either a single value or a 1D array</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Union</em>[<em>ndarray</em>, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.experimental.chlorophyll.indices.EVI">
+<span class="sig-prename descclassname"><span class="pre">hypso.experimental.chlorophyll.indices.</span></span><span class="sig-name descname"><span class="pre">EVI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.experimental.chlorophyll.indices.EVI" title="Permalink to this definition"></a></dt>
+<dd><p>Enhanced Vegetation Index</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>refl</strong> (<em>ndarray</em>) – Numpy array with reflectances per column</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Features calculated either a single value or a 1D array</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Union</em>[<em>ndarray</em>, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.experimental.chlorophyll.indices.EXG">
+<span class="sig-prename descclassname"><span class="pre">hypso.experimental.chlorophyll.indices.</span></span><span class="sig-name descname"><span class="pre">EXG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.experimental.chlorophyll.indices.EXG" title="Permalink to this definition"></a></dt>
+<dd><p>Excess Green Index</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>refl</strong> (<em>ndarray</em>) – Numpy array with reflectances per column</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Features calculated either a single value or a 1D array</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Union</em>[<em>ndarray</em>, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.experimental.chlorophyll.indices.FBM">
+<span class="sig-prename descclassname"><span class="pre">hypso.experimental.chlorophyll.indices.</span></span><span class="sig-name descname"><span class="pre">FBM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.experimental.chlorophyll.indices.FBM" title="Permalink to this definition"></a></dt>
+<dd><p>Four Band Model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>refl</strong> (<em>ndarray</em>) – Numpy array with reflectances per column</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Features calculated either a single value or a 1D array</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Union</em>[<em>ndarray</em>, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.experimental.chlorophyll.indices.GLI">
+<span class="sig-prename descclassname"><span class="pre">hypso.experimental.chlorophyll.indices.</span></span><span class="sig-name descname"><span class="pre">GLI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.experimental.chlorophyll.indices.GLI" title="Permalink to this definition"></a></dt>
+<dd><p>Green Leaf Index</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>refl</strong> (<em>ndarray</em>) – Numpy array with reflectances per column</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Features calculated either a single value or a 1D array</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Union</em>[<em>ndarray</em>, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.experimental.chlorophyll.indices.OCVI">
+<span class="sig-prename descclassname"><span class="pre">hypso.experimental.chlorophyll.indices.</span></span><span class="sig-name descname"><span class="pre">OCVI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.experimental.chlorophyll.indices.OCVI" title="Permalink to this definition"></a></dt>
+<dd><p>Optimized Chlorophyll Vegetation Index</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>refl</strong> (<em>ndarray</em>) – Numpy array with reflectances per column</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Features calculated either a single value or a 1D array</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Union</em>[<em>ndarray</em>, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.experimental.chlorophyll.indices.SINGLE">
+<span class="sig-prename descclassname"><span class="pre">hypso.experimental.chlorophyll.indices.</span></span><span class="sig-name descname"><span class="pre">SINGLE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.experimental.chlorophyll.indices.SINGLE" title="Permalink to this definition"></a></dt>
+<dd><p>Single Band (No features purely reflectance)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>refl</strong> (<em>ndarray</em>) – Numpy array with reflectances per column</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Features calculated either a single value or a 1D array</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Union</em>[<em>ndarray</em>, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.experimental.chlorophyll.indices.TBM">
+<span class="sig-prename descclassname"><span class="pre">hypso.experimental.chlorophyll.indices.</span></span><span class="sig-name descname"><span class="pre">TBM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.experimental.chlorophyll.indices.TBM" title="Permalink to this definition"></a></dt>
+<dd><p>Three Band Model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>refl</strong> (<em>ndarray</em>) – Numpy array with reflectances per column</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Features calculated either a single value or a 1D array</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Union</em>[<em>ndarray</em>, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.experimental.chlorophyll.indices.TBVI">
+<span class="sig-prename descclassname"><span class="pre">hypso.experimental.chlorophyll.indices.</span></span><span class="sig-name descname"><span class="pre">TBVI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.experimental.chlorophyll.indices.TBVI" title="Permalink to this definition"></a></dt>
+<dd><p>Two Band Vegetation Index</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>refl</strong> (<em>ndarray</em>) – Numpy array with reflectances per column</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Features calculated either a single value or a 1D array</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Union</em>[<em>ndarray</em>, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Norwegian University of Science and Technology (NTNU).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

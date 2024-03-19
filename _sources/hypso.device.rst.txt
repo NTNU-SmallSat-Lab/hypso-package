@@ -1,0 +1,7 @@
+hypso.device module
+===================
+
+.. automodule:: hypso.device
+   :members:
+   :undoc-members:
+   :show-inheritance:

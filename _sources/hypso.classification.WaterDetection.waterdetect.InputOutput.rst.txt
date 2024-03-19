@@ -1,0 +1,7 @@
+hypso.classification.WaterDetection.waterdetect.InputOutput module
+==================================================================
+
+.. automodule:: hypso.classification.WaterDetection.waterdetect.InputOutput
+   :members:
+   :undoc-members:
+   :show-inheritance:

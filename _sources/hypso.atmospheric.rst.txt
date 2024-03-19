@@ -1,0 +1,20 @@
+hypso.atmospheric package
+=========================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hypso.atmospheric.atmospheric_correction_6sv1
+   hypso.atmospheric.atmospheric_correction_acolite
+   hypso.atmospheric.base
+
+Module contents
+---------------
+
+.. automodule:: hypso.atmospheric
+   :members:
+   :undoc-members:
+   :show-inheritance:

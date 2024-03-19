@@ -1,0 +1,18 @@
+hypso.plot package
+==================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hypso.plot.map
+
+Module contents
+---------------
+
+.. automodule:: hypso.plot
+   :members:
+   :undoc-members:
+   :show-inheritance:

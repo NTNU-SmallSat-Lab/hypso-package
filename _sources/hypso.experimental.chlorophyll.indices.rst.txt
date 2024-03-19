@@ -1,0 +1,7 @@
+hypso.experimental.chlorophyll.indices module
+=============================================
+
+.. automodule:: hypso.experimental.chlorophyll.indices
+   :members:
+   :undoc-members:
+   :show-inheritance:

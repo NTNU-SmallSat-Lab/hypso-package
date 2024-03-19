@@ -1,0 +1,7 @@
+hypso.classification.WaterDetection.waterdetect.Common module
+=============================================================
+
+.. automodule:: hypso.classification.WaterDetection.waterdetect.Common
+   :members:
+   :undoc-members:
+   :show-inheritance:

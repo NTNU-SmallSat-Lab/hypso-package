@@ -1,0 +1,34 @@
+hypso package
+=============
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hypso.atmospheric
+   hypso.calibration
+   hypso.classification
+   hypso.experimental
+   hypso.georeference
+   hypso.plot
+   hypso.reading
+   hypso.utils
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hypso.device
+   hypso.download
+
+Module contents
+---------------
+
+.. automodule:: hypso
+   :members:
+   :undoc-members:
+   :show-inheritance:

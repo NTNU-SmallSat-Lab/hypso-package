@@ -1,0 +1,30 @@
+:py:mod:`hypso.download`
+========================
+
+.. py:module:: hypso.download
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.download.download_nc_files
+
+
+
+.. py:function:: download_nc_files(filename_list, download_dir = None)
+
+   Bulk download HYPSO-1_L1A data from server. NTNU VPN access is required.
+
+   :param filename_list: list of filenames.
+       Example: ["tibet_2022-09-29_0446Z.nc", "xaafuun_2023-09-11_0623Z-l1a.nc"]
+   :param download_dir: Absolute path to directory to download files
+
+   :return:
+
+

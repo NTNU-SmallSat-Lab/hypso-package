@@ -1,0 +1,18 @@
+hypso.calibration package
+=========================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hypso.calibration.correction
+
+Module contents
+---------------
+
+.. automodule:: hypso.calibration
+   :members:
+   :undoc-members:
+   :show-inheritance:

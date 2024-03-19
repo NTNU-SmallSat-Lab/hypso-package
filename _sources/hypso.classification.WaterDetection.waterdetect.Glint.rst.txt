@@ -1,0 +1,7 @@
+hypso.classification.WaterDetection.waterdetect.Glint module
+============================================================
+
+.. automodule:: hypso.classification.WaterDetection.waterdetect.Glint
+   :members:
+   :undoc-members:
+   :show-inheritance:

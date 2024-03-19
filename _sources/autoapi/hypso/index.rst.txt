@@ -1,0 +1,216 @@
+:py:mod:`hypso`
+===============
+
+.. py:module:: hypso
+
+.. autoapi-nested-parse::
+
+   A python package form NTNU HYPSO Hyperspectral Image Processing
+
+
+
+Subpackages
+-----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+
+   atmospheric/index.rst
+   calibration/index.rst
+   classification/index.rst
+   experimental/index.rst
+   georeference/index.rst
+   plot/index.rst
+   reading/index.rst
+   utils/index.rst
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   device/index.rst
+   download/index.rst
+
+
+Package Contents
+----------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   hypso.Hypso
+
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.download_nc_files
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.__author__
+   hypso.__credits__
+
+
+.. py:data:: __author__
+   :value: 'Alvaro Flores <alvaro.f.romero@ntnu.no>'
+
+   
+
+.. py:data:: __credits__
+   :value: 'Norwegian University of Science and Technology'
+
+   
+
+.. py:class:: Hypso(hypso_path, points_path = None)
+
+   .. py:method:: get_srf()
+
+      Get Spectral Response Functions (SRF) from HYPSO for each of the 120 bands. Theoretical FWHM of 3.33nm is
+      used to estimate Sigma for an assumed gaussian distribution of each SRF per band.
+
+      :return: List of SRF
+
+
+   .. py:method:: create_l1b_nc_file()
+
+      Create a l1b.nc file using the radiometrically corrected data. Same structure from the original l1a.nc file
+      is used. Required to run ACOLITE as the input is a radiometrically corrected .nc file.
+
+      :return: Nothing.
+
+
+   .. py:method:: create_geotiff(product = 'L2-ACOLITE', force_reload = False, atmos_dict = None)
+
+      Create a GeoTIFF file for either the L1C or L2 products.
+
+      :param product: Product to be used to create the GeoTIFF file
+      :param force_reload: When True, deletes the file if it exists and forces the generation of a new one.
+      :param atmos_dict: Dictionary of parameters if the L2 product is selected.
+
+
+          *** For ACOLITE *** 
+
+          ``{'user':'alvarof', 'password':'nwz7xmu8dak.UDG9kqz'}`` 
+
+          *(user and password from https://urs.earthdata.nasa.gov/profile)*
+
+          *** For 6SV1 **** 
+
+          ``{'aot550': 0.0580000256}`` 
+
+          *(AOT550 parameter gotten from: https://giovanni.gsfc.nasa.gov/giovanni/)*
+
+      :return: No return.
+
+
+   .. py:method:: delete_geotiff_dir()
+
+      Delete the GeoTiff directory. Used when force_reload is set to True in the "create_geotiff" method.
+
+      :return: No return.
+
+
+   .. py:method:: find_geotiffs()
+
+      Recursively find GeoTiffs inside the "top_folder_name" directory in the "info" dictionary from the Hypso
+      class. GeoTiffs paths are stored in the Hypso object attribures, rgbGeotiffFilePath, l1cgeotiffFilePath and
+      l2geotiffFilePath.
+
+      :return: No return.
+
+
+   .. py:method:: find_existing_l2_cube()
+
+      Recursively find the .npy files corresponding to previous runs of the atmospheric correction process. This saves
+      time by loading the .npy files instead of correction again.
+
+      :return: The dictionary containing all .npy containing atmospherically corrected BOA reflectance. Could be
+          either ACOLITE or 6SV1. Returns None if no .npy found.
+
+
+   .. py:method:: get_projection_metadata()
+
+      Returns the projection metadata dictionary. This is either extracted from the RGBA, L1 or L1C GeoTiff
+
+      :return: Dictionary containing the projection information for the capture.
+
+
+   .. py:method:: get_calibration_coefficients_path()
+
+      Get the absolute ath for the calibration coefficients included in the package. This includes radiometric,
+      smile and destriping correction.
+
+      :return: Dictionary with paths for radiometric, smil and destriping correction.
+
+
+   .. py:method:: get_spectral_coefficients_path()
+
+      Get the absolute path for the spectral coefficients (wavelengths).
+
+      :return: Absolute path for the spectral coefficients (wavelengths)
+
+
+   .. py:method:: get_spectra(position_dict, product = 'L1C', filename = None, plot = True)
+
+      Get spectra values from the indicated coordinated or pixel.
+
+      :param position_dict: Dictionary with the inputs required.
+
+          *** If Coordinates are Input *** 
+
+          ``{"lat":59.5,"lon":10}``
+
+          *** If pixel location passed *** 
+
+          ``{"X":200,"Y":83}``
+      :param product: Product of which to retrieve the spectral signal. Can either be "L1C", "L2-ACOLITE" or "L2-6SV1"
+      :param filename: Path on which to save the spectra as a .csv file. Filename should contain the ".csv" extension.
+          Example: "/Documents/export_signal.csv". If None, the spectral signal won´t be saved as a file.
+      :param plot: If True, the spectral signal will be plotted.
+
+      :return: None if the coordinates/pixel location are not withing the captured image. Otherwise, a pandas dataframe
+          containing the spectral signal is returned.
+
+
+   .. py:method:: get_calibrated_and_corrected_cube()
+
+      Get calibrated and corrected cube. Includes Radiometric, Smile and Destriping Correction.
+          Assumes all coefficients has been adjusted to the frame size (cropped and
+          binned), and that the data cube contains 12-bit values.
+
+      :return: Corrected Hyperspectral Cube as a Numpy Array
+
+
+   .. py:method:: get_toa_reflectance()
+
+      Convert Top Of Atmosphere (TOA) Radiance to TOA Reflectance.
+
+      :return: Array with TOA Reflectance.
+
+
+
+.. py:function:: download_nc_files(filename_list, download_dir = None)
+
+   Bulk download HYPSO-1_L1A data from server. NTNU VPN access is required.
+
+   :param filename_list: list of filenames.
+       Example: ["tibet_2022-09-29_0446Z.nc", "xaafuun_2023-09-11_0623Z-l1a.nc"]
+   :param download_dir: Absolute path to directory to download files
+
+   :return:
+
+

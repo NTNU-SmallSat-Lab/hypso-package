@@ -1,0 +1,7 @@
+hypso.classification.WaterDetection.waterdetect.External\_mask module
+=====================================================================
+
+.. automodule:: hypso.classification.WaterDetection.waterdetect.External_mask
+   :members:
+   :undoc-members:
+   :show-inheritance:

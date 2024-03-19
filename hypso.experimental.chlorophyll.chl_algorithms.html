@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hypso.experimental.chlorophyll.chl_algorithms module &mdash; Hypso Package 1.9.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Hypso Package
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Hypso Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">hypso.experimental.chlorophyll.chl_algorithms module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/hypso.experimental.chlorophyll.chl_algorithms.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-hypso.experimental.chlorophyll.chl_algorithms">
+<span id="hypso-experimental-chlorophyll-chl-algorithms-module"></span><h1>hypso.experimental.chlorophyll.chl_algorithms module<a class="headerlink" href="#module-hypso.experimental.chlorophyll.chl_algorithms" title="Permalink to this heading"></a></h1>
+<p>Created on Wed June 12, 2019</p>
+<p>This module contains a functions to calculate the tropical Pacific chlorophyll algorithm (TPCA) concentrations for the satellite sensors; SeaWiFS, MODIS-Aqua and MERIS
+Developed for Pittman et al., 2019. JGR: Oceans (2019JC015498)</p>
+<dl class="simple">
+<dt>Notes:</dt><dd><p>Numpy has been used over pure python or the math library for more efficient implementations. For increased efficiency, dask (dask.array) can be used instead of numpy.
+These functions are designed for Level 3 Mapped products, which may not precisely reproduce the implementations available on the NASA website (<a class="reference external" href="https://oceandata.sci.gsfc.nasa.gov/">https://oceandata.sci.gsfc.nasa.gov/</a>).</p>
+</dd>
+<dt>General functions include: </dt><dd><p>blended_chl
+calculate_chl_ocx
+calculate_chl_ci</p>
+</dd>
+<dt>Sensor specific functions include:</dt><dd><p>calculate_seawifs_chl
+calcuate_modis_chl
+calculate_meris_chl</p>
+</dd>
+</dl>
+<p>&#64;author: Nicholas.Pittman
+&#64;email: <a class="reference external" href="mailto:Nic&#46;Pittman&#37;&#52;&#48;utas&#46;edu&#46;au">Nic<span>&#46;</span>Pittman<span>&#64;</span>utas<span>&#46;</span>edu<span>&#46;</span>au</a>
+&#64;position: PhD Candidate; Biogeochemistry, remote sensing, oceanography, Tropical Pacific
+&#64;affiliation1: Institute of Marine and Antarctic Studies, University of Tasmania
+&#64;affiliation2: Australian Research Council Centre of Excellence for Climate Extremes.</p>
+<dl>
+<dt>References:</dt><dd><p>Tropical Pacific Chlorophyll Algorithm (2019JC015498)
+‘An assessment and improvement of satellite ocean color algorithms for the tropical Pacific Ocean’
+Pittman, N., Strutton, P., Matear, R., Johnson, R., (2019)
+Submitted: Journal of Geophysical Research: Oceans</p>
+<p>CI and blending window
+Hu, C., Lee, Z., and Franz, B. (2012). 
+Chlorophyll a algorithms for oligotrophic oceans: A novel approach based on three-band reflectance difference.
+Journal of Geophysical Research: Oceans 117.</p>
+<p>Traditional OCx Algorithm
+O’Reilly, J.E., Maritorena, S., Mitchell, B.G., Siegel, D.A., 
+Carder, K.L., Garver, S.A., Kahru, M., and McClain, C. (1998).
+Ocean color chlorophyll algorithms for SeaWiFS. 
+Journal of Geophysical Research: Oceans 103, 24937–24953.</p>
+</dd>
+</dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.experimental.chlorophyll.chl_algorithms.blended_chl">
+<span class="sig-prename descclassname"><span class="pre">hypso.experimental.chlorophyll.chl_algorithms.</span></span><span class="sig-name descname"><span class="pre">blended_chl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chl_ci</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chl_ocx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.experimental.chlorophyll.chl_algorithms.blended_chl" title="Permalink to this definition"></a></dt>
+<dd><p>A general Chl algorithm blending function between Chl_CI to Chl_OCx</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>chl_ci</strong> – </p></li>
+<li><p><strong>chl_ocx</strong> – </p></li>
+<li><p><strong>t1</strong> – </p></li>
+<li><p><strong>t2</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.experimental.chlorophyll.chl_algorithms.calculate_chl_ci">
+<span class="sig-prename descclassname"><span class="pre">hypso.experimental.chlorophyll.chl_algorithms.</span></span><span class="sig-name descname"><span class="pre">calculate_chl_ci</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ci_poly</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CI</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.experimental.chlorophyll.chl_algorithms.calculate_chl_ci" title="Permalink to this definition"></a></dt>
+<dd><p>A general Chl_CI algorithm for a linear polynomial (Hu et al., 2012)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ci_poly</strong> (<em>list</em>) – </p></li>
+<li><p><strong>CI</strong> (<em>ndarray</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.experimental.chlorophyll.chl_algorithms.calculate_chl_ocx">
+<span class="sig-prename descclassname"><span class="pre">hypso.experimental.chlorophyll.chl_algorithms.</span></span><span class="sig-name descname"><span class="pre">calculate_chl_ocx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ocx_poly</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lmbr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.experimental.chlorophyll.chl_algorithms.calculate_chl_ocx" title="Permalink to this definition"></a></dt>
+<dd><p>A general Chl_OCx algorithm for fourth order polynomials (O’Reilly et al., 1998)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ocx_poly</strong> (<em>list</em>) – </p></li>
+<li><p><strong>lmbr</strong> (<em>ndarray</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Union</em>[int, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.experimental.chlorophyll.chl_algorithms.closest_index">
+<span class="sig-prename descclassname"><span class="pre">hypso.experimental.chlorophyll.chl_algorithms.</span></span><span class="sig-name descname"><span class="pre">closest_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lookup_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.experimental.chlorophyll.chl_algorithms.closest_index" title="Permalink to this definition"></a></dt>
+<dd><p>Find the closest index to lookup_value</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_list</strong> – List up to look on the value</p></li>
+<li><p><strong>lookup_value</strong> – Value to lookup</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Closest indext to the loookup_value</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.experimental.chlorophyll.chl_algorithms.modis_aqua_ocx">
+<span class="sig-prename descclassname"><span class="pre">hypso.experimental.chlorophyll.chl_algorithms.</span></span><span class="sig-name descname"><span class="pre">modis_aqua_ocx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hypercube</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ocx_version</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.experimental.chlorophyll.chl_algorithms.modis_aqua_ocx" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate the MODIS AQUA OCX for Chlorophyll estimation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wl</strong> – </p></li>
+<li><p><strong>hypercube</strong> – </p></li>
+<li><p><strong>ocx_version</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.experimental.chlorophyll.chl_algorithms.sentinel_ocx">
+<span class="sig-prename descclassname"><span class="pre">hypso.experimental.chlorophyll.chl_algorithms.</span></span><span class="sig-name descname"><span class="pre">sentinel_ocx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hypercube</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ocx_version</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.experimental.chlorophyll.chl_algorithms.sentinel_ocx" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate chlorophyll using the Sentinel OCX Polynomial.</p>
+<p><strong>Given:</strong></p>
+<p>—— MODIS-Aqua RRS values for 443,488,547,667</p>
+<p>—— OCx: Polynomial</p>
+<p>—— CI: Polynomial</p>
+<p>—— l: Low blending cutoff</p>
+<p>—— h: High blending cutoff</p>
+<p><strong>Calculate:</strong></p>
+<p>—— Calculate Chl OCx</p>
+<p>—— Calculate Chl CI</p>
+<p>—— Return blended chlorophyll esimate (Default product is the Pittman et al., 2019 TPCA)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wl</strong> – </p></li>
+<li><p><strong>hypercube</strong> – </p></li>
+<li><p><strong>ocx_version</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Norwegian University of Science and Technology (NTNU).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

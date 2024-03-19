@@ -1,0 +1,80 @@
+:py:mod:`hypso.classification.WaterDetection.waterdetect.Glint`
+===============================================================
+
+.. py:module:: hypso.classification.WaterDetection.waterdetect.Glint
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   hypso.classification.WaterDetection.waterdetect.Glint.DWGlintProcessor
+
+
+
+
+.. py:class:: DWGlintProcessor(image, limit_angle=30)
+
+   .. py:attribute:: supported_products
+      :value: ['S2_S2COR', 'S2_THEIA', 'S2_PLANETARY']
+
+      
+
+   .. py:method:: create(image, limit_angle=30)
+      :classmethod:
+
+
+   .. py:method:: get_grid_values_from_xml(tree_node, xpath_str)
+      :staticmethod:
+
+      Receives a XML tree node and a XPath parsing string and search for children matching the string.
+      Then, extract the VALUES in <values> v1 v2 v3 </values> <values> v4 v5 v6 </values> format as numpy array
+      Loop through the arrays to compute the mean.
+
+
+   .. py:method:: create_glint_array(xml_file, product)
+      :staticmethod:
+
+
+   .. py:method:: create_annotated_heatmap(hm, img=None, cmap='magma', vmin=0.7, vmax=0.9)
+      :staticmethod:
+
+      Create an annotated heatmap. Parameter img is an optional background img to be blended
+
+
+   .. py:method:: nn_interpolate(arr, new_size)
+      :staticmethod:
+
+      Vectorized Nearest Neighbor Interpolation
+      From post: https://gist.github.com/KeremTurgutlu/68feb119c9dd148285be2e247267a203
+
+
+   .. py:method:: create_glint_heatmap(rgb, glint_arr, limit_angle)
+      :staticmethod:
+
+
+   .. py:method:: save_heatmap(folder, filename='glint_heatmap.pdf', dpi=50, brightness=5.0)
+
+
+   .. py:method:: create_multiplication_coefs(min_glint_multiplier=0.5)
+
+
+   .. py:method:: show_multiplication_coefs()
+
+
+   .. py:method:: glint_adjusted_threshold(band, value, thresh_type, mask=None, min_glint_multiplier=0.5)
+
+      Create an array with the image resolution, with the threshold adjusted for the GLINT
+      thresh_type can be SUP or INF 
+
+
+   .. py:method:: __repr__()
+
+      Return repr(self).
+
+
+

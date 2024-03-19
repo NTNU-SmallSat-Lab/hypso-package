@@ -1,0 +1,26 @@
+hypso.classification.WaterDetection package
+===========================================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hypso.classification.WaterDetection.waterdetect
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hypso.classification.WaterDetection.runWaterDetect
+
+Module contents
+---------------
+
+.. automodule:: hypso.classification.WaterDetection
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,29 @@
+:py:mod:`hypso.georeference.create_adcs_files`
+==============================================
+
+.. py:module:: hypso.georeference.create_adcs_files
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.georeference.create_adcs_files.create_adcs_timestamps_files
+
+
+
+.. py:function:: create_adcs_timestamps_files(nc_path, nc_info)
+
+   Creates timestamps for files
+
+   :param nc_path: Absolute patth of the netCDF4 file
+   :param nc_info: Dictionary containing the capture data and the temporary folder with generated files.
+
+   :return: Dictionary used with no modification
+
+

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hypso.plot.map module &mdash; Hypso Package 1.9.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Hypso Package
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Hypso Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">hypso.plot.map module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/hypso.plot.map.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-hypso.plot.map">
+<span id="hypso-plot-map-module"></span><h1>hypso.plot.map module<a class="headerlink" href="#module-hypso.plot.map" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.map.auto_adjust_img">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.map.</span></span><span class="sig-name descname"><span class="pre">auto_adjust_img</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.map.auto_adjust_img" title="Permalink to this definition"></a></dt>
+<dd><p>Automatically adjust the image contracts using histogram equalization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>img</strong> (<em>ndarray</em>) – Image to adjust as a numpy array.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Adjusted image as a numpy array.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.map.axis_extent">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.map.</span></span><span class="sig-name descname"><span class="pre">axis_extent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.map.axis_extent" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate the axis extent of the capture using the latitude and longitude arrays</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lat</strong> (<em>ndarray</em>) – 2D array of latitudes</p></li>
+<li><p><strong>lon</strong> (<em>ndarray</em>) – 2D array of longitudes</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List with the [lon_min, lon_max, lat_min, lat_max]</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>List</em>[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.map.check_projection_geotiff">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.map.</span></span><span class="sig-name descname"><span class="pre">check_projection_geotiff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satobj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.map.check_projection_geotiff" title="Permalink to this definition"></a></dt>
+<dd><p>Check and generate the projection metadata from GeoTiff. Generates GeoTiff if none is found.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>satobj</strong> – Hypso satellite object</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.map.get_cartopy_axis">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.map.</span></span><span class="sig-name descname"><span class="pre">get_cartopy_axis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi_input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.map.get_cartopy_axis" title="Permalink to this definition"></a></dt>
+<dd><p>Get cartopy axis adjusted to the projection of the Hypso capture focused on the map area defined by the latitude
+and longitude arrays.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>satellite_obj</strong> – Hypso satellite object</p></li>
+<li><p><strong>dpi_input</strong> (<em>int</em>) – DPI Resolution for the plot</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Matplotlib axes object adjusted to the Hypso image, the image extent tuple, the project RPSG and the
+latitude and longitude array.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Tuple</em>[<em>Axes</em>, tuple[float, float, float, float], <em>_EPSGProjection</em>, <em>ndarray</em>, <em>ndarray</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.map.get_rgb">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.map.</span></span><span class="sig-name descname"><span class="pre">get_rgb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sat_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R_wl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">650</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">G_wl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">550</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">B_wl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">450</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.map.get_rgb" title="Permalink to this definition"></a></dt>
+<dd><p>Write an RGB Image from specified Bands. Optional parameters are</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>R_wl</strong> – The wavelength for the red channel. Defaults to 650.</p></li>
+<li><p><strong>G_wl</strong> – The wavelength for the green channel. Defaults to 550.</p></li>
+<li><p><strong>B_wl</strong> – The wavelength for the blue channel. Defaults to 450.</p></li>
+<li><p><strong>sat_obj</strong> – Hypso satellite object</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>PIL Image object</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.map.image_extent">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.map.</span></span><span class="sig-name descname"><span class="pre">image_extent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inproj_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.map.image_extent" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate the image extent of the capture using the latitude and longitude arrays to plot capture on a map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inproj_value</strong> (<em>SpatialReference</em>) – Spatial reference projection value</p></li>
+<li><p><strong>lat</strong> (<em>ndarray</em>) – 2D array of latitudes</p></li>
+<li><p><strong>lon</strong> (<em>ndarray</em>) – 2D array of longitudes</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns two values, the image extent of the capture transformed into an EPSG projection and the projection
+into a cartopy projection</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Tuple</em>[tuple, <em>_EPSGProjection</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.map.plot_array_overlay">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.map.</span></span><span class="sig-name descname"><span class="pre">plot_array_overlay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plotTitle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'2D</span> <span class="pre">Array'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cbar_title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">Chlorophyll</span> <span class="pre">Concentration</span> <span class="pre">[mg</span> <span class="pre">m^-3]'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">450</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.map.plot_array_overlay" title="Permalink to this definition"></a></dt>
+<dd><p>Plot a 2D array overlayed on a RGB Hypso Capture on a Map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>satellite_obj</strong> – Hypso satellite object</p></li>
+<li><p><strong>plot_array</strong> – 2D array to plot. Should be of the same size of the Hypso capture Lat/Lon arrays</p></li>
+<li><p><strong>plotTitle</strong> – Tile for the plot</p></li>
+<li><p><strong>cbar_title</strong> – Tile for the colorbar</p></li>
+<li><p><strong>dpi_input</strong> – Resolution in DPI´s. Default 450.</p></li>
+<li><p><strong>min_value</strong> – Minimum value for the Colorbar</p></li>
+<li><p><strong>max_value</strong> – Maximum value for the Colorbar</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>No return.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.map.point_rgb_map">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.map.</span></span><span class="sig-name descname"><span class="pre">point_rgb_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plotTitle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RGB</span> <span class="pre">Image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">450</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patch_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.007</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_to_save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.map.point_rgb_map" title="Permalink to this definition"></a></dt>
+<dd><p>Function to add points to overlay on the RGB Map of the Hypso image</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>satellite_obj</strong> – Hypso satellite object</p></li>
+<li><p><strong>plotTitle</strong> – Title for the plot</p></li>
+<li><p><strong>dpi_input</strong> – Resolution in DPI´s. Default 450.</p></li>
+<li><p><strong>patch_dict</strong> – Dictionary containing the location and color of the points to plot
+<code class="docutils literal notranslate"><span class="pre">{&quot;Point</span> <span class="pre">1&quot;:{&quot;lat&quot;:60.7776,</span> <span class="pre">&quot;lon&quot;:11.0895,</span> <span class="pre">&quot;color&quot;:&quot;red&quot;},</span>
+<span class="pre">&quot;Point</span> <span class="pre">2&quot;:{&quot;lat&quot;:60.5,</span> <span class="pre">&quot;lon&quot;:10.4,</span> <span class="pre">&quot;color&quot;:&quot;orange&quot;}}</span></code></p></li>
+<li><p><strong>r_plot</strong> – Radius of the plotted points. Default: 0.007.</p></li>
+<li><p><strong>path_to_save</strong> – Absolute Path to save the plot image.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>No return.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.map.show_rgb_map">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.map.</span></span><span class="sig-name descname"><span class="pre">show_rgb_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plotTitle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RGB</span> <span class="pre">Image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">450</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.map.show_rgb_map" title="Permalink to this definition"></a></dt>
+<dd><p>Show RGB overlay of the Hypso image on a map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>satellite_obj</strong> – Hypso satellite object</p></li>
+<li><p><strong>plotTitle</strong> – Title for the plot</p></li>
+<li><p><strong>dpi_input</strong> – Resolution in DPI´s. Default 450.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>No return.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.map.tick_log_formatter">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.map.</span></span><span class="sig-name descname"><span class="pre">tick_log_formatter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.map.tick_log_formatter" title="Permalink to this definition"></a></dt>
+<dd><p>Matplotlib Image tick formatter</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pos</strong> – Axis position</p></li>
+<li><p><strong>y</strong> – Y-axis object</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Formatted axis to log format</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.map.write_rgb_to_png">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.map.</span></span><span class="sig-name descname"><span class="pre">write_rgb_to_png</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sat_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_to_save</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.map.write_rgb_to_png" title="Permalink to this definition"></a></dt>
+<dd><p>Write the RGB image to a .png file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sat_obj</strong> – Hypso Satellite object</p></li>
+<li><p><strong>path_to_save</strong> (<em>str</em>) – Path to save the .png image. Should include the file extension.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>No return.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Norwegian University of Science and Technology (NTNU).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hypso.atmospheric.atmospheric_correction_6sv1 module &mdash; Hypso Package 1.9.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Hypso Package
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Hypso Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">hypso.atmospheric.atmospheric_correction_6sv1 module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/hypso.atmospheric.atmospheric_correction_6sv1.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-hypso.atmospheric.atmospheric_correction_6sv1">
+<span id="hypso-atmospheric-atmospheric-correction-6sv1-module"></span><h1>hypso.atmospheric.atmospheric_correction_6sv1 module<a class="headerlink" href="#module-hypso.atmospheric.atmospheric_correction_6sv1" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.atmospheric.atmospheric_correction_6sv1.AtmosphericCorrection">
+<span class="sig-prename descclassname"><span class="pre">hypso.atmospheric.atmospheric_correction_6sv1.</span></span><span class="sig-name descname"><span class="pre">AtmosphericCorrection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">BandId</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SixsInputParameter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">srf</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.atmospheric.atmospheric_correction_6sv1.AtmosphericCorrection" title="Permalink to this definition"></a></dt>
+<dd><p>Call the 6s model and assign values to the parameters to obtain the atmospheric correction coefficients</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>BandId</strong> (<em>int</em>) – ID of the band being corrected</p></li>
+<li><p><strong>SixsInputParameter</strong> (<em>dict</em>) – Basic Parmeters used for the correction</p></li>
+<li><p><strong>srf</strong> (<em>list</em>) – Spectral response functions for Hypso</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.atmospheric.atmospheric_correction_6sv1.BasicParameters">
+<span class="sig-prename descclassname"><span class="pre">hypso.atmospheric.atmospheric_correction_6sv1.</span></span><span class="sig-name descname"><span class="pre">BasicParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wavelengths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hypercube_L1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hypso_info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_2d_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon_2d_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_capture</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.atmospheric.atmospheric_correction_6sv1.BasicParameters" title="Permalink to this definition"></a></dt>
+<dd><p>Get the parameters you need for 6s atmospheric correction</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wavelengths</strong> (<em>ndarray</em>) – Wavelengths corresponding to the spectral image</p></li>
+<li><p><strong>hypercube_L1</strong> (<em>ndarray</em>) – Hypercube of the spectral image L1B</p></li>
+<li><p><strong>hypso_info</strong> (<em>dict</em>) – Dictionary containing the information of the spectral image</p></li>
+<li><p><strong>lat_2d_array</strong> (<em>ndarray</em>) – 2D latitude array of the spectral image</p></li>
+<li><p><strong>lon_2d_array</strong> (<em>ndarray</em>) – 2D longitude array of the spectral image</p></li>
+<li><p><strong>time_capture</strong> (<em>&lt;module 'datetime' from '/usr/share/miniconda/envs/test/lib/python3.9/datetime.py'&gt;</em>) – Time of the capture</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary of the Basic Paramters for the PY6SV1 correction method</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.atmospheric.atmospheric_correction_6sv1.clip_srf">
+<span class="sig-prename descclassname"><span class="pre">hypso.atmospheric.atmospheric_correction_6sv1.</span></span><span class="sig-name descname"><span class="pre">clip_srf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">single_wl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">single_srf</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.atmospheric.atmospheric_correction_6sv1.clip_srf" title="Permalink to this definition"></a></dt>
+<dd><p>Trim and clip Spectral Response Function (SRF) to the 6SV1 requirements</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>single_wl</strong> – Wavelengths for the SRF</p></li>
+<li><p><strong>single_srf</strong> – Single band SRF [0, 1]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns the wavelength of the SRF adjusted for 6SV1 and the SRF for the 6SV1 model [0, 1]</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Tuple</em>[<em>ndarray</em>, <em>ndarray</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.atmospheric.atmospheric_correction_6sv1.get_corrected_radiance">
+<span class="sig-prename descclassname"><span class="pre">hypso.atmospheric.atmospheric_correction_6sv1.</span></span><span class="sig-name descname"><span class="pre">get_corrected_radiance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">radiance_band</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">py6s_results</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.atmospheric.atmospheric_correction_6sv1.get_corrected_radiance" title="Permalink to this definition"></a></dt>
+<dd><p>Alternative NOT USED method to correct based on the coefficients a, b and c</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>radiance_band</strong> (<em>ndarray</em>) – Radiance band to calculate surface reflectance (2D array)</p></li>
+<li><p><strong>py6s_results</strong> – Dictionary containing the results of the correction</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Surface reflectance for a single band</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.atmospheric.atmospheric_correction_6sv1.get_surface_reflectance">
+<span class="sig-prename descclassname"><span class="pre">hypso.atmospheric.atmospheric_correction_6sv1.</span></span><span class="sig-name descname"><span class="pre">get_surface_reflectance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">radiance_band</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">py6s_results</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.atmospheric.atmospheric_correction_6sv1.get_surface_reflectance" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate surface reflectance from at-sensor radiance given waveband name and the 6SV1 coefficients</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>radiance_band</strong> (<em>ndarray</em>) – Radiance band to calculate surface reflectance (2D array)</p></li>
+<li><p><strong>py6s_results</strong> (<em>dict</em>) – Dictionary containing the results of the correction</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Surface reflectance for a single band</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.atmospheric.atmospheric_correction_6sv1.run_py6s">
+<span class="sig-prename descclassname"><span class="pre">hypso.atmospheric.atmospheric_correction_6sv1.</span></span><span class="sig-name descname"><span class="pre">run_py6s</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wavelengths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hypercube_L1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hypso_info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_2d_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon_2d_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">py6s_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_capture</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">srf</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.atmospheric.atmospheric_correction_6sv1.run_py6s" title="Permalink to this definition"></a></dt>
+<dd><p>Run the PY6S atmospheric correction on the Hypso spectral image</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wavelengths</strong> (<em>ndarray</em>) – Wavelengths corresponding to the spectral image</p></li>
+<li><p><strong>hypercube_L1</strong> (<em>ndarray</em>) – Hypercube of the spectral image L1B</p></li>
+<li><p><strong>hypso_info</strong> (<em>dict</em>) – Dictionary containing the information of the spectral image</p></li>
+<li><p><strong>lat_2d_array</strong> (<em>ndarray</em>) – 2D latitude array of the spectral image</p></li>
+<li><p><strong>lon_2d_array</strong> (<em>ndarray</em>) – 2D longitude array of the spectral image</p></li>
+<li><p><strong>py6s_dict</strong> (<em>dict</em>) – Dictionary containing the PY6S information for atmospheric correction</p></li>
+<li><p><strong>time_capture</strong> (<em>&lt;module 'datetime' from '/usr/share/miniconda/envs/test/lib/python3.9/datetime.py'&gt;</em>) – Time of the capture</p></li>
+<li><p><strong>srf</strong> (<em>list</em>) – Spectral response function for each of the 120 bands</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Return 3-channel surface reflectance spectral image</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Norwegian University of Science and Technology (NTNU).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

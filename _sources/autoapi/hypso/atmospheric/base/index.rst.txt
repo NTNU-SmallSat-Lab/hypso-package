@@ -1,0 +1,29 @@
+:py:mod:`hypso.atmospheric.base`
+================================
+
+.. py:module:: hypso.atmospheric.base
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.atmospheric.base.MeanDEM
+
+
+
+.. py:function:: MeanDEM(pointUL, pointDR)
+
+   Calculate the average elevation of the area where the image is located.
+
+   :param pointUL: Upper left corner of the lat/lon array
+   :param pointDR: Lower right corner of the lat/lon array
+
+   :return: Mean elevation of the area where the image was captured
+
+

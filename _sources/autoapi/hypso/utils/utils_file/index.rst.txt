@@ -1,0 +1,214 @@
+:py:mod:`hypso.utils.utils_file`
+================================
+
+.. py:module:: hypso.utils.utils_file
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   hypso.utils.utils_file.MyProgressBar
+
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.utils.utils_file.flatten_dict
+   hypso.utils.utils_file.nested_dict_to_df
+   hypso.utils.utils_file.compare_netcdf_files
+   hypso.utils.utils_file.HSI2RGB
+   hypso.utils.utils_file.find_all_files
+   hypso.utils.utils_file.find_file
+   hypso.utils.utils_file.find_dir
+   hypso.utils.utils_file.is_integer_num
+   hypso.utils.utils_file.navigate_recursive_nc
+   hypso.utils.utils_file.print_nc
+   hypso.utils.utils_file.list_array_1d_to_string
+   hypso.utils.utils_file.recursive_print_nc
+   hypso.utils.utils_file.find_closest_water_lat_lon_match
+   hypso.utils.utils_file.haversine
+
+
+
+.. py:function:: flatten_dict(nested_dict)
+
+   Flatten a nested dictionary into a single level dictionary
+
+   :param nested_dict: Nested dictionary to flatten
+
+   :return: Single level dictionary with keys corresponding to the previous nested levels
+
+
+.. py:function:: nested_dict_to_df(values_dict)
+
+   Convert nested dictionary to DataFrame.
+
+   :param values_dict: Nested dictionary
+
+   :return: Dataframe where the nested level are displayed as a column.
+
+
+.. py:function:: compare_netcdf_files(file1, file2)
+
+   Compare two .nc files and returns a pandas DataFrame where each attribute, variable and values are compared side
+   by side.
+
+   :param file1: Absolute path to file 1
+   :param file2: Absolute path to file 2
+
+   :return: Dataframe with the compared characteristics
+
+
+.. py:function:: HSI2RGB(wY, HSI, d = 65, threshold=0.002)
+
+   Calculate a colore accurate RGB image with HSI values. Original function used for the paper
+   "Creating RGB Images from Hyperspectral Images Using a Color Matching Function" by
+   M. Magnusson, J. Sigurdsson, S. E. Armansson, M. O. Ulfarsson, H. Deborah and J. R. Sveinsson,
+
+   If you use this method, please cite the following paper:
+   @INPROCEEDINGS{hsi2rgb,
+   author={M. {Magnusson} and J. {Sigurdsson} and S. E. {Armansson}
+   and M. O. {Ulfarsson} and H. {Deborah} and J. R. {Sveinsson}},
+   booktitle={IEEE International Geoscience and Remote Sensing Symposium},
+   title={Creating {RGB} Images from Hyperspectral Images using a Color Matching Function},
+   year={2020}, volume={}, number={}, pages={}}
+
+   Paper is available at
+   https://www.researchgate.net/profile/Jakob_Sigurdsson
+
+   :param wY: Wavelengths in nm
+   :param HSI: Hyperspectral Image as a (#pixels x #bands) matrix,
+   :param d: Determines the illuminant used, if in doubt use d65. Values of  50, 55, 65, 75
+   :param threshold: True if RGB thesholding should be done to increase contrast
+
+   :return: RGB Image array
+
+
+.. py:class:: MyProgressBar(text_prefix)
+
+   Class used to display a progress bar on the screen for bulk downloading.
+
+   .. py:method:: __call__(block_num, block_size, total_size)
+
+
+
+.. py:function:: find_all_files(path, str_in_file, suffix = None, type = 'partial')
+
+   Find recursively all files in a specified directory.
+
+   :param path: Directory path on which to look for files.
+   :param str_in_file: Check if this string is in the file name
+   :param suffix: Check if file extension matches the suffix provided
+   :param type: Type of comparisson of "str_in_file". If "partial", then "str_in_file" will be checked to be in the filename,
+       otherwise "exact" will check if the filename matches exactly the string provided.
+
+   :return: List of file paths
+
+
+.. py:function:: find_file(path, str_in_file, suffix = None, type = 'partial')
+
+   Find recursively a single file (or first occurance) in a specified directory.
+
+   :param path: Directory path on which to look for files.
+   :param str_in_file: Check if this string is in the file name
+   :param suffix: Check if file extension matches the suffix provided
+   :param type: Type of comparisson of "str_in_file". If "partial", then "str_in_file" will be checked to be in the filename,
+       otherwise "exact" will check if the filename matches exactly the string provided.
+
+   :return: Path of the file or None if no file found
+
+
+.. py:function:: find_dir(path, str_in_dir, type = 'partial')
+
+   Find recursively a directory (or first occurance) in a specified directory.
+
+   :param path: Directory path on which to look for files.
+   :param str_in_dir: Check if this string is in the directory name
+   :param type: Type of comparisson of "str_in_file". If "partial", then "str_in_file" will be checked to be in the filename,
+       otherwise "exact" will check if the filename matches exactly the string provided.
+
+   :return: Path of the file or None if no file found
+
+
+.. py:function:: is_integer_num(n)
+
+   Check if a number is an integer
+
+   :param n: Number to check
+   :return: Boolean value indicating whether or not the number is an integer
+
+
+.. py:function:: navigate_recursive_nc(nc_file, path = '', depth = 0)
+
+   Navigate recursively the structure of a .nc file and return the dictionary structure. The function will call
+   itself to navigate recursively.
+
+   :param nc_file: Open .nc Dataset file
+   :param path: Relative path to append to recursivness
+   :param depth: Depth at which we are navigating
+
+   :return: Dictionary of dictionaries containing the structure of the .nc file
+
+
+.. py:function:: print_nc(nc_file_path)
+
+   Print the contents of a .nc file
+   :param nc_file_path: Absolute path to a .nc file
+
+   :return: No return
+
+
+.. py:function:: list_array_1d_to_string(arr)
+
+   Converts 1D numpy array to string
+
+   :param arr: 1D numpy array of numbers or strings to convert to string
+
+   :return: String of combined values or the same value if not a list
+
+
+.. py:function:: recursive_print_nc(nc_file, path = '', depth = 0)
+
+   Navigate recursively the structure of a .nc file and print the structure. The function will call
+   itself to navigate recursively.
+
+   :param nc_file: Open .nc Dataset file
+   :param path: Relative path to append to recursivness
+   :param depth: Depth at which we are navigating
+
+   :return: No return.
+
+
+.. py:function:: find_closest_water_lat_lon_match(sat_obj, target_lat, target_lon, water_pixel_filter = False)
+
+   Find the closest Image lat and lon to the targat specificed that is also a water pixel.
+
+   :param water_pixel_filter: If true, the closest pixel should also be classified as water pixel.
+   :param sat_obj: Hypso satellite object
+   :param target_lat: Target latitude
+   :param target_lon: Target longitude
+
+   :return: Row, col and dist_to_target in km from the closes water pixel
+
+
+.. py:function:: haversine(lon1, lat1, lon2, lat2)
+
+   Calculate the great circle distance between two points on the earth (specified in decimal degrees).
+   Source: https://stackoverflow.com/a/4913653
+
+   :param lon1: Longitude of first point
+   :param lat1: Latitude of first point
+   :param lon2: Longitude of second point
+   :param lat2: Latitude of second point
+
+   :return: Distance in km between two points on earth
+
+

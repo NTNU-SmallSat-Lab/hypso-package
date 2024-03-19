@@ -1,0 +1,7 @@
+hypso.atmospheric.atmospheric\_correction\_acolite module
+=========================================================
+
+.. automodule:: hypso.atmospheric.atmospheric_correction_acolite
+   :members:
+   :undoc-members:
+   :show-inheritance:

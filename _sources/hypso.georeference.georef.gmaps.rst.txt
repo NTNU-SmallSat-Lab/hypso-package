@@ -1,0 +1,7 @@
+hypso.georeference.georef.gmaps module
+======================================
+
+.. automodule:: hypso.georeference.georef.gmaps
+   :members:
+   :undoc-members:
+   :show-inheritance:

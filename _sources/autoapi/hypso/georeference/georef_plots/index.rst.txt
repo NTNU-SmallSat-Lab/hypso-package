@@ -1,0 +1,176 @@
+:py:mod:`hypso.georeference.georef_plots`
+=========================================
+
+.. py:module:: hypso.georeference.georef_plots
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.georeference.georef_plots.numpy_norm
+   hypso.georeference.georef_plots.compute_elevation_angle
+   hypso.georeference.georef_plots.compute_off_nadir_angle
+   hypso.georeference.georef_plots.pixel_index_to_angle
+   hypso.georeference.georef_plots.compute_local_angles
+   hypso.georeference.georef_plots.compute_local_angles_2
+   hypso.georeference.georef_plots.get_wkt
+   hypso.georeference.georef_plots.get_wkt_points
+   hypso.georeference.georef_plots.add_grid
+   hypso.georeference.georef_plots.geometry_computation
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.georeference.georef_plots.R_eq
+   hypso.georeference.georef_plots.f
+   hypso.georeference.georef_plots.e_2
+   hypso.georeference.georef_plots.R_pl
+   hypso.georeference.georef_plots.hypso_height_sensor
+
+
+.. py:data:: R_eq
+   :value: 6378137.0
+
+   
+
+.. py:data:: f
+
+   
+
+.. py:data:: e_2
+
+   
+
+.. py:data:: R_pl
+   :value: 6356752.0
+
+   
+
+.. py:data:: hypso_height_sensor
+   :value: 1216
+
+   
+
+.. py:function:: numpy_norm(np_array)
+
+   Gets the norm of an array
+
+   :param np_array: Numpy array to get the norm
+
+   :return: Float of the norm of the array
+
+
+.. py:function:: compute_elevation_angle(image_pos, sat_pos)
+
+   Computes the elevation angle
+
+   :param image_pos:
+   :param sat_pos:
+
+   :return: Float number of the elevation angle
+
+
+.. py:function:: compute_off_nadir_angle(image_pos, sat_pos)
+
+   Compute the off-nadir angle between the image and the satellite position
+
+   :param image_pos:
+   :param sat_pos:
+
+   :return: The off-nadir angle float value
+
+
+.. py:function:: pixel_index_to_angle(index, aoi_offset, fov_full, pixels_full)
+
+   Get the pixel to angle
+
+   :param index:
+   :param aoi_offset:
+   :param fov_full:
+   :param pixels_full:
+
+   :return:
+
+
+.. py:function:: compute_local_angles(times, pos_teme, latlons)
+
+   Compute the local angles on the capture
+
+   :param times:
+   :param pos_teme:
+   :param latlons:
+
+   :return: Numpy array with the local angles
+
+
+.. py:function:: compute_local_angles_2(times, pos_teme, lats, lons, indices)
+
+   Compute the Local Angles of the Capture (Second Variation)
+
+   :param times:
+   :param pos_teme:
+   :param lats:
+   :param lons:
+   :param indices:
+
+   :return: Returns array of local angles, and a list of numpy arrays of the satellite and sun zenith and azimuth pos
+
+
+.. py:function:: get_wkt(top_latlon, bot_latlon)
+
+   Gets WKT
+
+   :param top_latlon:
+   :param bot_latlon:
+
+   :return: a long string in Well known text representation of shapes format
+
+
+.. py:function:: get_wkt_points(latlon_top, latlon_mid_top, latlon_mid, latlon_mid_bot, latlon_bot)
+
+   Get WKT Points in a string readable format
+
+   :param latlon_top:
+   :param latlon_mid_top:
+   :param latlon_mid:
+   :param latlon_mid_bot:
+   :param latlon_bot:
+
+   :return: String of the WKT points
+
+
+.. py:function:: add_grid(axes, lat_center, lon_center, seg_lat, seg_lon, size_lat_deg, size_lon_deg)
+
+   Adds a grid for plotting based on the lat and lon
+
+   :param axes:
+   :param lat_center:
+   :param lon_center:
+   :param seg_lat:
+   :param seg_lon:
+   :param size_lat_deg:
+   :param size_lon_deg:
+
+   :return: No return.
+
+
+.. py:function:: geometry_computation(framepose_data_path, hypso_height=684)
+
+   Compute geometry using the framepose data
+
+   :param framepose_data_path:
+   :param hypso_height: Height of the Hypso capture
+
+   :return: No return.
+
+

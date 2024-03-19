@@ -1,0 +1,39 @@
+:py:mod:`hypso.reading`
+=======================
+
+.. py:module:: hypso.reading
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   load/index.rst
+
+
+Package Contents
+----------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.reading.load_nc
+
+
+
+.. py:function:: load_nc(nc_file_path, standardDimensions)
+
+   Load l1a.nc Hypso Capture file
+
+   :param nc_file_path: Absolute path to the l1a.nc file
+   :param standardDimensions: Dictionary with Standard Hypso allowed dimensions
+
+   :return: "info" Dictionary with Hypso capture information, raw cube numpy array (digital counts) and capture spatial
+       dimensions
+
+

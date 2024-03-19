@@ -1,0 +1,89 @@
+:py:mod:`hypso.calibration`
+===========================
+
+.. py:module:: hypso.calibration
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   correction/index.rst
+
+
+Package Contents
+----------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.calibration.crop_and_bin_matrix
+   hypso.calibration.calibrate_cube
+   hypso.calibration.get_coefficients_from_dict
+   hypso.calibration.get_coefficients_from_file
+   hypso.calibration.smile_correct_cube
+   hypso.calibration.destriping_correct_cube
+
+
+
+.. py:function:: crop_and_bin_matrix(matrix, x_start, x_stop, y_start, y_stop, bin_x=1, bin_y=1)
+
+   Crops matrix to AOI. Bins matrix so that the average value in the bin_x
+   number of pixels is stored.
+
+
+.. py:function:: calibrate_cube(info_sat, raw_cube, correction_coefficients_dict)
+
+   Radiometrically Calibrate the Raw Cube (digital counts) to Radiance
+
+   :param info_sat: Dictionary containing capture information
+   :param raw_cube: Numpy array containing digital countes 3-channel cube
+   :param correction_coefficients_dict: Dictionary containing the 2D coefficients for correction
+
+   :return: Corrected 3-channel cube
+
+
+.. py:function:: get_coefficients_from_dict(coeff_dict, satobj)
+
+   Get the coefficients from the csv files contained in a dictionary.
+
+   :param coeff_dict: Dictionary containing the paths of the csv files to read
+   :param satobj: Hypso satellite object
+
+   :return: Dictionary containing the 2D coefficients read from the csv files
+
+
+.. py:function:: get_coefficients_from_file(coeff_path)
+
+   Get correction coefficients from file
+
+   :param coeff_path: Coefficient path to read (.csv)
+
+   :return: 2D array of coefficients
+
+
+.. py:function:: smile_correct_cube(cube, correction_coefficients_dict)
+
+   Run smile correction on each frame in a cube, using the center row in the frame as the reference wavelength/band
+   for smile correction.
+
+   :param cube: 3-channel spectral cube
+   :param correction_coefficients_dict: Dictionary containing the coefficients for smile correction
+   :return:
+
+
+.. py:function:: destriping_correct_cube(cube, correction_coefficients_dict)
+
+   Apply destriping correction matrix.
+
+   :param cube: 3-channel spectral cube
+   :param correction_coefficients_dict: Dictionary containing the 2D coefficients for destriping
+
+   :return: 3-channel array for destriping correction
+
+

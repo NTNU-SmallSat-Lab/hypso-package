@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hypso.georeference.coordinate_correction module &mdash; Hypso Package 1.9.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Hypso Package
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Hypso Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">hypso.georeference.coordinate_correction module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/hypso.georeference.coordinate_correction.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-hypso.georeference.coordinate_correction">
+<span id="hypso-georeference-coordinate-correction-module"></span><h1>hypso.georeference.coordinate_correction module<a class="headerlink" href="#module-hypso.georeference.coordinate_correction" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.coordinate_correction.coordinate_correction">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.coordinate_correction.</span></span><span class="sig-name descname"><span class="pre">coordinate_correction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection_metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">originalLat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">originalLon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correction_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.coordinate_correction.coordinate_correction" title="Permalink to this definition"></a></dt>
+<dd><p>Correct the coordinates of the latitude and longitude 2D arrays</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>point_file</strong> (<em>Path</em>) – Absolute path to the .points file generated with QGIS</p></li>
+<li><p><strong>projection_metadata</strong> (<em>dict</em>) – Dictionary containing the projection information of the capture</p></li>
+<li><p><strong>originalLat</strong> (<em>ndarray</em>) – 2D latitude array</p></li>
+<li><p><strong>originalLon</strong> (<em>ndarray</em>) – 2D longitude array</p></li>
+<li><p><strong>correction_type</strong> (<em>Literal</em><em>[</em><em>'affine'</em><em>, </em><em>'homography'</em><em>, </em><em>'polynomial'</em><em>, </em><em>'lstsq'</em><em>]</em>) – String indicate the correction type. Options are “affine”, “homography”, polynomial”
+and “lstsq”</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The corrected latitude 2D array and the corrected longitude 2D array</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Tuple</em>[<em>ndarray</em>, <em>ndarray</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.coordinate_correction.coordinate_correction_matrix">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.coordinate_correction.</span></span><span class="sig-name descname"><span class="pre">coordinate_correction_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection_metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correction_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.coordinate_correction.coordinate_correction_matrix" title="Permalink to this definition"></a></dt>
+<dd><p>Generate the coordinate correction matrix</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>Path</em>) – Absolute path for the .points file generated with QGIS</p></li>
+<li><p><strong>projection_metadata</strong> (<em>dict</em>) – Dictionary containing projection metadata of hypso capture</p></li>
+<li><p><strong>correction_type</strong> (<em>Literal</em><em>[</em><em>'affine'</em><em>, </em><em>'homography'</em><em>, </em><em>'polynomial'</em><em>, </em><em>'lstsq'</em><em>]</em>) – String indicating the correction type. Options are “affine”, “homography”, polynomial”
+and “lstsq”</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary with the correction matrix</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.coordinate_correction.start_coordinate_correction">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.coordinate_correction.</span></span><span class="sig-name descname"><span class="pre">start_coordinate_correction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">satinfo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proj_metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correction_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'affine'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.coordinate_correction.start_coordinate_correction" title="Permalink to this definition"></a></dt>
+<dd><p>Start coordinate correction process</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points_path</strong> (<em>Path</em>) – Path of the .points file generated with QGIS software</p></li>
+<li><p><strong>satinfo</strong> (<em>dict</em>) – Dictionary containing capture information</p></li>
+<li><p><strong>proj_metadata</strong> (<em>dict</em>) – Dictionary containing projection metadata of the capture</p></li>
+<li><p><strong>correction_type</strong> (<em>Literal</em><em>[</em><em>'affine'</em><em>, </em><em>'homography'</em><em>, </em><em>'polynomial'</em><em>, </em><em>'lstsq'</em><em>]</em>) – String with the method out of “affine”, “homography”, polynomial” and “lstsq”</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Corrected lat and lon coordinate 2D arrays</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Tuple</em>[<em>ndarray</em>, <em>ndarray</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Norwegian University of Science and Technology (NTNU).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

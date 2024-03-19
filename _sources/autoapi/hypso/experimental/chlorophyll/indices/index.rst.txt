@@ -1,0 +1,168 @@
+:py:mod:`hypso.experimental.chlorophyll.indices`
+================================================
+
+.. py:module:: hypso.experimental.chlorophyll.indices
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.experimental.chlorophyll.indices.TBVI
+   hypso.experimental.chlorophyll.indices.BR
+   hypso.experimental.chlorophyll.indices.FBM
+   hypso.experimental.chlorophyll.indices.SINGLE
+   hypso.experimental.chlorophyll.indices.BDRATIO
+   hypso.experimental.chlorophyll.indices.BR_LOG
+   hypso.experimental.chlorophyll.indices.BDIFF
+   hypso.experimental.chlorophyll.indices.BDIFF_LOG
+   hypso.experimental.chlorophyll.indices.BR_DIFF
+   hypso.experimental.chlorophyll.indices.BR_DIFF_LOG
+   hypso.experimental.chlorophyll.indices.TBM
+   hypso.experimental.chlorophyll.indices.EXG
+   hypso.experimental.chlorophyll.indices.GLI
+   hypso.experimental.chlorophyll.indices.OCVI
+   hypso.experimental.chlorophyll.indices.EVI
+
+
+
+.. py:function:: TBVI(refl)
+
+   Two Band Vegetation Index
+
+   :param refl: Numpy array with reflectances per column
+
+   :return: Features calculated either a single value or a 1D array
+
+
+.. py:function:: BR(refl)
+
+   Band Ratio Feature
+
+   :param refl: Numpy array with reflectances per column
+
+   :return: Features calculated either a single value or a 1D array
+
+
+.. py:function:: FBM(refl)
+
+   Four Band Model
+
+   :param refl: Numpy array with reflectances per column
+
+   :return: Features calculated either a single value or a 1D array
+
+
+.. py:function:: SINGLE(refl)
+
+   Single Band (No features purely reflectance)
+
+   :param refl: Numpy array with reflectances per column
+
+   :return: Features calculated either a single value or a 1D array
+
+
+.. py:function:: BDRATIO(refl)
+
+   Band Difference Ratio
+
+   :param refl: Numpy array with reflectances per column
+
+   :return: Features calculated either a single value or a 1D array
+
+
+.. py:function:: BR_LOG(refl)
+
+   Log of Band Ratio
+
+   :param refl: Numpy array with reflectances per column
+
+   :return: Features calculated either a single value or a 1D array
+
+
+.. py:function:: BDIFF(refl)
+
+   Band Difference
+
+   :param refl: Numpy array with reflectances per column
+
+   :return: Features calculated either a single value or a 1D array
+
+
+.. py:function:: BDIFF_LOG(refl)
+
+   Log of Band Difference
+
+   :param refl: Numpy array with reflectances per column
+
+   :return: Features calculated either a single value or a 1D array
+
+
+.. py:function:: BR_DIFF(refl)
+
+   Band Ratio Difference
+
+   :param refl: Numpy array with reflectances per column
+
+   :return: Features calculated either a single value or a 1D array
+
+
+.. py:function:: BR_DIFF_LOG(refl)
+
+   Log of Band Ratio Difference
+
+   :param refl: Numpy array with reflectances per column
+
+   :return: Features calculated either a single value or a 1D array
+
+
+.. py:function:: TBM(refl)
+
+   Three Band Model
+
+   :param refl: Numpy array with reflectances per column
+
+   :return: Features calculated either a single value or a 1D array
+
+
+.. py:function:: EXG(refl)
+
+   Excess Green Index
+
+   :param refl: Numpy array with reflectances per column
+
+   :return: Features calculated either a single value or a 1D array
+
+
+.. py:function:: GLI(refl)
+
+   Green Leaf Index
+
+   :param refl: Numpy array with reflectances per column
+
+   :return: Features calculated either a single value or a 1D array
+
+
+.. py:function:: OCVI(refl)
+
+   Optimized Chlorophyll Vegetation Index
+
+   :param refl: Numpy array with reflectances per column
+
+   :return: Features calculated either a single value or a 1D array
+
+
+.. py:function:: EVI(refl)
+
+   Enhanced Vegetation Index
+
+   :param refl: Numpy array with reflectances per column
+
+   :return: Features calculated either a single value or a 1D array
+
+

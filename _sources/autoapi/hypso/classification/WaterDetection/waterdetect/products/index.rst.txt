@@ -1,0 +1,42 @@
+:py:mod:`hypso.classification.WaterDetection.waterdetect.products`
+==================================================================
+
+.. py:module:: hypso.classification.WaterDetection.waterdetect.products
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   hypso.classification.WaterDetection.waterdetect.products.DWProducts
+
+
+
+
+.. py:class:: DWProducts
+
+   .. py:attribute:: Landsat8_USGS
+      :value: 'L8_USGS'
+
+      
+
+   .. py:attribute:: Sentinel2_THEIA
+      :value: 'S2_THEIA'
+
+      
+
+   .. py:attribute:: Sentinel2_ESA
+      :value: 'S2_S2COR'
+
+      
+
+   .. py:attribute:: Sentinel2_L1C
+      :value: 'S2_L1C'
+
+      
+
+

@@ -1,0 +1,7 @@
+hypso.classification.water module
+=================================
+
+.. automodule:: hypso.classification.water
+   :members:
+   :undoc-members:
+   :show-inheritance:

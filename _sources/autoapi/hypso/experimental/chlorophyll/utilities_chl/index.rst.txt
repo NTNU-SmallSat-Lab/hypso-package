@@ -1,0 +1,34 @@
+:py:mod:`hypso.experimental.chlorophyll.utilities_chl`
+======================================================
+
+.. py:module:: hypso.experimental.chlorophyll.utilities_chl
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.experimental.chlorophyll.utilities_chl.convolve2d
+
+
+
+.. py:function:: convolve2d(slab, kernel, max_missing = 0.5, verbose = True)
+
+   2D convolution with missings ignored
+
+   :param slab: 2d array. Input array to convolve. Can have numpy.nan or masked values.
+   :param kernel: 2d array, convolution kernel, must have sizes as odd numbers.
+   :param max_missing: float in (0,1), max percentage of missing in each convolution
+       window is tolerated before a missing is placed in the result.
+   :param verbose: Default to True.
+
+   :return: 2d array, convolution result. Missings are represented as
+       numpy.nans if they are in <slab>, or masked if they are masked
+       in <slab>.
+
+

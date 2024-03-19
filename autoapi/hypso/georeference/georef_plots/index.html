@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hypso.georeference.georef_plots &mdash; Hypso Package 1.9.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            Hypso Package
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Hypso Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.georeference.georef_plots</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/autoapi/hypso/georeference/georef_plots/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-hypso.georeference.georef_plots">
+<span id="hypso-georeference-georef-plots"></span><h1><a class="reference internal" href="../../../../hypso.georeference.georef_plots.html#module-hypso.georeference.georef_plots" title="hypso.georeference.georef_plots"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.georeference.georef_plots</span></code></a><a class="headerlink" href="#module-hypso.georeference.georef_plots" title="Permalink to this heading"></a></h1>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this heading"></a></h2>
+<section id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../../../../hypso.georeference.georef_plots.html#hypso.georeference.georef_plots.numpy_norm" title="hypso.georeference.georef_plots.numpy_norm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy_norm</span></code></a>(np_array)</p></td>
+<td><p>Gets the norm of an array</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../../../../hypso.georeference.georef_plots.html#hypso.georeference.georef_plots.compute_elevation_angle" title="hypso.georeference.georef_plots.compute_elevation_angle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_elevation_angle</span></code></a>(image_pos, sat_pos)</p></td>
+<td><p>Computes the elevation angle</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../../../../hypso.georeference.georef_plots.html#hypso.georeference.georef_plots.compute_off_nadir_angle" title="hypso.georeference.georef_plots.compute_off_nadir_angle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_off_nadir_angle</span></code></a>(image_pos, sat_pos)</p></td>
+<td><p>Compute the off-nadir angle between the image and the satellite position</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../../../../hypso.georeference.georef_plots.html#hypso.georeference.georef_plots.pixel_index_to_angle" title="hypso.georeference.georef_plots.pixel_index_to_angle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pixel_index_to_angle</span></code></a>(index, aoi_offset, fov_full, ...)</p></td>
+<td><p>Get the pixel to angle</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../../../../hypso.georeference.georef_plots.html#hypso.georeference.georef_plots.compute_local_angles" title="hypso.georeference.georef_plots.compute_local_angles"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_local_angles</span></code></a>(times, pos_teme, latlons)</p></td>
+<td><p>Compute the local angles on the capture</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../../../../hypso.georeference.georef_plots.html#hypso.georeference.georef_plots.compute_local_angles_2" title="hypso.georeference.georef_plots.compute_local_angles_2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_local_angles_2</span></code></a>(times, pos_teme, lats, lons, ...)</p></td>
+<td><p>Compute the Local Angles of the Capture (Second Variation)</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../../../../hypso.georeference.georef_plots.html#hypso.georeference.georef_plots.get_wkt" title="hypso.georeference.georef_plots.get_wkt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_wkt</span></code></a>(top_latlon, bot_latlon)</p></td>
+<td><p>Gets WKT</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../../../../hypso.georeference.georef_plots.html#hypso.georeference.georef_plots.get_wkt_points" title="hypso.georeference.georef_plots.get_wkt_points"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_wkt_points</span></code></a>(latlon_top, latlon_mid_top, latlon_mid, ...)</p></td>
+<td><p>Get WKT Points in a string readable format</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../../../../hypso.georeference.georef_plots.html#hypso.georeference.georef_plots.add_grid" title="hypso.georeference.georef_plots.add_grid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_grid</span></code></a>(axes, lat_center, lon_center, seg_lat, ...)</p></td>
+<td><p>Adds a grid for plotting based on the lat and lon</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../../../../hypso.georeference.georef_plots.html#hypso.georeference.georef_plots.geometry_computation" title="hypso.georeference.georef_plots.geometry_computation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">geometry_computation</span></code></a>(framepose_data_path[, hypso_height])</p></td>
+<td><p>Compute geometry using the framepose data</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.georeference.georef_plots.R_eq" title="hypso.georeference.georef_plots.R_eq"><code class="xref py py-obj docutils literal notranslate"><span class="pre">R_eq</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.georeference.georef_plots.f" title="hypso.georeference.georef_plots.f"><code class="xref py py-obj docutils literal notranslate"><span class="pre">f</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.georeference.georef_plots.e_2" title="hypso.georeference.georef_plots.e_2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">e_2</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.georeference.georef_plots.R_pl" title="hypso.georeference.georef_plots.R_pl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">R_pl</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.georeference.georef_plots.hypso_height_sensor" title="hypso.georeference.georef_plots.hypso_height_sensor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hypso_height_sensor</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py data">
+<dt class="sig sig-object py" id="hypso.georeference.georef_plots.R_eq">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef_plots.</span></span><span class="sig-name descname"><span class="pre">R_eq</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6378137.0</span></em><a class="headerlink" href="#hypso.georeference.georef_plots.R_eq" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="hypso.georeference.georef_plots.f">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef_plots.</span></span><span class="sig-name descname"><span class="pre">f</span></span><a class="headerlink" href="#hypso.georeference.georef_plots.f" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="hypso.georeference.georef_plots.e_2">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef_plots.</span></span><span class="sig-name descname"><span class="pre">e_2</span></span><a class="headerlink" href="#hypso.georeference.georef_plots.e_2" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="hypso.georeference.georef_plots.R_pl">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef_plots.</span></span><span class="sig-name descname"><span class="pre">R_pl</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6356752.0</span></em><a class="headerlink" href="#hypso.georeference.georef_plots.R_pl" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="hypso.georeference.georef_plots.hypso_height_sensor">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef_plots.</span></span><span class="sig-name descname"><span class="pre">hypso_height_sensor</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1216</span></em><a class="headerlink" href="#hypso.georeference.georef_plots.hypso_height_sensor" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef_plots.numpy_norm">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef_plots.</span></span><span class="sig-name descname"><span class="pre">numpy_norm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">np_array</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef_plots.numpy_norm" title="Permalink to this definition"></a></dt>
+<dd><p>Gets the norm of an array</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>np_array</strong> – Numpy array to get the norm</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Float of the norm of the array</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef_plots.compute_elevation_angle">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef_plots.</span></span><span class="sig-name descname"><span class="pre">compute_elevation_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sat_pos</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef_plots.compute_elevation_angle" title="Permalink to this definition"></a></dt>
+<dd><p>Computes the elevation angle</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_pos</strong> – </p></li>
+<li><p><strong>sat_pos</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Float number of the elevation angle</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef_plots.compute_off_nadir_angle">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef_plots.</span></span><span class="sig-name descname"><span class="pre">compute_off_nadir_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sat_pos</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef_plots.compute_off_nadir_angle" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the off-nadir angle between the image and the satellite position</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_pos</strong> – </p></li>
+<li><p><strong>sat_pos</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The off-nadir angle float value</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef_plots.pixel_index_to_angle">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef_plots.</span></span><span class="sig-name descname"><span class="pre">pixel_index_to_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aoi_offset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fov_full</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixels_full</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef_plots.pixel_index_to_angle" title="Permalink to this definition"></a></dt>
+<dd><p>Get the pixel to angle</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>index</strong> – </p></li>
+<li><p><strong>aoi_offset</strong> – </p></li>
+<li><p><strong>fov_full</strong> – </p></li>
+<li><p><strong>pixels_full</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef_plots.compute_local_angles">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef_plots.</span></span><span class="sig-name descname"><span class="pre">compute_local_angles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_teme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latlons</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef_plots.compute_local_angles" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the local angles on the capture</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>times</strong> – </p></li>
+<li><p><strong>pos_teme</strong> – </p></li>
+<li><p><strong>latlons</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Numpy array with the local angles</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef_plots.compute_local_angles_2">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef_plots.</span></span><span class="sig-name descname"><span class="pre">compute_local_angles_2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_teme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lons</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef_plots.compute_local_angles_2" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the Local Angles of the Capture (Second Variation)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>times</strong> – </p></li>
+<li><p><strong>pos_teme</strong> – </p></li>
+<li><p><strong>lats</strong> – </p></li>
+<li><p><strong>lons</strong> – </p></li>
+<li><p><strong>indices</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns array of local angles, and a list of numpy arrays of the satellite and sun zenith and azimuth pos</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[numpy.ndarray, List[numpy.ndarray]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef_plots.get_wkt">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef_plots.</span></span><span class="sig-name descname"><span class="pre">get_wkt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">top_latlon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bot_latlon</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef_plots.get_wkt" title="Permalink to this definition"></a></dt>
+<dd><p>Gets WKT</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>top_latlon</strong> – </p></li>
+<li><p><strong>bot_latlon</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a long string in Well known text representation of shapes format</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef_plots.get_wkt_points">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef_plots.</span></span><span class="sig-name descname"><span class="pre">get_wkt_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">latlon_top</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latlon_mid_top</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latlon_mid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latlon_mid_bot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latlon_bot</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef_plots.get_wkt_points" title="Permalink to this definition"></a></dt>
+<dd><p>Get WKT Points in a string readable format</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>latlon_top</strong> – </p></li>
+<li><p><strong>latlon_mid_top</strong> – </p></li>
+<li><p><strong>latlon_mid</strong> – </p></li>
+<li><p><strong>latlon_mid_bot</strong> – </p></li>
+<li><p><strong>latlon_bot</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>String of the WKT points</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef_plots.add_grid">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef_plots.</span></span><span class="sig-name descname"><span class="pre">add_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_center</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon_center</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seg_lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seg_lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_lat_deg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_lon_deg</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef_plots.add_grid" title="Permalink to this definition"></a></dt>
+<dd><p>Adds a grid for plotting based on the lat and lon</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>axes</strong> – </p></li>
+<li><p><strong>lat_center</strong> – </p></li>
+<li><p><strong>lon_center</strong> – </p></li>
+<li><p><strong>seg_lat</strong> – </p></li>
+<li><p><strong>seg_lon</strong> – </p></li>
+<li><p><strong>size_lat_deg</strong> – </p></li>
+<li><p><strong>size_lon_deg</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>No return.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.georeference.georef_plots.geometry_computation">
+<span class="sig-prename descclassname"><span class="pre">hypso.georeference.georef_plots.</span></span><span class="sig-name descname"><span class="pre">geometry_computation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">framepose_data_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hypso_height</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">684</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.georeference.georef_plots.geometry_computation" title="Permalink to this definition"></a></dt>
+<dd><p>Compute geometry using the framepose data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>framepose_data_path</strong> – </p></li>
+<li><p><strong>hypso_height</strong> – Height of the Hypso capture</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>No return.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Norwegian University of Science and Technology (NTNU).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

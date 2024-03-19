@@ -1,0 +1,121 @@
+:py:mod:`hypso.georeference.reference`
+======================================
+
+.. py:module:: hypso.georeference.reference
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.georeference.reference.generate_rgb_geotiff
+   hypso.georeference.reference.generate_full_geotiff
+   hypso.georeference.reference.generate_geotiff
+   hypso.georeference.reference.interpolate_geotiff
+   hypso.georeference.reference.export_single_band_geotiff
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.georeference.reference.DEBUG
+   hypso.georeference.reference.EXPORT_SINGLE_BANDS
+   hypso.georeference.reference.r_band_index
+   hypso.georeference.reference.g_band_index
+   hypso.georeference.reference.b_band_index
+
+
+.. py:data:: DEBUG
+   :value: False
+
+   
+
+.. py:data:: EXPORT_SINGLE_BANDS
+   :value: False
+
+   
+
+.. py:data:: r_band_index
+   :value: 61
+
+   
+
+.. py:data:: g_band_index
+   :value: 50
+
+   
+
+.. py:data:: b_band_index
+   :value: 31
+
+   
+
+.. py:function:: generate_rgb_geotiff(satObj, overwrite = False)
+
+   Generate RGB GeoTiff image
+
+   :param satObj: Hypso satellite object.
+   :param overwrite: If true, overwrite the previously generated RGB GeoTiff image
+
+   :return: No return
+
+
+.. py:function:: generate_full_geotiff(satObj, product = 'L1C')
+
+   Generate Full 120 Band GeoTiff image
+
+   :param satObj: Hypso satellite object.
+   :param product: Product to generate it can be either "L1C", "L2-6SV1", "L2-ACOLITE"
+
+   :return: No return
+
+
+.. py:function:: generate_geotiff(satObj, bands, cube_data)
+
+   Generate geotiff (RGB or Full 120 bands)
+
+   :param satObj: Hypso Satellite object
+   :param bands: List of band indices
+   :param cube_data: Numpy array of the cube array to include in the GeoTiff
+
+   :return: No return
+
+
+.. py:function:: interpolate_geotiff(band_number, cube_data, pixel_coords_map_list, grid_points, resampling_method, contain_mask, geotiff_info, grid_data_all_bands)
+
+   Interplate Each band of the data cube before saving it to a GeoTiff
+
+   :param band_number: Band number to interpolate
+   :param cube_data: Numpy array of data cube
+   :param pixel_coords_map_list:
+   :param grid_points:
+   :param resampling_method: Resampling method. Default is "nearest". Linear is better but slower.
+   :param contain_mask:
+   :param geotiff_info:
+   :param grid_data_all_bands:
+
+   :return: No return
+
+
+.. py:function:: export_single_band_geotiff(filename, raster_data, grid_dims, grid_origin, grid_res, grid_epsg)
+
+   Export Single Band as individual channel GeoTiff
+
+   :param filename: Absolute path to save GeoTiff
+   :param raster_data: Numpy array of the data to save in the GeoTiff
+   :param grid_dims:
+   :param grid_origin:
+   :param grid_res:
+   :param grid_epsg:
+
+   :return: No return.
+
+

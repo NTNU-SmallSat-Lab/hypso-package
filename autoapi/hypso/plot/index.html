@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hypso.plot &mdash; Hypso Package 1.9.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Hypso Package
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Hypso Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.plot</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/autoapi/hypso/plot/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-hypso.plot">
+<span id="hypso-plot"></span><h1><a class="reference internal" href="../../../hypso.plot.html#module-hypso.plot" title="hypso.plot"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.plot</span></code></a><a class="headerlink" href="#module-hypso.plot" title="Permalink to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="map/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.plot.map</span></code></a></li>
+</ul>
+</div>
+</section>
+<section id="package-contents">
+<h2>Package Contents<a class="headerlink" href="#package-contents" title="Permalink to this heading"></a></h2>
+<section id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.plot.show_rgb_map" title="hypso.plot.show_rgb_map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">show_rgb_map</span></code></a>(satellite_obj[, plotTitle, dpi_input])</p></td>
+<td><p>Show RGB overlay of the Hypso image on a map.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.plot.write_rgb_to_png" title="hypso.plot.write_rgb_to_png"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_rgb_to_png</span></code></a>(sat_obj, path_to_save)</p></td>
+<td><p>Write the RGB image to a .png file</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.plot.plot_array_overlay" title="hypso.plot.plot_array_overlay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_array_overlay</span></code></a>(satellite_obj, plot_array[, ...])</p></td>
+<td><p>Plot a 2D array overlayed on a RGB Hypso Capture on a Map.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.plot.get_rgb" title="hypso.plot.get_rgb"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_rgb</span></code></a>(sat_obj[, R_wl, G_wl, B_wl])</p></td>
+<td><p>Write an RGB Image from specified Bands. Optional parameters are</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.plot.point_rgb_map" title="hypso.plot.point_rgb_map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">point_rgb_map</span></code></a>(satellite_obj[, plotTitle, dpi_input, ...])</p></td>
+<td><p>Function to add points to overlay on the RGB Map of the Hypso image</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.show_rgb_map">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.</span></span><span class="sig-name descname"><span class="pre">show_rgb_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plotTitle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RGB</span> <span class="pre">Image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">450</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.show_rgb_map" title="Permalink to this definition"></a></dt>
+<dd><p>Show RGB overlay of the Hypso image on a map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>satellite_obj</strong> – Hypso satellite object</p></li>
+<li><p><strong>plotTitle</strong> – Title for the plot</p></li>
+<li><p><strong>dpi_input</strong> – Resolution in DPI´s. Default 450.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>No return.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.write_rgb_to_png">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.</span></span><span class="sig-name descname"><span class="pre">write_rgb_to_png</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sat_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_to_save</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.write_rgb_to_png" title="Permalink to this definition"></a></dt>
+<dd><p>Write the RGB image to a .png file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sat_obj</strong> – Hypso Satellite object</p></li>
+<li><p><strong>path_to_save</strong> (<em>str</em>) – Path to save the .png image. Should include the file extension.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>No return.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.plot_array_overlay">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.</span></span><span class="sig-name descname"><span class="pre">plot_array_overlay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plotTitle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'2D</span> <span class="pre">Array'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cbar_title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">Chlorophyll</span> <span class="pre">Concentration</span> <span class="pre">[mg</span> <span class="pre">m^-3]'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">450</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.plot_array_overlay" title="Permalink to this definition"></a></dt>
+<dd><p>Plot a 2D array overlayed on a RGB Hypso Capture on a Map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>satellite_obj</strong> – Hypso satellite object</p></li>
+<li><p><strong>plot_array</strong> – 2D array to plot. Should be of the same size of the Hypso capture Lat/Lon arrays</p></li>
+<li><p><strong>plotTitle</strong> – Tile for the plot</p></li>
+<li><p><strong>cbar_title</strong> – Tile for the colorbar</p></li>
+<li><p><strong>dpi_input</strong> – Resolution in DPI´s. Default 450.</p></li>
+<li><p><strong>min_value</strong> – Minimum value for the Colorbar</p></li>
+<li><p><strong>max_value</strong> – Maximum value for the Colorbar</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>No return.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.get_rgb">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.</span></span><span class="sig-name descname"><span class="pre">get_rgb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sat_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R_wl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">650</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">G_wl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">550</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">B_wl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">450</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.get_rgb" title="Permalink to this definition"></a></dt>
+<dd><p>Write an RGB Image from specified Bands. Optional parameters are</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>R_wl</strong> – The wavelength for the red channel. Defaults to 650.</p></li>
+<li><p><strong>G_wl</strong> – The wavelength for the green channel. Defaults to 550.</p></li>
+<li><p><strong>B_wl</strong> – The wavelength for the blue channel. Defaults to 450.</p></li>
+<li><p><strong>sat_obj</strong> – Hypso satellite object</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>PIL Image object</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.plot.point_rgb_map">
+<span class="sig-prename descclassname"><span class="pre">hypso.plot.</span></span><span class="sig-name descname"><span class="pre">point_rgb_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">satellite_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plotTitle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RGB</span> <span class="pre">Image'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">450</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patch_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.007</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_to_save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.plot.point_rgb_map" title="Permalink to this definition"></a></dt>
+<dd><p>Function to add points to overlay on the RGB Map of the Hypso image</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>satellite_obj</strong> – Hypso satellite object</p></li>
+<li><p><strong>plotTitle</strong> – Title for the plot</p></li>
+<li><p><strong>dpi_input</strong> – Resolution in DPI´s. Default 450.</p></li>
+<li><p><strong>patch_dict</strong> – Dictionary containing the location and color of the points to plot
+<code class="docutils literal notranslate"><span class="pre">{&quot;Point</span> <span class="pre">1&quot;:{&quot;lat&quot;:60.7776,</span> <span class="pre">&quot;lon&quot;:11.0895,</span> <span class="pre">&quot;color&quot;:&quot;red&quot;},</span>
+<span class="pre">&quot;Point</span> <span class="pre">2&quot;:{&quot;lat&quot;:60.5,</span> <span class="pre">&quot;lon&quot;:10.4,</span> <span class="pre">&quot;color&quot;:&quot;orange&quot;}}</span></code></p></li>
+<li><p><strong>r_plot</strong> – Radius of the plotted points. Default: 0.007.</p></li>
+<li><p><strong>path_to_save</strong> – Absolute Path to save the plot image.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>No return.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Norwegian University of Science and Technology (NTNU).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

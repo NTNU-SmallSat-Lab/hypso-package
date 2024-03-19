@@ -1,0 +1,59 @@
+:py:mod:`hypso.georeference.coordinate_correction`
+==================================================
+
+.. py:module:: hypso.georeference.coordinate_correction
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   hypso.georeference.coordinate_correction.start_coordinate_correction
+   hypso.georeference.coordinate_correction.coordinate_correction_matrix
+   hypso.georeference.coordinate_correction.coordinate_correction
+
+
+
+.. py:function:: start_coordinate_correction(points_path, satinfo, proj_metadata, correction_type = 'affine')
+
+   Start coordinate correction process
+
+   :param points_path: Path of the .points file generated with QGIS software
+   :param satinfo: Dictionary containing capture information
+   :param proj_metadata: Dictionary containing projection metadata of the capture
+   :param correction_type: String with the method out of "affine", "homography", polynomial" and "lstsq"
+
+   :return: Corrected lat and lon coordinate 2D arrays
+
+
+.. py:function:: coordinate_correction_matrix(filename, projection_metadata, correction_type)
+
+   Generate the coordinate correction matrix
+
+   :param filename: Absolute path for the .points file generated with QGIS
+   :param projection_metadata: Dictionary containing projection metadata of hypso capture
+   :param correction_type: String indicating the correction type. Options are "affine", "homography", polynomial"
+       and "lstsq"
+
+   :return: Dictionary with the correction matrix
+
+
+.. py:function:: coordinate_correction(point_file, projection_metadata, originalLat, originalLon, correction_type)
+
+   Correct the coordinates of the latitude and longitude 2D arrays
+
+   :param point_file: Absolute path to the .points file generated with QGIS
+   :param projection_metadata: Dictionary containing the projection information of the capture
+   :param originalLat: 2D latitude array
+   :param originalLon: 2D longitude array
+   :param correction_type: String indicate the correction type. Options are "affine", "homography", polynomial"
+       and "lstsq"
+
+   :return: The corrected latitude 2D array and the corrected longitude 2D array
+
+

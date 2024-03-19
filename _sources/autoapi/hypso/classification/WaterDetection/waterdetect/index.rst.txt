@@ -1,0 +1,29 @@
+:py:mod:`hypso.classification.WaterDetection.waterdetect`
+=========================================================
+
+.. py:module:: hypso.classification.WaterDetection.waterdetect
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   Common/index.rst
+   External_mask/index.rst
+   Glint/index.rst
+   Image/index.rst
+   InputOutput/index.rst
+   WaterDetect/index.rst
+   products/index.rst
+
+
+Package Contents
+----------------
+
+.. py:data:: __version__
+   :value: '1.5.15'
+
+   
+

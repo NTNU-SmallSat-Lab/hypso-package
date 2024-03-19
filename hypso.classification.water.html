@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hypso.classification.water module &mdash; Hypso Package 1.9.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Hypso Package
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Hypso Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">hypso.classification.water module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/hypso.classification.water.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-hypso.classification.water">
+<span id="hypso-classification-water-module"></span><h1>hypso.classification.water module<a class="headerlink" href="#module-hypso.classification.water" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.classification.water.ndwi_watermask">
+<span class="sig-prename descclassname"><span class="pre">hypso.classification.water.</span></span><span class="sig-name descname"><span class="pre">ndwi_watermask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sat_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product_to_use</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'L1C'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.water.ndwi_watermask" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the Water Mask using the Normalized Difference Water Index (NDWI). This method was originally developed by
+Mauricio Cordeiro (<a class="reference external" href="https://github.com/cordmaur/WaterDetect">https://github.com/cordmaur/WaterDetect</a>)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sat_obj</strong> – Hypso satellite object</p></li>
+<li><p><strong>product_to_use</strong> (<em>Literal</em><em>[</em><em>'L1C'</em><em>, </em><em>'L1B'</em><em>, </em><em>'L2-ACOLITE'</em><em>, </em><em>'L2-6SV1'</em><em>]</em>) – String of product to use for calculating the water mask. Default and recommended: “L1C”</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>No Return</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.classification.water.threshold_watermask">
+<span class="sig-prename descclassname"><span class="pre">hypso.classification.water.</span></span><span class="sig-name descname"><span class="pre">threshold_watermask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sat_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.9</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.water.threshold_watermask" title="Permalink to this definition"></a></dt>
+<dd><p>Simple Threshold WaterMask</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sat_obj</strong> – Hypso satellite object</p></li>
+<li><p><strong>threshold_val</strong> (<em>float</em>) – Threshold value for pixel contrast. Default is 2.9</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Norwegian University of Science and Technology (NTNU).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

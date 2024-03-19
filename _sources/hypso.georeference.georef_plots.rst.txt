@@ -1,0 +1,7 @@
+hypso.georeference.georef\_plots module
+=======================================
+
+.. automodule:: hypso.georeference.georef_plots
+   :members:
+   :undoc-members:
+   :show-inheritance:

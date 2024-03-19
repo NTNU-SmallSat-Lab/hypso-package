@@ -1,0 +1,18 @@
+hypso.reading package
+=====================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   hypso.reading.load
+
+Module contents
+---------------
+
+.. automodule:: hypso.reading
+   :members:
+   :undoc-members:
+   :show-inheritance:

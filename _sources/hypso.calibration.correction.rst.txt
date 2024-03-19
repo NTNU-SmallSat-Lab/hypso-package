@@ -1,0 +1,7 @@
+hypso.calibration.correction module
+===================================
+
+.. automodule:: hypso.calibration.correction
+   :members:
+   :undoc-members:
+   :show-inheritance:

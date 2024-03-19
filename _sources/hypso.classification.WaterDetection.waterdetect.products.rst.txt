@@ -1,0 +1,7 @@
+hypso.classification.WaterDetection.waterdetect.products module
+===============================================================
+
+.. automodule:: hypso.classification.WaterDetection.waterdetect.products
+   :members:
+   :undoc-members:
+   :show-inheritance:

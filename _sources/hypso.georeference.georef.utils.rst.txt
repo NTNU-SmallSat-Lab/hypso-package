@@ -1,0 +1,7 @@
+hypso.georeference.georef.utils module
+======================================
+
+.. automodule:: hypso.georeference.georef.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:

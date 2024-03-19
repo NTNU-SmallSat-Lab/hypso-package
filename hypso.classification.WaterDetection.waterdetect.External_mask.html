@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hypso.classification.WaterDetection.waterdetect.External_mask module &mdash; Hypso Package 1.9.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Hypso Package
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="autoapi/index.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Hypso Package</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">hypso.classification.WaterDetection.waterdetect.External_mask module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/hypso.classification.WaterDetection.waterdetect.External_mask.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-hypso.classification.WaterDetection.waterdetect.External_mask">
+<span id="hypso-classification-waterdetection-waterdetect-external-mask-module"></span><h1>hypso.classification.WaterDetection.waterdetect.External_mask module<a class="headerlink" href="#module-hypso.classification.WaterDetection.waterdetect.External_mask" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.External_mask.prepare_external_masks">
+<span class="sig-prename descclassname"><span class="pre">hypso.classification.WaterDetection.waterdetect.External_mask.</span></span><span class="sig-name descname"><span class="pre">prepare_external_masks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imgs_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masks_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'S2_S2COR'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">msk_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'S2_S2COR'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dilation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.External_mask.prepare_external_masks" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>imgs_dir</strong> (<em>str</em>) – </p></li>
+<li><p><strong>masks_dir</strong> (<em>str</em>) – </p></li>
+<li><p><strong>flags</strong> (<em>list</em>) – </p></li>
+<li><p><strong>img_type</strong> (<em>str</em>) – </p></li>
+<li><p><strong>msk_type</strong> (<em>str</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.External_mask.process_mask">
+<span class="sig-prename descclassname"><span class="pre">hypso.classification.WaterDetection.waterdetect.External_mask.</span></span><span class="sig-name descname"><span class="pre">process_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">invalid_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">255</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dilation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.External_mask.process_mask" title="Permalink to this definition"></a></dt>
+<dd><p>Given a mask path and the satellite image path, set the pixels with values in the flags list to invalid value
+and remaining pixels to valid_value. At the end, the processed mask will be saved to the image directory.
+&#64;param mask: path to the mask geotiff
+&#64;param img: path to the image directory, where the mask will be copied into.
+&#64;param flags: flags on the mask image that should be masked (set to True)
+&#64;param valid_value: value to be assigned to valid pixels
+&#64;param invalid_value: value to be assigned to invalid pixels
+&#64;param dilation: Size of the kernel (square) to be applied in the dilation processing
+&#64;return: Nothing</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mask</strong> (<em>Path</em>) – </p></li>
+<li><p><strong>img</strong> (<em>Path</em>) – </p></li>
+<li><p><strong>flags</strong> (<em>list</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.External_mask.search_mask">
+<span class="sig-prename descclassname"><span class="pre">hypso.classification.WaterDetection.waterdetect.External_mask.</span></span><span class="sig-name descname"><span class="pre">search_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masks_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">img_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'S2_S2COR'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">msk_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'S2_S2COR'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.External_mask.search_mask" title="Permalink to this definition"></a></dt>
+<dd><p>Given an image and a path for masks, find the correct mask for the image, otherwise return None.
+The match is done by name. The mask name has to contain the images name.
+:param img_path: path to an image
+:param masks_path: path to mask images
+:param img_type: image naming convention. ‘S2_S2COR’, ‘S2_THEIA’ and ‘S2_PLANETARY’ are currently supported.
+:param msk_type: mask naming convention. ‘S2_S2COR’, ‘S2_THEIA’ and ‘S2_PLANETARY’ are currently supported.
+:return: The mask path or None</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img_path</strong> (<em>Path</em>) – </p></li>
+<li><p><strong>masks_path</strong> (<em>Path</em>) – </p></li>
+<li><p><strong>img_type</strong> (<em>str</em>) – </p></li>
+<li><p><strong>msk_type</strong> (<em>str</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Optional</em>[<em>Path</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.classification.WaterDetection.waterdetect.External_mask.set_mask_flags">
+<span class="sig-prename descclassname"><span class="pre">hypso.classification.WaterDetection.waterdetect.External_mask.</span></span><span class="sig-name descname"><span class="pre">set_mask_flags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dilation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hypso.classification.WaterDetection.waterdetect.External_mask.set_mask_flags" title="Permalink to this definition"></a></dt>
+<dd><p>Given a mask, set the pixels that have flag values as True and others as False.
+Return this boolean array.
+&#64;param mask: path to a geotiff with the mask
+&#64;param flags: values of the mask that shall be set to True
+&#64;param dilation: Applies a dilation on the True pixels. Default=0 (no dilation)
+&#64;return: boolean array</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mask</strong> (<em>ndarray</em>) – </p></li>
+<li><p><strong>flags</strong> (<em>list</em>) – </p></li>
+<li><p><strong>dilation</strong> (<em>int</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>ndarray</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Norwegian University of Science and Technology (NTNU).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,7 @@
+hypso.georeference.create\_adcs\_files module
+=============================================
+
+.. automodule:: hypso.georeference.create_adcs_files
+   :members:
+   :undoc-members:
+   :show-inheritance:

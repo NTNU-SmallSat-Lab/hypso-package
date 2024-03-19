@@ -1,0 +1,7 @@
+hypso.utils.utils\_file module
+==============================
+
+.. automodule:: hypso.utils.utils_file
+   :members:
+   :undoc-members:
+   :show-inheritance:
