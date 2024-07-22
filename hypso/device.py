@@ -85,6 +85,12 @@ class Hypso:
         # Get SRF
         self.srf = self.get_srf()
 
+        # Initialize latitude and longitude variables
+        self.latitudes = None
+        self.longitudes = None
+
+
+
 
         if generate_geotiff:
             # Generate RGB/RGBA Geotiff with Projection metadata and L1B
