@@ -17,8 +17,7 @@ from hypso.atmospheric import run_py6s, run_acolite
 from typing import Literal, Union
 
 
-import importlib
-georeferencing = importlib.import_module('hypso-georeferencing')
+from hypso.georeferencing import georeferencing
 
 EXPERIMENTAL_FEATURES = True
 
@@ -95,8 +94,19 @@ class Hypso:
 
         # Compute latitude and longitudes arrays if a points file is available
         if self.pointsPath is not None:
-            # TODO
-            pass
+
+            gr = georeferencing.Georeferencer(filename=self.pointsPath,
+                                              cube_height=self.spatialDim[0],
+                                              cube_width=self.spatialDim[1],
+                                              image_mode=None,
+                                              origin_mode='qgis')
+            
+            # Update latitude and longitude arrays with computed values from Georeferencer
+            self.latitude = gr.latitudes
+            self.longitudes = gr.longitudes
+            
+        else:
+            print('No georeferencing .points file provided. Skipping georeferencing.')
 
 
         if generate_geotiff:
