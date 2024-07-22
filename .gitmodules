@@ -1,0 +1,3 @@
+[submodule "hypso/hypso-georeferencing"]
+	path = hypso/hypso-georeferencing
+	url = https://github.com/NTNU-SmallSat-Lab/hypso-georeferencing.git
