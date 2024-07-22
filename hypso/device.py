@@ -20,7 +20,7 @@ EXPERIMENTAL_FEATURES = True
 
 
 class Hypso:
-    def __init__(self, hypso_path: str, points_path: Union[str, None] = None) -> None:
+    def __init__(self, hypso_path: str, points_path: Union[str, None] = None, generate_geotiff: bool = False) -> None:
         """
         Initialization of HYPSO Class.
 
@@ -85,22 +85,24 @@ class Hypso:
         # Get SRF
         self.srf = self.get_srf()
 
-        # Generate RGB/RGBA Geotiff with Projection metadata and L1B
-        # If points file used, run twice to use correct coordinates
-        message_list = ["Getting Projection Data without lat/lon correction =========================================",
-                        "Getting Projection Data with coordinate correction ========================================="]
-        range_correction = 1
-        if self.pointsPath is not None:
-            range_correction = 2
-        for i in range(range_correction):
-            print(message_list[i])
-            generate_rgb_geotiff(self, overwrite=True)
-            # Get Projection Metadata from created geotiff
-            self.projection_metadata = self.get_projection_metadata()
-            # Before Generating new Geotiff we check if .points file exists and update 2D coord
-            if i == 0:
-                self.info["lat"], self.info["lon"] = start_coordinate_correction(
-                    self.pointsPath, self.info, self.projection_metadata)
+
+        if generate_geotiff:
+            # Generate RGB/RGBA Geotiff with Projection metadata and L1B
+            # If points file used, run twice to use correct coordinates
+            message_list = ["Getting Projection Data without lat/lon correction =========================================",
+                            "Getting Projection Data with coordinate correction ========================================="]
+            range_correction = 1
+            if self.pointsPath is not None:
+                range_correction = 2
+            for i in range(range_correction):
+                print(message_list[i])
+                generate_rgb_geotiff(self, overwrite=True)
+                # Get Projection Metadata from created geotiff
+                self.projection_metadata = self.get_projection_metadata()
+                # Before Generating new Geotiff we check if .points file exists and update 2D coord
+                if i == 0:
+                    self.info["lat"], self.info["lon"] = start_coordinate_correction(
+                        self.pointsPath, self.info, self.projection_metadata)
 
     def get_srf(self) -> list:
         """
