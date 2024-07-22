@@ -16,6 +16,10 @@ from hypso.utils import find_dir, find_file, find_all_files
 from hypso.atmospheric import run_py6s, run_acolite
 from typing import Literal, Union
 
+
+import importlib
+georeferencing = importlib.import_module('hypso-georeferencing')
+
 EXPERIMENTAL_FEATURES = True
 
 
@@ -89,7 +93,10 @@ class Hypso:
         self.latitudes = None
         self.longitudes = None
 
-
+        # Compute latitude and longitudes arrays if a points file is available
+        if self.pointsPath is not None:
+            # TODO
+            pass
 
 
         if generate_geotiff:
