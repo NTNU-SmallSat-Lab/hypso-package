@@ -102,12 +102,14 @@ class Hypso:
                                               origin_mode='qgis')
             
             # Update latitude and longitude arrays with computed values from Georeferencer
-            self.latitude = gr.latitudes
+            self.latitudes = gr.latitudes
             self.longitudes = gr.longitudes
             
         else:
             print('No georeferencing .points file provided. Skipping georeferencing.')
 
+
+        #generate_rgb_geotiff(self, overwrite=True)
 
         if generate_geotiff:
             # Generate RGB/RGBA Geotiff with Projection metadata and L1B
