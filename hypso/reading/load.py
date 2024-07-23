@@ -16,11 +16,13 @@ def load_nc(nc_file_path: Path, standardDimensions: dict) -> Tuple[dict, np.ndar
     :param nc_file_path: Absolute path to the l1a.nc file
     :param standardDimensions: Dictionary with Standard Hypso allowed dimensions
 
-    :return: "info" Dictionary with Hypso capture information, raw cube numpy array (digital counts) and capture spatial
+    :return: "info" Dictionary with Hypso capture information, "adcs" Dictionary with Hypso ADCS information, raw cube numpy array (digital counts) and capture spatial
         dimensions
     """
     # Get metadata
     nc_info, spatialDim = get_metainfo_from_nc_file(nc_file_path, standardDimensions)
+
+    nc_adcs = get_adcs_from_nc_file(nc_file_path, standardDimensions)
 
     # Create temporary position.csv and quaternion.csv
     nc_info = georeference.create_adcs_timestamps_files(nc_file_path, nc_info)
@@ -60,7 +62,7 @@ def load_nc(nc_file_path: Path, standardDimensions: dict) -> Tuple[dict, np.ndar
 
     nc_rawcube = get_raw_cube_from_nc_file(nc_file_path)
 
-    return nc_info, nc_rawcube, spatialDim
+    return nc_info, nc_adcs, nc_rawcube, spatialDim
 
 
 def get_lat_lon_2d(latitude_dataPath: Path, longitude_dataPath: Path, info: dict, spatialDim: tuple) -> dict:
@@ -118,6 +120,57 @@ def get_local_angles(sat_azimuth_path: Path, sat_zenith_path: Path,
     return info
 
 
+
+def get_adcs_from_nc_file(nc_file_path: Path, standardDimensions: dict) -> Tuple[dict, tuple]:
+    """
+    Get the metadata from the top folder of the data.
+
+    :param nc_file_path: Path to the name of the tmp folder
+    :param standardDimensions: Dictionary with Hypso standard dimensions
+
+    :return: "info" dictionary with capture metadata, "adcs" dictionary with ADCS metadata, and a tuple with spatial dimensions
+    """
+
+
+    # ------------------------------------------------------------------------
+    # ADCS info -----------------------------------------------------------
+    # ------------------------------------------------------------------------
+
+    adcs = {}
+
+    with nc.Dataset(nc_file_path, format="NETCDF4") as f:
+        group = f.groups["metadata"]["adcs"]
+        
+        for key in group.variables.keys():
+            
+            value = group.variables[key][:]
+
+            adcs[key] = value
+
+            '''
+            try:
+                if is_integer_num(float(value)):
+                    adcs[attrname] = int(value)
+                else:
+                    adcs[attrname] = float(value)
+            except BaseException:
+                adcs[attrname] = value
+            '''
+
+        '''
+        for attrname in group.ncattrs():
+            value = getattr(group, attrname)
+            try:
+                if is_integer_num(float(value)):
+                    adcs[attrname] = int(value)
+                else:
+                    adcs[attrname] = float(value)
+            except BaseException:
+                adcs[attrname] = value
+        '''
+    
+    return adcs
+
 def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions: dict) -> Tuple[dict, tuple]:
     """
     Get the metadata from the top folder of the data.
@@ -125,7 +178,7 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions: dict) -> T
     :param nc_file_path: Path to the name of the tmp folder
     :param standardDimensions: Dictionary with Hypso standard dimensions
 
-    :return: "info" dictionary with the data and a tuple with spatial dimensions
+    :return: "info" dictionary with capture metadata, "adcs" dictionary with ADCS metadata, and a tuple with spatial dimensions
     """
 
     info = {}
@@ -141,6 +194,7 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions: dict) -> T
     info["capture_region"] = capture_name.split('_')[0].strip('_')
 
     temp_dir.mkdir(parents=True, exist_ok=True)
+
     # ------------------------------------------------------------------------
     # Capture info -----------------------------------------------------------
     # ------------------------------------------------------------------------
@@ -156,6 +210,9 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions: dict) -> T
                     info[attrname] = float(value)
             except BaseException:
                 info[attrname] = value
+
+
+
 
     # ------------------------------------------------------------------------
     # Timestamps -------------------------------------------------------------

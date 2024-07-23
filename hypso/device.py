@@ -54,7 +54,7 @@ class Hypso:
         # Check if file or directory passed
         if self.hypso_path.suffix == '.nc':
             # Obtain metadata from files
-            self.info, self.rawcube, self.spatialDim = load_nc(self.hypso_path, self.standardDimensions)
+            self.info, self.adcs, self.rawcube, self.spatialDim = load_nc(self.hypso_path, self.standardDimensions)
             self.info["top_folder_name"] = self.info["tmp_dir"]
             self.info["nc_file"] = self.hypso_path
         else:
