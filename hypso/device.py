@@ -117,9 +117,6 @@ class Hypso:
                                                            velocity_y=self.adcs['velocity_y'],
                                                            velocity_z=self.adcs['velocity_z'])
 
-            print('Flip?')
-            print(flip_datacube)
-
             if flip_datacube is not None and flip_datacube: 
                 self.latitudes = self.latitudes[::-1,:]
                 self.longitudes = self.longitudes[::-1,:]
@@ -827,9 +824,12 @@ class Hypso:
             either ACOLITE or 6SV1. Returns None if no .npy found.
         """
 
-        found_l2_npy = find_all_files(path=Path(self.info["top_folder_name"], "geotiff"),
-                                      str_in_file="L2",
-                                      suffix=".npy")
+        try:
+            found_l2_npy = find_all_files(path=Path(self.info["top_folder_name"], "geotiff"),
+                                            str_in_file="L2",
+                                            suffix=".npy")
+        except KeyError:
+            found_l2_npy = None
 
         if found_l2_npy is None:
             return None

@@ -28,7 +28,7 @@ def load_nc(nc_file_path: Path, standardDimensions: dict) -> Tuple[dict, np.ndar
     nc_rawcube = get_raw_cube_from_nc_file(nc_file_path)
 
     # TODO: remove this line
-    nc_info = create_tmp_dir(nc_file_path=nc_file_path, info=nc_info)
+    #nc_info = create_tmp_dir(nc_file_path=nc_file_path, info=nc_info)
 
     return nc_info, nc_adcs, nc_rawcube, spatialDim
 
