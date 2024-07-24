@@ -131,7 +131,6 @@ def get_adcs_from_nc_file(nc_file_path: Path, standardDimensions: dict) -> Tuple
     :return: "adcs" dictionary with ADCS metadata and a tuple with spatial dimensions
     """
 
-
     # ------------------------------------------------------------------------
     # ADCS info -----------------------------------------------------------
     # ------------------------------------------------------------------------

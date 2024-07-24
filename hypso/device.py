@@ -18,6 +18,7 @@ from typing import Literal, Union
 
 
 from hypso.georeferencing import georeferencing
+from hypso.georeferencing.utils import check_star_tracker_orientation
 
 EXPERIMENTAL_FEATURES = True
 
@@ -105,11 +106,51 @@ class Hypso:
             self.latitudes = gr.latitudes
             self.longitudes = gr.longitudes
             
+            
+
+            flip_datacube = check_star_tracker_orientation(adcs_samples=self.adcs['adcssamples'],
+                                                           quaternion_s=self.adcs['quaternion_s'],
+                                                           quaternion_x=self.adcs['quaternion_x'],
+                                                           quaternion_y=self.adcs['quaternion_y'],
+                                                           quaternion_z=self.adcs['quaternion_z'],
+                                                           velocity_x=self.adcs['velocity_x'],
+                                                           velocity_y=self.adcs['velocity_y'],
+                                                           velocity_z=self.adcs['velocity_z'])
+
+            print('Flip?')
+            print(flip_datacube)
+
+            if flip_datacube is not None and flip_datacube: 
+                self.latitudes = self.latitudes[::-1,:]
+                self.longitudes = self.longitudes[::-1,:]
+                #datacube = datacube[:, ::-1, :]
+
+                self.info["lat"] = self.latitudes
+                self.info["lon"] = self.longitudes
+
+                self.info["lat_original"] = self.latitudes
+                self.info["lon_original"] = self.longitudes
+
+            else:
+
+                self.latitudes = self.latitudes[::-1,::-1]
+                self.longitudes = self.longitudes[::-1,::-1]
+                #datacube = datacube[:, ::-1, :]
+
+                self.info["lat"] = self.latitudes
+                self.info["lon"] = self.longitudes
+
+                self.info["lat_original"] = self.latitudes
+                self.info["lon_original"] = self.longitudes
+
+                
+
+
         else:
             print('No georeferencing .points file provided. Skipping georeferencing.')
 
 
-        #generate_rgb_geotiff(self, overwrite=True)
+        generate_rgb_geotiff(self, overwrite=True)
 
         if generate_geotiff:
             # Generate RGB/RGBA Geotiff with Projection metadata and L1B
