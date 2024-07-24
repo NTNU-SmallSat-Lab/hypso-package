@@ -115,8 +115,8 @@ def get_cartopy_axis(satellite_obj, dpi_input: int) -> Tuple[
     :return: Matplotlib axes object adjusted to the Hypso image, the image extent tuple, the project RPSG and the
         latitude and longitude array.
     """
-    lat = satellite_obj.info["lat"]
-    lon = satellite_obj.info["lon"]
+    lat = satellite_obj.latitudes
+    lon = satellite_obj.longitudes
 
     # Create Axis Transformation
     inproj = satellite_obj.projection_metadata["inproj"]

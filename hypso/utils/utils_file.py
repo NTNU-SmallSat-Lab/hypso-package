@@ -557,8 +557,8 @@ def find_closest_water_lat_lon_match(sat_obj, target_lat: float, target_lon: flo
     :return: Row, col and dist_to_target in km from the closes water pixel
     """
 
-    lat_2d = sat_obj.info["lat"]
-    lon_2d = sat_obj.info["lon"]
+    lat_2d = sat_obj.latitudes
+    lon_2d = sat_obj.longitudes
     waterMask = sat_obj.waterMask
     row = 0
     col = 0

@@ -163,7 +163,7 @@ class Hypso:
                 self.projection_metadata = self.get_projection_metadata()
                 # Before Generating new Geotiff we check if .points file exists and update 2D coord
                 if i == 0:
-                    self.info["lat"], self.info["lon"] = start_coordinate_correction(
+                    self.latitudes, self.longitudes = start_coordinate_correction(
                         self.pointsPath, self.info, self.projection_metadata)
         '''
 
@@ -672,7 +672,7 @@ class Hypso:
                     # shuffle=COMP_SHUFFLE,
                 )
                 # latitude[:] = lat.reshape(frames, lines)
-                latitude[:] = self.info["lat"]
+                latitude[:] = self.latitudes
                 latitude.long_name = "Latitude"
                 latitude.units = "degrees"
                 # latitude.valid_range = [-180, 180]
@@ -687,7 +687,7 @@ class Hypso:
                     # shuffle=COMP_SHUFFLE,
                 )
                 # longitude[:] = lon.reshape(frames, lines)
-                longitude[:] = self.info["lon"]
+                longitude[:] = self.longitudes
                 longitude.long_name = "Longitude"
                 longitude.units = "degrees"
                 # longitude.valid_range = [-180, 180]
@@ -752,8 +752,8 @@ class Hypso:
                     #     'aot550': 0.01,
                     #     # 'aeronet': r"C:\Users\alvar\Downloads\070101_151231_Autilla.dubovik"
                     # }
-                    atmos_corrected_cube = run_py6s(self.wavelengths, self.l1b_cube, self.info, self.info["lat"],
-                                                    self.info["lon"],
+                    atmos_corrected_cube = run_py6s(self.wavelengths, self.l1b_cube, self.info, self.latitudes,
+                                                    self.longitudes,
                                                     atmos_dict, time_capture=parser.parse(self.info['iso_time']),
                                                     srf=self.srf)
                 elif atmos_model == "ACOLITE":
