@@ -128,7 +128,7 @@ def get_adcs_from_nc_file(nc_file_path: Path, standardDimensions: dict) -> Tuple
     :param nc_file_path: Path to the name of the tmp folder
     :param standardDimensions: Dictionary with Hypso standard dimensions
 
-    :return: "info" dictionary with capture metadata, "adcs" dictionary with ADCS metadata, and a tuple with spatial dimensions
+    :return: "adcs" dictionary with ADCS metadata and a tuple with spatial dimensions
     """
 
 
@@ -147,28 +147,8 @@ def get_adcs_from_nc_file(nc_file_path: Path, standardDimensions: dict) -> Tuple
 
             adcs[key] = value
 
-            '''
-            try:
-                if is_integer_num(float(value)):
-                    adcs[attrname] = int(value)
-                else:
-                    adcs[attrname] = float(value)
-            except BaseException:
-                adcs[attrname] = value
-            '''
+        adcs['adcssamples'] = len(f.dimensions['adcssamples'])
 
-        '''
-        for attrname in group.ncattrs():
-            value = getattr(group, attrname)
-            try:
-                if is_integer_num(float(value)):
-                    adcs[attrname] = int(value)
-                else:
-                    adcs[attrname] = float(value)
-            except BaseException:
-                adcs[attrname] = value
-        '''
-    
     return adcs
 
 def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions: dict) -> Tuple[dict, tuple]:
@@ -178,7 +158,7 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions: dict) -> T
     :param nc_file_path: Path to the name of the tmp folder
     :param standardDimensions: Dictionary with Hypso standard dimensions
 
-    :return: "info" dictionary with capture metadata, "adcs" dictionary with ADCS metadata, and a tuple with spatial dimensions
+    :return: "info" dictionary with capture metadata, and a tuple with spatial dimensions
     """
 
     info = {}
