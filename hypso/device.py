@@ -56,7 +56,7 @@ class Hypso:
         if self.hypso_path.suffix == '.nc':
             # Obtain metadata from files
             self.info, self.adcs, self.rawcube, self.spatialDim = load_nc(self.hypso_path, self.standardDimensions)
-            self.info["top_folder_name"] = self.info["tmp_dir"]
+            
             self.info["nc_file"] = self.hypso_path
         else:
             raise Exception("Incorrect HYPSO Path. Only .nc files supported")
@@ -143,15 +143,14 @@ class Hypso:
                 self.info["lat_original"] = self.latitudes
                 self.info["lon_original"] = self.longitudes
 
-                
-
 
         else:
             print('No georeferencing .points file provided. Skipping georeferencing.')
 
+        # For testing:
+        #generate_rgb_geotiff(self, overwrite=True)
 
-        generate_rgb_geotiff(self, overwrite=True)
-
+        '''
         if generate_geotiff:
             # Generate RGB/RGBA Geotiff with Projection metadata and L1B
             # If points file used, run twice to use correct coordinates
@@ -169,6 +168,7 @@ class Hypso:
                 if i == 0:
                     self.info["lat"], self.info["lon"] = start_coordinate_correction(
                         self.pointsPath, self.info, self.projection_metadata)
+        '''
 
     def get_srf(self) -> list:
         """

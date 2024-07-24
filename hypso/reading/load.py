@@ -25,22 +25,10 @@ def load_nc(nc_file_path: Path, standardDimensions: dict) -> Tuple[dict, np.ndar
 
     nc_adcs = get_adcs_from_nc_file(nc_file_path, standardDimensions)
 
-    # Create temporary position.csv and quaternion.csv
-
-
-    '''
-    nc_info = get_local_angles(sat_azimuth_path, sat_zenith_path,
-                               solar_azimuth_path, solar_zenith_path,
-                               nc_info, spatialDim)
-
-    '''
-
-    '''
-    nc_info = get_lat_lon_2d(latitude_dataPath, longitude_dataPath, nc_info, spatialDim)
-    '''
-    
-
     nc_rawcube = get_raw_cube_from_nc_file(nc_file_path)
+
+    # TODO: remove this line
+    nc_info = create_tmp_dir(nc_file_path=nc_file_path, info=nc_info)
 
     return nc_info, nc_adcs, nc_rawcube, spatialDim
 
@@ -66,6 +54,8 @@ def load_nc_old(nc_file_path: Path, standardDimensions: dict) -> Tuple[dict, np.
     nc_info, spatialDim = get_metainfo_from_nc_file(nc_file_path, standardDimensions)
 
     nc_adcs = get_adcs_from_nc_file(nc_file_path, standardDimensions)
+
+    nc_info = create_tmp_dir(nc_file_path=nc_file_path, info=nc_info)
 
     # Create temporary position.csv and quaternion.csv
     nc_info = georeference.create_adcs_timestamps_files(nc_file_path, nc_info)
@@ -193,6 +183,28 @@ def get_adcs_from_nc_file(nc_file_path: Path, standardDimensions: dict) -> Tuple
 
     return adcs
 
+
+def create_tmp_dir(nc_file_path: Path, info: dict) -> dict:
+    """
+    Create empty directory for generated files.
+
+    :param nc_file_path: Path to the name of the NetCDF file
+    :param info: Dictionary with Hypso capture info
+
+    :return: "info" dictionary modified with updated "tmp_dir" and "top_folder_name" entries
+    """
+
+    nc_name = nc_file_path.stem
+    temp_dir = Path(nc_file_path.parent.absolute(), nc_name.replace("-l1a", "") + "_tmp")
+    info["tmp_dir"] = temp_dir
+
+    info["top_folder_name"] = info["tmp_dir"]
+
+    temp_dir.mkdir(parents=True, exist_ok=True)
+
+    return info
+
+
 def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions: dict) -> Tuple[dict, tuple]:
     """
     Get the metadata from the top folder of the data.
@@ -204,9 +216,9 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions: dict) -> T
     """
 
     info = {}
-    nc_name = nc_file_path.stem
-    temp_dir = Path(nc_file_path.parent.absolute(), nc_name.replace("-l1a", "") + "_tmp")
-    info["tmp_dir"] = temp_dir
+    #nc_name = nc_file_path.stem
+    #temp_dir = Path(nc_file_path.parent.absolute(), nc_name.replace("-l1a", "") + "_tmp")
+    #info["tmp_dir"] = temp_dir
     # Add file name
     capture_name = nc_file_path.stem
     if "-l1a" in capture_name:
@@ -215,7 +227,7 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions: dict) -> T
 
     info["capture_region"] = capture_name.split('_')[0].strip('_')
 
-    temp_dir.mkdir(parents=True, exist_ok=True)
+    #temp_dir.mkdir(parents=True, exist_ok=True)
 
     # ------------------------------------------------------------------------
     # Capture info -----------------------------------------------------------
@@ -232,9 +244,6 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions: dict) -> T
                     info[attrname] = float(value)
             except BaseException:
                 info[attrname] = value
-
-
-
 
     # ------------------------------------------------------------------------
     # Timestamps -------------------------------------------------------------
