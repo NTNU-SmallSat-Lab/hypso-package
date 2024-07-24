@@ -23,5 +23,13 @@ points_file = os.path.join(dir_path, 'erie_2022-08-27_1605Z-bin3.points')
 satobj = Hypso(nc_file, points_path=points_file)
 
 
+import matplotlib.pyplot as plt
+
+#plt.imshow(satobj.l1b_cube[:,:,40])
+#plt.savefig('test.png')
+
+#satobj.create_l1b_nc_file()
+
+
 
 

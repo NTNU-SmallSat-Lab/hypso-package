@@ -76,18 +76,11 @@ class Hypso:
         self.l1b_cube = self.get_calibrated_and_corrected_cube()
 
         # Create L1B .nc File
-        self.create_l1b_nc_file()  # Input for ACOLITE
+        #self.create_l1b_nc_file()  # Input for ACOLITE
 
-        self.l2a_cube = self.find_existing_l2_cube()
+        #self.l2a_cube = self.find_existing_l2_cube()
 
-        # Generated afterwards
-        self.waterMask = None
 
-        # To store Chlorophyll estimation
-        self.chl = None
-
-        # Get SRF
-        self.srf = self.get_srf()
 
         # Initialize latitude and longitude variables
         self.latitudes = None
@@ -143,6 +136,19 @@ class Hypso:
 
         else:
             print('No georeferencing .points file provided. Skipping georeferencing.')
+
+
+        # Generated afterwards
+        self.waterMask = None
+
+        # To store Chlorophyll estimation
+        self.chl = None
+
+        # Get SRF
+        self.srf = self.get_srf()
+
+
+
 
         # For testing:
         #generate_rgb_geotiff(self, overwrite=True)
