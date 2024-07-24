@@ -9,9 +9,52 @@ from typing import Tuple
 EXPERIMENTAL_FEATURES = True
 
 
+
 def load_nc(nc_file_path: Path, standardDimensions: dict) -> Tuple[dict, np.ndarray, tuple]:
     """
     Load l1a.nc Hypso Capture file
+
+    :param nc_file_path: Absolute path to the l1a.nc file
+    :param standardDimensions: Dictionary with Standard Hypso allowed dimensions
+
+    :return: "info" Dictionary with Hypso capture information, "adcs" Dictionary with Hypso ADCS information, raw cube numpy array (digital counts) and capture spatial
+        dimensions
+    """
+    # Get metadata
+    nc_info, spatialDim = get_metainfo_from_nc_file(nc_file_path, standardDimensions)
+
+    nc_adcs = get_adcs_from_nc_file(nc_file_path, standardDimensions)
+
+    # Create temporary position.csv and quaternion.csv
+
+
+    '''
+    nc_info = get_local_angles(sat_azimuth_path, sat_zenith_path,
+                               solar_azimuth_path, solar_zenith_path,
+                               nc_info, spatialDim)
+
+    '''
+
+    '''
+    nc_info = get_lat_lon_2d(latitude_dataPath, longitude_dataPath, nc_info, spatialDim)
+    '''
+    
+
+    nc_rawcube = get_raw_cube_from_nc_file(nc_file_path)
+
+    return nc_info, nc_adcs, nc_rawcube, spatialDim
+
+
+
+
+
+
+def load_nc_old(nc_file_path: Path, standardDimensions: dict) -> Tuple[dict, np.ndarray, tuple]:
+    """
+
+    NOTE: old load_nc() function. This one generates a bunch of data files in a tmp directory
+
+    Load l1a.nc Hypso Capture file 
 
     :param nc_file_path: Absolute path to the l1a.nc file
     :param standardDimensions: Dictionary with Standard Hypso allowed dimensions
