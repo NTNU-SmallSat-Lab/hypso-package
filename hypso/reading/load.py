@@ -424,6 +424,8 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standard_dimensions: dict) -> 
     info["lonc"] = target_lon
 
     '''
+
+    '''
     info['target_area'] = target_lat + ' ' + target_lon
 
     info["background_value"] = 8 * info["bin_factor"]
@@ -437,7 +439,7 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standard_dimensions: dict) -> 
     info["image_height"] = info["row_count"]
     info["image_width"] = int(info["column_count"] / info["bin_factor"])
     info["im_size"] = info["image_height"] * info["image_width"]
-
+    '''
 
     '''
     # Update Spatial Dim if not standard
