@@ -46,9 +46,9 @@ def crop_and_bin_matrix(matrix, x_start, x_stop, y_start, y_stop, bin_x=1, bin_y
     return new_matrix
 
 
-def get_coefficients_from_file(coeff_path: str) -> np.ndarray:
+def read_coeffs_from_file(coeff_path: str) -> np.ndarray:
     """
-    Get correction coefficients from file
+    Read correction coefficients from file
 
     :param coeff_path: Coefficient path to read (.csv)
 
@@ -67,6 +67,97 @@ def get_coefficients_from_file(coeff_path: str) -> np.ndarray:
     return coefficients
 
 
+
+
+
+
+def get_coeffs_from_file(coeff_file: str, 
+                        capture_type: str = "nominal",
+                        x_start: int = None,
+                        x_stop: int = None,
+                        y_start: int = None,
+                        y_stop: int = None,
+                        bin_x: int = None) -> np.ndarray:
+
+    match capture_type:
+
+        case 'custom':
+
+            if any([x_start, x_stop, y_start, y_stop, bin_x]):
+
+                if not all([x_start, x_stop, y_start, y_stop, bin_x]):
+
+                    coeffs = None
+
+                else:
+                    full_coeffs = read_coeffs_from_file(coeff_file)
+
+                    coeffs = crop_and_bin_matrix(
+                                    matrix=full_coeffs,
+                                    x_start=x_start,
+                                    x_stop=x_stop,
+                                    y_start=y_start,
+                                    y_stop=y_stop,
+                                    bin_x=bin_x,
+                                    bin_y=1)
+
+            else:
+                coeffs = None
+
+        case 'nominal':
+            coeffs = read_coeffs_from_file(coeff_file)
+
+        case 'wide':
+            coeffs = read_coeffs_from_file(coeff_file)
+
+        case _:
+            coeffs = None
+
+    return coeffs
+
+
+'''
+def get_rad_coeffs_from_file(rad_coeff_file: str, 
+                             capture_type: str = "nominal",
+                             x_start: int = None,
+                             x_stop: int = None,
+                             y_start: int = None,
+                             y_stop: int = None,
+                             bin_x: int = None) -> np.ndarray:
+
+
+
+def get_smile_coeffs_from_file(smile_coeff_file: str, 
+                                capture_type: str = "nominal",
+                                x_start: int = None,
+                                x_stop: int = None,
+                                y_start: int = None,
+                                y_stop: int = None,
+                                bin_x: int = None) -> np.ndarray:
+    pass
+
+def get_destriping_coeffs_from_file(destriping_coeff_file: str,
+                                    capture_type: str = "nominal",
+                                    x_start: int = None,
+                                    x_stop: int = None,
+                                    y_start: int = None,
+                                    y_stop: int = None,
+                                    bin_x: int = None) -> np.ndarray:
+    pass
+
+def get_spectral_coeffs_from_file(spectral_coeff_file: str,
+                                    capture_type: str = "nominal",
+                                    x_start: int = None,
+                                    x_stop: int = None,
+                                    y_start: int = None,
+                                    y_stop: int = None,
+                                    bin_x: int = None) -> np.ndarray:
+    pass
+'''
+
+
+
+'''
 def get_coefficients_from_dict(coeff_dict: dict, satobj) -> dict:
     """
     Get the coefficients from the csv files contained in a dictionary.
@@ -82,7 +173,7 @@ def get_coefficients_from_dict(coeff_dict: dict, satobj) -> dict:
         # Coefficients Custom (needs trimming)
         if "full" in str(coeff_dict[k]):
             bin_x = satobj.info["bin_factor"]
-            full_coeff = get_coefficients_from_file(coeff_dict[k])
+            full_coeff = read_coeffs_from_file(coeff_dict[k])
             coeffs[k] = crop_and_bin_matrix(
                 full_coeff,
                 satobj.info["x_start"],
@@ -92,13 +183,13 @@ def get_coefficients_from_dict(coeff_dict: dict, satobj) -> dict:
                 bin_x)
         # Just read coefficients
         elif "nominal" in str(coeff_dict[k]) or "wide" in str(coeff_dict[k]):
-            coeffs[k] = get_coefficients_from_file(coeff_dict[k])
+            coeffs[k] = read_coeffs_from_file(coeff_dict[k])
 
         else:
             coeff_dict[k] = None
 
     return coeffs
-
+'''
 
 def calibrate_cube(info_sat: dict, raw_cube: np.ndarray, correction_coefficients_dict: dict) -> np.ndarray:
     """
