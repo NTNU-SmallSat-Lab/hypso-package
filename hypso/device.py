@@ -35,15 +35,11 @@ class Hypso:
 
         """
 
-        
+        # Make NetCDF file path an absolute path
+        self.hypso_path = Path(hypso_path).absolute()
 
         # Check that hypso_path file is a NetCDF file:
-        if self.hypso_path.suffix == '.nc':
-
-            # Make NetCDF file path an absolute path
-            self.hypso_path = Path(hypso_path).absolute()
-
-        else:
+        if not self.hypso_path.suffix == '.nc':
             raise Exception("Incorrect HYPSO Path. Only .nc files supported")
 
         # Make .points file path an absolute path (if possible)
