@@ -1319,7 +1319,7 @@ class Hypso1(Hypso):
 
         self.spatial_dimensions = (rows_img, cols_img)
 
-        print(f"Processing *{self.info['capture_type']}* Image with Dimensions: {self.spatial_dimensions}")
+        print(f"Processing *{self.info['capture_type']}* image mode with dimensions: {self.spatial_dimensions}")
 
 
 
