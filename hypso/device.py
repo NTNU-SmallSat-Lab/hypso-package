@@ -80,8 +80,8 @@ class Hypso:
         # Initilize cloud mask variable
         self.cloud_mask = None
 
-        # Initialize chlorophyll estimates variable
-        self.chl = None
+        # Initialize products dict
+        self.products = {}
 
         # DEBUG
         self.DEBUG = False
@@ -146,7 +146,8 @@ class Hypso1(Hypso):
         #self.l2a_cube = self.find_existing_l2_cube()
 
         # Georeferencing -----------------------------------------------------
-        self._run_georeferencing()
+        if False:
+            self._run_georeferencing()
 
         # Land Mask -----------------------------------------------------
         # TODO
@@ -155,10 +156,16 @@ class Hypso1(Hypso):
         # TODO
 
 
-        self.chl = None
+        # Products
+        # TODO
+        self.products['chl'] = None
+        self.products['tsm'] = None
+        self.products['pca'] = None
+        self.products['ica'] = None
 
         # Get SRF
-        self.srf = self.get_srf()
+        if False:
+            self.srf = self.get_srf()
 
 
 
