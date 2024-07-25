@@ -1485,7 +1485,7 @@ class Hypso1(Hypso):
 
     def _set_wavelengths(self) -> None:
 
-        if self.spectral_coeffs:
+        if self.spectral_coeffs is not None:
 
             self.wavelengths = self.spectral_coeffs
 
