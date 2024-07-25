@@ -138,7 +138,7 @@ class Hypso1(Hypso):
 
         self._set_calibration_coeffs()
 
-
+        self._set_wavelengths()
 
 
 
@@ -1477,11 +1477,17 @@ class Hypso1(Hypso):
 
     def _set_calibration_coeffs(self) -> None:
 
-        self.rad_coeffs = self.read_coeffs_from_file(self.rad_coeff_file)
-        self.smile_coeffs = self.read_coeffs_from_file(self.smile_coeff_file)
-        self.destriping_coeffs = self.read_coeffs_from_file(self.destriping_coeff_file)
-        self.spectral_coeffs = self.read_coeffs_from_file(self.spectral_coeff_file)
+        self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file)
+        self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file)
+        self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
+        self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
 
+
+    def _set_wavelengths(self) -> None:
+
+        if self.spectral_coeffs:
+
+            self.wavelengths = self.spectral_coeffs
 
 class Hypso2(Hypso):
     def __init__(self, nc_path: str, points_path: Union[str, None] = None) -> None:
