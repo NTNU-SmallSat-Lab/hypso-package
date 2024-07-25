@@ -35,8 +35,16 @@ class Hypso:
 
         """
 
-        # Make NetCDF file path an absolute path
-        self.hypso_path = Path(hypso_path).absolute()
+        
+
+        # Check that hypso_path file is a NetCDF file:
+        if self.hypso_path.suffix == '.nc':
+
+            # Make NetCDF file path an absolute path
+            self.hypso_path = Path(hypso_path).absolute()
+
+        else:
+            raise Exception("Incorrect HYPSO Path. Only .nc files supported")
 
         # Make .points file path an absolute path (if possible)
         if points_path is not None:
@@ -47,6 +55,10 @@ class Hypso:
         # Initialize platform and sensor names
         self.platform = None
         self.sensor = None
+
+        # Initialize capture name and target
+        self.capture_name = None
+        self.capture_region = None
 
         # Initialize projection information
         self.projection_metadata = None
@@ -81,6 +93,11 @@ class Hypso:
         #self.l1cgeotiffFilePath = None
         #self.l2geotiffFilePath = None
 
+
+
+
+
+
 class Hypso1(Hypso):
     def __init__(self, hypso_path: str, points_path: Union[str, None] = None) -> None:
         
@@ -98,14 +115,36 @@ class Hypso1(Hypso):
         self.platform = 'hypso1'
         self.sensor = 'hypso1_hsi'
 
-        # Check if file or directory passed
-        if self.hypso_path.suffix == '.nc':
-            # Obtain metadata from files
-            self.info, self.adcs, self.rawcube, self.spatial_dimensions = load_nc(self.hypso_path, self.standard_dimensions)
-            
-            self.info["nc_file"] = self.hypso_path
-        else:
-            raise Exception("Incorrect HYPSO Path. Only .nc files supported")
+        
+        self._update_capture_name()
+
+        # Obtain metadata from files
+        #self.info, self.adcs, self.rawcube, self.capture_config, self.spatial_dimensions = load_nc(self.hypso_path, self.standard_dimensions)
+        
+        self.capture_config, self.timing, self.target_coords, self.adcs, self.rawcube = load_nc(self.hypso_path, self.standard_dimensions)
+
+
+
+        #info['target_area'] = target_lat + ' ' + target_lon
+
+        #info["background_value"] = 8 * info["bin_factor"]
+
+        #info["x_start"] = info["aoi_x"]
+        #info["x_stop"] = info["aoi_x"] + info["column_count"]
+        #info["y_start"] = info["aoi_y"]
+        #info["y_stop"] = info["aoi_y"] + info["row_count"]
+        #info["exp"] = info["exposure"] / 1000  # in seconds
+
+        #info["image_height"] = info["row_count"]
+        #info["image_width"] = int(info["column_count"] / info["bin_factor"])
+        #info["im_size"] = info["image_height"] * info["image_width"]
+
+        self._detect_capture_type()
+
+
+
+        #self.info["nc_file"] = self.hypso_path
+        
 
         # Correction Coefficients ----------------------------------------
         self.calibration_coeffs_file_dict = self.get_calibration_coefficients_path()
@@ -127,7 +166,7 @@ class Hypso1(Hypso):
         #self.l2a_cube = self.find_existing_l2_cube()
 
         # Georeferencing -----------------------------------------------------
-        self.run_georeferencing()
+        self._run_georeferencing()
 
         # Land Mask -----------------------------------------------------
         # TODO
@@ -143,7 +182,7 @@ class Hypso1(Hypso):
 
 
 
-    def run_georeferencing(self) -> None:
+    def _run_georeferencing(self) -> None:
 
         # Compute latitude and longitudes arrays if a points file is available
         if self.points_path is not None:
@@ -691,7 +730,7 @@ class Hypso1(Hypso):
                 # solar_a.valid_range = [-180, 180]
                 solar_a.valid_min = -180
                 solar_a.valid_max = 180
-
+    
                 # Latitude ---------------------------------
                 latitude = netfile.createVariable(
                     'navigation/latitude', 'f4', ('lines', 'samples'),
@@ -952,40 +991,56 @@ class Hypso1(Hypso):
         csv_file_smile = None
         csv_file_destriping = None
 
-        if self.info["capture_type"] == "custom":
+        match self.sensor:
 
-            # Radiometric ---------------------------------
-            full_rad_coeff_file = files('hypso.calibration').joinpath(
-                f'data/{"radiometric_calibration_matrix_HYPSO-1_full_v1.csv"}')
+            case 'hypso1':
 
-            # Smile ---------------------------------
-            full_smile_coeff_file = files('hypso.calibration').joinpath(
-                f'data/{"spectral_calibration_matrix_HYPSO-1_full_v1.csv"}')
+                if self.info["capture_type"] == "custom":
 
-            # Destriping (not available for custom)
-            full_destripig_coeff_file = None
+                    # Radiometric ---------------------------------
+                    full_rad_coeff_file = files('hypso.calibration').joinpath(
+                        f'data/{"radiometric_calibration_matrix_HYPSO-1_full_v1.csv"}')
 
-            return {"radiometric": full_smile_coeff_file,
-                    "smile": full_smile_coeff_file,
-                    "destriping": full_destripig_coeff_file}
+                    # Smile ---------------------------------
+                    full_smile_coeff_file = files('hypso.calibration').joinpath(
+                        f'data/{"spectral_calibration_matrix_HYPSO-1_full_v1.csv"}')
 
-        elif self.info["capture_type"] == "nominal":
-            csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_nominal_v1.csv"
-            csv_file_smile = "smile_correction_matrix_HYPSO-1_nominal_v1.csv"
-            csv_file_destriping = "destriping_matrix_HYPSO-1_nominal_v1.csv"
-        elif self.info["capture_type"] == "wide":
-            csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_wide_v1.csv"
-            csv_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.csv"
-            csv_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.csv"
+                    # Destriping (not available for custom)
+                    full_destripig_coeff_file = None
 
-        rad_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_radiometric}')
+                    return {"radiometric": full_smile_coeff_file,
+                            "smile": full_smile_coeff_file,
+                            "destriping": full_destripig_coeff_file}
 
-        smile_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_smile}')
-        destriping_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_destriping}')
+                elif self.info["capture_type"] == "nominal":
+                    csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_nominal_v1.csv"
+                    csv_file_smile = "smile_correction_matrix_HYPSO-1_nominal_v1.csv"
+                    csv_file_destriping = "destriping_matrix_HYPSO-1_nominal_v1.csv"
+                elif self.info["capture_type"] == "wide":
+                    csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_wide_v1.csv"
+                    csv_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.csv"
+                    csv_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.csv"
 
-        coeff_dict = {"radiometric": rad_coeff_file,
-                      "smile": smile_coeff_file,
-                      "destriping": destriping_coeff_file}
+                rad_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_radiometric}')
+
+                smile_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_smile}')
+                destriping_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_destriping}')
+
+                coeff_dict = {"radiometric": rad_coeff_file,
+                            "smile": smile_coeff_file,
+                            "destriping": destriping_coeff_file}
+
+            case 'hypso2':
+
+                coeff_dict = {"radiometric": None,
+                            "smile": None,
+                            "destriping": None}
+                
+            case _:
+
+                coeff_dict = {"radiometric": None,
+                            "smile": None,
+                            "destriping": None}       
 
         return coeff_dict
 
@@ -996,7 +1051,20 @@ class Hypso1(Hypso):
         :return: Absolute path for the spectral coefficients (wavelengths)
         """
 
-        csv_file = "spectral_bands_HYPSO-1_v1.csv"
+        match self.sensor:
+
+            case 'hypso1':
+
+                csv_file = "spectral_bands_HYPSO-1_v1.csv"
+
+            case 'hypso2':
+
+                csv_file = None
+            
+            case _:
+
+                csv_file = None
+            
         wl_file = files(
             'hypso.calibration').joinpath(f'data/{csv_file}')
 
@@ -1242,6 +1310,39 @@ class Hypso1(Hypso):
 
         return toa_reflectance
 
+    def _update_capture_name(self) -> None:
+
+        capture_name = self.hypso_path.stem
+        if "-l1a" in capture_name:
+            capture_name = capture_name.replace("-l1a", "")
+
+        self.capture_name = capture_name
+        self.capture_region = capture_name.split('_')[0].strip('_')
+
+
+    def _detect_capture_type(self):
+
+        pass
+
+        # Update Spatial Dim if not standard
+        rows_img = info["frame_count"]  # Due to way image is captured
+        cols_img = info["image_height"]
+
+        if rows_img == standard_dimensions["nominal"]:
+            info["capture_type"] = "nominal"
+
+        elif cols_img == standard_dimensions["wide"]:
+            info["capture_type"] = "wide"
+        else:
+            if EXPERIMENTAL_FEATURES:
+                print("Number of Rows (AKA frame_count) Is Not Standard")
+                info["capture_type"] = "custom"
+            else:
+                raise Exception("Number of Rows (AKA frame_count) Is Not Standard")
+
+        spatial_dimensions = (rows_img, cols_img)
+
+        print(f"Processing *{info['capture_type']}* Image with Dimensions: {spatial_dimensions}")
 
 class Hypso2(Hypso):
     def __init__(self, hypso_path: str, points_path: Union[str, None] = None) -> None:

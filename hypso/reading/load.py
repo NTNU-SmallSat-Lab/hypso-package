@@ -10,7 +10,7 @@ EXPERIMENTAL_FEATURES = True
 
 
 
-def load_nc(nc_file_path: Path, standard_dimensions: dict) -> Tuple[dict, np.ndarray, tuple]:
+def load_nc(nc_file_path: Path, standard_dimensions: dict) -> Tuple[dict, dict, dict, dict, np.ndarray]:
     """
     Load l1a.nc Hypso Capture file
 
@@ -21,16 +21,25 @@ def load_nc(nc_file_path: Path, standard_dimensions: dict) -> Tuple[dict, np.nda
         dimensions
     """
     # Get metadata
-    nc_info, spatial_dimensions = get_metainfo_from_nc_file(nc_file_path, standard_dimensions)
 
-    nc_adcs = get_adcs_from_nc_file(nc_file_path, standard_dimensions)
+    nc_capture_config = get_capture_config_from_nc_file(nc_file_path)
+
+    nc_timing = get_timing_from_nc_file(nc_file_path)
+
+    nc_target_coords = get_target_coords_from_nc_file(nc_file_path)
+
+    #nc_info, spatial_dimensions = get_metainfo_from_nc_file(nc_file_path, standard_dimensions)
+
+    nc_adcs = get_adcs_from_nc_file(nc_file_path)
 
     nc_rawcube = get_raw_cube_from_nc_file(nc_file_path)
 
     # TODO: remove this line
     #nc_info = create_tmp_dir(nc_file_path=nc_file_path, info=nc_info)
 
-    return nc_info, nc_adcs, nc_rawcube, spatial_dimensions
+    #return nc_info, nc_adcs, nc_rawcube, capture_config, timing, spatial_dimensions
+
+    return nc_capture_config, nc_timing, nc_target_coords, nc_adcs, nc_rawcube
 
 
 
@@ -154,7 +163,7 @@ def get_local_angles(sat_azimuth_path: Path, sat_zenith_path: Path,
 
 
 
-def get_adcs_from_nc_file(nc_file_path: Path, standard_dimensions: dict) -> Tuple[dict, tuple]:
+def get_adcs_from_nc_file(nc_file_path: Path) -> Tuple[dict, tuple]:
     """
     Get the metadata from the top folder of the data.
 
@@ -205,6 +214,104 @@ def create_tmp_dir(nc_file_path: Path, info: dict) -> dict:
     return info
 
 
+
+def get_capture_config_from_nc_file(nc_file_path: Path):
+
+    # ------------------------------------------------------------------------
+    # Capture info -----------------------------------------------------------
+    # ------------------------------------------------------------------------
+
+    capture_config = {}
+
+    with nc.Dataset(nc_file_path, format="NETCDF4") as f:
+        group = f.groups["metadata"]["capture_config"]
+        for attrname in group.ncattrs():
+            value = getattr(group, attrname)
+            try:
+                if is_integer_num(float(value)):
+                    capture_config[attrname] = int(value)
+                else:
+                    capture_config[attrname] = float(value)
+            except BaseException:
+                capture_config[attrname] = value
+
+
+def get_timing_from_nc_file(nc_file_path: Path):
+
+    timing = {}
+
+    # ------------------------------------------------------------------------
+    # Timestamps -------------------------------------------------------------
+    # ------------------------------------------------------------------------
+    with nc.Dataset(nc_file_path, format="NETCDF4") as f:
+        group = f.groups["metadata"]["timing"]
+        # timestamps_services = group.variables["timestamps_srv"][:]
+        # timestamps = group.variables["timestamps"][:]
+        # TODO: Cosider using attribute "capture_start_unix" instead of "capture_start_planned_unix"
+        start_timestamp_capture = getattr(group, "capture_start_unix")  # unix time ms
+
+        if start_timestamp_capture is None or start_timestamp_capture == 0:
+            raise Exception("No Start Timestamp Capture Value available")
+
+    # TODO: Verify offset validity. Sivert had 20 here
+    UNIX_TIME_OFFSET = 20
+
+    timing["start_timestamp_capture"] = int(start_timestamp_capture) + UNIX_TIME_OFFSET
+
+    # Get END_TIMESTAMP_CAPTURE
+    #    cant compute end timestamp using frame count and frame rate
+    #     assuming some default value if fps and exposure not available
+
+    try:
+        timing["end_timestamp_capture"] = timing["start_timestamp_capture"] + timing["frame_count"] / timing["fps"] + timing[
+            "exposure"] / 1000.0
+    except:
+        print("fps or exposure values not found assuming 20.0 for each")
+        timing["end_timestamp_capture"] = timing["start_timestamp_capture"] + timing["frame_count"] / 20.0 + 20.0 / 1000.0
+
+    # using 'awk' for floating point arithmetic ('expr' only support integer arithmetic): {printf \"%.2f\n\", 100/3}"
+    time_margin_start = 641.0  # 70.0
+    time_margin_end = 180.0  # 70.0
+    timing["start_timestamp_adcs"] = timing["start_timestamp_capture"] - time_margin_start
+    timing["end_timestamp_adcs"] = timing["end_timestamp_capture"] + time_margin_end
+
+    # data for geotiff processing -----------------------------------------------
+
+    timing["unixtime"] = timing["start_timestamp_capture"]
+    timing["iso_time"] = datetime.utcfromtimestamp(timing["unixtime"]).isoformat()
+
+    return timing
+
+def get_target_coords_from_nc_file(nc_file_path: Path) -> dict:
+
+    # ------------------------------------------------------------------------
+    # Target Lat Lon ---------------------------------------------------------
+    # ------------------------------------------------------------------------
+
+    target_coords = {}
+
+    with nc.Dataset(nc_file_path, format="NETCDF4") as f:
+        group = f
+        try:
+            # returns string 'False' if doesnt exist
+            target_coords = getattr(group, "target_coords")
+            if target_coords == 'False':
+                target_lat = "-"
+                target_lon = "-"
+            else:
+                target_coords = target_coords.split(" ")
+                target_lat = target_coords[0]
+                target_lon = target_coords[1]
+        except AttributeError:
+            target_lat = "-"
+            target_lon = "-"
+
+        target_coords["latc"] = target_lat
+        target_coords["lonc"] = target_lon
+
+    return target_coords
+
+
 def get_metainfo_from_nc_file(nc_file_path: Path, standard_dimensions: dict) -> Tuple[dict, tuple]:
     """
     Get the metadata from the top folder of the data.
@@ -220,15 +327,19 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standard_dimensions: dict) -> 
     #temp_dir = Path(nc_file_path.parent.absolute(), nc_name.replace("-l1a", "") + "_tmp")
     #info["tmp_dir"] = temp_dir
     # Add file name
+
+    '''
     capture_name = nc_file_path.stem
     if "-l1a" in capture_name:
         capture_name = capture_name.replace("-l1a", "")
     info["capture_name"] = capture_name
 
     info["capture_region"] = capture_name.split('_')[0].strip('_')
-
+    '''
+    
     #temp_dir.mkdir(parents=True, exist_ok=True)
 
+    '''
     # ------------------------------------------------------------------------
     # Capture info -----------------------------------------------------------
     # ------------------------------------------------------------------------
@@ -245,6 +356,8 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standard_dimensions: dict) -> 
             except BaseException:
                 info[attrname] = value
 
+    '''
+    '''
     # ------------------------------------------------------------------------
     # Timestamps -------------------------------------------------------------
     # ------------------------------------------------------------------------
@@ -285,6 +398,9 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standard_dimensions: dict) -> 
     info["unixtime"] = info["start_timestamp_capture"]
     info["iso_time"] = datetime.utcfromtimestamp(info["unixtime"]).isoformat()
 
+    '''
+
+    '''
     # ------------------------------------------------------------------------
     # Target Lat Lon ---------------------------------------------------------
     # ------------------------------------------------------------------------
@@ -306,6 +422,8 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standard_dimensions: dict) -> 
 
     info["latc"] = target_lat
     info["lonc"] = target_lon
+
+    '''
     info['target_area'] = target_lat + ' ' + target_lon
 
     info["background_value"] = 8 * info["bin_factor"]
@@ -320,6 +438,8 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standard_dimensions: dict) -> 
     info["image_width"] = int(info["column_count"] / info["bin_factor"])
     info["im_size"] = info["image_height"] * info["image_width"]
 
+
+    '''
     # Update Spatial Dim if not standard
     rows_img = info["frame_count"]  # Due to way image is captured
     cols_img = info["image_height"]
@@ -337,6 +457,8 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standard_dimensions: dict) -> 
             raise Exception("Number of Rows (AKA frame_count) Is Not Standard")
 
     spatial_dimensions = (rows_img, cols_img)
+
+    '''
 
     print(
         f"Processing *{info['capture_type']}* Image with Dimensions: {spatial_dimensions}")
