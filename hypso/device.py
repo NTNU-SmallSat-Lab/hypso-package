@@ -22,9 +22,10 @@ from hypso.georeferencing.utils import check_star_tracker_orientation
 
 EXPERIMENTAL_FEATURES = True
 
-
 class Hypso:
-    def __init__(self, hypso_path: str, points_path: Union[str, None] = None, generate_geotiff: bool = False) -> None:
+
+    def __init__(self, hypso_path: str, points_path: Union[str, None] = None):
+
         """
         Initialization of HYPSO Class.
 
@@ -33,6 +34,7 @@ class Hypso:
             referencing. (Optional. Default=None)
 
         """
+
         self.projection_metadata = None
         self.DEBUG = False
         self.spatialDim = (956, 684)  # 1092 x variable
@@ -40,17 +42,49 @@ class Hypso:
             "nominal": 956,  # Along frame_count
             "wide": 1092  # Along image_height (row_count)
         }
-        self.units = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
-        self.rgbGeotiffFilePath = None
-        self.l1cgeotiffFilePath = None
-        self.l2geotiffFilePath = None
-        if points_path is not None:
-            self.pointsPath = Path(points_path)
-        else:
-            self.pointsPath = None
 
-        # Make absolute path
+        self.units = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
+
+        # Make NetCDF file path an absolute path
         self.hypso_path = Path(hypso_path).absolute()
+
+        # Make .points file path an absolute path (if possible)
+        if points_path is not None:
+            self.points_path = Path(points_path).absolute()
+        else:
+            self.points_path = None
+
+         # Initialize latitude and longitude variables
+        self.latitudes = None
+        self.longitudes = None
+
+        # Initilize land mask variable
+        self.land_mask = None
+
+        # Initilize cloud mask variable
+        self.cloud_mask = None
+
+        # Initialize chlorophyll estimates variable
+        self.chl = None
+
+
+        #self.rgbGeotiffFilePath = None
+        #self.l1cgeotiffFilePath = None
+        #self.l2geotiffFilePath = None
+
+class Hypso1(Hypso):
+    def __init__(self, hypso_path: str, points_path: Union[str, None] = None) -> None:
+        
+        """
+        Initialization of HYPSO-1 Class.
+
+        :param hypso_path: Absolute path to "L1a.nc" file
+        :param points_path: Absolute path to the corresponding ".points" files generated with QGIS for manual geo
+            referencing. (Optional. Default=None)
+
+        """
+
+        super().__init__(hypso_path=hypso_path, points_path=points_path)
 
         # Check if file or directory passed
         if self.hypso_path.suffix == '.nc':
@@ -80,14 +114,29 @@ class Hypso:
 
         #self.l2a_cube = self.find_existing_l2_cube()
 
-        # Initialize latitude and longitude variables
-        self.latitudes = None
-        self.longitudes = None
+        # Georeferencing -----------------------------------------------------
+        self.run_georeferencing()
+
+        # Land Mask -----------------------------------------------------
+        # TODO
+
+        # Cloud Mask -----------------------------------------------------
+        # TODO
+
+
+        self.chl = None
+
+        # Get SRF
+        self.srf = self.get_srf()
+
+
+
+    def run_georeferencing(self) -> None:
 
         # Compute latitude and longitudes arrays if a points file is available
-        if self.pointsPath is not None:
+        if self.points_path is not None:
 
-            gr = georeferencing.Georeferencer(filename=self.pointsPath,
+            gr = georeferencing.Georeferencer(filename=self.points_path,
                                               cube_height=self.spatialDim[0],
                                               cube_width=self.spatialDim[1],
                                               image_mode=None,
@@ -97,8 +146,6 @@ class Hypso:
             self.latitudes = gr.latitudes
             self.longitudes = gr.longitudes
             
-            
-
             flip_datacube = check_star_tracker_orientation(adcs_samples=self.adcs['adcssamples'],
                                                            quaternion_s=self.adcs['quaternion_s'],
                                                            quaternion_x=self.adcs['quaternion_x'],
@@ -135,41 +182,6 @@ class Hypso:
         else:
             print('No georeferencing .points file provided. Skipping georeferencing.')
 
-
-        # Generated afterwards
-        self.waterMask = None
-
-        # To store Chlorophyll estimation
-        self.chl = None
-
-        # Get SRF
-        self.srf = self.get_srf()
-
-
-
-
-        # For testing:
-        #generate_rgb_geotiff(self, overwrite=True)
-
-        '''
-        if generate_geotiff:
-            # Generate RGB/RGBA Geotiff with Projection metadata and L1B
-            # If points file used, run twice to use correct coordinates
-            message_list = ["Getting Projection Data without lat/lon correction =========================================",
-                            "Getting Projection Data with coordinate correction ========================================="]
-            range_correction = 1
-            if self.pointsPath is not None:
-                range_correction = 2
-            for i in range(range_correction):
-                print(message_list[i])
-                generate_rgb_geotiff(self, overwrite=True)
-                # Get Projection Metadata from created geotiff
-                self.projection_metadata = self.get_projection_metadata()
-                # Before Generating new Geotiff we check if .points file exists and update 2D coord
-                if i == 0:
-                    self.latitudes, self.longitudes = start_coordinate_correction(
-                        self.pointsPath, self.info, self.projection_metadata)
-        '''
 
     def get_srf(self) -> list:
         """
