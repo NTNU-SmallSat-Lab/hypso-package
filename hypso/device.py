@@ -123,42 +123,47 @@ class Hypso1(Hypso):
         
         self.capture_config, self.timing, self.target_coords, self.adcs, self.rawcube = load_nc(self.hypso_path, self.standard_dimensions)
 
+        if False:
+            self._detect_capture_type()
 
+        info = {}
 
-        #info['target_area'] = target_lat + ' ' + target_lon
+        info["nc_file"] = self.hypso_path
 
-        #info["background_value"] = 8 * info["bin_factor"]
+        info['target_area'] = self.target_coords['latc'] + ' ' + self.target_coords['lonc']
 
-        #info["x_start"] = info["aoi_x"]
-        #info["x_stop"] = info["aoi_x"] + info["column_count"]
-        #info["y_start"] = info["aoi_y"]
-        #info["y_stop"] = info["aoi_y"] + info["row_count"]
-        #info["exp"] = info["exposure"] / 1000  # in seconds
+        info["background_value"] = 8 * self.capture_config["bin_factor"]
 
-        #info["image_height"] = info["row_count"]
-        #info["image_width"] = int(info["column_count"] / info["bin_factor"])
-        #info["im_size"] = info["image_height"] * info["image_width"]
+        info["x_start"] = self.capture_config["aoi_x"]
+        info["x_stop"] = self.capture_config["aoi_x"] + self.capture_config["column_count"]
+        info["y_start"] = self.capture_config["aoi_y"]
+        info["y_stop"] = self.capture_config["aoi_y"] + self.capture_config["row_count"]
+        info["exp"] = self.capture_config["exposure"] / 1000  # in seconds
 
-        self._detect_capture_type()
+        info["image_height"] = self.capture_config["row_count"]
+        info["image_width"] = int(self.capture_config["column_count"] / self.capture_config["bin_factor"])
+        info["im_size"] = info["image_height"] * info["image_width"]
 
+        self.info = info
 
-
-        #self.info["nc_file"] = self.hypso_path
         
 
         # Correction Coefficients ----------------------------------------
-        self.calibration_coeffs_file_dict = self.get_calibration_coefficients_path()
-        self.calibration_coefficients_dict = get_coefficients_from_dict(
-            self.calibration_coeffs_file_dict, self)
+        if False:
+            self.calibration_coeffs_file_dict = self.get_calibration_coefficients_path()
+            self.calibration_coefficients_dict = get_coefficients_from_dict(
+                self.calibration_coeffs_file_dict, self)
 
         # Wavelengths -----------------------------------------------------
-        self.spectral_coeff_file = self.get_spectral_coefficients_path()
-        self.spectral_coefficients = get_coefficients_from_file(
-            self.spectral_coeff_file)
-        self.wavelengths = self.spectral_coefficients
+        if False:
+            self.spectral_coeff_file = self.get_spectral_coefficients_path()
+            self.spectral_coefficients = get_coefficients_from_file(
+                self.spectral_coeff_file)
+            self.wavelengths = self.spectral_coefficients
 
         # Calibrate and Correct Cube Variables and load existing L2 Cube  ----------------------------------------
-        self.l1b_cube = self.get_calibrated_and_corrected_cube()
+        if False:
+            self.l1b_cube = self.get_calibrated_and_corrected_cube()
 
         # Create L1B .nc File
         #self.create_l1b_nc_file()  # Input for ACOLITE
