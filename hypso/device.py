@@ -49,6 +49,11 @@ class Hypso:
         else:
             self.points_path = None
 
+        # Initialize calibration file paths:
+        self.rad_coeff_file = None
+        self.smile_coeff_file = None
+        self.destriping_coeff_file = None
+
         # Initialize platform and sensor names
         self.platform = None
         self.sensor = None
@@ -118,15 +123,12 @@ class Hypso1(Hypso):
 
         self._populate_info_dict()
 
-        self._detect_capture_type()
+        self._set_capture_type()
        
-
+        self._set_calibration_coeff_files()
         # Correction Coefficients ----------------------------------------
-        if True:
-            self.calibration_coeffs_file_dict = self.get_calibration_coefficients_path()
-
-            print(self.calibration_coeffs_file_dict)
-
+        if False:
+            
             self.calibration_coefficients_dict = get_coefficients_from_dict(self.calibration_coeffs_file_dict, self)
 
         # Wavelengths -----------------------------------------------------
@@ -966,54 +968,81 @@ class Hypso1(Hypso):
 
         return current_project
 
-    def get_calibration_coefficients_path(self) -> dict:
+
+
+    def _set_rad_coeff_file(self):
+        match self.info["capture_type"]:
+            case "custom":
+                csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1.csv"    
+            case "nominal":
+                csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_nominal_v1.csv"
+            case "wide":
+                csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_wide_v1.csv"
+            case _:
+                csv_file_radiometric = None
+
+        if csv_file_radiometric:
+            rad_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_radiometric}')
+        else: 
+            rad_coeff_file = None
+
+        self.rad_coeff_file = rad_coeff_file
+
+
+    def _set_smile_coeff_file(self):
+        match self.info["capture_type"]:
+            case "custom":
+                csv_file_smile = "spectral_calibration_matrix_HYPSO-1_full_v1.csv"    
+            case "nominal":
+                csv_file_smile = "smile_correction_matrix_HYPSO-1_nominal_v1.csv"
+            case "wide":
+                csv_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.csv"
+            case _:
+                csv_file_smile = None
+
+        if csv_file_smile:
+            smile_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_smile}')
+        else:
+            smile_coeff_file = csv_file_smile
+
+        self.smile_coeff_file = smile_coeff_file
+
+
+    def _set_destriping_coeff_file(self):
+        match self.info["capture_type"]:
+            
+            case "custom":
+                csv_file_destriping = None
+                        
+            case "nominal":
+                csv_file_destriping = "destriping_matrix_HYPSO-1_nominal_v1.csv"
+
+            case "wide":
+                csv_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.csv"
+
+            case _:
+                csv_file_destriping = None
+
+        if csv_file_destriping:
+            destriping_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_destriping}')
+        else:
+            destriping_coeff_file = csv_file_destriping
+
+        self.destriping_coeff_file = destriping_coeff_file
+
+
+
+    def _set_calibration_coeff_files(self):
         """
         Get the absolute ath for the calibration coefficients included in the package. This includes radiometric,
         smile and destriping correction.
 
         :return: Dictionary with paths for radiometric, smil and destriping correction.
         """
-
-        csv_file_radiometric = None
-        csv_file_smile = None
-        csv_file_destriping = None
-
-        if self.info["capture_type"] == "custom":
-
-            # Radiometric ---------------------------------
-            full_rad_coeff_file = files('hypso.calibration').joinpath(
-                f'data/{"radiometric_calibration_matrix_HYPSO-1_full_v1.csv"}')
-
-            # Smile ---------------------------------
-            full_smile_coeff_file = files('hypso.calibration').joinpath(
-                f'data/{"spectral_calibration_matrix_HYPSO-1_full_v1.csv"}')
-
-            # Destriping (not available for custom)
-            full_destripig_coeff_file = None
-
-            return {"radiometric": full_smile_coeff_file,
-                    "smile": full_smile_coeff_file,
-                    "destriping": full_destripig_coeff_file}
-
-        elif self.info["capture_type"] == "nominal":
-            csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_nominal_v1.csv"
-            csv_file_smile = "smile_correction_matrix_HYPSO-1_nominal_v1.csv"
-            csv_file_destriping = "destriping_matrix_HYPSO-1_nominal_v1.csv"
-        elif self.info["capture_type"] == "wide":
-            csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_wide_v1.csv"
-            csv_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.csv"
-            csv_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.csv"
-
-        rad_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_radiometric}')
-
-        smile_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_smile}')
-        destriping_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_destriping}')
-
-        coeff_dict = {"radiometric": rad_coeff_file,
-                    "smile": smile_coeff_file,
-                    "destriping": destriping_coeff_file}
-
-        return coeff_dict
+        self._set_rad_coeff_file()
+        self._set_smile_coeff_file()
+        self._set_destriping_coeff_file()
+        
 
     def get_spectral_coefficients_path(self) -> str:
         """
@@ -1291,7 +1320,7 @@ class Hypso1(Hypso):
         self.capture_region = capture_name.split('_')[0].strip('_')
 
 
-    def _detect_capture_type(self):
+    def _set_capture_type(self):
 
         # Update Spatial Dim if not standard
         rows_img = self.capture_config["frame_count"]  # Due to way image is captured
