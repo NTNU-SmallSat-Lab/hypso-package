@@ -118,7 +118,8 @@ class Hypso1(Hypso):
         self.platform = 'hypso1'
         self.sensor = 'hypso1_hsi'
 
-        self._update_capture_name()
+        self._set_capture_name()
+        self._set_capture_region()
 
         self.capture_config, self.timing, self.target_coords, self.adcs, self.rawcube = load_nc(self.nc_path)
 
@@ -1331,14 +1332,19 @@ class Hypso1(Hypso):
 
         return toa_reflectance
 
-    def _update_capture_name(self) -> None:
+    def _set_capture_name(self) -> None:
 
         capture_name = self.nc_path.stem
         if "-l1a" in capture_name:
             capture_name = capture_name.replace("-l1a", "")
 
         self.capture_name = capture_name
-        self.capture_region = capture_name.split('_')[0].strip('_')
+
+
+    def _set_capture_region(self) -> None:
+
+        self._set_capture_name()
+        self.capture_region = self.capture_name.split('_')[0].strip('_')
 
 
     def _set_capture_type(self):
