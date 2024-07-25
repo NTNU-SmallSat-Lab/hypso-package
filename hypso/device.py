@@ -136,7 +136,7 @@ class Hypso1(Hypso):
 
         # Wavelengths -----------------------------------------------------
         if False:
-            self.spectral_coeff_file = self.get_spectral_coefficients_path()
+            #self.spectral_coeff_file = self.get_spectral_coefficients_path()
             self.spectral_coefficients = get_coefficients_from_file(
                 self.spectral_coeff_file)
             self.wavelengths = self.spectral_coefficients
@@ -973,7 +973,20 @@ class Hypso1(Hypso):
 
 
 
-    def _set_rad_coeff_file(self):
+    def _set_rad_coeff_file(self, rad_coeff_file=None) -> None:
+
+        """
+        Get the absolute path for the radiometric coefficients.
+
+        :param rad_coeff_file: Path to radiometric coefficients file (optional)
+
+        :return: None.
+        """
+
+        if rad_coeff_file:
+            self.rad_coeff_file = rad_coeff_file
+            return
+
         match self.info["capture_type"]:
             case "custom":
                 csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1.csv"    
@@ -992,7 +1005,20 @@ class Hypso1(Hypso):
         self.rad_coeff_file = rad_coeff_file
 
 
-    def _set_smile_coeff_file(self):
+    def _set_smile_coeff_file(self, smile_coeff_file=None) -> None:
+
+        """
+        Get the absolute path for the smile coefficients.
+
+        :param smile_coeff_file: Path to smile coefficients file (optional)
+
+        :return: None.
+        """
+
+        if smile_coeff_file:
+            self.smile_coeff_file = smile_coeff_file
+            return
+
         match self.info["capture_type"]:
             case "custom":
                 csv_file_smile = "spectral_calibration_matrix_HYPSO-1_full_v1.csv"    
@@ -1011,7 +1037,20 @@ class Hypso1(Hypso):
         self.smile_coeff_file = smile_coeff_file
 
 
-    def _set_destriping_coeff_file(self):
+    def _set_destriping_coeff_file(self, destriping_coeff_file=None) -> None:
+
+        """
+        Get the absolute path for the destriping coefficients.
+
+        :param destriping_coeff_file: Path to destriping coefficients file (optional)
+
+        :return: None.
+        """
+
+        if destriping_coeff_file:
+            self.destriping_coeff_file = destriping_coeff_file
+            return
+
         match self.info["capture_type"]:
             
             case "custom":
@@ -1033,12 +1072,19 @@ class Hypso1(Hypso):
 
         self.destriping_coeff_file = destriping_coeff_file
 
-    def _set_spectral_coeff_file(self) -> None:
+    def _set_spectral_coeff_file(self, spectral_coeff_file=None) -> None:
+
         """
         Get the absolute path for the spectral coefficients (wavelengths).
 
+        :param spectral_coeff_file: Path to spectral coefficients file (optional)
+
         :return: None.
         """
+
+        if spectral_coeff_file:
+            self.spectral_coeff_file = spectral_coeff_file
+            return
         
         csv_file_spectral = "spectral_bands_HYPSO-1_v1.csv"
 
@@ -1058,11 +1104,6 @@ class Hypso1(Hypso):
         self._set_smile_coeff_file()
         self._set_destriping_coeff_file()
         self._set_spectral_coeff_file()
-        
-
-
-
-
 
     '''
     def get_spectral_coefficients_path(self) -> str:
