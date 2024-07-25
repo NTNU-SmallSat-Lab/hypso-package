@@ -215,7 +215,7 @@ def create_tmp_dir(nc_file_path: Path, info: dict) -> dict:
 
 
 
-def get_capture_config_from_nc_file(nc_file_path: Path):
+def get_capture_config_from_nc_file(nc_file_path: Path) -> dict:
 
     # ------------------------------------------------------------------------
     # Capture info -----------------------------------------------------------
@@ -226,6 +226,7 @@ def get_capture_config_from_nc_file(nc_file_path: Path):
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
         group = f.groups["metadata"]["capture_config"]
         for attrname in group.ncattrs():
+
             value = getattr(group, attrname)
             try:
                 if is_integer_num(float(value)):
@@ -235,8 +236,10 @@ def get_capture_config_from_nc_file(nc_file_path: Path):
             except BaseException:
                 capture_config[attrname] = value
 
+    return capture_config
 
-def get_timing_from_nc_file(nc_file_path: Path):
+
+def get_timing_from_nc_file(nc_file_path: Path) -> dict:
 
     timing = {}
 
@@ -277,11 +280,6 @@ def get_timing_from_nc_file(nc_file_path: Path):
     return timing
 
 
-
-
-
-
-    return timing
 
 def get_target_coords_from_nc_file(nc_file_path: Path) -> dict:
 

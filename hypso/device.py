@@ -119,6 +119,7 @@ class Hypso1(Hypso):
         
         self.capture_config, self.timing, self.target_coords, self.adcs, self.rawcube = load_nc(self.hypso_path, self.standard_dimensions)
 
+
         if False:
             self._detect_capture_type()
 
@@ -152,7 +153,7 @@ class Hypso1(Hypso):
                 raise Exception("No Start Timestamp Capture Value available")
 
         '''
-        
+
         # TODO: Verify offset validity. Sivert had 20 here
         UNIX_TIME_OFFSET = 20
 
