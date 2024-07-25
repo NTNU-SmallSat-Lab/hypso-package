@@ -22,7 +22,7 @@ A python package form NTNU HYPSO Hyperspectral Image Processing
 __author__ = "Alvaro Flores <alvaro.f.romero@ntnu.no>"
 __credits__ = "Norwegian University of Science and Technology"
 
-from .device import Hypso
+from .device import Hypso, Hypso1, Hypso2
 from .download import download_nc_files
 
 try:
