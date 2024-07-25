@@ -1006,7 +1006,7 @@ class Hypso1(Hypso):
                     "smile": smile_coeff_file,
                     "destriping": destriping_coeff_file}
 
-return coeff_dict
+        return coeff_dict
 
     def get_spectral_coefficients_path(self) -> str:
         """
