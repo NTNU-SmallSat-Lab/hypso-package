@@ -10,34 +10,34 @@ EXPERIMENTAL_FEATURES = True
 
 
 
-def load_nc(nc_file_path: Path, standardDimensions: dict) -> Tuple[dict, np.ndarray, tuple]:
+def load_nc(nc_file_path: Path, standard_dimensions: dict) -> Tuple[dict, np.ndarray, tuple]:
     """
     Load l1a.nc Hypso Capture file
 
     :param nc_file_path: Absolute path to the l1a.nc file
-    :param standardDimensions: Dictionary with Standard Hypso allowed dimensions
+    :param standard_dimensions: Dictionary with Standard Hypso allowed dimensions
 
     :return: "info" Dictionary with Hypso capture information, "adcs" Dictionary with Hypso ADCS information, raw cube numpy array (digital counts) and capture spatial
         dimensions
     """
     # Get metadata
-    nc_info, spatialDim = get_metainfo_from_nc_file(nc_file_path, standardDimensions)
+    nc_info, spatial_dimensions = get_metainfo_from_nc_file(nc_file_path, standard_dimensions)
 
-    nc_adcs = get_adcs_from_nc_file(nc_file_path, standardDimensions)
+    nc_adcs = get_adcs_from_nc_file(nc_file_path, standard_dimensions)
 
     nc_rawcube = get_raw_cube_from_nc_file(nc_file_path)
 
     # TODO: remove this line
     #nc_info = create_tmp_dir(nc_file_path=nc_file_path, info=nc_info)
 
-    return nc_info, nc_adcs, nc_rawcube, spatialDim
+    return nc_info, nc_adcs, nc_rawcube, spatial_dimensions
 
 
 
 
 
 
-def load_nc_old(nc_file_path: Path, standardDimensions: dict) -> Tuple[dict, np.ndarray, tuple]:
+def load_nc_old(nc_file_path: Path, standard_dimensions: dict) -> Tuple[dict, np.ndarray, tuple]:
     """
 
     NOTE: old load_nc() function. This one generates a bunch of data files in a tmp directory
@@ -45,15 +45,15 @@ def load_nc_old(nc_file_path: Path, standardDimensions: dict) -> Tuple[dict, np.
     Load l1a.nc Hypso Capture file 
 
     :param nc_file_path: Absolute path to the l1a.nc file
-    :param standardDimensions: Dictionary with Standard Hypso allowed dimensions
+    :param standard_dimensions: Dictionary with Standard Hypso allowed dimensions
 
     :return: "info" Dictionary with Hypso capture information, "adcs" Dictionary with Hypso ADCS information, raw cube numpy array (digital counts) and capture spatial
         dimensions
     """
     # Get metadata
-    nc_info, spatialDim = get_metainfo_from_nc_file(nc_file_path, standardDimensions)
+    nc_info, spatial_dimensions = get_metainfo_from_nc_file(nc_file_path, standard_dimensions)
 
-    nc_adcs = get_adcs_from_nc_file(nc_file_path, standardDimensions)
+    nc_adcs = get_adcs_from_nc_file(nc_file_path, standard_dimensions)
 
     nc_info = create_tmp_dir(nc_file_path=nc_file_path, info=nc_info)
 
@@ -89,32 +89,32 @@ def load_nc_old(nc_file_path: Path, standardDimensions: dict) -> Tuple[dict, np.
 
     nc_info = get_local_angles(sat_azimuth_path, sat_zenith_path,
                                solar_azimuth_path, solar_zenith_path,
-                               nc_info, spatialDim)
+                               nc_info, spatial_dimensions)
 
-    nc_info = get_lat_lon_2d(latitude_dataPath, longitude_dataPath, nc_info, spatialDim)
+    nc_info = get_lat_lon_2d(latitude_dataPath, longitude_dataPath, nc_info, spatial_dimensions)
 
     nc_rawcube = get_raw_cube_from_nc_file(nc_file_path)
 
-    return nc_info, nc_adcs, nc_rawcube, spatialDim
+    return nc_info, nc_adcs, nc_rawcube, spatial_dimensions
 
 
-def get_lat_lon_2d(latitude_dataPath: Path, longitude_dataPath: Path, info: dict, spatialDim: tuple) -> dict:
+def get_lat_lon_2d(latitude_dataPath: Path, longitude_dataPath: Path, info: dict, spatial_dimensions: tuple) -> dict:
     """
     Load Latitude and Longitude 2D arrays from generated tmp files
 
     :param latitude_dataPath: Absolute path to Latitude .dat file
     :param longitude_dataPath: Absolute path to Longitude .dat file
     :param info: Info Dictionary to mutate with new information
-    :param spatialDim: Spatial dimension of the Hypso capture
+    :param spatial_dimensions: Spatial dimension of the Hypso capture
 
     :return: Updated "info" dictionary with the latitude and longitude 2D arrays
     """
     # Load Latitude
     info["lat"] = np.fromfile(latitude_dataPath, dtype="float32")
-    info["lat"] = info["lat"].reshape(spatialDim)
+    info["lat"] = info["lat"].reshape(spatial_dimensions)
     # Load Longitude
     info["lon"] = np.fromfile(longitude_dataPath, dtype="float32")
-    info["lon"] = info["lon"].reshape(spatialDim)
+    info["lon"] = info["lon"].reshape(spatial_dimensions)
 
     # Original Lat in case manual georeference is used
     info["lat_original"] = info["lat"]
@@ -124,7 +124,7 @@ def get_lat_lon_2d(latitude_dataPath: Path, longitude_dataPath: Path, info: dict
 
 
 def get_local_angles(sat_azimuth_path: Path, sat_zenith_path: Path,
-                     solar_azimuth_path: Path, solar_zenith_path: Path, info: dict, spatialDim: tuple) -> dict:
+                     solar_azimuth_path: Path, solar_zenith_path: Path, info: dict, spatial_dimensions: tuple) -> dict:
     """
     Load Satellite and Solar Angles from generated tmp files
 
@@ -133,33 +133,33 @@ def get_local_angles(sat_azimuth_path: Path, sat_zenith_path: Path,
     :param solar_azimuth_path: Absolute path to Solar Azimuth .dat file
     :param solar_zenith_path: Absolute path to Solar Zenith .dat file
     :param info: Info Dictionary to mutate with new information
-    :param spatialDim: Spatial dimension of the Hypso capture
+    :param spatial_dimensions: Spatial dimension of the Hypso capture
 
     :return: Updated "info" dictionary with the Arrays of the solar and satellite (viewing) angles
     """
 
     info["solar_zenith_angle"] = np.fromfile(solar_zenith_path, dtype="float32")
-    info["solar_zenith_angle"] = info["solar_zenith_angle"].reshape(spatialDim)
+    info["solar_zenith_angle"] = info["solar_zenith_angle"].reshape(spatial_dimensions)
 
     info["solar_azimuth_angle"] = np.fromfile(solar_azimuth_path, dtype="float32")
-    info["solar_azimuth_angle"] = info["solar_azimuth_angle"].reshape(spatialDim)
+    info["solar_azimuth_angle"] = info["solar_azimuth_angle"].reshape(spatial_dimensions)
 
     info["sat_zenith_angle"] = np.fromfile(sat_zenith_path, dtype="float32")
-    info["sat_zenith_angle"] = info["sat_zenith_angle"].reshape(spatialDim)
+    info["sat_zenith_angle"] = info["sat_zenith_angle"].reshape(spatial_dimensions)
 
     info["sat_azimuth_angle"] = np.fromfile(sat_azimuth_path, dtype="float32")
-    info["sat_azimuth_angle"] = info["sat_azimuth_angle"].reshape(spatialDim)
+    info["sat_azimuth_angle"] = info["sat_azimuth_angle"].reshape(spatial_dimensions)
 
     return info
 
 
 
-def get_adcs_from_nc_file(nc_file_path: Path, standardDimensions: dict) -> Tuple[dict, tuple]:
+def get_adcs_from_nc_file(nc_file_path: Path, standard_dimensions: dict) -> Tuple[dict, tuple]:
     """
     Get the metadata from the top folder of the data.
 
     :param nc_file_path: Path to the name of the tmp folder
-    :param standardDimensions: Dictionary with Hypso standard dimensions
+    :param standard_dimensions: Dictionary with Hypso standard dimensions
 
     :return: "adcs" dictionary with ADCS metadata and a tuple with spatial dimensions
     """
@@ -205,12 +205,12 @@ def create_tmp_dir(nc_file_path: Path, info: dict) -> dict:
     return info
 
 
-def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions: dict) -> Tuple[dict, tuple]:
+def get_metainfo_from_nc_file(nc_file_path: Path, standard_dimensions: dict) -> Tuple[dict, tuple]:
     """
     Get the metadata from the top folder of the data.
 
     :param nc_file_path: Path to the name of the tmp folder
-    :param standardDimensions: Dictionary with Hypso standard dimensions
+    :param standard_dimensions: Dictionary with Hypso standard dimensions
 
     :return: "info" dictionary with capture metadata, and a tuple with spatial dimensions
     """
@@ -324,10 +324,10 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions: dict) -> T
     rows_img = info["frame_count"]  # Due to way image is captured
     cols_img = info["image_height"]
 
-    if rows_img == standardDimensions["nominal"]:
+    if rows_img == standard_dimensions["nominal"]:
         info["capture_type"] = "nominal"
 
-    elif cols_img == standardDimensions["wide"]:
+    elif cols_img == standard_dimensions["wide"]:
         info["capture_type"] = "wide"
     else:
         if EXPERIMENTAL_FEATURES:
@@ -336,12 +336,12 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standardDimensions: dict) -> T
         else:
             raise Exception("Number of Rows (AKA frame_count) Is Not Standard")
 
-    spatialDim = (rows_img, cols_img)
+    spatial_dimensions = (rows_img, cols_img)
 
     print(
-        f"Processing *{info['capture_type']}* Image with Dimensions: {spatialDim}")
+        f"Processing *{info['capture_type']}* Image with Dimensions: {spatial_dimensions}")
 
-    return info, spatialDim
+    return info, spatial_dimensions
 
 
 def get_raw_cube_from_nc_file(nc_file_path: Path) -> np.ndarray:

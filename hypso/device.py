@@ -48,14 +48,12 @@ class Hypso:
         self.platform = None
         self.sensor = None
 
-
-
         # Initialize projection information
         self.projection_metadata = None
         
         # Initialize dimensions
-        self.spatialDim = (956, 684)  # 1092 x variable
-        self.standardDimensions = {
+        self.spatial_dimensions = (956, 684)  # 1092 x variable
+        self.standard_dimensions = {
             "nominal": 956,  # Along frame_count
             "wide": 1092  # Along image_height (row_count)
         }
@@ -103,7 +101,7 @@ class Hypso1(Hypso):
         # Check if file or directory passed
         if self.hypso_path.suffix == '.nc':
             # Obtain metadata from files
-            self.info, self.adcs, self.rawcube, self.spatialDim = load_nc(self.hypso_path, self.standardDimensions)
+            self.info, self.adcs, self.rawcube, self.spatial_dimensions = load_nc(self.hypso_path, self.standard_dimensions)
             
             self.info["nc_file"] = self.hypso_path
         else:
@@ -151,8 +149,8 @@ class Hypso1(Hypso):
         if self.points_path is not None:
 
             gr = georeferencing.Georeferencer(filename=self.points_path,
-                                              cube_height=self.spatialDim[0],
-                                              cube_width=self.spatialDim[1],
+                                              cube_height=self.spatial_dimensions[0],
+                                              cube_width=self.spatial_dimensions[1],
                                               image_mode=None,
                                               origin_mode='qgis')
             
@@ -645,7 +643,7 @@ class Hypso1(Hypso):
                     # complevel=COMP_LEVEL,
                     # shuffle=COMP_SHUFFLE,
                 )
-                sensor_z[:] = sat_zenith_angle.reshape(self.spatialDim)
+                sensor_z[:] = sat_zenith_angle.reshape(self.spatial_dimensions)
                 sensor_z.long_name = "Sensor Zenith Angle"
                 sensor_z.units = "degrees"
                 # sensor_z.valid_range = [-180, 180]
@@ -659,7 +657,7 @@ class Hypso1(Hypso):
                     # complevel=COMP_LEVEL,
                     # shuffle=COMP_SHUFFLE,
                 )
-                sensor_a[:] = sat_azimuth_angle.reshape(self.spatialDim)
+                sensor_a[:] = sat_azimuth_angle.reshape(self.spatial_dimensions)
                 sensor_a.long_name = "Sensor Azimuth Angle"
                 sensor_a.units = "degrees"
                 # sensor_a.valid_range = [-180, 180]
@@ -673,7 +671,7 @@ class Hypso1(Hypso):
                     # complevel=COMP_LEVEL,
                     # shuffle=COMP_SHUFFLE,
                 )
-                solar_z[:] = solar_zenith_angle.reshape(self.spatialDim)
+                solar_z[:] = solar_zenith_angle.reshape(self.spatial_dimensions)
                 solar_z.long_name = "Solar Zenith Angle"
                 solar_z.units = "degrees"
                 # solar_z.valid_range = [-180, 180]
@@ -687,7 +685,7 @@ class Hypso1(Hypso):
                     # complevel=COMP_LEVEL,
                     # shuffle=COMP_SHUFFLE,
                 )
-                solar_a[:] = solar_azimuth_angle.reshape(self.spatialDim)
+                solar_a[:] = solar_azimuth_angle.reshape(self.spatial_dimensions)
                 solar_a.long_name = "Solar Azimuth Angle"
                 solar_a.units = "degrees"
                 # solar_a.valid_range = [-180, 180]
