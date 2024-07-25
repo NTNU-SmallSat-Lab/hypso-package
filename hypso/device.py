@@ -124,6 +124,9 @@ class Hypso1(Hypso):
         # Correction Coefficients ----------------------------------------
         if True:
             self.calibration_coeffs_file_dict = self.get_calibration_coefficients_path()
+
+            print(self.calibration_coeffs_file_dict)
+
             self.calibration_coefficients_dict = get_coefficients_from_dict(self.calibration_coeffs_file_dict, self)
 
         # Wavelengths -----------------------------------------------------
@@ -968,58 +971,42 @@ class Hypso1(Hypso):
         csv_file_smile = None
         csv_file_destriping = None
 
-        match self.sensor:
+        if self.info["capture_type"] == "custom":
 
-            case 'hypso1':
+            # Radiometric ---------------------------------
+            full_rad_coeff_file = files('hypso.calibration').joinpath(
+                f'data/{"radiometric_calibration_matrix_HYPSO-1_full_v1.csv"}')
 
-                if self.info["capture_type"] == "custom":
+            # Smile ---------------------------------
+            full_smile_coeff_file = files('hypso.calibration').joinpath(
+                f'data/{"spectral_calibration_matrix_HYPSO-1_full_v1.csv"}')
 
-                    # Radiometric ---------------------------------
-                    full_rad_coeff_file = files('hypso.calibration').joinpath(
-                        f'data/{"radiometric_calibration_matrix_HYPSO-1_full_v1.csv"}')
+            # Destriping (not available for custom)
+            full_destripig_coeff_file = None
 
-                    # Smile ---------------------------------
-                    full_smile_coeff_file = files('hypso.calibration').joinpath(
-                        f'data/{"spectral_calibration_matrix_HYPSO-1_full_v1.csv"}')
+            return {"radiometric": full_smile_coeff_file,
+                    "smile": full_smile_coeff_file,
+                    "destriping": full_destripig_coeff_file}
 
-                    # Destriping (not available for custom)
-                    full_destripig_coeff_file = None
+        elif self.info["capture_type"] == "nominal":
+            csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_nominal_v1.csv"
+            csv_file_smile = "smile_correction_matrix_HYPSO-1_nominal_v1.csv"
+            csv_file_destriping = "destriping_matrix_HYPSO-1_nominal_v1.csv"
+        elif self.info["capture_type"] == "wide":
+            csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_wide_v1.csv"
+            csv_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.csv"
+            csv_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.csv"
 
-                    return {"radiometric": full_smile_coeff_file,
-                            "smile": full_smile_coeff_file,
-                            "destriping": full_destripig_coeff_file}
+        rad_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_radiometric}')
 
-                elif self.info["capture_type"] == "nominal":
-                    csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_nominal_v1.csv"
-                    csv_file_smile = "smile_correction_matrix_HYPSO-1_nominal_v1.csv"
-                    csv_file_destriping = "destriping_matrix_HYPSO-1_nominal_v1.csv"
-                elif self.info["capture_type"] == "wide":
-                    csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_wide_v1.csv"
-                    csv_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.csv"
-                    csv_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.csv"
+        smile_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_smile}')
+        destriping_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_destriping}')
 
-                rad_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_radiometric}')
+        coeff_dict = {"radiometric": rad_coeff_file,
+                    "smile": smile_coeff_file,
+                    "destriping": destriping_coeff_file}
 
-                smile_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_smile}')
-                destriping_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_destriping}')
-
-                coeff_dict = {"radiometric": rad_coeff_file,
-                            "smile": smile_coeff_file,
-                            "destriping": destriping_coeff_file}
-
-            case 'hypso2':
-
-                coeff_dict = {"radiometric": None,
-                            "smile": None,
-                            "destriping": None}
-                
-            case _:
-
-                coeff_dict = {"radiometric": None,
-                            "smile": None,
-                            "destriping": None}       
-
-        return coeff_dict
+return coeff_dict
 
     def get_spectral_coefficients_path(self) -> str:
         """
