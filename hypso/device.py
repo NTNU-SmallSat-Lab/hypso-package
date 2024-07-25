@@ -53,6 +53,7 @@ class Hypso:
         self.rad_coeff_file = None
         self.smile_coeff_file = None
         self.destriping_coeff_file = None
+        self.spectral_coeff_file = None
 
         # Initialize platform and sensor names
         self.platform = None
@@ -62,9 +63,6 @@ class Hypso:
         self.capture_name = None
         self.capture_region = None
 
-        # Initialize projection information
-        self.projection_metadata = None
-        
         # Initialize dimensions
         self.spatial_dimensions = (956, 684)  # 1092 x variable
         self.standard_dimensions = {
@@ -72,12 +70,15 @@ class Hypso:
             "wide": 1092  # Along image_height (row_count)
         }
 
-        # Initialize units
-        self.units = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
+        # Initialize projection information
+        self.projection_metadata = None
 
          # Initialize latitude and longitude variables
         self.latitudes = None
         self.longitudes = None
+
+        # Initialize units
+        self.units = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
 
         # Initilize land mask variable
         self.land_mask = None
@@ -126,6 +127,7 @@ class Hypso1(Hypso):
         self._set_capture_type()
        
         self._set_calibration_coeff_files()
+
         # Correction Coefficients ----------------------------------------
         if False:
             
@@ -1030,20 +1032,38 @@ class Hypso1(Hypso):
 
         self.destriping_coeff_file = destriping_coeff_file
 
-
-
-    def _set_calibration_coeff_files(self):
+    def _set_spectral_coeff_file(self) -> None:
         """
-        Get the absolute ath for the calibration coefficients included in the package. This includes radiometric,
+        Get the absolute path for the spectral coefficients (wavelengths).
+
+        :return: None.
+        """
+        
+        csv_file_spectral = "spectral_bands_HYPSO-1_v1.csv"
+
+        spectral_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_spectral}')
+
+        self.spectral_coeff_file = spectral_coeff_file
+
+
+    def _set_calibration_coeff_files(self) -> None:
+        """
+        Set the absolute path for the calibration coefficients included in the package. This includes radiometric,
         smile and destriping correction.
 
-        :return: Dictionary with paths for radiometric, smil and destriping correction.
+        :return: None.
         """
         self._set_rad_coeff_file()
         self._set_smile_coeff_file()
         self._set_destriping_coeff_file()
+        self._set_spectral_coeff_file()
         
 
+
+
+
+
+    '''
     def get_spectral_coefficients_path(self) -> str:
         """
         Get the absolute path for the spectral coefficients (wavelengths).
@@ -1069,7 +1089,8 @@ class Hypso1(Hypso):
             'hypso.calibration').joinpath(f'data/{csv_file}')
 
         return str(wl_file)
-
+    '''
+        
     def get_spectra(self, position_dict: dict, product: Literal["L1C", "L2-6SV1", "L2-ACOLITE"] = "L1C",
                     filename: Union[str, None] = None, plot: bool = True) -> Union[pd.DataFrame, None]:
         """
