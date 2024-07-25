@@ -10,7 +10,7 @@ EXPERIMENTAL_FEATURES = True
 
 
 
-def load_nc(nc_file_path: Path, standard_dimensions: dict) -> Tuple[dict, dict, dict, dict, np.ndarray]:
+def load_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, np.ndarray]:
     """
     Load l1a.nc Hypso Capture file
 
@@ -28,16 +28,12 @@ def load_nc(nc_file_path: Path, standard_dimensions: dict) -> Tuple[dict, dict, 
 
     nc_target_coords = get_target_coords_from_nc_file(nc_file_path)
 
-    #nc_info, spatial_dimensions = get_metainfo_from_nc_file(nc_file_path, standard_dimensions)
-
     nc_adcs = get_adcs_from_nc_file(nc_file_path)
 
     nc_rawcube = get_raw_cube_from_nc_file(nc_file_path)
 
     # TODO: remove this line
     #nc_info = create_tmp_dir(nc_file_path=nc_file_path, info=nc_info)
-
-    #return nc_info, nc_adcs, nc_rawcube, capture_config, timing, spatial_dimensions
 
     return nc_capture_config, nc_timing, nc_target_coords, nc_adcs, nc_rawcube
 

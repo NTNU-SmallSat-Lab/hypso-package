@@ -15,6 +15,7 @@ from hypso.reading import load_nc
 from hypso.utils import find_dir, find_file, find_all_files
 from hypso.atmospheric import run_py6s, run_acolite
 from typing import Literal, Union
+from datetime import datetime
 
 
 from hypso.georeferencing import georeferencing
@@ -111,93 +112,15 @@ class Hypso1(Hypso):
         self.platform = 'hypso1'
         self.sensor = 'hypso1_hsi'
 
-        
         self._update_capture_name()
 
-        # Obtain metadata from files
-        #self.info, self.adcs, self.rawcube, self.capture_config, self.spatial_dimensions = load_nc(self.hypso_path, self.standard_dimensions)
-        
-        self.capture_config, self.timing, self.target_coords, self.adcs, self.rawcube = load_nc(self.hypso_path, self.standard_dimensions)
+        self.capture_config, self.timing, self.target_coords, self.adcs, self.rawcube = load_nc(self.hypso_path)
 
+        self._populate_info_dict()
 
-        if False:
-            self._detect_capture_type()
+        self._detect_capture_type()
 
-        info = {}
-
-        info["nc_file"] = self.hypso_path
-
-        if all([self.target_coords.get('latc'), self.target_coords.get('lonc')]):
-            info['target_area'] = self.target_coords['latc'] + ' ' + self.target_coords['lonc']
-        else:
-            info['target_area'] = None
-
-
-        info["background_value"] = 8 * self.capture_config["bin_factor"]
-
-        info["x_start"] = self.capture_config["aoi_x"]
-        info["x_stop"] = self.capture_config["aoi_x"] + self.capture_config["column_count"]
-        info["y_start"] = self.capture_config["aoi_y"]
-        info["y_stop"] = self.capture_config["aoi_y"] + self.capture_config["row_count"]
-        info["exp"] = self.capture_config["exposure"] / 1000  # in seconds
-
-        info["image_height"] = self.capture_config["row_count"]
-        info["image_width"] = int(self.capture_config["column_count"] / self.capture_config["bin_factor"])
-        info["im_size"] = info["image_height"] * info["image_width"]
-
-        '''
-        with nc.Dataset(nc_file_path, format="NETCDF4") as f:
-            group = f.groups["metadata"]["timing"]
-            # timestamps_services = group.variables["timestamps_srv"][:]
-            # timestamps = group.variables["timestamps"][:]
-            # TODO: Cosider using attribute "capture_start_unix" instead of "capture_start_planned_unix"
-            start_timestamp_capture = getattr(group, "capture_start_unix")  # unix time ms
-
-            if start_timestamp_capture is None or start_timestamp_capture == 0:
-                raise Exception("No Start Timestamp Capture Value available")
-
-        '''
-
-        # TODO: Verify offset validity. Sivert had 20 here
-        UNIX_TIME_OFFSET = 20
-
-        timing["start_timestamp_capture"] = int(start_timestamp_capture) + UNIX_TIME_OFFSET
-
-        # Get END_TIMESTAMP_CAPTURE
-        #    cant compute end timestamp using frame count and frame rate
-        #     assuming some default value if fps and exposure not available
-
-        try:
-            timing["end_timestamp_capture"] = timing["start_timestamp_capture"] + timing["frame_count"] / timing["fps"] + timing[
-                "exposure"] / 1000.0
-        except:
-            print("fps or exposure values not found assuming 20.0 for each")
-            timing["end_timestamp_capture"] = timing["start_timestamp_capture"] + timing["frame_count"] / 20.0 + 20.0 / 1000.0
-
-        # using 'awk' for floating point arithmetic ('expr' only support integer arithmetic): {printf \"%.2f\n\", 100/3}"
-        time_margin_start = 641.0  # 70.0
-        time_margin_end = 180.0  # 70.0
-        timing["start_timestamp_adcs"] = timing["start_timestamp_capture"] - time_margin_start
-        timing["end_timestamp_adcs"] = timing["end_timestamp_capture"] + time_margin_end
-
-        # data for geotiff processing -----------------------------------------------
-
-        timing["unixtime"] = timing["start_timestamp_capture"]
-        timing["iso_time"] = datetime.utcfromtimestamp(timing["unixtime"]).isoformat()
-
-
-
-
-
-
-
-
-
-
-
-        self.info = info
-
-        
+        return        
 
         # Correction Coefficients ----------------------------------------
         if False:
@@ -1378,27 +1301,77 @@ class Hypso1(Hypso):
 
     def _detect_capture_type(self):
 
-        pass
-
         # Update Spatial Dim if not standard
-        rows_img = info["frame_count"]  # Due to way image is captured
-        cols_img = info["image_height"]
+        rows_img = self.capture_config["frame_count"]  # Due to way image is captured
+        cols_img = self.info["image_height"]
 
-        if rows_img == standard_dimensions["nominal"]:
-            info["capture_type"] = "nominal"
+        if rows_img == self.standard_dimensions["nominal"]:
+            self.info["capture_type"] = "nominal"
 
-        elif cols_img == standard_dimensions["wide"]:
-            info["capture_type"] = "wide"
+        elif cols_img ==self.standard_dimensions["wide"]:
+            self.info["capture_type"] = "wide"
         else:
             if EXPERIMENTAL_FEATURES:
                 print("Number of Rows (AKA frame_count) Is Not Standard")
-                info["capture_type"] = "custom"
+                self.info["capture_type"] = "custom"
             else:
                 raise Exception("Number of Rows (AKA frame_count) Is Not Standard")
 
-        spatial_dimensions = (rows_img, cols_img)
+        self.spatial_dimensions = (rows_img, cols_img)
 
-        print(f"Processing *{info['capture_type']}* Image with Dimensions: {spatial_dimensions}")
+        print(f"Processing *{self.info['capture_type']}* Image with Dimensions: {self.spatial_dimensions}")
+
+
+
+    def _populate_info_dict(self) -> None:
+
+        info = {}
+
+        info["nc_file"] = self.hypso_path
+
+        if all([self.target_coords.get('latc'), self.target_coords.get('lonc')]):
+            info['target_area'] = self.target_coords['latc'] + ' ' + self.target_coords['lonc']
+        else:
+            info['target_area'] = None
+
+        info["background_value"] = 8 * self.capture_config["bin_factor"]
+
+        info["x_start"] = self.capture_config["aoi_x"]
+        info["x_stop"] = self.capture_config["aoi_x"] + self.capture_config["column_count"]
+        info["y_start"] = self.capture_config["aoi_y"]
+        info["y_stop"] = self.capture_config["aoi_y"] + self.capture_config["row_count"]
+        info["exp"] = self.capture_config["exposure"] / 1000  # in seconds
+
+        info["image_height"] = self.capture_config["row_count"]
+        info["image_width"] = int(self.capture_config["column_count"] / self.capture_config["bin_factor"])
+        info["im_size"] = info["image_height"] * info["image_width"]
+
+        # TODO: Verify offset validity. Sivert had 20 here
+        UNIX_TIME_OFFSET = 20
+
+        info["start_timestamp_capture"] = int(self.timing['capture_start_unix']) + UNIX_TIME_OFFSET
+
+        # Get END_TIMESTAMP_CAPTURE
+        #    cant compute end timestamp using frame count and frame rate
+        #     assuming some default value if fps and exposure not available
+        try:
+            info["end_timestamp_capture"] = info["start_timestamp_capture"] + self.capture_config["frame_count"] / self.capture_config["fps"] + self.capture_config["exposure"] / 1000.0
+        except:
+            print("fps or exposure values not found assuming 20.0 for each")
+            info["end_timestamp_capture"] = info["start_timestamp_capture"] + self.capture_config["frame_count"] / 20.0 + 20.0 / 1000.0
+
+        # using 'awk' for floating point arithmetic ('expr' only support integer arithmetic): {printf \"%.2f\n\", 100/3}"
+        time_margin_start = 641.0  # 70.0
+        time_margin_end = 180.0  # 70.0
+        info["start_timestamp_adcs"] = info["start_timestamp_capture"] - time_margin_start
+        info["end_timestamp_adcs"] = info["end_timestamp_capture"] + time_margin_end
+
+        info["unixtime"] = info["start_timestamp_capture"]
+        info["iso_time"] = datetime.utcfromtimestamp(info["unixtime"]).isoformat()
+
+
+        self.info = info
+
 
 class Hypso2(Hypso):
     def __init__(self, hypso_path: str, points_path: Union[str, None] = None) -> None:
