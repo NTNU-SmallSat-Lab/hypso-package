@@ -127,7 +127,11 @@ class Hypso1(Hypso):
 
         info["nc_file"] = self.hypso_path
 
-        info['target_area'] = self.target_coords['latc'] + ' ' + self.target_coords['lonc']
+        if all([self.target_coords.get('latc'), self.target_coords.get('lonc')]):
+            info['target_area'] = self.target_coords['latc'] + ' ' + self.target_coords['lonc']
+        else:
+            info['target_area'] = None
+
 
         info["background_value"] = 8 * self.capture_config["bin_factor"]
 
