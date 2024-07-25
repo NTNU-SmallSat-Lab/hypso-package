@@ -25,22 +25,22 @@ EXPERIMENTAL_FEATURES = True
 
 class Hypso:
 
-    def __init__(self, hypso_path: str, points_path: Union[str, None] = None):
+    def __init__(self, nc_path: str, points_path: Union[str, None] = None):
 
         """
         Initialization of HYPSO Class.
 
-        :param hypso_path: Absolute path to "L1a.nc" file
+        :param nc_path: Absolute path to "L1a.nc" file
         :param points_path: Absolute path to the corresponding ".points" files generated with QGIS for manual geo
             referencing. (Optional. Default=None)
 
         """
 
         # Make NetCDF file path an absolute path
-        self.hypso_path = Path(hypso_path).absolute()
+        self.nc_path = Path(nc_path).absolute()
 
-        # Check that hypso_path file is a NetCDF file:
-        if not self.hypso_path.suffix == '.nc':
+        # Check that nc_path file is a NetCDF file:
+        if not self.nc_path.suffix == '.nc':
             raise Exception("Incorrect HYPSO Path. Only .nc files supported")
 
         # Make .points file path an absolute path (if possible)
@@ -96,25 +96,25 @@ class Hypso:
 
 
 class Hypso1(Hypso):
-    def __init__(self, hypso_path: str, points_path: Union[str, None] = None) -> None:
+    def __init__(self, nc_path: str, points_path: Union[str, None] = None) -> None:
         
         """
         Initialization of HYPSO-1 Class.
 
-        :param hypso_path: Absolute path to "L1a.nc" file
+        :param nc_path: Absolute path to "L1a.nc" file
         :param points_path: Absolute path to the corresponding ".points" files generated with QGIS for manual geo
             referencing. (Optional. Default=None)
 
         """
 
-        super().__init__(hypso_path=hypso_path, points_path=points_path)
+        super().__init__(nc_path=nc_path, points_path=points_path)
 
         self.platform = 'hypso1'
         self.sensor = 'hypso1_hsi'
 
         self._update_capture_name()
 
-        self.capture_config, self.timing, self.target_coords, self.adcs, self.rawcube = load_nc(self.hypso_path)
+        self.capture_config, self.timing, self.target_coords, self.adcs, self.rawcube = load_nc(self.nc_path)
 
         self._populate_info_dict()
 
@@ -273,7 +273,7 @@ class Hypso1(Hypso):
 
         :return: Nothing.
         """
-        hypso_nc_path = self.hypso_path
+        hypso_nc_path = self.nc_path
         old_nc = nc.Dataset(hypso_nc_path, 'r', format='NETCDF4')
         new_path = hypso_nc_path
         new_path = str(new_path).replace('l1a.nc', 'l1b.nc')
@@ -1291,7 +1291,7 @@ class Hypso1(Hypso):
 
     def _update_capture_name(self) -> None:
 
-        capture_name = self.hypso_path.stem
+        capture_name = self.nc_path.stem
         if "-l1a" in capture_name:
             capture_name = capture_name.replace("-l1a", "")
 
@@ -1327,7 +1327,7 @@ class Hypso1(Hypso):
 
         info = {}
 
-        info["nc_file"] = self.hypso_path
+        info["nc_file"] = self.nc_path
 
         if all([self.target_coords.get('latc'), self.target_coords.get('lonc')]):
             info['target_area'] = self.target_coords['latc'] + ' ' + self.target_coords['lonc']
@@ -1374,18 +1374,18 @@ class Hypso1(Hypso):
 
 
 class Hypso2(Hypso):
-    def __init__(self, hypso_path: str, points_path: Union[str, None] = None) -> None:
+    def __init__(self, nc_path: str, points_path: Union[str, None] = None) -> None:
         
         """
         Initialization of (planned) HYPSO-2 Class.
 
-        :param hypso_path: Absolute path to "L1a.nc" file
+        :param nc_path: Absolute path to "L1a.nc" file
         :param points_path: Absolute path to the corresponding ".points" files generated with QGIS for manual geo
             referencing. (Optional. Default=None)
 
         """
 
-        super().__init__(hypso_path=hypso_path, points_path=points_path)
+        super().__init__(nc_path=nc_path, points_path=points_path)
 
         self.platform = 'hypso2'
         self.sensor = 'hypso2_hsi'
