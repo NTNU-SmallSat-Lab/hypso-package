@@ -35,16 +35,6 @@ class Hypso:
 
         """
 
-        self.projection_metadata = None
-        self.DEBUG = False
-        self.spatialDim = (956, 684)  # 1092 x variable
-        self.standardDimensions = {
-            "nominal": 956,  # Along frame_count
-            "wide": 1092  # Along image_height (row_count)
-        }
-
-        self.units = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
-
         # Make NetCDF file path an absolute path
         self.hypso_path = Path(hypso_path).absolute()
 
@@ -53,6 +43,25 @@ class Hypso:
             self.points_path = Path(points_path).absolute()
         else:
             self.points_path = None
+
+        # Initialize platform and sensor names
+        self.platform = None
+        self.sensor = None
+
+
+
+        # Initialize projection information
+        self.projection_metadata = None
+        
+        # Initialize dimensions
+        self.spatialDim = (956, 684)  # 1092 x variable
+        self.standardDimensions = {
+            "nominal": 956,  # Along frame_count
+            "wide": 1092  # Along image_height (row_count)
+        }
+
+        # Initialize units
+        self.units = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
 
          # Initialize latitude and longitude variables
         self.latitudes = None
@@ -67,6 +76,8 @@ class Hypso:
         # Initialize chlorophyll estimates variable
         self.chl = None
 
+        # DEBUG
+        self.DEBUG = False
 
         #self.rgbGeotiffFilePath = None
         #self.l1cgeotiffFilePath = None
@@ -85,6 +96,9 @@ class Hypso1(Hypso):
         """
 
         super().__init__(hypso_path=hypso_path, points_path=points_path)
+
+        self.platform = 'hypso1'
+        self.sensor = 'hypso1_hsi'
 
         # Check if file or directory passed
         if self.hypso_path.suffix == '.nc':
@@ -1244,6 +1258,9 @@ class Hypso2(Hypso):
         """
 
         super().__init__(hypso_path=hypso_path, points_path=points_path)
+
+        self.platform = 'hypso2'
+        self.sensor = 'hypso2_hsi'
 
 def set_or_create_attr(var, attr_name, attr_value) -> None:
     """
