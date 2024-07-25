@@ -243,6 +243,7 @@ def get_timing_from_nc_file(nc_file_path: Path):
     # ------------------------------------------------------------------------
     # Timestamps -------------------------------------------------------------
     # ------------------------------------------------------------------------
+    '''
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
         group = f.groups["metadata"]["timing"]
         # timestamps_services = group.variables["timestamps_srv"][:]
@@ -252,33 +253,33 @@ def get_timing_from_nc_file(nc_file_path: Path):
 
         if start_timestamp_capture is None or start_timestamp_capture == 0:
             raise Exception("No Start Timestamp Capture Value available")
+    '''
 
-    # TODO: Verify offset validity. Sivert had 20 here
-    UNIX_TIME_OFFSET = 20
+    with nc.Dataset(nc_file_path, format="NETCDF4") as f:
+        group = f.groups["metadata"]["timing"]
+        
+        for key in group.variables.keys():
+            value = group.variables[key][:]
+            timing[key] = value
+        timing['lines'] = len(f.dimensions['lines'])
 
-    timing["start_timestamp_capture"] = int(start_timestamp_capture) + UNIX_TIME_OFFSET
 
-    # Get END_TIMESTAMP_CAPTURE
-    #    cant compute end timestamp using frame count and frame rate
-    #     assuming some default value if fps and exposure not available
+        for attrname in group.ncattrs():
+            value = getattr(group, attrname)
+            try:
+                if is_integer_num(float(value)):
+                    timing[attrname] = int(value)
+                else:
+                    timing[attrname] = float(value)
+            except BaseException:
+                timing[attrname] = value
 
-    try:
-        timing["end_timestamp_capture"] = timing["start_timestamp_capture"] + timing["frame_count"] / timing["fps"] + timing[
-            "exposure"] / 1000.0
-    except:
-        print("fps or exposure values not found assuming 20.0 for each")
-        timing["end_timestamp_capture"] = timing["start_timestamp_capture"] + timing["frame_count"] / 20.0 + 20.0 / 1000.0
+    return timing
 
-    # using 'awk' for floating point arithmetic ('expr' only support integer arithmetic): {printf \"%.2f\n\", 100/3}"
-    time_margin_start = 641.0  # 70.0
-    time_margin_end = 180.0  # 70.0
-    timing["start_timestamp_adcs"] = timing["start_timestamp_capture"] - time_margin_start
-    timing["end_timestamp_adcs"] = timing["end_timestamp_capture"] + time_margin_end
 
-    # data for geotiff processing -----------------------------------------------
 
-    timing["unixtime"] = timing["start_timestamp_capture"]
-    timing["iso_time"] = datetime.utcfromtimestamp(timing["unixtime"]).isoformat()
+
+
 
     return timing
 
@@ -294,17 +295,17 @@ def get_target_coords_from_nc_file(nc_file_path: Path) -> dict:
         group = f
         try:
             # returns string 'False' if doesnt exist
-            target_coords = getattr(group, "target_coords")
-            if target_coords == 'False':
-                target_lat = "-"
-                target_lon = "-"
+            target_coords_attr = getattr(group, "target_coords")
+            if target_coords_attr == 'False':
+                target_lat = None
+                target_lon = None
             else:
-                target_coords = target_coords.split(" ")
-                target_lat = target_coords[0]
-                target_lon = target_coords[1]
+                target_coords_attr = target_coords_attr.split(" ")
+                target_lat = target_coords_attr[0]
+                target_lon = target_coords_attr[1]
         except AttributeError:
-            target_lat = "-"
-            target_lon = "-"
+            target_lat = None
+            target_lon = None
 
         target_coords["latc"] = target_lat
         target_coords["lonc"] = target_lon

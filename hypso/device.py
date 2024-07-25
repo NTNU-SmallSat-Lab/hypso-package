@@ -140,6 +140,56 @@ class Hypso1(Hypso):
         info["image_width"] = int(self.capture_config["column_count"] / self.capture_config["bin_factor"])
         info["im_size"] = info["image_height"] * info["image_width"]
 
+        '''
+        with nc.Dataset(nc_file_path, format="NETCDF4") as f:
+            group = f.groups["metadata"]["timing"]
+            # timestamps_services = group.variables["timestamps_srv"][:]
+            # timestamps = group.variables["timestamps"][:]
+            # TODO: Cosider using attribute "capture_start_unix" instead of "capture_start_planned_unix"
+            start_timestamp_capture = getattr(group, "capture_start_unix")  # unix time ms
+
+            if start_timestamp_capture is None or start_timestamp_capture == 0:
+                raise Exception("No Start Timestamp Capture Value available")
+
+        '''
+        
+        # TODO: Verify offset validity. Sivert had 20 here
+        UNIX_TIME_OFFSET = 20
+
+        timing["start_timestamp_capture"] = int(start_timestamp_capture) + UNIX_TIME_OFFSET
+
+        # Get END_TIMESTAMP_CAPTURE
+        #    cant compute end timestamp using frame count and frame rate
+        #     assuming some default value if fps and exposure not available
+
+        try:
+            timing["end_timestamp_capture"] = timing["start_timestamp_capture"] + timing["frame_count"] / timing["fps"] + timing[
+                "exposure"] / 1000.0
+        except:
+            print("fps or exposure values not found assuming 20.0 for each")
+            timing["end_timestamp_capture"] = timing["start_timestamp_capture"] + timing["frame_count"] / 20.0 + 20.0 / 1000.0
+
+        # using 'awk' for floating point arithmetic ('expr' only support integer arithmetic): {printf \"%.2f\n\", 100/3}"
+        time_margin_start = 641.0  # 70.0
+        time_margin_end = 180.0  # 70.0
+        timing["start_timestamp_adcs"] = timing["start_timestamp_capture"] - time_margin_start
+        timing["end_timestamp_adcs"] = timing["end_timestamp_capture"] + time_margin_end
+
+        # data for geotiff processing -----------------------------------------------
+
+        timing["unixtime"] = timing["start_timestamp_capture"]
+        timing["iso_time"] = datetime.utcfromtimestamp(timing["unixtime"]).isoformat()
+
+
+
+
+
+
+
+
+
+
+
         self.info = info
 
         
