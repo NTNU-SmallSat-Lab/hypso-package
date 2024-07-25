@@ -119,14 +119,12 @@ class Hypso1(Hypso):
         self._populate_info_dict()
 
         self._detect_capture_type()
-
-        return        
+       
 
         # Correction Coefficients ----------------------------------------
-        if False:
+        if True:
             self.calibration_coeffs_file_dict = self.get_calibration_coefficients_path()
-            self.calibration_coefficients_dict = get_coefficients_from_dict(
-                self.calibration_coeffs_file_dict, self)
+            self.calibration_coefficients_dict = get_coefficients_from_dict(self.calibration_coeffs_file_dict, self)
 
         # Wavelengths -----------------------------------------------------
         if False:
