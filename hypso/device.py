@@ -8,7 +8,7 @@ from pathlib import Path
 from dateutil import parser
 import netCDF4 as nc
 import pyproj as prj
-from hypso.calibration import calibrate_cube, get_coefficients_from_dict, get_coefficients_from_file, \
+from hypso.calibration import calibrate_cube, read_coeffs_from_file, \
     smile_correct_cube, destriping_correct_cube
 from hypso.georeference import start_coordinate_correction, generate_full_geotiff, generate_rgb_geotiff
 from hypso.reading import load_nc
@@ -54,6 +54,12 @@ class Hypso:
         self.smile_coeff_file = None
         self.destriping_coeff_file = None
         self.spectral_coeff_file = None
+
+        # Initialize calibration coefficients
+        self.rad_coeffs = None
+        self.smile_coeffs = None
+        self.destriping_coeffs = None
+        self.spectral_coeffs = None
 
         # Initialize platform and sensor names
         self.platform = None
@@ -119,15 +125,22 @@ class Hypso1(Hypso):
         self.sensor = 'hypso1_hsi'
 
         self._set_capture_name()
+
         self._set_capture_region()
 
         self.capture_config, self.timing, self.target_coords, self.adcs, self.rawcube = load_nc(self.nc_path)
 
-        self._populate_info_dict()
+        self._set_info_dict()
 
         self._set_capture_type()
        
         self._set_calibration_coeff_files()
+
+        self._set_calibration_coeffs()
+
+
+
+
 
         # Correction Coefficients ----------------------------------------
         if False:
@@ -1412,7 +1425,7 @@ class Hypso1(Hypso):
 
 
 
-    def _populate_info_dict(self) -> None:
+    def _set_info_dict(self) -> None:
 
         info = {}
 
@@ -1460,6 +1473,14 @@ class Hypso1(Hypso):
 
 
         self.info = info
+
+
+    def _set_calibration_coeffs(self) -> None:
+
+        self.rad_coeffs = self.read_coeffs_from_file(self.rad_coeff_file)
+        self.smile_coeffs = self.read_coeffs_from_file(self.smile_coeff_file)
+        self.destriping_coeffs = self.read_coeffs_from_file(self.destriping_coeff_file)
+        self.spectral_coeffs = self.read_coeffs_from_file(self.spectral_coeff_file)
 
 
 class Hypso2(Hypso):
