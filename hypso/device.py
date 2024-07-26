@@ -132,8 +132,13 @@ class Hypso1(Hypso):
 
         super().__init__(nc_path=nc_path, points_path=points_path)
 
-        self.platform = 'hypso1'
-        self.sensor = 'hypso1_hsi'
+        
+        
+
+        self._set_platform()
+
+        self._set_sensor()
+
 
         self._set_capture_name()
 
@@ -193,6 +198,13 @@ class Hypso1(Hypso):
             self.srf = self.get_srf()
 
 
+    def _set_platform(self) -> None:
+
+        self.platform = 'hypso1'
+
+    def _set_sensor(self) -> None:
+
+        self.sensor = 'hypso1_hsi'
 
     def _run_georeferencing(self) -> None:
 
