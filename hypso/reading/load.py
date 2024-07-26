@@ -8,8 +8,6 @@ from typing import Tuple
 
 EXPERIMENTAL_FEATURES = True
 
-
-
 def load_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, np.ndarray]:
     """
     Load l1a.nc Hypso Capture file
@@ -37,11 +35,7 @@ def load_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, np.ndarray]:
 
     return nc_capture_config, nc_timing, nc_target_coords, nc_adcs, nc_rawcube
 
-
-
-
-
-
+# TODO
 def load_nc_old(nc_file_path: Path, standard_dimensions: dict) -> Tuple[dict, np.ndarray, tuple]:
     """
 
@@ -102,7 +96,7 @@ def load_nc_old(nc_file_path: Path, standard_dimensions: dict) -> Tuple[dict, np
 
     return nc_info, nc_adcs, nc_rawcube, spatial_dimensions
 
-
+# TODO
 def get_lat_lon_2d(latitude_dataPath: Path, longitude_dataPath: Path, info: dict, spatial_dimensions: tuple) -> dict:
     """
     Load Latitude and Longitude 2D arrays from generated tmp files
@@ -127,7 +121,7 @@ def get_lat_lon_2d(latitude_dataPath: Path, longitude_dataPath: Path, info: dict
 
     return info
 
-
+# TODO
 def get_local_angles(sat_azimuth_path: Path, sat_zenith_path: Path,
                      solar_azimuth_path: Path, solar_zenith_path: Path, info: dict, spatial_dimensions: tuple) -> dict:
     """
@@ -156,8 +150,6 @@ def get_local_angles(sat_azimuth_path: Path, sat_zenith_path: Path,
     info["sat_azimuth_angle"] = info["sat_azimuth_angle"].reshape(spatial_dimensions)
 
     return info
-
-
 
 def get_adcs_from_nc_file(nc_file_path: Path) -> Tuple[dict, tuple]:
     """
@@ -188,7 +180,7 @@ def get_adcs_from_nc_file(nc_file_path: Path) -> Tuple[dict, tuple]:
 
     return adcs
 
-
+# TODO
 def create_tmp_dir(nc_file_path: Path, info: dict) -> dict:
     """
     Create empty directory for generated files.
@@ -208,8 +200,6 @@ def create_tmp_dir(nc_file_path: Path, info: dict) -> dict:
     temp_dir.mkdir(parents=True, exist_ok=True)
 
     return info
-
-
 
 def get_capture_config_from_nc_file(nc_file_path: Path) -> dict:
 
@@ -233,7 +223,6 @@ def get_capture_config_from_nc_file(nc_file_path: Path) -> dict:
                 capture_config[attrname] = value
 
     return capture_config
-
 
 def get_timing_from_nc_file(nc_file_path: Path) -> dict:
 
@@ -275,8 +264,6 @@ def get_timing_from_nc_file(nc_file_path: Path) -> dict:
 
     return timing
 
-
-
 def get_target_coords_from_nc_file(nc_file_path: Path) -> dict:
 
     # ------------------------------------------------------------------------
@@ -306,7 +293,7 @@ def get_target_coords_from_nc_file(nc_file_path: Path) -> dict:
 
     return target_coords
 
-
+# TODO
 def get_metainfo_from_nc_file(nc_file_path: Path, standard_dimensions: dict) -> Tuple[dict, tuple]:
     """
     Get the metadata from the top folder of the data.
@@ -461,7 +448,6 @@ def get_metainfo_from_nc_file(nc_file_path: Path, standard_dimensions: dict) -> 
         f"Processing *{info['capture_type']}* Image with Dimensions: {spatial_dimensions}")
 
     return info, spatial_dimensions
-
 
 def get_raw_cube_from_nc_file(nc_file_path: Path) -> np.ndarray:
     """
