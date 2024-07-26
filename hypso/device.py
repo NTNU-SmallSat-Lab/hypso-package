@@ -94,6 +94,9 @@ class Hypso:
         self.wavelengths = None
         self.wavelengths_units = r'$nm$'
 
+        # Initialize spectral response function
+        self.srf = None
+
         # Initialize units
         self.units = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
 
@@ -257,12 +260,10 @@ class Hypso1(Hypso):
         else:
             print('No georeferencing .points file provided. Skipping georeferencing.')
 
-    def get_srf(self) -> list:
+    def _set_srf(self) -> None:
         """
         Get Spectral Response Functions (SRF) from HYPSO for each of the 120 bands. Theoretical FWHM of 3.33nm is
         used to estimate Sigma for an assumed gaussian distribution of each SRF per band.
-
-        :return: List of SRF
         """
         fwhm_nm = 3.33
         sigma_nm = fwhm_nm / (2 * np.sqrt(2 * np.log(2)))
@@ -308,7 +309,7 @@ class Hypso1(Hypso):
 
             srf.append([srf_wl_single, srf_single])
 
-        return srf
+        self.srf = srf
 
     def create_l1b_nc_file(self) -> None:
         """
