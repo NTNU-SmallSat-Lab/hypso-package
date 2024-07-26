@@ -191,7 +191,8 @@ def get_coefficients_from_dict(coeff_dict: dict, satobj) -> dict:
     return coeffs
 '''
 
-def calibrate_cube(info_sat: dict, raw_cube: np.ndarray, correction_coefficients_dict: dict) -> np.ndarray:
+'''
+def run_radiometric_calibration(info_sat: dict, raw_cube: np.ndarray, correction_coefficients_dict: dict) -> np.ndarray:
     """
     Radiometrically Calibrate the Raw Cube (digital counts) to Radiance
 
@@ -234,6 +235,66 @@ def calibrate_cube(info_sat: dict, raw_cube: np.ndarray, correction_coefficients
     l1b_cube = cube_calibrated
 
     return l1b_cube
+'''
+
+
+
+
+def run_radiometric_calibration(raw_cube: np.ndarray, 
+                                background_value: int,
+                                exp: int,
+                                image_height: int,
+                                image_width: int,
+                                correction_coefficients_dict: dict) -> np.ndarray:
+    """
+    Radiometrically Calibrate the Raw Cube (digital counts) to Radiance
+
+    :param raw_cube: Numpy array containing digital countes 3-channel cube
+    :param background_value: Integer representing capture the background value level.
+    :param exp: Integer representing the capture exposure level.
+    :param image_height: Integer representing image height. Equivalent to row_count
+    :param image_width: Integer representing image width. Equivalent to column_count divided by bin_factor (or bin_x)
+    :param correction_coefficients_dict: Dictionary containing the 2D coefficients for correction
+
+    :return: Corrected 3-channel cube
+    """
+
+    #DEBUG = False
+
+    #if correction_coefficients_dict["radiometric"] is None:
+    #    return raw_cube.copy()
+
+    #print("Radiometric Correction Ongoing")
+
+    #background_value = info_sat['background_value']
+    #exp = info_sat['exp']
+    #image_height = info_sat['image_height']
+    #image_width = info_sat['image_width']
+
+    # Radiometric calibration
+    num_frames = info_sat["frame_count"]
+    cube_calibrated = np.zeros([num_frames, image_height, image_width])
+
+    if DEBUG:
+        print("F:", num_frames, "H:", image_height, "W:", image_width)
+        print("Radioshape: ",
+              correction_coefficients_dict["radiometric"].shape)
+
+    for i in range(num_frames):
+        frame = raw_cube[i, :, :]
+        # Radiometric Calibration
+        frame_calibrated = apply_radiometric_calibration(
+            frame, exp, background_value, correction_coefficients_dict["radiometric"])
+
+        cube_calibrated[i, :, :] = frame_calibrated
+
+    l1b_cube = cube_calibrated
+
+    return l1b_cube
+
+
+
+
 
 
 def apply_radiometric_calibration(
@@ -308,7 +369,7 @@ def smile_correction_one_frame(frame, spectral_band_matrix) -> np.ndarray:
     return frame_smile_corrected
 
 
-def smile_correct_cube(cube, correction_coefficients_dict: dict) -> np.ndarray:
+def run_smile_correction(cube, correction_coefficients_dict: dict) -> np.ndarray:
     """
     Run smile correction on each frame in a cube, using the center row in the frame as the reference wavelength/band
     for smile correction.
@@ -334,7 +395,7 @@ def smile_correct_cube(cube, correction_coefficients_dict: dict) -> np.ndarray:
     return cube_smile_corrected
 
 
-def destriping_correct_cube(cube, correction_coefficients_dict) -> np.ndarray:
+def run_destriping_correction(cube, correction_coefficients_dict) -> np.ndarray:
     """
     Apply destriping correction matrix.
 

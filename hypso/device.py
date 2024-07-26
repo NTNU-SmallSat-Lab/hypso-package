@@ -8,8 +8,10 @@ from pathlib import Path
 from dateutil import parser
 import netCDF4 as nc
 import pyproj as prj
-from hypso.calibration import calibrate_cube, read_coeffs_from_file, \
-    smile_correct_cube, destriping_correct_cube
+from hypso.calibration import read_coeffs_from_file, \
+                            run_radiometric_calibration, \
+                            run_destriping_correction, \
+                            run_smile_correction
 from hypso.georeference import start_coordinate_correction, generate_full_geotiff, generate_rgb_geotiff
 from hypso.reading import load_nc
 from hypso.utils import find_dir, find_file, find_all_files
@@ -61,6 +63,11 @@ class Hypso:
         self.destriping_coeffs = None
         self.spectral_coeffs = None
 
+        # Initialize datacubes
+        self.l1a_cube = None
+        self.l1b_cube = None
+        self.l2a_cube = None
+
         # Initialize platform and sensor names
         self.platform = None
         self.sensor = None
@@ -82,6 +89,10 @@ class Hypso:
          # Initialize latitude and longitude variables
         self.latitudes = None
         self.longitudes = None
+
+        # Initialize wavelengths
+        self.wavelengths = None
+        self.wavelengths_units = r'$nm$'
 
         # Initialize units
         self.units = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
@@ -128,7 +139,7 @@ class Hypso1(Hypso):
 
         self._set_capture_region()
 
-        self.capture_config, self.timing, self.target_coords, self.adcs, self.rawcube = load_nc(self.nc_path)
+        self.capture_config, self.timing, self.target_coords, self.adcs, self.l1a_cube = load_nc(self.nc_path)
 
         self._set_info_dict()
 
@@ -140,23 +151,23 @@ class Hypso1(Hypso):
 
         self._set_wavelengths()
 
-
+        for key in self.info.keys():
+            print(key)
+            print(type(self.info[key]))
+        
+        #self._generate_l1b_cube()
 
         # Correction Coefficients ----------------------------------------
-        if False:
-            
-            self.calibration_coefficients_dict = get_coefficients_from_dict(self.calibration_coeffs_file_dict, self)
+        #self.calibration_coefficients_dict = get_coefficients_from_dict(self.calibration_coeffs_file_dict, self)
 
         # Wavelengths -----------------------------------------------------
-        if False:
-            #self.spectral_coeff_file = self.get_spectral_coefficients_path()
-            self.spectral_coefficients = get_coefficients_from_file(
-                self.spectral_coeff_file)
-            self.wavelengths = self.spectral_coefficients
+        #self.spectral_coeff_file = self.get_spectral_coefficients_path()
+        #self.spectral_coefficients = get_coefficients_from_file(
+        #    self.spectral_coeff_file)
+        #self.wavelengths = self.spectral_coefficients
 
         # Calibrate and Correct Cube Variables and load existing L2 Cube  ----------------------------------------
-        if False:
-            self.l1b_cube = self.get_calibrated_and_corrected_cube()
+        #self.l1b_cube = self.get_calibrated_and_corrected_cube()
 
         # Create L1B .nc File
         #self.create_l1b_nc_file()  # Input for ACOLITE
@@ -237,7 +248,6 @@ class Hypso1(Hypso):
 
         else:
             print('No georeferencing .points file provided. Skipping georeferencing.')
-
 
     def get_srf(self) -> list:
         """
@@ -984,8 +994,6 @@ class Hypso1(Hypso):
 
         return current_project
 
-
-
     def _set_rad_coeff_file(self, rad_coeff_file=None) -> None:
 
         """
@@ -1017,7 +1025,6 @@ class Hypso1(Hypso):
 
         self.rad_coeff_file = rad_coeff_file
 
-
     def _set_smile_coeff_file(self, smile_coeff_file=None) -> None:
 
         """
@@ -1048,7 +1055,6 @@ class Hypso1(Hypso):
             smile_coeff_file = csv_file_smile
 
         self.smile_coeff_file = smile_coeff_file
-
 
     def _set_destriping_coeff_file(self, destriping_coeff_file=None) -> None:
 
@@ -1105,7 +1111,6 @@ class Hypso1(Hypso):
 
         self.spectral_coeff_file = spectral_coeff_file
 
-
     def _set_calibration_coeff_files(self) -> None:
         """
         Set the absolute path for the calibration coefficients included in the package. This includes radiometric,
@@ -1117,35 +1122,7 @@ class Hypso1(Hypso):
         self._set_smile_coeff_file()
         self._set_destriping_coeff_file()
         self._set_spectral_coeff_file()
-
-    '''
-    def get_spectral_coefficients_path(self) -> str:
-        """
-        Get the absolute path for the spectral coefficients (wavelengths).
-
-        :return: Absolute path for the spectral coefficients (wavelengths)
-        """
-
-        match self.sensor:
-
-            case 'hypso1':
-
-                csv_file = "spectral_bands_HYPSO-1_v1.csv"
-
-            case 'hypso2':
-
-                csv_file = None
-            
-            case _:
-
-                csv_file = None
-            
-        wl_file = files(
-            'hypso.calibration').joinpath(f'data/{csv_file}')
-
-        return str(wl_file)
-    '''
-        
+  
     def get_spectra(self, position_dict: dict, product: Literal["L1C", "L2-6SV1", "L2-ACOLITE"] = "L1C",
                     filename: Union[str, None] = None, plot: bool = True) -> Union[pd.DataFrame, None]:
         """
@@ -1306,6 +1283,32 @@ class Hypso1(Hypso):
 
         return df_band
 
+
+    def _generate_l1b_cube(self) -> np.ndarray:
+        """
+        Get calibrated and corrected cube. Includes Radiometric, Smile and Destriping Correction.
+            Assumes all coefficients has been adjusted to the frame size (cropped and
+            binned), and that the data cube contains 12-bit values.
+
+        :return: Calibrated and corrected hyperspectral cube as a Numpy Array
+        """
+
+        # Radiometric calibration
+        # TODO: The factor by 10 is to fix a bug in which the coeff have a factor of 10
+        cube_calibrated = run_radiometric_calibration(self.info, self.rawcube, self.calibration_coefficients_dict) / 10
+
+        # Smile correction
+        cube_smile_corrected = run_smile_correction(cube_calibrated, self.calibration_coefficients_dict)
+
+        # Destriping
+        cube_destriped = run_destriping_correction(cube_smile_corrected, self.calibration_coefficients_dict)
+
+    
+        self.l1b_cube = cube_destriped
+
+
+
+    '''
     def get_calibrated_and_corrected_cube(self) -> np.ndarray:
         """
         Get calibrated and corrected cube. Includes Radiometric, Smile and Destriping Correction.
@@ -1329,6 +1332,7 @@ class Hypso1(Hypso):
             cube_smile_corrected, self.calibration_coefficients_dict)
 
         return cube_destriped
+    '''
 
     def get_toa_reflectance(self) -> np.ndarray:
         """
@@ -1394,12 +1398,10 @@ class Hypso1(Hypso):
 
         self.capture_name = capture_name
 
-
     def _set_capture_region(self) -> None:
 
         self._set_capture_name()
         self.capture_region = self.capture_name.split('_')[0].strip('_')
-
 
     def _set_capture_type(self):
 
@@ -1422,8 +1424,6 @@ class Hypso1(Hypso):
         self.spatial_dimensions = (rows_img, cols_img)
 
         print(f"Processing *{self.info['capture_type']}* image mode with dimensions: {self.spatial_dimensions}")
-
-
 
     def _set_info_dict(self) -> None:
 
@@ -1474,14 +1474,12 @@ class Hypso1(Hypso):
 
         self.info = info
 
-
     def _set_calibration_coeffs(self) -> None:
 
         self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file)
         self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file)
         self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
         self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
-
 
     def _set_wavelengths(self) -> None:
 
