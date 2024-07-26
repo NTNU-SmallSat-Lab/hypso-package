@@ -135,13 +135,9 @@ class Hypso1(Hypso):
 
         super().__init__(nc_path=nc_path, points_path=points_path)
 
-        
-        
-
         self._set_platform()
 
         self._set_sensor()
-
 
         self._set_capture_name()
 
@@ -254,7 +250,7 @@ class Hypso1(Hypso):
         used to estimate Sigma for an assumed gaussian distribution of each SRF per band.
         """
 
-        if not self.wavelengths:
+        if not any(self.wavelengths):
             self.srf = None
 
         fwhm_nm = 3.33
@@ -303,6 +299,7 @@ class Hypso1(Hypso):
 
         self.srf = srf
 
+    # TODO
     def create_l1b_nc_file(self) -> None:
         """
         Create a l1b.nc file using the radiometrically corrected data. Same structure from the original l1a.nc file
@@ -785,6 +782,7 @@ class Hypso1(Hypso):
         # Update
         self.info["nc_file"] = Path(new_path)
 
+    # TODO
     def create_geotiff(self, product: Literal["L2-ACOLITE", "L2-6SV1", "L1C"] = "L2-ACOLITE", force_reload: bool = False,
                        atmos_dict: Union[dict, None] = None) -> None:
         """
@@ -859,6 +857,7 @@ class Hypso1(Hypso):
         # Generate RGBA/RGBA and Full Geotiff with corrected metadata and L2A if exists (if not L1B)
         generate_full_geotiff(self, product=product)
 
+    # TODO
     def delete_geotiff_dir(self) -> None:
         """
         Delete the GeoTiff directory. Used when force_reload is set to True in the "create_geotiff" method.
@@ -878,6 +877,7 @@ class Hypso1(Hypso):
             import shutil
             shutil.rmtree(geotiff_dir, ignore_errors=True)
 
+    # TODO
     def find_geotiffs(self) -> None:
         """
         Recursively find GeoTiffs inside the "top_folder_name" directory in the "info" dictionary from the Hypso
@@ -898,6 +898,7 @@ class Hypso1(Hypso):
                 L2_dict[key] = f
             self.l2geotiffFilePath = L2_dict
 
+    # TODO
     def find_existing_l2_cube(self) -> Union[dict, None]:
         """
         Recursively find the .npy files corresponding to previous runs of the atmospheric correction process. This saves
@@ -933,6 +934,7 @@ class Hypso1(Hypso):
 
         return dict_L2
 
+    # TODO
     def get_projection_metadata(self) -> dict:
         """
         Returns the projection metadata dictionary. This is either extracted from the RGBA, L1 or L1C GeoTiff
@@ -1124,6 +1126,7 @@ class Hypso1(Hypso):
         self._set_destriping_coeff_file()
         self._set_spectral_coeff_file()
   
+    # TODO
     def get_spectra(self, position_dict: dict, product: Literal["L1C", "L2-6SV1", "L2-ACOLITE"] = "L1C",
                     filename: Union[str, None] = None, plot: bool = True) -> Union[pd.DataFrame, None]:
         """
@@ -1284,7 +1287,6 @@ class Hypso1(Hypso):
 
         return df_band
 
-
     def _generate_l1b_cube(self) -> None:
         """
         Get calibrated and corrected cube. Includes Radiometric, Smile and Destriping Correction.
@@ -1299,23 +1301,25 @@ class Hypso1(Hypso):
         #cube_calibrated = run_radiometric_calibration(self.info, self.rawcube, self.calibration_coefficients_dict) / 10
 
 
-        cube_rad_calibrated = run_radiometric_calibration(cube=self.l1a_cube, 
-                                                          background_value=self.info['background_value'],
-                                                          exp=self.info['exp'],
-                                                          image_height=self.info['image_height'],
-                                                          image_width=self.info['image_width'],
-                                                          frame_count=self.capture_config['frame_count'],
-                                                          rad_coeffs=self.rad_coeffs)
+        cube = run_radiometric_calibration(cube=self.l1a_cube, 
+                                           background_value=self.info['background_value'],
+                                           exp=self.info['exp'],
+                                           image_height=self.info['image_height'],
+                                           image_width=self.info['image_width'],
+                                           frame_count=self.capture_config['frame_count'],
+                                           rad_coeffs=self.rad_coeffs)
 
         # Smile correction
-        cube_smile_corrected = run_smile_correction(cube=cube_rad_calibrated, 
-                                                    smile_coeffs=self.smile_coeffs)
+        cube = run_smile_correction(cube=cube, 
+                                    smile_coeffs=self.smile_coeffs)
 
         # Destriping
-        #cube_destriped = run_destriping_correction(cube_smile_corrected, self.calibration_coefficients_dict)
+        cube = run_destriping_correction(cube=cube, 
+                                         destriping_coeffs=self.destriping_coeffs)
 
-    
-        #self.l1b_cube = cube_destriped
+        self.l1b_cube = cube
+
+        del cube
 
 
 
