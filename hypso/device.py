@@ -109,6 +109,13 @@ class Hypso:
         # Initialize products dict
         self.products = {}
 
+        # Initialize ADCS data
+        self.adcs = None
+        self.adcs_pos_df = None
+        self.adcs_quat_df = None
+
+
+
         # DEBUG
         self.DEBUG = False
 
@@ -148,7 +155,11 @@ class Hypso1(Hypso):
         self._set_info_dict()
 
         self._set_capture_type()
-       
+
+        self._set_adcs_dataframes()
+
+        return
+
         self._set_calibration_coeff_files()
 
         self._set_calibration_coeffs()
@@ -159,8 +170,6 @@ class Hypso1(Hypso):
         
         self._generate_l1b_cube()
 
-
-        # Create L1B .nc File
         #self.create_l1b_nc_file()  # Input for ACOLITE
 
         #self.l2a_cube = self.find_existing_l2_cube()
@@ -300,6 +309,492 @@ class Hypso1(Hypso):
         self.srf = srf
 
     # TODO
+    def create_l1b_nc_file(self) -> None:
+        """
+        Create a l1b.nc file using the radiometrically corrected data. Same structure from the original l1a.nc file
+        is used. Required to run ACOLITE as the input is a radiometrically corrected .nc file.
+
+        :return: Nothing.
+        """
+
+        # TODO: can this be implemented with satpy NetCDF reader?
+
+        hypso_nc_path = self.nc_path
+        old_nc = nc.Dataset(hypso_nc_path, 'r', format='NETCDF4')
+        new_path = hypso_nc_path
+        new_path = str(new_path).replace('l1a.nc', 'l1b.nc')
+
+        if Path(new_path).is_file():
+            print("L1b.nc file already exists. Not creating it.")
+            self.info["nc_file"] = Path(new_path)
+            return
+
+        # Create a new NetCDF file
+        with (nc.Dataset(new_path, 'w', format='NETCDF4') as netfile):
+            bands = self.info["image_width"]
+            lines = self.info["frame_count"]  # AKA Frames AKA Rows
+            samples = self.info["image_height"]  # AKA Cols
+
+            # Set top level attributes -------------------------------------------------
+            for md in old_nc.ncattrs():
+                set_or_create_attr(netfile,
+                                   md,
+                                   old_nc.getncattr(md))
+
+            # Manual Replacement
+            set_or_create_attr(netfile,
+                               attr_name="radiometric_file",
+                               attr_value=str(Path(self.calibration_coeffs_file_dict["radiometric"]).name))
+
+            set_or_create_attr(netfile,
+                               attr_name="smile_file",
+                               attr_value=str(Path(self.calibration_coeffs_file_dict["smile"]).name))
+
+            # Destriping Path is the only one which can be None
+            if self.calibration_coeffs_file_dict["destriping"] is None:
+                set_or_create_attr(netfile,
+                                   attr_name="destriping",
+                                   attr_value="No-File")
+            else:
+                set_or_create_attr(netfile,
+                                   attr_name="destriping",
+                                   attr_value=str(Path(self.calibration_coeffs_file_dict["destriping"]).name))
+
+            set_or_create_attr(netfile, attr_name="spectral_file", attr_value=str(Path(self.spectral_coeff_file).name))
+
+            set_or_create_attr(netfile, attr_name="processing_level", attr_value="L1B")
+
+            # Create dimensions
+            netfile.createDimension('lines', lines)
+            netfile.createDimension('samples', samples)
+            netfile.createDimension('bands', bands)
+
+            # Create groups
+            netfile.createGroup('logfiles')
+
+            netfile.createGroup('products')
+
+            netfile.createGroup('metadata')
+
+            netfile.createGroup('navigation')
+
+            # Adding metadata ---------------------------------------
+            meta_capcon = netfile.createGroup('metadata/capture_config')
+            for md in old_nc['metadata']["capture_config"].ncattrs():
+                set_or_create_attr(meta_capcon,
+                                   md,
+                                   old_nc['metadata']["capture_config"].getncattr(md))
+
+            # Adding Metatiming --------------------------------------
+            meta_timing = netfile.createGroup('metadata/timing')
+            for md in old_nc['metadata']["timing"].ncattrs():
+                set_or_create_attr(meta_timing,
+                                   md,
+                                   old_nc['metadata']["timing"].getncattr(md))
+
+            # Meta Temperature -------------------------------------------
+            meta_temperature = netfile.createGroup('metadata/temperature')
+            for md in old_nc['metadata']["temperature"].ncattrs():
+                set_or_create_attr(meta_temperature,
+                                   md,
+                                   old_nc['metadata']["temperature"].getncattr(md))
+
+            # Meta Corrections -------------------------------------------
+            meta_adcs = netfile.createGroup('metadata/adcs')
+            for md in old_nc['metadata']["adcs"].ncattrs():
+                set_or_create_attr(meta_adcs,
+                                   md,
+                                   old_nc['metadata']["adcs"].getncattr(md))
+
+            # Meta Corrections -------------------------------------------
+            meta_corrections = netfile.createGroup('metadata/corrections')
+            for md in old_nc['metadata']["corrections"].ncattrs():
+                set_or_create_attr(meta_corrections,
+                                   md,
+                                   old_nc['metadata']["corrections"].getncattr(md))
+
+            # Meta Database -------------------------------------------
+            meta_database = netfile.createGroup('metadata/database')
+            for md in old_nc['metadata']["database"].ncattrs():
+                set_or_create_attr(meta_database,
+                                   md,
+                                   old_nc['metadata']["database"].getncattr(md))
+
+            # Set pseudoglobal vars like compression level
+            COMP_SCHEME = 'zlib'  # Default: zlib
+            COMP_LEVEL = 4  # Default (when scheme != none): 4
+            COMP_SHUFFLE = True  # Default (when scheme != none): True
+
+            # Create and populate variables
+            Lt = netfile.createVariable(
+                'products/Lt', 'uint16',
+                ('lines', 'samples', 'bands'),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE)
+            Lt.units = "W/m^2/micrometer/sr"
+            Lt.long_name = "Top of Atmosphere Measured Radiance"
+            Lt.wavelength_units = "nanometers"
+            Lt.fwhm = [5.5] * bands
+            Lt.wavelengths = np.around(self.spectral_coefficients, 1)
+            Lt[:] = self.l1b_cube
+
+            # ADCS Timestamps ----------------------------------------------------
+            len_timestamps = old_nc.dimensions["adcssamples"].size
+            netfile.createDimension('adcssamples', len_timestamps)
+
+            meta_adcs_timestamps = netfile.createVariable(
+                'metadata/adcs/timestamps', 'f8',
+                ('adcssamples',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE
+            )
+
+            meta_adcs_timestamps[:] = old_nc['metadata']["adcs"]["timestamps"][:]
+
+            # ADCS Position X -----------------------------------------------------
+            meta_adcs_position_x = netfile.createVariable(
+                'metadata/adcs/position_x', 'f8',
+                ('adcssamples',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE
+            )
+            meta_adcs_position_x[:] = old_nc['metadata']["adcs"]["position_x"][:]
+
+            # ADCS Position Y -----------------------------------------------------
+            meta_adcs_position_y = netfile.createVariable(
+                'metadata/adcs/position_y', 'f8',
+                ('adcssamples',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE
+            )
+            meta_adcs_position_y[:] = old_nc['metadata']["adcs"]["position_y"][:]
+
+            # ADCS Position Z -----------------------------------------------------
+            meta_adcs_position_z = netfile.createVariable(
+                'metadata/adcs/position_z', 'f8',
+                ('adcssamples',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE
+            )
+            meta_adcs_position_z[:] = old_nc['metadata']["adcs"]["position_z"][:]
+
+            # ADCS Velocity X -----------------------------------------------------
+            meta_adcs_velocity_x = netfile.createVariable(
+                'metadata/adcs/velocity_x', 'f8',
+                ('adcssamples',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE
+            )
+            meta_adcs_velocity_x[:] = old_nc['metadata']["adcs"]["velocity_x"][:]
+
+            # ADCS Velocity Y -----------------------------------------------------
+            meta_adcs_velocity_y = netfile.createVariable(
+                'metadata/adcs/velocity_y', 'f8',
+                ('adcssamples',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE
+            )
+            meta_adcs_velocity_y[:] = old_nc['metadata']["adcs"]["velocity_y"][:]
+
+            # ADCS Velocity Z -----------------------------------------------------
+            meta_adcs_velocity_z = netfile.createVariable(
+                'metadata/adcs/velocity_z', 'f8',
+                ('adcssamples',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE
+            )
+            meta_adcs_velocity_z[:] = old_nc['metadata']["adcs"]["velocity_z"][:]
+
+            # ADCS Quaternion S -----------------------------------------------------
+            meta_adcs_quaternion_s = netfile.createVariable(
+                'metadata/adcs/quaternion_s', 'f8',
+                ('adcssamples',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE
+            )
+            meta_adcs_quaternion_s[:] = old_nc['metadata']["adcs"]["quaternion_s"][:]
+
+            # ADCS Quaternion X -----------------------------------------------------
+            meta_adcs_quaternion_x = netfile.createVariable(
+                'metadata/adcs/quaternion_x', 'f8',
+                ('adcssamples',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE
+            )
+            meta_adcs_quaternion_x[:] = old_nc['metadata']["adcs"]["quaternion_x"][:]
+
+            # ADCS Quaternion Y -----------------------------------------------------
+            meta_adcs_quaternion_y = netfile.createVariable(
+                'metadata/adcs/quaternion_y', 'f8',
+                ('adcssamples',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE
+            )
+            meta_adcs_quaternion_y[:] = old_nc['metadata']["adcs"]["quaternion_y"][:]
+
+            # ADCS Quaternion Z -----------------------------------------------------
+            meta_adcs_quaternion_z = netfile.createVariable(
+                'metadata/adcs/quaternion_z', 'f8',
+                ('adcssamples',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE
+            )
+            meta_adcs_quaternion_z[:] = old_nc['metadata']["adcs"]["quaternion_z"][:]
+
+            # ADCS Angular Velocity X -----------------------------------------------------
+            meta_adcs_angular_velocity_x = netfile.createVariable(
+                'metadata/adcs/angular_velocity_x', 'f8',
+                ('adcssamples',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE
+            )
+            meta_adcs_angular_velocity_x[:] = old_nc['metadata']["adcs"]["angular_velocity_x"][:]
+
+            # ADCS Angular Velocity Y -----------------------------------------------------
+            meta_adcs_angular_velocity_y = netfile.createVariable(
+                'metadata/adcs/angular_velocity_y', 'f8',
+                ('adcssamples',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE
+            )
+            meta_adcs_angular_velocity_y[:] = old_nc['metadata']["adcs"]["angular_velocity_y"][:]
+
+            # ADCS Angular Velocity Z -----------------------------------------------------
+            meta_adcs_angular_velocity_z = netfile.createVariable(
+                'metadata/adcs/angular_velocity_z', 'f8',
+                ('adcssamples',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE
+            )
+            meta_adcs_angular_velocity_z[:] = old_nc['metadata']["adcs"]["angular_velocity_z"][:]
+
+            # ADCS ST Quaternion S -----------------------------------------------------
+            meta_adcs_st_quaternion_s = netfile.createVariable(
+                'metadata/adcs/st_quaternion_s', 'f8',
+                ('adcssamples',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE
+            )
+            meta_adcs_st_quaternion_s[:] = old_nc['metadata']["adcs"]["st_quaternion_s"][:]
+
+            # ADCS ST Quaternion X -----------------------------------------------------
+            meta_adcs_st_quaternion_x = netfile.createVariable(
+                'metadata/adcs/st_quaternion_x', 'f8',
+                ('adcssamples',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE
+            )
+            meta_adcs_st_quaternion_x[:] = old_nc['metadata']["adcs"]["st_quaternion_x"][:]
+
+            # ADCS ST Quaternion Y -----------------------------------------------------
+            meta_adcs_st_quaternion_y = netfile.createVariable(
+                'metadata/adcs/st_quaternion_y', 'f8',
+                ('adcssamples',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE
+            )
+            meta_adcs_st_quaternion_y[:] = old_nc['metadata']["adcs"]["st_quaternion_y"][:]
+
+            # ADCS ST Quaternion Z -----------------------------------------------------
+            meta_adcs_st_quaternion_z = netfile.createVariable(
+                'metadata/adcs/st_quaternion_z', 'f8',
+                ('adcssamples',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE
+            )
+            meta_adcs_st_quaternion_z[:] = old_nc['metadata']["adcs"]["st_quaternion_z"][:]
+
+            # ADCS Control Error -----------------------------------------------------
+            meta_adcs_control_error = netfile.createVariable(
+                'metadata/adcs/control_error', 'f8',
+                ('adcssamples',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE
+            )
+            meta_adcs_control_error[:] = old_nc['metadata']["adcs"]["control_error"][:]
+
+            # Capcon File -------------------------------------------------------------
+            meta_capcon_file = netfile.createVariable(
+                'metadata/capture_config/file', 'str')  # str seems necessary for storage of an arbitrarily large scalar
+            meta_capcon_file[()] = old_nc['metadata']["capture_config"]["file"][:]  # [()] assignment of scalar to array
+
+            # Metadata: Rad calibration coeff ----------------------------------------------------
+            len_radrows = self.calibration_coefficients_dict["radiometric"].shape[0]
+            len_radcols = self.calibration_coefficients_dict["radiometric"].shape[1]
+            netfile.createDimension('radrows', len_radrows)
+            netfile.createDimension('radcols', len_radcols)
+            meta_corrections_rad = netfile.createVariable(
+                'metadata/corrections/rad_matrix', 'f4',
+                ('radrows', 'radcols'),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE)
+            meta_corrections_rad[:] = self.calibration_coefficients_dict["radiometric"]
+
+            # Metadata: Spectral coeff ----------------------------------------------------
+            len_spectral = self.wavelengths.shape[0]
+            netfile.createDimension('specrows', len_spectral)
+            meta_corrections_spec = netfile.createVariable(
+                'metadata/corrections/spec_coeffs', 'f4',
+                ('specrows',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE)
+            meta_corrections_spec[:] = self.spectral_coefficients
+
+            # Meta Temperature File ---------------------------------------------------------
+            meta_temperature_file = netfile.createVariable(
+                'metadata/temperature/file', 'str')
+            meta_temperature_file[()] = old_nc['metadata']["temperature"]["file"][:]
+
+            # Bin Time ----------------------------------------------------------------------
+            bin_time = netfile.createVariable(
+                'metadata/timing/bin_time', 'uint16',
+                ('lines',))
+            bin_time[:] = old_nc['metadata']["timing"]["bin_time"][:]
+
+            # Timestamps -------------------------------------------------------------------
+            timestamps = netfile.createVariable(
+                'metadata/timing/timestamps', 'uint32',
+                ('lines',))
+            timestamps[:] = old_nc['metadata']["timing"]["timestamps"][:]
+
+            # Timestamps Service -----------------------------------------------------------
+            timestamps_srv = netfile.createVariable(
+                'metadata/timing/timestamps_srv', 'f8',
+                ('lines',))
+            timestamps_srv[:] = old_nc['metadata']["timing"]["timestamps_srv"][:]
+
+            # Create Navigation Group --------------------------------------
+            try:
+                navigation_group = netfile.createGroup('navigation')
+                sat_zenith_angle = self.info["sat_zenith_angle"]
+                sat_azimuth_angle = self.info["sat_azimuth_angle"]
+
+                solar_zenith_angle = self.info["solar_zenith_angle"]
+                solar_azimuth_angle = self.info["solar_azimuth_angle"]
+
+                # Unix time -----------------------
+                time = netfile.createVariable('navigation/unixtime', 'u8', ('lines',))
+                frametime_pose_file = find_file(self.info["top_folder_name"], "frametime-pose", ".csv")
+                df = pd.read_csv(frametime_pose_file)
+                time[:] = df["timestamp"].values
+
+                # Sensor Zenith --------------------------
+                sensor_z = netfile.createVariable(
+                    'navigation/sensor_zenith', 'f4', ('lines', 'samples'),
+                    # compression=COMP_SCHEME,
+                    # complevel=COMP_LEVEL,
+                    # shuffle=COMP_SHUFFLE,
+                )
+                sensor_z[:] = sat_zenith_angle.reshape(self.spatial_dimensions)
+                sensor_z.long_name = "Sensor Zenith Angle"
+                sensor_z.units = "degrees"
+                # sensor_z.valid_range = [-180, 180]
+                sensor_z.valid_min = -180
+                sensor_z.valid_max = 180
+
+                # Sensor Azimuth ---------------------------
+                sensor_a = netfile.createVariable(
+                    'navigation/sensor_azimuth', 'f4', ('lines', 'samples'),
+                    # compression=COMP_SCHEME,
+                    # complevel=COMP_LEVEL,
+                    # shuffle=COMP_SHUFFLE,
+                )
+                sensor_a[:] = sat_azimuth_angle.reshape(self.spatial_dimensions)
+                sensor_a.long_name = "Sensor Azimuth Angle"
+                sensor_a.units = "degrees"
+                # sensor_a.valid_range = [-180, 180]
+                sensor_a.valid_min = -180
+                sensor_a.valid_max = 180
+
+                # Solar Zenith ----------------------------------------
+                solar_z = netfile.createVariable(
+                    'navigation/solar_zenith', 'f4', ('lines', 'samples'),
+                    # compression=COMP_SCHEME,
+                    # complevel=COMP_LEVEL,
+                    # shuffle=COMP_SHUFFLE,
+                )
+                solar_z[:] = solar_zenith_angle.reshape(self.spatial_dimensions)
+                solar_z.long_name = "Solar Zenith Angle"
+                solar_z.units = "degrees"
+                # solar_z.valid_range = [-180, 180]
+                solar_z.valid_min = -180
+                solar_z.valid_max = 180
+
+                # Solar Azimuth ---------------------------------------
+                solar_a = netfile.createVariable(
+                    'navigation/solar_azimuth', 'f4', ('lines', 'samples'),
+                    # compression=COMP_SCHEME,
+                    # complevel=COMP_LEVEL,
+                    # shuffle=COMP_SHUFFLE,
+                )
+                solar_a[:] = solar_azimuth_angle.reshape(self.spatial_dimensions)
+                solar_a.long_name = "Solar Azimuth Angle"
+                solar_a.units = "degrees"
+                # solar_a.valid_range = [-180, 180]
+                solar_a.valid_min = -180
+                solar_a.valid_max = 180
+    
+                # Latitude ---------------------------------
+                latitude = netfile.createVariable(
+                    'navigation/latitude', 'f4', ('lines', 'samples'),
+                    # compression=COMP_SCHEME,
+                    # complevel=COMP_LEVEL,
+                    # shuffle=COMP_SHUFFLE,
+                )
+                # latitude[:] = lat.reshape(frames, lines)
+                latitude[:] = self.latitudes
+                latitude.long_name = "Latitude"
+                latitude.units = "degrees"
+                # latitude.valid_range = [-180, 180]
+                latitude.valid_min = -180
+                latitude.valid_max = 180
+
+                # Longitude ----------------------------------
+                longitude = netfile.createVariable(
+                    'navigation/longitude', 'f4', ('lines', 'samples'),
+                    # compression=COMP_SCHEME,
+                    # complevel=COMP_LEVEL,
+                    # shuffle=COMP_SHUFFLE,
+                )
+                # longitude[:] = lon.reshape(frames, lines)
+                longitude[:] = self.longitudes
+                longitude.long_name = "Longitude"
+                longitude.units = "degrees"
+                # longitude.valid_range = [-180, 180]
+                longitude.valid_min = -180
+                longitude.valid_max = 180
+            except Exception as ex:
+                print("Navigation Group and Attributes already exist")
+                print(ex)
+
+        old_nc.close()
+
+        # Update
+        self.info["nc_file"] = Path(new_path)
+
+    '''    
     def create_l1b_nc_file(self) -> None:
         """
         Create a l1b.nc file using the radiometrically corrected data. Same structure from the original l1a.nc file
@@ -781,6 +1276,7 @@ class Hypso1(Hypso):
 
         # Update
         self.info["nc_file"] = Path(new_path)
+    '''
 
     # TODO
     def create_geotiff(self, product: Literal["L2-ACOLITE", "L2-6SV1", "L1C"] = "L2-ACOLITE", force_reload: bool = False,
@@ -1322,33 +1818,7 @@ class Hypso1(Hypso):
         del cube
 
 
-
-    '''
-    def get_calibrated_and_corrected_cube(self) -> np.ndarray:
-        """
-        Get calibrated and corrected cube. Includes Radiometric, Smile and Destriping Correction.
-            Assumes all coefficients has been adjusted to the frame size (cropped and
-            binned), and that the data cube contains 12-bit values.
-
-        :return: Corrected Hyperspectral Cube as a Numpy Array
-        """
-
-        # Radiometric calibration
-        # TODO: The factor by 10 is to fix a bug in which the coeff have a factor of 10
-        cube_calibrated = calibrate_cube(
-            self.info, self.rawcube, self.calibration_coefficients_dict) / 10
-
-        # Smile correction
-        cube_smile_corrected = smile_correct_cube(
-            cube_calibrated, self.calibration_coefficients_dict)
-
-        # Destriping
-        cube_destriped = destriping_correct_cube(
-            cube_smile_corrected, self.calibration_coefficients_dict)
-
-        return cube_destriped
-    '''
-
+    # TODO
     def get_toa_reflectance(self) -> np.ndarray:
         """
         Convert Top Of Atmosphere (TOA) Radiance to TOA Reflectance.
@@ -1501,6 +1971,47 @@ class Hypso1(Hypso):
         if self.spectral_coeffs is not None:
 
             self.wavelengths = self.spectral_coeffs
+
+    def _set_adcs_dataframes(self) -> None:
+        self._set_adcs_pos_dataframe()
+        self._set_adcs_pos_dataframe()
+
+    def _set_adcs_pos_dataframe(self) -> None:
+        position_headers = ["timestamp", "eci x [m]", "eci y [m]", "eci z [m]"]
+        
+        timestamps = self.adcs["timestamps"]
+        pos_x = self.adcs["position_x"]
+        pos_y = self.adcs["position_y"]
+        pos_z = self.adcs["position_z"]
+
+        pos_array = np.column_stack((timestamps, pos_x, pos_y, pos_z))
+        pos_df = pd.DataFrame(pos_array, columns=position_headers)
+
+        self.adcs_pos_df = pos_df
+
+    def _set_adcs_quat_dataframe(self) -> None:
+        quaternion_headers = ["timestamp", "quat_0", "quat_1", "quat_2", "quat_3", "Control error [deg]"]
+
+        timestamps = self.adcs["timestamps"]
+        quat_s = self.adcs["quaternion_s"]
+        quat_x = self.adcs["quaternion_x"]
+        quat_y = self.adcs["quaternion_y"]
+        quat_z = self.adcs["quaternion_z"]
+        control_error = self.adcs["control_error"]
+
+        quat_array = np.column_stack((timestamps, quat_s, quat_x, quat_y, quat_z, control_error))
+        quat_df = pd.DataFrame(quat_array, columns=quaternion_headers)
+
+        self.adcs_quat_df = quat_df
+
+
+
+
+
+
+
+
+
 
 class Hypso2(Hypso):
     def __init__(self, nc_path: str, points_path: Union[str, None] = None) -> None:
