@@ -45,7 +45,6 @@ def crop_and_bin_matrix(matrix, x_start, x_stop, y_start, y_stop, bin_x=1, bin_y
 
     return new_matrix
 
-
 def read_coeffs_from_file(coeff_path: str) -> np.ndarray:
     """
     Read correction coefficients from file
@@ -65,54 +64,6 @@ def read_coeffs_from_file(coeff_path: str) -> np.ndarray:
         raise ValueError("Could not read coefficients file.")
 
     return coefficients
-
-
-'''
-def get_coeffs_from_file(coeff_file: str, 
-                        capture_type: str = "nominal",
-                        x_start: int = None,
-                        x_stop: int = None,
-                        y_start: int = None,
-                        y_stop: int = None,
-                        bin_x: int = None) -> np.ndarray:
-
-    match capture_type:
-
-        case 'custom':
-
-            if any([x_start, x_stop, y_start, y_stop, bin_x]):
-
-                if not all([x_start, x_stop, y_start, y_stop, bin_x]):
-
-                    coeffs = None
-
-                else:
-                    full_coeffs = read_coeffs_from_file(coeff_file)
-
-                    coeffs = crop_and_bin_matrix(
-                                    matrix=full_coeffs,
-                                    x_start=x_start,
-                                    x_stop=x_stop,
-                                    y_start=y_start,
-                                    y_stop=y_stop,
-                                    bin_x=bin_x,
-                                    bin_y=1)
-
-            else:
-                coeffs = None
-
-        case 'nominal':
-            coeffs = read_coeffs_from_file(coeff_file)
-
-        case 'wide':
-            coeffs = read_coeffs_from_file(coeff_file)
-
-        case _:
-            coeffs = None
-
-    return coeffs
-'''
-
 
 def run_radiometric_calibration(cube: np.ndarray, 
                                 background_value: int,
@@ -175,7 +126,6 @@ def run_radiometric_calibration_one_frame(frame: np.ndarray,
 
     return frame_rad_calibrated
 
-
 def run_smile_correction(cube: np.ndarray, 
                          smile_coeffs: np.ndarray) -> np.ndarray:
     """
@@ -205,7 +155,6 @@ def run_smile_correction(cube: np.ndarray,
         cube_smile_corrected[i, :, :] = frame_smile_corrected
 
     return cube_smile_corrected
-
 
 def run_smile_correction_one_frame(frame: np.ndarray,
                                    smile_coeffs: np.ndarray) -> np.ndarray:
@@ -242,8 +191,6 @@ def run_smile_correction_one_frame(frame: np.ndarray,
 
     return frame_smile_corrected
 
-
-
 def run_smile_correction_one_row(row: np.ndarray, 
                                  wavelength: np.ndarray, 
                                  wavelength_ref: np.ndarray) -> np.ndarray:
@@ -271,9 +218,6 @@ def run_smile_correction_one_row(row: np.ndarray,
             break
 
     return row_corrected
-
-
-
 
 def run_destriping_correction(cube, correction_coefficients_dict) -> np.ndarray:
     """
