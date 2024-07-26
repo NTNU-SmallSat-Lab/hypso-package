@@ -1294,7 +1294,7 @@ class Hypso1(Hypso):
         #cube_calibrated = run_radiometric_calibration(self.info, self.rawcube, self.calibration_coefficients_dict) / 10
 
 
-        cube_rad_calibrated = run_radiometric_calibration(raw_cube=self.l1a_cube, 
+        cube_rad_calibrated = run_radiometric_calibration(cube=self.l1a_cube, 
                                                           background_value=self.info['background_value'],
                                                           exp=self.info['exp'],
                                                           image_height=self.info['image_height'],
@@ -1303,7 +1303,8 @@ class Hypso1(Hypso):
                                                           rad_coeffs=self.rad_coeffs)
 
         # Smile correction
-        #cube_smile_corrected = run_smile_correction(cube_calibrated, self.calibration_coefficients_dict)
+        cube_smile_corrected = run_smile_correction(cube=cube_rad_calibrated, 
+                                                    smile_coeffs=self.smile_coeffs)
 
         # Destriping
         #cube_destriped = run_destriping_correction(cube_smile_corrected, self.calibration_coefficients_dict)

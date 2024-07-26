@@ -32,6 +32,8 @@ satobj = Hypso1(nc_path=nc_file, points_path=points_file)
 
 #satobj.create_l1b_nc_file()
 
+#print(type(satobj.rad_coeffs))
+
 
 
 

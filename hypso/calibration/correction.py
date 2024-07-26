@@ -67,10 +67,7 @@ def read_coeffs_from_file(coeff_path: str) -> np.ndarray:
     return coefficients
 
 
-
-
-
-
+'''
 def get_coeffs_from_file(coeff_file: str, 
                         capture_type: str = "nominal",
                         x_start: int = None,
@@ -114,143 +111,20 @@ def get_coeffs_from_file(coeff_file: str,
             coeffs = None
 
     return coeffs
-
-
-'''
-def get_rad_coeffs_from_file(rad_coeff_file: str, 
-                             capture_type: str = "nominal",
-                             x_start: int = None,
-                             x_stop: int = None,
-                             y_start: int = None,
-                             y_stop: int = None,
-                             bin_x: int = None) -> np.ndarray:
-
-
-
-def get_smile_coeffs_from_file(smile_coeff_file: str, 
-                                capture_type: str = "nominal",
-                                x_start: int = None,
-                                x_stop: int = None,
-                                y_start: int = None,
-                                y_stop: int = None,
-                                bin_x: int = None) -> np.ndarray:
-    pass
-
-def get_destriping_coeffs_from_file(destriping_coeff_file: str,
-                                    capture_type: str = "nominal",
-                                    x_start: int = None,
-                                    x_stop: int = None,
-                                    y_start: int = None,
-                                    y_stop: int = None,
-                                    bin_x: int = None) -> np.ndarray:
-    pass
-
-def get_spectral_coeffs_from_file(spectral_coeff_file: str,
-                                    capture_type: str = "nominal",
-                                    x_start: int = None,
-                                    x_stop: int = None,
-                                    y_start: int = None,
-                                    y_stop: int = None,
-                                    bin_x: int = None) -> np.ndarray:
-    pass
 '''
 
 
-
-'''
-def get_coefficients_from_dict(coeff_dict: dict, satobj) -> dict:
-    """
-    Get the coefficients from the csv files contained in a dictionary.
-
-    :param coeff_dict: Dictionary containing the paths of the csv files to read
-    :param satobj: Hypso satellite object
-
-    :return: Dictionary containing the 2D coefficients read from the csv files
-    """
-
-    coeffs = coeff_dict.copy()
-    for k in coeff_dict:
-        # Coefficients Custom (needs trimming)
-        if "full" in str(coeff_dict[k]):
-            bin_x = satobj.info["bin_factor"]
-            full_coeff = read_coeffs_from_file(coeff_dict[k])
-            coeffs[k] = crop_and_bin_matrix(
-                full_coeff,
-                satobj.info["x_start"],
-                satobj.info["x_stop"],
-                satobj.info["y_start"],
-                satobj.info["y_stop"],
-                bin_x)
-        # Just read coefficients
-        elif "nominal" in str(coeff_dict[k]) or "wide" in str(coeff_dict[k]):
-            coeffs[k] = read_coeffs_from_file(coeff_dict[k])
-
-        else:
-            coeff_dict[k] = None
-
-    return coeffs
-'''
-
-'''
-def run_radiometric_calibration(info_sat: dict, raw_cube: np.ndarray, correction_coefficients_dict: dict) -> np.ndarray:
-    """
-    Radiometrically Calibrate the Raw Cube (digital counts) to Radiance
-
-    :param info_sat: Dictionary containing capture information
-    :param raw_cube: Numpy array containing digital countes 3-channel cube
-    :param correction_coefficients_dict: Dictionary containing the 2D coefficients for correction
-
-    :return: Corrected 3-channel cube
-    """
-
-    DEBUG = False
-
-    if correction_coefficients_dict["radiometric"] is None:
-        return raw_cube.copy()
-
-    print("Radiometric Correction Ongoing")
-
-    background_value = info_sat['background_value']
-    exp = info_sat['exp']
-    image_height = info_sat['image_height']
-    image_width = info_sat['image_width']
-
-    # Radiometric calibration
-    num_frames = info_sat["frame_count"]
-    cube_calibrated = np.zeros([num_frames, image_height, image_width])
-
-    if DEBUG:
-        print("F:", num_frames, "H:", image_height, "W:", image_width)
-        print("Radioshape: ",
-              correction_coefficients_dict["radiometric"].shape)
-
-    for i in range(num_frames):
-        frame = raw_cube[i, :, :]
-        # Radiometric Calibration
-        frame_calibrated = apply_radiometric_calibration(
-            frame, exp, background_value, correction_coefficients_dict["radiometric"])
-
-        cube_calibrated[i, :, :] = frame_calibrated
-
-    l1b_cube = cube_calibrated
-
-    return l1b_cube
-'''
-
-
-
-
-def run_radiometric_calibration(raw_cube: np.ndarray, 
+def run_radiometric_calibration(cube: np.ndarray, 
                                 background_value: int,
                                 exp: int,
                                 image_height: int,
                                 image_width: int,
                                 frame_count: int,
-                                rad_coeffs) -> np.ndarray:
+                                rad_coeffs: np.ndarray) -> np.ndarray:
     """
     Radiometrically Calibrate the Raw Cube (digital counts) to Radiance
 
-    :param raw_cube: Numpy array containing digital countes 3-channel cube
+    :param cube: Numpy array containing digital countes 3-channel cube
     :param background_value: Integer representing capture the background value level.
     :param exp: Integer representing the capture exposure level.
     :param image_height: Integer representing image height. Equivalent to row_count
@@ -266,7 +140,7 @@ def run_radiometric_calibration(raw_cube: np.ndarray,
 
     for i in range(frame_count):
 
-        frame = raw_cube[i, :, :]
+        frame = cube[i, :, :]
 
         frame_rad_calibrated = run_radiometric_calibration_one_frame(frame, 
                                                                      exp, 
@@ -276,7 +150,6 @@ def run_radiometric_calibration(raw_cube: np.ndarray,
         cube_rad_calibrated[i, :, :] = frame_rad_calibrated
 
     return cube_rad_calibrated
-
 
 def run_radiometric_calibration_one_frame(frame: np.ndarray,
                                           exp: float,
@@ -297,60 +170,14 @@ def run_radiometric_calibration_one_frame(frame: np.ndarray,
     """
 
     frame = frame - background_value
+
     frame_rad_calibrated = frame * rad_coeffs / exp
 
     return frame_rad_calibrated
 
 
-def smile_correction_one_row(row, w, w_ref) -> np.ndarray:
-    """
-    Applies smile correction. Use cubic spline interpolation to resample one row onto the correct
-    wavelengths/bands from a reference wavelength/band array to correct for the smile effect.
-
-    :param row: Data row to apply smile correction
-    :param w:
-    :param w_ref:
-
-    :return: Row corrected for smile effect
-    """
-
-    row_interpolated = interpolate.splrep(w, row)
-    row_corrected = interpolate.splev(w_ref, row_interpolated)
-    # Set values for wavelengths below 400 nm to zero
-    for i in range(len(w_ref)):
-        w = w_ref[i]
-        if w < 400:
-            row_corrected[i] = 0
-        else:
-            break
-    return row_corrected
-
-
-def smile_correction_one_frame(frame, spectral_band_matrix) -> np.ndarray:
-    """
-    Run smile correction on each row in a frame, using the center row as the reference wavelength/band for
-    smile correction.
-
-    :param frame: 2D frame on which to apply smile correction
-    :param spectral_band_matrix: Spectral coefficients (Wavelength)
-
-    :return: Corrected frame after smile correction
-    """
-
-    image_height, image_width = frame.shape
-    center_row_no = int(image_height / 2)
-    w_ref = spectral_band_matrix[center_row_no]
-    frame_smile_corrected = np.zeros([image_height, image_width])
-    for i in range(image_height):  # For each row
-        this_w = spectral_band_matrix[i]
-        this_row = frame[i]
-        # Correct row
-        row_corrected = smile_correction_one_row(this_row, this_w, w_ref)
-        frame_smile_corrected[i, :] = row_corrected
-    return frame_smile_corrected
-
-
-def run_smile_correction(cube, correction_coefficients_dict: dict) -> np.ndarray:
+def run_smile_correction(cube: np.ndarray, 
+                         smile_coeffs: np.ndarray) -> np.ndarray:
     """
     Run smile correction on each frame in a cube, using the center row in the frame as the reference wavelength/band
     for smile correction.
@@ -360,20 +187,92 @@ def run_smile_correction(cube, correction_coefficients_dict: dict) -> np.ndarray
     :return:
     """
 
-    if correction_coefficients_dict["smile"] is None:
-        return cube.copy()
+    #if smile_coeffs is None:
+    #    return cube.copy()
 
-    print("Smile Correction Ongoing")
+    #spectral_band_matrix = smile_coeffs
 
-    spectral_band_matrix = correction_coefficients_dict["smile"]
     num_frames, image_height, image_width = cube.shape
+
     cube_smile_corrected = np.zeros([num_frames, image_height, image_width])
+
     for i in range(num_frames):
-        this_frame = cube[i, :, :]
-        frame_smile_corrected = smile_correction_one_frame(
-            this_frame, spectral_band_matrix)
+
+        frame = cube[i, :, :]
+
+        frame_smile_corrected = run_smile_correction_one_frame(frame, smile_coeffs)
+
         cube_smile_corrected[i, :, :] = frame_smile_corrected
+
     return cube_smile_corrected
+
+
+def run_smile_correction_one_frame(frame: np.ndarray,
+                                   smile_coeffs: np.ndarray) -> np.ndarray:
+    """
+    Run smile correction on each row in a frame, using the center row as the reference wavelength/band for
+    smile correction.
+
+    :param frame: 2D frame on which to apply smile correction
+    :param smile_coeffs: Spectral coefficients (Wavelength)
+
+    :return: Corrected frame after smile correction
+    """
+
+    image_height, image_width = frame.shape
+
+    center_row_no = int(image_height / 2)
+
+    wavelength_ref = smile_coeffs[center_row_no]
+
+    frame_smile_corrected = np.zeros([image_height, image_width])
+
+    for i in range(image_height):  # For each row
+
+        wavelength = smile_coeffs[i]
+
+        row = frame[i]
+
+        # Correct row
+        row_corrected = run_smile_correction_one_row(row, 
+                                                     wavelength, 
+                                                     wavelength_ref)
+
+        frame_smile_corrected[i, :] = row_corrected
+
+    return frame_smile_corrected
+
+
+
+def run_smile_correction_one_row(row: np.ndarray, 
+                                 wavelength: np.ndarray, 
+                                 wavelength_ref: np.ndarray) -> np.ndarray:
+    """
+    Applies smile correction. Use cubic spline interpolation to resample one row onto the correct
+    wavelengths/bands from a reference wavelength/band array to correct for the smile effect.
+
+    :param row: Data row to apply smile correction
+    :param wavelength:
+    :param wavelength_ref:
+
+    :return: Row corrected for smile effect
+    """
+
+    row_interpolated = interpolate.splrep(wavelength, row)
+
+    row_corrected = interpolate.splev(wavelength_ref, row_interpolated)
+
+    # Set values for wavelengths below 400 nm to zero
+    for i in range(len(wavelength_ref)):
+        wavelength = wavelength_ref[i]
+        if wavelength < 400:
+            row_corrected[i] = 0
+        else:
+            break
+
+    return row_corrected
+
+
 
 
 def run_destriping_correction(cube, correction_coefficients_dict) -> np.ndarray:
