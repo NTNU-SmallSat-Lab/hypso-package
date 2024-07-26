@@ -245,7 +245,8 @@ def run_radiometric_calibration(raw_cube: np.ndarray,
                                 exp: int,
                                 image_height: int,
                                 image_width: int,
-                                correction_coefficients_dict: dict) -> np.ndarray:
+                                frame_count: int,
+                                rad_coeffs) -> np.ndarray:
     """
     Radiometrically Calibrate the Raw Cube (digital counts) to Radiance
 
@@ -254,54 +255,34 @@ def run_radiometric_calibration(raw_cube: np.ndarray,
     :param exp: Integer representing the capture exposure level.
     :param image_height: Integer representing image height. Equivalent to row_count
     :param image_width: Integer representing image width. Equivalent to column_count divided by bin_factor (or bin_x)
+    :param frame_count: Integer representing number of frames.
     :param correction_coefficients_dict: Dictionary containing the 2D coefficients for correction
 
     :return: Corrected 3-channel cube
     """
 
-    #DEBUG = False
-
-    #if correction_coefficients_dict["radiometric"] is None:
-    #    return raw_cube.copy()
-
-    #print("Radiometric Correction Ongoing")
-
-    #background_value = info_sat['background_value']
-    #exp = info_sat['exp']
-    #image_height = info_sat['image_height']
-    #image_width = info_sat['image_width']
-
     # Radiometric calibration
-    num_frames = info_sat["frame_count"]
-    cube_calibrated = np.zeros([num_frames, image_height, image_width])
+    cube_rad_calibrated = np.zeros([frame_count, image_height, image_width])
 
-    if DEBUG:
-        print("F:", num_frames, "H:", image_height, "W:", image_width)
-        print("Radioshape: ",
-              correction_coefficients_dict["radiometric"].shape)
+    for i in range(frame_count):
 
-    for i in range(num_frames):
         frame = raw_cube[i, :, :]
-        # Radiometric Calibration
-        frame_calibrated = apply_radiometric_calibration(
-            frame, exp, background_value, correction_coefficients_dict["radiometric"])
 
-        cube_calibrated[i, :, :] = frame_calibrated
+        frame_rad_calibrated = run_radiometric_calibration_one_frame(frame, 
+                                                                     exp, 
+                                                                     background_value, 
+                                                                     rad_coeffs)
 
-    l1b_cube = cube_calibrated
+        cube_rad_calibrated[i, :, :] = frame_rad_calibrated
 
-    return l1b_cube
-
-
+    return cube_rad_calibrated
 
 
-
-
-def apply_radiometric_calibration(
-        frame: np.ndarray,
-        exp: float,
-        background_value: float,
-        radiometric_calibration_coefficients: np.ndarray):
+def run_radiometric_calibration_one_frame(frame: np.ndarray,
+                                          exp: float,
+                                          background_value: float,
+                                          rad_coeffs: np.ndarray) -> np.ndarray:
+    
     """
     Applies radiometric calibration. Assumes input is 12-bit values, and that the radiometric calibration
     coefficients are the same size as the input image. Note: radiometric calibration coefficients have original
@@ -310,15 +291,15 @@ def apply_radiometric_calibration(
     :param frame: 2D frame to apply radiometric calibration
     :param exp: Exposure value
     :param background_value: Background value
-    :param radiometric_calibration_coefficients: 2D array of radio calibration coefficients
+    :param rad_coeffs: 2D array of radio calibration coefficients
 
     :return: Calibrated frame 2D array
     """
 
     frame = frame - background_value
-    frame_calibrated = frame * radiometric_calibration_coefficients / exp
+    frame_rad_calibrated = frame * rad_coeffs / exp
 
-    return frame_calibrated
+    return frame_rad_calibrated
 
 
 def smile_correction_one_row(row, w, w_ref) -> np.ndarray:

@@ -150,12 +150,8 @@ class Hypso1(Hypso):
         self._set_calibration_coeffs()
 
         self._set_wavelengths()
-
-        for key in self.info.keys():
-            print(key)
-            print(type(self.info[key]))
         
-        #self._generate_l1b_cube()
+        self._generate_l1b_cube()
 
         # Correction Coefficients ----------------------------------------
         #self.calibration_coefficients_dict = get_coefficients_from_dict(self.calibration_coeffs_file_dict, self)
@@ -1284,27 +1280,36 @@ class Hypso1(Hypso):
         return df_band
 
 
-    def _generate_l1b_cube(self) -> np.ndarray:
+    def _generate_l1b_cube(self) -> None:
         """
         Get calibrated and corrected cube. Includes Radiometric, Smile and Destriping Correction.
             Assumes all coefficients has been adjusted to the frame size (cropped and
             binned), and that the data cube contains 12-bit values.
 
-        :return: Calibrated and corrected hyperspectral cube as a Numpy Array
+        :return: None
         """
 
         # Radiometric calibration
         # TODO: The factor by 10 is to fix a bug in which the coeff have a factor of 10
-        cube_calibrated = run_radiometric_calibration(self.info, self.rawcube, self.calibration_coefficients_dict) / 10
+        #cube_calibrated = run_radiometric_calibration(self.info, self.rawcube, self.calibration_coefficients_dict) / 10
+
+
+        cube_rad_calibrated = run_radiometric_calibration(raw_cube=self.l1a_cube, 
+                                                          background_value=self.info['background_value'],
+                                                          exp=self.info['exp'],
+                                                          image_height=self.info['image_height'],
+                                                          image_width=self.info['image_width'],
+                                                          frame_count=self.capture_config['frame_count'],
+                                                          rad_coeffs=self.rad_coeffs)
 
         # Smile correction
-        cube_smile_corrected = run_smile_correction(cube_calibrated, self.calibration_coefficients_dict)
+        #cube_smile_corrected = run_smile_correction(cube_calibrated, self.calibration_coefficients_dict)
 
         # Destriping
-        cube_destriped = run_destriping_correction(cube_smile_corrected, self.calibration_coefficients_dict)
+        #cube_destriped = run_destriping_correction(cube_smile_corrected, self.calibration_coefficients_dict)
 
     
-        self.l1b_cube = cube_destriped
+        #self.l1b_cube = cube_destriped
 
 
 
