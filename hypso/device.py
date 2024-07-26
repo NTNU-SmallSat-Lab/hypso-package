@@ -163,17 +163,6 @@ class Hypso1(Hypso):
         
         self._generate_l1b_cube()
 
-        # Correction Coefficients ----------------------------------------
-        #self.calibration_coefficients_dict = get_coefficients_from_dict(self.calibration_coeffs_file_dict, self)
-
-        # Wavelengths -----------------------------------------------------
-        #self.spectral_coeff_file = self.get_spectral_coefficients_path()
-        #self.spectral_coefficients = get_coefficients_from_file(
-        #    self.spectral_coeff_file)
-        #self.wavelengths = self.spectral_coefficients
-
-        # Calibrate and Correct Cube Variables and load existing L2 Cube  ----------------------------------------
-        #self.l1b_cube = self.get_calibrated_and_corrected_cube()
 
         # Create L1B .nc File
         #self.create_l1b_nc_file()  # Input for ACOLITE
@@ -181,15 +170,13 @@ class Hypso1(Hypso):
         #self.l2a_cube = self.find_existing_l2_cube()
 
         # Georeferencing -----------------------------------------------------
-        if False:
-            self._run_georeferencing()
+        self._run_georeferencing()
 
         # Land Mask -----------------------------------------------------
         # TODO
 
         # Cloud Mask -----------------------------------------------------
         # TODO
-
 
         # Products
         # TODO
@@ -198,9 +185,6 @@ class Hypso1(Hypso):
         self.products['pca'] = None
         self.products['ica'] = None
 
-        # Get SRF
-        if False:
-            self.srf = self.get_srf()
 
 
     def _set_platform(self) -> None:
@@ -240,6 +224,7 @@ class Hypso1(Hypso):
                 self.longitudes = self.longitudes[::-1,:]
                 #datacube = datacube[:, ::-1, :]
 
+                # TODO remove lat and lon in info dict
                 self.info["lat"] = self.latitudes
                 self.info["lon"] = self.longitudes
 
@@ -252,6 +237,7 @@ class Hypso1(Hypso):
                 self.longitudes = self.longitudes[::-1,::-1]
                 #datacube = datacube[:, ::-1, :]
 
+                # TODO remove lat and lon in info dict
                 self.info["lat"] = self.latitudes
                 self.info["lon"] = self.longitudes
 
@@ -267,6 +253,10 @@ class Hypso1(Hypso):
         Get Spectral Response Functions (SRF) from HYPSO for each of the 120 bands. Theoretical FWHM of 3.33nm is
         used to estimate Sigma for an assumed gaussian distribution of each SRF per band.
         """
+
+        if not self.wavelengths:
+            self.srf = None
+
         fwhm_nm = 3.33
         sigma_nm = fwhm_nm / (2 * np.sqrt(2 * np.log(2)))
 
