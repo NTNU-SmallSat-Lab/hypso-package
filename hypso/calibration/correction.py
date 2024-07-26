@@ -133,14 +133,9 @@ def run_smile_correction(cube: np.ndarray,
     for smile correction.
 
     :param cube: 3-channel spectral cube
-    :param correction_coefficients_dict: Dictionary containing the coefficients for smile correction
+    :param smile_coeffs: Dictionary containing the coefficients for smile correction
     :return:
     """
-
-    #if smile_coeffs is None:
-    #    return cube.copy()
-
-    #spectral_band_matrix = smile_coeffs
 
     num_frames, image_height, image_width = cube.shape
 
@@ -219,26 +214,25 @@ def run_smile_correction_one_row(row: np.ndarray,
 
     return row_corrected
 
-def run_destriping_correction(cube, correction_coefficients_dict) -> np.ndarray:
+def run_destriping_correction(cube: np.ndarray, 
+                              destriping_coeffs: np.ndarray) -> np.ndarray:
     """
     Apply destriping correction matrix.
 
     :param cube: 3-channel spectral cube
-    :param correction_coefficients_dict: Dictionary containing the 2D coefficients for destriping
+    :param destriping_coeffs: Dictionary containing the 2D coefficients for destriping
 
     :return: 3-channel array for destriping correction
     """
 
+    #print("Destriping Correction Ongoing")
 
-    if correction_coefficients_dict["destriping"] is None:
-        return cube.copy()
-
-    print("Destriping Correction Ongoing")
-
-    destriping_correction_matrix = correction_coefficients_dict["destriping"]
     # print(destriping_correction_matrix.shape)
     # print(cube.shape)
-    # cube_delined = copy.deepcopy(cube)
-    # cube_delined[:, 1:] -= destriping_correction_matrix[:-1]
-    cube_delined = cube * destriping_correction_matrix
-    return cube_delined
+    # cube_destriped = copy.deepcopy(cube)
+    # cube_destriped[:, 1:] -= destriping_correction_matrix[:-1]
+
+    #cube_destriped = cube * destriping_coeffs
+    cube_destriped= np.multiply(cube, destriping_coeffs)
+
+    return cube_destriped
