@@ -31,6 +31,155 @@ R_pl = 6356752.0
 hypso_height_sensor = 1216
 
 
+
+
+def interpolate_at_frame(adcs_pos_df: pd.DataFrame,
+                         adcs_quat_df: pd.DataFrame,
+                         timestamps_srv: np.ndarray,
+                         frame_count: int,
+                         additional_time_offset: float=0.0, 
+                         fps: float=-1.0,
+                         exposure: float=-1.0,
+                         verbose=False) -> pd.DataFrame:
+    """
+    Function to interpolate at the frame based on the quaternion, position and timestamps
+
+    :param adcs_pos_df: Formatted position information from ADCS
+    :param adcs_quat_df: Formatted quaternion information from ADCS
+    :param timestamps_srv: Timestamps_srv variable from timing
+    :param frame_count:  Line/frames/rows in image. Frame_count attribute from capture_config
+    :param additional_time_offset: Offset for timestamps
+    :param fps: FPS or framerate attribute from capture_config
+    :param exposure: Exposure attribute from capture_config
+
+    :return pd.DataFrame:
+    """
+
+    # 1. Reading .csv file with ECI position info
+    posdata = adcs_pos_df
+    pos_time_col_index = 0
+    eci_x_col_index = 1
+    eci_y_col_index = 2
+    eci_z_col_index = 3
+
+    if verbose:
+        print('ECI position samples: ', posdata.shape[0])
+
+    # 2. Reading .csv file with GPS info
+    quatdata = adcs_quat_df
+    quat_time_col_index = 0
+    q0_col_index = 1
+    q1_col_index = 2
+    q2_col_index = 3
+    q3_col_index = 4
+
+    if verbose:
+        print('Quaternion samples: ', quatdata.shape[0])
+
+    # 3. Reading frame timestamps
+
+    if isinstance(timestamps_srv, np.ma.MaskedArray):
+        flashtimes = timestamps_srv.data
+    else:
+        flashtimes = timestamps_srv
+
+    # Add offset
+    flashtimes = flashtimes + additional_time_offset
+
+    ## workaround for making the timestamps smoother. Does not actually smooth out the data.
+    if fps > 0.0:
+        starttime = flashtimes[0]
+        for i in range(flashtimes.shape[0]):
+            flashtimes[i] = starttime - exposure / (2 * 1000.0) + i / fps
+
+    # Inclusion of frame times in ADCS telemetry time series check
+
+    # ADCS data time boundary
+    adcs_ts_start = posdata.iloc[0, 0]
+    adcs_ts_end = posdata.iloc[-1, 0]
+
+    frame_ts_start = flashtimes[0]
+    frame_ts_end = flashtimes[-1]
+
+    if verbose:
+        print(f'ADCS time range: {adcs_ts_start:17.6f} to {adcs_ts_end:17.6f}')
+        print(f'Frame time range: {frame_ts_start:17.6f} to {frame_ts_end:17.6f}\n')
+
+    if frame_ts_start < adcs_ts_start:
+        print('ERROR: Frame timestamps begin earlier than ADCS data!')
+        exit(-1)
+    if frame_ts_end > adcs_ts_end:
+        print('ERROR: Frame timestamps end later than ADCS data!')
+        exit(-1)
+
+    a = quatdata.values[:, 0] > flashtimes[0]
+    b = quatdata.values[:, 0] < flashtimes[-1]
+
+    if verbose:
+        print(f'{np.sum(a & b)} sample(s) inside frame time range')
+        print(f'Interpolating {frame_count:d} frames')
+
+    posdata_time_unix = posdata.values[:, pos_time_col_index].astype(np.float64)
+
+    posdata_eci_x = posdata.values[:, eci_x_col_index].astype(np.float64)
+    posdata_eci_y = posdata.values[:, eci_y_col_index].astype(np.float64)
+    posdata_eci_z = posdata.values[:, eci_z_col_index].astype(np.float64)
+
+    # USE THIS IF TIME IS GIVEN AS A DATETIME STRING
+    # quatdata_time_unix = np.zeros(quatdata.shape[0]).astype('float64')
+    # for i, dto in enumerate(posdata.values[:,quat_time_col_index]):
+    #    dt = pd.to_datetime(dto)
+    #    dt_utc = dt.replace(tzinfo=datetime.timezone.utc)
+    #    quatdata_time_unix[i] = dt_utc.timestamp()
+
+    # USE THIS IF TIME IS GIVEN AS A UNIX TIMESTAMP
+    quatdata_time_unix = quatdata.values[:, quat_time_col_index].astype(np.float64)
+
+    quatdata_q0 = quatdata.values[:, q0_col_index].astype(np.float64)
+    quatdata_q1 = quatdata.values[:, q1_col_index].astype(np.float64)
+    quatdata_q2 = quatdata.values[:, q2_col_index].astype(np.float64)
+    quatdata_q3 = quatdata.values[:, q3_col_index].astype(np.float64)
+
+    ##############################################################################
+
+    interpolation_method = 'linear'  # 'cubic' causes errors sometimes: "ValueError: Expect x to not have duplicates"
+
+    posdata_eci_x_interp = si.griddata(posdata_time_unix, posdata_eci_x, flashtimes, method=interpolation_method)
+    posdata_eci_y_interp = si.griddata(posdata_time_unix, posdata_eci_y, flashtimes, method=interpolation_method)
+    posdata_eci_z_interp = si.griddata(posdata_time_unix, posdata_eci_z, flashtimes, method=interpolation_method)
+
+    quatdata_q0_interp = si.griddata(quatdata_time_unix, quatdata_q0, flashtimes, method=interpolation_method)
+    quatdata_q1_interp = si.griddata(quatdata_time_unix, quatdata_q1, flashtimes, method=interpolation_method)
+    quatdata_q2_interp = si.griddata(quatdata_time_unix, quatdata_q2, flashtimes, method=interpolation_method)
+    quatdata_q3_interp = si.griddata(quatdata_time_unix, quatdata_q3, flashtimes, method=interpolation_method)
+
+    # print(quatdata_q0.shape, quatdata_q0_interp.shape)
+
+    flashindices = np.linspace(0, frame_count - 1, frame_count).astype(np.int32)
+
+    data = {
+        'timestamp': flashtimes,
+        'frame index': flashindices,
+        'eci x [m]': posdata_eci_x_interp,
+        'eci y [m]': posdata_eci_y_interp,
+        'eci z [m]': posdata_eci_z_interp,
+        'q_eta': quatdata_q0_interp,
+        'q_e1': quatdata_q1_interp,
+        'q_e2': quatdata_q2_interp,
+        'q_e3': quatdata_q3_interp
+    }
+
+    frametime_pose = pd.DataFrame(data)
+
+    #This used to written to frametime-pose.csv
+    return frametime_pose 
+
+
+
+
+
+
+
 def numpy_norm(np_array) -> float:
     """
     Gets the norm of an array
