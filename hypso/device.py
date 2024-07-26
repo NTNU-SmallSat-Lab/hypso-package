@@ -158,6 +158,8 @@ class Hypso1(Hypso):
         self._set_calibration_coeffs()
 
         self._set_wavelengths()
+
+        self._set_srf()
         
         self._generate_l1b_cube()
 
