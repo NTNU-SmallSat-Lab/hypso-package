@@ -35,5 +35,17 @@ satobj = Hypso1(nc_path=nc_file, points_path=points_file)
 #print(type(satobj.rad_coeffs))
 
 
+#print(type(satobj.timing['timestamps_srv']))
+
+
+#for idx, stamp in enumerate(satobj.timing['timestamps_srv']):
+#    current_txt = '{:4d}'.format(idx) + ', ' + str(stamp) + '\n'
+#    print(current_txt)
+
+#for key in satobj.timing.keys():
+#    print(key)
+#    print(type(satobj.timing[key]))
+
+
 
 
