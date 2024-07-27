@@ -19,6 +19,18 @@ def load_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, np.ndarray]:
         dimensions
     """
     # Get metadata
+    #quaternion_csv_path = Path(nc_info["tmp_dir"], "quaternion.csv")
+    #position_csv_path = Path(nc_info["tmp_dir"], "position.csv")
+    #timestamps_srv_path = Path(nc_info["tmp_dir"], "timestamps_services.txt")
+    #frametime_pose_csv_path = Path(nc_info["tmp_dir"], "frametime-pose.csv")
+    # TODO: Check if local-angles.csv is to be used or sun-azimuth.dat and etc
+    #local_angles_csv_path = Path(nc_info["tmp_dir"], "local-angles.csv")
+    #sat_azimuth_path = Path(nc_info["tmp_dir"], "sat-azimuth.dat")
+    #sat_zenith_path = Path(nc_info["tmp_dir"], "sat-zenith.dat")
+    #solar_azimuth_path = Path(nc_info["tmp_dir"], "sun-azimuth.dat")
+    #solar_zenith_path = Path(nc_info["tmp_dir"], "sun-zenith.dat")
+    #latitude_dataPath = Path(nc_info["tmp_dir"], "latitudes.dat")
+    #longitude_dataPath = Path(nc_info["tmp_dir"], "longitudes.dat")
 
     nc_capture_config = get_capture_config_from_nc_file(nc_file_path)
 
@@ -36,67 +48,6 @@ def load_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, np.ndarray]:
     #nc_info = create_tmp_dir(nc_file_path=nc_file_path, info=nc_info)
 
     return nc_capture_config, nc_timing, nc_target_coords, nc_adcs, nc_dimensions, nc_rawcube
-
-# TODO
-def load_nc_old(nc_file_path: Path, standard_dimensions: dict) -> Tuple[dict, np.ndarray, tuple]:
-    """
-
-    NOTE: old load_nc() function. This one generates a bunch of data files in a tmp directory
-
-    Load l1a.nc Hypso Capture file 
-
-    :param nc_file_path: Absolute path to the l1a.nc file
-    :param standard_dimensions: Dictionary with Standard Hypso allowed dimensions
-
-    :return: "info" Dictionary with Hypso capture information, "adcs" Dictionary with Hypso ADCS information, raw cube numpy array (digital counts) and capture spatial
-        dimensions
-    """
-    # Get metadata
-    nc_info, spatial_dimensions = get_metainfo_from_nc_file(nc_file_path, standard_dimensions)
-
-    nc_adcs = get_adcs_from_nc_file(nc_file_path, standard_dimensions)
-
-    nc_info = create_tmp_dir(nc_file_path=nc_file_path, info=nc_info)
-
-    # Create temporary position.csv and quaternion.csv
-    nc_info = georeference.create_adcs_timestamps_files(nc_file_path, nc_info)
-
-    FRAME_TIMESTAMP_TUNE_OFFSET = 0.0
-    quaternion_csv_path = Path(nc_info["tmp_dir"], "quaternion.csv")
-    position_csv_path = Path(nc_info["tmp_dir"], "position.csv")
-    timestamps_srv_path = Path(nc_info["tmp_dir"], "timestamps_services.txt")
-    frametime_pose_csv_path = Path(nc_info["tmp_dir"], "frametime-pose.csv")
-    # TODO: Check if local-angles.csv is to be used or sun-azimuth.dat and etc
-    local_angles_csv_path = Path(nc_info["tmp_dir"], "local-angles.csv")
-    sat_azimuth_path = Path(nc_info["tmp_dir"], "sat-azimuth.dat")
-    sat_zenith_path = Path(nc_info["tmp_dir"], "sat-zenith.dat")
-    solar_azimuth_path = Path(nc_info["tmp_dir"], "sun-azimuth.dat")
-    solar_zenith_path = Path(nc_info["tmp_dir"], "sun-zenith.dat")
-
-    latitude_dataPath = Path(nc_info["tmp_dir"], "latitudes.dat")
-    longitude_dataPath = Path(nc_info["tmp_dir"], "longitudes.dat")
-
-    if not frametime_pose_csv_path.is_file():
-        georeference.interpolate_at_frame(pos_csv_path=position_csv_path,
-                                          quat_csv_path=quaternion_csv_path,
-                                          flash_csv_path=timestamps_srv_path,
-                                          additional_time_offset=FRAME_TIMESTAMP_TUNE_OFFSET,
-                                          framerate=nc_info["fps"],
-                                          exposure=nc_info["exposure"])
-
-    if not local_angles_csv_path.is_file():
-        georeference.geometry_computation(framepose_data_path=frametime_pose_csv_path,
-                                          hypso_height=nc_info["row_count"])  # frame_height = row_count
-
-    nc_info = get_local_angles(sat_azimuth_path, sat_zenith_path,
-                               solar_azimuth_path, solar_zenith_path,
-                               nc_info, spatial_dimensions)
-
-    nc_info = get_lat_lon_2d(latitude_dataPath, longitude_dataPath, nc_info, spatial_dimensions)
-
-    nc_rawcube = get_raw_cube_from_nc_file(nc_file_path)
-
-    return nc_info, nc_adcs, nc_rawcube, spatial_dimensions
 
 # TODO
 def get_lat_lon_2d(latitude_dataPath: Path, longitude_dataPath: Path, info: dict, spatial_dimensions: tuple) -> dict:
