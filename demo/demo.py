@@ -47,5 +47,4 @@ satobj = Hypso1(nc_path=nc_file, points_path=points_file)
 #    print(type(satobj.timing[key]))
 
 
-
-
+satobj.get_geometry_information()

@@ -87,6 +87,7 @@ class Hypso:
         self.capture_region = None
 
         # Initialize dimensions
+        self.dimensions = None
         self.spatial_dimensions = (956, 684)  # 1092 x variable
         self.standard_dimensions = {
             "nominal": 956,  # Along frame_count
@@ -160,7 +161,12 @@ class Hypso1(Hypso):
 
         self._set_capture_region()
 
-        self.capture_config, self.timing, self.target_coords, self.adcs, self.l1a_cube = load_nc(self.nc_path)
+        self.capture_config, \
+            self.timing, \
+            self.target_coords, \
+            self.adcs, \
+            self.dimensions, \
+            self.l1a_cube = load_nc(self.nc_path)
 
         self._set_info_dict()
 
@@ -1501,9 +1507,6 @@ class Hypso1(Hypso):
 
             self.wavelengths = self.spectral_coeffs
 
-
-
-
     def _set_adcs_dataframes(self) -> None:
         self._set_adcs_pos_dataframe()
         self._set_adcs_quat_dataframe()
@@ -1540,16 +1543,37 @@ class Hypso1(Hypso):
 
         self.adcs_quat_df = quat_df
 
+    def get_geometry_information(self) -> None:
+
+        # Notes:
+        # - along_track, frame_count, lines, rows, y, latitude: 956, 598
+        # - cross_track, row_count, image_height, samples, cols, x, longitude: 684, 1092
+        # - spectral, image_width, bands, z: 120
+        print('Spatial dimensions: ' + str(self.spatial_dimensions))
+        print('Standard dimensions: ' + str(self.standard_dimensions))
+        print('Row count: ' + str(self.capture_config['row_count']))
+        print('Image height: ' + str(self.info['image_height']))
+        print('Image width: ' + str(self.info['image_width']))
+        print('Frame count: ' + str(self.capture_config['frame_count']))
+        #print('Frame height: ' + str(frame_height))
+        print('Lines: ' + str(self.dimensions['lines']))
+        print('Samples: ' + str(self.dimensions['samples']))
+        print('Bands: ' + str(self.dimensions['bands']))
 
     def _run_geometry(self) -> None:
 
-        frametime_pose = interpolate_at_frame(adcs_pos_df=self.adcs_pos_df,
+        framepose_data = interpolate_at_frame(adcs_pos_df=self.adcs_pos_df,
                                               adcs_quat_df=self.adcs_quat_df,
                                               timestamps_srv=self.timing['timestamps_srv'],
                                               frame_count=self.capture_config['frame_count'],
                                               fps=self.capture_config['fps'],
                                               exposure=self.capture_config['exposure']
                                               )
+
+        geometry_computation(framepose_data=framepose_data,
+                             image_height=self.info['image_height']
+                             )
+
 
         #geometry_computation()
 
