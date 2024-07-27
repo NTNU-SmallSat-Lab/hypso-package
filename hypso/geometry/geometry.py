@@ -169,10 +169,12 @@ def interpolate_at_frame(adcs_pos_df: pd.DataFrame,
         'q_e3': quatdata_q3_interp
     }
 
+    #This used to written to frametime-pose.csv
     frametime_pose = pd.DataFrame(data)
 
-    #This used to written to frametime-pose.csv
-    return frametime_pose 
+    framepose_data = frametime_pose 
+
+    return framepose_data 
 
 
 
@@ -449,30 +451,23 @@ def get_wkt_points(latlon_top, latlon_mid_top, latlon_mid, latlon_mid_bot, latlo
     return string
 
 
-# PLOTTING FUNCTIONS
 
-
-
-
-def geometry_computation(framepose_data_path, hypso_height=684) -> None:
+def geometry_computation(framepose_data: pd.DataFrame,
+                         image_height: int=684) -> None:
     """
     Compute geometry using the framepose data
 
     :param framepose_data_path:
-    :param hypso_height: Height of the Hypso capture
+    :param image_height: Height of the Hypso capture
 
     :return: No return.
     """
     print('Geometric Computations')
 
-    # print('  This script requires:')
-    # print('    a path to a \'frametime pose file\'')
-    # print('    optional the data height in pixels (default 684)')
     # This is a kind of "east-west offset"
     # the north south offset is in "interpolate_at_frame.py" (as of october 2022)
     additional_time_offset = -650.0 * 0.0 + 0.0
 
-    framepose_data = pd.read_csv(framepose_data_path)
 
     # output_path_band_tif_base = Path(parent_dir, 'geotiff/band_')
     # output_path_rgb_tif = Path(parent_dir, 'geotiff/rgb.tif')
@@ -498,7 +493,7 @@ def geometry_computation(framepose_data_path, hypso_height=684) -> None:
     body_x_itrs = np.zeros([frame_count, 3])
     body_z_itrs = np.zeros([frame_count, 3])
 
-    print(f'Spatial dimensions: {frame_count} frames/lines, {hypso_height} pixels/samples')
+    print(f'Spatial dimensions: {frame_count} frames/lines, {image_height} pixels/samples')
 
     print('  Pixel coordinates ...')  # computing pixel lat,lon's
 
@@ -553,11 +548,11 @@ def geometry_computation(framepose_data_path, hypso_height=684) -> None:
         fov = 8.4  # degrees, theoretical 8.008 deg
 
 
-        top_pixel_angle = pixel_index_to_angle(hypso_height - 1, 266, fov, hypso_height_sensor)
-        mid_top_pixel_angle = pixel_index_to_angle(3 * hypso_height / 4 - 1, 266, fov, hypso_height_sensor)
-        mid_pixel_angle = pixel_index_to_angle(hypso_height / 2 - 1, 266, fov, hypso_height_sensor)
-        mid_bot_pixel_angle = pixel_index_to_angle(hypso_height / 4 - 1, 266, fov, hypso_height_sensor)
-        bot_pixel_angle = pixel_index_to_angle(0, 266, fov, hypso_height_sensor)
+        top_pixel_angle = pixel_index_to_angle(image_height - 1, 266, fov, hypso_height_sensor)
+        mid_top_pixel_angle = pixel_index_to_angle(3 * image_height / 4 - 1, 266, fov, hypso_height_sensor)
+        mid_pixel_angle = pixel_index_to_angle(image_height / 2 - 1, 266, fov, hypso_height_sensor)
+        mid_bot_pixel_angle = pixel_index_to_angle(image_height / 4 - 1, 266, fov, hypso_height_sensor)
+        bot_pixel_angle = pixel_index_to_angle(0, 266, fov, image_height)
 
         view_dir_top = gref.rotate_axis_angle(body_z_itrs[i, :], body_x_itrs[i, :], top_pixel_angle)
         view_dir_mid_top = gref.rotate_axis_angle(body_z_itrs[i, :], body_x_itrs[i, :], mid_top_pixel_angle)
@@ -642,21 +637,17 @@ def geometry_computation(framepose_data_path, hypso_height=684) -> None:
     lat_center = latlon_mid[frame_count // 2, 0] * m.pi / 180.0
     lon_center = latlon_mid[frame_count // 2, 1] * m.pi / 180.0
 
-
-
     if pointing_off_earth_indicator != frame_count:
         print('At least one pixel was pointing beyond the earth\'s horizon!')
         exit(2)
 
-
-
     print('  Interpolating pixel coordinate gaps ...')
-    pixels_lat = np.zeros([frame_count, hypso_height])
-    pixels_lon = np.zeros([frame_count, hypso_height])
+    pixels_lat = np.zeros([frame_count, image_height])
+    pixels_lon = np.zeros([frame_count, image_height])
 
-    subsample_pixels_indices = np.array([hypso_height, 3 * hypso_height / 4, hypso_height / 2, hypso_height / 4, 1])
+    subsample_pixels_indices = np.array([image_height, 3 * image_height / 4, image_height / 2, image_height / 4, 1])
     # subsample_pixels_indices = np.array([ 1, hypso_height/4, hypso_height/2, 3*hypso_height/4, hypso_height])
-    all_pixels_indices = np.linspace(1, hypso_height, hypso_height)
+    all_pixels_indices = np.linspace(1, image_height, image_height)
 
     # Determining (interpolating) latlon for all pixels (pixels  [0,1,...,682,683] )
 
@@ -671,8 +662,10 @@ def geometry_computation(framepose_data_path, hypso_height=684) -> None:
     print('  Local angles (sun and satellite azimuth and zenith angles) ...')
 
     # must contain "hypso_height//2 - 1" so that local_angles_summary is computed properly
-    subsample_pixels_indices = [0, hypso_height // 4 - 1, hypso_height // 2 - 1, 3 * hypso_height // 4 - 1,
-                                hypso_height - 1]
+    subsample_pixels_indices = [0, image_height // 4 - 1, 
+                                image_height // 2 - 1, 
+                                3 * image_height // 4 - 1,
+                                image_height - 1]
 
     local_angles_summary, allangles = compute_local_angles_2(times, 
                                                              pos_teme, 
@@ -684,16 +677,17 @@ def geometry_computation(framepose_data_path, hypso_height=684) -> None:
                                 columns=['Frame index', 'Frame time', 'latitude [degrees]', 'longitude [degrees]',
                                         'Solar Zenith Angle [degrees]', 'Solar Azimuth Angle [degrees]',
                                         'Satellite Zenith Angle [degrees]', 'Satellite Azimuth Angle [degrees]'])
+    
     local_angles['Frame index'] = local_angles['Frame index'].astype('uint16')
 
 
-    subsample_pixels_indices = np.array([1, hypso_height / 4, hypso_height / 2, 3 * hypso_height / 4, hypso_height])
-    all_pixels_indices = np.linspace(1, hypso_height, hypso_height)
+    subsample_pixels_indices = np.array([1, image_height / 4, image_height / 2, 3 * image_height / 4, image_height])
+    all_pixels_indices = np.linspace(1, image_height, image_height)
 
-    sun_azi_full = np.zeros([frame_count, hypso_height])
-    sun_zen_full = np.zeros([frame_count, hypso_height])
-    sat_azi_full = np.zeros([frame_count, hypso_height])
-    sat_zen_full = np.zeros([frame_count, hypso_height])
+    sun_azi_full = np.zeros([frame_count, image_height])
+    sun_zen_full = np.zeros([frame_count, image_height])
+    sat_azi_full = np.zeros([frame_count, image_height])
+    sat_zen_full = np.zeros([frame_count, image_height])
 
     for i in range(frame_count):
 
@@ -719,7 +713,6 @@ def geometry_computation(framepose_data_path, hypso_height=684) -> None:
     print(f'  Image Center elevation angle: {elevation_angle * 180.0 / m.pi:08.5f}')
     print(f'  Image Center off-nadir angle: {off_nadir_angle * 180.0 / m.pi:08.5f}')
     
-    
     geometric_meta_info ={}
     geometric_meta_info['image_center_lat'] = lat_center * 180.0 / m.pi
     geometric_meta_info['image_center_lon'] = lon_center * 180.0 / m.pi
@@ -733,6 +726,15 @@ def geometry_computation(framepose_data_path, hypso_height=684) -> None:
     sat_zenith = sat_zen_full
 
 
-    return wkt_linestring_footprint, prj_file_contents, local_angles, geometric_meta_info, pixels_lat, pixels_lon, sun_azimuth, sun_zenith, sat_azimuth, sat_zenith
+    return wkt_linestring_footprint, \
+           prj_file_contents, \
+           local_angles, \
+           geometric_meta_info, \
+           pixels_lat, \
+           pixels_lon, \
+           sun_azimuth, \
+           sun_zenith, \
+           sat_azimuth, \
+           sat_zenith
 
 
