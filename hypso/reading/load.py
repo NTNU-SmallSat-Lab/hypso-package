@@ -30,10 +30,12 @@ def load_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, np.ndarray]:
 
     nc_rawcube = get_raw_cube_from_nc_file(nc_file_path)
 
+    nc_dimensions = get_dimensions_from_nc_file(nc_file_path)
+
     # TODO: remove this line
     #nc_info = create_tmp_dir(nc_file_path=nc_file_path, info=nc_info)
 
-    return nc_capture_config, nc_timing, nc_target_coords, nc_adcs, nc_rawcube
+    return nc_capture_config, nc_timing, nc_target_coords, nc_adcs, nc_dimensions, nc_rawcube
 
 # TODO
 def load_nc_old(nc_file_path: Path, standard_dimensions: dict) -> Tuple[dict, np.ndarray, tuple]:
@@ -227,21 +229,6 @@ def get_capture_config_from_nc_file(nc_file_path: Path) -> dict:
 def get_timing_from_nc_file(nc_file_path: Path) -> dict:
 
     timing = {}
-
-    # ------------------------------------------------------------------------
-    # Timestamps -------------------------------------------------------------
-    # ------------------------------------------------------------------------
-    '''
-    with nc.Dataset(nc_file_path, format="NETCDF4") as f:
-        group = f.groups["metadata"]["timing"]
-        # timestamps_services = group.variables["timestamps_srv"][:]
-        # timestamps = group.variables["timestamps"][:]
-        # TODO: Cosider using attribute "capture_start_unix" instead of "capture_start_planned_unix"
-        start_timestamp_capture = getattr(group, "capture_start_unix")  # unix time ms
-
-        if start_timestamp_capture is None or start_timestamp_capture == 0:
-            raise Exception("No Start Timestamp Capture Value available")
-    '''
 
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
         group = f.groups["metadata"]["timing"]
@@ -463,3 +450,16 @@ def get_raw_cube_from_nc_file(nc_file_path: Path) -> np.ndarray:
         raw_cube = np.array(group.variables["Lt"][:], dtype='uint16')
 
         return raw_cube
+
+def get_dimensions_from_nc_file(nc_file_path: Path) -> dict:
+
+    dimensions = {}
+    
+    with nc.Dataset(nc_file_path, format="NETCDF4") as f:
+        group = f.dimensions
+        
+        for key in group.keys():
+            value = group[key]
+            dimensions[key] = len(value)
+                
+    return dimensions
