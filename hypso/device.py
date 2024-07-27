@@ -179,9 +179,7 @@ class Hypso1(Hypso):
 
         self._set_adcs_dataframes()
 
-        self._run_geometry()
-
-        return
+        self._run_geometry_computation()
 
         self._set_calibration_coeff_files()
 
@@ -192,6 +190,8 @@ class Hypso1(Hypso):
         self._set_srf()
         
         self._generate_l1b_cube()
+
+        return
 
         #self.create_l1b_nc_file()  # Input for ACOLITE
 
@@ -1324,6 +1324,65 @@ class Hypso1(Hypso):
 
         return df_band
 
+
+    def _run_radiometric_calibration(self, cube=None) -> np.ndarray:
+
+        # Radiometric calibration
+
+        if cube is None:
+            cube = self.l1a_cube
+
+        if self.verbose:
+            print("[INFO] Running radiometric calibration...")
+
+        cube = run_radiometric_calibration(cube=cube, 
+                                           background_value=self.info['background_value'],
+                                           exp=self.info['exp'],
+                                           image_height=self.info['image_height'],
+                                           image_width=self.info['image_width'],
+                                           frame_count=self.capture_config['frame_count'],
+                                           rad_coeffs=self.rad_coeffs)
+
+        # TODO: The factor by 10 is to fix a bug in which the coeff have a factor of 10
+        #cube_calibrated = run_radiometric_calibration(self.info, self.rawcube, self.calibration_coefficients_dict) / 10
+        cube = cube / 10
+
+        return cube
+
+
+    def _run_smile_correction(self, cube=None) -> np.ndarray:
+
+        # Smile correction
+
+        if cube is None:
+            cube = self.l1a_cube
+
+        if self.verbose:
+            print("[INFO] Running smile correction...")
+
+        cube = run_smile_correction(cube=cube, 
+                                    smile_coeffs=self.smile_coeffs)
+        
+        return cube
+
+    def _run_destriping_correction(self, cube) -> np.ndarray:
+
+        # Destriping
+
+        if cube is None:
+            cube = self.l1a_cube
+
+        if self.verbose:
+            print("[INFO] Running destriping correction...")
+
+        cube = run_destriping_correction(cube=cube, 
+                                         destriping_coeffs=self.destriping_coeffs)
+        
+        return cube
+
+
+
+
     def _generate_l1b_cube(self) -> None:
         """
         Get calibrated and corrected cube. Includes Radiometric, Smile and Destriping Correction.
@@ -1333,30 +1392,9 @@ class Hypso1(Hypso):
         :return: None
         """
 
-        # Radiometric calibration
-        # TODO: The factor by 10 is to fix a bug in which the coeff have a factor of 10
-        #cube_calibrated = run_radiometric_calibration(self.info, self.rawcube, self.calibration_coefficients_dict) / 10
-
-
-        cube = run_radiometric_calibration(cube=self.l1a_cube, 
-                                           background_value=self.info['background_value'],
-                                           exp=self.info['exp'],
-                                           image_height=self.info['image_height'],
-                                           image_width=self.info['image_width'],
-                                           frame_count=self.capture_config['frame_count'],
-                                           rad_coeffs=self.rad_coeffs)
-
-        # Smile correction
-        cube = run_smile_correction(cube=cube, 
-                                    smile_coeffs=self.smile_coeffs)
-
-        # Destriping
-        cube = run_destriping_correction(cube=cube, 
-                                         destriping_coeffs=self.destriping_coeffs)
-
-        self.l1b_cube = cube
-
-        del cube
+        self.l1b_cube = self._run_radiometric_calibration()
+        self.l1b_cube = self._run_smile_correction(cube=self.l1b_cube)
+        self.l1b_cube = self._run_destriping_correction(cube=self.l1b_cube)
 
 
     # TODO
@@ -1569,7 +1607,9 @@ class Hypso1(Hypso):
         print('Samples: ' + str(self.dimensions['samples']))
         print('Bands: ' + str(self.dimensions['bands']))
 
-    def _run_geometry(self) -> None:
+    def _run_geometry_computation(self) -> None:
+
+        print("[INFO] Running frame interpolation...")
 
         framepose_data = interpolate_at_frame(adcs_pos_df=self.adcs_pos_df,
                                               adcs_quat_df=self.adcs_quat_df,
@@ -1579,6 +1619,8 @@ class Hypso1(Hypso):
                                               exposure=self.capture_config['exposure'],
                                               verbose=self.verbose
                                               )
+
+        print("[INFO] Running geometry computation...")
 
         geometry_computation(framepose_data=framepose_data,
                              image_height=self.info['image_height'],

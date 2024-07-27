@@ -63,7 +63,6 @@ def interpolate_at_frame(adcs_pos_df: pd.DataFrame,
     eci_z_col_index = 3
 
     if verbose:
-        print("[INFO] Running frame interpolation...")
         print('  ECI position samples:', posdata.shape[0])
 
     # 2. Reading .csv file with GPS info
@@ -459,9 +458,6 @@ def geometry_computation(framepose_data: pd.DataFrame,
     :return: No return.
     """
 
-    if verbose:
-        print('[INFO] Running geometric computations')
-
     # This is a kind of "east-west offset"
     # the north south offset is in "interpolate_at_frame.py" (as of october 2022)
     additional_time_offset = -650.0 * 0.0 + 0.0
@@ -655,7 +651,7 @@ def geometry_computation(framepose_data: pd.DataFrame,
         pixels_lon[i, :] = si.griddata(subsample_pixels_indices, lons, all_pixels_indices, method='cubic')
 
     if verbose:
-        print('  Computing local angles (sun and satellite azimuth and zenith angles) ...')
+        print('  Computing local angles (sun and satellite azimuth and zenith angles)...')
 
     # must contain "hypso_height//2 - 1" so that local_angles_summary is computed properly
     subsample_pixels_indices = [0, image_height // 4 - 1, 
