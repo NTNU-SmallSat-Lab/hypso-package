@@ -1574,6 +1574,17 @@ class Hypso1(Hypso):
                              image_height=self.info['image_height']
                              )
 
+        '''
+        nc_info = get_local_angles(sat_azimuth_path, sat_zenith_path,
+                                solar_azimuth_path, solar_zenith_path,
+                                nc_info, spatial_dimensions)
+
+        nc_info = get_lat_lon_2d(latitude_dataPath, longitude_dataPath, nc_info, spatial_dimensions)
+
+        nc_rawcube = get_raw_cube_from_nc_file(nc_file_path)
+        '''
+
+
 
         #geometry_computation()
 

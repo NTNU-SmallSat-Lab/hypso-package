@@ -108,6 +108,7 @@ def interpolate_at_frame(adcs_pos_df: pd.DataFrame,
     if frame_ts_start < adcs_ts_start:
         print('ERROR: Frame timestamps begin earlier than ADCS data!')
         exit(-1)
+
     if frame_ts_end > adcs_ts_end:
         print('ERROR: Frame timestamps end later than ADCS data!')
         exit(-1)
@@ -250,7 +251,9 @@ def compute_off_nadir_angle(image_pos, sat_pos) -> float:
     """
     pos_itrf_vp_to_sat = sat_pos - image_pos
     off_nadir_angle = m.acos(np.dot(pos_itrf_vp_to_sat / numpy_norm(pos_itrf_vp_to_sat), sat_pos / numpy_norm(sat_pos)))
+
     # print("Off nadir angle:", off_nadir_angle*180.0/m.pi)
+    
     return off_nadir_angle
 
 
@@ -451,9 +454,10 @@ def get_wkt_points(latlon_top, latlon_mid_top, latlon_mid, latlon_mid_bot, latlo
     return string
 
 
-
+# TODO refactor this function
 def geometry_computation(framepose_data: pd.DataFrame,
-                         image_height: int=684) -> None:
+                         image_height: int=684, 
+                         verbose = False) -> None:
     """
     Compute geometry using the framepose data
 
@@ -462,15 +466,13 @@ def geometry_computation(framepose_data: pd.DataFrame,
 
     :return: No return.
     """
-    print('Geometric Computations')
+
+    if verbose:
+        print('Geometric Computations')
 
     # This is a kind of "east-west offset"
     # the north south offset is in "interpolate_at_frame.py" (as of october 2022)
     additional_time_offset = -650.0 * 0.0 + 0.0
-
-
-    # output_path_band_tif_base = Path(parent_dir, 'geotiff/band_')
-    # output_path_rgb_tif = Path(parent_dir, 'geotiff/rgb.tif')
 
     times = framepose_data.values[:, 0]
     pos_teme = framepose_data.values[:, 2:5]
@@ -478,9 +480,9 @@ def geometry_computation(framepose_data: pd.DataFrame,
 
     frame_count = times.shape[0]
 
-
     # new method
     # computing five points of ground locations (geo codes) along each detector line 
+
     latlon_top = np.zeros([frame_count, 2])
     latlon_mid_top = np.zeros([frame_count, 2])
     latlon_mid = np.zeros([frame_count, 2])
@@ -493,9 +495,9 @@ def geometry_computation(framepose_data: pd.DataFrame,
     body_x_itrs = np.zeros([frame_count, 3])
     body_z_itrs = np.zeros([frame_count, 3])
 
-    print(f'Spatial dimensions: {frame_count} frames/lines, {image_height} pixels/samples')
-
-    print('  Pixel coordinates ...')  # computing pixel lat,lon's
+    if verbose:
+        print(f'Spatial dimensions: {frame_count} frames/lines, {image_height} pixels/samples')
+        print('  Pixel coordinates ...')  # computing pixel lat,lon's
 
     pointing_off_earth_indicator = 0
     for i in range(frame_count):
@@ -544,9 +546,7 @@ def geometry_computation(framepose_data: pd.DataFrame,
         # get top pixel direction by rotating center view (ca. +z axis) around +x axis with positive angle
         # get bottom pixel direction is rotation with negative angle
 
-
         fov = 8.4  # degrees, theoretical 8.008 deg
-
 
         top_pixel_angle = pixel_index_to_angle(image_height - 1, 266, fov, hypso_height_sensor)
         mid_top_pixel_angle = pixel_index_to_angle(3 * image_height / 4 - 1, 266, fov, hypso_height_sensor)
@@ -610,24 +610,28 @@ def geometry_computation(framepose_data: pd.DataFrame,
             pointing_off_earth_indicator += 1
 
         if i == -1:
+
             dt = datetime.datetime.fromtimestamp(times[i], tz=datetime.timezone.utc)
-            print(f'JD number: {gref.get_julian_day_number(dt)} + {(3600 * dt.hour + 60 * dt.minute + dt.second) / ((24 * 3600))}')
-            print(f'GMST radians: {2 * m.pi * gref.get_greenwich_mean_sidereal_time_seconds(dt) / (24 * 3600)}')
-            print(f'campos TEME: [{pos_teme[i, 0]}, {pos_teme[i, 1]}, {pos_teme[i, 2]}]')
-            print(f'campos ITRF: [{campos_itrs[i, 0]}, {campos_itrs[i, 1]}, {campos_itrs[i, 2]}]')
+            if verbose:
+                print(f'JD number: {gref.get_julian_day_number(dt)} + {(3600 * dt.hour + 60 * dt.minute + dt.second) / ((24 * 3600))}')
+                print(f'GMST radians: {2 * m.pi * gref.get_greenwich_mean_sidereal_time_seconds(dt) / (24 * 3600)}')
+                
+                print(f'campos TEME: [{pos_teme[i, 0]}, {pos_teme[i, 1]}, {pos_teme[i, 2]}]')
+                print(f'campos ITRF: [{campos_itrs[i, 0]}, {campos_itrs[i, 1]}, {campos_itrs[i, 2]}]')
 
-            print(f'view dir top: [{view_dir_top[0]}, {view_dir_top[1]}, {view_dir_top[2]}]')
-            print(f'view dir bot: [{view_dir_bot[0]}, {view_dir_bot[1]}, {view_dir_bot[2]}]')
+                print(f'view dir top: [{view_dir_top[0]}, {view_dir_top[1]}, {view_dir_top[2]}]')
+                print(f'view dir bot: [{view_dir_bot[0]}, {view_dir_bot[1]}, {view_dir_bot[2]}]')
 
-            print(f'ellipsoid pos top: [{pos_itrs_viewpoint_top[0]}, {pos_itrs_viewpoint_top[1]}, {pos_itrs_viewpoint_top[2]}]')
-            print(f'ellipsoid pos bot: [{pos_itrs_viewpoint_bot[0]}, {pos_itrs_viewpoint_bot[1]}, {pos_itrs_viewpoint_bot[2]}]')
+                print(f'ellipsoid pos top: [{pos_itrs_viewpoint_top[0]}, {pos_itrs_viewpoint_top[1]}, {pos_itrs_viewpoint_top[2]}]')
+                print(f'ellipsoid pos bot: [{pos_itrs_viewpoint_bot[0]}, {pos_itrs_viewpoint_bot[1]}, {pos_itrs_viewpoint_bot[2]}]')
 
-            print(f'latlon top: {latlon_top[i, 0]}, {latlon_top[i, 1]}')
-            print(f'latlon bot: {latlon_bot[i, 0]}, {latlon_bot[i, 1]}')
+                print(f'latlon top: {latlon_top[i, 0]}, {latlon_top[i, 1]}')
+                print(f'latlon bot: {latlon_bot[i, 0]}, {latlon_bot[i, 1]}')
 
 
+    if verbose:
+        print('  Plotting computations ...')
 
-    print('  Plotting computations ...')
     # Setting altitude to zero to compute satellite ground track from lat lon
     satpos_lat_lon_alt = gref.ecef_to_lat_lon_alt(campos_itrs)
     satpos_lat_lon = satpos_lat_lon_alt.copy()
@@ -638,10 +642,13 @@ def geometry_computation(framepose_data: pd.DataFrame,
     lon_center = latlon_mid[frame_count // 2, 1] * m.pi / 180.0
 
     if pointing_off_earth_indicator != frame_count:
+
         print('At least one pixel was pointing beyond the earth\'s horizon!')
         exit(2)
 
-    print('  Interpolating pixel coordinate gaps ...')
+    if verbose:
+        print('  Interpolating pixel coordinate gaps ...')
+
     pixels_lat = np.zeros([frame_count, image_height])
     pixels_lon = np.zeros([frame_count, image_height])
 
@@ -659,7 +666,8 @@ def geometry_computation(framepose_data: pd.DataFrame,
         pixels_lat[i, :] = si.griddata(subsample_pixels_indices, lats, all_pixels_indices, method='cubic')
         pixels_lon[i, :] = si.griddata(subsample_pixels_indices, lons, all_pixels_indices, method='cubic')
 
-    print('  Local angles (sun and satellite azimuth and zenith angles) ...')
+    if verbose:
+        print('  Local angles (sun and satellite azimuth and zenith angles) ...')
 
     # must contain "hypso_height//2 - 1" so that local_angles_summary is computed properly
     subsample_pixels_indices = [0, image_height // 4 - 1, 
@@ -709,9 +717,10 @@ def geometry_computation(framepose_data: pd.DataFrame,
     elevation_angle = compute_elevation_angle(impos_mid_itrs[frame_count // 2, :], campos_itrs[frame_count // 2, :])
     off_nadir_angle = compute_off_nadir_angle(impos_mid_itrs[frame_count // 2, :], campos_itrs[frame_count // 2, :])
 
-    print(f'  Image Center (lat,lon): ({lat_center * 180.0 / m.pi:08.5f}\t{lon_center * 180.0 / m.pi:09.5f})')
-    print(f'  Image Center elevation angle: {elevation_angle * 180.0 / m.pi:08.5f}')
-    print(f'  Image Center off-nadir angle: {off_nadir_angle * 180.0 / m.pi:08.5f}')
+    if verbose:
+        print(f'  Image Center (lat,lon): ({lat_center * 180.0 / m.pi:08.5f}\t{lon_center * 180.0 / m.pi:09.5f})')
+        print(f'  Image Center elevation angle: {elevation_angle * 180.0 / m.pi:08.5f}')
+        print(f'  Image Center off-nadir angle: {off_nadir_angle * 180.0 / m.pi:08.5f}')
     
     geometric_meta_info ={}
     geometric_meta_info['image_center_lat'] = lat_center * 180.0 / m.pi
