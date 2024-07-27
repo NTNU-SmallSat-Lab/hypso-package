@@ -63,7 +63,8 @@ def interpolate_at_frame(adcs_pos_df: pd.DataFrame,
     eci_z_col_index = 3
 
     if verbose:
-        print('ECI position samples: ', posdata.shape[0])
+        print("[INFO] Running frame interpolation...")
+        print('  ECI position samples:', posdata.shape[0])
 
     # 2. Reading .csv file with GPS info
     quatdata = adcs_quat_df
@@ -74,7 +75,7 @@ def interpolate_at_frame(adcs_pos_df: pd.DataFrame,
     q3_col_index = 4
 
     if verbose:
-        print('Quaternion samples: ', quatdata.shape[0])
+        print('  Quaternion samples:', quatdata.shape[0])
 
     # 3. Reading frame timestamps
 
@@ -102,11 +103,11 @@ def interpolate_at_frame(adcs_pos_df: pd.DataFrame,
     frame_ts_end = flashtimes[-1]
 
     if verbose:
-        print(f'ADCS time range: {adcs_ts_start:17.6f} to {adcs_ts_end:17.6f}')
-        print(f'Frame time range: {frame_ts_start:17.6f} to {frame_ts_end:17.6f}\n')
+        print(f'  ADCS time range: {adcs_ts_start:17.6f} to {adcs_ts_end:17.6f}')
+        print(f'  Frame time range: {frame_ts_start:17.6f} to {frame_ts_end:17.6f}')
 
     if frame_ts_start < adcs_ts_start:
-        print('ERROR: Frame timestamps begin earlier than ADCS data!')
+        print(' ERROR: Frame timestamps begin earlier than ADCS data!')
         exit(-1)
 
     if frame_ts_end > adcs_ts_end:
@@ -117,8 +118,8 @@ def interpolate_at_frame(adcs_pos_df: pd.DataFrame,
     b = quatdata.values[:, 0] < flashtimes[-1]
 
     if verbose:
-        print(f'{np.sum(a & b)} sample(s) inside frame time range')
-        print(f'Interpolating {frame_count:d} frames')
+        print(f'  {np.sum(a & b)} sample(s) inside frame time range')
+        print(f'  Interpolating {frame_count:d} frames')
 
     posdata_time_unix = posdata.values[:, pos_time_col_index].astype(np.float64)
 
@@ -177,12 +178,6 @@ def interpolate_at_frame(adcs_pos_df: pd.DataFrame,
 
     return framepose_data 
 
-
-
-
-
-
-
 def numpy_norm(np_array) -> float:
     """
     Gets the norm of an array
@@ -195,7 +190,6 @@ def numpy_norm(np_array) -> float:
     for i in range(np_array.shape[0]):
         summ += np_array[i] ** 2
     return m.sqrt(summ)
-
 
 def compute_elevation_angle(image_pos, sat_pos) -> float:
     """
@@ -239,7 +233,6 @@ def compute_elevation_angle(image_pos, sat_pos) -> float:
 
     return elevation_angle
 
-
 def compute_off_nadir_angle(image_pos, sat_pos) -> float:
     """
     Compute the off-nadir angle between the image and the satellite position
@@ -253,9 +246,8 @@ def compute_off_nadir_angle(image_pos, sat_pos) -> float:
     off_nadir_angle = m.acos(np.dot(pos_itrf_vp_to_sat / numpy_norm(pos_itrf_vp_to_sat), sat_pos / numpy_norm(sat_pos)))
 
     # print("Off nadir angle:", off_nadir_angle*180.0/m.pi)
-    
-    return off_nadir_angle
 
+    return off_nadir_angle
 
 def pixel_index_to_angle(index, aoi_offset, fov_full, pixels_full) -> float:
     """
@@ -289,7 +281,7 @@ def pixel_index_to_angle(index, aoi_offset, fov_full, pixels_full) -> float:
 # https://pyorbital.readthedocs.io/en/latest/#computing-astronomical-parameters
 # -> from pyorbital import astronomy
 # Function verifies using: https://gml.noaa.gov/grad/antuv/SolarCalc.jsp
-def compute_local_angles(times, pos_teme, latlons) -> np.ndarray:
+def compute_local_angles(times, pos_teme, latlons, verbose=False) -> np.ndarray:
     """
     Compute the local angles on the capture
 
@@ -339,7 +331,7 @@ def compute_local_angles(times, pos_teme, latlons) -> np.ndarray:
 # https://pyorbital.readthedocs.io/en/latest/#computing-astronomical-parameters
 # -> from pyorbital import astronomy
 # Function verified using: https://gml.noaa.gov/grad/antuv/SolarCalc.jsp
-def compute_local_angles_2(times, pos_teme, lats, lons, indices) -> Tuple[np.ndarray, List[np.ndarray]]:
+def compute_local_angles_2(times, pos_teme, lats, lons, indices, verbose=False) -> Tuple[np.ndarray, List[np.ndarray]]:
     """
     Compute the Local Angles of the Capture (Second Variation)
 
@@ -468,7 +460,7 @@ def geometry_computation(framepose_data: pd.DataFrame,
     """
 
     if verbose:
-        print('Geometric Computations')
+        print('[INFO] Running geometric computations')
 
     # This is a kind of "east-west offset"
     # the north south offset is in "interpolate_at_frame.py" (as of october 2022)
@@ -496,8 +488,8 @@ def geometry_computation(framepose_data: pd.DataFrame,
     body_z_itrs = np.zeros([frame_count, 3])
 
     if verbose:
-        print(f'Spatial dimensions: {frame_count} frames/lines, {image_height} pixels/samples')
-        print('  Pixel coordinates ...')  # computing pixel lat,lon's
+        print(f'  Spatial dimensions: {frame_count} frames/lines, {image_height} pixels/samples')
+        print('  Computing pixel latitude and longitude coordinates...')  # computing pixel lat,lon's
 
     pointing_off_earth_indicator = 0
     for i in range(frame_count):
@@ -628,10 +620,6 @@ def geometry_computation(framepose_data: pd.DataFrame,
                 print(f'latlon top: {latlon_top[i, 0]}, {latlon_top[i, 1]}')
                 print(f'latlon bot: {latlon_bot[i, 0]}, {latlon_bot[i, 1]}')
 
-
-    if verbose:
-        print('  Plotting computations ...')
-
     # Setting altitude to zero to compute satellite ground track from lat lon
     satpos_lat_lon_alt = gref.ecef_to_lat_lon_alt(campos_itrs)
     satpos_lat_lon = satpos_lat_lon_alt.copy()
@@ -643,11 +631,11 @@ def geometry_computation(framepose_data: pd.DataFrame,
 
     if pointing_off_earth_indicator != frame_count:
 
-        print('At least one pixel was pointing beyond the earth\'s horizon!')
+        print('[ERROR] At least one pixel was pointing beyond the earth\'s horizon!')
         exit(2)
 
     if verbose:
-        print('  Interpolating pixel coordinate gaps ...')
+        print('  Interpolating pixel coordinate gaps...')
 
     pixels_lat = np.zeros([frame_count, image_height])
     pixels_lon = np.zeros([frame_count, image_height])
@@ -667,7 +655,7 @@ def geometry_computation(framepose_data: pd.DataFrame,
         pixels_lon[i, :] = si.griddata(subsample_pixels_indices, lons, all_pixels_indices, method='cubic')
 
     if verbose:
-        print('  Local angles (sun and satellite azimuth and zenith angles) ...')
+        print('  Computing local angles (sun and satellite azimuth and zenith angles) ...')
 
     # must contain "hypso_height//2 - 1" so that local_angles_summary is computed properly
     subsample_pixels_indices = [0, image_height // 4 - 1, 

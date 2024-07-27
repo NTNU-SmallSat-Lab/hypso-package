@@ -129,6 +129,7 @@ class Hypso:
 
         # DEBUG
         self.DEBUG = False
+        self.verbose = False
 
         #self.rgbGeotiffFilePath = None
         #self.l1cgeotiffFilePath = None
@@ -140,7 +141,7 @@ class Hypso:
 
 
 class Hypso1(Hypso):
-    def __init__(self, nc_path: str, points_path: Union[str, None] = None) -> None:
+    def __init__(self, nc_path: str, points_path: Union[str, None] = None, verbose=False) -> None:
         
         """
         Initialization of HYPSO-1 Class.
@@ -152,6 +153,8 @@ class Hypso1(Hypso):
         """
 
         super().__init__(nc_path=nc_path, points_path=points_path)
+
+        self._set_verbose(verbose=verbose)
 
         self._set_platform()
 
@@ -171,6 +174,8 @@ class Hypso1(Hypso):
         self._set_info_dict()
 
         self._set_capture_type()
+
+        self._set_spatial_dimensions()
 
         self._set_adcs_dataframes()
 
@@ -208,7 +213,8 @@ class Hypso1(Hypso):
         self.products['pca'] = None
         self.products['ica'] = None
 
-
+    def _set_verbose(self, verbose=False):
+        self.verbose = verbose
 
     def _set_platform(self) -> None:
 
@@ -1423,16 +1429,20 @@ class Hypso1(Hypso):
         self._set_capture_name()
         self.capture_region = self.capture_name.split('_')[0].strip('_')
 
+    def _set_spatial_dimensions(self) -> None:
+
+        self.spatial_dimensions = (self.capture_config["frame_count"], self.info["image_height"])
+
+        if self.verbose:
+            print(f"[INFO] Processing capture with dimensions: {self.spatial_dimensions}")
+
+
     def _set_capture_type(self):
 
-        # Update Spatial Dim if not standard
-        rows_img = self.capture_config["frame_count"]  # Due to way image is captured
-        cols_img = self.info["image_height"]
-
-        if rows_img == self.standard_dimensions["nominal"]:
+        if self.capture_config["frame_count"] == self.standard_dimensions["nominal"]:
             self.info["capture_type"] = "nominal"
 
-        elif cols_img ==self.standard_dimensions["wide"]:
+        elif self.info["image_height"] == self.standard_dimensions["wide"]:
             self.info["capture_type"] = "wide"
         else:
             if EXPERIMENTAL_FEATURES:
@@ -1441,9 +1451,8 @@ class Hypso1(Hypso):
             else:
                 raise Exception("Number of Rows (AKA frame_count) Is Not Standard")
 
-        self.spatial_dimensions = (rows_img, cols_img)
-
-        print(f"Processing *{self.info['capture_type']}* image mode with dimensions: {self.spatial_dimensions}")
+        if self.verbose:
+            print(f"[INFO] Processing capture with image mode (capture type): {self.info['capture_type']}")
 
     def _set_info_dict(self) -> None:
 
@@ -1567,11 +1576,13 @@ class Hypso1(Hypso):
                                               timestamps_srv=self.timing['timestamps_srv'],
                                               frame_count=self.capture_config['frame_count'],
                                               fps=self.capture_config['fps'],
-                                              exposure=self.capture_config['exposure']
+                                              exposure=self.capture_config['exposure'],
+                                              verbose=self.verbose
                                               )
 
         geometry_computation(framepose_data=framepose_data,
-                             image_height=self.info['image_height']
+                             image_height=self.info['image_height'],
+                             verbose=self.verbose
                              )
 
         '''
