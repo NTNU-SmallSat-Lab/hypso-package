@@ -215,7 +215,7 @@ class Hypso1(Hypso):
         # End processing timer
         proc_time = time.time() - t
         if self.verbose:
-            print('[INFO] Processing complete! Processing time: ' + str(proc_time) + ' seconds.')
+            print('[INFO] Processing complete! Elapsed time: ' + str(proc_time) + ' seconds.')
 
 
         return None
@@ -1415,7 +1415,7 @@ class Hypso1(Hypso):
                 raise Exception("Number of Rows (AKA frame_count) Is Not Standard")
 
         if self.verbose:
-            print(f"[INFO] Capture image mode/capture type: {self.info['capture_type']}")
+            print(f"[INFO] Capture capture type: {self.info['capture_type']}")
 
         return None
 
@@ -1535,7 +1535,7 @@ class Hypso1(Hypso):
 
     def _run_geometry_computation(self) -> None:
 
-        print("[INFO] Running frame interpolation...", end=" ")
+        print("[INFO] Running frame interpolation...")
 
         framepose_data = interpolate_at_frame(adcs_pos_df=self.adcs_pos_df,
                                               adcs_quat_df=self.adcs_quat_df,
@@ -1545,9 +1545,9 @@ class Hypso1(Hypso):
                                               exposure=self.capture_config['exposure'],
                                               verbose=self.verbose
                                               )
-        print("Done!")
+        print("...Done!")
 
-        print("[INFO] Running geometry computation...", end =" ")
+        print("[INFO] Running geometry computation...")
 
         wkt_linestring_footprint, \
            prj_file_contents, \
@@ -1563,7 +1563,29 @@ class Hypso1(Hypso):
                                              verbose=self.verbose
                                              )
 
-        print("Done!")
+        print("...Done!")
+
+
+        self.wkt_linestring_footprint = wkt_linestring_footprint
+        self.prj_file_contents = prj_file_contents
+        self.local_angles = local_angles
+        self.geometric_meta_info = geometric_meta_info
+
+        self.solar_zenith_angles = sun_zenith.reshape(self.spatial_dimensions)
+        self.solar_azimuth_angles = sun_azimuth.reshape(self.spatial_dimensions)
+
+        self.sat_zenith_angles = sat_zenith.reshape(self.spatial_dimensions)
+        self.sat_azimuth_angles = sat_azimuth.reshape(self.spatial_dimensions)
+
+        #self.lat_original = pixels_lat.reshape(self.spatial_dimensions)
+        #self.lon_original = pixels_lon.reshape(self.spatial_dimensions)
+
+        self.latitudes_original = pixels_lat.reshape(self.spatial_dimensions)
+        self.longitudes_original = pixels_lon.reshape(self.spatial_dimensions)
+
+        
+
+
 
 
         # TODO: finish this:

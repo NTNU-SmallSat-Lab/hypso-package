@@ -79,35 +79,7 @@ def get_lat_lon_2d(latitude_dataPath: Path, longitude_dataPath: Path, info: dict
 
     return info
 
-# TODO
-def get_local_angles(sat_azimuth_path: Path, sat_zenith_path: Path,
-                     solar_azimuth_path: Path, solar_zenith_path: Path, info: dict, spatial_dimensions: tuple) -> dict:
-    """
-    Load Satellite and Solar Angles from generated tmp files
 
-    :param sat_azimuth_path: Absolute path to Satellite (Viewing) Azimuth .dat file
-    :param sat_zenith_path: Absolute path to Satellite (Viewing) Zenith .dat file
-    :param solar_azimuth_path: Absolute path to Solar Azimuth .dat file
-    :param solar_zenith_path: Absolute path to Solar Zenith .dat file
-    :param info: Info Dictionary to mutate with new information
-    :param spatial_dimensions: Spatial dimension of the Hypso capture
-
-    :return: Updated "info" dictionary with the Arrays of the solar and satellite (viewing) angles
-    """
-
-    info["solar_zenith_angle"] = np.fromfile(solar_zenith_path, dtype="float32")
-    info["solar_zenith_angle"] = info["solar_zenith_angle"].reshape(spatial_dimensions)
-
-    info["solar_azimuth_angle"] = np.fromfile(solar_azimuth_path, dtype="float32")
-    info["solar_azimuth_angle"] = info["solar_azimuth_angle"].reshape(spatial_dimensions)
-
-    info["sat_zenith_angle"] = np.fromfile(sat_zenith_path, dtype="float32")
-    info["sat_zenith_angle"] = info["sat_zenith_angle"].reshape(spatial_dimensions)
-
-    info["sat_azimuth_angle"] = np.fromfile(sat_azimuth_path, dtype="float32")
-    info["sat_azimuth_angle"] = info["sat_azimuth_angle"].reshape(spatial_dimensions)
-
-    return info
 
 def load_adcs_from_nc_file(nc_file_path: Path) -> Tuple[dict, tuple]:
     """
