@@ -18,48 +18,37 @@ from hypso.geometry import interpolate_at_frame, \
                            geometry_computation
 
 from hypso.georeference import start_coordinate_correction, generate_full_geotiff, generate_rgb_geotiff
-from hypso.reading import load_nc, load_nc_old
+from hypso.reading import load_l1a_nc_cube, load_l1a_nc_metadata
 from hypso.utils import find_dir, find_file, find_all_files
 from hypso.atmospheric import run_py6s, run_acolite
 from typing import Literal, Union
 from datetime import datetime
 
-
 from hypso.georeferencing import georeferencing
 from hypso.georeferencing.utils import check_star_tracker_orientation
 
-
+import time
 import scipy.interpolate as si
-
-
 
 EXPERIMENTAL_FEATURES = True
 
+SUPPORTED_PRODUCT_LEVELS = ["l1a", "l1b", "l2a"]
+
 class Hypso:
 
-    def __init__(self, nc_path: str, points_path: Union[str, None] = None):
+    def __init__(self, hypso_path: str, points_path: Union[str, None] = None):
 
         """
         Initialization of HYPSO Class.
 
-        :param nc_path: Absolute path to "L1a.nc" file
+        :param hypso_path: Absolute path to "L1a.nc" file
         :param points_path: Absolute path to the corresponding ".points" files generated with QGIS for manual geo
             referencing. (Optional. Default=None)
 
         """
-
-        # Make NetCDF file path an absolute path
-        self.nc_path = Path(nc_path).absolute()
-
-        # Check that nc_path file is a NetCDF file:
-        if not self.nc_path.suffix == '.nc':
-            raise Exception("Incorrect HYPSO Path. Only .nc files supported")
-
-        # Make .points file path an absolute path (if possible)
-        if points_path is not None:
-            self.points_path = Path(points_path).absolute()
-        else:
-            self.points_path = None
+        # Set NetCDF and .points file paths
+        self._set_hypso_path(hypso_path=hypso_path)
+        self._set_points_path(points_path=points_path)
 
         # Initialize calibration file paths:
         self.rad_coeff_file = None
@@ -85,6 +74,9 @@ class Hypso:
         # Initialize capture name and target
         self.capture_name = None
         self.capture_region = None
+
+        # Initialize capture date and time
+        self.capture_datetime = None
 
         # Initialize dimensions
         self.dimensions = None
@@ -137,59 +129,68 @@ class Hypso:
 
 
 
+    def _set_hypso_path(self, hypso_path=None) -> None:
 
+        if hypso_path is None:
+            hypso_path = self.hypso_path
+
+        # Make NetCDF file path an absolute path
+        self.hypso_path = Path(hypso_path).absolute()
+
+
+        
+
+    def _set_points_path(self, points_path=None):
+
+        # Make .points file path an absolute path (if possible)
+        if points_path is not None:
+            self.points_path = Path(points_path).absolute()
+        else:
+            self.points_path = None
+        
 
 
 class Hypso1(Hypso):
-    def __init__(self, nc_path: str, points_path: Union[str, None] = None, verbose=False) -> None:
+
+    def __init__(self, hypso_path: str, points_path: Union[str, None] = None, verbose=False) -> None:
         
         """
         Initialization of HYPSO-1 Class.
 
-        :param nc_path: Absolute path to "L1a.nc" file
+        :param hypso_path: Absolute path to "L1a.nc" file
         :param points_path: Absolute path to the corresponding ".points" files generated with QGIS for manual geo
             referencing. (Optional. Default=None)
 
         """
 
-        super().__init__(nc_path=nc_path, points_path=points_path)
+        # Start processing timer
+        t = time.time()
 
-        self._set_verbose(verbose=verbose)
+        super().__init__(hypso_path=hypso_path, points_path=points_path)
 
+        # General -----------------------------------------------------
         self._set_platform()
-
         self._set_sensor()
+        self._set_verbose(verbose=verbose)
+ 
+        # Load L1a file -----------------------------------------------------
+        self._load_l1a_file()
 
-        self._set_capture_name()
-
-        self._set_capture_region()
-
-        self.capture_config, \
-            self.timing, \
-            self.target_coords, \
-            self.adcs, \
-            self.dimensions, \
-            self.l1a_cube = load_nc(self.nc_path)
-
-        self._set_info_dict()
-
-        self._set_capture_type()
-
-        self._set_spatial_dimensions()
-
-        self._set_adcs_dataframes()
-
+        # Georeferencing -----------------------------------------------------
+        self._run_georeferencing()
         self._run_geometry_computation()
 
-        self._set_calibration_coeff_files()
+        # Calibration -----------------------------------------------------
+        self._run_calibration()
+        #self._write_l1b_file()
 
-        self._set_calibration_coeffs()
+        #self._run_atmospheric_correction()
 
-        self._set_wavelengths()
+        # End processing timer
+        proc_time = time.time() - t
+        if self.verbose:
+            print('[INFO] Processing complete! Processing time: ' + str(proc_time) + ' seconds.')
 
-        self._set_srf()
-        
-        self._generate_l1b_cube()
 
         return
 
@@ -197,8 +198,7 @@ class Hypso1(Hypso):
 
         #self.l2a_cube = self.find_existing_l2_cube()
 
-        # Georeferencing -----------------------------------------------------
-        self._run_georeferencing()
+
 
         # Land Mask -----------------------------------------------------
         # TODO
@@ -213,6 +213,52 @@ class Hypso1(Hypso):
         self.products['pca'] = None
         self.products['ica'] = None
 
+
+
+    def _run_calibration(self):
+
+        self._set_calibration_coeff_files()
+        self._set_calibration_coeffs()
+        self._set_wavelengths()
+        self._set_srf()
+        self._generate_l1b_cube()
+
+
+    def _load_l1a_file(self) -> None:
+
+        self._check_l1a_file_format()
+
+        self._set_capture_name()
+        self._set_capture_region()
+        self._set_capture_datetime()
+
+        self._load_l1a_cube()
+        self._load_l1a_metadata()
+
+        self._set_info_dict()
+        self._set_capture_type()
+        self._set_spatial_dimensions()
+        self._set_adcs_dataframes()
+
+
+    def _check_l1a_file_format(self) -> None:
+
+        # Check that hypso_path file is a NetCDF file:
+        if not self.hypso_path.suffix == '.nc':
+            raise Exception("Incorrect HYPSO Path. Only .nc files supported")
+
+    def _load_l1a_cube(self) -> None:
+
+        self.l1a_cube = load_l1a_nc_cube(self.hypso_path)
+
+    def _load_l1a_metadata(self) -> None:
+
+        self.capture_config, \
+            self.timing, \
+            self.target_coords, \
+            self.adcs, \
+            self.dimensions = load_l1a_nc_metadata(self.hypso_path)
+
     def _set_verbose(self, verbose=False):
         self.verbose = verbose
 
@@ -223,6 +269,11 @@ class Hypso1(Hypso):
     def _set_sensor(self) -> None:
 
         self.sensor = 'hypso1_hsi'
+
+    def _set_capture_datetime(self) -> None:
+
+        # TODO: implement this function
+        self.capture_datetime = None
 
     def _run_georeferencing(self) -> None:
 
@@ -343,7 +394,7 @@ class Hypso1(Hypso):
 
         # TODO: can this be implemented with satpy NetCDF reader?
 
-        hypso_nc_path = self.nc_path
+        hypso_nc_path = self.hypso_path
         old_nc = nc.Dataset(hypso_nc_path, 'r', format='NETCDF4')
         new_path = hypso_nc_path
         new_path = str(new_path).replace('l1a.nc', 'l1b.nc')
@@ -818,7 +869,6 @@ class Hypso1(Hypso):
         # Update
         self.info["nc_file"] = Path(new_path)
 
-
     # TODO
     def create_geotiff(self, product: Literal["L2-ACOLITE", "L2-6SV1", "L1C"] = "L2-ACOLITE", force_reload: bool = False,
                        atmos_dict: Union[dict, None] = None) -> None:
@@ -913,27 +963,6 @@ class Hypso1(Hypso):
             print("Deleting geotiff Directory...")
             import shutil
             shutil.rmtree(geotiff_dir, ignore_errors=True)
-
-    # TODO
-    def find_geotiffs(self) -> None:
-        """
-        Recursively find GeoTiffs inside the "top_folder_name" directory in the "info" dictionary from the Hypso
-        class. GeoTiffs paths are stored in the Hypso object attribures, rgbGeotiffFilePath, l1cgeotiffFilePath and
-        l2geotiffFilePath.
-
-        :return: No return.
-        """
-        top_folder_name = self.info["top_folder_name"]
-        self.rgbGeotiffFilePath = find_file(top_folder_name, "rgba_8bit", ".tif")
-        self.l1cgeotiffFilePath = find_file(top_folder_name, "-full_L1C", ".tif")
-
-        L2_dict = {}
-        L2_files = find_all_files(top_folder_name, "-full_L2", ".tif")
-        if len(L2_files) > 0:
-            for f in find_all_files(top_folder_name, "-full_L2", ".tif"):
-                key = str(f.stem).split("_")[-1]
-                L2_dict[key] = f
-            self.l2geotiffFilePath = L2_dict
 
     # TODO
     def find_existing_l2_cube(self) -> Union[dict, None]:
@@ -1163,6 +1192,339 @@ class Hypso1(Hypso):
         self._set_destriping_coeff_file()
         self._set_spectral_coeff_file()
   
+
+    def _run_radiometric_calibration(self, cube=None) -> np.ndarray:
+
+        # Radiometric calibration
+
+        if cube is None:
+            cube = self.l1a_cube
+
+        if self.verbose:
+            print("[INFO] Running radiometric calibration...", end =" ")
+
+        cube = run_radiometric_calibration(cube=cube, 
+                                           background_value=self.info['background_value'],
+                                           exp=self.info['exp'],
+                                           image_height=self.info['image_height'],
+                                           image_width=self.info['image_width'],
+                                           frame_count=self.capture_config['frame_count'],
+                                           rad_coeffs=self.rad_coeffs)
+
+        # TODO: The factor by 10 is to fix a bug in which the coeff have a factor of 10
+        #cube_calibrated = run_radiometric_calibration(self.info, self.rawcube, self.calibration_coefficients_dict) / 10
+        cube = cube / 10
+
+        if self.verbose:
+            print("Done!")
+
+        return cube
+
+    def _run_smile_correction(self, cube=None) -> np.ndarray:
+
+        # Smile correction
+
+        if cube is None:
+            cube = self.l1a_cube
+
+        if self.verbose:
+            print("[INFO] Running smile correction...", end =" ")
+
+        cube = run_smile_correction(cube=cube, 
+                                    smile_coeffs=self.smile_coeffs)
+        
+        if self.verbose:
+            print("Done!")
+
+        return cube
+
+    def _run_destriping_correction(self, cube) -> np.ndarray:
+
+        # Destriping
+
+        if cube is None:
+            cube = self.l1a_cube
+
+        if self.verbose:
+            print("[INFO] Running destriping correction...", end =" ")
+
+        cube = run_destriping_correction(cube=cube, 
+                                         destriping_coeffs=self.destriping_coeffs)
+        
+        if self.verbose:
+            print("Done!")
+
+        return cube
+
+    def _generate_l1b_cube(self) -> None:
+        """
+        Get calibrated and corrected cube. Includes Radiometric, Smile and Destriping Correction.
+            Assumes all coefficients has been adjusted to the frame size (cropped and
+            binned), and that the data cube contains 12-bit values.
+
+        :return: None
+        """
+
+        self.l1b_cube = self._run_radiometric_calibration()
+        self.l1b_cube = self._run_smile_correction(cube=self.l1b_cube)
+        self.l1b_cube = self._run_destriping_correction(cube=self.l1b_cube)
+
+    # TODO
+    def get_toa_reflectance(self) -> np.ndarray:
+        """
+        Convert Top Of Atmosphere (TOA) Radiance to TOA Reflectance.
+
+        :return: Array with TOA Reflectance.
+        """
+        # Get Local variables
+        srf = self.srf
+        toa_radiance = self.l1b_cube
+
+        scene_date = parser.isoparse(self.info['iso_time'])
+        julian_day = scene_date.timetuple().tm_yday
+        solar_zenith = self.info['solar_zenith_angle']
+
+        # Read Solar Data
+        solar_data_path = str(files('hypso.atmospheric').joinpath("Solar_irradiance_Thuillier_2002.csv"))
+        solar_df = pd.read_csv(solar_data_path)
+
+        # Create new solar X with a new delta
+        solar_array = np.array(solar_df)
+        current_num = solar_array[0, 0]
+        delta = 0.01
+        new_solar_x = [solar_array[0, 0]]
+        while current_num <= solar_array[-1, 0]:
+            current_num = current_num + delta
+            new_solar_x.append(current_num)
+
+        # Interpolate for Y with original solar data
+        new_solar_y = np.interp(new_solar_x, solar_array[:, 0], solar_array[:, 1])
+
+        # Replace solar Dataframe
+        solar_df = pd.DataFrame(np.column_stack((new_solar_x, new_solar_y)), columns=solar_df.columns)
+
+        # Estimation of TOA Reflectance
+        band_number = 0
+        toa_reflectance = np.empty_like(toa_radiance)
+        for single_wl, single_srf in srf:
+            # Resample HYPSO SRF to new solar wavelength
+            resamp_srf = np.interp(new_solar_x, single_wl, single_srf)
+            weights_srf = resamp_srf / np.sum(resamp_srf)
+            ESUN = np.sum(solar_df['mW/m2/nm'].values * weights_srf)  # units matche HYPSO from device.py
+
+            # Earth-Sun distance (from day of year) using julian date
+            # http://physics.stackexchange.com/questions/177949/earth-sun-distance-on-a-given-day-of-the-year
+            distance_sun = 1 - 0.01672 * np.cos(0.9856 * (
+                    julian_day - 4))
+
+            # Get toa_reflectance
+            solar_angle_correction = np.cos(np.radians(solar_zenith))
+            multiplier = (ESUN * solar_angle_correction) / (np.pi * distance_sun ** 2)
+            toa_reflectance[:, :, band_number] = toa_radiance[:, :, band_number] / multiplier
+
+            band_number = band_number + 1
+
+        return toa_reflectance
+
+    def _set_capture_name(self) -> None:
+
+        capture_name = self.hypso_path.stem
+
+        for pl in SUPPORTED_PRODUCT_LEVELS:
+
+            if "-" + pl in capture_name:
+                capture_name = capture_name.replace("-" + pl, "")
+
+        #if "-l1a" in capture_name:
+        #    capture_name = capture_name.replace("-l1a", "")
+
+        self.capture_name = capture_name
+
+    def _set_capture_region(self) -> None:
+
+        self._set_capture_name()
+        self.capture_region = self.capture_name.split('_')[0].strip('_')
+
+    def _set_spatial_dimensions(self) -> None:
+
+        self.spatial_dimensions = (self.capture_config["frame_count"], self.info["image_height"])
+
+        if self.verbose:
+            print(f"[INFO] Capture spatial dimensions: {self.spatial_dimensions}")
+
+    def _set_capture_type(self):
+
+        if self.capture_config["frame_count"] == self.standard_dimensions["nominal"]:
+            self.info["capture_type"] = "nominal"
+
+        elif self.info["image_height"] == self.standard_dimensions["wide"]:
+            self.info["capture_type"] = "wide"
+        else:
+            if EXPERIMENTAL_FEATURES:
+                print("Number of Rows (AKA frame_count) Is Not Standard")
+                self.info["capture_type"] = "custom"
+            else:
+                raise Exception("Number of Rows (AKA frame_count) Is Not Standard")
+
+        if self.verbose:
+            print(f"[INFO] Capture image mode/capture type: {self.info['capture_type']}")
+
+    def _set_info_dict(self) -> None:
+
+        info = {}
+
+        info["nc_file"] = self.hypso_path
+
+        if all([self.target_coords.get('latc'), self.target_coords.get('lonc')]):
+            info['target_area'] = self.target_coords['latc'] + ' ' + self.target_coords['lonc']
+        else:
+            info['target_area'] = None
+
+        info["background_value"] = 8 * self.capture_config["bin_factor"]
+
+        info["x_start"] = self.capture_config["aoi_x"]
+        info["x_stop"] = self.capture_config["aoi_x"] + self.capture_config["column_count"]
+        info["y_start"] = self.capture_config["aoi_y"]
+        info["y_stop"] = self.capture_config["aoi_y"] + self.capture_config["row_count"]
+        info["exp"] = self.capture_config["exposure"] / 1000  # in seconds
+
+        info["image_height"] = self.capture_config["row_count"]
+        info["image_width"] = int(self.capture_config["column_count"] / self.capture_config["bin_factor"])
+        info["im_size"] = info["image_height"] * info["image_width"]
+
+        # TODO: Verify offset validity. Sivert had 20 here
+        UNIX_TIME_OFFSET = 20
+
+        info["start_timestamp_capture"] = int(self.timing['capture_start_unix']) + UNIX_TIME_OFFSET
+
+        # Get END_TIMESTAMP_CAPTURE
+        #    cant compute end timestamp using frame count and frame rate
+        #     assuming some default value if fps and exposure not available
+        try:
+            info["end_timestamp_capture"] = info["start_timestamp_capture"] + self.capture_config["frame_count"] / self.capture_config["fps"] + self.capture_config["exposure"] / 1000.0
+        except:
+            print("fps or exposure values not found assuming 20.0 for each")
+            info["end_timestamp_capture"] = info["start_timestamp_capture"] + self.capture_config["frame_count"] / 20.0 + 20.0 / 1000.0
+
+        # using 'awk' for floating point arithmetic ('expr' only support integer arithmetic): {printf \"%.2f\n\", 100/3}"
+        time_margin_start = 641.0  # 70.0
+        time_margin_end = 180.0  # 70.0
+        info["start_timestamp_adcs"] = info["start_timestamp_capture"] - time_margin_start
+        info["end_timestamp_adcs"] = info["end_timestamp_capture"] + time_margin_end
+
+        info["unixtime"] = info["start_timestamp_capture"]
+        info["iso_time"] = datetime.utcfromtimestamp(info["unixtime"]).isoformat()
+
+
+        self.info = info
+
+    def _set_calibration_coeffs(self) -> None:
+
+        self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file)
+        self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file)
+        self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
+        self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
+
+    def _set_wavelengths(self) -> None:
+
+        if self.spectral_coeffs is not None:
+
+            self.wavelengths = self.spectral_coeffs
+
+    def _set_adcs_dataframes(self) -> None:
+        self._set_adcs_pos_dataframe()
+        self._set_adcs_quat_dataframe()
+
+    def _set_adcs_pos_dataframe(self) -> None:
+
+        # TODO move DataFrame formatting related code to geometry
+        position_headers = ["timestamp", "eci x [m]", "eci y [m]", "eci z [m]"]
+        
+        timestamps = self.adcs["timestamps"]
+        pos_x = self.adcs["position_x"]
+        pos_y = self.adcs["position_y"]
+        pos_z = self.adcs["position_z"]
+
+        pos_array = np.column_stack((timestamps, pos_x, pos_y, pos_z))
+        pos_df = pd.DataFrame(pos_array, columns=position_headers)
+
+        self.adcs_pos_df = pos_df
+
+    def _set_adcs_quat_dataframe(self) -> None:
+
+        # TODO move DataFrame formatting related code to geometry
+        quaternion_headers = ["timestamp", "quat_0", "quat_1", "quat_2", "quat_3", "Control error [deg]"]
+
+        timestamps = self.adcs["timestamps"]
+        quat_s = self.adcs["quaternion_s"]
+        quat_x = self.adcs["quaternion_x"]
+        quat_y = self.adcs["quaternion_y"]
+        quat_z = self.adcs["quaternion_z"]
+        control_error = self.adcs["control_error"]
+
+        quat_array = np.column_stack((timestamps, quat_s, quat_x, quat_y, quat_z, control_error))
+        quat_df = pd.DataFrame(quat_array, columns=quaternion_headers)
+
+        self.adcs_quat_df = quat_df
+
+
+    def _run_geometry_computation(self) -> None:
+
+        print("[INFO] Running frame interpolation...")
+
+        framepose_data = interpolate_at_frame(adcs_pos_df=self.adcs_pos_df,
+                                              adcs_quat_df=self.adcs_quat_df,
+                                              timestamps_srv=self.timing['timestamps_srv'],
+                                              frame_count=self.capture_config['frame_count'],
+                                              fps=self.capture_config['fps'],
+                                              exposure=self.capture_config['exposure'],
+                                              verbose=self.verbose
+                                              )
+
+        print("[INFO] Running geometry computation...", end =" ")
+
+        geometry_computation(framepose_data=framepose_data,
+                             image_height=self.info['image_height'],
+                             verbose=self.verbose
+                             )
+
+        print("Done!")
+
+        '''
+        nc_info = get_local_angles(sat_azimuth_path, sat_zenith_path,
+                                solar_azimuth_path, solar_zenith_path,
+                                nc_info, spatial_dimensions)
+
+        nc_info = get_lat_lon_2d(latitude_dataPath, longitude_dataPath, nc_info, spatial_dimensions)
+
+        nc_rawcube = get_raw_cube_from_nc_file(nc_file_path)
+        '''
+
+
+
+        #geometry_computation()
+
+
+
+    # Public methods
+
+    def get_geometry_information(self) -> None:
+
+        # Notes:
+        # - along_track, frame_count, lines, rows, y, latitude: 956, 598
+        # - cross_track, row_count, image_height, samples, cols, x, longitude: 684, 1092
+        # - spectral, image_width, bands, z: 120
+        print('Spatial dimensions: ' + str(self.spatial_dimensions))
+        print('Standard dimensions: ' + str(self.standard_dimensions))
+        print('Row count: ' + str(self.capture_config['row_count']))
+        print('Image height: ' + str(self.info['image_height']))
+        print('Image width: ' + str(self.info['image_width']))
+        print('Frame count: ' + str(self.capture_config['frame_count']))
+        #print('Frame height: ' + str(frame_height))
+        print('Lines: ' + str(self.dimensions['lines']))
+        print('Samples: ' + str(self.dimensions['samples']))
+        print('Bands: ' + str(self.dimensions['bands']))
+
     # TODO
     def get_spectra(self, position_dict: dict, product: Literal["L1C", "L2-6SV1", "L2-ACOLITE"] = "L1C",
                     filename: Union[str, None] = None, plot: bool = True) -> Union[pd.DataFrame, None]:
@@ -1325,338 +1687,19 @@ class Hypso1(Hypso):
         return df_band
 
 
-    def _run_radiometric_calibration(self, cube=None) -> np.ndarray:
-
-        # Radiometric calibration
-
-        if cube is None:
-            cube = self.l1a_cube
-
-        if self.verbose:
-            print("[INFO] Running radiometric calibration...")
-
-        cube = run_radiometric_calibration(cube=cube, 
-                                           background_value=self.info['background_value'],
-                                           exp=self.info['exp'],
-                                           image_height=self.info['image_height'],
-                                           image_width=self.info['image_width'],
-                                           frame_count=self.capture_config['frame_count'],
-                                           rad_coeffs=self.rad_coeffs)
-
-        # TODO: The factor by 10 is to fix a bug in which the coeff have a factor of 10
-        #cube_calibrated = run_radiometric_calibration(self.info, self.rawcube, self.calibration_coefficients_dict) / 10
-        cube = cube / 10
-
-        return cube
-
-
-    def _run_smile_correction(self, cube=None) -> np.ndarray:
-
-        # Smile correction
-
-        if cube is None:
-            cube = self.l1a_cube
-
-        if self.verbose:
-            print("[INFO] Running smile correction...")
-
-        cube = run_smile_correction(cube=cube, 
-                                    smile_coeffs=self.smile_coeffs)
-        
-        return cube
-
-    def _run_destriping_correction(self, cube) -> np.ndarray:
-
-        # Destriping
-
-        if cube is None:
-            cube = self.l1a_cube
-
-        if self.verbose:
-            print("[INFO] Running destriping correction...")
-
-        cube = run_destriping_correction(cube=cube, 
-                                         destriping_coeffs=self.destriping_coeffs)
-        
-        return cube
-
-
-
-
-    def _generate_l1b_cube(self) -> None:
-        """
-        Get calibrated and corrected cube. Includes Radiometric, Smile and Destriping Correction.
-            Assumes all coefficients has been adjusted to the frame size (cropped and
-            binned), and that the data cube contains 12-bit values.
-
-        :return: None
-        """
-
-        self.l1b_cube = self._run_radiometric_calibration()
-        self.l1b_cube = self._run_smile_correction(cube=self.l1b_cube)
-        self.l1b_cube = self._run_destriping_correction(cube=self.l1b_cube)
-
-
-    # TODO
-    def get_toa_reflectance(self) -> np.ndarray:
-        """
-        Convert Top Of Atmosphere (TOA) Radiance to TOA Reflectance.
-
-        :return: Array with TOA Reflectance.
-        """
-        # Get Local variables
-        srf = self.srf
-        toa_radiance = self.l1b_cube
-
-        scene_date = parser.isoparse(self.info['iso_time'])
-        julian_day = scene_date.timetuple().tm_yday
-        solar_zenith = self.info['solar_zenith_angle']
-
-        # Read Solar Data
-        solar_data_path = str(files('hypso.atmospheric').joinpath("Solar_irradiance_Thuillier_2002.csv"))
-        solar_df = pd.read_csv(solar_data_path)
-
-        # Create new solar X with a new delta
-        solar_array = np.array(solar_df)
-        current_num = solar_array[0, 0]
-        delta = 0.01
-        new_solar_x = [solar_array[0, 0]]
-        while current_num <= solar_array[-1, 0]:
-            current_num = current_num + delta
-            new_solar_x.append(current_num)
-
-        # Interpolate for Y with original solar data
-        new_solar_y = np.interp(new_solar_x, solar_array[:, 0], solar_array[:, 1])
-
-        # Replace solar Dataframe
-        solar_df = pd.DataFrame(np.column_stack((new_solar_x, new_solar_y)), columns=solar_df.columns)
-
-        # Estimation of TOA Reflectance
-        band_number = 0
-        toa_reflectance = np.empty_like(toa_radiance)
-        for single_wl, single_srf in srf:
-            # Resample HYPSO SRF to new solar wavelength
-            resamp_srf = np.interp(new_solar_x, single_wl, single_srf)
-            weights_srf = resamp_srf / np.sum(resamp_srf)
-            ESUN = np.sum(solar_df['mW/m2/nm'].values * weights_srf)  # units matche HYPSO from device.py
-
-            # Earth-Sun distance (from day of year) using julian date
-            # http://physics.stackexchange.com/questions/177949/earth-sun-distance-on-a-given-day-of-the-year
-            distance_sun = 1 - 0.01672 * np.cos(0.9856 * (
-                    julian_day - 4))
-
-            # Get toa_reflectance
-            solar_angle_correction = np.cos(np.radians(solar_zenith))
-            multiplier = (ESUN * solar_angle_correction) / (np.pi * distance_sun ** 2)
-            toa_reflectance[:, :, band_number] = toa_radiance[:, :, band_number] / multiplier
-
-            band_number = band_number + 1
-
-        return toa_reflectance
-
-    def _set_capture_name(self) -> None:
-
-        capture_name = self.nc_path.stem
-        if "-l1a" in capture_name:
-            capture_name = capture_name.replace("-l1a", "")
-
-        self.capture_name = capture_name
-
-    def _set_capture_region(self) -> None:
-
-        self._set_capture_name()
-        self.capture_region = self.capture_name.split('_')[0].strip('_')
-
-    def _set_spatial_dimensions(self) -> None:
-
-        self.spatial_dimensions = (self.capture_config["frame_count"], self.info["image_height"])
-
-        if self.verbose:
-            print(f"[INFO] Processing capture with dimensions: {self.spatial_dimensions}")
-
-
-    def _set_capture_type(self):
-
-        if self.capture_config["frame_count"] == self.standard_dimensions["nominal"]:
-            self.info["capture_type"] = "nominal"
-
-        elif self.info["image_height"] == self.standard_dimensions["wide"]:
-            self.info["capture_type"] = "wide"
-        else:
-            if EXPERIMENTAL_FEATURES:
-                print("Number of Rows (AKA frame_count) Is Not Standard")
-                self.info["capture_type"] = "custom"
-            else:
-                raise Exception("Number of Rows (AKA frame_count) Is Not Standard")
-
-        if self.verbose:
-            print(f"[INFO] Processing capture with image mode (capture type): {self.info['capture_type']}")
-
-    def _set_info_dict(self) -> None:
-
-        info = {}
-
-        info["nc_file"] = self.nc_path
-
-        if all([self.target_coords.get('latc'), self.target_coords.get('lonc')]):
-            info['target_area'] = self.target_coords['latc'] + ' ' + self.target_coords['lonc']
-        else:
-            info['target_area'] = None
-
-        info["background_value"] = 8 * self.capture_config["bin_factor"]
-
-        info["x_start"] = self.capture_config["aoi_x"]
-        info["x_stop"] = self.capture_config["aoi_x"] + self.capture_config["column_count"]
-        info["y_start"] = self.capture_config["aoi_y"]
-        info["y_stop"] = self.capture_config["aoi_y"] + self.capture_config["row_count"]
-        info["exp"] = self.capture_config["exposure"] / 1000  # in seconds
-
-        info["image_height"] = self.capture_config["row_count"]
-        info["image_width"] = int(self.capture_config["column_count"] / self.capture_config["bin_factor"])
-        info["im_size"] = info["image_height"] * info["image_width"]
-
-        # TODO: Verify offset validity. Sivert had 20 here
-        UNIX_TIME_OFFSET = 20
-
-        info["start_timestamp_capture"] = int(self.timing['capture_start_unix']) + UNIX_TIME_OFFSET
-
-        # Get END_TIMESTAMP_CAPTURE
-        #    cant compute end timestamp using frame count and frame rate
-        #     assuming some default value if fps and exposure not available
-        try:
-            info["end_timestamp_capture"] = info["start_timestamp_capture"] + self.capture_config["frame_count"] / self.capture_config["fps"] + self.capture_config["exposure"] / 1000.0
-        except:
-            print("fps or exposure values not found assuming 20.0 for each")
-            info["end_timestamp_capture"] = info["start_timestamp_capture"] + self.capture_config["frame_count"] / 20.0 + 20.0 / 1000.0
-
-        # using 'awk' for floating point arithmetic ('expr' only support integer arithmetic): {printf \"%.2f\n\", 100/3}"
-        time_margin_start = 641.0  # 70.0
-        time_margin_end = 180.0  # 70.0
-        info["start_timestamp_adcs"] = info["start_timestamp_capture"] - time_margin_start
-        info["end_timestamp_adcs"] = info["end_timestamp_capture"] + time_margin_end
-
-        info["unixtime"] = info["start_timestamp_capture"]
-        info["iso_time"] = datetime.utcfromtimestamp(info["unixtime"]).isoformat()
-
-
-        self.info = info
-
-    def _set_calibration_coeffs(self) -> None:
-
-        self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file)
-        self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file)
-        self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
-        self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
-
-    def _set_wavelengths(self) -> None:
-
-        if self.spectral_coeffs is not None:
-
-            self.wavelengths = self.spectral_coeffs
-
-    def _set_adcs_dataframes(self) -> None:
-        self._set_adcs_pos_dataframe()
-        self._set_adcs_quat_dataframe()
-
-    def _set_adcs_pos_dataframe(self) -> None:
-
-        # TODO move DataFrame formatting related code to geometry
-        position_headers = ["timestamp", "eci x [m]", "eci y [m]", "eci z [m]"]
-        
-        timestamps = self.adcs["timestamps"]
-        pos_x = self.adcs["position_x"]
-        pos_y = self.adcs["position_y"]
-        pos_z = self.adcs["position_z"]
-
-        pos_array = np.column_stack((timestamps, pos_x, pos_y, pos_z))
-        pos_df = pd.DataFrame(pos_array, columns=position_headers)
-
-        self.adcs_pos_df = pos_df
-
-    def _set_adcs_quat_dataframe(self) -> None:
-
-        # TODO move DataFrame formatting related code to geometry
-        quaternion_headers = ["timestamp", "quat_0", "quat_1", "quat_2", "quat_3", "Control error [deg]"]
-
-        timestamps = self.adcs["timestamps"]
-        quat_s = self.adcs["quaternion_s"]
-        quat_x = self.adcs["quaternion_x"]
-        quat_y = self.adcs["quaternion_y"]
-        quat_z = self.adcs["quaternion_z"]
-        control_error = self.adcs["control_error"]
-
-        quat_array = np.column_stack((timestamps, quat_s, quat_x, quat_y, quat_z, control_error))
-        quat_df = pd.DataFrame(quat_array, columns=quaternion_headers)
-
-        self.adcs_quat_df = quat_df
-
-    def get_geometry_information(self) -> None:
-
-        # Notes:
-        # - along_track, frame_count, lines, rows, y, latitude: 956, 598
-        # - cross_track, row_count, image_height, samples, cols, x, longitude: 684, 1092
-        # - spectral, image_width, bands, z: 120
-        print('Spatial dimensions: ' + str(self.spatial_dimensions))
-        print('Standard dimensions: ' + str(self.standard_dimensions))
-        print('Row count: ' + str(self.capture_config['row_count']))
-        print('Image height: ' + str(self.info['image_height']))
-        print('Image width: ' + str(self.info['image_width']))
-        print('Frame count: ' + str(self.capture_config['frame_count']))
-        #print('Frame height: ' + str(frame_height))
-        print('Lines: ' + str(self.dimensions['lines']))
-        print('Samples: ' + str(self.dimensions['samples']))
-        print('Bands: ' + str(self.dimensions['bands']))
-
-    def _run_geometry_computation(self) -> None:
-
-        print("[INFO] Running frame interpolation...")
-
-        framepose_data = interpolate_at_frame(adcs_pos_df=self.adcs_pos_df,
-                                              adcs_quat_df=self.adcs_quat_df,
-                                              timestamps_srv=self.timing['timestamps_srv'],
-                                              frame_count=self.capture_config['frame_count'],
-                                              fps=self.capture_config['fps'],
-                                              exposure=self.capture_config['exposure'],
-                                              verbose=self.verbose
-                                              )
-
-        print("[INFO] Running geometry computation...")
-
-        geometry_computation(framepose_data=framepose_data,
-                             image_height=self.info['image_height'],
-                             verbose=self.verbose
-                             )
-
-        '''
-        nc_info = get_local_angles(sat_azimuth_path, sat_zenith_path,
-                                solar_azimuth_path, solar_zenith_path,
-                                nc_info, spatial_dimensions)
-
-        nc_info = get_lat_lon_2d(latitude_dataPath, longitude_dataPath, nc_info, spatial_dimensions)
-
-        nc_rawcube = get_raw_cube_from_nc_file(nc_file_path)
-        '''
-
-
-
-        #geometry_computation()
-
-
-
-
 class Hypso2(Hypso):
-    def __init__(self, nc_path: str, points_path: Union[str, None] = None) -> None:
+    def __init__(self, hypso_path: str, points_path: Union[str, None] = None) -> None:
         
         """
         Initialization of (planned) HYPSO-2 Class.
 
-        :param nc_path: Absolute path to "L1a.nc" file
+        :param hypso_path: Absolute path to "L1a.nc" file
         :param points_path: Absolute path to the corresponding ".points" files generated with QGIS for manual geo
             referencing. (Optional. Default=None)
 
         """
 
-        super().__init__(nc_path=nc_path, points_path=points_path)
+        super().__init__(hypso_path=hypso_path, points_path=points_path)
 
         self.platform = 'hypso2'
         self.sensor = 'hypso2_hsi'

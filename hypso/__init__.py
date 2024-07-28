@@ -19,7 +19,7 @@
 A python package form NTNU HYPSO Hyperspectral Image Processing
 """
 
-__author__ = "Alvaro Flores <alvaro.f.romero@ntnu.no>"
+__author__ = "Cameron Penne <cameron.l.penne@ntnu.no>, Alvaro Flores <alvaro.f.romero@ntnu.no>"
 __credits__ = "Norwegian University of Science and Technology"
 
 from .device import Hypso, Hypso1, Hypso2

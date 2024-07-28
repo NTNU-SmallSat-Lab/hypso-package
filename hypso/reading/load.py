@@ -8,15 +8,26 @@ from typing import Tuple
 
 EXPERIMENTAL_FEATURES = True
 
-def load_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, np.ndarray]:
+def load_l1a_nc_cube(nc_file_path: Path) -> np.ndarray:
     """
-    Load l1a.nc Hypso Capture file
+    Load l1a.nc Hypso Capture file metadata
 
     :param nc_file_path: Absolute path to the l1a.nc file
-    :param standard_dimensions: Dictionary with Standard Hypso allowed dimensions
 
-    :return: "info" Dictionary with Hypso capture information, "adcs" Dictionary with Hypso ADCS information, raw cube numpy array (digital counts) and capture spatial
-        dimensions
+    :return: raw cube numpy array (digital counts)
+    """
+
+    nc_cube = load_cube_from_nc_file(nc_file_path)
+
+    return nc_cube
+
+def load_l1a_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict]:
+    """
+    Load l1a.nc Hypso Capture file metadata
+
+    :param nc_file_path: Absolute path to the l1a.nc file
+
+    :return: "capture_config" dictionary with Hypso capture information, "timing" dictionary with Hypso timing information, "target_coords" dictionary with Hypso target coordinate information, "adcs" dictionary with Hypso ADCS information, and "dimensions" dictionary with Hypso capture spatial dimensions information
     """
     # Get metadata
     #quaternion_csv_path = Path(nc_info["tmp_dir"], "quaternion.csv")
@@ -32,22 +43,16 @@ def load_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, np.ndarray]:
     #latitude_dataPath = Path(nc_info["tmp_dir"], "latitudes.dat")
     #longitude_dataPath = Path(nc_info["tmp_dir"], "longitudes.dat")
 
-    nc_capture_config = get_capture_config_from_nc_file(nc_file_path)
-
-    nc_timing = get_timing_from_nc_file(nc_file_path)
-
-    nc_target_coords = get_target_coords_from_nc_file(nc_file_path)
-
-    nc_adcs = get_adcs_from_nc_file(nc_file_path)
-
-    nc_rawcube = get_raw_cube_from_nc_file(nc_file_path)
-
-    nc_dimensions = get_dimensions_from_nc_file(nc_file_path)
+    nc_capture_config = load_capture_config_from_nc_file(nc_file_path)
+    nc_timing = load_timing_from_nc_file(nc_file_path)
+    nc_target_coords = load_target_coords_from_nc_file(nc_file_path)
+    nc_adcs = load_adcs_from_nc_file(nc_file_path)
+    nc_dimensions = load_dimensions_from_nc_file(nc_file_path)
 
     # TODO: remove this line
     #nc_info = create_tmp_dir(nc_file_path=nc_file_path, info=nc_info)
 
-    return nc_capture_config, nc_timing, nc_target_coords, nc_adcs, nc_dimensions, nc_rawcube
+    return nc_capture_config, nc_timing, nc_target_coords, nc_adcs, nc_dimensions
 
 # TODO
 def get_lat_lon_2d(latitude_dataPath: Path, longitude_dataPath: Path, info: dict, spatial_dimensions: tuple) -> dict:
@@ -104,7 +109,7 @@ def get_local_angles(sat_azimuth_path: Path, sat_zenith_path: Path,
 
     return info
 
-def get_adcs_from_nc_file(nc_file_path: Path) -> Tuple[dict, tuple]:
+def load_adcs_from_nc_file(nc_file_path: Path) -> Tuple[dict, tuple]:
     """
     Get the metadata from the top folder of the data.
 
@@ -134,27 +139,26 @@ def get_adcs_from_nc_file(nc_file_path: Path) -> Tuple[dict, tuple]:
     return adcs
 
 # TODO
-def create_tmp_dir(nc_file_path: Path, info: dict) -> dict:
+def create_tmp_dir(nc_file_path: Path) -> str:
     """
     Create empty directory for generated files.
 
     :param nc_file_path: Path to the name of the NetCDF file
-    :param info: Dictionary with Hypso capture info
 
-    :return: "info" dictionary modified with updated "tmp_dir" and "top_folder_name" entries
+    :return: temp_dir path
     """
 
     nc_name = nc_file_path.stem
     temp_dir = Path(nc_file_path.parent.absolute(), nc_name.replace("-l1a", "") + "_tmp")
-    info["tmp_dir"] = temp_dir
 
-    info["top_folder_name"] = info["tmp_dir"]
+    #info["tmp_dir"] = temp_dir
+    #info["top_folder_name"] = info["tmp_dir"]
 
     temp_dir.mkdir(parents=True, exist_ok=True)
 
-    return info
+    return str(temp_dir)
 
-def get_capture_config_from_nc_file(nc_file_path: Path) -> dict:
+def load_capture_config_from_nc_file(nc_file_path: Path) -> dict:
 
     # ------------------------------------------------------------------------
     # Capture info -----------------------------------------------------------
@@ -177,7 +181,7 @@ def get_capture_config_from_nc_file(nc_file_path: Path) -> dict:
 
     return capture_config
 
-def get_timing_from_nc_file(nc_file_path: Path) -> dict:
+def load_timing_from_nc_file(nc_file_path: Path) -> dict:
 
     timing = {}
 
@@ -202,7 +206,7 @@ def get_timing_from_nc_file(nc_file_path: Path) -> dict:
 
     return timing
 
-def get_target_coords_from_nc_file(nc_file_path: Path) -> dict:
+def load_target_coords_from_nc_file(nc_file_path: Path) -> dict:
 
     # ------------------------------------------------------------------------
     # Target Lat Lon ---------------------------------------------------------
@@ -231,7 +235,7 @@ def get_target_coords_from_nc_file(nc_file_path: Path) -> dict:
 
     return target_coords
 
-def get_raw_cube_from_nc_file(nc_file_path: Path) -> np.ndarray:
+def load_cube_from_nc_file(nc_file_path: Path) -> np.ndarray:
     """
     Get Raw Cube from Hypso l1a.nc File
 
@@ -242,11 +246,11 @@ def get_raw_cube_from_nc_file(nc_file_path: Path) -> np.ndarray:
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
         group = f.groups["products"]
         # 16-bit according to Original data Capture
-        raw_cube = np.array(group.variables["Lt"][:], dtype='uint16')
+        cube = np.array(group.variables["Lt"][:], dtype='uint16')
 
-        return raw_cube
+        return cube
 
-def get_dimensions_from_nc_file(nc_file_path: Path) -> dict:
+def load_dimensions_from_nc_file(nc_file_path: Path) -> dict:
 
     dimensions = {}
     
