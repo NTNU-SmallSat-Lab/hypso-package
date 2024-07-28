@@ -54,33 +54,6 @@ def load_l1a_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, di
 
     return nc_capture_config, nc_timing, nc_target_coords, nc_adcs, nc_dimensions
 
-# TODO
-def get_lat_lon_2d(latitude_dataPath: Path, longitude_dataPath: Path, info: dict, spatial_dimensions: tuple) -> dict:
-    """
-    Load Latitude and Longitude 2D arrays from generated tmp files
-
-    :param latitude_dataPath: Absolute path to Latitude .dat file
-    :param longitude_dataPath: Absolute path to Longitude .dat file
-    :param info: Info Dictionary to mutate with new information
-    :param spatial_dimensions: Spatial dimension of the Hypso capture
-
-    :return: Updated "info" dictionary with the latitude and longitude 2D arrays
-    """
-    # Load Latitude
-    info["lat"] = np.fromfile(latitude_dataPath, dtype="float32")
-    info["lat"] = info["lat"].reshape(spatial_dimensions)
-    # Load Longitude
-    info["lon"] = np.fromfile(longitude_dataPath, dtype="float32")
-    info["lon"] = info["lon"].reshape(spatial_dimensions)
-
-    # Original Lat in case manual georeference is used
-    info["lat_original"] = info["lat"]
-    info["lon_original"] = info["lon"]
-
-    return info
-
-
-
 def load_adcs_from_nc_file(nc_file_path: Path) -> Tuple[dict, tuple]:
     """
     Get the metadata from the top folder of the data.
