@@ -137,16 +137,19 @@ class Hypso:
         # Make NetCDF file path an absolute path
         self.hypso_path = Path(hypso_path).absolute()
 
+        return None
 
         
 
-    def _set_points_path(self, points_path=None):
+    def _set_points_path(self, points_path=None) -> None:
 
         # Make .points file path an absolute path (if possible)
         if points_path is not None:
             self.points_path = Path(points_path).absolute()
         else:
             self.points_path = None
+
+        return None
         
 
 
@@ -182,23 +185,18 @@ class Hypso1(Hypso):
 
         # Calibration -----------------------------------------------------
         self._run_calibration()
-        #self._write_l1b_file()
+        #self.run_calibration() # public
 
+        # Atmospheric correction -----------------------------------------------------
         #self._run_atmospheric_correction()
+        #self.run_atmospheric_correction() # public
 
-        # End processing timer
-        proc_time = time.time() - t
-        if self.verbose:
-            print('[INFO] Processing complete! Processing time: ' + str(proc_time) + ' seconds.')
-
-
-        return
-
+        # File output
+        #self._write_l1a_file()
+        #self._write_l1b_file()
+        #self._write_l2a_file()
         #self.create_l1b_nc_file()  # Input for ACOLITE
-
         #self.l2a_cube = self.find_existing_l2_cube()
-
-
 
         # Land Mask -----------------------------------------------------
         # TODO
@@ -208,20 +206,30 @@ class Hypso1(Hypso):
 
         # Products
         # TODO
-        self.products['chl'] = None
-        self.products['tsm'] = None
-        self.products['pca'] = None
-        self.products['ica'] = None
+        #self.products['chl'] = None
+        #self.products['tsm'] = None
+        #self.products['pca'] = None
+        #self.products['ica'] = None
 
 
+        # End processing timer
+        proc_time = time.time() - t
+        if self.verbose:
+            print('[INFO] Processing complete! Processing time: ' + str(proc_time) + ' seconds.')
 
-    def _run_calibration(self):
+
+        return None
+
+
+    def _run_calibration(self) -> None:
 
         self._set_calibration_coeff_files()
         self._set_calibration_coeffs()
         self._set_wavelengths()
         self._set_srf()
         self._generate_l1b_cube()
+
+        return None
 
 
     def _load_l1a_file(self) -> None:
@@ -240,16 +248,22 @@ class Hypso1(Hypso):
         self._set_spatial_dimensions()
         self._set_adcs_dataframes()
 
+        return None
+
 
     def _check_l1a_file_format(self) -> None:
 
         # Check that hypso_path file is a NetCDF file:
         if not self.hypso_path.suffix == '.nc':
             raise Exception("Incorrect HYPSO Path. Only .nc files supported")
+        
+        return None
 
     def _load_l1a_cube(self) -> None:
 
         self.l1a_cube = load_l1a_nc_cube(self.hypso_path)
+
+        return None
 
     def _load_l1a_metadata(self) -> None:
 
@@ -258,22 +272,33 @@ class Hypso1(Hypso):
             self.target_coords, \
             self.adcs, \
             self.dimensions = load_l1a_nc_metadata(self.hypso_path)
+        
+        return None
 
-    def _set_verbose(self, verbose=False):
+    def _set_verbose(self, verbose=False) -> None:
+
         self.verbose = verbose
+
+        return None
 
     def _set_platform(self) -> None:
 
         self.platform = 'hypso1'
 
+        return None
+
     def _set_sensor(self) -> None:
 
         self.sensor = 'hypso1_hsi'
+
+        return None
 
     def _set_capture_datetime(self) -> None:
 
         # TODO: implement this function
         self.capture_datetime = None
+
+        return None
 
     def _run_georeferencing(self) -> None:
 
@@ -327,6 +352,8 @@ class Hypso1(Hypso):
 
         else:
             print('No georeferencing .points file provided. Skipping georeferencing.')
+
+        return None
 
     def _set_srf(self) -> None:
         """
@@ -382,6 +409,8 @@ class Hypso1(Hypso):
             srf.append([srf_wl_single, srf_single])
 
         self.srf = srf
+
+        return None
 
     # TODO
     def create_l1b_nc_file(self) -> None:
@@ -1094,6 +1123,8 @@ class Hypso1(Hypso):
 
         self.rad_coeff_file = rad_coeff_file
 
+        return None
+
     def _set_smile_coeff_file(self, smile_coeff_file=None) -> None:
 
         """
@@ -1124,6 +1155,8 @@ class Hypso1(Hypso):
             smile_coeff_file = csv_file_smile
 
         self.smile_coeff_file = smile_coeff_file
+
+        return None
 
     def _set_destriping_coeff_file(self, destriping_coeff_file=None) -> None:
 
@@ -1160,6 +1193,8 @@ class Hypso1(Hypso):
 
         self.destriping_coeff_file = destriping_coeff_file
 
+        return None
+
     def _set_spectral_coeff_file(self, spectral_coeff_file=None) -> None:
 
         """
@@ -1180,6 +1215,8 @@ class Hypso1(Hypso):
 
         self.spectral_coeff_file = spectral_coeff_file
 
+        return None
+
     def _set_calibration_coeff_files(self) -> None:
         """
         Set the absolute path for the calibration coefficients included in the package. This includes radiometric,
@@ -1187,10 +1224,13 @@ class Hypso1(Hypso):
 
         :return: None.
         """
+
         self._set_rad_coeff_file()
         self._set_smile_coeff_file()
         self._set_destriping_coeff_file()
         self._set_spectral_coeff_file()
+
+        return None
   
 
     def _run_radiometric_calibration(self, cube=None) -> np.ndarray:
@@ -1269,6 +1309,8 @@ class Hypso1(Hypso):
         self.l1b_cube = self._run_smile_correction(cube=self.l1b_cube)
         self.l1b_cube = self._run_destriping_correction(cube=self.l1b_cube)
 
+        return None
+
     # TODO
     def get_toa_reflectance(self) -> np.ndarray:
         """
@@ -1340,10 +1382,14 @@ class Hypso1(Hypso):
 
         self.capture_name = capture_name
 
+        return None
+
     def _set_capture_region(self) -> None:
 
         self._set_capture_name()
         self.capture_region = self.capture_name.split('_')[0].strip('_')
+
+        return None
 
     def _set_spatial_dimensions(self) -> None:
 
@@ -1352,7 +1398,9 @@ class Hypso1(Hypso):
         if self.verbose:
             print(f"[INFO] Capture spatial dimensions: {self.spatial_dimensions}")
 
-    def _set_capture_type(self):
+        return None
+
+    def _set_capture_type(self) -> None:
 
         if self.capture_config["frame_count"] == self.standard_dimensions["nominal"]:
             self.info["capture_type"] = "nominal"
@@ -1369,7 +1417,11 @@ class Hypso1(Hypso):
         if self.verbose:
             print(f"[INFO] Capture image mode/capture type: {self.info['capture_type']}")
 
+        return None
+
     def _set_info_dict(self) -> None:
+
+        # TODO: move this dictionary into object variables
 
         info = {}
 
@@ -1415,8 +1467,9 @@ class Hypso1(Hypso):
         info["unixtime"] = info["start_timestamp_capture"]
         info["iso_time"] = datetime.utcfromtimestamp(info["unixtime"]).isoformat()
 
-
         self.info = info
+
+        return None
 
     def _set_calibration_coeffs(self) -> None:
 
@@ -1425,15 +1478,23 @@ class Hypso1(Hypso):
         self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
         self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
 
+        return None
+
     def _set_wavelengths(self) -> None:
 
         if self.spectral_coeffs is not None:
-
             self.wavelengths = self.spectral_coeffs
+        else:
+            self.wavelengths = None
+
+        return None
 
     def _set_adcs_dataframes(self) -> None:
+
         self._set_adcs_pos_dataframe()
         self._set_adcs_quat_dataframe()
+
+        return None
 
     def _set_adcs_pos_dataframe(self) -> None:
 
@@ -1449,6 +1510,8 @@ class Hypso1(Hypso):
         pos_df = pd.DataFrame(pos_array, columns=position_headers)
 
         self.adcs_pos_df = pos_df
+
+        return None
 
     def _set_adcs_quat_dataframe(self) -> None:
 
@@ -1467,10 +1530,12 @@ class Hypso1(Hypso):
 
         self.adcs_quat_df = quat_df
 
+        return None
+
 
     def _run_geometry_computation(self) -> None:
 
-        print("[INFO] Running frame interpolation...")
+        print("[INFO] Running frame interpolation...", end=" ")
 
         framepose_data = interpolate_at_frame(adcs_pos_df=self.adcs_pos_df,
                                               adcs_quat_df=self.adcs_quat_df,
@@ -1480,6 +1545,7 @@ class Hypso1(Hypso):
                                               exposure=self.capture_config['exposure'],
                                               verbose=self.verbose
                                               )
+        print("Done!")
 
         print("[INFO] Running geometry computation...", end =" ")
 
@@ -1500,9 +1566,7 @@ class Hypso1(Hypso):
         nc_rawcube = get_raw_cube_from_nc_file(nc_file_path)
         '''
 
-
-
-        #geometry_computation()
+        return Done
 
 
 
@@ -1524,6 +1588,8 @@ class Hypso1(Hypso):
         print('Lines: ' + str(self.dimensions['lines']))
         print('Samples: ' + str(self.dimensions['samples']))
         print('Bands: ' + str(self.dimensions['bands']))
+
+        return None
 
     # TODO
     def get_spectra(self, position_dict: dict, product: Literal["L1C", "L2-6SV1", "L2-ACOLITE"] = "L1C",
