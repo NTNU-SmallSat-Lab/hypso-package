@@ -49,9 +49,6 @@ def load_l1a_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, di
     nc_adcs = load_adcs_from_nc_file(nc_file_path)
     nc_dimensions = load_dimensions_from_nc_file(nc_file_path)
 
-    # TODO: remove this line
-    #nc_info = create_tmp_dir(nc_file_path=nc_file_path, info=nc_info)
-
     return nc_capture_config, nc_timing, nc_target_coords, nc_adcs, nc_dimensions
 
 def load_adcs_from_nc_file(nc_file_path: Path) -> Tuple[dict, tuple]:
