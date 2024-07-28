@@ -919,6 +919,84 @@ class Hypso1(Hypso):
         # Update
         self.info["nc_file"] = Path(new_path)
 
+    def _run_atmospheric_correction(self, 
+                                    product: str) -> None:
+
+        if self.l2a_cube is None:
+            self.l2a_cube = {}
+
+        match product:
+
+            case "L2-6SV1":
+
+                atmos_model = product.split("-")[1].upper()
+
+                if self.l2a_cube[atmos_model] is None:
+
+                    self.l2a_cube[atmos_model] = self._run_6sv1_atmospheric_correction()
+                
+            case "L2-ACOLITE":
+
+                atmos_model = product.split("-")[1].upper()
+
+                if self.l2a_cube[atmos_model] is None:
+
+                    self.l2a_cube[atmos_model] = self._run_acolite_atmospheric_correction()
+
+
+            case "L1C":
+
+                print("[WARNING] L1C product not supported!")
+
+            case _:
+
+                print("[WARNING] No such product!")
+
+
+        return None
+
+    def _run_6sv1_atmospheric_correction(self) -> np.ndarray:
+
+        # Py6S Atmospheric Correction
+        # aot value: https://neo.gsfc.nasa.gov/view.php?datasetId=MYDAL2_D_AER_OD&date=2023-01-01
+        # alternative: https://giovanni.gsfc.nasa.gov/giovanni/
+        # atmos_dict = {
+        #     'aot550': 0.01,
+        #     # 'aeronet': r"C:\Users\alvar\Downloads\070101_151231_Autilla.dubovik"
+        # }
+        # AOT550 parameter gotten from: https://giovanni.gsfc.nasa.gov/giovanni/
+
+        atmos_params = {
+            'aot550': 0.0580000256
+        }
+
+        time_capture = parser.parse(self.info['iso_time'])
+
+        atmos_corrected_cube = run_py6s(self.wavelengths, 
+                                        self.l1b_cube, 
+                                        self.info, 
+                                        self.latitudes,
+                                        self.longitudes,
+                                        atmos_params, 
+                                        time_capture=time_capture,
+                                        srf=self.srf)
+        
+        return atmos_corrected_cube
+
+    def _run_acolite_atmospheric_correction(self) -> None:
+
+        atmos_params = None # TODO: what should these be?
+
+        if not self.info["nc_file"].is_file():
+            raise Exception("No -l1b.nc file found")
+        
+        atmos_corrected_cube = run_acolite(self.info, 
+                                            atmos_params, 
+                                            self.info["nc_file"])
+
+        return atmos_corrected_cube
+
+
     # TODO
     def create_geotiff(self, product: Literal["L2-ACOLITE", "L2-6SV1", "L1C"] = "L2-ACOLITE", force_reload: bool = False,
                        atmos_dict: Union[dict, None] = None) -> None:
