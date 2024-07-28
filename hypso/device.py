@@ -1549,13 +1549,24 @@ class Hypso1(Hypso):
 
         print("[INFO] Running geometry computation...", end =" ")
 
-        geometry_computation(framepose_data=framepose_data,
-                             image_height=self.info['image_height'],
-                             verbose=self.verbose
-                             )
+        wkt_linestring_footprint, \
+           prj_file_contents, \
+           local_angles, \
+           geometric_meta_info, \
+           pixels_lat, \
+           pixels_lon, \
+           sun_azimuth, \
+           sun_zenith, \
+           sat_azimuth, \
+           sat_zenith = geometry_computation(framepose_data=framepose_data,
+                                             image_height=self.info['image_height'],
+                                             verbose=self.verbose
+                                             )
 
         print("Done!")
 
+
+        # TODO: finish this:
         '''
         nc_info = get_local_angles(sat_azimuth_path, sat_zenith_path,
                                 solar_azimuth_path, solar_zenith_path,
@@ -1566,7 +1577,7 @@ class Hypso1(Hypso):
         nc_rawcube = get_raw_cube_from_nc_file(nc_file_path)
         '''
 
-        return Done
+        return None
 
 
 
