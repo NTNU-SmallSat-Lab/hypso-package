@@ -210,9 +210,11 @@ class Hypso1(Hypso):
 
         # Land Mask -----------------------------------------------------
         # TODO
+        # self._generate_land_mask()
 
         # Cloud Mask -----------------------------------------------------
         # TODO
+        #self._generate_cloud_mask()
 
         # Products
         # TODO
@@ -222,7 +224,7 @@ class Hypso1(Hypso):
         #self.products['ica'] = None
 
 
-        # End processing timer
+        # Stop processing timer
         proc_time = time.time() - t
         if self.verbose:
             print('[INFO] Processing complete. Elapsed time: ' + str(proc_time) + ' seconds.')
@@ -241,10 +243,11 @@ class Hypso1(Hypso):
 
         return None
 
-
     def _load_l1a_file(self) -> None:
 
         self._check_l1a_file_format()
+
+        self._set_nc_file()
 
         self._set_capture_name()
         self._set_capture_region()
@@ -260,13 +263,14 @@ class Hypso1(Hypso):
 
         return None
 
-
     def _check_l1a_file_format(self) -> None:
 
         # Check that hypso_path file is a NetCDF file:
         if not self.hypso_path.suffix == '.nc':
             raise Exception("Incorrect HYPSO Path. Only .nc files supported")
         
+
+
         return None
 
     def _load_l1a_cube(self) -> None:
@@ -458,21 +462,21 @@ class Hypso1(Hypso):
             # Manual Replacement
             set_or_create_attr(netfile,
                                attr_name="radiometric_file",
-                               attr_value=str(Path(self.calibration_coeffs_file_dict["radiometric"]).name))
+                               attr_value=str(Path(self.rad_coeff_file).name))
 
             set_or_create_attr(netfile,
                                attr_name="smile_file",
-                               attr_value=str(Path(self.calibration_coeffs_file_dict["smile"]).name))
+                               attr_value=str(Path(self.smile_coeff_file).name))
 
             # Destriping Path is the only one which can be None
-            if self.calibration_coeffs_file_dict["destriping"] is None:
+            if self.destriping_coeff_file is None:
                 set_or_create_attr(netfile,
                                    attr_name="destriping",
                                    attr_value="No-File")
             else:
                 set_or_create_attr(netfile,
                                    attr_name="destriping",
-                                   attr_value=str(Path(self.calibration_coeffs_file_dict["destriping"]).name))
+                                   attr_value=str(Path(self.destriping_coeff_file).name))
 
             set_or_create_attr(netfile, attr_name="spectral_file", attr_value=str(Path(self.spectral_coeff_file).name))
 
@@ -1242,7 +1246,6 @@ class Hypso1(Hypso):
 
         return None
   
-
     def _run_radiometric_calibration(self, cube=None) -> np.ndarray:
 
         # Radiometric calibration
@@ -1428,6 +1431,9 @@ class Hypso1(Hypso):
             print(f"[INFO] Capture capture type: {self.info['capture_type']}")
 
         return None
+
+    def _set_nc_file(self) -> None:
+        self.nc_file = self.hypso_path
 
     def _set_info_dict(self) -> None:
 
@@ -1615,7 +1621,7 @@ class Hypso1(Hypso):
 
     # Public methods
 
-    def get_geometry_information(self) -> None:
+    def display_geometry_information(self) -> None:
 
         # Notes:
         # - along_track, frame_count, lines, rows, y, latitude: 956, 598

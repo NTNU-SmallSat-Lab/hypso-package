@@ -24,4 +24,5 @@ points_file = os.path.join(dir_path, 'erie_2022-08-27_1605Z-bin3.points')
 
 satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
 
-
+print(satobj.l1b_cube)
+print(satobj.l1b_cube.shape)
