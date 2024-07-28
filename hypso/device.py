@@ -266,11 +266,18 @@ class Hypso1(Hypso):
     def _check_l1a_file_format(self) -> None:
 
         # Check that hypso_path file is a NetCDF file:
-        if not self.hypso_path.suffix == '.nc':
-            raise Exception("Incorrect HYPSO Path. Only .nc files supported")
-        
+        #if not self.hypso_path.suffix == '.nc':
+        #    raise Exception("Incorrect HYPSO Path. Only .nc files supported")
 
+        match self.hypso_path.suffix:
 
+            case '.nc':
+                pass
+            case '.bip':
+                raise Exception("Incorrect HYPSO Path. Only .nc files supported")
+            case _:
+                raise Exception("Incorrect HYPSO Path. Only .nc files supported")
+    
         return None
 
     def _load_l1a_cube(self) -> None:
