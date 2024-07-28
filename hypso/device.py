@@ -450,7 +450,7 @@ class Hypso1(Hypso):
         # Create a new NetCDF file
         with (nc.Dataset(new_path, 'w', format='NETCDF4') as netfile):
             bands = self.info["image_width"]
-            lines = self.info["frame_count"]  # AKA Frames AKA Rows
+            lines = self.capture_config["frame_count"]  # AKA Frames AKA Rows
             samples = self.info["image_height"]  # AKA Cols
 
             # Set top level attributes -------------------------------------------------
@@ -1431,9 +1431,6 @@ class Hypso1(Hypso):
             print(f"[INFO] Capture capture type: {self.info['capture_type']}")
 
         return None
-
-    def _set_nc_file(self) -> None:
-        self.nc_file = self.hypso_path
 
     def _set_info_dict(self) -> None:
 
