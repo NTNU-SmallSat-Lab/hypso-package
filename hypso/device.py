@@ -117,7 +117,17 @@ class Hypso:
         self.adcs_pos_df = None
         self.adcs_quat_df = None
 
-
+        # Initialize geometry data
+        self.wkt_linestring_footprint = None
+        self.prj_file_contents = None
+        self.local_angles = None
+        self.geometric_meta_info = None
+        self.solar_zenith_angles = None
+        self.solar_azimuth_angles = None
+        self.sat_zenith_angles = None
+        self.sat_azimuth_angles = None
+        self.latitudes_original = None
+        self.longitudes_original = None
 
         # DEBUG
         self.DEBUG = False
@@ -215,7 +225,7 @@ class Hypso1(Hypso):
         # End processing timer
         proc_time = time.time() - t
         if self.verbose:
-            print('[INFO] Processing complete! Elapsed time: ' + str(proc_time) + ' seconds.')
+            print('[INFO] Processing complete. Elapsed time: ' + str(proc_time) + ' seconds.')
 
 
         return None
