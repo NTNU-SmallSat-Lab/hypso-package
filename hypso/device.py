@@ -195,11 +195,9 @@ class Hypso1(Hypso):
 
         # Calibration -----------------------------------------------------
         self._run_calibration()
-        #self.run_calibration() # public
 
         # Atmospheric correction -----------------------------------------------------
-        #self._run_atmospheric_correction()
-        #self.run_atmospheric_correction() # public
+        self._run_atmospheric_correction(product='6SV1')
 
         # File output
         #self._write_l1a_file()
@@ -246,8 +244,6 @@ class Hypso1(Hypso):
     def _load_l1a_file(self) -> None:
 
         self._check_l1a_file_format()
-
-        self._set_nc_file()
 
         self._set_capture_name()
         self._set_capture_region()
@@ -323,8 +319,13 @@ class Hypso1(Hypso):
 
     def _run_georeferencing(self) -> None:
 
+        
+
         # Compute latitude and longitudes arrays if a points file is available
         if self.points_path is not None:
+
+            if self.verbose:
+                print('[INFO] Running georeferencing...')
 
             gr = georeferencing.Georeferencer(filename=self.points_path,
                                               cube_height=self.spatial_dimensions[0],
@@ -370,9 +371,13 @@ class Hypso1(Hypso):
                 self.info["lat_original"] = self.latitudes
                 self.info["lon_original"] = self.longitudes
 
+            if self.verbose:
+                print('[INFO] Done!')
 
         else:
-            print('No georeferencing .points file provided. Skipping georeferencing.')
+
+            if self.verbose:
+                print('[INFO] No georeferencing .points file provided. Skipping georeferencing.')
 
         return None
 
@@ -920,38 +925,39 @@ class Hypso1(Hypso):
         self.info["nc_file"] = Path(new_path)
 
     def _run_atmospheric_correction(self, 
-                                    product: str) -> None:
+                                    product: Literal["ACOLITE", "6SV1"]) -> None:
+
+        # products = ["L2-ACOLITE", "L2-6SV1", "L1C"]
 
         if self.l2a_cube is None:
             self.l2a_cube = {}
 
         match product:
 
-            case "L2-6SV1":
+            case "6SV1":
 
-                atmos_model = product.split("-")[1].upper()
+                if self.verbose: 
+                    print("[INFO] Running 6SV1 atmospheric correction")
 
-                if self.l2a_cube[atmos_model] is None:
+                if product not in self.l2a_cube:
+                    self.l2a_cube[product] = self._run_6sv1_atmospheric_correction()
 
-                    self.l2a_cube[atmos_model] = self._run_6sv1_atmospheric_correction()
+                if self.verbose: 
+                    print("[INFO] Done!")
                 
-            case "L2-ACOLITE":
+            case "ACOLITE":
 
-                atmos_model = product.split("-")[1].upper()
+                if self.verbose: 
+                    print("[INFO] Running ACOLITE atmospheric correction")
 
-                if self.l2a_cube[atmos_model] is None:
+                if product not in self.l2a_cube:
+                    self.l2a_cube[product] = self._run_acolite_atmospheric_correction()
 
-                    self.l2a_cube[atmos_model] = self._run_acolite_atmospheric_correction()
-
-
-            case "L1C":
-
-                print("[WARNING] L1C product not supported!")
+                if self.verbose: 
+                    print("[INFO] Done!")
 
             case _:
-
-                print("[WARNING] No such product!")
-
+                print("[WARNING] No such product supported!")
 
         return None
 
@@ -972,12 +978,16 @@ class Hypso1(Hypso):
 
         time_capture = parser.parse(self.info['iso_time'])
 
-        atmos_corrected_cube = run_py6s(self.wavelengths, 
-                                        self.l1b_cube, 
-                                        self.info, 
-                                        self.latitudes,
-                                        self.longitudes,
-                                        atmos_params, 
+        atmos_corrected_cube = run_py6s(wavelengths=self.wavelengths, 
+                                        hypercube_L1=self.l1b_cube, 
+                                        lat_2d_array=self.latitudes,
+                                        lon_2d_array=self.longitudes,
+                                        solar_azimuth_angles=self.solar_azimuth_angles,
+                                        solar_zenith_angles=self.solar_zenith_angles,
+                                        sat_azimuth_angles=self.sat_azimuth_angles,
+                                        sat_zenith_angles=self.sat_zenith_angles,
+                                        iso_time=self.info['iso_time'],
+                                        py6s_dict=atmos_params, 
                                         time_capture=time_capture,
                                         srf=self.srf)
         
@@ -996,101 +1006,6 @@ class Hypso1(Hypso):
 
         return atmos_corrected_cube
 
-
-    # TODO
-    def create_geotiff(self, product: Literal["L2-ACOLITE", "L2-6SV1", "L1C"] = "L2-ACOLITE", force_reload: bool = False,
-                       atmos_dict: Union[dict, None] = None) -> None:
-        """
-        Create a GeoTIFF file for either the L1C or L2 products.
-
-        :param product: Product to be used to create the GeoTIFF file
-        :param force_reload: When True, deletes the file if it exists and forces the generation of a new one.
-        :param atmos_dict: Dictionary of parameters if the L2 product is selected.\n\n
-            *** For ACOLITE *** \n
-            ``{'user':'alvarof', 'password':'nwz7xmu8dak.UDG9kqz'}`` \n
-            *(user and password from https://urs.earthdata.nasa.gov/profile)*\n
-            *** For 6SV1 **** \n
-            ``{'aot550': 0.0580000256}`` \n
-            *(AOT550 parameter gotten from: https://giovanni.gsfc.nasa.gov/giovanni/)*
-
-        :return: No return.
-        """
-
-        if product != "L2-ACOLITE" and product != "L2-6SV1" and product != "L1C":
-            raise Exception("Wrong product")
-
-        if np.logical_or(product == "L2-ACOLITE", product == "L2-6SV1") and atmos_dict is None:
-            raise Exception("Atmospheric Dictionary is needed")
-
-        if force_reload:
-            # Delete geotiff dir and generate a new rgba one
-            self.delete_geotiff_dir()
-
-            # Generate RGB/RGBA Geotiff with Projection metadata and L1B
-            generate_rgb_geotiff(self)
-
-            # Get Projection Metadata from created geotiff
-            self.projection_metadata = self.get_projection_metadata()
-
-        atmos_corrected_cube = None
-        atmos_model = None
-
-        if "L2" in product:
-            atmos_model = product.split("-")[1].upper()
-            try:
-                atmos_corrected_cube = self.l2a_cube[atmos_model]
-            except Exception as err:
-                if atmos_model == "6SV1":
-                    # Py6S Atmospheric Correction
-                    # aot value: https://neo.gsfc.nasa.gov/view.php?datasetId=MYDAL2_D_AER_OD&date=2023-01-01
-                    # alternative: https://giovanni.gsfc.nasa.gov/giovanni/
-                    # atmos_dict = {
-                    #     'aot550': 0.01,
-                    #     # 'aeronet': r"C:\Users\alvar\Downloads\070101_151231_Autilla.dubovik"
-                    # }
-                    atmos_corrected_cube = run_py6s(self.wavelengths, self.l1b_cube, self.info, self.latitudes,
-                                                    self.longitudes,
-                                                    atmos_dict, time_capture=parser.parse(self.info['iso_time']),
-                                                    srf=self.srf)
-                elif atmos_model == "ACOLITE":
-                    print("Getting ACOLITE L2")
-                    if not self.info["nc_file"].is_file():
-                        raise Exception("No -l1b.nc file found")
-                    file_name_l1b = self.info["nc_file"].name
-                    print(f"Found {file_name_l1b}")
-                    atmos_corrected_cube = run_acolite(self.info, atmos_dict, self.info["nc_file"])
-
-            # Store the l2a_cube just generated
-            if self.l2a_cube is None:
-                self.l2a_cube = {}
-
-            self.l2a_cube[atmos_model] = atmos_corrected_cube
-
-            with open(Path(self.info["top_folder_name"], "geotiff", f'L2_{atmos_model}.npy'), 'wb') as f:
-                np.save(f, atmos_corrected_cube)
-
-        # Generate RGBA/RGBA and Full Geotiff with corrected metadata and L2A if exists (if not L1B)
-        generate_full_geotiff(self, product=product)
-
-    # TODO
-    def delete_geotiff_dir(self) -> None:
-        """
-        Delete the GeoTiff directory. Used when force_reload is set to True in the "create_geotiff" method.
-
-        :return: No return.
-        """
-        top_folder_name = self.info["top_folder_name"]
-        tiff_name = "geotiff"
-        geotiff_dir = find_dir(top_folder_name, tiff_name)
-
-        self.rgbGeotiffFilePath = None
-        self.l1cgeotiffFilePath = None
-        self.l2geotiffFilePath = None
-
-        if geotiff_dir is not None:
-            print("Deleting geotiff Directory...")
-            import shutil
-            shutil.rmtree(geotiff_dir, ignore_errors=True)
 
     # TODO
     def find_existing_l2_cube(self) -> Union[dict, None]:
@@ -1339,7 +1254,7 @@ class Hypso1(Hypso):
             cube = self.l1a_cube
 
         if self.verbose:
-            print("[INFO] Running radiometric calibration...", end =" ")
+            print("[INFO] Running radiometric calibration...")
 
         cube = run_radiometric_calibration(cube=cube, 
                                            background_value=self.info['background_value'],
@@ -1354,7 +1269,7 @@ class Hypso1(Hypso):
         cube = cube / 10
 
         if self.verbose:
-            print("Done!")
+            print("[INFO] Done!")
 
         return cube
 
@@ -1366,13 +1281,13 @@ class Hypso1(Hypso):
             cube = self.l1a_cube
 
         if self.verbose:
-            print("[INFO] Running smile correction...", end =" ")
+            print("[INFO] Running smile correction...")
 
         cube = run_smile_correction(cube=cube, 
                                     smile_coeffs=self.smile_coeffs)
         
         if self.verbose:
-            print("Done!")
+            print("[INFO] Done!")
 
         return cube
 
@@ -1384,13 +1299,13 @@ class Hypso1(Hypso):
             cube = self.l1a_cube
 
         if self.verbose:
-            print("[INFO] Running destriping correction...", end =" ")
+            print("[INFO] Running destriping correction...")
 
         cube = run_destriping_correction(cube=cube, 
                                          destriping_coeffs=self.destriping_coeffs)
         
         if self.verbose:
-            print("Done!")
+            print("[INFO] Done!")
 
         return cube
 
@@ -1643,7 +1558,7 @@ class Hypso1(Hypso):
                                               exposure=self.capture_config['exposure'],
                                               verbose=self.verbose
                                               )
-        print("...Done!")
+        print("[INFO] Done!")
 
         print("[INFO] Running geometry computation...")
 
@@ -1661,7 +1576,7 @@ class Hypso1(Hypso):
                                              verbose=self.verbose
                                              )
 
-        print("...Done!")
+        print("[INFO] Done!")
 
 
         self.wkt_linestring_footprint = wkt_linestring_footprint
