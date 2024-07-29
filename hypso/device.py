@@ -1308,16 +1308,14 @@ class Hypso1(Hypso):
 
     def get_l1b_cube(self) -> np.ndarray:
 
-        if not self.calibration_has_run:
-            self._run_calibration()
+        self._check_calibration_has_run()
 
         return self.l1b_cube
 
     def get_l2a_cube(self, product="6SV1") -> dict:
 
-        if not self.atmospheric_correction_has_run:
-            self._run_atmospheric_correction(product=product)
-        
+        self._check_atmospheric_correction_has_run(product=product)
+
         return self.l2a_cube
             
 
