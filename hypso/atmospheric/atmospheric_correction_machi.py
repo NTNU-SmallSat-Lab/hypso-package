@@ -198,3 +198,11 @@ def atm_correction(cube, solar = 1, tol=0.01, verbose=False):
             print(obj)
             
     return T, A, objs
+
+
+
+def run_machi(cube, solar = 1, tol=0.01, verbose=False):
+    
+    T, A, objs = atm_correction(cube=cube, solar=solar, tol=tol, verbose=verbose)
+
+    return T, A, objs
