@@ -996,19 +996,6 @@ class Hypso1(Hypso):
         
         return None
 
-        self._check_calibration_has_run()
-        self._check_geometry_computation_has_run()
-
-        atmos_params = None # TODO: what should these be?
-
-        if not self.info["nc_file"].is_file():
-            raise Exception("No -l1b.nc file found")
-        
-        atmos_corrected_cube = run_acolite(self.info, 
-                                            atmos_params, 
-                                            self.info["nc_file"])
-
-        return atmos_corrected_cube
 
     def _run_land_mask(self) -> None:
 
