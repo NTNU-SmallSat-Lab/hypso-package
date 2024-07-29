@@ -765,7 +765,7 @@ class Hypso1(Hypso):
         return None
 
 
-    def _get_original_orientation_cube(self, cube: np.ndarray) -> np.ndarray:
+    def _get_flipped_cube(self, cube: np.ndarray) -> np.ndarray:
 
         if self.datacube_flipped is None:
             return cube
@@ -790,7 +790,7 @@ class Hypso1(Hypso):
         if self.verbose:
             print("[INFO] Running radiometric calibration...")
 
-        cube = self._get_original_orientation_cube(cube=cube)
+        cube = self._get_flipped_cube(cube=cube)
 
         cube = run_radiometric_calibration(cube=cube, 
                                            background_value=self.info['background_value'],
@@ -800,7 +800,7 @@ class Hypso1(Hypso):
                                            frame_count=self.capture_config['frame_count'],
                                            rad_coeffs=self.rad_coeffs)
 
-        cube = self._get_original_orientation_cube(cube=cube)
+        cube = self._get_flipped_cube(cube=cube)
 
         # TODO: The factor by 10 is to fix a bug in which the coeff have a factor of 10
         #cube_calibrated = run_radiometric_calibration(self.info, self.rawcube, self.calibration_coefficients_dict) / 10
@@ -818,12 +818,12 @@ class Hypso1(Hypso):
         if self.verbose:
             print("[INFO] Running smile correction...")
 
-        cube = self._get_original_orientation_cube(cube=cube)
+        cube = self._get_flipped_cube(cube=cube)
 
         cube = run_smile_correction(cube=cube, 
                                     smile_coeffs=self.smile_coeffs)
 
-        cube = self._get_original_orientation_cube(cube=cube)
+        cube = self._get_flipped_cube(cube=cube)
 
         return cube
 
@@ -837,12 +837,12 @@ class Hypso1(Hypso):
         if self.verbose:
             print("[INFO] Running destriping correction...")
 
-        cube = self._get_original_orientation_cube(cube=cube)
+        cube = self._get_flipped_cube(cube=cube)
 
         cube = run_destriping_correction(cube=cube, 
                                          destriping_coeffs=self.destriping_coeffs)
 
-        cube = self._get_original_orientation_cube(cube=cube)
+        cube = self._get_flipped_cube(cube=cube)
 
         return cube
 
