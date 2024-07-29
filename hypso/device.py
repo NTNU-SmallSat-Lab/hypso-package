@@ -8,6 +8,15 @@ from pathlib import Path
 from dateutil import parser
 import netCDF4 as nc
 import pyproj as prj
+
+from hypso.reading import load_l1a_nc_cube, load_l1a_nc_metadata
+from hypso.utils import find_dir, find_file, find_all_files
+from hypso.atmospheric import run_py6s, run_acolite
+from typing import Literal, Union
+from datetime import datetime
+
+from hypso.georeferencing import georeferencing
+from hypso.georeferencing.utils import check_star_tracker_orientation
 from hypso.calibration import read_coeffs_from_file, \
                               run_radiometric_calibration, \
                               run_destriping_correction, \
@@ -18,14 +27,7 @@ from hypso.geometry import interpolate_at_frame, \
                            geometry_computation
 
 from hypso.georeference import start_coordinate_correction, generate_full_geotiff, generate_rgb_geotiff
-from hypso.reading import load_l1a_nc_cube, load_l1a_nc_metadata
-from hypso.utils import find_dir, find_file, find_all_files
-from hypso.atmospheric import run_py6s, run_acolite
-from typing import Literal, Union
-from datetime import datetime
-
-from hypso.georeferencing import georeferencing
-from hypso.georeferencing.utils import check_star_tracker_orientation
+from hypso.masks import generate_land_mask, generate_cloud_mask
 
 import time
 import scipy.interpolate as si
@@ -959,8 +961,39 @@ class Hypso1(Hypso):
 
         return atmos_corrected_cube
 
+    def _run_land_mask(self) -> None:
 
+        if self.verbose:
+            print("[INFO] Running land mask generation...")
 
+        land_mask = generate_land_mask(spatial_dimensions=self.spatial_dimensions,
+                                       latitudes=self.latitudes,
+                                       longitudes=self.longitudes
+                                       )
+        
+        self.land_mask = land_mask
+
+        if self.verbose:
+            print("[INFO] Done!.")
+
+        return None
+
+    def _run_cloud_mask(self) -> None:
+
+        if self.verbose:
+            print("[INFO] Running cloud mask generation...")
+        
+        cloud_mask = generate_cloud_mask(spatial_dimensions=self.spatial_dimensions,
+                                        latitudes=self.latitudes,
+                                        longitudes=self.longitudes
+                                        )
+        
+        self.cloud_mask = cloud_mask
+
+        if self.verbose:
+            print("[INFO] Done!.")
+
+        return None
 
     # Other
 

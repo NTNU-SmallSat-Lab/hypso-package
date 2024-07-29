@@ -63,7 +63,7 @@ def interpolate_at_frame(adcs_pos_df: pd.DataFrame,
     eci_z_col_index = 3
 
     if verbose:
-        print('  ECI position samples:', posdata.shape[0])
+        print('ECI position samples:', posdata.shape[0])
 
     # 2. Reading .csv file with GPS info
     quatdata = adcs_quat_df
@@ -74,7 +74,7 @@ def interpolate_at_frame(adcs_pos_df: pd.DataFrame,
     q3_col_index = 4
 
     if verbose:
-        print('  Quaternion samples:', quatdata.shape[0])
+        print('Quaternion samples:', quatdata.shape[0])
 
     # 3. Reading frame timestamps
 
@@ -102,11 +102,11 @@ def interpolate_at_frame(adcs_pos_df: pd.DataFrame,
     frame_ts_end = flashtimes[-1]
 
     if verbose:
-        print(f'  ADCS time range: {adcs_ts_start:17.6f} to {adcs_ts_end:17.6f}')
-        print(f'  Frame time range: {frame_ts_start:17.6f} to {frame_ts_end:17.6f}')
+        print(f'ADCS time range: {adcs_ts_start:17.6f} to {adcs_ts_end:17.6f}')
+        print(f'Frame time range: {frame_ts_start:17.6f} to {frame_ts_end:17.6f}')
 
     if frame_ts_start < adcs_ts_start:
-        print(' ERROR: Frame timestamps begin earlier than ADCS data!')
+        print('ERROR: Frame timestamps begin earlier than ADCS data!')
         exit(-1)
 
     if frame_ts_end > adcs_ts_end:
@@ -117,8 +117,8 @@ def interpolate_at_frame(adcs_pos_df: pd.DataFrame,
     b = quatdata.values[:, 0] < flashtimes[-1]
 
     if verbose:
-        print(f'  {np.sum(a & b)} sample(s) inside frame time range')
-        print(f'  Interpolating {frame_count:d} frames')
+        print(f'{np.sum(a & b)} sample(s) inside frame time range')
+        print(f'Interpolating {frame_count:d} frames')
 
     posdata_time_unix = posdata.values[:, pos_time_col_index].astype(np.float64)
 
@@ -484,8 +484,8 @@ def geometry_computation(framepose_data: pd.DataFrame,
     body_z_itrs = np.zeros([frame_count, 3])
 
     if verbose:
-        print(f'  Spatial dimensions: {frame_count} frames/lines, {image_height} pixels/samples')
-        print('  Computing pixel latitude and longitude coordinates...')  # computing pixel lat,lon's
+        print(f'Spatial dimensions: {frame_count} frames/lines, {image_height} pixels/samples')
+        print('Computing pixel latitude and longitude coordinates...')  # computing pixel lat,lon's
 
     pointing_off_earth_indicator = 0
     for i in range(frame_count):
@@ -631,7 +631,7 @@ def geometry_computation(framepose_data: pd.DataFrame,
         exit(2)
 
     if verbose:
-        print('  Interpolating pixel coordinate gaps...')
+        print('Interpolating pixel coordinate gaps...')
 
     pixels_lat = np.zeros([frame_count, image_height])
     pixels_lon = np.zeros([frame_count, image_height])
@@ -647,11 +647,17 @@ def geometry_computation(framepose_data: pd.DataFrame,
         lats = np.array([latlon_top[i, 0], latlon_mid_top[i, 0], latlon_mid[i, 0], latlon_mid_bot[i, 0], latlon_bot[i, 0]])
         lons = np.array([latlon_top[i, 1], latlon_mid_top[i, 1], latlon_mid[i, 1], latlon_mid_bot[i, 1], latlon_bot[i, 1]])
 
+
+        # TODO: override if self.latitudes and self.longitudes exist?
         pixels_lat[i, :] = si.griddata(subsample_pixels_indices, lats, all_pixels_indices, method='cubic')
         pixels_lon[i, :] = si.griddata(subsample_pixels_indices, lons, all_pixels_indices, method='cubic')
 
+        if verbose:
+            print('Using geometry-computed latitude and longitude values')
+
+
     if verbose:
-        print('  Computing local angles (sun and satellite azimuth and zenith angles)...')
+        print('Computing local angles (sun and satellite azimuth and zenith angles)...')
 
     # must contain "hypso_height//2 - 1" so that local_angles_summary is computed properly
     subsample_pixels_indices = [0, image_height // 4 - 1, 
@@ -702,9 +708,9 @@ def geometry_computation(framepose_data: pd.DataFrame,
     off_nadir_angle = compute_off_nadir_angle(impos_mid_itrs[frame_count // 2, :], campos_itrs[frame_count // 2, :])
 
     if verbose:
-        print(f'  Image Center (lat,lon): ({lat_center * 180.0 / m.pi:08.5f}\t{lon_center * 180.0 / m.pi:09.5f})')
-        print(f'  Image Center elevation angle: {elevation_angle * 180.0 / m.pi:08.5f}')
-        print(f'  Image Center off-nadir angle: {off_nadir_angle * 180.0 / m.pi:08.5f}')
+        print(f' Image Center (lat,lon): ({lat_center * 180.0 / m.pi:08.5f}\t{lon_center * 180.0 / m.pi:09.5f})')
+        print(f' Image Center elevation angle: {elevation_angle * 180.0 / m.pi:08.5f}')
+        print(f'Image Center off-nadir angle: {off_nadir_angle * 180.0 / m.pi:08.5f}')
     
     geometric_meta_info ={}
     geometric_meta_info['image_center_lat'] = lat_center * 180.0 / m.pi

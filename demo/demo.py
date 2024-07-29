@@ -24,10 +24,12 @@ points_file = os.path.join(dir_path, 'erie_2022-08-27_1605Z-bin3.points')
 
 satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
 
+print(satobj.latitudes.shape)
+satobj.display_geometry_information()
 
-satobj.run_geometry_computation()
+#satobj.run_geometry_computation()
 
-satobj.run_atmospheric_correction(product='6SV1')
+#satobj.run_atmospheric_correction(product='6SV1')
 
 #print(satobj.l1b_cube)
 #print(satobj.l1b_cube.shape)
