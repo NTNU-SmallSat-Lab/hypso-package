@@ -642,6 +642,9 @@ def geometry_computation(framepose_data: pd.DataFrame,
 
     # Determining (interpolating) latlon for all pixels (pixels  [0,1,...,682,683] )
 
+    if verbose:
+        print('Using geometry-computed latitude and longitude values')
+
     for i in range(frame_count):
 
         lats = np.array([latlon_top[i, 0], latlon_mid_top[i, 0], latlon_mid[i, 0], latlon_mid_bot[i, 0], latlon_bot[i, 0]])
@@ -652,8 +655,7 @@ def geometry_computation(framepose_data: pd.DataFrame,
         pixels_lat[i, :] = si.griddata(subsample_pixels_indices, lats, all_pixels_indices, method='cubic')
         pixels_lon[i, :] = si.griddata(subsample_pixels_indices, lons, all_pixels_indices, method='cubic')
 
-        if verbose:
-            print('Using geometry-computed latitude and longitude values')
+
 
 
     if verbose:
