@@ -627,9 +627,6 @@ class Hypso1(Hypso):
         return None
 
 
-
-
-
     # Loaders
 
     def _load_l1a_file(self) -> None:
@@ -687,7 +684,6 @@ class Hypso1(Hypso):
     def _load_l1a_bip_metadata(self) -> None:
         
         return None
-
 
 
     # Runners
@@ -1031,9 +1027,6 @@ class Hypso1(Hypso):
         return None
 
 
-
-
-
     # Public methods
 
     def display_geometry_information(self) -> None:
@@ -1306,42 +1299,6 @@ class Hypso1(Hypso):
             band_number = band_number + 1
 
         return toa_reflectance
-
-    # TODO
-    def find_existing_l2_cube(self) -> Union[dict, None]:
-        """
-        Recursively find the .npy files corresponding to previous runs of the atmospheric correction process. This saves
-        time by loading the .npy files instead of correction again.
-
-        :return: The dictionary containing all .npy containing atmospherically corrected BOA reflectance. Could be
-            either ACOLITE or 6SV1. Returns None if no .npy found.
-        """
-
-        try:
-            found_l2_npy = find_all_files(path=Path(self.info["top_folder_name"], "geotiff"),
-                                            str_in_file="L2",
-                                            suffix=".npy")
-        except KeyError:
-            found_l2_npy = None
-
-        if found_l2_npy is None:
-            return None
-
-        dict_L2 = None
-        # Save Generated Cube as "npy" (for faster loading
-        for l2_file in found_l2_npy:
-            correction_model = str(l2_file.stem).split("_")[1]
-            correction_model = correction_model.upper()
-            l2_cube = None
-            with open(l2_file, 'rb') as f:
-                print(f"Found {l2_file.name}")
-                l2_cube = np.load(f)
-
-            if dict_L2 is None:
-                dict_L2 = {}
-            dict_L2[correction_model] = l2_cube
-
-        return dict_L2
 
     # TODO
     def get_projection_metadata(self) -> dict:
