@@ -886,46 +886,34 @@ class Hypso1(Hypso):
 
         # products = ["L2-ACOLITE", "L2-6SV1", "L1C"]
 
-        self._check_calibration_has_run()
-        self._check_geometry_computation_has_run()
+        #self._check_calibration_has_run()
+        #self._check_geometry_computation_has_run()
 
         if self.l2a_cube is None:
             self.l2a_cube = {}
 
         match product:
-
             case "6SV1":
-
                 if self.verbose: 
                     print("[INFO] Running 6SV1 atmospheric correction")
-
                 if product not in self.l2a_cube:
                     self.l2a_cube[product] = self._run_6sv1_atmospheric_correction()
-
                 if self.verbose: 
                     print("[INFO] Done!")
-                
             case "ACOLITE":
-
                 if self.verbose: 
                     print("[INFO] Running ACOLITE atmospheric correction")
 
                 if product not in self.l2a_cube:
                     self.l2a_cube[product] = self._run_acolite_atmospheric_correction()
-
                 if self.verbose: 
                     print("[INFO] Done!")
 
-
             case "MACHI":
-
                 if self.verbose: 
                     print("[INFO] Running MACHI atmospheric correction")
-
                 if product not in self.l2a_cube:
-
-                    self.l2a_cube[product] = self._run_machi_atmospheric_correction
-
+                    self.l2a_cube[product] = self._run_machi_atmospheric_correction()
                 if self.verbose: 
                     print("[INFO] Done!")       
 
@@ -985,6 +973,7 @@ class Hypso1(Hypso):
 
     def _run_acolite_atmospheric_correction(self) -> None:
 
+        # TODO
         print("[WARNING] ACOLITE atmospheric correction has not been enabled.")
 
         return None
@@ -1003,15 +992,19 @@ class Hypso1(Hypso):
 
         return atmos_corrected_cube
     
-
     def _run_machi_atmospheric_correction(self) -> None:
 
+        # TODO
         print("[WARNING] Minimal Atmospheric Compensation for Hyperspectral Imagers (MACHI) atmospheric correction has not been enabled.")
         
-        self._check_calibration_has_run()
+        return None
+
+        #self._check_calibration_has_run()
         #self._check_geometry_computation_has_run()
 
-        return None
+        #T, A, objs = run_machi(cube=self.l1b_cube, verbose=self.verbose)
+
+
 
 
     def _run_land_mask(self) -> None:
@@ -1312,7 +1305,7 @@ class Hypso1(Hypso):
         return df_band
 
     # TODO: merge into get_l2a_cube function
-    def run_atmospheric_correction(self, product: Literal["ACOLITE", "6SV1"]) -> None:
+    def run_atmospheric_correction(self, product: Literal["ACOLITE", "6SV1", "MACHI"]) -> None:
 
         self._check_geometry_computation_has_run()
 

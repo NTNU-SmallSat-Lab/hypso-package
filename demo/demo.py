@@ -38,7 +38,7 @@ satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
 #print(satobj.l2a_cube['6SV1'].shape)
 
 #l1b_cube = satobj.get_l1b_cube()
-l2a_cube = satobj.get_l2a_cube()
+l2a_cube = satobj.get_l2a_cube(product="MACHI")
 
 #print(l1b_cube)
 print(l2a_cube)
