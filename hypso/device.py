@@ -196,11 +196,11 @@ class Hypso1(Hypso):
         # Load L1a file -----------------------------------------------------
         self._load_l1a_file()
 
-        # Georeferencing -----------------------------------------------------
-        #self._run_georeferencing()
-
         # Calibration -----------------------------------------------------
-        #self._run_calibration()
+        self._run_calibration()
+
+        # Georeferencing -----------------------------------------------------
+        self._run_georeferencing()
 
         # Atmospheric correction -----------------------------------------------------
         # TODO: add flags to make sure run in the correct orders
@@ -750,22 +750,27 @@ class Hypso1(Hypso):
         self.datacube_flipped = flip_datacube
 
 
-        self.latitudes = self.latitudes[:, ::-1]
-        self.longitudes = self.longitudes[:, ::-1]
-            
-        if self.l1a_cube is not None:
-            self.l1a_cube = self.l1a_cube[:, ::-1, :]
+        # TODO
 
-        if self.l1b_cube is not None:  
-            self.l1b_cube = self.l1b_cube[:, ::-1, :]
-            
-        if self.l2a_cube is not None:
-            if isinstance(self.l2a_cube, dict):
-                for key in self.l2a_cube.keys():
-                    self.l2a_cube = self.l2a_cube[key][:, ::-1, :]
+        '''
+        if not flip_datacube:
+
+            self.latitudes = self.latitudes[:, ::-1]
+            self.longitudes = self.longitudes[:, ::-1]
+                
+            if self.l1a_cube is not None:
+                self.l1a_cube = self.l1a_cube[:, ::-1, :]
+
+            if self.l1b_cube is not None:  
+                self.l1b_cube = self.l1b_cube[:, ::-1, :]
+                
+            if self.l2a_cube is not None:
+                if isinstance(self.l2a_cube, dict):
+                    for key in self.l2a_cube.keys():
+                        self.l2a_cube = self.l2a_cube[key][:, ::-1, :]
 
 
-
+        '''
 
         '''
         if flip_datacube is not None and flip_datacube: 

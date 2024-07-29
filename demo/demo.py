@@ -30,9 +30,13 @@ from hypso import Hypso1
 #nc_file = os.path.join(dir_path, 'frohavet_2024-04-19_1014Z-l1a.nc')
 #points_file = os.path.join(dir_path, 'frohavet_2024-04-19_1014Z-bin3.points')
 
+#dir_path = '/home/cameron/Dokumenter/Data/frohavet'
+#nc_file = os.path.join(dir_path, 'frohavet_2024-04-26_1049Z-l1a.nc')
+#points_file = os.path.join(dir_path, 'frohavet_2024-04-26_1049Z-bin3.points')
+
 dir_path = '/home/cameron/Dokumenter/Data/frohavet'
-nc_file = os.path.join(dir_path, 'frohavet_2024-04-26_1049Z-l1a.nc')
-points_file = os.path.join(dir_path, 'frohavet_2024-04-26_1049Z-bin3.points')
+nc_file = os.path.join(dir_path, 'frohavet_2024-05-06_1017Z-l1a.nc')
+points_file = os.path.join(dir_path, 'frohavet_2024-05-06_1017Z-bin3.points')
 
 
 satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
@@ -59,13 +63,14 @@ satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
 #print(l1b_cube)
 #print(l2a_cube)
 
-satobj._run_land_mask(product="threshold")
-#plt.imshow(satobj.land_mask)
-plt.imsave(fname='threshold.png', arr=satobj.land_mask)
 
 satobj._run_land_mask(product="global")
 #plt.imshow(arr=satobj.land_mask)
 plt.imsave(fname='global.png', arr=satobj.land_mask)
+
+satobj._run_land_mask(product="threshold")
+#plt.imshow(satobj.land_mask)
+plt.imsave(fname='threshold.png', arr=satobj.land_mask)
 
 satobj._run_land_mask(product="NDWI")
 #plt.imshow(satobj.land_mask)

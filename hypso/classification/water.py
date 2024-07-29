@@ -111,7 +111,7 @@ def threshold_watermask(cube, wavelengths: np.ndarray, threshold_val: float = 2.
 
     bool_mask = ret > threshold_val
 
-    bool_mask = bool_mask[:,::-1] 
+    #bool_mask = bool_mask[:,::-1] 
 
     return bool_mask
 
