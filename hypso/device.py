@@ -33,12 +33,8 @@ import time
 import scipy.interpolate as si
 
 EXPERIMENTAL_FEATURES = True
-
 SUPPORTED_PRODUCT_LEVELS = ["l1a", "l1b", "l2a"]
-
 SUPPORTED_ATM_CORR_PRODUCTS = ["6SV1", "ACOLITE"]
-
-
 
 class Hypso:
 
@@ -143,8 +139,6 @@ class Hypso:
         #self.l1cgeotiffFilePath = None
         #self.l2geotiffFilePath = None
 
-
-
     def _set_hypso_path(self, hypso_path=None) -> None:
 
         if hypso_path is None:
@@ -154,8 +148,6 @@ class Hypso:
         self.hypso_path = Path(hypso_path).absolute()
 
         return None
-
-        
 
     def _set_points_path(self, points_path=None) -> None:
 
@@ -944,6 +936,8 @@ class Hypso1(Hypso):
         self._check_calibration_has_run()
         self._check_geometry_computation_has_run()
 
+
+        # TODO: which values should we use?
         if self.latitudes is None:
             latitudes = self.latitudes_original # fall back on geometry computed values
         else:
@@ -976,6 +970,9 @@ class Hypso1(Hypso):
         return atmos_corrected_cube
 
     def _run_acolite_atmospheric_correction(self) -> None:
+
+        print("[WARNING] ACOLITE atmospheric correction has not been enabled.")
+        return None
 
         self._check_calibration_has_run()
         self._check_geometry_computation_has_run()
@@ -1026,8 +1023,8 @@ class Hypso1(Hypso):
 
         return None
 
-    # Other
 
+    # Other
 
     def _check_georeferencing_has_run(self, run=True) -> bool:
         if run:
@@ -1073,11 +1070,6 @@ class Hypso1(Hypso):
 
         return False
     
-
-    
-
-
-
     def _check_l1a_file_format(self) -> None:
 
         # Check that hypso_path file is a NetCDF file:
@@ -1330,10 +1322,16 @@ class Hypso1(Hypso):
             
 
     def get_land_mask(self) -> np.ndarray:
-        return None        
+
+        self._run_land_mask()
+
+        return self.land_mask       
     
     def get_cloud_mask(self) -> np.ndarray:
-        return None       
+
+        self._run_cloud_mask()
+
+        return self.cloud_mask 
 
     # TODO
     def get_toa_reflectance(self) -> np.ndarray:
