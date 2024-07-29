@@ -518,6 +518,17 @@ class Hypso1(Hypso):
 
         info["nc_file"] = self.hypso_path
 
+        info["nc_name"] = self.hypso_path.stem
+
+        info["l1a_nc_file"] = info["nc_file"]
+        info["l1b_nc_file"] = info["nc_name"].replace("-l1a", "-l1b") + ".nc"
+        info["l2a_nc_file"] = info["nc_name"].replace("-l2a", "-l2a") + ".nc"
+
+        
+
+        info["tmp_dir"] =  Path(info["nc_file"].parent.absolute(), info["nc_name"].replace("-l1a", "") + "_tmp")
+        info["top_folder_name"] = info["tmp_dir"]
+
         if all([self.target_coords.get('latc'), self.target_coords.get('lonc')]):
             info['target_area'] = self.target_coords['latc'] + ' ' + self.target_coords['lonc']
         else:
@@ -900,9 +911,6 @@ class Hypso1(Hypso):
 
         # products = ["L2-ACOLITE", "L2-6SV1", "L1C"]
 
-        #self._check_calibration_has_run()
-        #self._check_geometry_computation_has_run()
-
         if self.l2a_cube is None:
             self.l2a_cube = {}
 
@@ -984,19 +992,22 @@ class Hypso1(Hypso):
         # TODO
         print("[WARNING] ACOLITE atmospheric correction has not been enabled.")
 
-        return None
-
         self._check_calibration_has_run()
         self._check_geometry_computation_has_run()
 
-        atmos_params = None # TODO: what should these be?
+        # user and password from https://urs.earthdata.nasa.gov/profile
+        # optional but good
+        atmos_params = {
+            'user':'alvarof',
+            'password':'nwz7xmu8dak.UDG9kqz'
+        }
 
         if not self.info["nc_file"].is_file():
             raise Exception("No -l1b.nc file found")
         
-        atmos_corrected_cube = run_acolite(self.info, 
-                                            atmos_params, 
-                                            self.info["nc_file"])
+        atmos_corrected_cube = run_acolite(self.info["top_folder_name"], 
+                                          atmos_params, 
+                                          self.info["nc_file"])
 
         return atmos_corrected_cube
     
