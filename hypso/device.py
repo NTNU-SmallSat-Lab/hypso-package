@@ -34,6 +34,10 @@ EXPERIMENTAL_FEATURES = True
 
 SUPPORTED_PRODUCT_LEVELS = ["l1a", "l1b", "l2a"]
 
+SUPPORTED_ATM_CORR_PRODUCTS = ["6SV1", "ACOLITE"]
+
+
+
 class Hypso:
 
     def __init__(self, hypso_path: str, points_path: Union[str, None] = None):
@@ -197,7 +201,7 @@ class Hypso1(Hypso):
         self._run_calibration()
 
         # Atmospheric correction -----------------------------------------------------
-        self._run_atmospheric_correction(product='6SV1')
+        #self._run_atmospheric_correction(product='6SV1')
 
         # File output
         #self._write_l1a_file()
@@ -231,66 +235,7 @@ class Hypso1(Hypso):
         return None
 
 
-    def _run_calibration(self) -> None:
-
-        self._set_calibration_coeff_files()
-        self._set_calibration_coeffs()
-        self._set_wavelengths()
-        self._set_srf()
-        self._generate_l1b_cube()
-
-        return None
-
-    def _load_l1a_file(self) -> None:
-
-        self._check_l1a_file_format()
-
-        self._set_capture_name()
-        self._set_capture_region()
-        self._set_capture_datetime()
-
-        self._load_l1a_cube()
-        self._load_l1a_metadata()
-
-        self._set_info_dict()
-        self._set_capture_type()
-        self._set_spatial_dimensions()
-        self._set_adcs_dataframes()
-
-        return None
-
-    def _check_l1a_file_format(self) -> None:
-
-        # Check that hypso_path file is a NetCDF file:
-        #if not self.hypso_path.suffix == '.nc':
-        #    raise Exception("Incorrect HYPSO Path. Only .nc files supported")
-
-        match self.hypso_path.suffix:
-
-            case '.nc':
-                pass
-            case '.bip':
-                raise Exception("Incorrect HYPSO Path. Only .nc files supported")
-            case _:
-                raise Exception("Incorrect HYPSO Path. Only .nc files supported")
-    
-        return None
-
-    def _load_l1a_cube(self) -> None:
-
-        self.l1a_cube = load_l1a_nc_cube(self.hypso_path)
-
-        return None
-
-    def _load_l1a_metadata(self) -> None:
-
-        self.capture_config, \
-            self.timing, \
-            self.target_coords, \
-            self.adcs, \
-            self.dimensions = load_l1a_nc_metadata(self.hypso_path)
-        
-        return None
+    # Setters
 
     def _set_verbose(self, verbose=False) -> None:
 
@@ -314,6 +259,443 @@ class Hypso1(Hypso):
 
         # TODO: implement this function
         self.capture_datetime = None
+
+        return None
+
+    def _set_srf(self) -> None:
+        """
+        Get Spectral Response Functions (SRF) from HYPSO for each of the 120 bands. Theoretical FWHM of 3.33nm is
+        used to estimate Sigma for an assumed gaussian distribution of each SRF per band.
+        """
+
+        if not any(self.wavelengths):
+            self.srf = None
+
+        fwhm_nm = 3.33
+        sigma_nm = fwhm_nm / (2 * np.sqrt(2 * np.log(2)))
+
+        srf = []
+        for band in self.wavelengths:
+            center_lambda_nm = band
+            start_lambda_nm = np.round(center_lambda_nm - (3 * sigma_nm), 4)
+            soft_end_lambda_nm = np.round(center_lambda_nm + (3 * sigma_nm), 4)
+
+            srf_wl = [center_lambda_nm]
+            lower_wl = []
+            upper_wl = []
+            for ele in self.wavelengths:
+                if start_lambda_nm < ele < center_lambda_nm:
+                    lower_wl.append(ele)
+                elif center_lambda_nm < ele < soft_end_lambda_nm:
+                    upper_wl.append(ele)
+
+            # Make symmetric
+            while len(lower_wl) > len(upper_wl):
+                lower_wl.pop(0)
+            while len(upper_wl) > len(lower_wl):
+                upper_wl.pop(-1)
+
+            srf_wl = lower_wl + srf_wl + upper_wl
+
+            good_idx = [(True if ele in srf_wl else False) for ele in self.wavelengths]
+
+            # Delta based on Hypso Sampling (Wavelengths)
+            gx = None
+            if len(srf_wl) == 1:
+                gx = [0]
+            else:
+                gx = np.linspace(-3 * sigma_nm, 3 * sigma_nm, len(srf_wl))
+            gaussian_srf = np.exp(
+                -(gx / sigma_nm) ** 2 / 2)  # Not divided by the sum, because we want peak to 1.0
+
+            # Get final wavelength and SRF
+            srf_wl_single = self.wavelengths
+            srf_single = np.zeros_like(srf_wl_single)
+            srf_single[good_idx] = gaussian_srf
+
+            srf.append([srf_wl_single, srf_single])
+
+        self.srf = srf
+
+        return None
+    
+    def _set_rad_coeff_file(self, rad_coeff_file=None) -> None:
+
+        """
+        Get the absolute path for the radiometric coefficients.
+
+        :param rad_coeff_file: Path to radiometric coefficients file (optional)
+
+        :return: None.
+        """
+
+        if rad_coeff_file:
+            self.rad_coeff_file = rad_coeff_file
+            return
+
+        match self.info["capture_type"]:
+            case "custom":
+                csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1.csv"    
+            case "nominal":
+                csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_nominal_v1.csv"
+            case "wide":
+                csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_wide_v1.csv"
+            case _:
+                csv_file_radiometric = None
+
+        if csv_file_radiometric:
+            rad_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_radiometric}')
+        else: 
+            rad_coeff_file = None
+
+        self.rad_coeff_file = rad_coeff_file
+
+        return None
+
+    def _set_smile_coeff_file(self, smile_coeff_file=None) -> None:
+
+        """
+        Get the absolute path for the smile coefficients.
+
+        :param smile_coeff_file: Path to smile coefficients file (optional)
+
+        :return: None.
+        """
+
+        if smile_coeff_file:
+            self.smile_coeff_file = smile_coeff_file
+            return
+
+        match self.info["capture_type"]:
+            case "custom":
+                csv_file_smile = "spectral_calibration_matrix_HYPSO-1_full_v1.csv"    
+            case "nominal":
+                csv_file_smile = "smile_correction_matrix_HYPSO-1_nominal_v1.csv"
+            case "wide":
+                csv_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.csv"
+            case _:
+                csv_file_smile = None
+
+        if csv_file_smile:
+            smile_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_smile}')
+        else:
+            smile_coeff_file = csv_file_smile
+
+        self.smile_coeff_file = smile_coeff_file
+
+        return None
+
+    def _set_destriping_coeff_file(self, destriping_coeff_file=None) -> None:
+
+        """
+        Get the absolute path for the destriping coefficients.
+
+        :param destriping_coeff_file: Path to destriping coefficients file (optional)
+
+        :return: None.
+        """
+
+        if destriping_coeff_file:
+            self.destriping_coeff_file = destriping_coeff_file
+            return
+
+        match self.info["capture_type"]:
+            
+            case "custom":
+                csv_file_destriping = None
+                        
+            case "nominal":
+                csv_file_destriping = "destriping_matrix_HYPSO-1_nominal_v1.csv"
+
+            case "wide":
+                csv_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.csv"
+
+            case _:
+                csv_file_destriping = None
+
+        if csv_file_destriping:
+            destriping_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_destriping}')
+        else:
+            destriping_coeff_file = csv_file_destriping
+
+        self.destriping_coeff_file = destriping_coeff_file
+
+        return None
+
+    def _set_spectral_coeff_file(self, spectral_coeff_file=None) -> None:
+
+        """
+        Get the absolute path for the spectral coefficients (wavelengths).
+
+        :param spectral_coeff_file: Path to spectral coefficients file (optional)
+
+        :return: None.
+        """
+
+        if spectral_coeff_file:
+            self.spectral_coeff_file = spectral_coeff_file
+            return
+        
+        csv_file_spectral = "spectral_bands_HYPSO-1_v1.csv"
+
+        spectral_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_spectral}')
+
+        self.spectral_coeff_file = spectral_coeff_file
+
+        return None
+
+    def _set_calibration_coeff_files(self) -> None:
+        """
+        Set the absolute path for the calibration coefficients included in the package. This includes radiometric,
+        smile and destriping correction.
+
+        :return: None.
+        """
+
+        self._set_rad_coeff_file()
+        self._set_smile_coeff_file()
+        self._set_destriping_coeff_file()
+        self._set_spectral_coeff_file()
+
+        return None
+    
+    def _set_capture_name(self) -> None:
+
+        capture_name = self.hypso_path.stem
+
+        for pl in SUPPORTED_PRODUCT_LEVELS:
+
+            if "-" + pl in capture_name:
+                capture_name = capture_name.replace("-" + pl, "")
+
+        #if "-l1a" in capture_name:
+        #    capture_name = capture_name.replace("-l1a", "")
+
+        self.capture_name = capture_name
+
+        return None
+
+    def _set_capture_region(self) -> None:
+
+        self._set_capture_name()
+        self.capture_region = self.capture_name.split('_')[0].strip('_')
+
+        return None
+
+    def _set_spatial_dimensions(self) -> None:
+
+        self.spatial_dimensions = (self.capture_config["frame_count"], self.info["image_height"])
+
+        if self.verbose:
+            print(f"[INFO] Capture spatial dimensions: {self.spatial_dimensions}")
+
+        return None
+
+    def _set_capture_type(self) -> None:
+
+        if self.capture_config["frame_count"] == self.standard_dimensions["nominal"]:
+            self.info["capture_type"] = "nominal"
+
+        elif self.info["image_height"] == self.standard_dimensions["wide"]:
+            self.info["capture_type"] = "wide"
+        else:
+            if EXPERIMENTAL_FEATURES:
+                print("Number of Rows (AKA frame_count) Is Not Standard")
+                self.info["capture_type"] = "custom"
+            else:
+                raise Exception("Number of Rows (AKA frame_count) Is Not Standard")
+
+        if self.verbose:
+            print(f"[INFO] Capture capture type: {self.info['capture_type']}")
+
+        return None
+
+    def _set_info_dict(self) -> None:
+
+        # TODO: move this dictionary into object variables
+
+        info = {}
+
+        info["nc_file"] = self.hypso_path
+
+        if all([self.target_coords.get('latc'), self.target_coords.get('lonc')]):
+            info['target_area'] = self.target_coords['latc'] + ' ' + self.target_coords['lonc']
+        else:
+            info['target_area'] = None
+
+        info["background_value"] = 8 * self.capture_config["bin_factor"]
+
+        info["x_start"] = self.capture_config["aoi_x"]
+        info["x_stop"] = self.capture_config["aoi_x"] + self.capture_config["column_count"]
+        info["y_start"] = self.capture_config["aoi_y"]
+        info["y_stop"] = self.capture_config["aoi_y"] + self.capture_config["row_count"]
+        info["exp"] = self.capture_config["exposure"] / 1000  # in seconds
+
+        info["image_height"] = self.capture_config["row_count"]
+        info["image_width"] = int(self.capture_config["column_count"] / self.capture_config["bin_factor"])
+        info["im_size"] = info["image_height"] * info["image_width"]
+
+        # TODO: Verify offset validity. Sivert had 20 here
+        UNIX_TIME_OFFSET = 20
+
+        info["start_timestamp_capture"] = int(self.timing['capture_start_unix']) + UNIX_TIME_OFFSET
+
+        # Get END_TIMESTAMP_CAPTURE
+        #    cant compute end timestamp using frame count and frame rate
+        #     assuming some default value if fps and exposure not available
+        try:
+            info["end_timestamp_capture"] = info["start_timestamp_capture"] + self.capture_config["frame_count"] / self.capture_config["fps"] + self.capture_config["exposure"] / 1000.0
+        except:
+            print("fps or exposure values not found assuming 20.0 for each")
+            info["end_timestamp_capture"] = info["start_timestamp_capture"] + self.capture_config["frame_count"] / 20.0 + 20.0 / 1000.0
+
+        # using 'awk' for floating point arithmetic ('expr' only support integer arithmetic): {printf \"%.2f\n\", 100/3}"
+        time_margin_start = 641.0  # 70.0
+        time_margin_end = 180.0  # 70.0
+        info["start_timestamp_adcs"] = info["start_timestamp_capture"] - time_margin_start
+        info["end_timestamp_adcs"] = info["end_timestamp_capture"] + time_margin_end
+
+        info["unixtime"] = info["start_timestamp_capture"]
+        info["iso_time"] = datetime.utcfromtimestamp(info["unixtime"]).isoformat()
+
+        self.info = info
+
+        return None
+
+    def _set_calibration_coeffs(self) -> None:
+
+        self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file)
+        self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file)
+        self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
+        self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
+
+        return None
+
+    def _set_wavelengths(self) -> None:
+
+        if self.spectral_coeffs is not None:
+            self.wavelengths = self.spectral_coeffs
+        else:
+            self.wavelengths = None
+
+        return None
+
+    def _set_adcs_dataframes(self) -> None:
+
+        self._set_adcs_pos_dataframe()
+        self._set_adcs_quat_dataframe()
+
+        return None
+
+    def _set_adcs_pos_dataframe(self) -> None:
+
+        # TODO move DataFrame formatting related code to geometry
+        position_headers = ["timestamp", "eci x [m]", "eci y [m]", "eci z [m]"]
+        
+        timestamps = self.adcs["timestamps"]
+        pos_x = self.adcs["position_x"]
+        pos_y = self.adcs["position_y"]
+        pos_z = self.adcs["position_z"]
+
+        pos_array = np.column_stack((timestamps, pos_x, pos_y, pos_z))
+        pos_df = pd.DataFrame(pos_array, columns=position_headers)
+
+        self.adcs_pos_df = pos_df
+
+        return None
+
+    def _set_adcs_quat_dataframe(self) -> None:
+
+        # TODO move DataFrame formatting related code to geometry
+        quaternion_headers = ["timestamp", "quat_0", "quat_1", "quat_2", "quat_3", "Control error [deg]"]
+
+        timestamps = self.adcs["timestamps"]
+        quat_s = self.adcs["quaternion_s"]
+        quat_x = self.adcs["quaternion_x"]
+        quat_y = self.adcs["quaternion_y"]
+        quat_z = self.adcs["quaternion_z"]
+        control_error = self.adcs["control_error"]
+
+        quat_array = np.column_stack((timestamps, quat_s, quat_x, quat_y, quat_z, control_error))
+        quat_df = pd.DataFrame(quat_array, columns=quaternion_headers)
+
+        self.adcs_quat_df = quat_df
+
+        return None
+
+
+
+
+
+    # Loaders
+
+    def _load_l1a_file(self) -> None:
+
+        self._check_l1a_file_format()
+
+        self._set_capture_name()
+        self._set_capture_region()
+        self._set_capture_datetime()
+
+        self._load_l1a_cube()
+        self._load_l1a_metadata()
+
+        self._set_info_dict()
+        self._set_capture_type()
+        self._set_spatial_dimensions()
+        self._set_adcs_dataframes()
+
+        return None
+
+    def _load_l1a_cube(self) -> None:
+
+        self._load_l1a_nc_cube()
+        #self._load_l1a_bip_cube()
+        
+        return None
+
+    def _load_l1a_metadata(self) -> None:
+        
+        self._load_l1a_nc_metadata()
+        self._load_l1a_bip_metadata()
+
+        return None
+
+    def _load_l1a_nc_cube(self) -> None:
+
+        self.l1a_cube = load_l1a_nc_cube(self.hypso_path)
+
+        return None
+
+    def _load_l1a_nc_metadata(self) -> None:
+
+        self.capture_config, \
+            self.timing, \
+            self.target_coords, \
+            self.adcs, \
+            self.dimensions = load_l1a_nc_metadata(self.hypso_path)
+        
+        return None
+
+    def _load_l1a_bip_cube(self) -> None:
+        
+        return None
+
+    def _load_l1a_bip_metadata(self) -> None:
+        
+        return None
+
+
+
+    # Runners
+
+    def _run_calibration(self) -> None:
+
+        self._set_calibration_coeff_files()
+        self._set_calibration_coeffs()
+        self._set_wavelengths()
+        self._set_srf()
+        self._generate_l1b_cube()
 
         return None
 
@@ -381,62 +763,589 @@ class Hypso1(Hypso):
 
         return None
 
-    def _set_srf(self) -> None:
-        """
-        Get Spectral Response Functions (SRF) from HYPSO for each of the 120 bands. Theoretical FWHM of 3.33nm is
-        used to estimate Sigma for an assumed gaussian distribution of each SRF per band.
-        """
+    def _run_radiometric_calibration(self, cube=None) -> np.ndarray:
 
-        if not any(self.wavelengths):
-            self.srf = None
+        # Radiometric calibration
 
-        fwhm_nm = 3.33
-        sigma_nm = fwhm_nm / (2 * np.sqrt(2 * np.log(2)))
+        if cube is None:
+            cube = self.l1a_cube
 
-        srf = []
-        for band in self.wavelengths:
-            center_lambda_nm = band
-            start_lambda_nm = np.round(center_lambda_nm - (3 * sigma_nm), 4)
-            soft_end_lambda_nm = np.round(center_lambda_nm + (3 * sigma_nm), 4)
+        if self.verbose:
+            print("[INFO] Running radiometric calibration...")
 
-            srf_wl = [center_lambda_nm]
-            lower_wl = []
-            upper_wl = []
-            for ele in self.wavelengths:
-                if start_lambda_nm < ele < center_lambda_nm:
-                    lower_wl.append(ele)
-                elif center_lambda_nm < ele < soft_end_lambda_nm:
-                    upper_wl.append(ele)
+        cube = run_radiometric_calibration(cube=cube, 
+                                           background_value=self.info['background_value'],
+                                           exp=self.info['exp'],
+                                           image_height=self.info['image_height'],
+                                           image_width=self.info['image_width'],
+                                           frame_count=self.capture_config['frame_count'],
+                                           rad_coeffs=self.rad_coeffs)
 
-            # Make symmetric
-            while len(lower_wl) > len(upper_wl):
-                lower_wl.pop(0)
-            while len(upper_wl) > len(lower_wl):
-                upper_wl.pop(-1)
+        # TODO: The factor by 10 is to fix a bug in which the coeff have a factor of 10
+        #cube_calibrated = run_radiometric_calibration(self.info, self.rawcube, self.calibration_coefficients_dict) / 10
+        cube = cube / 10
 
-            srf_wl = lower_wl + srf_wl + upper_wl
+        if self.verbose:
+            print("[INFO] Done!")
 
-            good_idx = [(True if ele in srf_wl else False) for ele in self.wavelengths]
+        return cube
 
-            # Delta based on Hypso Sampling (Wavelengths)
-            gx = None
-            if len(srf_wl) == 1:
-                gx = [0]
-            else:
-                gx = np.linspace(-3 * sigma_nm, 3 * sigma_nm, len(srf_wl))
-            gaussian_srf = np.exp(
-                -(gx / sigma_nm) ** 2 / 2)  # Not divided by the sum, because we want peak to 1.0
+    def _run_smile_correction(self, cube=None) -> np.ndarray:
 
-            # Get final wavelength and SRF
-            srf_wl_single = self.wavelengths
-            srf_single = np.zeros_like(srf_wl_single)
-            srf_single[good_idx] = gaussian_srf
+        # Smile correction
 
-            srf.append([srf_wl_single, srf_single])
+        if cube is None:
+            cube = self.l1a_cube
 
-        self.srf = srf
+        if self.verbose:
+            print("[INFO] Running smile correction...")
+
+        cube = run_smile_correction(cube=cube, 
+                                    smile_coeffs=self.smile_coeffs)
+        
+        if self.verbose:
+            print("[INFO] Done!")
+
+        return cube
+
+    def _run_destriping_correction(self, cube) -> np.ndarray:
+
+        # Destriping
+
+        if cube is None:
+            cube = self.l1a_cube
+
+        if self.verbose:
+            print("[INFO] Running destriping correction...")
+
+        cube = run_destriping_correction(cube=cube, 
+                                         destriping_coeffs=self.destriping_coeffs)
+        
+        if self.verbose:
+            print("[INFO] Done!")
+
+        return cube
+
+    def _run_geometry_computation(self) -> None:
+
+        print("[INFO] Running frame interpolation...")
+
+        framepose_data = interpolate_at_frame(adcs_pos_df=self.adcs_pos_df,
+                                              adcs_quat_df=self.adcs_quat_df,
+                                              timestamps_srv=self.timing['timestamps_srv'],
+                                              frame_count=self.capture_config['frame_count'],
+                                              fps=self.capture_config['fps'],
+                                              exposure=self.capture_config['exposure'],
+                                              verbose=self.verbose
+                                              )
+        print("[INFO] Done!")
+
+        print("[INFO] Running geometry computation...")
+
+        wkt_linestring_footprint, \
+           prj_file_contents, \
+           local_angles, \
+           geometric_meta_info, \
+           pixels_lat, \
+           pixels_lon, \
+           sun_azimuth, \
+           sun_zenith, \
+           sat_azimuth, \
+           sat_zenith = geometry_computation(framepose_data=framepose_data,
+                                             image_height=self.info['image_height'],
+                                             verbose=self.verbose
+                                             )
+
+        print("[INFO] Done!")
+
+        self.wkt_linestring_footprint = wkt_linestring_footprint
+        self.prj_file_contents = prj_file_contents
+        self.local_angles = local_angles
+        self.geometric_meta_info = geometric_meta_info
+
+        self.solar_zenith_angles = sun_zenith.reshape(self.spatial_dimensions)
+        self.solar_azimuth_angles = sun_azimuth.reshape(self.spatial_dimensions)
+
+        self.sat_zenith_angles = sat_zenith.reshape(self.spatial_dimensions)
+        self.sat_azimuth_angles = sat_azimuth.reshape(self.spatial_dimensions)
+
+        #self.lat_original = pixels_lat.reshape(self.spatial_dimensions)
+        #self.lon_original = pixels_lon.reshape(self.spatial_dimensions)
+
+        self.latitudes_original = pixels_lat.reshape(self.spatial_dimensions)
+        self.longitudes_original = pixels_lon.reshape(self.spatial_dimensions)
 
         return None
+
+    def _run_atmospheric_correction(self, product: str) -> None:
+
+        # products = ["L2-ACOLITE", "L2-6SV1", "L1C"]
+
+        if self.l2a_cube is None:
+            self.l2a_cube = {}
+
+        match product:
+
+            case "6SV1":
+
+                if self.verbose: 
+                    print("[INFO] Running 6SV1 atmospheric correction")
+
+                if product not in self.l2a_cube:
+                    self.l2a_cube[product] = self._run_6sv1_atmospheric_correction()
+
+                if self.verbose: 
+                    print("[INFO] Done!")
+                
+            case "ACOLITE":
+
+                if self.verbose: 
+                    print("[INFO] Running ACOLITE atmospheric correction")
+
+                if product not in self.l2a_cube:
+                    self.l2a_cube[product] = self._run_acolite_atmospheric_correction()
+
+                if self.verbose: 
+                    print("[INFO] Done!")
+
+            case _:
+                print("[WARNING] No such product supported!")
+
+        return None
+
+    def _run_6sv1_atmospheric_correction(self) -> np.ndarray:
+
+        # Py6S Atmospheric Correction
+        # aot value: https://neo.gsfc.nasa.gov/view.php?datasetId=MYDAL2_D_AER_OD&date=2023-01-01
+        # alternative: https://giovanni.gsfc.nasa.gov/giovanni/
+        # atmos_dict = {
+        #     'aot550': 0.01,
+        #     # 'aeronet': r"C:\Users\alvar\Downloads\070101_151231_Autilla.dubovik"
+        # }
+        # AOT550 parameter gotten from: https://giovanni.gsfc.nasa.gov/giovanni/
+
+        atmos_params = {
+            'aot550': 0.0580000256
+        }
+
+        time_capture = parser.parse(self.info['iso_time'])
+
+        atmos_corrected_cube = run_py6s(wavelengths=self.wavelengths, 
+                                        hypercube_L1=self.l1b_cube, 
+                                        lat_2d_array=self.latitudes,
+                                        lon_2d_array=self.longitudes,
+                                        solar_azimuth_angles=self.solar_azimuth_angles,
+                                        solar_zenith_angles=self.solar_zenith_angles,
+                                        sat_azimuth_angles=self.sat_azimuth_angles,
+                                        sat_zenith_angles=self.sat_zenith_angles,
+                                        iso_time=self.info['iso_time'],
+                                        py6s_dict=atmos_params, 
+                                        time_capture=time_capture,
+                                        srf=self.srf)
+        
+        return atmos_corrected_cube
+
+    def _run_acolite_atmospheric_correction(self) -> None:
+
+        atmos_params = None # TODO: what should these be?
+
+        if not self.info["nc_file"].is_file():
+            raise Exception("No -l1b.nc file found")
+        
+        atmos_corrected_cube = run_acolite(self.info, 
+                                            atmos_params, 
+                                            self.info["nc_file"])
+
+        return atmos_corrected_cube
+
+
+
+
+    # Other
+
+    def _check_l1a_file_format(self) -> None:
+
+        # Check that hypso_path file is a NetCDF file:
+        #if not self.hypso_path.suffix == '.nc':
+        #    raise Exception("Incorrect HYPSO Path. Only .nc files supported")
+
+        match self.hypso_path.suffix:
+
+            case '.nc':
+                pass
+            case '.bip':
+                raise Exception("Incorrect HYPSO Path. Only .nc files supported")
+            case _:
+                raise Exception("Incorrect HYPSO Path. Only .nc files supported")
+    
+        return None
+
+    def _generate_l1b_cube(self) -> None:
+        """
+        Get calibrated and corrected cube. Includes Radiometric, Smile and Destriping Correction.
+            Assumes all coefficients has been adjusted to the frame size (cropped and
+            binned), and that the data cube contains 12-bit values.
+
+        :return: None
+        """
+
+        self.l1b_cube = self._run_radiometric_calibration()
+        self.l1b_cube = self._run_smile_correction(cube=self.l1b_cube)
+        self.l1b_cube = self._run_destriping_correction(cube=self.l1b_cube)
+
+        return None
+
+
+
+
+
+    # Public methods
+
+    def display_geometry_information(self) -> None:
+
+        # Notes:
+        # - along_track, frame_count, lines, rows, y, latitude: 956, 598
+        # - cross_track, row_count, image_height, samples, cols, x, longitude: 684, 1092
+        # - spectral, image_width, bands, z: 120
+        print('Spatial dimensions: ' + str(self.spatial_dimensions))
+        print('Standard dimensions: ' + str(self.standard_dimensions))
+        print('Row count: ' + str(self.capture_config['row_count']))
+        print('Image height: ' + str(self.info['image_height']))
+        print('Image width: ' + str(self.info['image_width']))
+        print('Frame count: ' + str(self.capture_config['frame_count']))
+        #print('Frame height: ' + str(frame_height))
+        print('Lines: ' + str(self.dimensions['lines']))
+        print('Samples: ' + str(self.dimensions['samples']))
+        print('Bands: ' + str(self.dimensions['bands']))
+
+        return None
+
+    # TODO
+    def get_spectra(self, position_dict: dict, product: Literal["L1C", "L2-6SV1", "L2-ACOLITE"] = "L1C",
+                    filename: Union[str, None] = None, plot: bool = True) -> Union[pd.DataFrame, None]:
+        """
+        Get spectra values from the indicated coordinated or pixel.
+
+        :param position_dict: Dictionary with the inputs required.\n
+            *** If Coordinates are Input *** \n
+            ``{"lat":59.5,"lon":10}``\n
+            *** If pixel location passed *** \n
+            ``{"X":200,"Y":83}``
+        :param product: Product of which to retrieve the spectral signal. Can either be "L1C", "L2-ACOLITE" or "L2-6SV1"
+        :param filename: Path on which to save the spectra as a .csv file. Filename should contain the ".csv" extension.
+            Example: "/Documents/export_signal.csv". If None, the spectral signal won´t be saved as a file.
+        :param plot: If True, the spectral signal will be plotted.
+
+        :return: None if the coordinates/pixel location are not withing the captured image. Otherwise, a pandas dataframe
+            containing the spectral signal is returned.
+        """
+
+        position_keys = list(position_dict.keys())
+        if "lat" in position_keys or "lon" in position_keys:
+            postype = "coord"
+        elif "X" in position_keys or "Y" in position_keys:
+            postype = "pix"
+        else:
+            raise Exception("Keys of ")
+
+        # To Store data
+        spectra_data = []
+        multiplier = 1  # Multiplier for the signal. In case signal is compressed differently.
+        posX = None
+        posY = None
+        lat = None
+        lon = None
+        transformed_lon = None
+        transformed_lat = None
+        # Open the raster
+
+        # Find Geotiffs
+        self.find_geotiffs()
+
+        # Check if full (120 band) tiff exists
+        if self.l1cgeotiffFilePath is None and self.l2geotiffFilePath is None:
+            raise Exception("No Full-Band GeoTiff, Force Restart")
+
+        path_to_read = None
+        cols = []
+        if product == "L1C":
+            if self.l1cgeotiffFilePath is None:
+                raise Exception("L1C product does not exist.")
+            elif self.l1cgeotiffFilePath is not None:
+                path_to_read = self.l1cgeotiffFilePath
+                cols = ["wl", "radiance"]
+        elif "L2" in product:
+            l2_engine = product.split("-")[1]
+            if self.l2geotiffFilePath is None:
+                raise Exception("L2 product does not exist.")
+            elif self.l2geotiffFilePath is not None:
+                try:
+                    path_to_read = self.l2geotiffFilePath[l2_engine.upper()]
+                except:
+                    raise Exception(f"There is no L2 Geotiff for {l2_engine.upper()}")
+
+                cols = ["wl", "rrs"]
+
+        else:
+            raise Exception("Wrong product type.")
+
+        with rasterio.open(str(path_to_read)) as dataset:
+            dataset_crs = dataset.crs
+            print("Dataset CRS: ", dataset_crs)
+
+            # Create Projection with Dataset CRS
+            dataset_proj = prj.Proj(dataset_crs)  # your data crs
+
+            # Find Corners of Image (For Development)
+            boundbox = dataset.bounds
+            left_bottom = dataset_proj(
+                boundbox[0], boundbox[1], inverse=True)
+            right_top = dataset_proj(
+                boundbox[2], boundbox[3], inverse=True)
+
+            if postype == 'coord':
+                # Get list to two variables
+                lat = position_dict["lat"]
+                lon = position_dict["lon"]
+                # lat, lon = position
+                # Transform Coordinates to Image CRS
+                transformed_lon, transformed_lat = dataset_proj(
+                    lon, lat, inverse=False)
+                # Get pixel coordinates from map coordinates
+                posY, posX = dataset.index(
+                    transformed_lon, transformed_lat)
+
+            elif postype == 'pix':
+                posX = int(position_dict["X"])
+                posY = int(position_dict["Y"])
+
+                # posX = int(position[0])
+                # posY = int(position[1])
+
+                transformed_lon = dataset.xy(posX, posY)[0]
+                transformed_lat = dataset.xy(posX, posY)[1]
+
+                # Transform from the GeoTiff CRS
+                lon, lat = dataset_proj(
+                    transformed_lon, transformed_lat, inverse=True)
+
+            # Window size is 1 for a Single Pixel or 3 for a 3x3 windowd
+            N = 3
+            # Build an NxN window
+            window = rasterio.windows.Window(
+                posX - (N // 2), posY - (N // 2), N, N)
+
+            # Read the data in the window
+            # clip is a nbands * N * N numpy array
+            clip = dataset.read(window=window)
+            if N != 1:
+                clip = np.mean(clip, axis=(1, 2))
+
+            clip = np.squeeze(clip)
+
+            # Append data to Array
+            # Multiplier for Values like Sentinel 2 which need 1/10000
+            spectra_data = clip * multiplier
+
+        # Return None if outside of boundaries or alpha channel is 0
+        if posX < 0 or posY < 0 or self.projection_metadata["rgba_data"][3, posY, posX] == 0:
+            print("Location not covered by image --------------------------\n")
+            return None
+
+        # Print Coordinate and Pixel Matching
+        print("(lat, lon) -→ (X, Y) : (%s, %s) -→ (%s, %s)" %
+              (lat, lon, posX, posY))
+
+        df_band = pd.DataFrame(np.column_stack((self.wavelengths, spectra_data)), columns=cols)
+        df_band["lat"] = lat
+        df_band["lon"] = lon
+        df_band["X"] = posX
+        df_band["Y"] = posY
+
+        if filename is not None:
+            df_band.to_csv(filename, index=False)
+
+        if plot:
+            import matplotlib.pyplot as plt
+            plt.figure(figsize=(10, 5))
+            plt.plot(self.wavelengths, spectra_data)
+            if product == "L1C":
+                plt.ylabel(self.units)
+            elif "L2" in product:
+                plt.ylabel("Rrs [0,1]")
+                plt.ylim([0, 1])
+            plt.xlabel("Wavelength (nm)")
+            plt.title(f"(lat, lon) -→ (X, Y) : ({lat}, {lon}) -→ ({posX}, {posY})")
+            plt.grid(True)
+            plt.show()
+
+        return df_band
+
+    def run_atmospheric_correction(self, product: Literal["ACOLITE", "6SV1"]) -> dict:
+
+        if product in SUPPORTED_ATM_CORR_PRODUCTS:
+            self._run_atmospheric_correction(product=product)
+            return self.l2a_cube
+        
+        else:
+            print("[ERROR] The atmospheric correction product \"" + str(product) + "\" is not supported.")
+            return None
+
+    # TODO
+    def get_toa_reflectance(self) -> np.ndarray:
+        """
+        Convert Top Of Atmosphere (TOA) Radiance to TOA Reflectance.
+
+        :return: Array with TOA Reflectance.
+        """
+        # Get Local variables
+        srf = self.srf
+        toa_radiance = self.l1b_cube
+
+        scene_date = parser.isoparse(self.info['iso_time'])
+        julian_day = scene_date.timetuple().tm_yday
+        solar_zenith = self.info['solar_zenith_angle']
+
+        # Read Solar Data
+        solar_data_path = str(files('hypso.atmospheric').joinpath("Solar_irradiance_Thuillier_2002.csv"))
+        solar_df = pd.read_csv(solar_data_path)
+
+        # Create new solar X with a new delta
+        solar_array = np.array(solar_df)
+        current_num = solar_array[0, 0]
+        delta = 0.01
+        new_solar_x = [solar_array[0, 0]]
+        while current_num <= solar_array[-1, 0]:
+            current_num = current_num + delta
+            new_solar_x.append(current_num)
+
+        # Interpolate for Y with original solar data
+        new_solar_y = np.interp(new_solar_x, solar_array[:, 0], solar_array[:, 1])
+
+        # Replace solar Dataframe
+        solar_df = pd.DataFrame(np.column_stack((new_solar_x, new_solar_y)), columns=solar_df.columns)
+
+        # Estimation of TOA Reflectance
+        band_number = 0
+        toa_reflectance = np.empty_like(toa_radiance)
+        for single_wl, single_srf in srf:
+            # Resample HYPSO SRF to new solar wavelength
+            resamp_srf = np.interp(new_solar_x, single_wl, single_srf)
+            weights_srf = resamp_srf / np.sum(resamp_srf)
+            ESUN = np.sum(solar_df['mW/m2/nm'].values * weights_srf)  # units matche HYPSO from device.py
+
+            # Earth-Sun distance (from day of year) using julian date
+            # http://physics.stackexchange.com/questions/177949/earth-sun-distance-on-a-given-day-of-the-year
+            distance_sun = 1 - 0.01672 * np.cos(0.9856 * (
+                    julian_day - 4))
+
+            # Get toa_reflectance
+            solar_angle_correction = np.cos(np.radians(solar_zenith))
+            multiplier = (ESUN * solar_angle_correction) / (np.pi * distance_sun ** 2)
+            toa_reflectance[:, :, band_number] = toa_radiance[:, :, band_number] / multiplier
+
+            band_number = band_number + 1
+
+        return toa_reflectance
+
+    # TODO
+    def find_existing_l2_cube(self) -> Union[dict, None]:
+        """
+        Recursively find the .npy files corresponding to previous runs of the atmospheric correction process. This saves
+        time by loading the .npy files instead of correction again.
+
+        :return: The dictionary containing all .npy containing atmospherically corrected BOA reflectance. Could be
+            either ACOLITE or 6SV1. Returns None if no .npy found.
+        """
+
+        try:
+            found_l2_npy = find_all_files(path=Path(self.info["top_folder_name"], "geotiff"),
+                                            str_in_file="L2",
+                                            suffix=".npy")
+        except KeyError:
+            found_l2_npy = None
+
+        if found_l2_npy is None:
+            return None
+
+        dict_L2 = None
+        # Save Generated Cube as "npy" (for faster loading
+        for l2_file in found_l2_npy:
+            correction_model = str(l2_file.stem).split("_")[1]
+            correction_model = correction_model.upper()
+            l2_cube = None
+            with open(l2_file, 'rb') as f:
+                print(f"Found {l2_file.name}")
+                l2_cube = np.load(f)
+
+            if dict_L2 is None:
+                dict_L2 = {}
+            dict_L2[correction_model] = l2_cube
+
+        return dict_L2
+
+    # TODO
+    def get_projection_metadata(self) -> dict:
+        """
+        Returns the projection metadata dictionary. This is either extracted from the RGBA, L1 or L1C GeoTiff
+
+        :return: Dictionary containing the projection information for the capture.
+        """
+
+        top_folder_name = self.info["top_folder_name"]
+        current_project = {}
+
+        # Find Geotiffs
+        self.find_geotiffs()
+
+        # -----------------------------------------------------------------
+        # Get geotiff data for rgba first    ------------------------------
+        # -----------------------------------------------------------------
+        if self.rgbGeotiffFilePath is not None:
+            print("RGBA Tif File: ", self.rgbGeotiffFilePath.name)
+            # Load GeoTiff Metadata with gdal
+            ds = gdal.Open(str(self.rgbGeotiffFilePath))
+            data = ds.ReadAsArray()
+            gt = ds.GetGeoTransform()
+            proj = ds.GetProjection()
+            inproj = osr.SpatialReference()
+            inproj.ImportFromWkt(proj)
+
+            boundbox = None
+            crs = None
+            with rasterio.open(self.rgbGeotiffFilePath) as dataset:
+                crs = dataset.crs
+                boundbox = dataset.bounds
+
+            current_project = {
+                "rgba_data": data,
+                "gt": gt,
+                "proj": proj,
+                "inproj": inproj,
+                "boundbox": boundbox,
+                "crs": str(crs).lower()
+            }
+
+        # -----------------------------------------------------------------
+        # Get geotiff data for full second   ------------------------------
+        # -----------------------------------------------------------------
+        full_path = None
+        if self.l2geotiffFilePath is not None:
+            # Load GeoTiff Metadata with gdal
+            first_key = list(self.l2geotiffFilePath)[0]
+            path_found = self.l2geotiffFilePath[first_key]
+            ds = gdal.Open(str(path_found))
+            data = ds.ReadAsArray()
+            current_project["data"] = data
+            print("Full L2 Tif File: ", path_found.name)
+        if self.l1cgeotiffFilePath is not None:
+            # Load GeoTiff Metadata with gdal
+            ds = gdal.Open(str(self.l1cgeotiffFilePath))
+            data = ds.ReadAsArray()
+            current_project["data"] = data
+            print("Full L1C Tif File: ", self.l1cgeotiffFilePath.name)
+
+        return current_project
 
     # TODO
     def create_l1b_nc_file(self) -> None:
@@ -924,879 +1833,7 @@ class Hypso1(Hypso):
         # Update
         self.info["nc_file"] = Path(new_path)
 
-    def _run_atmospheric_correction(self, 
-                                    product: Literal["ACOLITE", "6SV1"]) -> None:
 
-        # products = ["L2-ACOLITE", "L2-6SV1", "L1C"]
-
-        if self.l2a_cube is None:
-            self.l2a_cube = {}
-
-        match product:
-
-            case "6SV1":
-
-                if self.verbose: 
-                    print("[INFO] Running 6SV1 atmospheric correction")
-
-                if product not in self.l2a_cube:
-                    self.l2a_cube[product] = self._run_6sv1_atmospheric_correction()
-
-                if self.verbose: 
-                    print("[INFO] Done!")
-                
-            case "ACOLITE":
-
-                if self.verbose: 
-                    print("[INFO] Running ACOLITE atmospheric correction")
-
-                if product not in self.l2a_cube:
-                    self.l2a_cube[product] = self._run_acolite_atmospheric_correction()
-
-                if self.verbose: 
-                    print("[INFO] Done!")
-
-            case _:
-                print("[WARNING] No such product supported!")
-
-        return None
-
-    def _run_6sv1_atmospheric_correction(self) -> np.ndarray:
-
-        # Py6S Atmospheric Correction
-        # aot value: https://neo.gsfc.nasa.gov/view.php?datasetId=MYDAL2_D_AER_OD&date=2023-01-01
-        # alternative: https://giovanni.gsfc.nasa.gov/giovanni/
-        # atmos_dict = {
-        #     'aot550': 0.01,
-        #     # 'aeronet': r"C:\Users\alvar\Downloads\070101_151231_Autilla.dubovik"
-        # }
-        # AOT550 parameter gotten from: https://giovanni.gsfc.nasa.gov/giovanni/
-
-        atmos_params = {
-            'aot550': 0.0580000256
-        }
-
-        time_capture = parser.parse(self.info['iso_time'])
-
-        atmos_corrected_cube = run_py6s(wavelengths=self.wavelengths, 
-                                        hypercube_L1=self.l1b_cube, 
-                                        lat_2d_array=self.latitudes,
-                                        lon_2d_array=self.longitudes,
-                                        solar_azimuth_angles=self.solar_azimuth_angles,
-                                        solar_zenith_angles=self.solar_zenith_angles,
-                                        sat_azimuth_angles=self.sat_azimuth_angles,
-                                        sat_zenith_angles=self.sat_zenith_angles,
-                                        iso_time=self.info['iso_time'],
-                                        py6s_dict=atmos_params, 
-                                        time_capture=time_capture,
-                                        srf=self.srf)
-        
-        return atmos_corrected_cube
-
-    def _run_acolite_atmospheric_correction(self) -> None:
-
-        atmos_params = None # TODO: what should these be?
-
-        if not self.info["nc_file"].is_file():
-            raise Exception("No -l1b.nc file found")
-        
-        atmos_corrected_cube = run_acolite(self.info, 
-                                            atmos_params, 
-                                            self.info["nc_file"])
-
-        return atmos_corrected_cube
-
-
-    # TODO
-    def find_existing_l2_cube(self) -> Union[dict, None]:
-        """
-        Recursively find the .npy files corresponding to previous runs of the atmospheric correction process. This saves
-        time by loading the .npy files instead of correction again.
-
-        :return: The dictionary containing all .npy containing atmospherically corrected BOA reflectance. Could be
-            either ACOLITE or 6SV1. Returns None if no .npy found.
-        """
-
-        try:
-            found_l2_npy = find_all_files(path=Path(self.info["top_folder_name"], "geotiff"),
-                                            str_in_file="L2",
-                                            suffix=".npy")
-        except KeyError:
-            found_l2_npy = None
-
-        if found_l2_npy is None:
-            return None
-
-        dict_L2 = None
-        # Save Generated Cube as "npy" (for faster loading
-        for l2_file in found_l2_npy:
-            correction_model = str(l2_file.stem).split("_")[1]
-            correction_model = correction_model.upper()
-            l2_cube = None
-            with open(l2_file, 'rb') as f:
-                print(f"Found {l2_file.name}")
-                l2_cube = np.load(f)
-
-            if dict_L2 is None:
-                dict_L2 = {}
-            dict_L2[correction_model] = l2_cube
-
-        return dict_L2
-
-    # TODO
-    def get_projection_metadata(self) -> dict:
-        """
-        Returns the projection metadata dictionary. This is either extracted from the RGBA, L1 or L1C GeoTiff
-
-        :return: Dictionary containing the projection information for the capture.
-        """
-
-        top_folder_name = self.info["top_folder_name"]
-        current_project = {}
-
-        # Find Geotiffs
-        self.find_geotiffs()
-
-        # -----------------------------------------------------------------
-        # Get geotiff data for rgba first    ------------------------------
-        # -----------------------------------------------------------------
-        if self.rgbGeotiffFilePath is not None:
-            print("RGBA Tif File: ", self.rgbGeotiffFilePath.name)
-            # Load GeoTiff Metadata with gdal
-            ds = gdal.Open(str(self.rgbGeotiffFilePath))
-            data = ds.ReadAsArray()
-            gt = ds.GetGeoTransform()
-            proj = ds.GetProjection()
-            inproj = osr.SpatialReference()
-            inproj.ImportFromWkt(proj)
-
-            boundbox = None
-            crs = None
-            with rasterio.open(self.rgbGeotiffFilePath) as dataset:
-                crs = dataset.crs
-                boundbox = dataset.bounds
-
-            current_project = {
-                "rgba_data": data,
-                "gt": gt,
-                "proj": proj,
-                "inproj": inproj,
-                "boundbox": boundbox,
-                "crs": str(crs).lower()
-            }
-
-        # -----------------------------------------------------------------
-        # Get geotiff data for full second   ------------------------------
-        # -----------------------------------------------------------------
-        full_path = None
-        if self.l2geotiffFilePath is not None:
-            # Load GeoTiff Metadata with gdal
-            first_key = list(self.l2geotiffFilePath)[0]
-            path_found = self.l2geotiffFilePath[first_key]
-            ds = gdal.Open(str(path_found))
-            data = ds.ReadAsArray()
-            current_project["data"] = data
-            print("Full L2 Tif File: ", path_found.name)
-        if self.l1cgeotiffFilePath is not None:
-            # Load GeoTiff Metadata with gdal
-            ds = gdal.Open(str(self.l1cgeotiffFilePath))
-            data = ds.ReadAsArray()
-            current_project["data"] = data
-            print("Full L1C Tif File: ", self.l1cgeotiffFilePath.name)
-
-        return current_project
-
-    def _set_rad_coeff_file(self, rad_coeff_file=None) -> None:
-
-        """
-        Get the absolute path for the radiometric coefficients.
-
-        :param rad_coeff_file: Path to radiometric coefficients file (optional)
-
-        :return: None.
-        """
-
-        if rad_coeff_file:
-            self.rad_coeff_file = rad_coeff_file
-            return
-
-        match self.info["capture_type"]:
-            case "custom":
-                csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1.csv"    
-            case "nominal":
-                csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_nominal_v1.csv"
-            case "wide":
-                csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_wide_v1.csv"
-            case _:
-                csv_file_radiometric = None
-
-        if csv_file_radiometric:
-            rad_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_radiometric}')
-        else: 
-            rad_coeff_file = None
-
-        self.rad_coeff_file = rad_coeff_file
-
-        return None
-
-    def _set_smile_coeff_file(self, smile_coeff_file=None) -> None:
-
-        """
-        Get the absolute path for the smile coefficients.
-
-        :param smile_coeff_file: Path to smile coefficients file (optional)
-
-        :return: None.
-        """
-
-        if smile_coeff_file:
-            self.smile_coeff_file = smile_coeff_file
-            return
-
-        match self.info["capture_type"]:
-            case "custom":
-                csv_file_smile = "spectral_calibration_matrix_HYPSO-1_full_v1.csv"    
-            case "nominal":
-                csv_file_smile = "smile_correction_matrix_HYPSO-1_nominal_v1.csv"
-            case "wide":
-                csv_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.csv"
-            case _:
-                csv_file_smile = None
-
-        if csv_file_smile:
-            smile_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_smile}')
-        else:
-            smile_coeff_file = csv_file_smile
-
-        self.smile_coeff_file = smile_coeff_file
-
-        return None
-
-    def _set_destriping_coeff_file(self, destriping_coeff_file=None) -> None:
-
-        """
-        Get the absolute path for the destriping coefficients.
-
-        :param destriping_coeff_file: Path to destriping coefficients file (optional)
-
-        :return: None.
-        """
-
-        if destriping_coeff_file:
-            self.destriping_coeff_file = destriping_coeff_file
-            return
-
-        match self.info["capture_type"]:
-            
-            case "custom":
-                csv_file_destriping = None
-                        
-            case "nominal":
-                csv_file_destriping = "destriping_matrix_HYPSO-1_nominal_v1.csv"
-
-            case "wide":
-                csv_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.csv"
-
-            case _:
-                csv_file_destriping = None
-
-        if csv_file_destriping:
-            destriping_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_destriping}')
-        else:
-            destriping_coeff_file = csv_file_destriping
-
-        self.destriping_coeff_file = destriping_coeff_file
-
-        return None
-
-    def _set_spectral_coeff_file(self, spectral_coeff_file=None) -> None:
-
-        """
-        Get the absolute path for the spectral coefficients (wavelengths).
-
-        :param spectral_coeff_file: Path to spectral coefficients file (optional)
-
-        :return: None.
-        """
-
-        if spectral_coeff_file:
-            self.spectral_coeff_file = spectral_coeff_file
-            return
-        
-        csv_file_spectral = "spectral_bands_HYPSO-1_v1.csv"
-
-        spectral_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_spectral}')
-
-        self.spectral_coeff_file = spectral_coeff_file
-
-        return None
-
-    def _set_calibration_coeff_files(self) -> None:
-        """
-        Set the absolute path for the calibration coefficients included in the package. This includes radiometric,
-        smile and destriping correction.
-
-        :return: None.
-        """
-
-        self._set_rad_coeff_file()
-        self._set_smile_coeff_file()
-        self._set_destriping_coeff_file()
-        self._set_spectral_coeff_file()
-
-        return None
-  
-    def _run_radiometric_calibration(self, cube=None) -> np.ndarray:
-
-        # Radiometric calibration
-
-        if cube is None:
-            cube = self.l1a_cube
-
-        if self.verbose:
-            print("[INFO] Running radiometric calibration...")
-
-        cube = run_radiometric_calibration(cube=cube, 
-                                           background_value=self.info['background_value'],
-                                           exp=self.info['exp'],
-                                           image_height=self.info['image_height'],
-                                           image_width=self.info['image_width'],
-                                           frame_count=self.capture_config['frame_count'],
-                                           rad_coeffs=self.rad_coeffs)
-
-        # TODO: The factor by 10 is to fix a bug in which the coeff have a factor of 10
-        #cube_calibrated = run_radiometric_calibration(self.info, self.rawcube, self.calibration_coefficients_dict) / 10
-        cube = cube / 10
-
-        if self.verbose:
-            print("[INFO] Done!")
-
-        return cube
-
-    def _run_smile_correction(self, cube=None) -> np.ndarray:
-
-        # Smile correction
-
-        if cube is None:
-            cube = self.l1a_cube
-
-        if self.verbose:
-            print("[INFO] Running smile correction...")
-
-        cube = run_smile_correction(cube=cube, 
-                                    smile_coeffs=self.smile_coeffs)
-        
-        if self.verbose:
-            print("[INFO] Done!")
-
-        return cube
-
-    def _run_destriping_correction(self, cube) -> np.ndarray:
-
-        # Destriping
-
-        if cube is None:
-            cube = self.l1a_cube
-
-        if self.verbose:
-            print("[INFO] Running destriping correction...")
-
-        cube = run_destriping_correction(cube=cube, 
-                                         destriping_coeffs=self.destriping_coeffs)
-        
-        if self.verbose:
-            print("[INFO] Done!")
-
-        return cube
-
-    def _generate_l1b_cube(self) -> None:
-        """
-        Get calibrated and corrected cube. Includes Radiometric, Smile and Destriping Correction.
-            Assumes all coefficients has been adjusted to the frame size (cropped and
-            binned), and that the data cube contains 12-bit values.
-
-        :return: None
-        """
-
-        self.l1b_cube = self._run_radiometric_calibration()
-        self.l1b_cube = self._run_smile_correction(cube=self.l1b_cube)
-        self.l1b_cube = self._run_destriping_correction(cube=self.l1b_cube)
-
-        return None
-
-    # TODO
-    def get_toa_reflectance(self) -> np.ndarray:
-        """
-        Convert Top Of Atmosphere (TOA) Radiance to TOA Reflectance.
-
-        :return: Array with TOA Reflectance.
-        """
-        # Get Local variables
-        srf = self.srf
-        toa_radiance = self.l1b_cube
-
-        scene_date = parser.isoparse(self.info['iso_time'])
-        julian_day = scene_date.timetuple().tm_yday
-        solar_zenith = self.info['solar_zenith_angle']
-
-        # Read Solar Data
-        solar_data_path = str(files('hypso.atmospheric').joinpath("Solar_irradiance_Thuillier_2002.csv"))
-        solar_df = pd.read_csv(solar_data_path)
-
-        # Create new solar X with a new delta
-        solar_array = np.array(solar_df)
-        current_num = solar_array[0, 0]
-        delta = 0.01
-        new_solar_x = [solar_array[0, 0]]
-        while current_num <= solar_array[-1, 0]:
-            current_num = current_num + delta
-            new_solar_x.append(current_num)
-
-        # Interpolate for Y with original solar data
-        new_solar_y = np.interp(new_solar_x, solar_array[:, 0], solar_array[:, 1])
-
-        # Replace solar Dataframe
-        solar_df = pd.DataFrame(np.column_stack((new_solar_x, new_solar_y)), columns=solar_df.columns)
-
-        # Estimation of TOA Reflectance
-        band_number = 0
-        toa_reflectance = np.empty_like(toa_radiance)
-        for single_wl, single_srf in srf:
-            # Resample HYPSO SRF to new solar wavelength
-            resamp_srf = np.interp(new_solar_x, single_wl, single_srf)
-            weights_srf = resamp_srf / np.sum(resamp_srf)
-            ESUN = np.sum(solar_df['mW/m2/nm'].values * weights_srf)  # units matche HYPSO from device.py
-
-            # Earth-Sun distance (from day of year) using julian date
-            # http://physics.stackexchange.com/questions/177949/earth-sun-distance-on-a-given-day-of-the-year
-            distance_sun = 1 - 0.01672 * np.cos(0.9856 * (
-                    julian_day - 4))
-
-            # Get toa_reflectance
-            solar_angle_correction = np.cos(np.radians(solar_zenith))
-            multiplier = (ESUN * solar_angle_correction) / (np.pi * distance_sun ** 2)
-            toa_reflectance[:, :, band_number] = toa_radiance[:, :, band_number] / multiplier
-
-            band_number = band_number + 1
-
-        return toa_reflectance
-
-    def _set_capture_name(self) -> None:
-
-        capture_name = self.hypso_path.stem
-
-        for pl in SUPPORTED_PRODUCT_LEVELS:
-
-            if "-" + pl in capture_name:
-                capture_name = capture_name.replace("-" + pl, "")
-
-        #if "-l1a" in capture_name:
-        #    capture_name = capture_name.replace("-l1a", "")
-
-        self.capture_name = capture_name
-
-        return None
-
-    def _set_capture_region(self) -> None:
-
-        self._set_capture_name()
-        self.capture_region = self.capture_name.split('_')[0].strip('_')
-
-        return None
-
-    def _set_spatial_dimensions(self) -> None:
-
-        self.spatial_dimensions = (self.capture_config["frame_count"], self.info["image_height"])
-
-        if self.verbose:
-            print(f"[INFO] Capture spatial dimensions: {self.spatial_dimensions}")
-
-        return None
-
-    def _set_capture_type(self) -> None:
-
-        if self.capture_config["frame_count"] == self.standard_dimensions["nominal"]:
-            self.info["capture_type"] = "nominal"
-
-        elif self.info["image_height"] == self.standard_dimensions["wide"]:
-            self.info["capture_type"] = "wide"
-        else:
-            if EXPERIMENTAL_FEATURES:
-                print("Number of Rows (AKA frame_count) Is Not Standard")
-                self.info["capture_type"] = "custom"
-            else:
-                raise Exception("Number of Rows (AKA frame_count) Is Not Standard")
-
-        if self.verbose:
-            print(f"[INFO] Capture capture type: {self.info['capture_type']}")
-
-        return None
-
-    def _set_info_dict(self) -> None:
-
-        # TODO: move this dictionary into object variables
-
-        info = {}
-
-        info["nc_file"] = self.hypso_path
-
-        if all([self.target_coords.get('latc'), self.target_coords.get('lonc')]):
-            info['target_area'] = self.target_coords['latc'] + ' ' + self.target_coords['lonc']
-        else:
-            info['target_area'] = None
-
-        info["background_value"] = 8 * self.capture_config["bin_factor"]
-
-        info["x_start"] = self.capture_config["aoi_x"]
-        info["x_stop"] = self.capture_config["aoi_x"] + self.capture_config["column_count"]
-        info["y_start"] = self.capture_config["aoi_y"]
-        info["y_stop"] = self.capture_config["aoi_y"] + self.capture_config["row_count"]
-        info["exp"] = self.capture_config["exposure"] / 1000  # in seconds
-
-        info["image_height"] = self.capture_config["row_count"]
-        info["image_width"] = int(self.capture_config["column_count"] / self.capture_config["bin_factor"])
-        info["im_size"] = info["image_height"] * info["image_width"]
-
-        # TODO: Verify offset validity. Sivert had 20 here
-        UNIX_TIME_OFFSET = 20
-
-        info["start_timestamp_capture"] = int(self.timing['capture_start_unix']) + UNIX_TIME_OFFSET
-
-        # Get END_TIMESTAMP_CAPTURE
-        #    cant compute end timestamp using frame count and frame rate
-        #     assuming some default value if fps and exposure not available
-        try:
-            info["end_timestamp_capture"] = info["start_timestamp_capture"] + self.capture_config["frame_count"] / self.capture_config["fps"] + self.capture_config["exposure"] / 1000.0
-        except:
-            print("fps or exposure values not found assuming 20.0 for each")
-            info["end_timestamp_capture"] = info["start_timestamp_capture"] + self.capture_config["frame_count"] / 20.0 + 20.0 / 1000.0
-
-        # using 'awk' for floating point arithmetic ('expr' only support integer arithmetic): {printf \"%.2f\n\", 100/3}"
-        time_margin_start = 641.0  # 70.0
-        time_margin_end = 180.0  # 70.0
-        info["start_timestamp_adcs"] = info["start_timestamp_capture"] - time_margin_start
-        info["end_timestamp_adcs"] = info["end_timestamp_capture"] + time_margin_end
-
-        info["unixtime"] = info["start_timestamp_capture"]
-        info["iso_time"] = datetime.utcfromtimestamp(info["unixtime"]).isoformat()
-
-        self.info = info
-
-        return None
-
-    def _set_calibration_coeffs(self) -> None:
-
-        self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file)
-        self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file)
-        self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
-        self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
-
-        return None
-
-    def _set_wavelengths(self) -> None:
-
-        if self.spectral_coeffs is not None:
-            self.wavelengths = self.spectral_coeffs
-        else:
-            self.wavelengths = None
-
-        return None
-
-    def _set_adcs_dataframes(self) -> None:
-
-        self._set_adcs_pos_dataframe()
-        self._set_adcs_quat_dataframe()
-
-        return None
-
-    def _set_adcs_pos_dataframe(self) -> None:
-
-        # TODO move DataFrame formatting related code to geometry
-        position_headers = ["timestamp", "eci x [m]", "eci y [m]", "eci z [m]"]
-        
-        timestamps = self.adcs["timestamps"]
-        pos_x = self.adcs["position_x"]
-        pos_y = self.adcs["position_y"]
-        pos_z = self.adcs["position_z"]
-
-        pos_array = np.column_stack((timestamps, pos_x, pos_y, pos_z))
-        pos_df = pd.DataFrame(pos_array, columns=position_headers)
-
-        self.adcs_pos_df = pos_df
-
-        return None
-
-    def _set_adcs_quat_dataframe(self) -> None:
-
-        # TODO move DataFrame formatting related code to geometry
-        quaternion_headers = ["timestamp", "quat_0", "quat_1", "quat_2", "quat_3", "Control error [deg]"]
-
-        timestamps = self.adcs["timestamps"]
-        quat_s = self.adcs["quaternion_s"]
-        quat_x = self.adcs["quaternion_x"]
-        quat_y = self.adcs["quaternion_y"]
-        quat_z = self.adcs["quaternion_z"]
-        control_error = self.adcs["control_error"]
-
-        quat_array = np.column_stack((timestamps, quat_s, quat_x, quat_y, quat_z, control_error))
-        quat_df = pd.DataFrame(quat_array, columns=quaternion_headers)
-
-        self.adcs_quat_df = quat_df
-
-        return None
-
-
-    def _run_geometry_computation(self) -> None:
-
-        print("[INFO] Running frame interpolation...")
-
-        framepose_data = interpolate_at_frame(adcs_pos_df=self.adcs_pos_df,
-                                              adcs_quat_df=self.adcs_quat_df,
-                                              timestamps_srv=self.timing['timestamps_srv'],
-                                              frame_count=self.capture_config['frame_count'],
-                                              fps=self.capture_config['fps'],
-                                              exposure=self.capture_config['exposure'],
-                                              verbose=self.verbose
-                                              )
-        print("[INFO] Done!")
-
-        print("[INFO] Running geometry computation...")
-
-        wkt_linestring_footprint, \
-           prj_file_contents, \
-           local_angles, \
-           geometric_meta_info, \
-           pixels_lat, \
-           pixels_lon, \
-           sun_azimuth, \
-           sun_zenith, \
-           sat_azimuth, \
-           sat_zenith = geometry_computation(framepose_data=framepose_data,
-                                             image_height=self.info['image_height'],
-                                             verbose=self.verbose
-                                             )
-
-        print("[INFO] Done!")
-
-
-        self.wkt_linestring_footprint = wkt_linestring_footprint
-        self.prj_file_contents = prj_file_contents
-        self.local_angles = local_angles
-        self.geometric_meta_info = geometric_meta_info
-
-        self.solar_zenith_angles = sun_zenith.reshape(self.spatial_dimensions)
-        self.solar_azimuth_angles = sun_azimuth.reshape(self.spatial_dimensions)
-
-        self.sat_zenith_angles = sat_zenith.reshape(self.spatial_dimensions)
-        self.sat_azimuth_angles = sat_azimuth.reshape(self.spatial_dimensions)
-
-        #self.lat_original = pixels_lat.reshape(self.spatial_dimensions)
-        #self.lon_original = pixels_lon.reshape(self.spatial_dimensions)
-
-        self.latitudes_original = pixels_lat.reshape(self.spatial_dimensions)
-        self.longitudes_original = pixels_lon.reshape(self.spatial_dimensions)
-
-        
-
-
-
-
-        # TODO: finish this:
-        '''
-        nc_info = get_local_angles(sat_azimuth_path, sat_zenith_path,
-                                solar_azimuth_path, solar_zenith_path,
-                                nc_info, spatial_dimensions)
-
-        nc_info = get_lat_lon_2d(latitude_dataPath, longitude_dataPath, nc_info, spatial_dimensions)
-
-        nc_rawcube = get_raw_cube_from_nc_file(nc_file_path)
-        '''
-
-        return None
-
-
-
-    # Public methods
-
-    def display_geometry_information(self) -> None:
-
-        # Notes:
-        # - along_track, frame_count, lines, rows, y, latitude: 956, 598
-        # - cross_track, row_count, image_height, samples, cols, x, longitude: 684, 1092
-        # - spectral, image_width, bands, z: 120
-        print('Spatial dimensions: ' + str(self.spatial_dimensions))
-        print('Standard dimensions: ' + str(self.standard_dimensions))
-        print('Row count: ' + str(self.capture_config['row_count']))
-        print('Image height: ' + str(self.info['image_height']))
-        print('Image width: ' + str(self.info['image_width']))
-        print('Frame count: ' + str(self.capture_config['frame_count']))
-        #print('Frame height: ' + str(frame_height))
-        print('Lines: ' + str(self.dimensions['lines']))
-        print('Samples: ' + str(self.dimensions['samples']))
-        print('Bands: ' + str(self.dimensions['bands']))
-
-        return None
-
-    # TODO
-    def get_spectra(self, position_dict: dict, product: Literal["L1C", "L2-6SV1", "L2-ACOLITE"] = "L1C",
-                    filename: Union[str, None] = None, plot: bool = True) -> Union[pd.DataFrame, None]:
-        """
-        Get spectra values from the indicated coordinated or pixel.
-
-        :param position_dict: Dictionary with the inputs required.\n
-            *** If Coordinates are Input *** \n
-            ``{"lat":59.5,"lon":10}``\n
-            *** If pixel location passed *** \n
-            ``{"X":200,"Y":83}``
-        :param product: Product of which to retrieve the spectral signal. Can either be "L1C", "L2-ACOLITE" or "L2-6SV1"
-        :param filename: Path on which to save the spectra as a .csv file. Filename should contain the ".csv" extension.
-            Example: "/Documents/export_signal.csv". If None, the spectral signal won´t be saved as a file.
-        :param plot: If True, the spectral signal will be plotted.
-
-        :return: None if the coordinates/pixel location are not withing the captured image. Otherwise, a pandas dataframe
-            containing the spectral signal is returned.
-        """
-
-        position_keys = list(position_dict.keys())
-        if "lat" in position_keys or "lon" in position_keys:
-            postype = "coord"
-        elif "X" in position_keys or "Y" in position_keys:
-            postype = "pix"
-        else:
-            raise Exception("Keys of ")
-
-        # To Store data
-        spectra_data = []
-        multiplier = 1  # Multiplier for the signal. In case signal is compressed differently.
-        posX = None
-        posY = None
-        lat = None
-        lon = None
-        transformed_lon = None
-        transformed_lat = None
-        # Open the raster
-
-        # Find Geotiffs
-        self.find_geotiffs()
-
-        # Check if full (120 band) tiff exists
-        if self.l1cgeotiffFilePath is None and self.l2geotiffFilePath is None:
-            raise Exception("No Full-Band GeoTiff, Force Restart")
-
-        path_to_read = None
-        cols = []
-        if product == "L1C":
-            if self.l1cgeotiffFilePath is None:
-                raise Exception("L1C product does not exist.")
-            elif self.l1cgeotiffFilePath is not None:
-                path_to_read = self.l1cgeotiffFilePath
-                cols = ["wl", "radiance"]
-        elif "L2" in product:
-            l2_engine = product.split("-")[1]
-            if self.l2geotiffFilePath is None:
-                raise Exception("L2 product does not exist.")
-            elif self.l2geotiffFilePath is not None:
-                try:
-                    path_to_read = self.l2geotiffFilePath[l2_engine.upper()]
-                except:
-                    raise Exception(f"There is no L2 Geotiff for {l2_engine.upper()}")
-
-                cols = ["wl", "rrs"]
-
-        else:
-            raise Exception("Wrong product type.")
-
-        with rasterio.open(str(path_to_read)) as dataset:
-            dataset_crs = dataset.crs
-            print("Dataset CRS: ", dataset_crs)
-
-            # Create Projection with Dataset CRS
-            dataset_proj = prj.Proj(dataset_crs)  # your data crs
-
-            # Find Corners of Image (For Development)
-            boundbox = dataset.bounds
-            left_bottom = dataset_proj(
-                boundbox[0], boundbox[1], inverse=True)
-            right_top = dataset_proj(
-                boundbox[2], boundbox[3], inverse=True)
-
-            if postype == 'coord':
-                # Get list to two variables
-                lat = position_dict["lat"]
-                lon = position_dict["lon"]
-                # lat, lon = position
-                # Transform Coordinates to Image CRS
-                transformed_lon, transformed_lat = dataset_proj(
-                    lon, lat, inverse=False)
-                # Get pixel coordinates from map coordinates
-                posY, posX = dataset.index(
-                    transformed_lon, transformed_lat)
-
-            elif postype == 'pix':
-                posX = int(position_dict["X"])
-                posY = int(position_dict["Y"])
-
-                # posX = int(position[0])
-                # posY = int(position[1])
-
-                transformed_lon = dataset.xy(posX, posY)[0]
-                transformed_lat = dataset.xy(posX, posY)[1]
-
-                # Transform from the GeoTiff CRS
-                lon, lat = dataset_proj(
-                    transformed_lon, transformed_lat, inverse=True)
-
-            # Window size is 1 for a Single Pixel or 3 for a 3x3 windowd
-            N = 3
-            # Build an NxN window
-            window = rasterio.windows.Window(
-                posX - (N // 2), posY - (N // 2), N, N)
-
-            # Read the data in the window
-            # clip is a nbands * N * N numpy array
-            clip = dataset.read(window=window)
-            if N != 1:
-                clip = np.mean(clip, axis=(1, 2))
-
-            clip = np.squeeze(clip)
-
-            # Append data to Array
-            # Multiplier for Values like Sentinel 2 which need 1/10000
-            spectra_data = clip * multiplier
-
-        # Return None if outside of boundaries or alpha channel is 0
-        if posX < 0 or posY < 0 or self.projection_metadata["rgba_data"][3, posY, posX] == 0:
-            print("Location not covered by image --------------------------\n")
-            return None
-
-        # Print Coordinate and Pixel Matching
-        print("(lat, lon) -→ (X, Y) : (%s, %s) -→ (%s, %s)" %
-              (lat, lon, posX, posY))
-
-        df_band = pd.DataFrame(np.column_stack((self.wavelengths, spectra_data)), columns=cols)
-        df_band["lat"] = lat
-        df_band["lon"] = lon
-        df_band["X"] = posX
-        df_band["Y"] = posY
-
-        if filename is not None:
-            df_band.to_csv(filename, index=False)
-
-        if plot:
-            import matplotlib.pyplot as plt
-            plt.figure(figsize=(10, 5))
-            plt.plot(self.wavelengths, spectra_data)
-            if product == "L1C":
-                plt.ylabel(self.units)
-            elif "L2" in product:
-                plt.ylabel("Rrs [0,1]")
-                plt.ylim([0, 1])
-            plt.xlabel("Wavelength (nm)")
-            plt.title(f"(lat, lon) -→ (X, Y) : ({lat}, {lon}) -→ ({posX}, {posY})")
-            plt.grid(True)
-            plt.show()
-
-        return df_band
 
 
 class Hypso2(Hypso):
