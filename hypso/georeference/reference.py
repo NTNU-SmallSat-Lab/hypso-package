@@ -204,8 +204,8 @@ def generate_geotiff(satObj, bands: list, cube_data: np.ndarray) -> None:
     hypso_width = 120
     band_count = hypso_width
 
-    pixels_lat = satObj.info["lat"]
-    pixels_lon = satObj.info["lon"]
+    pixels_lat = satObj.latitudes
+    pixels_lon = satObj.longitudes
 
     # Setup Paths -----------------------------------------------------------
     top_folder_name = satObj.info["top_folder_name"]
