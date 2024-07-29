@@ -12,6 +12,7 @@ joseph.garrett@ntnu.no
 
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 def load_solar(wl):
     '''
