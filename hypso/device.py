@@ -95,7 +95,7 @@ class Hypso:
          # Initialize latitude and longitude variables
         self.latitudes = None
         self.longitudes = None
-        self.datacube_flipped = None
+        self.datacube_flipped = False
 
         # Initialize wavelengths
         self.wavelengths = None
@@ -714,8 +714,8 @@ class Hypso1(Hypso):
                                               origin_mode='qgis')
             
             # Update latitude and longitude arrays with computed values from Georeferencer
-            self.latitudes = gr.latitudes
-            self.longitudes = gr.longitudes
+            self.latitudes = gr.latitudes[:, ::-1]
+            self.longitudes = gr.longitudes[:, ::-1]
             
             self._run_georeferencing_orientation()
 
@@ -738,26 +738,17 @@ class Hypso1(Hypso):
 
     def _run_georeferencing_orientation(self) -> None:
 
-        flip_datacube = check_star_tracker_orientation(adcs_samples=self.adcs['adcssamples'],
-                                                        quaternion_s=self.adcs['quaternion_s'],
-                                                        quaternion_x=self.adcs['quaternion_x'],
-                                                        quaternion_y=self.adcs['quaternion_y'],
-                                                        quaternion_z=self.adcs['quaternion_z'],
-                                                        velocity_x=self.adcs['velocity_x'],
-                                                        velocity_y=self.adcs['velocity_y'],
-                                                        velocity_z=self.adcs['velocity_z'])
+        datacube_flipped = check_star_tracker_orientation(adcs_samples=self.adcs['adcssamples'],
+                                                         quaternion_s=self.adcs['quaternion_s'],
+                                                         quaternion_x=self.adcs['quaternion_x'],
+                                                         quaternion_y=self.adcs['quaternion_y'],
+                                                         quaternion_z=self.adcs['quaternion_z'],
+                                                         velocity_x=self.adcs['velocity_x'],
+                                                         velocity_y=self.adcs['velocity_y'],
+                                                         velocity_z=self.adcs['velocity_z'])
 
-        self.datacube_flipped = flip_datacube
+        if not datacube_flipped:
 
-
-        # TODO
-
-        '''
-        if not flip_datacube:
-
-            self.latitudes = self.latitudes[:, ::-1]
-            self.longitudes = self.longitudes[:, ::-1]
-                
             if self.l1a_cube is not None:
                 self.l1a_cube = self.l1a_cube[:, ::-1, :]
 
@@ -769,55 +760,24 @@ class Hypso1(Hypso):
                     for key in self.l2a_cube.keys():
                         self.l2a_cube = self.l2a_cube[key][:, ::-1, :]
 
+        self.datacube_flipped = datacube_flipped
 
-        '''
+        return None
 
-        '''
-        if flip_datacube is not None and flip_datacube: 
-            self.latitudes = self.latitudes[::-1,:]
-            self.longitudes = self.longitudes[::-1,:]
-            #datacube = datacube[:, ::-1, :]
-        else:
 
-            pass
-            self.latitudes = self.latitudes[:,::-1]
-            self.longitudes = self.longitudes[:,::-1]
-            
-            if self.l1a_cube is not None:
-                self.l1a_cube = self.l1a_cube[:, ::-1, :]
-
-            if self.l1b_cube is not None:  
-                self.l1b_cube = self.l1b_cube[:, ::-1, :]
-
-            if self.l2a_cube is not None and isinstance(self.l2a_cube, dict):
-                for key in self.l2a_cube.keys():
-                    self.l2a_cube = self.l2a_cube[key][:, ::-1, :]
-
-            self.latitudes = self.latitudes[::-1,::-1]
-            self.longitudes = self.longitudes[::-1,::-1]
-            datacube = datacube[:, ::-1, :]
-        '''
-            
     def _get_original_orientation_cube(self, cube: np.ndarray) -> np.ndarray:
 
-
         if self.datacube_flipped is None:
-            
             return cube
-        
         else:
-
             if self.datacube_flipped:
-                return cube # TODO
+                return cube[:, ::-1, :]
 
             else:
                 return cube
 
         return cube
 
-
-
-        return None
 
 
     def _run_radiometric_calibration(self, cube=None) -> np.ndarray:
@@ -830,6 +790,8 @@ class Hypso1(Hypso):
         if self.verbose:
             print("[INFO] Running radiometric calibration...")
 
+        cube = self._get_original_orientation_cube(cube=cube)
+
         cube = run_radiometric_calibration(cube=cube, 
                                            background_value=self.info['background_value'],
                                            exp=self.info['exp'],
@@ -837,6 +799,8 @@ class Hypso1(Hypso):
                                            image_width=self.info['image_width'],
                                            frame_count=self.capture_config['frame_count'],
                                            rad_coeffs=self.rad_coeffs)
+
+        cube = self._get_original_orientation_cube(cube=cube)
 
         # TODO: The factor by 10 is to fix a bug in which the coeff have a factor of 10
         #cube_calibrated = run_radiometric_calibration(self.info, self.rawcube, self.calibration_coefficients_dict) / 10
@@ -854,8 +818,12 @@ class Hypso1(Hypso):
         if self.verbose:
             print("[INFO] Running smile correction...")
 
+        cube = self._get_original_orientation_cube(cube=cube)
+
         cube = run_smile_correction(cube=cube, 
                                     smile_coeffs=self.smile_coeffs)
+
+        cube = self._get_original_orientation_cube(cube=cube)
 
         return cube
 
@@ -869,8 +837,12 @@ class Hypso1(Hypso):
         if self.verbose:
             print("[INFO] Running destriping correction...")
 
+        cube = self._get_original_orientation_cube(cube=cube)
+
         cube = run_destriping_correction(cube=cube, 
                                          destriping_coeffs=self.destriping_coeffs)
+
+        cube = self._get_original_orientation_cube(cube=cube)
 
         return cube
 

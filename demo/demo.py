@@ -21,10 +21,51 @@ from hypso import Hypso1
 #nc_file = os.path.join(dir_path, 'erie_2023-10-02_1559Z-l1a.nc')
 #points_file = os.path.join(dir_path, 'erie_2023-10-02_1559Z-bin3.points')
 
+#dir_path = '/home/cameron/Dokumenter/Data/erie'
+#nc_file = os.path.join(dir_path, 'erie_2023-05-17_1553Z-l1a.nc')
+#points_file = os.path.join(dir_path, 'erie_2023-05-17_1553Z-bin3.points')
+
+#dir_path = '/home/cameron/Dokumenter/Data/erie'
+#nc_file = os.path.join(dir_path, 'erie_2023-06-03_1612Z-l1a.nc')
+#points_file = os.path.join(dir_path, 'erie_2023-06-03_1612Z-bin3.points')
+
+#dir_path = '/home/cameron/Dokumenter/Data/erie'
+#nc_file = os.path.join(dir_path, 'erie_2023-06-04_1557Z-l1a.nc')
+#points_file = os.path.join(dir_path, 'erie_2023-06-04_1557Z-bin3.points')
+
+#dir_path = '/home/cameron/Dokumenter/Data/erie'
+#nc_file = os.path.join(dir_path, 'erie_2023-06-17_1541Z-l1a.nc')
+#points_file = os.path.join(dir_path, 'erie_2023-06-17_1541Z-bin3.points')
+
+#dir_path = '/home/cameron/Dokumenter/Data/erie'
+#nc_file = os.path.join(dir_path, 'erie_2023-08-20_1538Z-l1a.nc')
+#points_file = os.path.join(dir_path, 'erie_2023-08-20_1538Z-bin3.points')
+
+#dir_path = '/home/cameron/Dokumenter/Data/erie'
+#nc_file = os.path.join(dir_path, 'erie_2022-07-19_1550Z-l1a.nc')
+#points_file = os.path.join(dir_path, 'erie_2022-07-19_1550Z-bin3.points')
+
+# flipped
+dir_path = '/home/cameron/Dokumenter/Data/erie'
+nc_file = os.path.join(dir_path, 'erie_2022-07-20_1539Z-l1a.nc')
+points_file = os.path.join(dir_path, 'erie_2022-07-20_1539Z-bin3.points')
+
+
+#dir_path = '/home/cameron/Dokumenter/Data/frohavet'
+#nc_file = os.path.join(dir_path, 'frohavet_2024-04-03_0941Z-l1a.nc')
+#points_file = os.path.join(dir_path, 'frohavet_2024-04-03_0941Z-bin3.points')
+
+#dir_path = '/home/cameron/Dokumenter/Data/frohavet'
+#nc_file = os.path.join(dir_path, 'frohavet_2024-04-16_0945Z-l1a.nc')
+#points_file = os.path.join(dir_path, 'frohavet_2024-04-16_0945Z-bin3.points')
+
+#dir_path = '/home/cameron/Dokumenter/Data/frohavet'
+#nc_file = os.path.join(dir_path, 'frohavet_2024-04-18_1035Z-l1a.nc')
+#points_file = os.path.join(dir_path, 'frohavet_2024-04-18_1035Z-bin3.points')
+
 #dir_path = '/home/cameron/Dokumenter/Data/frohavet'
 #nc_file = os.path.join(dir_path, 'frohavet_2024-04-15_1006Z-l1a.nc')
 #points_file = os.path.join(dir_path, 'frohavet_2024-04-15_1006Z-bin3.points')
-
 
 #dir_path = '/home/cameron/Dokumenter/Data/frohavet'
 #nc_file = os.path.join(dir_path, 'frohavet_2024-04-19_1014Z-l1a.nc')
@@ -34,9 +75,9 @@ from hypso import Hypso1
 #nc_file = os.path.join(dir_path, 'frohavet_2024-04-26_1049Z-l1a.nc')
 #points_file = os.path.join(dir_path, 'frohavet_2024-04-26_1049Z-bin3.points')
 
-dir_path = '/home/cameron/Dokumenter/Data/frohavet'
-nc_file = os.path.join(dir_path, 'frohavet_2024-05-06_1017Z-l1a.nc')
-points_file = os.path.join(dir_path, 'frohavet_2024-05-06_1017Z-bin3.points')
+#dir_path = '/home/cameron/Dokumenter/Data/frohavet'
+#nc_file = os.path.join(dir_path, 'frohavet_2024-05-06_1017Z-l1a.nc')
+#points_file = os.path.join(dir_path, 'frohavet_2024-05-06_1017Z-bin3.points')
 
 
 satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
@@ -85,3 +126,10 @@ plt.imsave(fname='latitudes.png', arr=satobj.latitudes)
 plt.imsave(fname='longitudes.png', arr=satobj.longitudes)
 
 print(satobj.datacube_flipped)
+
+
+print(satobj.latitudes[0,0])
+print(satobj.latitudes[-1,-1])
+
+print(satobj.longitudes[0,0])
+print(satobj.longitudes[-1,-1])
