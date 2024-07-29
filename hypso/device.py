@@ -972,6 +972,28 @@ class Hypso1(Hypso):
     def _run_acolite_atmospheric_correction(self) -> None:
 
         print("[WARNING] ACOLITE atmospheric correction has not been enabled.")
+
+        return None
+
+        self._check_calibration_has_run()
+        self._check_geometry_computation_has_run()
+
+        atmos_params = None # TODO: what should these be?
+
+        if not self.info["nc_file"].is_file():
+            raise Exception("No -l1b.nc file found")
+        
+        atmos_corrected_cube = run_acolite(self.info, 
+                                            atmos_params, 
+                                            self.info["nc_file"])
+
+        return atmos_corrected_cube
+    
+
+    def _run_machi_atmospheric_correction(self) -> None:
+
+        print("[WARNING] Minimal Atmospheric Compensation for Hyperspectral Imagers (MACHI) atmospheric correction has not been enabled.")
+        
         return None
 
         self._check_calibration_has_run()
