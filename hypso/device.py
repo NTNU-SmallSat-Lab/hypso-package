@@ -195,12 +195,12 @@ class Hypso1(Hypso):
 
         # Georeferencing -----------------------------------------------------
         self._run_georeferencing()
-        self._run_geometry_computation()
 
         # Calibration -----------------------------------------------------
         self._run_calibration()
 
         # Atmospheric correction -----------------------------------------------------
+        #self._run_geometry_computation()
         #self._run_atmospheric_correction(product='6SV1')
 
         # File output
@@ -1190,6 +1190,10 @@ class Hypso1(Hypso):
         else:
             print("[ERROR] The atmospheric correction product \"" + str(product) + "\" is not supported.")
             return None
+
+    def run_geometry_computation(self) -> None:
+
+        self._run_geometry_computation()
 
     # TODO
     def get_toa_reflectance(self) -> np.ndarray:
