@@ -183,7 +183,7 @@ class Hypso1(Hypso):
         """
 
         # Start processing timer
-        t = time.time()
+        #t = time.time()
 
         super().__init__(hypso_path=hypso_path, points_path=points_path)
 
@@ -191,15 +191,22 @@ class Hypso1(Hypso):
         self._set_platform()
         self._set_sensor()
         self._set_verbose(verbose=verbose)
+
+        # Booleans to check if certain processes have been run
+        self.georeferencing_has_run = False
+        self.calibration_has_run = False
+        self.geometry_computation_has_run = False
+        self.atmospheric_correction_has_run = False
+
  
         # Load L1a file -----------------------------------------------------
         self._load_l1a_file()
 
         # Georeferencing -----------------------------------------------------
-        self._run_georeferencing()
+        #self._run_georeferencing()
 
         # Calibration -----------------------------------------------------
-        self._run_calibration()
+        #self._run_calibration()
 
         # Atmospheric correction -----------------------------------------------------
         # TODO: add flags to make sure run in the correct orders
@@ -230,9 +237,9 @@ class Hypso1(Hypso):
 
 
         # Stop processing timer
-        proc_time = time.time() - t
-        if self.verbose:
-            print('[INFO] Processing complete. Elapsed time: ' + str(proc_time) + ' seconds.')
+        #proc_time = time.time() - t
+        #if self.verbose:
+        #    print('[INFO] Processing complete. Elapsed time: ' + str(proc_time) + ' seconds.')
 
 
         return None
@@ -696,6 +703,8 @@ class Hypso1(Hypso):
         self._set_srf()
         self._generate_l1b_cube()
 
+        self.calibration_has_run = True
+
         return None
 
     def _run_georeferencing(self) -> None:
@@ -759,6 +768,8 @@ class Hypso1(Hypso):
 
             if self.verbose:
                 print('[INFO] No georeferencing .points file provided. Skipping georeferencing.')
+
+        self.georeferencing_has_run = True
 
         return None
 
@@ -874,11 +885,19 @@ class Hypso1(Hypso):
         self.latitudes_original = pixels_lat.reshape(self.spatial_dimensions)
         self.longitudes_original = pixels_lon.reshape(self.spatial_dimensions)
 
+        self.geometry_computation_has_run = True
+
         return None
 
     def _run_atmospheric_correction(self, product: str) -> None:
 
         # products = ["L2-ACOLITE", "L2-6SV1", "L1C"]
+
+        if not self.calibration_has_run:
+            self._run_calibration()
+
+        if not self.geometry_computation_has_run:
+            self._run_geometry_computation()
 
         if self.l2a_cube is None:
             self.l2a_cube = {}
@@ -910,6 +929,8 @@ class Hypso1(Hypso):
             case _:
                 print("[WARNING] No such product supported!")
 
+        self.atmospheric_correction_has_run = True
+
         return None
 
     def _run_6sv1_atmospheric_correction(self) -> np.ndarray:
@@ -922,6 +943,12 @@ class Hypso1(Hypso):
         #     # 'aeronet': r"C:\Users\alvar\Downloads\070101_151231_Autilla.dubovik"
         # }
         # AOT550 parameter gotten from: https://giovanni.gsfc.nasa.gov/giovanni/
+
+        if not self.calibration_has_run:
+            self._run_calibration()
+
+        if not self.geometry_computation_has_run:
+            self._run_geometry_computation()
 
         atmos_params = {
             'aot550': 0.0580000256
@@ -945,6 +972,12 @@ class Hypso1(Hypso):
         return atmos_corrected_cube
 
     def _run_acolite_atmospheric_correction(self) -> None:
+
+        if not self.calibration_has_run:
+            self._run_calibration()
+
+        if not self.geometry_computation_has_run:
+            self._run_geometry_computation()
 
         atmos_params = None # TODO: what should these be?
 
@@ -1211,7 +1244,8 @@ class Hypso1(Hypso):
 
     def run_atmospheric_correction(self, product: Literal["ACOLITE", "6SV1"]) -> None:
 
-        # TODO: add check to see if geometry computation has been run
+        if not self.geometry_computation_has_run:
+            self._run_geometry_computation()
 
         if product in SUPPORTED_ATM_CORR_PRODUCTS:
             self._run_atmospheric_correction(product=product)
@@ -1231,12 +1265,15 @@ class Hypso1(Hypso):
 
     def get_l1b_cube(self) -> np.ndarray:
 
-        return None
+        if not self.calibration_has_run:
+            self._run_calibration()
 
-    def get_l2a_cube(self) -> dict:
+        return self.l1b_cube
 
-        if self.l2a_cube is None:
-            self.run_atmospheric_correction("6SV1")
+    def get_l2a_cube(self, product="6SV1") -> dict:
+
+        if not self.atmospheric_correction_has_run:
+            self._run_atmospheric_correction(product=product)
         
         return self.l2a_cube
             
@@ -1848,8 +1885,6 @@ class Hypso1(Hypso):
 
         # Update
         self.info["nc_file"] = Path(new_path)
-
-
 
 
 class Hypso2(Hypso):
