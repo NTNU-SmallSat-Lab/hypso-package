@@ -9,9 +9,7 @@ from dateutil import parser
 import netCDF4 as nc
 import pyproj as prj
 
-from hypso.reading import load_l1a_nc_cube, load_l1a_nc_metadata
-from hypso.utils import find_dir, find_file, find_all_files
-from hypso.atmospheric import run_py6s, run_acolite
+
 from typing import Literal, Union
 from datetime import datetime
 
@@ -28,6 +26,9 @@ from hypso.geometry import interpolate_at_frame, \
 
 from hypso.georeference import start_coordinate_correction, generate_full_geotiff, generate_rgb_geotiff
 from hypso.masks import generate_land_mask, generate_cloud_mask
+from hypso.reading import load_l1a_nc_cube, load_l1a_nc_metadata
+from hypso.utils import find_dir, find_file, find_all_files
+from hypso.atmospheric import run_py6s, run_acolite, run_machi
 
 import time
 import scipy.interpolate as si
