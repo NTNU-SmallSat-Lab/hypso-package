@@ -893,11 +893,8 @@ class Hypso1(Hypso):
 
         # products = ["L2-ACOLITE", "L2-6SV1", "L1C"]
 
-        if not self.calibration_has_run:
-            self._run_calibration()
-
-        if not self.geometry_computation_has_run:
-            self._run_geometry_computation()
+        self._check_calibration_has_run()
+        self._check_geometry_computation_has_run()
 
         if self.l2a_cube is None:
             self.l2a_cube = {}
@@ -944,11 +941,18 @@ class Hypso1(Hypso):
         # }
         # AOT550 parameter gotten from: https://giovanni.gsfc.nasa.gov/giovanni/
 
-        if not self.calibration_has_run:
-            self._run_calibration()
+        self._check_calibration_has_run()
+        self._check_geometry_computation_has_run()
 
-        if not self.geometry_computation_has_run:
-            self._run_geometry_computation()
+        if self.latitudes is None:
+            latitudes = self.latitudes_original # fall back on geometry computed values
+        else:
+            latitudes = self.latitudes
+
+        if self.longitudes is None:
+            longitudes = self.longitudes_original # fall back on geometry computed values
+        else:
+            longitudes = self.longitudes
 
         atmos_params = {
             'aot550': 0.0580000256
@@ -958,8 +962,8 @@ class Hypso1(Hypso):
 
         atmos_corrected_cube = run_py6s(wavelengths=self.wavelengths, 
                                         hypercube_L1=self.l1b_cube, 
-                                        lat_2d_array=self.latitudes,
-                                        lon_2d_array=self.longitudes,
+                                        lat_2d_array=latitudes,
+                                        lon_2d_array=longitudes,
                                         solar_azimuth_angles=self.solar_azimuth_angles,
                                         solar_zenith_angles=self.solar_zenith_angles,
                                         sat_azimuth_angles=self.sat_azimuth_angles,
@@ -973,11 +977,8 @@ class Hypso1(Hypso):
 
     def _run_acolite_atmospheric_correction(self) -> None:
 
-        if not self.calibration_has_run:
-            self._run_calibration()
-
-        if not self.geometry_computation_has_run:
-            self._run_geometry_computation()
+        self._check_calibration_has_run()
+        self._check_geometry_computation_has_run()
 
         atmos_params = None # TODO: what should these be?
 
@@ -1026,6 +1027,56 @@ class Hypso1(Hypso):
         return None
 
     # Other
+
+
+    def _check_georeferencing_has_run(self, run=True) -> bool:
+        if run:
+            if not self.georeferencing_has_run:
+                self._run_georeferencing()
+                return True
+
+        if self.georeferencing_has_run:
+            return True
+
+        return False
+    
+    def _check_calibration_has_run(self, run=True) -> bool:
+        if run:
+            if not self.calibration_has_run:
+                self._run_calibration()
+                return True
+
+        if self.calibration_has_run:
+            return True
+
+        return False
+    
+    def _check_geometry_computation_has_run(self, run=True) -> bool:
+        if run:
+            if not self.geometry_computation_has_run:
+                self._run_geometry_computation()
+                return True
+
+        if self.geometry_computation_has_run:
+            return True
+
+        return False
+    
+    def _check_atmospheric_correction_has_run(self, product, run=True) -> bool:
+        if run:
+            if not self.atmospheric_correction_has_run:
+                self._run_atmospheric_correction(product=product)
+                return True
+
+        if self.atmospheric_correction_has_run:
+            return True
+
+        return False
+    
+
+    
+
+
 
     def _check_l1a_file_format(self) -> None:
 
@@ -1245,8 +1296,7 @@ class Hypso1(Hypso):
     # TODO: merge into get_l2a_cube function
     def run_atmospheric_correction(self, product: Literal["ACOLITE", "6SV1"]) -> None:
 
-        if not self.geometry_computation_has_run:
-            self._run_geometry_computation()
+        self._check_geometry_computation_has_run()
 
         if product in SUPPORTED_ATM_CORR_PRODUCTS:
             self._run_atmospheric_correction(product=product)
