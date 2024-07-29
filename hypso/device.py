@@ -982,6 +982,7 @@ class Hypso1(Hypso):
 
         if self.verbose:
             print("[INFO] Running cloud mask generation...")
+            print("[WARNING] Cloud mask generation has not been implemented.")
         
         cloud_mask = generate_cloud_mask(spatial_dimensions=self.spatial_dimensions,
                                         latitudes=self.latitudes,
