@@ -1242,6 +1242,7 @@ class Hypso1(Hypso):
 
         return df_band
 
+    # TODO: merge into get_l2a_cube function
     def run_atmospheric_correction(self, product: Literal["ACOLITE", "6SV1"]) -> None:
 
         if not self.geometry_computation_has_run:
@@ -1278,7 +1279,11 @@ class Hypso1(Hypso):
         return self.l2a_cube
             
 
-        
+    def get_land_mask(self) -> np.ndarray:
+        return None        
+    
+    def get_cloud_mask(self) -> np.ndarray:
+        return None       
 
     # TODO
     def get_toa_reflectance(self) -> np.ndarray:
