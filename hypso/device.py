@@ -200,6 +200,7 @@ class Hypso1(Hypso):
         self._run_calibration()
 
         # Atmospheric correction -----------------------------------------------------
+        # TODO: add flags to make sure run in the correct orders
         #self._run_geometry_computation()
         #self._run_atmospheric_correction(product='6SV1')
 
@@ -1181,11 +1182,13 @@ class Hypso1(Hypso):
 
         return df_band
 
-    def run_atmospheric_correction(self, product: Literal["ACOLITE", "6SV1"]) -> dict:
+    def run_atmospheric_correction(self, product: Literal["ACOLITE", "6SV1"]) -> None:
+
+        # TODO: add check to see if geometry computation has been run
 
         if product in SUPPORTED_ATM_CORR_PRODUCTS:
             self._run_atmospheric_correction(product=product)
-            return self.l2a_cube
+            return None
         
         else:
             print("[ERROR] The atmospheric correction product \"" + str(product) + "\" is not supported.")
@@ -1194,6 +1197,24 @@ class Hypso1(Hypso):
     def run_geometry_computation(self) -> None:
 
         self._run_geometry_computation()
+
+    def get_l1a_cube(self) -> np.ndarray:
+
+        return None
+
+    def get_l1b_cube(self) -> np.ndarray:
+
+        return None
+
+    def get_l2a_cube(self) -> dict:
+
+        if self.l2a_cube is None:
+            self.run_atmospheric_correction("6SV1")
+        
+        return self.l2a_cube
+            
+
+        
 
     # TODO
     def get_toa_reflectance(self) -> np.ndarray:
