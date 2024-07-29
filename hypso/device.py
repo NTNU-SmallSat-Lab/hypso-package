@@ -35,7 +35,7 @@ import scipy.interpolate as si
 
 EXPERIMENTAL_FEATURES = True
 SUPPORTED_PRODUCT_LEVELS = ["l1a", "l1b", "l2a"]
-SUPPORTED_ATM_CORR_PRODUCTS = ["6SV1", "ACOLITE"]
+SUPPORTED_ATM_CORR_PRODUCTS = ["6SV1", "ACOLITE", "MACHI"]
 
 class Hypso:
 
@@ -916,6 +916,19 @@ class Hypso1(Hypso):
                 if self.verbose: 
                     print("[INFO] Done!")
 
+
+            case "MACHI":
+
+                if self.verbose: 
+                    print("[INFO] Running MACHI atmospheric correction")
+
+                if product not in self.l2a_cube:
+
+                    self.l2a_cube[product] = self._run_machi_atmospheric_correction
+
+                if self.verbose: 
+                    print("[INFO] Done!")       
+
             case _:
                 print("[WARNING] No such product supported!")
 
@@ -995,6 +1008,9 @@ class Hypso1(Hypso):
 
         print("[WARNING] Minimal Atmospheric Compensation for Hyperspectral Imagers (MACHI) atmospheric correction has not been enabled.")
         
+        self._check_calibration_has_run()
+        #self._check_geometry_computation_has_run()
+
         return None
 
 
