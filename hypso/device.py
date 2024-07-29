@@ -974,7 +974,7 @@ class Hypso1(Hypso):
         self.land_mask = land_mask
 
         if self.verbose:
-            print("[INFO] Done!.")
+            print("[INFO] Done!")
 
         return None
 
@@ -992,7 +992,7 @@ class Hypso1(Hypso):
         self.cloud_mask = cloud_mask
 
         if self.verbose:
-            print("[INFO] Done!.")
+            print("[INFO] Done!")
 
         return None
 
