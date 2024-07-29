@@ -1,10 +1,10 @@
 import numpy as np
 from global_land_mask import globe
 
-def generate_land_mask(spatial_dimensions: tuple, 
-                       latitudes: np.ndarray,
-                       longitudes: np.ndarray
-                       ) -> np.ndarray:
+def run_global_land_mask(spatial_dimensions: tuple, 
+                        latitudes: np.ndarray,
+                        longitudes: np.ndarray
+                        ) -> np.ndarray:
 
     land_mask = np.zeros(spatial_dimensions, dtype=bool)
 
@@ -21,3 +21,9 @@ def generate_land_mask(spatial_dimensions: tuple,
             land_mask[x][y] = globe.is_land(lat, lon)
 
     return land_mask
+
+
+def run_ndwi_land_mask():
+
+    pass
+    # ndwi_watermask

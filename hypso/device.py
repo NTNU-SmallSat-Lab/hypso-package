@@ -25,7 +25,7 @@ from hypso.geometry import interpolate_at_frame, \
                            geometry_computation
 
 from hypso.georeference import start_coordinate_correction, generate_full_geotiff, generate_rgb_geotiff
-from hypso.masks import generate_land_mask, generate_cloud_mask
+from hypso.masks import run_global_land_mask, run_ndwi_land_mask, run_cloud_mask
 from hypso.reading import load_l1a_nc_cube, load_l1a_nc_metadata
 from hypso.utils import find_dir, find_file, find_all_files
 from hypso.atmospheric import run_py6s, run_acolite, run_machi
@@ -403,16 +403,12 @@ class Hypso1(Hypso):
             return
 
         match self.info["capture_type"]:
-            
             case "custom":
                 csv_file_destriping = None
-                        
             case "nominal":
                 csv_file_destriping = "destriping_matrix_HYPSO-1_nominal_v1.csv"
-
             case "wide":
                 csv_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.csv"
-
             case _:
                 csv_file_destriping = None
 
@@ -892,15 +888,17 @@ class Hypso1(Hypso):
         if self.l2a_cube is None:
             self.l2a_cube = {}
 
+        product = product.lower()
+
         match product:
-            case "6SV1":
+            case "6sv1":
                 if self.verbose: 
                     print("[INFO] Running 6SV1 atmospheric correction")
                 if product not in self.l2a_cube:
                     self.l2a_cube[product] = self._run_6sv1_atmospheric_correction()
                 if self.verbose: 
                     print("[INFO] Done!")
-            case "ACOLITE":
+            case "acolite":
                 if self.verbose: 
                     print("[INFO] Running ACOLITE atmospheric correction")
 
@@ -908,8 +906,7 @@ class Hypso1(Hypso):
                     self.l2a_cube[product] = self._run_acolite_atmospheric_correction()
                 if self.verbose: 
                     print("[INFO] Done!")
-
-            case "MACHI":
+            case "machi":
                 if self.verbose: 
                     print("[INFO] Running MACHI atmospheric correction")
                 if product not in self.l2a_cube:
@@ -1005,24 +1002,47 @@ class Hypso1(Hypso):
         #T, A, objs = run_machi(cube=self.l1b_cube, verbose=self.verbose)
 
 
+    def _run_land_mask(self, product: str) -> None:
+
+        product = product.lower()
+
+        match product:
+
+            case "global":
+
+                if self.verbose:
+                    print("[INFO] Running land mask generation...")
+
+                self.land_mask = self._run_global_land_mask()
+
+                if self.verbose:
+                    print("[INFO] Done!")
+
+            case "ndwi":
+
+                pass
+
+            case _:
+
+                pass
 
 
-    def _run_land_mask(self) -> None:
 
-        if self.verbose:
-            print("[INFO] Running land mask generation...")
 
-        land_mask = generate_land_mask(spatial_dimensions=self.spatial_dimensions,
-                                       latitudes=self.latitudes,
-                                       longitudes=self.longitudes
-                                       )
+    def _run_global_land_mask(self) -> np.ndarray:
+
+        land_mask = run_global_land_mask(spatial_dimensions=self.spatial_dimensions,
+                                        latitudes=self.latitudes,
+                                        longitudes=self.longitudes
+                                        )
         
-        self.land_mask = land_mask
+        return land_mask
 
-        if self.verbose:
-            print("[INFO] Done!")
+    def _run_ndwi_land_mask(self) -> np.ndarray:
 
-        return None
+        land_mask = run_ndwi_land_mask()
+
+        return land_mask
 
     def _run_cloud_mask(self) -> None:
 
@@ -1030,7 +1050,7 @@ class Hypso1(Hypso):
             print("[INFO] Running cloud mask generation...")
             print("[WARNING] Cloud mask generation has not been implemented.")
         
-        cloud_mask = generate_cloud_mask(spatial_dimensions=self.spatial_dimensions,
+        cloud_mask = run_cloud_mask(spatial_dimensions=self.spatial_dimensions,
                                         latitudes=self.latitudes,
                                         longitudes=self.longitudes
                                         )
@@ -1096,7 +1116,6 @@ class Hypso1(Hypso):
         #    raise Exception("Incorrect HYPSO Path. Only .nc files supported")
 
         match self.hypso_path.suffix:
-
             case '.nc':
                 pass
             case '.bip':
@@ -1338,9 +1357,9 @@ class Hypso1(Hypso):
         return self.l2a_cube
             
 
-    def get_land_mask(self) -> np.ndarray:
+    def get_land_mask(self, product='global') -> np.ndarray:
 
-        self._run_land_mask()
+        self._run_land_mask(product=product)
 
         return self.land_mask       
     
