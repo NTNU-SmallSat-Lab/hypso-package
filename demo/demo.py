@@ -13,16 +13,32 @@ from hypso import Hypso1
 
 
 
-dir_path = '/home/cameron/Dokumenter/Data/erie'
-nc_file = os.path.join(dir_path, 'erie_2022-08-27_1605Z-l1a.nc')
-points_file = os.path.join(dir_path, 'erie_2022-08-27_1605Z-bin3.points')
+#dir_path = '/home/cameron/Dokumenter/Data/erie'
+#nc_file = os.path.join(dir_path, 'erie_2022-08-27_1605Z-l1a.nc')
+#points_file = os.path.join(dir_path, 'erie_2022-08-27_1605Z-bin3.points')
 
 #dir_path = '/home/cameron/Dokumenter/Data/erie'
 #nc_file = os.path.join(dir_path, 'erie_2023-10-02_1559Z-l1a.nc')
 #points_file = os.path.join(dir_path, 'erie_2023-10-02_1559Z-bin3.points')
 
+#dir_path = '/home/cameron/Dokumenter/Data/frohavet'
+#nc_file = os.path.join(dir_path, 'frohavet_2024-04-15_1006Z-l1a.nc')
+#points_file = os.path.join(dir_path, 'frohavet_2024-04-15_1006Z-bin3.points')
+
+
+#dir_path = '/home/cameron/Dokumenter/Data/frohavet'
+#nc_file = os.path.join(dir_path, 'frohavet_2024-04-19_1014Z-l1a.nc')
+#points_file = os.path.join(dir_path, 'frohavet_2024-04-19_1014Z-bin3.points')
+
+dir_path = '/home/cameron/Dokumenter/Data/frohavet'
+nc_file = os.path.join(dir_path, 'frohavet_2024-04-26_1049Z-l1a.nc')
+points_file = os.path.join(dir_path, 'frohavet_2024-04-26_1049Z-bin3.points')
+
 
 satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
+
+
+#satobj._run_calibration()
 
 #print(satobj.latitudes.shape)
 #satobj.display_geometry_information()
@@ -38,7 +54,29 @@ satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
 #print(satobj.l2a_cube['6SV1'].shape)
 
 #l1b_cube = satobj.get_l1b_cube()
-l2a_cube = satobj.get_l2a_cube(product="MACHI")
+#l2a_cube = satobj.get_l2a_cube(product="MACHI")
 
 #print(l1b_cube)
-print(l2a_cube)
+#print(l2a_cube)
+
+satobj._run_land_mask(product="threshold")
+#plt.imshow(satobj.land_mask)
+plt.imsave(fname='threshold.png', arr=satobj.land_mask)
+
+satobj._run_land_mask(product="global")
+#plt.imshow(arr=satobj.land_mask)
+plt.imsave(fname='global.png', arr=satobj.land_mask)
+
+satobj._run_land_mask(product="NDWI")
+#plt.imshow(satobj.land_mask)
+plt.imsave(fname='NDWI.png', arr=satobj.land_mask)
+
+
+plt.imsave(fname='l1b_40.png', arr=satobj.get_l1b_cube()[:,:,40])
+
+plt.imsave(fname='l1a_40.png', arr=satobj.get_l1a_cube()[:,:,40])
+
+plt.imsave(fname='latitudes.png', arr=satobj.latitudes)
+plt.imsave(fname='longitudes.png', arr=satobj.longitudes)
+
+print(satobj.datacube_flipped)

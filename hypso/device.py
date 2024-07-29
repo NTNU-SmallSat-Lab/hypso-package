@@ -25,7 +25,7 @@ from hypso.geometry import interpolate_at_frame, \
                            geometry_computation
 
 from hypso.georeference import start_coordinate_correction, generate_full_geotiff, generate_rgb_geotiff
-from hypso.masks import run_global_land_mask, run_ndwi_land_mask, run_cloud_mask
+from hypso.masks import run_global_land_mask, run_ndwi_land_mask, run_threshold_land_mask, run_cloud_mask
 from hypso.reading import load_l1a_nc_cube, load_l1a_nc_metadata
 from hypso.utils import find_dir, find_file, find_all_files
 from hypso.atmospheric import run_py6s, run_acolite, run_machi
@@ -95,6 +95,7 @@ class Hypso:
          # Initialize latitude and longitude variables
         self.latitudes = None
         self.longitudes = None
+        self.datacube_flipped = None
 
         # Initialize wavelengths
         self.wavelengths = None
@@ -716,42 +717,15 @@ class Hypso1(Hypso):
             self.latitudes = gr.latitudes
             self.longitudes = gr.longitudes
             
-            flip_datacube = check_star_tracker_orientation(adcs_samples=self.adcs['adcssamples'],
-                                                           quaternion_s=self.adcs['quaternion_s'],
-                                                           quaternion_x=self.adcs['quaternion_x'],
-                                                           quaternion_y=self.adcs['quaternion_y'],
-                                                           quaternion_z=self.adcs['quaternion_z'],
-                                                           velocity_x=self.adcs['velocity_x'],
-                                                           velocity_y=self.adcs['velocity_y'],
-                                                           velocity_z=self.adcs['velocity_z'])
+            self._run_georeferencing_orientation()
 
-            if flip_datacube is not None and flip_datacube: 
-                self.latitudes = self.latitudes[::-1,:]
-                self.longitudes = self.longitudes[::-1,:]
-                #datacube = datacube[:, ::-1, :]
+            # TODO remove lat and lon in info dict
+            self.info["lat"] = self.latitudes
+            self.info["lon"] = self.longitudes
 
-                # TODO remove lat and lon in info dict
-                self.info["lat"] = self.latitudes
-                self.info["lon"] = self.longitudes
+            self.info["lat_original"] = self.latitudes
+            self.info["lon_original"] = self.longitudes
 
-                self.info["lat_original"] = self.latitudes
-                self.info["lon_original"] = self.longitudes
-
-            else:
-
-                self.latitudes = self.latitudes[::-1,::-1]
-                self.longitudes = self.longitudes[::-1,::-1]
-                #datacube = datacube[:, ::-1, :]
-
-                # TODO remove lat and lon in info dict
-                self.info["lat"] = self.latitudes
-                self.info["lon"] = self.longitudes
-
-                self.info["lat_original"] = self.latitudes
-                self.info["lon_original"] = self.longitudes
-
-            if self.verbose:
-                print('[INFO] Done!')
 
         else:
 
@@ -761,6 +735,85 @@ class Hypso1(Hypso):
         self.georeferencing_has_run = True
 
         return None
+
+    def _run_georeferencing_orientation(self) -> None:
+
+        flip_datacube = check_star_tracker_orientation(adcs_samples=self.adcs['adcssamples'],
+                                                        quaternion_s=self.adcs['quaternion_s'],
+                                                        quaternion_x=self.adcs['quaternion_x'],
+                                                        quaternion_y=self.adcs['quaternion_y'],
+                                                        quaternion_z=self.adcs['quaternion_z'],
+                                                        velocity_x=self.adcs['velocity_x'],
+                                                        velocity_y=self.adcs['velocity_y'],
+                                                        velocity_z=self.adcs['velocity_z'])
+
+        self.datacube_flipped = flip_datacube
+
+
+        self.latitudes = self.latitudes[:, ::-1]
+        self.longitudes = self.longitudes[:, ::-1]
+            
+        if self.l1a_cube is not None:
+            self.l1a_cube = self.l1a_cube[:, ::-1, :]
+
+        if self.l1b_cube is not None:  
+            self.l1b_cube = self.l1b_cube[:, ::-1, :]
+            
+        if self.l2a_cube is not None:
+            if isinstance(self.l2a_cube, dict):
+                for key in self.l2a_cube.keys():
+                    self.l2a_cube = self.l2a_cube[key][:, ::-1, :]
+
+
+
+
+        '''
+        if flip_datacube is not None and flip_datacube: 
+            self.latitudes = self.latitudes[::-1,:]
+            self.longitudes = self.longitudes[::-1,:]
+            #datacube = datacube[:, ::-1, :]
+        else:
+
+            pass
+            self.latitudes = self.latitudes[:,::-1]
+            self.longitudes = self.longitudes[:,::-1]
+            
+            if self.l1a_cube is not None:
+                self.l1a_cube = self.l1a_cube[:, ::-1, :]
+
+            if self.l1b_cube is not None:  
+                self.l1b_cube = self.l1b_cube[:, ::-1, :]
+
+            if self.l2a_cube is not None and isinstance(self.l2a_cube, dict):
+                for key in self.l2a_cube.keys():
+                    self.l2a_cube = self.l2a_cube[key][:, ::-1, :]
+
+            self.latitudes = self.latitudes[::-1,::-1]
+            self.longitudes = self.longitudes[::-1,::-1]
+            datacube = datacube[:, ::-1, :]
+        '''
+            
+    def _get_original_orientation_cube(self, cube: np.ndarray) -> np.ndarray:
+
+
+        if self.datacube_flipped is None:
+            
+            return cube
+        
+        else:
+
+            if self.datacube_flipped:
+                return cube # TODO
+
+            else:
+                return cube
+
+        return cube
+
+
+
+        return None
+
 
     def _run_radiometric_calibration(self, cube=None) -> np.ndarray:
 
@@ -784,9 +837,6 @@ class Hypso1(Hypso):
         #cube_calibrated = run_radiometric_calibration(self.info, self.rawcube, self.calibration_coefficients_dict) / 10
         cube = cube / 10
 
-        if self.verbose:
-            print("[INFO] Done!")
-
         return cube
 
     def _run_smile_correction(self, cube=None) -> np.ndarray:
@@ -801,9 +851,6 @@ class Hypso1(Hypso):
 
         cube = run_smile_correction(cube=cube, 
                                     smile_coeffs=self.smile_coeffs)
-        
-        if self.verbose:
-            print("[INFO] Done!")
 
         return cube
 
@@ -819,9 +866,6 @@ class Hypso1(Hypso):
 
         cube = run_destriping_correction(cube=cube, 
                                          destriping_coeffs=self.destriping_coeffs)
-        
-        if self.verbose:
-            print("[INFO] Done!")
 
         return cube
 
@@ -837,7 +881,6 @@ class Hypso1(Hypso):
                                               exposure=self.capture_config['exposure'],
                                               verbose=self.verbose
                                               )
-        print("[INFO] Done!")
 
         print("[INFO] Running geometry computation...")
 
@@ -854,8 +897,6 @@ class Hypso1(Hypso):
                                              image_height=self.info['image_height'],
                                              verbose=self.verbose
                                              )
-
-        print("[INFO] Done!")
 
         self.wkt_linestring_footprint = wkt_linestring_footprint
         self.prj_file_contents = prj_file_contents
@@ -896,23 +937,16 @@ class Hypso1(Hypso):
                     print("[INFO] Running 6SV1 atmospheric correction")
                 if product not in self.l2a_cube:
                     self.l2a_cube[product] = self._run_6sv1_atmospheric_correction()
-                if self.verbose: 
-                    print("[INFO] Done!")
             case "acolite":
                 if self.verbose: 
                     print("[INFO] Running ACOLITE atmospheric correction")
-
                 if product not in self.l2a_cube:
                     self.l2a_cube[product] = self._run_acolite_atmospheric_correction()
-                if self.verbose: 
-                    print("[INFO] Done!")
             case "machi":
                 if self.verbose: 
                     print("[INFO] Running MACHI atmospheric correction")
                 if product not in self.l2a_cube:
-                    self.l2a_cube[product] = self._run_machi_atmospheric_correction()
-                if self.verbose: 
-                    print("[INFO] Done!")       
+                    self.l2a_cube[product] = self._run_machi_atmospheric_correction()  
 
             case _:
                 print("[WARNING] No such product supported!")
@@ -1015,12 +1049,19 @@ class Hypso1(Hypso):
 
                 self.land_mask = self._run_global_land_mask()
 
-                if self.verbose:
-                    print("[INFO] Done!")
-
             case "ndwi":
 
-                pass
+                if self.verbose:
+                    print("[INFO] Running NDWI land mask generation...")
+
+                self.land_mask = self._run_ndwi_land_mask()
+
+            case "threshold":
+
+                if self.verbose:
+                    print("[INFO] Running threshold land mask generation...")
+
+                self.land_mask = self._run_threshold_land_mask()
 
             case _:
 
@@ -1031,6 +1072,8 @@ class Hypso1(Hypso):
 
     def _run_global_land_mask(self) -> np.ndarray:
 
+        self._check_georeferencing_has_run()
+
         land_mask = run_global_land_mask(spatial_dimensions=self.spatial_dimensions,
                                         latitudes=self.latitudes,
                                         longitudes=self.longitudes
@@ -1040,8 +1083,22 @@ class Hypso1(Hypso):
 
     def _run_ndwi_land_mask(self) -> np.ndarray:
 
-        land_mask = run_ndwi_land_mask()
+        self._check_calibration_has_run()
 
+        land_mask = run_ndwi_land_mask(cube=self.l1b_cube, 
+                                       wavelengths=self.wavelengths,
+                                       verbose=self.verbose)
+
+        return land_mask
+    
+    def _run_threshold_land_mask(self) -> np.ndarray:
+
+        self._check_calibration_has_run()
+
+        land_mask = run_threshold_land_mask(cube=self.l1b_cube,
+                                            wavelengths=self.wavelengths,
+                                            verbose=self.verbose)
+    
         return land_mask
 
     def _run_cloud_mask(self) -> None:
@@ -1056,9 +1113,6 @@ class Hypso1(Hypso):
                                         )
         
         self.cloud_mask = cloud_mask
-
-        if self.verbose:
-            print("[INFO] Done!")
 
         return None
 
@@ -1342,7 +1396,7 @@ class Hypso1(Hypso):
 
     def get_l1a_cube(self) -> np.ndarray:
 
-        return None
+        return self.l1a_cube
 
     def get_l1b_cube(self) -> np.ndarray:
 
@@ -1357,7 +1411,7 @@ class Hypso1(Hypso):
         return self.l2a_cube
             
 
-    def get_land_mask(self, product='global') -> np.ndarray:
+    def get_land_mask(self, product: Literal["global", "NDWI", "threshold"]) -> np.ndarray:
 
         self._run_land_mask(product=product)
 
