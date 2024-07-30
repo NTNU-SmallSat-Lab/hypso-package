@@ -65,10 +65,14 @@ class Hypso:
         self.destriping_coeffs = None
         self.spectral_coeffs = None
 
-        # Initialize datacubes
+        # Initialize raw datacube
         self.l1a_cube = None
+
+        # Initialize calibrated datacube
         self.l1b_cube = None
-        self.l2a_cube = None
+
+        # Initialize atms corr datacubes dict
+        self.l2a_cube = {}
 
         # Initialize platform and sensor names
         self.platform = None
@@ -116,6 +120,7 @@ class Hypso:
         # Initialize products dict
         self.products = {}
 
+        # Initialize chlorophyll estimates dict
         self.chl = {}
 
         # Initialize ADCS data
