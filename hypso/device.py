@@ -1526,6 +1526,10 @@ class Hypso1(Hypso):
         return self.products[key]
 
 
+    def get_products(self) -> dict:
+
+        return self.products
+
     # TODO
     def get_toa_reflectance(self) -> np.ndarray:
         """
