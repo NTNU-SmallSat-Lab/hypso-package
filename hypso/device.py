@@ -931,7 +931,7 @@ class Hypso1(Hypso):
                     self.l2a_cube[product] = self._run_machi_atmospheric_correction()  
 
             case _:
-                print("[WARNING] No such product supported!")
+                print("[WARNING] No such atmospheric correction product supported!")
 
         self.atmospheric_correction_has_run = True
 
@@ -1244,7 +1244,7 @@ class Hypso1(Hypso):
 
         return False     
 
-    def _check_atmospheric_correction_has_run(self, product, run=True) -> bool:
+    def _check_atmospheric_correction_has_run(self, product=None, run=True) -> bool:
         if run:
             if not self.atmospheric_correction_has_run:
                 self._run_atmospheric_correction(product=product)
@@ -1469,19 +1469,6 @@ class Hypso1(Hypso):
 
         return df_band
 
-    # TODO: merge into get_l2a_cube function
-    def run_atmospheric_correction(self, product: Literal["ACOLITE", "6SV1", "MACHI"]) -> None:
-
-        self._check_geometry_computation_has_run()
-
-        if product in SUPPORTED_ATM_CORR_PRODUCTS:
-            self._run_atmospheric_correction(product=product)
-            return None
-        
-        else:
-            print("[ERROR] The atmospheric correction product \"" + str(product) + "\" is not supported.")
-            return None
-
     def run_geometry_computation(self) -> None:
 
         self._run_geometry_computation()
@@ -1496,11 +1483,14 @@ class Hypso1(Hypso):
 
         return self.l1b_cube
 
-    def get_l2a_cube(self, product="6SV1") -> dict:
+    def get_l2a_cube(self, product: Literal["ACOLITE", "6SV1", "MACHI"]="6SV1") -> dict:
 
-        self._check_atmospheric_correction_has_run(product=product)
+        self._check_geometry_computation_has_run()
 
-        return self.l2a_cube
+        if not self._check_atmospheric_correction_has_run(run=False)
+            self._run_atmospheric_correction(product=product)
+            
+        return self.l2a_cube[product]
             
     def get_land_mask(self, product: Literal["global", "NDWI", "threshold"]) -> np.ndarray:
 
