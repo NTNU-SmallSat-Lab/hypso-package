@@ -1104,10 +1104,6 @@ class Hypso1(Hypso):
 
         return None
 
-
-
-
-
     def _run_chlorophyll_estimation(self, product: str) -> None:
 
         if self.products is None:
@@ -1159,12 +1155,6 @@ class Hypso1(Hypso):
     def _run_acolite_aqua_chlorophyll_estimation(self, model) -> None:
 
         pass
-
-
-
-
-
-
 
 
     # Other
@@ -1644,8 +1634,6 @@ class Hypso1(Hypso):
             print("Full L1C Tif File: ", self.l1cgeotiffFilePath.name)
 
         return current_project
-
-    # TODO
 
     def write_l1b_nc_file(self) -> None:
 
@@ -2148,6 +2136,7 @@ class Hypso1(Hypso):
 
 
 class Hypso2(Hypso):
+
     def __init__(self, hypso_path: str, points_path: Union[str, None] = None) -> None:
         
         """
