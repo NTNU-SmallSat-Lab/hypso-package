@@ -1467,10 +1467,6 @@ class Hypso1(Hypso):
 
         return df_band
 
-    def run_geometry_computation(self) -> None:
-
-        self._run_geometry_computation()
-
     def get_l1a_cube(self) -> np.ndarray:
 
         return self.l1a_cube
@@ -1516,7 +1512,6 @@ class Hypso1(Hypso):
 
         return self.cloud_mask 
 
-
     def get_chlorophyll_estimate(self, 
                                  product:  Literal["band_ratio", "6sv1_aqua", "acolite_aqua"],
                                 model=None
@@ -1527,7 +1522,6 @@ class Hypso1(Hypso):
         key = 'chl_' + product
 
         return self.products[key]
-
 
     def get_products(self) -> dict:
 
