@@ -902,7 +902,8 @@ class Hypso1(Hypso):
         if self.l2a_cube is None:
             self.l2a_cube = {}
 
-        product = product.lower()
+        if product is not None:
+            product = product.lower()
 
         match product:
             case "6sv1":
@@ -1014,10 +1015,11 @@ class Hypso1(Hypso):
 
     def _run_land_mask(self, land_mask: str) -> None:
 
-        key = land_mask.lower()
-
         if self.land_masks is None:
             self.land_masks = {}
+
+        if land_mask is not None:
+            key = land_mask.lower()
 
         match key:
 
@@ -1083,10 +1085,11 @@ class Hypso1(Hypso):
 
     def _run_cloud_mask(self, cloud_mask: str='default') -> None:
 
-        key = cloud_mask.lower()
-
         if self.cloud_masks is None:
             self.cloud_masks = {}
+
+        if cloud_mask is not None:
+            key = cloud_mask.lower()
 
         match key:
 
@@ -1125,12 +1128,13 @@ class Hypso1(Hypso):
         return unified_mask
 
 
-    def _run_chlorophyll_estimation(self, product: str) -> None:
+    def _run_chlorophyll_estimation(self, product: str = None) -> None:
 
         if self.chl is None:
             self.chl = {}
 
-        product = product.lower()
+        if product is not None:
+            product = product.lower()
 
         match product:
 
@@ -1527,8 +1531,9 @@ class Hypso1(Hypso):
 
         if not self._check_atmospheric_correction_has_run(run=False):
             self._run_atmospheric_correction(product=product)
-            
-        product = product.lower()
+
+        if product is not None:    
+            product = product.lower()
 
         return self.l2a_cube[product]
     

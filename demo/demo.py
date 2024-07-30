@@ -85,7 +85,7 @@ satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
 #satobj._run_land_mask(product="global")
 
 satobj.get_cloud_mask(cloud_mask=None)
-
+exit()
 land_mask = satobj.get_land_mask('global')
 
 unified_mask = satobj._get_unified_mask(land_mask="global")
