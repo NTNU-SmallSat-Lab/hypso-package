@@ -1239,7 +1239,7 @@ class Hypso1(Hypso):
 
         match self.hypso_path.suffix:
             case '.nc':
-                pass
+                return None
             case '.bip':
                 raise Exception("Incorrect HYPSO Path. Only .nc files supported")
             case _:
