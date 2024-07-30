@@ -183,9 +183,6 @@ class Hypso1(Hypso):
 
         """
 
-        # Start processing timer
-        #t = time.time()
-
         super().__init__(hypso_path=hypso_path, points_path=points_path)
 
         # General -----------------------------------------------------
@@ -235,13 +232,6 @@ class Hypso1(Hypso):
         #self.products['tsm'] = None
         #self.products['pca'] = None
         #self.products['ica'] = None
-
-
-        # Stop processing timer
-        #proc_time = time.time() - t
-        #if self.verbose:
-        #    print('[INFO] Processing complete. Elapsed time: ' + str(proc_time) + ' seconds.')
-
 
         return None
 
