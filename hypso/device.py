@@ -116,6 +116,8 @@ class Hypso:
         # Initialize products dict
         self.products = {}
 
+        self.chl = {}
+
         # Initialize ADCS data
         self.adcs = None
         self.adcs_pos_df = None
