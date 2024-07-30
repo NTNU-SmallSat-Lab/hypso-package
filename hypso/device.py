@@ -190,7 +190,7 @@ class Hypso1(Hypso):
         self.georeferencing_has_run = False
         self.calibration_has_run = False
         self.geometry_computation_has_run = False
-        self.create_l1b_has_run = False
+        self.write_l1b_nc_file_has_run = False
         self.atmospheric_correction_has_run = False
 
  
@@ -212,7 +212,7 @@ class Hypso1(Hypso):
         #self._write_l1a_file()
         #self._write_l1b_file()
         #self._write_l2a_file()
-        #self.create_l1b_nc_file()  # Input for ACOLITE
+        #self.write_l1b_nc_file()  # Input for ACOLITE
         #self.l2a_cube = self.find_existing_l2_cube()
 
         # Land Mask -----------------------------------------------------
@@ -998,8 +998,8 @@ class Hypso1(Hypso):
         print("[WARNING] ACOLITE atmospheric correction has not been enabled.")
 
         self._check_calibration_has_run()
-        #self._check_geometry_computation_has_run()
-        self._check_create_l1b_has_run()
+        self._check_geometry_computation_has_run()
+        self._check_write_l1b_nc_file_has_run()
 
         # user and password from https://urs.earthdata.nasa.gov/profile
         # optional but good
@@ -1142,10 +1142,10 @@ class Hypso1(Hypso):
 
         return False
     
-    def _check_create_l1b_has_run(self, run=True) -> bool:
+    def _check_write_l1b_nc_file_has_run(self, run=True) -> bool:
         if run:
             if not self.geometry_computation_has_run:
-                self.create_l1b_nc_file()
+                self._write_l1b_nc_file()
                 return True
 
         if self.geometry_computation_has_run:
@@ -1545,7 +1545,14 @@ class Hypso1(Hypso):
         return current_project
 
     # TODO
-    def create_l1b_nc_file(self) -> None:
+
+    def write_l1b_nc_file(self) -> None:
+
+        self._write_l1b_nc_file()
+
+        return None
+
+    def _write_l1b_nc_file(self) -> None:
         """
         Create a l1b.nc file using the radiometrically corrected data. Same structure from the original l1a.nc file
         is used. Required to run ACOLITE as the input is a radiometrically corrected .nc file.
@@ -1922,15 +1929,15 @@ class Hypso1(Hypso):
                 'metadata/timing/timestamps_srv', 'f8',
                 ('lines',))
             timestamps_srv[:] = old_nc['metadata']["timing"]["timestamps_srv"][:]
-
+            
             # Create Navigation Group --------------------------------------
             try:
                 navigation_group = netfile.createGroup('navigation')
-                sat_zenith_angle = self.info["sat_zenith_angle"]
-                sat_azimuth_angle = self.info["sat_azimuth_angle"]
+                sat_zenith_angle = self.sat_zenith_angles
+                sat_azimuth_angle = self.sat_azimuth_angles
 
-                solar_zenith_angle = self.info["solar_zenith_angle"]
-                solar_azimuth_angle = self.info["solar_azimuth_angle"]
+                solar_zenith_angle = self.solar_zenith_angles
+                solar_azimuth_angle = self.solar_azimuth_angles
 
                 # Unix time -----------------------
                 time = netfile.createVariable('navigation/unixtime', 'u8', ('lines',))
@@ -1982,10 +1989,10 @@ class Hypso1(Hypso):
 
                 # Solar Azimuth ---------------------------------------
                 solar_a = netfile.createVariable(
-                    'navigation/solar_azimuth', 'f4', ('lines', 'samples'),
-                    # compression=COMP_SCHEME,
-                    # complevel=COMP_LEVEL,
-                    # shuffle=COMP_SHUFFLE,
+                'navigation/solar_azimuth', 'f4', ('lines', 'samples'),
+                # compression=COMP_SCHEME,
+                # complevel=COMP_LEVEL,
+                # shuffle=COMP_SHUFFLE,
                 )
                 solar_a[:] = solar_azimuth_angle.reshape(self.spatial_dimensions)
                 solar_a.long_name = "Solar Azimuth Angle"
@@ -1993,7 +2000,7 @@ class Hypso1(Hypso):
                 # solar_a.valid_range = [-180, 180]
                 solar_a.valid_min = -180
                 solar_a.valid_max = 180
-    
+        
                 # Latitude ---------------------------------
                 latitude = netfile.createVariable(
                     'navigation/latitude', 'f4', ('lines', 'samples'),
@@ -2023,16 +2030,20 @@ class Hypso1(Hypso):
                 # longitude.valid_range = [-180, 180]
                 longitude.valid_min = -180
                 longitude.valid_max = 180
+
             except Exception as ex:
                 print("Navigation Group and Attributes already exist")
                 print(ex)
+
 
         old_nc.close()
 
         # Update
         self.info["l1b_nc_file"] = Path(new_path)
 
-        self.create_l1b_has_run = True
+        self.write_l1b_nc_file_has_run = True
+
+        return None
 
 
 class Hypso2(Hypso):
