@@ -1018,8 +1018,10 @@ class Hypso1(Hypso):
         if self.land_masks is None:
             self.land_masks = {}
 
-        if land_mask is not None:
-            key = land_mask.lower()
+        key = land_mask
+
+        if key is not None:
+            key = key.lower()
 
         match key:
 
@@ -1088,8 +1090,10 @@ class Hypso1(Hypso):
         if self.cloud_masks is None:
             self.cloud_masks = {}
 
-        if cloud_mask is not None:
-            key = cloud_mask.lower()
+        key = cloud_mask
+
+        if key is not None:
+            key = key.lower()
 
         match key:
 
