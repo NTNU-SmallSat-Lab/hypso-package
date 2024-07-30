@@ -34,6 +34,7 @@ from hypso.atmospheric import run_py6s, run_acolite, run_machi
 EXPERIMENTAL_FEATURES = True
 SUPPORTED_PRODUCT_LEVELS = ["l1a", "l1b", "l2a"]
 SUPPORTED_ATM_CORR_PRODUCTS = ["6sv1", "acolite", "machi"]
+SUPPORTED_CHL_EST_PRODUCTS = ["band_ratio", "6sv1_aqua", "acolite_aqua"]
 
 class Hypso:
 
@@ -842,7 +843,7 @@ class Hypso1(Hypso):
 
         return cube
 
-    def _run_geometry_computation(self) -> None:
+    def _run_geget_spectraometry_computation(self) -> None:
 
         print("[INFO] Running frame interpolation...")
 
