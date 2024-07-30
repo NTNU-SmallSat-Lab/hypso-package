@@ -1093,6 +1093,26 @@ class Hypso1(Hypso):
 
         return None
 
+    def _get_unified_mask(self, 
+                          land_mask_product: str=None,
+                          cloud_mask_product: str=None
+                          ) -> np.ndarray:
+        
+        if land_mask_product in self.land_mask.keys():
+            land_mask = self.land_mask[land_mask_product]
+        else:
+            land_mask = np.full(self.spatial_dimensions, False, dtype=bool)
+
+        if cloud_mask_product in self.cloud_mask.keys():
+            cloud_mask = self.cloud_mask[cloud_mask]
+        else:
+            cloud_mask = np.full(self.spatial_dimensions, False, dtype=bool)
+
+        unified_mask = land_mask | cloud_mask
+
+        return unified_mask
+
+
     def _run_chlorophyll_estimation(self, product: str) -> None:
 
         if self.products is None:
@@ -1151,6 +1171,7 @@ class Hypso1(Hypso):
 
         chl = self.l1b_cube[:,:,numerator_index] / self.l1b_cube[:,:,denominator_index]
 
+        unified_mask = self._get_unified_mask()
 
         # TODO
 
