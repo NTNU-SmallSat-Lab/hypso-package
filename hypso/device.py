@@ -1100,6 +1100,32 @@ class Hypso1(Hypso):
         return None
 
 
+
+
+
+    def _run_chlorophyll_estimation(self, product: str) -> None:
+
+        pass
+
+    def _run_band_ratio_chlorophyll_estimation(self) -> None:
+
+        pass
+
+    def _run_6sv1_aqua_chlorophyll_estimation(self) -> None:
+
+        pass
+
+    def _run_acolite_aqua_chlorophyll_estimation(self) -> None:
+
+        pass
+
+
+
+
+
+
+
+
     # Other
 
     def _get_flipped_cube(self, cube: np.ndarray) -> np.ndarray:
