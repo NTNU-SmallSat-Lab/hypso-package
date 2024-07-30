@@ -113,7 +113,7 @@ def run_acolite(output_path: str, atmos_dict: dict, nc_file_acoliteready: Path) 
         tar.extractall(dst_path)
         tar.close()
 
-        # Rename
+        # Renamedst_path
         dst_path = Path(dst_path, "acolite-20231023.0")
         dst_path.rename(Path(acolite_dir))
 

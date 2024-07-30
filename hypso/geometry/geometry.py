@@ -710,8 +710,8 @@ def geometry_computation(framepose_data: pd.DataFrame,
     off_nadir_angle = compute_off_nadir_angle(impos_mid_itrs[frame_count // 2, :], campos_itrs[frame_count // 2, :])
 
     if verbose:
-        print(f' Image Center (lat,lon): ({lat_center * 180.0 / m.pi:08.5f}\t{lon_center * 180.0 / m.pi:09.5f})')
-        print(f' Image Center elevation angle: {elevation_angle * 180.0 / m.pi:08.5f}')
+        print(f'Image Center (lat,lon): ({lat_center * 180.0 / m.pi:08.5f}\t{lon_center * 180.0 / m.pi:09.5f})')
+        print(f'Image Center elevation angle: {elevation_angle * 180.0 / m.pi:08.5f}')
         print(f'Image Center off-nadir angle: {off_nadir_angle * 180.0 / m.pi:08.5f}')
     
     geometric_meta_info ={}

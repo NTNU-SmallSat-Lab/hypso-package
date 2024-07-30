@@ -216,12 +216,11 @@ class Hypso1(Hypso):
         #self.l2a_cube = self.find_existing_l2_cube()
 
         # Land Mask -----------------------------------------------------
-        # TODO
-        # self._generate_land_mask()
+        # self._run_land_mask()
 
         # Cloud Mask -----------------------------------------------------
         # TODO
-        #self._generate_cloud_mask()
+        #self._run_cloud_mask()
 
         # Products
         # TODO
@@ -521,9 +520,11 @@ class Hypso1(Hypso):
 
         info["nc_name"] = self.hypso_path.stem
 
-        info["l1a_nc_file"] = info["nc_file"]
-        info["l1b_nc_file"] = info["nc_name"].replace("-l1a", "-l1b") + ".nc"
-        info["l2a_nc_file"] = info["nc_name"].replace("-l2a", "-l2a") + ".nc"
+        file_path = str(self.hypso_path)
+
+        info["l1a_nc_file"] = Path(file_path)
+        info["l1b_nc_file"] = Path(file_path.replace("-l1a", "-l1b"))
+        info["l2a_nc_file"] = Path(file_path.replace("-l1a", "-l2a"))
 
         info["tmp_dir"] =  Path(info["nc_file"].parent.absolute(), info["nc_name"].replace("-l1a", "") + "_tmp")
         info["top_folder_name"] = info["tmp_dir"]
@@ -779,20 +780,6 @@ class Hypso1(Hypso):
         self.datacube_flipped = datacube_flipped
 
         return None
-
-
-    def _get_flipped_cube(self, cube: np.ndarray) -> np.ndarray:
-
-        if self.datacube_flipped is None:
-            return cube
-        else:
-            if self.datacube_flipped:
-                return cube[:, ::-1, :]
-
-            else:
-                return cube
-
-        return cube
 
 
 
@@ -1108,6 +1095,19 @@ class Hypso1(Hypso):
 
 
     # Other
+
+    def _get_flipped_cube(self, cube: np.ndarray) -> np.ndarray:
+
+        if self.datacube_flipped is None:
+            return cube
+        else:
+            if self.datacube_flipped:
+                return cube[:, ::-1, :]
+
+            else:
+                return cube
+
+        return cube
 
     def _check_georeferencing_has_run(self, run=True) -> bool:
         if run:

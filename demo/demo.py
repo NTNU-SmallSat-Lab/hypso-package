@@ -82,13 +82,18 @@ points_file = os.path.join(dir_path, 'frohavet_2024-05-06_1017Z-bin3.points')
 
 satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
 
-satobj._run_geometry_computation()
+#print(satobj.info["nc_file"])
+#print(satobj.info["l1a_nc_file"])
+#print(satobj.info["l1b_nc_file"])
+#print(satobj.info["l2a_nc_file"])
+
+#satobj._run_geometry_computation()
 #satobj.write_l1b_nc_file()
 
 l2a_cube = satobj.get_l2a_cube(product="acolite")
 
-print(l2a_cube['acolite'])
-print(l2a_cube['acolite'].shape)
+#print(l2a_cube['acolite'])
+#print(l2a_cube['acolite'].shape)
 
 #satobj._run_calibration()
 
