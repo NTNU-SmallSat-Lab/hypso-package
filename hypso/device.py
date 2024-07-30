@@ -1411,7 +1411,6 @@ class Hypso1(Hypso):
 
         return self.l2a_cube
             
-
     def get_land_mask(self, product: Literal["global", "NDWI", "threshold"]) -> np.ndarray:
 
         self._run_land_mask(product=product)
