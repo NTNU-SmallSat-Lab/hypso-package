@@ -84,7 +84,8 @@ satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
 
 #satobj._run_land_mask(product="global")
 
-satobj.get_cloud_mask(cloud_mask=None)
+print(type(satobj.rad_coeff_file))
+
 exit()
 land_mask = satobj.get_land_mask('global')
 

@@ -335,7 +335,7 @@ class Hypso1(Hypso):
 
         if rad_coeff_file:
             self.rad_coeff_file = rad_coeff_file
-            return
+            return None
 
         match self.info["capture_type"]:
             case "custom":
@@ -368,7 +368,7 @@ class Hypso1(Hypso):
 
         if smile_coeff_file:
             self.smile_coeff_file = smile_coeff_file
-            return
+            return None
 
         match self.info["capture_type"]:
             case "custom":
@@ -401,7 +401,7 @@ class Hypso1(Hypso):
 
         if destriping_coeff_file:
             self.destriping_coeff_file = destriping_coeff_file
-            return
+            return None
 
         match self.info["capture_type"]:
             case "custom":
@@ -434,7 +434,7 @@ class Hypso1(Hypso):
 
         if spectral_coeff_file:
             self.spectral_coeff_file = spectral_coeff_file
-            return
+            return None
         
         csv_file_spectral = "spectral_bands_HYPSO-1_v1.csv"
 
@@ -642,7 +642,7 @@ class Hypso1(Hypso):
 
 
     # Getters
-    
+
     def _get_unified_mask(self, 
                           land_mask: str=None,
                           cloud_mask: str=None
