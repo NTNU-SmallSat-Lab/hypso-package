@@ -1007,9 +1007,9 @@ class Hypso1(Hypso):
 
         return atmos_corrected_cube
     
+    # TODO
     def _run_machi_atmospheric_correction(self) -> None:
 
-        # TODO
         print("[WARNING] Minimal Atmospheric Compensation for Hyperspectral Imagers (MACHI) atmospheric correction has not been enabled.")
         
         return None
