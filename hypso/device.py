@@ -1517,7 +1517,10 @@ class Hypso1(Hypso):
         return self.cloud_mask 
 
 
-    def get_chlorophyll_estimate(self, product:  Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]) -> np.ndarray:
+    def get_chlorophyll_estimate(self, 
+                                 product:  Literal["band_ratio", "6sv1_aqua", "acolite_aqua"],
+                                model=None
+                                ) -> np.ndarray:
 
         self._run_chlorophyll_estimation(product=product)
 
