@@ -1133,7 +1133,7 @@ class Hypso1(Hypso):
 
                 print("[WARNING] No such chlorophyll estimation product supported!")
 
-    def _run_band_ratio_chlorophyll_estimation(self) -> None:
+    def _run_band_ratio_chlorophyll_estimation(self, chl_factor = 0.1) -> None:
 
         self._check_calibration_has_run()
 
@@ -1152,22 +1152,18 @@ class Hypso1(Hypso):
         chl = self.l1b_cube[:,:,numerator_index] / self.l1b_cube[:,:,denominator_index]
 
 
-        #chlor = scene[band_549nm_name] / scene[band_663nm_name]
-        #chlor = chlor.to_numpy()
+        # TODO
 
-        #chlor = np.ma.masked_array(chlor, unified_mask, fill_value=np.nan)
+        #chl = np.ma.masked_array(chl, unified_mask, fill_value=np.nan)
 
-        #chlor_factor = 0.1
+        #chl_factor = 0.1
 
         # Only get maximum from unmasked data
-        #chlor = chlor - chlor_factor*chlor.compressed().max()
-        #chlor = chlor - 0.88*chlor.compressed().max()
-        #chlor[chlor < 0] = 0
+        #chl = chl - chl_factor*chl.compressed().max()
+        #chl = chl - 0.88*chl.compressed().max()
+        #chl[chl < 0] = 0
 
         #chlor = chlor[:,::-1]
-
-
-
 
         return None
 
