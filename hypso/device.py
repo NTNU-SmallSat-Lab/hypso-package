@@ -107,11 +107,11 @@ class Hypso:
         # Initialize units
         self.units = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
 
-        # Initilize land mask variable
+        # Initilize land mask dict
         self.land_mask = {}
 
-        # Initilize cloud mask variable
-        self.cloud_mask = None
+        # Initilize cloud mask dict
+        self.cloud_mask = {}
 
         # Initialize products dict
         self.products = {}
@@ -781,8 +781,6 @@ class Hypso1(Hypso):
 
         return None
 
-
-
     def _run_radiometric_calibration(self, cube=None) -> np.ndarray:
 
         # Radiometric calibration
@@ -1081,18 +1079,23 @@ class Hypso1(Hypso):
     
         return land_mask
 
-    def _run_cloud_mask(self) -> None:
+    def _run_cloud_mask(self, product: str) -> None:
+
+        if self.cloud_mask is None:
+            self.cloud_mask = {}
 
         if self.verbose:
             print("[INFO] Running cloud mask generation...")
             print("[WARNING] Cloud mask generation has not been implemented.")
         
+        product = "general"
+
         cloud_mask = run_cloud_mask(spatial_dimensions=self.spatial_dimensions,
                                         latitudes=self.latitudes,
                                         longitudes=self.longitudes
                                         )
         
-        self.cloud_mask = cloud_mask
+        self.cloud_mask = cloud_mask[product]
 
         return None
 
@@ -1436,14 +1439,18 @@ class Hypso1(Hypso):
 
         return self.land_mask[product]   
 
-    def get_land_masks(self) -> np.ndarray:
+    def get_land_masks(self) -> dict:
 
 
         return self.land_mask     
     
-    def get_cloud_mask(self) -> np.ndarray:
+    def get_cloud_mask(self, product: str) -> np.ndarray:
 
-        self._run_cloud_mask()
+        self._run_cloud_mask(product=product)
+
+        return self.cloud_mask[product]
+    
+    def get_cloud_masks(self) -> dict:
 
         return self.cloud_mask 
 
