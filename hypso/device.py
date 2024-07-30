@@ -1112,6 +1112,10 @@ class Hypso1(Hypso):
     def _check_georeferencing_has_run(self, run=True) -> bool:
         if run:
             if not self.georeferencing_has_run:
+
+                if self.verbose:
+                    print("[INFO] Georeferencing has not been run yet. Running now...")
+
                 self._run_georeferencing()
                 return True
 
@@ -1123,6 +1127,10 @@ class Hypso1(Hypso):
     def _check_calibration_has_run(self, run=True) -> bool:
         if run:
             if not self.calibration_has_run:
+
+                if self.verbose:
+                    print("[INFO] Calibration has not been run yet. Running now...")
+
                 self._run_calibration()
                 return True
 
@@ -1134,6 +1142,10 @@ class Hypso1(Hypso):
     def _check_geometry_computation_has_run(self, run=True) -> bool:
         if run:
             if not self.geometry_computation_has_run:
+
+                if self.verbose:
+                    print("[INFO] Geometry computation has not been run yet. Running now...")
+
                 self._run_geometry_computation()
                 return True
 
@@ -1145,6 +1157,10 @@ class Hypso1(Hypso):
     def _check_write_l1b_nc_file_has_run(self, run=True) -> bool:
         if run:
             if not self.geometry_computation_has_run:
+
+                if self.verbose:
+                    print("[INFO] L1b .nc file has not been created yet. Creating it now...")
+    
                 self._write_l1b_nc_file()
                 return True
 
