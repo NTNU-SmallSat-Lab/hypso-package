@@ -1135,7 +1135,42 @@ class Hypso1(Hypso):
 
     def _run_band_ratio_chlorophyll_estimation(self) -> None:
 
-        pass
+        self._check_calibration_has_run()
+
+        numerator_wavelength = 549
+        denominator_wavelength = 663
+
+        a = abs(self.wavelengths - numerator_wavelength)
+        numerator_index = np.argmin(a)
+        
+        a = abs(self.wavelengths - denominator_wavelength)
+        denominator_index = np.argmin(a)
+    
+        print(self.wavelengths[numerator_index])
+        print(self.wavelengths[denominator_index])
+
+        chl = self.l1b_cube[:,:,numerator_index] / self.l1b_cube[:,:,denominator_index]
+
+
+        #chlor = scene[band_549nm_name] / scene[band_663nm_name]
+        #chlor = chlor.to_numpy()
+
+        #chlor = np.ma.masked_array(chlor, unified_mask, fill_value=np.nan)
+
+        #chlor_factor = 0.1
+
+        # Only get maximum from unmasked data
+        #chlor = chlor - chlor_factor*chlor.compressed().max()
+        #chlor = chlor - 0.88*chlor.compressed().max()
+        #chlor[chlor < 0] = 0
+
+        #chlor = chlor[:,::-1]
+
+
+
+
+        return None
+
 
     def _run_6sv1_aqua_chlorophyll_estimation(self, model) -> None:
 
@@ -1489,7 +1524,7 @@ class Hypso1(Hypso):
         return self.cloud_mask 
 
     def get_chlorophyll_estimate(self, 
-                                 product:  Literal["band_ratio", "6sv1_aqua", "acolite_aqua"],
+                                 product:  Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',
                                 model=None
                                 ) -> np.ndarray:
 
