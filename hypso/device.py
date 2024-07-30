@@ -1465,8 +1465,7 @@ class Hypso1(Hypso):
         product = product.lower()
 
         return self.l2a_cube[product]
-            
-
+    
     def get_land_mask(self, product: Literal["global", "ndwi", "threshold"]) -> np.ndarray:
 
         self._run_land_mask(product=product)
@@ -1559,69 +1558,6 @@ class Hypso1(Hypso):
             band_number = band_number + 1
 
         return toa_reflectance
-
-    # TODO
-    def get_projection_metadata(self) -> dict:
-        """
-        Returns the projection metadata dictionary. This is either extracted from the RGBA, L1 or L1C GeoTiff
-
-        :return: Dictionary containing the projection information for the capture.
-        """
-
-        top_folder_name = self.info["top_folder_name"]
-        current_project = {}
-
-        # Find Geotiffs
-        self.find_geotiffs()
-
-        # -----------------------------------------------------------------
-        # Get geotiff data for rgba first    ------------------------------
-        # -----------------------------------------------------------------
-        if self.rgbGeotiffFilePath is not None:
-            print("RGBA Tif File: ", self.rgbGeotiffFilePath.name)
-            # Load GeoTiff Metadata with gdal
-            ds = gdal.Open(str(self.rgbGeotiffFilePath))
-            data = ds.ReadAsArray()
-            gt = ds.GetGeoTransform()
-            proj = ds.GetProjection()
-            inproj = osr.SpatialReference()
-            inproj.ImportFromWkt(proj)
-
-            boundbox = None
-            crs = None
-            with rasterio.open(self.rgbGeotiffFilePath) as dataset:
-                crs = dataset.crs
-                boundbox = dataset.bounds
-
-            current_project = {
-                "rgba_data": data,
-                "gt": gt,
-                "proj": proj,
-                "inproj": inproj,
-                "boundbox": boundbox,
-                "crs": str(crs).lower()
-            }
-
-        # -----------------------------------------------------------------
-        # Get geotiff data for full second   ------------------------------
-        # -----------------------------------------------------------------
-        full_path = None
-        if self.l2geotiffFilePath is not None:
-            # Load GeoTiff Metadata with gdal
-            first_key = list(self.l2geotiffFilePath)[0]
-            path_found = self.l2geotiffFilePath[first_key]
-            ds = gdal.Open(str(path_found))
-            data = ds.ReadAsArray()
-            current_project["data"] = data
-            print("Full L2 Tif File: ", path_found.name)
-        if self.l1cgeotiffFilePath is not None:
-            # Load GeoTiff Metadata with gdal
-            ds = gdal.Open(str(self.l1cgeotiffFilePath))
-            data = ds.ReadAsArray()
-            current_project["data"] = data
-            print("Full L1C Tif File: ", self.l1cgeotiffFilePath.name)
-
-        return current_project
 
     def write_l1b_nc_file(self) -> None:
 
