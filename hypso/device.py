@@ -111,10 +111,12 @@ class Hypso:
         self.units = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
 
         # Initilize land mask dict
-        self.land_mask = {}
+        self.land_mask = None
+        self.land_masks = {}
 
         # Initilize cloud mask dict
-        self.cloud_mask = {}
+        self.cloud_mask = None
+        self.cloud_masks = {}
 
         # Initialize products dict
         self.products = {}
@@ -1010,8 +1012,8 @@ class Hypso1(Hypso):
 
     def _run_land_mask(self, product: str) -> None:
 
-        if self.land_mask is None:
-            self.land_mask = {}
+        if self.land_masks is None:
+            self.land_masks = {}
 
         product = product.lower()
 
@@ -1022,21 +1024,21 @@ class Hypso1(Hypso):
                 if self.verbose:
                     print("[INFO] Running land mask generation...")
 
-                self.land_mask[product] = self._run_global_land_mask()
+                self.land_masks[product] = self._run_global_land_mask()
 
             case "ndwi":
 
                 if self.verbose:
                     print("[INFO] Running NDWI land mask generation...")
 
-                self.land_mask[product] = self._run_ndwi_land_mask()
+                self.land_masks[product] = self._run_ndwi_land_mask()
 
             case "threshold":
 
                 if self.verbose:
                     print("[INFO] Running threshold land mask generation...")
 
-                self.land_mask[product] = self._run_threshold_land_mask()
+                self.land_masks[product] = self._run_threshold_land_mask()
 
             case _:
 
@@ -1075,8 +1077,8 @@ class Hypso1(Hypso):
 
     def _run_cloud_mask(self, product: str) -> None:
 
-        if self.cloud_mask is None:
-            self.cloud_mask = {}
+        if self.cloud_masks is None:
+            self.cloud_masks = {}
 
         if self.verbose:
             print("[INFO] Running cloud mask generation...")
@@ -1089,7 +1091,7 @@ class Hypso1(Hypso):
                                         longitudes=self.longitudes
                                         )
         
-        self.cloud_mask = cloud_mask[product]
+        self.cloud_masks = cloud_mask[product]
 
         return None
 
@@ -1098,13 +1100,13 @@ class Hypso1(Hypso):
                           cloud_mask_product: str=None
                           ) -> np.ndarray:
         
-        if land_mask_product in self.land_mask.keys():
-            land_mask = self.land_mask[land_mask_product]
+        if land_mask_product in self.land_masks.keys():
+            land_mask = self.land_masks[land_mask_product]
         else:
             land_mask = np.full(self.spatial_dimensions, False, dtype=bool)
 
-        if cloud_mask_product in self.cloud_mask.keys():
-            cloud_mask = self.cloud_mask[cloud_mask]
+        if cloud_mask_product in self.cloud_masks.keys():
+            cloud_mask = self.cloud_masks[cloud_mask]
         else:
             cloud_mask = np.full(self.spatial_dimensions, False, dtype=bool)
 
@@ -1523,22 +1525,22 @@ class Hypso1(Hypso):
 
         self._run_land_mask(product=product)
 
-        return self.land_mask[product]   
+        return self.land_masks[product]   
 
     def get_land_masks(self) -> dict:
 
 
-        return self.land_mask     
+        return self.land_masks     
     
     def get_cloud_mask(self, product: str) -> np.ndarray:
 
         self._run_cloud_mask(product=product)
 
-        return self.cloud_mask[product]
+        return self.cloud_masks[product]
     
     def get_cloud_masks(self) -> dict:
 
-        return self.cloud_mask 
+        return self.cloud_masks 
 
     def get_chlorophyll_estimate(self, 
                                  product:  Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',
