@@ -1521,7 +1521,7 @@ class Hypso1(Hypso):
 
         return self.l1b_cube
 
-    def get_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"]="6sv1") -> dict:
+    def get_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = "6sv1") -> dict:
 
         #self._check_geometry_computation_has_run()
 
@@ -1532,30 +1532,30 @@ class Hypso1(Hypso):
 
         return self.l2a_cube[product]
     
-    def get_land_mask(self, product: Literal["global", "ndwi", "threshold"]) -> np.ndarray:
+    def get_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global") -> np.ndarray:
 
-        if product not in self.land_masks.keys():
-            self._run_land_mask(product=product)
+        if land_mask not in self.land_masks.keys():
+            self._run_land_mask(product=land_mask)
 
-            if product not in self.land_masks.keys():
+            if land_mask not in self.land_masks.keys():
                 return None
 
-        return self.land_masks[product]
+        return self.land_masks[land_mask]
 
     def get_land_mask_dict(self) -> dict:
 
 
         return self.land_masks     
     
-    def get_cloud_mask(self, product: str) -> np.ndarray:
+    def get_cloud_mask(self, cloud_mask: str = None) -> np.ndarray:
 
-        if product not in self.cloud_masks.keys():
-            self._run_cloud_mask(product=product)
+        if cloud_mask not in self.cloud_masks.keys():
+            self._run_cloud_mask(cloud_mask=cloud_mask)
 
-            if product not in self.cloud_masks.keys():
+            if cloud_mask not in self.cloud_masks.keys():
                 return None
 
-        return self.cloud_masks[product]
+        return self.cloud_masks[cloud_mask]
     
     def get_cloud_mask_dict(self) -> dict:
 
