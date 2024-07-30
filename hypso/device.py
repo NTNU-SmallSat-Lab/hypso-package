@@ -35,7 +35,7 @@ import scipy.interpolate as si
 
 EXPERIMENTAL_FEATURES = True
 SUPPORTED_PRODUCT_LEVELS = ["l1a", "l1b", "l2a"]
-SUPPORTED_ATM_CORR_PRODUCTS = ["6SV1", "ACOLITE", "MACHI"]
+SUPPORTED_ATM_CORR_PRODUCTS = ["6sv1", "acolite", "machi"]
 
 class Hypso:
 
@@ -906,8 +906,6 @@ class Hypso1(Hypso):
 
     def _run_atmospheric_correction(self, product: str) -> None:
 
-        # products = ["L2-ACOLITE", "L2-6SV1", "L1C"]
-
         if self.l2a_cube is None:
             self.l2a_cube = {}
 
@@ -1483,16 +1481,21 @@ class Hypso1(Hypso):
 
         return self.l1b_cube
 
-    def get_l2a_cube(self, product: Literal["ACOLITE", "6SV1", "MACHI"]="6SV1") -> dict:
+    def get_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"]="6sv1") -> dict:
 
-        self._check_geometry_computation_has_run()
+        #self._check_geometry_computation_has_run()
 
-        if not self._check_atmospheric_correction_has_run(run=False)
+        if not self._check_atmospheric_correction_has_run(run=False):
             self._run_atmospheric_correction(product=product)
             
+        product = product.lower()
+
         return self.l2a_cube[product]
             
-    def get_land_mask(self, product: Literal["global", "NDWI", "threshold"]) -> np.ndarray:
+
+
+
+    def get_land_mask(self, product: Literal["global", "ndwi", "threshold"]) -> np.ndarray:
 
         self._run_land_mask(product=product)
 

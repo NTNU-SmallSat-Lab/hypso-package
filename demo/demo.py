@@ -82,6 +82,10 @@ points_file = os.path.join(dir_path, 'frohavet_2024-05-06_1017Z-bin3.points')
 
 satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
 
+cube = satobj.get_l2a_cube(product="6SV1")
+
+print(cube)
+
 #print(satobj.info["nc_file"])
 #print(satobj.info["l1a_nc_file"])
 #print(satobj.info["l1b_nc_file"])
