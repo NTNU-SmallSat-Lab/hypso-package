@@ -190,6 +190,7 @@ class Hypso1(Hypso):
         self.georeferencing_has_run = False
         self.calibration_has_run = False
         self.geometry_computation_has_run = False
+        self.create_l1b_has_run = False
         self.atmospheric_correction_has_run = False
 
  
@@ -524,8 +525,6 @@ class Hypso1(Hypso):
         info["l1b_nc_file"] = info["nc_name"].replace("-l1a", "-l1b") + ".nc"
         info["l2a_nc_file"] = info["nc_name"].replace("-l2a", "-l2a") + ".nc"
 
-        
-
         info["tmp_dir"] =  Path(info["nc_file"].parent.absolute(), info["nc_name"].replace("-l1a", "") + "_tmp")
         info["top_folder_name"] = info["tmp_dir"]
 
@@ -545,6 +544,12 @@ class Hypso1(Hypso):
         info["image_height"] = self.capture_config["row_count"]
         info["image_width"] = int(self.capture_config["column_count"] / self.capture_config["bin_factor"])
         info["im_size"] = info["image_height"] * info["image_width"]
+
+
+        info["bands"] = info["image_width"]
+        info["lines"] = self.capture_config["frame_count"]  # AKA Frames AKA Rows
+        info["samples"] = info["image_height"]  # AKA Cols
+
 
         # TODO: Verify offset validity. Sivert had 20 here
         UNIX_TIME_OFFSET = 20
@@ -993,7 +998,8 @@ class Hypso1(Hypso):
         print("[WARNING] ACOLITE atmospheric correction has not been enabled.")
 
         self._check_calibration_has_run()
-        self._check_geometry_computation_has_run()
+        #self._check_geometry_computation_has_run()
+        self._check_create_l1b_has_run()
 
         # user and password from https://urs.earthdata.nasa.gov/profile
         # optional but good
@@ -1002,12 +1008,12 @@ class Hypso1(Hypso):
             'password':'nwz7xmu8dak.UDG9kqz'
         }
 
-        if not self.info["nc_file"].is_file():
+        if not self.info["l1b_nc_file"].is_file():
             raise Exception("No -l1b.nc file found")
         
-        atmos_corrected_cube = run_acolite(self.info["top_folder_name"], 
-                                          atmos_params, 
-                                          self.info["nc_file"])
+        atmos_corrected_cube = run_acolite(output_path=self.info["top_folder_name"], 
+                                          atmos_dict=atmos_params, 
+                                          nc_file_acoliteready=self.info["l1b_nc_file"])
 
         return atmos_corrected_cube
     
@@ -1022,7 +1028,6 @@ class Hypso1(Hypso):
         #self._check_geometry_computation_has_run()
 
         #T, A, objs = run_machi(cube=self.l1b_cube, verbose=self.verbose)
-
 
     def _run_land_mask(self, product: str) -> None:
 
@@ -1054,9 +1059,6 @@ class Hypso1(Hypso):
             case _:
 
                 pass
-
-
-
 
     def _run_global_land_mask(self) -> np.ndarray:
 
@@ -1140,6 +1142,17 @@ class Hypso1(Hypso):
 
         return False
     
+    def _check_create_l1b_has_run(self, run=True) -> bool:
+        if run:
+            if not self.geometry_computation_has_run:
+                self.create_l1b_nc_file()
+                return True
+
+        if self.geometry_computation_has_run:
+            return True
+
+        return False     
+
     def _check_atmospheric_correction_has_run(self, product, run=True) -> bool:
         if run:
             if not self.atmospheric_correction_has_run:
@@ -1542,14 +1555,15 @@ class Hypso1(Hypso):
 
         # TODO: can this be implemented with satpy NetCDF reader?
 
-        hypso_nc_path = self.hypso_path
+        hypso_nc_path = self.info["l1a_nc_file"]
         old_nc = nc.Dataset(hypso_nc_path, 'r', format='NETCDF4')
+
         new_path = hypso_nc_path
         new_path = str(new_path).replace('l1a.nc', 'l1b.nc')
 
         if Path(new_path).is_file():
             print("L1b.nc file already exists. Not creating it.")
-            self.info["nc_file"] = Path(new_path)
+            self.info["l1b_nc_file"] = Path(new_path)
             return
 
         # Create a new NetCDF file
@@ -1659,7 +1673,7 @@ class Hypso1(Hypso):
             Lt.long_name = "Top of Atmosphere Measured Radiance"
             Lt.wavelength_units = "nanometers"
             Lt.fwhm = [5.5] * bands
-            Lt.wavelengths = np.around(self.spectral_coefficients, 1)
+            Lt.wavelengths = np.around(self.spectral_coeffs, 1)
             Lt[:] = self.l1b_cube
 
             # ADCS Timestamps ----------------------------------------------------
@@ -1862,8 +1876,9 @@ class Hypso1(Hypso):
             meta_capcon_file[()] = old_nc['metadata']["capture_config"]["file"][:]  # [()] assignment of scalar to array
 
             # Metadata: Rad calibration coeff ----------------------------------------------------
-            len_radrows = self.calibration_coefficients_dict["radiometric"].shape[0]
-            len_radcols = self.calibration_coefficients_dict["radiometric"].shape[1]
+            len_radrows = self.rad_coeffs.shape[0]
+            len_radcols = self.rad_coeffs.shape[1]
+
             netfile.createDimension('radrows', len_radrows)
             netfile.createDimension('radcols', len_radcols)
             meta_corrections_rad = netfile.createVariable(
@@ -1872,7 +1887,7 @@ class Hypso1(Hypso):
                 compression=COMP_SCHEME,
                 complevel=COMP_LEVEL,
                 shuffle=COMP_SHUFFLE)
-            meta_corrections_rad[:] = self.calibration_coefficients_dict["radiometric"]
+            meta_corrections_rad[:] = self.rad_coeffs
 
             # Metadata: Spectral coeff ----------------------------------------------------
             len_spectral = self.wavelengths.shape[0]
@@ -1883,7 +1898,7 @@ class Hypso1(Hypso):
                 compression=COMP_SCHEME,
                 complevel=COMP_LEVEL,
                 shuffle=COMP_SHUFFLE)
-            meta_corrections_spec[:] = self.spectral_coefficients
+            meta_corrections_spec[:] = self.spectral_coeffs
 
             # Meta Temperature File ---------------------------------------------------------
             meta_temperature_file = netfile.createVariable(
@@ -2015,7 +2030,9 @@ class Hypso1(Hypso):
         old_nc.close()
 
         # Update
-        self.info["nc_file"] = Path(new_path)
+        self.info["l1b_nc_file"] = Path(new_path)
+
+        self.create_l1b_has_run = True
 
 
 class Hypso2(Hypso):
