@@ -108,7 +108,7 @@ class Hypso:
         self.units = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
 
         # Initilize land mask variable
-        self.land_mask = None
+        self.land_mask = {}
 
         # Initilize cloud mask variable
         self.cloud_mask = None
@@ -1018,6 +1018,9 @@ class Hypso1(Hypso):
 
     def _run_land_mask(self, product: str) -> None:
 
+        if self.land_mask is None:
+            self.land_mask = {}
+
         product = product.lower()
 
         match product:
@@ -1027,21 +1030,21 @@ class Hypso1(Hypso):
                 if self.verbose:
                     print("[INFO] Running land mask generation...")
 
-                self.land_mask = self._run_global_land_mask()
+                self.land_mask[product] = self._run_global_land_mask()
 
             case "ndwi":
 
                 if self.verbose:
                     print("[INFO] Running NDWI land mask generation...")
 
-                self.land_mask = self._run_ndwi_land_mask()
+                self.land_mask[product] = self._run_ndwi_land_mask()
 
             case "threshold":
 
                 if self.verbose:
                     print("[INFO] Running threshold land mask generation...")
 
-                self.land_mask = self._run_threshold_land_mask()
+                self.land_mask[product] = self._run_threshold_land_mask()
 
             case _:
 
@@ -1431,7 +1434,12 @@ class Hypso1(Hypso):
 
         self._run_land_mask(product=product)
 
-        return self.land_mask       
+        return self.land_mask[product]   
+
+    def get_land_masks(self) -> np.ndarray:
+
+
+        return self.land_mask     
     
     def get_cloud_mask(self) -> np.ndarray:
 
