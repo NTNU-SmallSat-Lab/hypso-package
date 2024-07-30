@@ -847,7 +847,7 @@ class Hypso1(Hypso):
 
         return cube
 
-    def _run_geget_spectraometry_computation(self) -> None:
+    def _run_geometry_computation(self) -> None:
 
         print("[INFO] Running frame interpolation...")
 
@@ -1165,7 +1165,10 @@ class Hypso1(Hypso):
 
                 print("[WARNING] No such chlorophyll estimation product supported!")
 
-    def _run_band_ratio_chlorophyll_estimation(self, land_mask=None, cloud_mask=None, factor=0.1, threshold=0.88) -> None:
+    def _run_band_ratio_chlorophyll_estimation(self, land_mask: str = None, 
+                                               cloud_mask: str = None, 
+                                               factor: float = 0.1, 
+                                               threshold: float = 0.88) -> None:
 
         self._check_calibration_has_run()
 
@@ -1199,11 +1202,11 @@ class Hypso1(Hypso):
         return chl
 
 
-    def _run_6sv1_aqua_chlorophyll_estimation(self, model) -> None:
+    def _run_6sv1_aqua_chlorophyll_estimation(self, model: str = None) -> None:
 
         pass
 
-    def _run_acolite_aqua_chlorophyll_estimation(self, model) -> None:
+    def _run_acolite_aqua_chlorophyll_estimation(self, model: str = None) -> None:
 
         pass
 
@@ -1223,7 +1226,7 @@ class Hypso1(Hypso):
 
         return cube
 
-    def _check_georeferencing_has_run(self, run=True) -> bool:
+    def _check_georeferencing_has_run(self, run: bool = True) -> bool:
         if run:
             if not self.georeferencing_has_run:
 
@@ -1238,7 +1241,7 @@ class Hypso1(Hypso):
 
         return False
     
-    def _check_calibration_has_run(self, run=True) -> bool:
+    def _check_calibration_has_run(self, run: bool = True) -> bool:
         if run:
             if not self.calibration_has_run:
 
@@ -1253,7 +1256,7 @@ class Hypso1(Hypso):
 
         return False
     
-    def _check_geometry_computation_has_run(self, run=True) -> bool:
+    def _check_geometry_computation_has_run(self, run: bool = True) -> bool:
         if run:
             if not self.geometry_computation_has_run:
 
@@ -1268,7 +1271,7 @@ class Hypso1(Hypso):
 
         return False
     
-    def _check_write_l1b_nc_file_has_run(self, run=True) -> bool:
+    def _check_write_l1b_nc_file_has_run(self, run: bool = True) -> bool:
         if run:
             if not self.geometry_computation_has_run:
 
@@ -1283,7 +1286,7 @@ class Hypso1(Hypso):
 
         return False     
 
-    def _check_atmospheric_correction_has_run(self, product=None, run=True) -> bool:
+    def _check_atmospheric_correction_has_run(self, product: str = None, run: bool = True) -> bool:
         if run:
             if not self.atmospheric_correction_has_run:
                 self._run_atmospheric_correction(product=product)
