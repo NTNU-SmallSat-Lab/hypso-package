@@ -82,18 +82,21 @@ points_file = os.path.join(dir_path, 'frohavet_2024-05-06_1017Z-bin3.points')
 
 satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
 
-satobj._run_land_mask(product="global")
+#satobj._run_land_mask(product="global")
 
-unified_mask = satobj._get_unified_mask(land_mask_product="global")
+land_mask = satobj.get_land_mask('global')
+
+unified_mask = satobj._get_unified_mask(land_mask="global")
 
 
-plt.imsave(fname='land_mask.png', arr=satobj.land_mask['global'])
+plt.imsave(fname='land_mask.png', arr=land_mask)
 plt.imsave(fname='unified_mask.png', arr=unified_mask)
 
 
 #cube = satobj.get_l2a_cube(product="6SV1")
 
-#satobj.get_chlorophyll_estimate('band_ratio')
+band_ratio = satobj.get_chlorophyll_estimate('band_ratio')
+plt.imsave(fname='band_ratio.png', arr=band_ratio)
 
 #print(satobj.info["nc_file"])
 #print(satobj.info["l1a_nc_file"])

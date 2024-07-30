@@ -197,6 +197,8 @@ class Hypso1(Hypso):
         self.geometry_computation_has_run = False
         self.write_l1b_nc_file_has_run = False
         self.atmospheric_correction_has_run = False
+        self.land_mask_has_run = False
+        self.cloud_mask_has_run = False
 
  
         # Load L1a file -----------------------------------------------------
@@ -779,7 +781,7 @@ class Hypso1(Hypso):
 
         return None
 
-    def _run_radiometric_calibration(self, cube=None) -> np.ndarray:
+    def _run_radiometric_calibration(self, cube: np.ndarray = None) -> np.ndarray:
 
         # Radiometric calibration
 
@@ -807,7 +809,7 @@ class Hypso1(Hypso):
 
         return cube
 
-    def _run_smile_correction(self, cube=None) -> np.ndarray:
+    def _run_smile_correction(self, cube: np.ndarray = None) -> np.ndarray:
 
         # Smile correction
 
@@ -826,7 +828,7 @@ class Hypso1(Hypso):
 
         return cube
 
-    def _run_destriping_correction(self, cube) -> np.ndarray:
+    def _run_destriping_correction(self, cube: np.ndarray = None) -> np.ndarray:
 
         # Destriping
 
@@ -1010,39 +1012,43 @@ class Hypso1(Hypso):
 
         #T, A, objs = run_machi(cube=self.l1b_cube, verbose=self.verbose)
 
-    def _run_land_mask(self, product: str) -> None:
+    def _run_land_mask(self, land_mask: str) -> None:
+
+        key = land_mask.lower()
 
         if self.land_masks is None:
             self.land_masks = {}
 
-        product = product.lower()
-
-        match product:
+        match key:
 
             case "global":
 
                 if self.verbose:
                     print("[INFO] Running land mask generation...")
 
-                self.land_masks[product] = self._run_global_land_mask()
+                self.land_masks[key] = self._run_global_land_mask()
 
             case "ndwi":
 
                 if self.verbose:
                     print("[INFO] Running NDWI land mask generation...")
 
-                self.land_masks[product] = self._run_ndwi_land_mask()
+                self.land_masks[key] = self._run_ndwi_land_mask()
 
             case "threshold":
 
                 if self.verbose:
                     print("[INFO] Running threshold land mask generation...")
 
-                self.land_masks[product] = self._run_threshold_land_mask()
+                self.land_masks[key] = self._run_threshold_land_mask()
 
             case _:
 
                 print("[WARNING] No such land mask supported!")
+
+        self.land_mask_has_run = True
+
+        return None
 
     def _run_global_land_mask(self) -> np.ndarray:
 
@@ -1075,37 +1081,41 @@ class Hypso1(Hypso):
     
         return land_mask
 
-    def _run_cloud_mask(self, product: str) -> None:
+    def _run_cloud_mask(self, cloud_mask: str='default') -> None:
+
+        key = cloud_mask.lower()
 
         if self.cloud_masks is None:
             self.cloud_masks = {}
 
-        if self.verbose:
-            print("[INFO] Running cloud mask generation...")
-            print("[WARNING] Cloud mask generation has not been implemented.")
-        
-        product = "general"
+        match key:
 
-        cloud_mask = run_cloud_mask(spatial_dimensions=self.spatial_dimensions,
-                                        latitudes=self.latitudes,
-                                        longitudes=self.longitudes
-                                        )
-        
-        self.cloud_masks = cloud_mask[product]
+            case 'default':
+
+                if self.verbose:
+                    print("[INFO] Running cloud mask generation...")
+                    print("[WARNING] Cloud mask generation has not been implemented.")
+
+                self.cloud_masks[key] = run_cloud_mask()
+
+            case _:
+                print("[WARNING] No such cloud mask supported!")
+
+        self.cloud_mask_has_run = True
 
         return None
 
     def _get_unified_mask(self, 
-                          land_mask_product: str=None,
-                          cloud_mask_product: str=None
+                          land_mask: str=None,
+                          cloud_mask: str=None
                           ) -> np.ndarray:
         
-        if land_mask_product in self.land_masks.keys():
-            land_mask = self.land_masks[land_mask_product]
+        if land_mask in self.land_masks.keys():
+            land_mask = self.land_masks[land_mask]
         else:
             land_mask = np.full(self.spatial_dimensions, False, dtype=bool)
 
-        if cloud_mask_product in self.cloud_masks.keys():
+        if cloud_mask in self.cloud_masks.keys():
             cloud_mask = self.cloud_masks[cloud_mask]
         else:
             cloud_mask = np.full(self.spatial_dimensions, False, dtype=bool)
@@ -1117,8 +1127,8 @@ class Hypso1(Hypso):
 
     def _run_chlorophyll_estimation(self, product: str) -> None:
 
-        if self.products is None:
-            self.products = {}
+        if self.chl is None:
+            self.chl = {}
 
         product = product.lower()
 
@@ -1131,7 +1141,7 @@ class Hypso1(Hypso):
 
                 key = "chl_" + product
 
-                self.products[key] = self._run_band_ratio_chlorophyll_estimation()
+                self.chl[key] = self._run_band_ratio_chlorophyll_estimation()
 
             case "6sv1_aqua":
 
@@ -1140,7 +1150,7 @@ class Hypso1(Hypso):
 
                 key = "chl_" + product
 
-                self.products[key] = self._run_6sv1_aqua_chlorophyll_estimation()
+                self.chl[key] = self._run_6sv1_aqua_chlorophyll_estimation()
 
             case "acolite_aqua":
 
@@ -1149,13 +1159,13 @@ class Hypso1(Hypso):
 
                 key = "chl_" + product
 
-                self.products[key] = self._run_acolite_aqua_chlorophyll_estimation()
+                self.chl[key] = self._run_acolite_aqua_chlorophyll_estimation()
 
             case _:
 
                 print("[WARNING] No such chlorophyll estimation product supported!")
 
-    def _run_band_ratio_chlorophyll_estimation(self, chl_factor = 0.1) -> None:
+    def _run_band_ratio_chlorophyll_estimation(self, land_mask=None, cloud_mask=None, factor=0.1, threshold=0.88) -> None:
 
         self._check_calibration_has_run()
 
@@ -1173,22 +1183,20 @@ class Hypso1(Hypso):
 
         chl = self.l1b_cube[:,:,numerator_index] / self.l1b_cube[:,:,denominator_index]
 
-        unified_mask = self._get_unified_mask()
+        unified_mask = self._get_unified_mask(land_mask=land_mask, cloud_mask=cloud_mask)
 
         # TODO
 
-        #chl = np.ma.masked_array(chl, unified_mask, fill_value=np.nan)
-
-        #chl_factor = 0.1
+        chl = np.ma.masked_array(chl, unified_mask, fill_value=np.nan)
 
         # Only get maximum from unmasked data
-        #chl = chl - chl_factor*chl.compressed().max()
-        #chl = chl - 0.88*chl.compressed().max()
-        #chl[chl < 0] = 0
+        chl = chl - factor*chl.compressed().max()
+        chl = chl - threshold*chl.compressed().max()
+        chl[chl < 0] = 0
 
-        #chlor = chlor[:,::-1]
+        #chl = chl[:,::-1]
 
-        return None
+        return chl
 
 
     def _run_6sv1_aqua_chlorophyll_estimation(self, model) -> None:
@@ -1523,35 +1531,47 @@ class Hypso1(Hypso):
     
     def get_land_mask(self, product: Literal["global", "ndwi", "threshold"]) -> np.ndarray:
 
-        self._run_land_mask(product=product)
+        if product not in self.land_masks.keys():
+            self._run_land_mask(product=product)
 
-        return self.land_masks[product]   
+            if product not in self.land_masks.keys():
+                return None
 
-    def get_land_masks(self) -> dict:
+        return self.land_masks[product]
+
+    def get_land_mask_dict(self) -> dict:
 
 
         return self.land_masks     
     
     def get_cloud_mask(self, product: str) -> np.ndarray:
 
-        self._run_cloud_mask(product=product)
+        if product not in self.cloud_masks.keys():
+            self._run_cloud_mask(product=product)
+
+            if product not in self.cloud_masks.keys():
+                return None
 
         return self.cloud_masks[product]
     
-    def get_cloud_masks(self) -> dict:
+    def get_cloud_mask_dict(self) -> dict:
 
         return self.cloud_masks 
 
-    def get_chlorophyll_estimate(self, 
+    def get_chlorophyll_estimates(self, 
                                  product:  Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',
-                                model=None
-                                ) -> np.ndarray:
+                                 model=None
+                                 ) -> np.ndarray:
 
         self._run_chlorophyll_estimation(product=product)
 
         key = 'chl_' + product
 
-        return self.products[key]
+        return self.chl[key]
+
+    def get_chlorophyll_estimates_dict(self) -> dict:
+
+        return self.chl
 
     def get_products(self) -> dict:
 

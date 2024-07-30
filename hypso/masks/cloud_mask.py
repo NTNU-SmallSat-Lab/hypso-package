@@ -2,10 +2,7 @@
 import numpy as np
 
 
-def run_cloud_mask(spatial_dimensions: tuple, 
-                  latitudes: np.ndarray,
-                  longitudes: np.ndarray
-                  ) -> np.ndarray:
+def run_cloud_mask() -> np.ndarray:
     
 
     return None
