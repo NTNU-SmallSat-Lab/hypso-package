@@ -641,6 +641,28 @@ class Hypso1(Hypso):
         return None
 
 
+    # Getters
+    
+    def _get_unified_mask(self, 
+                          land_mask: str=None,
+                          cloud_mask: str=None
+                          ) -> np.ndarray:
+        
+        if land_mask in self.land_masks.keys():
+            land_mask = self.land_masks[land_mask]
+        else:
+            land_mask = np.full(self.spatial_dimensions, False, dtype=bool)
+
+        if cloud_mask in self.cloud_masks.keys():
+            cloud_mask = self.cloud_masks[cloud_mask]
+        else:
+            cloud_mask = np.full(self.spatial_dimensions, False, dtype=bool)
+
+        unified_mask = land_mask | cloud_mask
+
+        return unified_mask
+
+
     # Loaders
 
     def _load_l1a_file(self) -> None:
@@ -1112,26 +1134,6 @@ class Hypso1(Hypso):
 
         return None
 
-    def _get_unified_mask(self, 
-                          land_mask: str=None,
-                          cloud_mask: str=None
-                          ) -> np.ndarray:
-        
-        if land_mask in self.land_masks.keys():
-            land_mask = self.land_masks[land_mask]
-        else:
-            land_mask = np.full(self.spatial_dimensions, False, dtype=bool)
-
-        if cloud_mask in self.cloud_masks.keys():
-            cloud_mask = self.cloud_masks[cloud_mask]
-        else:
-            cloud_mask = np.full(self.spatial_dimensions, False, dtype=bool)
-
-        unified_mask = land_mask | cloud_mask
-
-        return unified_mask
-
-
     def _run_chlorophyll_estimation(self, product: str = None) -> None:
 
         if self.chl is None:
@@ -1208,7 +1210,6 @@ class Hypso1(Hypso):
         #chl = chl[:,::-1]
 
         return chl
-
 
     def _run_6sv1_aqua_chlorophyll_estimation(self, model: str = None) -> None:
 
