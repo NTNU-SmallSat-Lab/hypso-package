@@ -1046,7 +1046,7 @@ class Hypso1(Hypso):
 
             case _:
 
-                pass
+                print("[WARNING] No such land mask supported!")
 
     def _run_global_land_mask(self) -> np.ndarray:
 
@@ -1105,17 +1105,53 @@ class Hypso1(Hypso):
 
     def _run_chlorophyll_estimation(self, product: str) -> None:
 
-        pass
+        if self.products is None:
+            self.products = {}
+
+        product = product.lower()
+
+        match product:
+
+            case "band_ratio":
+
+                if self.verbose:
+                    print("[INFO] Running band ratio chlorophyll estimation...")
+
+                key = "chl_" + product
+
+                self.products[key] = self._run_band_ratio_chlorophyll_estimation()
+
+            case "6sv1_aqua":
+
+                if self.verbose:
+                    print("[INFO] Running 6SV1 AQUA Tuned chlorophyll estimation...")
+
+                key = "chl_" + product
+
+                self.products[key] = self._run_6sv1_aqua_chlorophyll_estimation()
+
+            case "acolite_aqua":
+
+                if self.verbose:
+                    print("[INFO] Running ACOLITE AQUA Tuned chlorophyll estimation...")
+
+                key = "chl_" + product
+
+                self.products[key] = self._run_acolite_aqua_chlorophyll_estimation()
+
+            case _:
+
+                print("[WARNING] No such chlorophyll estimation product supported!")
 
     def _run_band_ratio_chlorophyll_estimation(self) -> None:
 
         pass
 
-    def _run_6sv1_aqua_chlorophyll_estimation(self) -> None:
+    def _run_6sv1_aqua_chlorophyll_estimation(self, model) -> None:
 
         pass
 
-    def _run_acolite_aqua_chlorophyll_estimation(self) -> None:
+    def _run_acolite_aqua_chlorophyll_estimation(self, model) -> None:
 
         pass
 
@@ -1479,6 +1515,16 @@ class Hypso1(Hypso):
     def get_cloud_masks(self) -> dict:
 
         return self.cloud_mask 
+
+
+    def get_chlorophyll_estimate(self, product:  Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]) -> np.ndarray:
+
+        self._run_chlorophyll_estimation(product=product)
+
+        key = 'chl_' + product
+
+        return self.products[key]
+
 
     # TODO
     def get_toa_reflectance(self) -> np.ndarray:
