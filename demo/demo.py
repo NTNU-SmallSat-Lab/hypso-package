@@ -90,10 +90,8 @@ satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
 #satobj._run_geometry_computation()
 #satobj.write_l1b_nc_file()
 
-print(satobj.get_land_mask(product='global'))
-
-print(satobj.get_land_masks())
-
+#print(satobj.get_land_mask(product='global'))
+#print(satobj.get_land_masks())
 
 #l2a_cube = satobj.get_l2a_cube(product="acolite")
 
