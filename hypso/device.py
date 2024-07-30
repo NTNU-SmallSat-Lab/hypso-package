@@ -323,7 +323,7 @@ class Hypso1(Hypso):
 
         return None
     
-    def _set_rad_coeff_file(self, rad_coeff_file=None) -> None:
+    def _set_rad_coeff_file(self, rad_coeff_file: Union[str, Path, None] = None) -> None:
 
         """
         Get the absolute path for the radiometric coefficients.
@@ -356,7 +356,7 @@ class Hypso1(Hypso):
 
         return None
 
-    def _set_smile_coeff_file(self, smile_coeff_file=None) -> None:
+    def _set_smile_coeff_file(self, smile_coeff_file: Union[str, Path, None] = None) -> None:
 
         """
         Get the absolute path for the smile coefficients.
@@ -389,7 +389,7 @@ class Hypso1(Hypso):
 
         return None
 
-    def _set_destriping_coeff_file(self, destriping_coeff_file=None) -> None:
+    def _set_destriping_coeff_file(self, destriping_coeff_file: Union[str, Path, None] = None) -> None:
 
         """
         Get the absolute path for the destriping coefficients.
@@ -422,7 +422,7 @@ class Hypso1(Hypso):
 
         return None
 
-    def _set_spectral_coeff_file(self, spectral_coeff_file=None) -> None:
+    def _set_spectral_coeff_file(self, spectral_coeff_file: Union[str, Path, None] = None) -> None:
 
         """
         Get the absolute path for the spectral coefficients (wavelengths).
