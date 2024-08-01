@@ -855,6 +855,10 @@ class Hypso1(Hypso):
     def _run_calibration(self, overwrite: bool = False) -> None:
 
         if self._check_calibration_has_run() and not overwrite:
+
+            if self.verbose:
+                    print("[INFO] Geometry computation has already been run. Skipping.")
+
             return None
 
         if self.verbose:
@@ -954,10 +958,14 @@ class Hypso1(Hypso):
     def _run_geometry_computation(self, overwrite: bool = False) -> None:
 
         if self._check_geometry_has_run() and not overwrite:
+
+            if self.verbose:
+                    print("[INFO] Geometry computation has already been run. Skipping.")
+
             return None
 
         if self.verbose:
-            print("[INFO] Running frame interpolation...")
+            print("[INFO] Running geometry computation...")
 
         framepose_data = interpolate_at_frame(adcs_pos_df=self.adcs_pos_df,
                                               adcs_quat_df=self.adcs_quat_df,
@@ -968,8 +976,6 @@ class Hypso1(Hypso):
                                               verbose=self.verbose
                                               )
 
-        if self.verbose:
-            print("[INFO] Running geometry computation...")
 
         wkt_linestring_footprint, \
            prj_file_contents, \
@@ -1027,6 +1033,10 @@ class Hypso1(Hypso):
     def _run_atmospheric_correction(self, product: str, overwrite: bool = False) -> None:
 
         if self._check_atmospheric_correction_has_run(product=product) and not overwrite:
+
+            if self.verbose:
+                print("[INFO] Atmospheric correction has already been run. Skipping.")
+
             return None
 
         if self.l2a_cube is None:
@@ -1053,7 +1063,8 @@ class Hypso1(Hypso):
                     self.l2a_cube[product] = self._run_machi_atmospheric_correction()  
 
             case _:
-                print("[WARNING] No such atmospheric correction product supported!")
+                print("[ERROR] No such atmospheric correction product supported!")
+                return None
 
         self.atmospheric_correction_has_run = True
 
@@ -1161,6 +1172,10 @@ class Hypso1(Hypso):
     def _run_land_mask(self, land_mask: str, overwrite: bool = False) -> None:
 
         if self._check_land_mask_has_run(land_mask=land_mask) and not overwrite:
+
+            if self.verbose:
+                print("[INFO] Land mask has already been run. Skipping.")
+
             return None
 
         if self.land_masks is None:
@@ -1251,6 +1266,10 @@ class Hypso1(Hypso):
     def _run_cloud_mask(self, cloud_mask: str='default', overwrite: bool = False) -> None:
 
         if self._check_cloud_mask_has_run(cloud_mask=cloud_mask) and not overwrite:
+
+            if self.verbose:
+                print("[INFO] Cloud mask has already been run. Skipping.")
+
             return None
 
         if self.cloud_masks is None:
@@ -1274,7 +1293,6 @@ class Hypso1(Hypso):
                 self.cloud_masks[key] = returned_cloud_mask
                 self._update_active_cloud_mask(cloud_mask=returned_cloud_mask, override=False)
 
-
             case _:
                 print("[WARNING] No such cloud mask supported!")
                 return None
@@ -1283,7 +1301,14 @@ class Hypso1(Hypso):
 
         return None
 
-    def _run_chlorophyll_estimation(self, product: str = None) -> None:
+    def _run_chlorophyll_estimation(self, product: str = None, overwrite: bool = False) -> None:
+
+        if self._check_chlorophyll_estimation_has_run(product=product) and not overwrite:
+
+            if self.verbose:
+                print("[INFO] Chlorophyll estimation has already been run. Skipping.")
+
+            return None
 
         if self.chl is None:
             self.chl = {}
@@ -1317,19 +1342,20 @@ class Hypso1(Hypso):
                 self.chl[key] = self._run_acolite_aqua_chlorophyll_estimation()
 
             case _:
-
-                print("[WARNING] No such chlorophyll estimation product supported!")
+                print("[ERROR] No such chlorophyll estimation product supported!")
+                return None
 
         self.chlorophyll_estimation_has_run = True
 
         return None
 
+    # TODO: move this code to chlorophyll module
     def _run_band_ratio_chlorophyll_estimation(self, land_mask: str = None, 
                                                cloud_mask: str = None, 
                                                factor: float = 0.1, 
                                                threshold: float = 0.88) -> None:
 
-        self._run_calibration_wrapper()
+        self._run_calibration()
 
         numerator_wavelength = 549
         denominator_wavelength = 663
@@ -1392,69 +1418,17 @@ class Hypso1(Hypso):
     def _check_georeferencing_has_run(self) -> bool:
 
         return self.georeferencing_has_run
-    
-    '''
-    # TODO refactor
-    def _check_georeferencing_has_run(self, run_on_false: bool = True) -> bool:
-        if run_on_false:
-            if not self.georeferencing_has_run:
-
-                if self.verbose:
-                    print("[INFO] Georeferencing has not been run yet. Running now...")
-
-                self._run_georeferencing()
-                return True
-
-        if self.georeferencing_has_run:
-            return True
-
-        return False
-    '''
-        
+            
 
     def _check_calibration_has_run(self) -> bool:
 
         return self.calibration_has_run
 
-    '''
-    # TODO refactor
-    def _check_calibration_has_run(self, run_on_false: bool = True) -> bool:
-        if run_on_false:
-            if not self.calibration_has_run:
-
-                if self.verbose:
-                    print("[INFO] Calibration has not been run yet. Running now...")
-
-                self._run_calibration()
-                return True
-
-        if self.calibration_has_run:
-            return True
-
-        return False
-    '''
     
     def _check_geometry_has_run(self) -> bool:
 
         return self.geometry_computation_has_run
 
-    '''
-    # TODO refactor
-    def _check_geometry_computation_has_run(self, run_on_false: bool = True) -> bool:
-        if run_on_false:
-            if not self.geometry_computation_has_run:
-
-                if self.verbose:
-                    print("[INFO] Geometry computation has not been run yet. Running now...")
-
-                self._run_geometry_computation()
-                return True
-
-        if self.geometry_computation_has_run:
-            return True
-
-        return False
-    '''
         
     # TODO refactor
     def _check_write_l1b_nc_file_has_run(self, run_on_false: bool = True) -> bool:
@@ -1478,102 +1452,33 @@ class Hypso1(Hypso):
     def _check_atmospheric_correction_has_run(self, product: str = None) -> bool:
 
         if self.atmospheric_correction_has_run:
-
             if product is None:
                 return True
-            
             elif product.lower() in self.l2a_cube.keys():
                 return True
-            
             else:
                 return False
-
         return False
-
-
-
-    # TODO refactor
-    '''
-    def _check_atmospheric_correction_has_run(self, product: str = None, run_on_false: bool = True) -> bool:
-
-        if self.atmospheric_correction_has_run:
-             
-            if product is None:
-                return True
-            
-            product = product.lower()
-
-            if product in self.l2a_cube.keys():
-                return True
-            else:
-                if self.verbose:
-                    print("[ERROR] " + product.upper() + " L2a cube has not yet been generated.")
-                return False
-
-        if not self.atmospheric_correction_has_run:
-            if run_on_false:
-                self._run_atmospheric_correction(product=product)
-                return True
-            
-        return False
-    '''
-        
-
 
     def _check_land_mask_has_run(self, land_mask: str = None) -> bool:
 
         if self.land_mask_has_run:
-
             if land_mask is None:
-                return True
-            
+                return True  
             elif land_mask.lower() in self.land_masks.keys():
-                return True
-            
+                return True  
             else:
                 return False
-
         return False
 
-
-
-
-    '''
-    # TODO refactor
-    def _check_land_mask_has_run(self, land_mask: str = None, run_on_false: bool = True) -> bool:
-
-        if self.land_mask_has_run:
-             
-            if land_mask is None:
-                return True
-            
-            land_mask = land_mask.lower()
-
-            if land_mask in self.land_masks.keys():
-                return True
-            else:
-                if self.verbose:
-                    print("[ERROR] " + land_mask.upper() + " land mask has not yet been generated.")
-                return False
-
-        if not self.land_mask_has_run:
-            if run_on_false:
-                self._run_land_mask(land_mask=land_mask)
-                return True
-
-        return False
-    '''
         
     def _check_cloud_mask_has_run(self, cloud_mask: str = None) -> bool:
 
         if self.cloud_mask_has_run:
-
             if cloud_mask is None:
-                return True
-            
+                return True     
             elif cloud_mask.lower() in self.land_masks.keys():
-                return True
-            
+                return True     
             else:
                 return False
 
@@ -1583,28 +1488,18 @@ class Hypso1(Hypso):
 
 
 
-    # TODO refactor
-    def _check_chlorophyll_estimation_has_run(self, product: str = None, run_on_false: bool = True) -> bool:
+
+
+
+    def _check_chlorophyll_estimation_has_run(self, product: str = None) -> bool:
 
         if self.chlorophyll_estimation_has_run:
-             
             if product is None:
                 return True
-
-            product = product.lower()
-
-            if product in self.chl.keys():
+            elif product.lower() in self.chl.keys():
                 return True
-            else: 
-                if self.verbose:
-                    print("[ERROR] " + product + " chlorophyll estimates have not yet been generated.")
+            else:
                 return False
-
-        if not self.chlorophyll_estimation_has_run:
-            if run_on_false:
-                self._run_chlorophyll_estimation(product=product)
-                return True
-            
         return False
 
     
