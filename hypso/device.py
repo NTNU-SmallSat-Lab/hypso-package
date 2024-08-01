@@ -642,59 +642,7 @@ class Hypso1(Hypso):
         return None
 
 
-    # Updaters
 
-    def _update_active_land_mask(self, land_mask: str = None, override: bool = False) -> None:
-
-        if land_mask is None:
-            return None
-
-        land_mask = land_mask.lower()
-
-        if land_mask not in self.land_masks.keys():
-            return None
-
-        if self.land_mask is None or override:
-            self.land_mask = self.land_masks[land_mask]
-
-        return None
-
-    def _update_active_cloud_mask(self, cloud_mask: str = None, override: bool = False) -> None:
-
-        if cloud_mask is None:
-            return None
-
-        cloud_mask = cloud_mask.lower()
-
-        if cloud_mask not in self.cloud_masks.keys():
-            return None
-
-        if self.cloud_mask is None or override:
-            self.cloud_mask = self.cloud_masks[cloud_mask]
-
-        return None
-
-    # Getters
-
-    # TODO: use active land and cloud masks
-    def _get_unified_mask(self, 
-                          land_mask: str=None,
-                          cloud_mask: str=None
-                          ) -> np.ndarray:
-        
-        if land_mask in self.land_masks.keys():
-            land_mask = self.land_masks[land_mask]
-        else:
-            land_mask = np.full(self.spatial_dimensions, False, dtype=bool)
-
-        if cloud_mask in self.cloud_masks.keys():
-            cloud_mask = self.cloud_masks[cloud_mask]
-        else:
-            cloud_mask = np.full(self.spatial_dimensions, False, dtype=bool)
-
-        unified_mask = land_mask | cloud_mask
-
-        return unified_mask
 
 
     # Loaders
@@ -756,9 +704,7 @@ class Hypso1(Hypso):
         return None
 
 
-    # Runners
-
-
+    # Georeferencing functions
 
     def _run_georeferencing_wrapper(self) -> None:
 
@@ -835,24 +781,23 @@ class Hypso1(Hypso):
         self.datacube_flipped = datacube_flipped
 
         return None
+    
+    def _check_georeferencing_has_run(self) -> bool:
 
+        return self.georeferencing_has_run
+            
 
-
-
-    '''
-    def _run_calibration_wrapper(self) -> None:
-
-        if self._check_calibration_has_run() is False:
-
-            if self.verbose:
-                    print("[INFO] Calibration has not been run yet. Running now...")
-
-            self._run_calibration()
-
-        return None
-    '''
+    # Calibration functions
         
     def _run_calibration(self, overwrite: bool = False) -> None:
+        """
+        Get calibrated and corrected cube. Includes Radiometric, Smile and Destriping Correction.
+            Assumes all coefficients has been adjusted to the frame size (cropped and
+            binned), and that the data cube contains 12-bit values.
+
+        :return: None
+        """
+
 
         if self._check_calibration_has_run() and not overwrite:
 
@@ -868,7 +813,10 @@ class Hypso1(Hypso):
         self._set_calibration_coeffs()
         self._set_wavelengths()
         self._set_srf()
-        self._generate_l1b_cube()
+
+        self.l1b_cube = self._run_radiometric_calibration()
+        self.l1b_cube = self._run_smile_correction(cube=self.l1b_cube)
+        self.l1b_cube = self._run_destriping_correction(cube=self.l1b_cube)
 
         self.calibration_has_run = True
 
@@ -940,24 +888,16 @@ class Hypso1(Hypso):
 
         return cube
 
+    def _check_calibration_has_run(self) -> bool:
 
+        return self.calibration_has_run
+ 
 
-    '''
-    def _run_geometry_computation_wrapper(self) -> None:
-
-        if self._check_geometry_has_run() is False:
-
-            if self.verbose:
-                    print("[INFO] Geometry computations have not been run yet. Running now...")
-
-            self._run_geometry_computation()
-
-        return None
-    '''
+    # Geometry computation functions
 
     def _run_geometry_computation(self, overwrite: bool = False) -> None:
 
-        if self._check_geometry_has_run() and not overwrite:
+        if self._check_geometry_computation_has_run() and not overwrite:
 
             if self.verbose:
                     print("[INFO] Geometry computation has already been run. Skipping.")
@@ -1012,23 +952,12 @@ class Hypso1(Hypso):
 
         return None
 
+    def _check_geometry_computation_has_run(self) -> bool:
+
+        return self.geometry_computation_has_run
 
 
-
-    '''
-
-    def _run_atmospheric_correction_wrapper(self, product: str) -> None:
-
-        if self._check_atmospheric_correction_has_run(product=product) is False:
-
-            if self.verbose:
-                    print("[INFO] " + product + " atmospheric correction has not been run yet. Running now...")
-
-            self._run_atmospheric_correction(product=product)
-
-        return None
-
-    '''
+    # Atmospheric correction functions
 
     def _run_atmospheric_correction(self, product: str, overwrite: bool = False) -> None:
 
@@ -1049,18 +978,15 @@ class Hypso1(Hypso):
             case "6sv1":
                 if self.verbose: 
                     print("[INFO] Running 6SV1 atmospheric correction")
-                if product not in self.l2a_cube:
-                    self.l2a_cube[product] = self._run_6sv1_atmospheric_correction()
+                self.l2a_cube[product] = self._run_6sv1_atmospheric_correction()
             case "acolite":
                 if self.verbose: 
                     print("[INFO] Running ACOLITE atmospheric correction")
-                if product not in self.l2a_cube:
-                    self.l2a_cube[product] = self._run_acolite_atmospheric_correction()
+                self.l2a_cube[product] = self._run_acolite_atmospheric_correction()
             case "machi":
                 if self.verbose: 
                     print("[INFO] Running MACHI atmospheric correction")
-                if product not in self.l2a_cube:
-                    self.l2a_cube[product] = self._run_machi_atmospheric_correction()  
+                self.l2a_cube[product] = self._run_machi_atmospheric_correction()  
 
             case _:
                 print("[ERROR] No such atmospheric correction product supported!")
@@ -1151,23 +1077,20 @@ class Hypso1(Hypso):
         return None
 
         #T, A, objs = run_machi(cube=self.l1b_cube, verbose=self.verbose)
+    
+    def _check_atmospheric_correction_has_run(self, product: str = None) -> bool:
+
+        if self.atmospheric_correction_has_run:
+            if product is None:
+                return True
+            elif product.lower() in self.l2a_cube.keys():
+                return True
+            else:
+                return False
+        return False
 
 
-
-
-    '''
-    def _run_land_mask_wrapper(self, land_mask: str) -> None:
-
-        if self._check_land_mask_has_run(land_mask=land_mask) is False:
-
-            if self.verbose:
-                    print("[INFO] " + land_mask + " land mask has not been run yet. Running now...")
-
-            self._run_land_mask(land_mask=land_mask)
-
-        return None
-
-    '''
+    # Land mask functions
 
     def _run_land_mask(self, land_mask: str, overwrite: bool = False) -> None:
 
@@ -1258,10 +1181,32 @@ class Hypso1(Hypso):
     
         return land_mask
 
+    def _update_active_land_mask(self, land_mask: str = None, override: bool = False) -> None:
 
+        if land_mask is None:
+            return None
 
+        if land_mask.lower() not in self.land_masks.keys():
+            return None
 
+        if self.land_mask is None or override:
+            self.land_mask = self.land_masks[land_mask.lower()]
 
+        return None
+
+    def _check_land_mask_has_run(self, land_mask: str = None) -> bool:
+
+        if self.land_mask_has_run:
+            if land_mask is None:
+                return True  
+            elif land_mask.lower() in self.land_masks.keys():
+                return True  
+            else:
+                return False
+        return False
+       
+
+    # Cloud mask functions
 
     def _run_cloud_mask(self, cloud_mask: str='default', overwrite: bool = False) -> None:
 
@@ -1300,6 +1245,34 @@ class Hypso1(Hypso):
         self.cloud_mask_has_run = True
 
         return None
+
+    def _update_active_cloud_mask(self, cloud_mask: str = None, override: bool = False) -> None:
+
+        if cloud_mask is None:
+            return None
+
+        if cloud_mask.lower() not in self.cloud_masks.keys():
+            return None
+
+        if self.cloud_mask is None or override:
+            self.cloud_mask = self.cloud_masks[cloud_mask.lower()]
+
+        return None
+
+    def _check_cloud_mask_has_run(self, cloud_mask: str = None) -> bool:
+
+        if self.cloud_mask_has_run:
+            if cloud_mask is None:
+                return True     
+            elif cloud_mask.lower() in self.land_masks.keys():
+                return True     
+            else:
+                return False
+
+        return False
+
+
+    # Chlorophyll estimation functions
 
     def _run_chlorophyll_estimation(self, product: str = None, overwrite: bool = False) -> None:
 
@@ -1386,18 +1359,29 @@ class Hypso1(Hypso):
 
         return chl
 
-    # TODO
+    # TODO: complete
     def _run_6sv1_aqua_chlorophyll_estimation(self, model: str = None) -> None:
 
         pass
 
-    # TODO
+    # TODO: complete
     def _run_acolite_aqua_chlorophyll_estimation(self, model: str = None) -> None:
 
         pass
 
+    def _check_chlorophyll_estimation_has_run(self, product: str = None) -> bool:
 
-    # Other
+        if self.chlorophyll_estimation_has_run:
+            if product is None:
+                return True
+            elif product.lower() in self.chl.keys():
+                return True
+            else:
+                return False
+        return False
+
+
+    # Other functions
 
     def _get_flipped_cube(self, cube: np.ndarray) -> np.ndarray:
 
@@ -1414,22 +1398,6 @@ class Hypso1(Hypso):
 
 
 
-
-    def _check_georeferencing_has_run(self) -> bool:
-
-        return self.georeferencing_has_run
-            
-
-    def _check_calibration_has_run(self) -> bool:
-
-        return self.calibration_has_run
-
-    
-    def _check_geometry_has_run(self) -> bool:
-
-        return self.geometry_computation_has_run
-
-        
     # TODO refactor
     def _check_write_l1b_nc_file_has_run(self, run_on_false: bool = True) -> bool:
         if run_on_false:
@@ -1446,63 +1414,6 @@ class Hypso1(Hypso):
 
         return False     
 
-
-
-
-    def _check_atmospheric_correction_has_run(self, product: str = None) -> bool:
-
-        if self.atmospheric_correction_has_run:
-            if product is None:
-                return True
-            elif product.lower() in self.l2a_cube.keys():
-                return True
-            else:
-                return False
-        return False
-
-    def _check_land_mask_has_run(self, land_mask: str = None) -> bool:
-
-        if self.land_mask_has_run:
-            if land_mask is None:
-                return True  
-            elif land_mask.lower() in self.land_masks.keys():
-                return True  
-            else:
-                return False
-        return False
-
-        
-    def _check_cloud_mask_has_run(self, cloud_mask: str = None) -> bool:
-
-        if self.cloud_mask_has_run:
-            if cloud_mask is None:
-                return True     
-            elif cloud_mask.lower() in self.land_masks.keys():
-                return True     
-            else:
-                return False
-
-        return False
-
-
-
-
-
-
-
-
-    def _check_chlorophyll_estimation_has_run(self, product: str = None) -> bool:
-
-        if self.chlorophyll_estimation_has_run:
-            if product is None:
-                return True
-            elif product.lower() in self.chl.keys():
-                return True
-            else:
-                return False
-        return False
-
-    
     def _check_l1a_file_format(self) -> None:
 
         # Check that hypso_path file is a NetCDF file:
@@ -1519,20 +1430,28 @@ class Hypso1(Hypso):
     
         return None
 
-    def _generate_l1b_cube(self) -> None:
-        """
-        Get calibrated and corrected cube. Includes Radiometric, Smile and Destriping Correction.
-            Assumes all coefficients has been adjusted to the frame size (cropped and
-            binned), and that the data cube contains 12-bit values.
+    # TODO: use active land and cloud masks
+    def _get_unified_mask(self, 
+                          land_mask: str=None,
+                          cloud_mask: str=None
+                          ) -> np.ndarray:
+        
+        if land_mask in self.land_masks.keys():
+            land_mask = self.land_masks[land_mask]
+        else:
+            land_mask = np.full(self.spatial_dimensions, False, dtype=bool)
 
-        :return: None
-        """
+        if cloud_mask in self.cloud_masks.keys():
+            cloud_mask = self.cloud_masks[cloud_mask]
+        else:
+            cloud_mask = np.full(self.spatial_dimensions, False, dtype=bool)
 
-        self.l1b_cube = self._run_radiometric_calibration()
-        self.l1b_cube = self._run_smile_correction(cube=self.l1b_cube)
-        self.l1b_cube = self._run_destriping_correction(cube=self.l1b_cube)
+        unified_mask = land_mask | cloud_mask
 
-        return None
+        return unified_mask
+
+
+
 
 
     # Public methods
