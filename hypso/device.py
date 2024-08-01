@@ -758,6 +758,15 @@ class Hypso1(Hypso):
 
     # Runners
 
+    # TODO
+    def _run_calibration_guard(self) -> None:
+
+        if self.calibration_has_run is False:
+
+            self._run_calibration()
+
+        return None
+
     def _run_calibration(self) -> None:
 
         if self.verbose:
@@ -997,8 +1006,9 @@ class Hypso1(Hypso):
         # }
         # AOT550 parameter gotten from: https://giovanni.gsfc.nasa.gov/giovanni/
 
-        self._check_calibration_has_run()
-        self._check_geometry_computation_has_run()
+        self._run_calibration_guard()
+        #self._check_calibration_has_run(run_on_false=True)
+        self._check_geometry_computation_has_run(run_on_false=True)
 
         # TODO: which values should we use?
         if self.latitudes is None:
@@ -1037,9 +1047,10 @@ class Hypso1(Hypso):
         # TODO
         print("[WARNING] ACOLITE atmospheric correction has not been enabled.")
 
-        self._check_calibration_has_run()
-        self._check_geometry_computation_has_run()
-        self._check_write_l1b_nc_file_has_run()
+        self._run_calibration_guard()
+        #self._check_calibration_has_run(run_on_false=True)
+        self._check_geometry_computation_has_run(run_on_false=True)
+        self._check_write_l1b_nc_file_has_run(run_on_false=True)
 
         # user and password from https://urs.earthdata.nasa.gov/profile
         # optional but good
@@ -1122,7 +1133,7 @@ class Hypso1(Hypso):
 
     def _run_global_land_mask(self) -> np.ndarray:
 
-        self._check_georeferencing_has_run()
+        self._check_georeferencing_has_run(run_on_false=True)
 
         land_mask = run_global_land_mask(spatial_dimensions=self.spatial_dimensions,
                                         latitudes=self.latitudes,
@@ -1133,7 +1144,8 @@ class Hypso1(Hypso):
 
     def _run_ndwi_land_mask(self) -> np.ndarray:
 
-        self._check_calibration_has_run()
+        self._run_calibration_guard()
+        #self._check_calibration_has_run(run_on_false=True)
 
         land_mask = run_ndwi_land_mask(cube=self.l1b_cube, 
                                        wavelengths=self.wavelengths,
@@ -1143,7 +1155,8 @@ class Hypso1(Hypso):
     
     def _run_threshold_land_mask(self) -> np.ndarray:
 
-        self._check_calibration_has_run()
+        self._run_calibration_guard()
+        #self._check_calibration_has_run(run_on_false=True)
 
         land_mask = run_threshold_land_mask(cube=self.l1b_cube,
                                             wavelengths=self.wavelengths,
@@ -1229,7 +1242,8 @@ class Hypso1(Hypso):
                                                factor: float = 0.1, 
                                                threshold: float = 0.88) -> None:
 
-        self._check_calibration_has_run()
+        self._run_calibration_guard()
+        #self._check_calibration_has_run(run_on_false=True)
 
         numerator_wavelength = 549
         denominator_wavelength = 663
@@ -1286,8 +1300,10 @@ class Hypso1(Hypso):
 
         return cube
 
-    def _check_georeferencing_has_run(self, run: bool = True) -> bool:
-        if run:
+
+    # TODO refactor
+    def _check_georeferencing_has_run(self, run_on_false: bool = True) -> bool:
+        if run_on_false:
             if not self.georeferencing_has_run:
 
                 if self.verbose:
@@ -1301,8 +1317,9 @@ class Hypso1(Hypso):
 
         return False
     
-    def _check_calibration_has_run(self, run: bool = True) -> bool:
-        if run:
+    # TODO refactor
+    def _check_calibration_has_run(self, run_on_false: bool = True) -> bool:
+        if run_on_false:
             if not self.calibration_has_run:
 
                 if self.verbose:
@@ -1316,8 +1333,9 @@ class Hypso1(Hypso):
 
         return False
     
-    def _check_geometry_computation_has_run(self, run: bool = True) -> bool:
-        if run:
+    # TODO refactor
+    def _check_geometry_computation_has_run(self, run_on_false: bool = True) -> bool:
+        if run_on_false:
             if not self.geometry_computation_has_run:
 
                 if self.verbose:
@@ -1331,8 +1349,9 @@ class Hypso1(Hypso):
 
         return False
     
-    def _check_write_l1b_nc_file_has_run(self, run: bool = True) -> bool:
-        if run:
+    # TODO refactor
+    def _check_write_l1b_nc_file_has_run(self, run_on_false: bool = True) -> bool:
+        if run_on_false:
             if not self.geometry_computation_has_run:
 
                 if self.verbose:
@@ -1346,14 +1365,25 @@ class Hypso1(Hypso):
 
         return False     
 
-    def _check_atmospheric_correction_has_run(self, product: str = None, run: bool = True) -> bool:
+    # TODO refactor
+    def _check_atmospheric_correction_has_run(self, product: str = None, run_on_false: bool = True) -> bool:
 
         if self.atmospheric_correction_has_run:
-             if product in self.l2a_cube.keys():
+             
+            if product is None:
                 return True
+            
+            product = product.lower()
+
+            if product in self.l2a_cube.keys():
+                return True
+            else:
+                if self.verbose:
+                    print("[ERROR] " + product.upper() + " L2a cube has not yet been generated.")
+                return False
 
         if not self.atmospheric_correction_has_run:
-            if run:
+            if run_on_false:
                 self._run_atmospheric_correction(product=product)
                 return True
             
@@ -1407,15 +1437,25 @@ class Hypso1(Hypso):
             
         return False
 
-
-    def _check_chlorophyll_estimation_has_run(self, product: str = None, run: bool = True) -> bool:
+    # TODO refactor
+    def _check_chlorophyll_estimation_has_run(self, product: str = None, run_on_false: bool = True) -> bool:
 
         if self.chlorophyll_estimation_has_run:
-             if product in self.chl.keys():
+             
+            if product is None:
                 return True
 
+            product = product.lower()
+
+            if product in self.chl.keys():
+                return True
+            else: 
+                if self.verbose:
+                    print("[ERROR] " + product + " chlorophyll estimates have not yet been generated.")
+                return False
+
         if not self.chlorophyll_estimation_has_run:
-            if run:
+            if run_on_false:
                 self._run_chlorophyll_estimation(product=product)
                 return True
             
@@ -1481,13 +1521,13 @@ class Hypso1(Hypso):
 
     def generate_l1b_cube(self) -> None:
 
-        self._check_calibration_has_run()
+        self._run_calibration_guard()
 
         return None
 
     def get_l1b_cube(self) -> np.ndarray:
 
-        if not self._check_calibration_has_run(run=False):
+        if self.calibration_has_run is False:
             print("[WARNING] L1b cube has not yet been generated.")
             return None
 
@@ -1501,7 +1541,7 @@ class Hypso1(Hypso):
 
     def get_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = "6sv1") -> np.ndarray:
 
-        if not self._check_atmospheric_correction_has_run(run=False, product=product):
+        if not self._check_atmospheric_correction_has_run(run_on_false=False, product=product):
             print("[WARNING] " + product.upper() + " L2a cube has not yet been generated.")
             return None
 
