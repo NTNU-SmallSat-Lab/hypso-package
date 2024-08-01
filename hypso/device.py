@@ -342,16 +342,6 @@ class Hypso1(Hypso):
 
         return None
 
-    # TODO: Move to _set_capture_config_info
-    def _set_spatial_dimensions(self) -> None:
-
-        self.spatial_dimensions = (self.capture_config["frame_count"], self.info["image_height"])
-
-        if self.verbose:
-            print(f"[INFO] Capture spatial dimensions: {self.spatial_dimensions}")
-
-        return None
-
     def _set_capture_type(self) -> None:
 
         if self.capture_config["frame_count"] == self.standard_dimensions["nominal"]:
@@ -480,8 +470,7 @@ class Hypso1(Hypso):
         self.y_start = self.capture_config["aoi_y"]
         self.y_stop = self.capture_config["aoi_y"] + self.capture_config["row_count"]
 
-    def _set_capture_config_attributes(self) -> None:
-
+    def _set_dimensions(self) -> None:
 
         self.image_height = self.capture_config["row_count"]
         self.image_width = int(self.capture_config["column_count"] / self.capture_config["bin_factor"])
@@ -490,6 +479,11 @@ class Hypso1(Hypso):
         self.bands = self.image_width
         self.lines = self.capture_config["frame_count"]  # AKA Frames AKA Rows
         self.samples = self.image_height  # AKA Cols
+
+        self.spatial_dimensions = (self.capture_config["frame_count"], self.image_height)
+
+        if self.verbose:
+            print(f"[INFO] Capture spatial dimensions: {self.spatial_dimensions}")
 
         return None
 
@@ -625,7 +619,7 @@ class Hypso1(Hypso):
         self._set_exposure()
         self._set_aoi()
         self._set_capture_type()
-        self._set_spatial_dimensions()
+        self._set_dimensions()
         self._set_adcs_dataframes()
         self._set_target_area()
 
