@@ -642,8 +642,35 @@ class Hypso1(Hypso):
         return None
 
 
+    # Updaters
+
+    def _update_active_land_mask(self, land_mask: str = None, override: bool = False) -> None:
+
+        land_mask = land_mask.lower()
+
+        if land_mask not in self.land_masks.keys():
+            return None
+
+        if self.land_mask is None or override:
+            self.land_mask = self.land_masks[land_mask]
+
+        return None
+
+    def _update_active_cloud_mask(self, cloud_mask: str = None, override: bool = False) -> None:
+
+        cloud_mask = cloud_mask.lower()
+
+        if cloud_mask not in self.cloud_masks.keys():
+            return None
+
+        if self.cloud_mask is None or override:
+            self.cloud_mask = self.cloud_masks[cloud_mask]
+
+        return None
+
     # Getters
 
+    # TODO: use active land and cloud masks
     def _get_unified_mask(self, 
                           land_mask: str=None,
                           cloud_mask: str=None
@@ -727,6 +754,9 @@ class Hypso1(Hypso):
 
     def _run_calibration(self) -> None:
 
+        if self.verbose:
+            print('[INFO] Running calibration routines...')
+
         self._set_calibration_coeff_files()
         self._set_calibration_coeffs()
         self._set_wavelengths()
@@ -738,8 +768,6 @@ class Hypso1(Hypso):
         return None
 
     def _run_georeferencing(self) -> None:
-
-        
 
         # Compute latitude and longitudes arrays if a points file is available
         if self.points_path is not None:
@@ -1052,25 +1080,35 @@ class Hypso1(Hypso):
                 if self.verbose:
                     print("[INFO] Running land mask generation...")
 
-                self.land_masks[key] = self._run_global_land_mask()
+                returned_land_mask = self._run_global_land_mask()
+
+                self.land_masks[key] = returned_land_mask
+                self._update_active_land_mask(land_mask=returned_land_mask, override=False)
 
             case "ndwi":
 
                 if self.verbose:
                     print("[INFO] Running NDWI land mask generation...")
 
-                self.land_masks[key] = self._run_ndwi_land_mask()
+                returned_land_mask = self._run_ndwi_land_mask()
+
+                self.land_masks[key] = returned_land_mask
+                self._update_active_land_mask(land_mask=returned_land_mask, override=False)
 
             case "threshold":
 
                 if self.verbose:
                     print("[INFO] Running threshold land mask generation...")
 
-                self.land_masks[key] = self._run_threshold_land_mask()
+                returned_land_mask = self._run_threshold_land_mask()
+
+                self.land_masks[key] = returned_land_mask
+                self._update_active_land_mask(land_mask=returned_land_mask, override=False)
 
             case _:
 
                 print("[WARNING] No such land mask supported!")
+                return None
 
         self.land_mask_has_run = True
 
@@ -1125,10 +1163,15 @@ class Hypso1(Hypso):
                     print("[INFO] Running cloud mask generation...")
                     print("[WARNING] Cloud mask generation has not been implemented.")
 
-                self.cloud_masks[key] = run_cloud_mask()
+                returned_cloud_mask = run_cloud_mask()
+
+                self.cloud_masks[key] = returned_cloud_mask
+                self._update_active_cloud_mask(cloud_mask=returned_cloud_mask, override=False)
+
 
             case _:
                 print("[WARNING] No such cloud mask supported!")
+                return None
 
         self.cloud_mask_has_run = True
 
@@ -1139,8 +1182,10 @@ class Hypso1(Hypso):
         if self.chl is None:
             self.chl = {}
 
-        if product is not None:
-            product = product.lower()
+        key = product
+
+        if key is not None:
+            key = product.lower()
 
         match product:
 
@@ -1149,8 +1194,6 @@ class Hypso1(Hypso):
                 if self.verbose:
                     print("[INFO] Running band ratio chlorophyll estimation...")
 
-                key = "chl_" + product
-
                 self.chl[key] = self._run_band_ratio_chlorophyll_estimation()
 
             case "6sv1_aqua":
@@ -1158,16 +1201,12 @@ class Hypso1(Hypso):
                 if self.verbose:
                     print("[INFO] Running 6SV1 AQUA Tuned chlorophyll estimation...")
 
-                key = "chl_" + product
-
                 self.chl[key] = self._run_6sv1_aqua_chlorophyll_estimation()
 
             case "acolite_aqua":
 
                 if self.verbose:
                     print("[INFO] Running ACOLITE AQUA Tuned chlorophyll estimation...")
-
-                key = "chl_" + product
 
                 self.chl[key] = self._run_acolite_aqua_chlorophyll_estimation()
 
@@ -1215,10 +1254,12 @@ class Hypso1(Hypso):
 
         return chl
 
+    # TODO
     def _run_6sv1_aqua_chlorophyll_estimation(self, model: str = None) -> None:
 
         pass
 
+    # TODO
     def _run_acolite_aqua_chlorophyll_estimation(self, model: str = None) -> None:
 
         pass
@@ -1299,7 +1340,6 @@ class Hypso1(Hypso):
 
         return False     
 
-    # TODO add match case for products
     def _check_atmospheric_correction_has_run(self, product: str = None, run: bool = True) -> bool:
 
         if self.atmospheric_correction_has_run:
@@ -1313,6 +1353,40 @@ class Hypso1(Hypso):
             
         return False
     
+    def _check_land_mask_has_run(self, land_mask: str = None, run_on_false: bool = True) -> bool:
+
+        if self.land_mask_has_run:
+             if land_mask in self.land_masks.keys():
+                return True
+             else:
+                if self.verbose:
+                    print("[ERROR] " + land_mask.upper() + " land mask has not yet been generated.")
+                return False
+
+        if not self.land_mask_has_run:
+            if run_on_false:
+                self._run_land_mask(land_mask=land_mask)
+                return True
+
+        return False
+
+    def _check_cloud_mask_has_run(self, cloud_mask: str = None, run_on_false: bool = True) -> bool:
+
+        if self.cloud_mask_has_run:
+             if cloud_mask in self.cloud_mask.keys():
+                return True
+             else: 
+                if self.verbose:
+                    print("[ERROR] " + cloud_mask.upper() + " cloud mask has not yet been generated.")
+                return False
+                 
+        if not self.cloud_mask_has_run:
+            if run_on_false:
+                self._run_cloud_mask(cloud_mask=cloud_mask)
+                return True
+            
+        return False
+
 
     def _check_chlorophyll_estimation_has_run(self, product: str = None, run: bool = True) -> bool:
 
@@ -1407,8 +1481,6 @@ class Hypso1(Hypso):
 
     def get_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = "6sv1") -> np.ndarray:
 
-        #self._check_geometry_computation_has_run()
-
         if not self._check_atmospheric_correction_has_run(run=False, product=product):
             print("[WARNING] " + product.upper() + " L2a cube has not yet been generated.")
             return None
@@ -1418,56 +1490,76 @@ class Hypso1(Hypso):
 
         return self.l2a_cube[product]
     
-    def generate_land_mask(self):
+    def generate_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global") -> None:
 
-        pass
+        self._check_land_mask_has_run(land_mask=land_mask)
+
+        return None
 
     def get_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global") -> np.ndarray:
 
-        if land_mask not in self.land_masks.keys():
-            self._run_land_mask(product=land_mask)
+        if self._check_land_mask_has_run(run_on_false=False, land_mask=land_mask):
 
-            if land_mask not in self.land_masks.keys():
-                return None
+            if land_mask is not None:    
+                land_mask = land_mask.lower()
 
-        return self.land_masks[land_mask]
+            return self.land_masks[land_mask]
+        
+        return None
 
     def get_land_mask_dict(self) -> dict:
 
-
         return self.land_masks     
     
+    def set_active_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global"):
+
+        self._update_active_land_mask(self, land_mask=land_mask, override=True)
+
+    def get_active_land_mask(self) -> np.ndarray:
+
+        return self.land_mask
+
+    # TODO
     def generate_cloud_mask(self):
 
         pass
 
+
     def get_cloud_mask(self, cloud_mask: str = None) -> np.ndarray:
 
-        if cloud_mask not in self.cloud_masks.keys():
-            self._run_cloud_mask(cloud_mask=cloud_mask)
+        if self._check_cloud_mask_has_run(run_on_false=False, cloud_mask=cloud_mask):
 
-            if cloud_mask not in self.cloud_masks.keys():
-                return None
+            if cloud_mask is not None:    
+                cloud_mask = cloud_mask.lower()
 
-        return self.cloud_masks[cloud_mask]
+            return self.cloud_masks[cloud_mask]
+        
+        return None
+
     
     def get_cloud_mask_dict(self) -> dict:
 
         return self.cloud_masks 
 
+    def set_active_cloud_mask(self, cloud_mask: Literal["default"] = "default"):
 
-    def generate_chlorophyll_estimates(self):
+        self._update_active_cloud_mask(self, cloud_mask=cloud_mask, override=True)
 
-        pass
+    def get_active_cloud_mask(self) -> np.ndarray:
+
+        return self.cloud_mask
+
+    def generate_chlorophyll_estimates(self, 
+                                       product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',
+                                       model = None):
+
+        self._run_chlorophyll_estimation(self, product=product)
 
     def get_chlorophyll_estimates(self, 
-                                 product:  Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',
-                                 model=None
+                                 product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',
                                  ) -> np.ndarray:
 
-        self._run_chlorophyll_estimation(product=product)
-
-        key = 'chl_' + product
+        key = product.lower()
 
         return self.chl[key]
 
