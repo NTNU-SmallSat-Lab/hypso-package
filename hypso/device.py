@@ -1362,13 +1362,16 @@ class Hypso1(Hypso):
     # TODO refactor
     def _check_land_mask_has_run(self, land_mask: str = None, run_on_false: bool = True) -> bool:
 
-
-        land_mask = land_mask.lower()
-
         if self.land_mask_has_run:
-             if land_mask in self.land_masks.keys():
+             
+            if land_mask is None:
                 return True
-             else:
+            
+            land_mask = land_mask.lower()
+
+            if land_mask in self.land_masks.keys():
+                return True
+            else:
                 if self.verbose:
                     print("[ERROR] " + land_mask.upper() + " land mask has not yet been generated.")
                 return False
