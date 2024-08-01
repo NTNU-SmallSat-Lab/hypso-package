@@ -1340,7 +1340,7 @@ class Hypso1(Hypso):
 
     # Public methods
 
-    def display_geometry_information(self) -> None:
+    def geometry_summary(self) -> None:
 
         # Notes:
         # - along_track, frame_count, lines, rows, y, latitude: 956, 598
@@ -1524,11 +1524,19 @@ class Hypso1(Hypso):
 
         return self.l1a_cube
 
+    def generate_l1b_cube(self):
+
+        pass
+
     def get_l1b_cube(self) -> np.ndarray:
 
         self._check_calibration_has_run()
 
         return self.l1b_cube
+
+    def generate_l2a_cube(self):
+
+        pass
 
     def get_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = "6sv1") -> dict:
 
@@ -1542,6 +1550,10 @@ class Hypso1(Hypso):
 
         return self.l2a_cube[product]
     
+    def generate_land_mask(self):
+
+        pass
+
     def get_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global") -> np.ndarray:
 
         if land_mask not in self.land_masks.keys():
@@ -1557,6 +1569,10 @@ class Hypso1(Hypso):
 
         return self.land_masks     
     
+    def generate_cloud_mask(self):
+
+        pass
+
     def get_cloud_mask(self, cloud_mask: str = None) -> np.ndarray:
 
         if cloud_mask not in self.cloud_masks.keys():
@@ -1570,6 +1586,11 @@ class Hypso1(Hypso):
     def get_cloud_mask_dict(self) -> dict:
 
         return self.cloud_masks 
+
+
+    def generate_chlorophyll_estimates(self):
+
+        pass
 
     def get_chlorophyll_estimates(self, 
                                  product:  Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',
@@ -1585,6 +1606,15 @@ class Hypso1(Hypso):
     def get_chlorophyll_estimates_dict(self) -> dict:
 
         return self.chl
+
+
+    def generate_product(self):
+
+        pass
+
+    def get_product(self):
+
+        pass
 
     def get_products(self) -> dict:
 
