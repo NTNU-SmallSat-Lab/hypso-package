@@ -36,6 +36,8 @@ SUPPORTED_PRODUCT_LEVELS = ["l1a", "l1b", "l2a"]
 SUPPORTED_ATM_CORR_PRODUCTS = ["6sv1", "acolite", "machi"]
 SUPPORTED_CHL_EST_PRODUCTS = ["band_ratio", "6sv1_aqua", "acolite_aqua"]
 
+UNIX_TIME_OFFSET = 20 # TODO: Verify offset validity. Sivert had 20 here
+
 class Hypso:
 
     def __init__(self, hypso_path: str, points_path: Union[str, None] = None):
@@ -201,7 +203,6 @@ class Hypso1(Hypso):
         self.cloud_mask_has_run = False
         self.chlorophyll_estimation_has_run = False
 
- 
         # Load L1a file -----------------------------------------------------
         self._load_l1a_file()
 
@@ -212,23 +213,17 @@ class Hypso1(Hypso):
         #self._run_calibration()
 
         # Atmospheric correction -----------------------------------------------------
-        # TODO: add flags to make sure run in the correct orders
         #self._run_geometry_computation()
         #self._run_atmospheric_correction(product='6SV1')
-
-        # File output
-        #self._write_l1a_file()
-        #self._write_l1b_file()
-        #self._write_l2a_file()
-        #self.write_l1b_nc_file()  # Input for ACOLITE
-        #self.l2a_cube = self.find_existing_l2_cube()
 
         # Land Mask -----------------------------------------------------
         # self._run_land_mask()
 
         # Cloud Mask -----------------------------------------------------
-        # TODO
         #self._run_cloud_mask()
+
+        # Chlorophyll -----------------------------------------------------
+        # self.chl
 
         # Products
         # TODO
@@ -323,143 +318,7 @@ class Hypso1(Hypso):
         self.srf = srf
 
         return None
-    
-    def _set_rad_coeff_file(self, rad_coeff_file: Union[str, Path, None] = None) -> None:
 
-        """
-        Get the absolute path for the radiometric coefficients.
-
-        :param rad_coeff_file: Path to radiometric coefficients file (optional)
-
-        :return: None.
-        """
-
-        if rad_coeff_file:
-            self.rad_coeff_file = rad_coeff_file
-            return None
-
-        match self.info["capture_type"]:
-            case "custom":
-                csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1.csv"    
-            case "nominal":
-                csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_nominal_v1.csv"
-            case "wide":
-                csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_wide_v1.csv"
-            case _:
-                csv_file_radiometric = None
-
-        if csv_file_radiometric:
-            rad_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_radiometric}')
-        else: 
-            rad_coeff_file = None
-
-        self.rad_coeff_file = rad_coeff_file
-
-        return None
-
-    def _set_smile_coeff_file(self, smile_coeff_file: Union[str, Path, None] = None) -> None:
-
-        """
-        Get the absolute path for the smile coefficients.
-
-        :param smile_coeff_file: Path to smile coefficients file (optional)
-
-        :return: None.
-        """
-
-        if smile_coeff_file:
-            self.smile_coeff_file = smile_coeff_file
-            return None
-
-        match self.info["capture_type"]:
-            case "custom":
-                csv_file_smile = "spectral_calibration_matrix_HYPSO-1_full_v1.csv"    
-            case "nominal":
-                csv_file_smile = "smile_correction_matrix_HYPSO-1_nominal_v1.csv"
-            case "wide":
-                csv_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.csv"
-            case _:
-                csv_file_smile = None
-
-        if csv_file_smile:
-            smile_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_smile}')
-        else:
-            smile_coeff_file = csv_file_smile
-
-        self.smile_coeff_file = smile_coeff_file
-
-        return None
-
-    def _set_destriping_coeff_file(self, destriping_coeff_file: Union[str, Path, None] = None) -> None:
-
-        """
-        Get the absolute path for the destriping coefficients.
-
-        :param destriping_coeff_file: Path to destriping coefficients file (optional)
-
-        :return: None.
-        """
-
-        if destriping_coeff_file:
-            self.destriping_coeff_file = destriping_coeff_file
-            return None
-
-        match self.info["capture_type"]:
-            case "custom":
-                csv_file_destriping = None
-            case "nominal":
-                csv_file_destriping = "destriping_matrix_HYPSO-1_nominal_v1.csv"
-            case "wide":
-                csv_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.csv"
-            case _:
-                csv_file_destriping = None
-
-        if csv_file_destriping:
-            destriping_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_destriping}')
-        else:
-            destriping_coeff_file = csv_file_destriping
-
-        self.destriping_coeff_file = destriping_coeff_file
-
-        return None
-
-    def _set_spectral_coeff_file(self, spectral_coeff_file: Union[str, Path, None] = None) -> None:
-
-        """
-        Get the absolute path for the spectral coefficients (wavelengths).
-
-        :param spectral_coeff_file: Path to spectral coefficients file (optional)
-
-        :return: None.
-        """
-
-        if spectral_coeff_file:
-            self.spectral_coeff_file = spectral_coeff_file
-            return None
-        
-        csv_file_spectral = "spectral_bands_HYPSO-1_v1.csv"
-
-        spectral_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_spectral}')
-
-        self.spectral_coeff_file = spectral_coeff_file
-
-        return None
-
-    def _set_calibration_coeff_files(self) -> None:
-        """
-        Set the absolute path for the calibration coefficients included in the package. This includes radiometric,
-        smile and destriping correction.
-
-        :return: None.
-        """
-
-        self._set_rad_coeff_file()
-        self._set_smile_coeff_file()
-        self._set_destriping_coeff_file()
-        self._set_spectral_coeff_file()
-
-        return None
-    
     def _set_capture_name(self) -> None:
 
         capture_name = self.hypso_path.stem
@@ -511,31 +370,42 @@ class Hypso1(Hypso):
 
         return None
 
+    # TODO: move info dictionary into object variables
     def _set_info_dict(self) -> None:
-
-        # TODO: move this dictionary into object variables
 
         info = {}
 
         info["nc_file"] = self.hypso_path
-
         info["nc_name"] = self.hypso_path.stem
+
+        self.nc_file = self.hypso_path
+        self.nc_name = self.hypso_path.stem
 
         file_path = str(self.hypso_path)
 
         info["l1a_nc_file"] = Path(file_path)
         info["l1b_nc_file"] = Path(file_path.replace("-l1a", "-l1b"))
         info["l2a_nc_file"] = Path(file_path.replace("-l1a", "-l2a"))
+        
+        self.l1a_nc_file = Path(file_path)
+        self.l1b_nc_file = Path(file_path.replace("-l1a", "-l1b"))
+        self.l2a_nc_file = Path(file_path.replace("-l1a", "-l2a"))
 
         info["tmp_dir"] =  Path(info["nc_file"].parent.absolute(), info["nc_name"].replace("-l1a", "") + "_tmp")
         info["top_folder_name"] = info["tmp_dir"]
 
+        self.tmp_dir = Path(self.nc_file.parent.absolute(), self.nc_name.replace("-l1a", "") + "_tmp")
+        self.top_folder_name = self.tmp_dir
+
         if all([self.target_coords.get('latc'), self.target_coords.get('lonc')]):
             info['target_area'] = self.target_coords['latc'] + ' ' + self.target_coords['lonc']
+            self.target_area = self.target_coords['latc'] + ' ' + self.target_coords['lonc']
         else:
             info['target_area'] = None
+            self.target_area = None
 
         info["background_value"] = 8 * self.capture_config["bin_factor"]
+        self.background_value =8 * self.capture_config["bin_factor"]
 
         info["x_start"] = self.capture_config["aoi_x"]
         info["x_stop"] = self.capture_config["aoi_x"] + self.capture_config["column_count"]
@@ -543,38 +413,59 @@ class Hypso1(Hypso):
         info["y_stop"] = self.capture_config["aoi_y"] + self.capture_config["row_count"]
         info["exp"] = self.capture_config["exposure"] / 1000  # in seconds
 
+        self.x_start = self.capture_config["aoi_x"]
+        self.x_stop = self.capture_config["aoi_x"] + self.capture_config["column_count"]
+        self.y_start = self.capture_config["aoi_y"]
+        self.y_stop = self.capture_config["aoi_y"] + self.capture_config["row_count"]
+        self.exp = self.capture_config["exposure"] / 1000  # in seconds
+        self.exposure = self.exp
+
         info["image_height"] = self.capture_config["row_count"]
         info["image_width"] = int(self.capture_config["column_count"] / self.capture_config["bin_factor"])
         info["im_size"] = info["image_height"] * info["image_width"]
 
+        self.image_height = self.capture_config["row_count"]
+        self.image_width = int(self.capture_config["column_count"] / self.capture_config["bin_factor"])
+        self.im_size = self.image_height * self.image_width
 
         info["bands"] = info["image_width"]
         info["lines"] = self.capture_config["frame_count"]  # AKA Frames AKA Rows
         info["samples"] = info["image_height"]  # AKA Cols
 
-
-        # TODO: Verify offset validity. Sivert had 20 here
-        UNIX_TIME_OFFSET = 20
+        self.bands = self.image_width
+        self.lines = self.capture_config["frame_count"]  # AKA Frames AKA Rows
+        self.samples = self.image_height  # AKA Cols
 
         info["start_timestamp_capture"] = int(self.timing['capture_start_unix']) + UNIX_TIME_OFFSET
+        self.start_timestamp_capture = int(self.timing['capture_start_unix']) + UNIX_TIME_OFFSET
 
         # Get END_TIMESTAMP_CAPTURE
-        #    cant compute end timestamp using frame count and frame rate
-        #     assuming some default value if fps and exposure not available
+        # can't compute end timestamp using frame count and frame rate
+        # assuming some default value if fps and exposure not available
         try:
             info["end_timestamp_capture"] = info["start_timestamp_capture"] + self.capture_config["frame_count"] / self.capture_config["fps"] + self.capture_config["exposure"] / 1000.0
+            self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config["frame_count"] / self.capture_config["fps"] + self.capture_config["exposure"] / 1000.0
         except:
-            print("fps or exposure values not found assuming 20.0 for each")
+            if self.verbose:
+                print("[WARNING] FPS or exposure values not found. Assuming 20.0 for each.")
             info["end_timestamp_capture"] = info["start_timestamp_capture"] + self.capture_config["frame_count"] / 20.0 + 20.0 / 1000.0
+            self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config["frame_count"] / 20.0 + 20.0 / 1000.0
 
         # using 'awk' for floating point arithmetic ('expr' only support integer arithmetic): {printf \"%.2f\n\", 100/3}"
         time_margin_start = 641.0  # 70.0
         time_margin_end = 180.0  # 70.0
+
         info["start_timestamp_adcs"] = info["start_timestamp_capture"] - time_margin_start
         info["end_timestamp_adcs"] = info["end_timestamp_capture"] + time_margin_end
 
+        self.start_timestamp_adcs = self.start_timestamp_capture - time_margin_start
+        self.end_timestamp_adcs = self.end_timestamp_capture + time_margin_end
+
         info["unixtime"] = info["start_timestamp_capture"]
         info["iso_time"] = datetime.utcfromtimestamp(info["unixtime"]).isoformat()
+
+        self.unixtime = self.start_timestamp_capture
+        self.iso_time = datetime.utcfromtimestamp(self.unixtime).isoformat()
 
         self.info = info
 
@@ -645,7 +536,7 @@ class Hypso1(Hypso):
 
 
 
-    # Loaders
+    # Loading
 
     def _load_l1a_file(self) -> None:
 
@@ -887,6 +778,142 @@ class Hypso1(Hypso):
         cube = self._get_flipped_cube(cube=cube)
 
         return cube
+
+    def _set_calibration_coeff_files(self) -> None:
+        """
+        Set the absolute path for the calibration coefficients included in the package. This includes radiometric,
+        smile and destriping correction.
+
+        :return: None.
+        """
+
+        self._set_rad_coeff_file()
+        self._set_smile_coeff_file()
+        self._set_destriping_coeff_file()
+        self._set_spectral_coeff_file()
+
+        return None
+
+    def _set_rad_coeff_file(self, rad_coeff_file: Union[str, Path, None] = None) -> None:
+
+        """
+        Get the absolute path for the radiometric coefficients.
+
+        :param rad_coeff_file: Path to radiometric coefficients file (optional)
+
+        :return: None.
+        """
+
+        if rad_coeff_file:
+            self.rad_coeff_file = rad_coeff_file
+            return None
+
+        match self.info["capture_type"]:
+            case "custom":
+                csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1.csv"    
+            case "nominal":
+                csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_nominal_v1.csv"
+            case "wide":
+                csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_wide_v1.csv"
+            case _:
+                csv_file_radiometric = None
+
+        if csv_file_radiometric:
+            rad_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_radiometric}')
+        else: 
+            rad_coeff_file = None
+
+        self.rad_coeff_file = rad_coeff_file
+
+        return None
+
+    def _set_smile_coeff_file(self, smile_coeff_file: Union[str, Path, None] = None) -> None:
+
+        """
+        Get the absolute path for the smile coefficients.
+
+        :param smile_coeff_file: Path to smile coefficients file (optional)
+
+        :return: None.
+        """
+
+        if smile_coeff_file:
+            self.smile_coeff_file = smile_coeff_file
+            return None
+
+        match self.info["capture_type"]:
+            case "custom":
+                csv_file_smile = "spectral_calibration_matrix_HYPSO-1_full_v1.csv"    
+            case "nominal":
+                csv_file_smile = "smile_correction_matrix_HYPSO-1_nominal_v1.csv"
+            case "wide":
+                csv_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.csv"
+            case _:
+                csv_file_smile = None
+
+        if csv_file_smile:
+            smile_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_smile}')
+        else:
+            smile_coeff_file = csv_file_smile
+
+        self.smile_coeff_file = smile_coeff_file
+
+        return None
+
+    def _set_destriping_coeff_file(self, destriping_coeff_file: Union[str, Path, None] = None) -> None:
+
+        """
+        Get the absolute path for the destriping coefficients.
+
+        :param destriping_coeff_file: Path to destriping coefficients file (optional)
+
+        :return: None.
+        """
+
+        if destriping_coeff_file:
+            self.destriping_coeff_file = destriping_coeff_file
+            return None
+
+        match self.info["capture_type"]:
+            case "custom":
+                csv_file_destriping = None
+            case "nominal":
+                csv_file_destriping = "destriping_matrix_HYPSO-1_nominal_v1.csv"
+            case "wide":
+                csv_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.csv"
+            case _:
+                csv_file_destriping = None
+
+        if csv_file_destriping:
+            destriping_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_destriping}')
+        else:
+            destriping_coeff_file = csv_file_destriping
+
+        self.destriping_coeff_file = destriping_coeff_file
+
+        return None
+
+    def _set_spectral_coeff_file(self, spectral_coeff_file: Union[str, Path, None] = None) -> None:
+
+        """
+        Get the absolute path for the spectral coefficients (wavelengths).
+
+        :param spectral_coeff_file: Path to spectral coefficients file (optional)
+
+        :return: None.
+        """
+
+        if spectral_coeff_file:
+            self.spectral_coeff_file = spectral_coeff_file
+            return None
+        
+        csv_file_spectral = "spectral_bands_HYPSO-1_v1.csv"
+
+        spectral_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_spectral}')
+
+        self.spectral_coeff_file = spectral_coeff_file
+
+        return None
 
     def _check_calibration_has_run(self) -> bool:
 
