@@ -758,10 +758,12 @@ class Hypso1(Hypso):
 
     # Runners
 
-    # TODO
     def _run_calibration_guard(self) -> None:
 
         if self.calibration_has_run is False:
+
+            if self.verbose:
+                    print("[INFO] Calibration has not been run yet. Running now...")
 
             self._run_calibration()
 
@@ -913,6 +915,17 @@ class Hypso1(Hypso):
 
         return cube
 
+    def _run_geometry_computation_guard(self) -> None:
+
+        if self.geometry_computation_has_run is False:
+
+            if self.verbose:
+                    print("[INFO] Geometry computations have not been run yet. Running now...")
+
+            self._run_geometry_computation()
+
+        return None
+
     def _run_geometry_computation(self) -> None:
 
         print("[INFO] Running frame interpolation...")
@@ -1007,8 +1020,7 @@ class Hypso1(Hypso):
         # AOT550 parameter gotten from: https://giovanni.gsfc.nasa.gov/giovanni/
 
         self._run_calibration_guard()
-        #self._check_calibration_has_run(run_on_false=True)
-        self._check_geometry_computation_has_run(run_on_false=True)
+        self._run_geometry_computation_guard()
 
         # TODO: which values should we use?
         if self.latitudes is None:
@@ -1048,8 +1060,7 @@ class Hypso1(Hypso):
         print("[WARNING] ACOLITE atmospheric correction has not been enabled.")
 
         self._run_calibration_guard()
-        #self._check_calibration_has_run(run_on_false=True)
-        self._check_geometry_computation_has_run(run_on_false=True)
+        self._run_geometry_computation_guard()
         self._check_write_l1b_nc_file_has_run(run_on_false=True)
 
         # user and password from https://urs.earthdata.nasa.gov/profile
@@ -1072,11 +1083,13 @@ class Hypso1(Hypso):
     def _run_machi_atmospheric_correction(self) -> None:
 
         print("[WARNING] Minimal Atmospheric Compensation for Hyperspectral Imagers (MACHI) atmospheric correction has not been enabled.")
-        
+
         return None
 
-        #self._check_calibration_has_run()
-        #self._check_geometry_computation_has_run()
+        self._run_calibration_guard()
+        self._run_geometry_computation_guard()
+
+        return None
 
         #T, A, objs = run_machi(cube=self.l1b_cube, verbose=self.verbose)
 
@@ -1145,7 +1158,6 @@ class Hypso1(Hypso):
     def _run_ndwi_land_mask(self) -> np.ndarray:
 
         self._run_calibration_guard()
-        #self._check_calibration_has_run(run_on_false=True)
 
         land_mask = run_ndwi_land_mask(cube=self.l1b_cube, 
                                        wavelengths=self.wavelengths,
@@ -1156,7 +1168,6 @@ class Hypso1(Hypso):
     def _run_threshold_land_mask(self) -> np.ndarray:
 
         self._run_calibration_guard()
-        #self._check_calibration_has_run(run_on_false=True)
 
         land_mask = run_threshold_land_mask(cube=self.l1b_cube,
                                             wavelengths=self.wavelengths,
@@ -1243,7 +1254,6 @@ class Hypso1(Hypso):
                                                threshold: float = 0.88) -> None:
 
         self._run_calibration_guard()
-        #self._check_calibration_has_run(run_on_false=True)
 
         numerator_wavelength = 549
         denominator_wavelength = 663
@@ -1317,6 +1327,7 @@ class Hypso1(Hypso):
 
         return False
     
+    '''
     # TODO refactor
     def _check_calibration_has_run(self, run_on_false: bool = True) -> bool:
         if run_on_false:
@@ -1332,7 +1343,9 @@ class Hypso1(Hypso):
             return True
 
         return False
+    '''
     
+    '''
     # TODO refactor
     def _check_geometry_computation_has_run(self, run_on_false: bool = True) -> bool:
         if run_on_false:
@@ -1348,7 +1361,8 @@ class Hypso1(Hypso):
             return True
 
         return False
-    
+    '''
+        
     # TODO refactor
     def _check_write_l1b_nc_file_has_run(self, run_on_false: bool = True) -> bool:
         if run_on_false:

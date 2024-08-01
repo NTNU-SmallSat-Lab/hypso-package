@@ -83,19 +83,10 @@ points_file = os.path.join(dir_path, 'frohavet_2024-05-06_1017Z-bin3.points')
 satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
 
 #satobj._run_land_mask(product="global")
-z = satobj._check_cloud_mask_has_run('default')
-print(z)
-z = satobj._check_cloud_mask_has_run()
-print(z)
-
-z = satobj._check_cloud_mask_has_run('default')
-print(z)
-
-
-z = satobj._check_cloud_mask_has_run('test')
-print(z)
-
-
+satobj.get_l1a_cube()
+satobj.get_l1b_cube()
+satobj.generate_l1b_cube()
+satobj.get_l1b_cube()
 #satobj.generate_l1b_cube()
 
 
