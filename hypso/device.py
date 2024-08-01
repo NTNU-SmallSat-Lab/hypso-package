@@ -342,6 +342,7 @@ class Hypso1(Hypso):
 
         return None
 
+    # TODO: Move to _set_capture_config_info
     def _set_spatial_dimensions(self) -> None:
 
         self.spatial_dimensions = (self.capture_config["frame_count"], self.info["image_height"])
@@ -370,115 +371,8 @@ class Hypso1(Hypso):
 
         return None
 
-    # TODO: move info dictionary into object variables
-    def _set_info_dict(self) -> None:
 
-        info = {}
 
-        info["nc_file"] = self.hypso_path
-        info["nc_name"] = self.hypso_path.stem
-
-        self.nc_file = self.hypso_path
-        self.nc_name = self.hypso_path.stem
-
-        file_path = str(self.hypso_path)
-
-        info["l1a_nc_file"] = Path(file_path)
-        info["l1b_nc_file"] = Path(file_path.replace("-l1a", "-l1b"))
-        info["l2a_nc_file"] = Path(file_path.replace("-l1a", "-l2a"))
-        
-        self.l1a_nc_file = Path(file_path)
-        self.l1b_nc_file = Path(file_path.replace("-l1a", "-l1b"))
-        self.l2a_nc_file = Path(file_path.replace("-l1a", "-l2a"))
-
-        info["tmp_dir"] =  Path(info["nc_file"].parent.absolute(), info["nc_name"].replace("-l1a", "") + "_tmp")
-        info["top_folder_name"] = info["tmp_dir"]
-
-        self.tmp_dir = Path(self.nc_file.parent.absolute(), self.nc_name.replace("-l1a", "") + "_tmp")
-        self.top_folder_name = self.tmp_dir
-
-        if all([self.target_coords.get('latc'), self.target_coords.get('lonc')]):
-            info['target_area'] = self.target_coords['latc'] + ' ' + self.target_coords['lonc']
-            self.target_area = self.target_coords['latc'] + ' ' + self.target_coords['lonc']
-        else:
-            info['target_area'] = None
-            self.target_area = None
-
-        info["background_value"] = 8 * self.capture_config["bin_factor"]
-        self.background_value =8 * self.capture_config["bin_factor"]
-
-        info["x_start"] = self.capture_config["aoi_x"]
-        info["x_stop"] = self.capture_config["aoi_x"] + self.capture_config["column_count"]
-        info["y_start"] = self.capture_config["aoi_y"]
-        info["y_stop"] = self.capture_config["aoi_y"] + self.capture_config["row_count"]
-        info["exp"] = self.capture_config["exposure"] / 1000  # in seconds
-
-        self.x_start = self.capture_config["aoi_x"]
-        self.x_stop = self.capture_config["aoi_x"] + self.capture_config["column_count"]
-        self.y_start = self.capture_config["aoi_y"]
-        self.y_stop = self.capture_config["aoi_y"] + self.capture_config["row_count"]
-        self.exp = self.capture_config["exposure"] / 1000  # in seconds
-        self.exposure = self.exp
-
-        info["image_height"] = self.capture_config["row_count"]
-        info["image_width"] = int(self.capture_config["column_count"] / self.capture_config["bin_factor"])
-        info["im_size"] = info["image_height"] * info["image_width"]
-
-        self.image_height = self.capture_config["row_count"]
-        self.image_width = int(self.capture_config["column_count"] / self.capture_config["bin_factor"])
-        self.im_size = self.image_height * self.image_width
-
-        info["bands"] = info["image_width"]
-        info["lines"] = self.capture_config["frame_count"]  # AKA Frames AKA Rows
-        info["samples"] = info["image_height"]  # AKA Cols
-
-        self.bands = self.image_width
-        self.lines = self.capture_config["frame_count"]  # AKA Frames AKA Rows
-        self.samples = self.image_height  # AKA Cols
-
-        info["start_timestamp_capture"] = int(self.timing['capture_start_unix']) + UNIX_TIME_OFFSET
-        self.start_timestamp_capture = int(self.timing['capture_start_unix']) + UNIX_TIME_OFFSET
-
-        # Get END_TIMESTAMP_CAPTURE
-        # can't compute end timestamp using frame count and frame rate
-        # assuming some default value if fps and exposure not available
-        try:
-            info["end_timestamp_capture"] = info["start_timestamp_capture"] + self.capture_config["frame_count"] / self.capture_config["fps"] + self.capture_config["exposure"] / 1000.0
-            self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config["frame_count"] / self.capture_config["fps"] + self.capture_config["exposure"] / 1000.0
-        except:
-            if self.verbose:
-                print("[WARNING] FPS or exposure values not found. Assuming 20.0 for each.")
-            info["end_timestamp_capture"] = info["start_timestamp_capture"] + self.capture_config["frame_count"] / 20.0 + 20.0 / 1000.0
-            self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config["frame_count"] / 20.0 + 20.0 / 1000.0
-
-        # using 'awk' for floating point arithmetic ('expr' only support integer arithmetic): {printf \"%.2f\n\", 100/3}"
-        time_margin_start = 641.0  # 70.0
-        time_margin_end = 180.0  # 70.0
-
-        info["start_timestamp_adcs"] = info["start_timestamp_capture"] - time_margin_start
-        info["end_timestamp_adcs"] = info["end_timestamp_capture"] + time_margin_end
-
-        self.start_timestamp_adcs = self.start_timestamp_capture - time_margin_start
-        self.end_timestamp_adcs = self.end_timestamp_capture + time_margin_end
-
-        info["unixtime"] = info["start_timestamp_capture"]
-        info["iso_time"] = datetime.utcfromtimestamp(info["unixtime"]).isoformat()
-
-        self.unixtime = self.start_timestamp_capture
-        self.iso_time = datetime.utcfromtimestamp(self.unixtime).isoformat()
-
-        self.info = info
-
-        return None
-
-    def _set_calibration_coeffs(self) -> None:
-
-        self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file)
-        self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file)
-        self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
-        self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
-
-        return None
 
     def _set_wavelengths(self) -> None:
 
@@ -535,6 +429,177 @@ class Hypso1(Hypso):
 
 
 
+# Info metadata
+
+    def _set_nc_files(self) -> None:
+
+        self.nc_file = self.hypso_path
+        self.nc_name = self.hypso_path.stem
+
+        file_path = str(self.hypso_path)
+
+        self.l1a_nc_file = Path(file_path)
+        self.l1b_nc_file = Path(file_path.replace("-l1a", "-l1b"))
+        self.l2a_nc_file = Path(file_path.replace("-l1a", "-l2a"))
+
+        return None
+
+    def _set_directory(self) -> None:
+
+        self.tmp_dir = Path(self.nc_file.parent.absolute(), self.nc_name.replace("-l1a", "") + "_tmp")
+        self.top_folder_name = self.tmp_dir
+
+        return None
+
+    def _set_target_area(self) -> None:
+
+        if all([self.target_coords.get('latc'), self.target_coords.get('lonc')]):
+            self.target_area = self.target_coords['latc'] + ' ' + self.target_coords['lonc']
+        else:
+            self.target_area = None
+
+        return None
+
+    def _set_background_value(self) -> None:
+
+        self.background_value = 8 * self.capture_config["bin_factor"]
+
+        return None
+
+    def _set_exposure(self) -> None:
+
+        self.exp = self.capture_config["exposure"] / 1000  # in seconds
+        self.exposure = self.exp
+
+        return None
+
+    def _set_aoi(self) -> None:
+
+        self.x_start = self.capture_config["aoi_x"]
+        self.x_stop = self.capture_config["aoi_x"] + self.capture_config["column_count"]
+        self.y_start = self.capture_config["aoi_y"]
+        self.y_stop = self.capture_config["aoi_y"] + self.capture_config["row_count"]
+
+    def _set_capture_config_attributes(self) -> None:
+
+
+        self.image_height = self.capture_config["row_count"]
+        self.image_width = int(self.capture_config["column_count"] / self.capture_config["bin_factor"])
+        self.im_size = self.image_height * self.image_width
+
+        self.bands = self.image_width
+        self.lines = self.capture_config["frame_count"]  # AKA Frames AKA Rows
+        self.samples = self.image_height  # AKA Cols
+
+        return None
+
+    def _set_time_info(self) -> None:
+
+        self.start_timestamp_capture = int(self.timing['capture_start_unix']) + UNIX_TIME_OFFSET
+
+        # Get END_TIMESTAMP_CAPTURE
+        # can't compute end timestamp using frame count and frame rate
+        # assuming some default value if fps and exposure not available
+        try:
+            self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config["frame_count"] / self.capture_config["fps"] + self.capture_config["exposure"] / 1000.0
+        except:
+            if self.verbose:
+                print("[WARNING] FPS or exposure values not found. Assuming 20.0 for each.")
+            self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config["frame_count"] / 20.0 + 20.0 / 1000.0
+
+        # using 'awk' for floating point arithmetic ('expr' only support integer arithmetic): {printf \"%.2f\n\", 100/3}"
+        time_margin_start = 641.0  # 70.0
+        time_margin_end = 180.0  # 70.0
+
+        self.start_timestamp_adcs = self.start_timestamp_capture - time_margin_start
+        self.end_timestamp_adcs = self.end_timestamp_capture + time_margin_end
+
+        self.unixtime = self.start_timestamp_capture
+        self.iso_time = datetime.utcfromtimestamp(self.unixtime).isoformat()
+
+        return None
+
+
+    # TODO: move info dictionary into object variables
+    def _set_info_dict(self) -> None:
+
+        info = {}
+
+        info["nc_file"] = self.hypso_path
+        info["nc_name"] = self.hypso_path.stem
+
+        file_path = str(self.hypso_path)
+
+        info["l1a_nc_file"] = Path(file_path)
+        info["l1b_nc_file"] = Path(file_path.replace("-l1a", "-l1b"))
+        info["l2a_nc_file"] = Path(file_path.replace("-l1a", "-l2a"))
+
+        info["tmp_dir"] =  Path(info["nc_file"].parent.absolute(), info["nc_name"].replace("-l1a", "") + "_tmp")
+        info["top_folder_name"] = info["tmp_dir"]
+
+        if all([self.target_coords.get('latc'), self.target_coords.get('lonc')]):
+            info['target_area'] = self.target_coords['latc'] + ' ' + self.target_coords['lonc']
+            self.target_area = self.target_coords['latc'] + ' ' + self.target_coords['lonc']
+        else:
+            info['target_area'] = None
+            self.target_area = None
+
+        info["background_value"] = 8 * self.capture_config["bin_factor"]
+        
+        info["x_start"] = self.capture_config["aoi_x"]
+        info["x_stop"] = self.capture_config["aoi_x"] + self.capture_config["column_count"]
+        info["y_start"] = self.capture_config["aoi_y"]
+        info["y_stop"] = self.capture_config["aoi_y"] + self.capture_config["row_count"]
+        info["exp"] = self.capture_config["exposure"] / 1000  # in seconds
+
+        info["image_height"] = self.capture_config["row_count"]
+        info["image_width"] = int(self.capture_config["column_count"] / self.capture_config["bin_factor"])
+        info["im_size"] = info["image_height"] * info["image_width"]
+
+        info["bands"] = info["image_width"]
+        info["lines"] = self.capture_config["frame_count"]  # AKA Frames AKA Rows
+        info["samples"] = info["image_height"]  # AKA Cols
+
+
+
+        info["start_timestamp_capture"] = int(self.timing['capture_start_unix']) + UNIX_TIME_OFFSET
+        
+
+        # Get END_TIMESTAMP_CAPTURE
+        # can't compute end timestamp using frame count and frame rate
+        # assuming some default value if fps and exposure not available
+        try:
+            info["end_timestamp_capture"] = info["start_timestamp_capture"] + self.capture_config["frame_count"] / self.capture_config["fps"] + self.capture_config["exposure"] / 1000.0
+            self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config["frame_count"] / self.capture_config["fps"] + self.capture_config["exposure"] / 1000.0
+        except:
+            if self.verbose:
+                print("[WARNING] FPS or exposure values not found. Assuming 20.0 for each.")
+            info["end_timestamp_capture"] = info["start_timestamp_capture"] + self.capture_config["frame_count"] / 20.0 + 20.0 / 1000.0
+            self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config["frame_count"] / 20.0 + 20.0 / 1000.0
+
+        # using 'awk' for floating point arithmetic ('expr' only support integer arithmetic): {printf \"%.2f\n\", 100/3}"
+        time_margin_start = 641.0  # 70.0
+        time_margin_end = 180.0  # 70.0
+
+        info["start_timestamp_adcs"] = info["start_timestamp_capture"] - time_margin_start
+        info["end_timestamp_adcs"] = info["end_timestamp_capture"] + time_margin_end
+
+        self.start_timestamp_adcs = self.start_timestamp_capture - time_margin_start
+        self.end_timestamp_adcs = self.end_timestamp_capture + time_margin_end
+
+        info["unixtime"] = info["start_timestamp_capture"]
+        info["iso_time"] = datetime.utcfromtimestamp(info["unixtime"]).isoformat()
+
+        self.unixtime = self.start_timestamp_capture
+        self.iso_time = datetime.utcfromtimestamp(self.unixtime).isoformat()
+
+        self.info = info
+
+        return None
+
+
+
+
 
     # Loading
 
@@ -549,10 +614,20 @@ class Hypso1(Hypso):
         self._load_l1a_cube()
         self._load_l1a_metadata()
 
+        # TODO remove
         self._set_info_dict()
+
+        self._set_nc_files()
+        self._set_directory()
+
+
+        self._set_background_value()
+        self._set_exposure()
+        self._set_aoi()
         self._set_capture_type()
         self._set_spatial_dimensions()
         self._set_adcs_dataframes()
+        self._set_target_area()
 
         return None
 
@@ -778,6 +853,15 @@ class Hypso1(Hypso):
         cube = self._get_flipped_cube(cube=cube)
 
         return cube
+
+    def _set_calibration_coeffs(self) -> None:
+
+        self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file)
+        self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file)
+        self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
+        self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
+
+        return None
 
     def _set_calibration_coeff_files(self) -> None:
         """
