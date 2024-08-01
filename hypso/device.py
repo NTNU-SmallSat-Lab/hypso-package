@@ -1381,470 +1381,8 @@ class Hypso1(Hypso):
         return False
 
 
-    # Other functions
 
-    def _get_flipped_cube(self, cube: np.ndarray) -> np.ndarray:
-
-        if self.datacube_flipped is None:
-            return cube
-        else:
-            if self.datacube_flipped:
-                return cube[:, ::-1, :]
-
-            else:
-                return cube
-
-        return cube
-
-
-
-    # TODO refactor
-    def _check_write_l1b_nc_file_has_run(self, run_on_false: bool = True) -> bool:
-        if run_on_false:
-            if not self.geometry_computation_has_run:
-
-                if self.verbose:
-                    print("[INFO] L1b .nc file has not been created yet. Creating it now...")
-    
-                self._write_l1b_nc_file()
-                return True
-
-        if self.geometry_computation_has_run:
-            return True
-
-        return False     
-
-    def _check_l1a_file_format(self) -> None:
-
-        # Check that hypso_path file is a NetCDF file:
-        #if not self.hypso_path.suffix == '.nc':
-        #    raise Exception("Incorrect HYPSO Path. Only .nc files supported")
-
-        match self.hypso_path.suffix:
-            case '.nc':
-                return None
-            case '.bip':
-                raise Exception("Incorrect HYPSO Path. Only .nc files supported")
-            case _:
-                raise Exception("Incorrect HYPSO Path. Only .nc files supported")
-    
-        return None
-
-    # TODO: use active land and cloud masks
-    def _get_unified_mask(self, 
-                          land_mask: str=None,
-                          cloud_mask: str=None
-                          ) -> np.ndarray:
-        
-        if land_mask in self.land_masks.keys():
-            land_mask = self.land_masks[land_mask]
-        else:
-            land_mask = np.full(self.spatial_dimensions, False, dtype=bool)
-
-        if cloud_mask in self.cloud_masks.keys():
-            cloud_mask = self.cloud_masks[cloud_mask]
-        else:
-            cloud_mask = np.full(self.spatial_dimensions, False, dtype=bool)
-
-        unified_mask = land_mask | cloud_mask
-
-        return unified_mask
-
-
-
-
-
-    # Public methods
-
-    def geometry_summary(self) -> None:
-
-        # Notes:
-        # - along_track, frame_count, lines, rows, y, latitude: 956, 598
-        # - cross_track, row_count, image_height, samples, cols, x, longitude: 684, 1092
-        # - spectral, image_width, bands, z: 120
-        print('Spatial dimensions: ' + str(self.spatial_dimensions))
-        print('Standard dimensions: ' + str(self.standard_dimensions))
-        print('Row count: ' + str(self.capture_config['row_count']))
-        print('Image height: ' + str(self.info['image_height']))
-        print('Image width: ' + str(self.info['image_width']))
-        print('Frame count: ' + str(self.capture_config['frame_count']))
-        #print('Frame height: ' + str(frame_height))
-        print('Lines: ' + str(self.dimensions['lines']))
-        print('Samples: ' + str(self.dimensions['samples']))
-        print('Bands: ' + str(self.dimensions['bands']))
-
-        return None
-
-    def get_l1a_cube(self) -> np.ndarray:
-
-        return self.l1a_cube
-
-    def generate_l1b_cube(self) -> None:
-
-        self._run_calibration()
-
-        return None
-
-    def get_l1b_cube(self) -> np.ndarray:
-
-        if self._check_calibration_has_run():
-
-            return self.l1b_cube
-
-        if self.verbose:
-            print("[ERROR] L1b cube has not yet been generated.")
-
-        return None
-
-    def generate_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = "6sv1") -> None:
-
-        self._run_atmospheric_correction(product=product)
-
-        return None
-
-
-    def get_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = "6sv1") -> np.ndarray:
-
-        if product and self._check_atmospheric_correction_has_run(product=product):
-
-            return self.l2a_cube[product.lower()]
-        
-        if self.verbose:
-            print("[ERROR] " + product.upper() + " L2a cube has not yet been generated.")
-
-        return None
-
-
-    
-    def generate_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global") -> None:
-
-        self._run_land_mask(land_mask=land_mask)
-
-        return None
-
-
-
-    def get_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global") -> np.ndarray:
-
-        if land_mask and self._check_land_mask_has_run(land_mask=land_mask):
-
-            return self.land_masks[land_mask.lower()]
-        
-        if self.verbose:
-            print("[ERROR] " + land_mask + " land mask has not yet been generated.")
-
-        return None
-
-    def get_land_mask_dict(self) -> dict:
-
-        return self.land_masks     
-    
-
-
-    def set_active_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global"):
-
-        self._update_active_land_mask(self, land_mask=land_mask, override=True)
-
-    def get_active_land_mask(self) -> np.ndarray:
-
-        return self.land_mask
-
-
-
-
-
-    def generate_cloud_mask(self, cloud_mask: Literal["default"] = "default"):
-
-        self._run_cloud_mask(cloud_mask=cloud_mask)
-
-        return None
-
-    def get_cloud_mask(self, cloud_mask: str = None) -> np.ndarray:
-
-        if cloud_mask and self._check_cloud_mask_has_run(cloud_mask=cloud_mask):
-
-            return self.cloud_masks[cloud_mask.lower()]
-        
-        if self.verbose:
-            print("[ERROR] " + cloud_mask + " cloud mask has not yet been generated.")
-        
-        return None
-    
-    def get_cloud_mask_dict(self) -> dict:
-
-        return self.cloud_masks 
-
-    def set_active_cloud_mask(self, cloud_mask: Literal["default"] = "default"):
-
-        self._update_active_cloud_mask(self, cloud_mask=cloud_mask, override=True)
-
-    def get_active_cloud_mask(self) -> np.ndarray:
-
-        return self.cloud_mask
-
-
-
-
-
-
-
-
-
-    def generate_chlorophyll_estimates(self, 
-                                       product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',
-                                       model = None):
-
-        self._run_chlorophyll_estimation(self, product=product)
-
-    def get_chlorophyll_estimates(self, 
-                                 product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',
-                                 ) -> np.ndarray:
-
-        key = product.lower()
-
-        return self.chl[key]
-
-    def get_chlorophyll_estimates_dict(self) -> dict:
-
-        return self.chl
-
-
-    def generate_product(self):
-
-        pass
-
-    def get_product(self):
-
-        pass
-
-    def get_products(self) -> dict:
-
-        return self.products
-
-    # TODO
-    def get_toa_reflectance(self) -> np.ndarray:
-        """
-        Convert Top Of Atmosphere (TOA) Radiance to TOA Reflectance.
-
-        :return: Array with TOA Reflectance.
-        """
-        # Get Local variables
-        srf = self.srf
-        toa_radiance = self.l1b_cube
-
-        scene_date = parser.isoparse(self.info['iso_time'])
-        julian_day = scene_date.timetuple().tm_yday
-        solar_zenith = self.info['solar_zenith_angle']
-
-        # Read Solar Data
-        solar_data_path = str(files('hypso.atmospheric').joinpath("Solar_irradiance_Thuillier_2002.csv"))
-        solar_df = pd.read_csv(solar_data_path)
-
-        # Create new solar X with a new delta
-        solar_array = np.array(solar_df)
-        current_num = solar_array[0, 0]
-        delta = 0.01
-        new_solar_x = [solar_array[0, 0]]
-        while current_num <= solar_array[-1, 0]:
-            current_num = current_num + delta
-            new_solar_x.append(current_num)
-
-        # Interpolate for Y with original solar data
-        new_solar_y = np.interp(new_solar_x, solar_array[:, 0], solar_array[:, 1])
-
-        # Replace solar Dataframe
-        solar_df = pd.DataFrame(np.column_stack((new_solar_x, new_solar_y)), columns=solar_df.columns)
-
-        # Estimation of TOA Reflectance
-        band_number = 0
-        toa_reflectance = np.empty_like(toa_radiance)
-        for single_wl, single_srf in srf:
-            # Resample HYPSO SRF to new solar wavelength
-            resamp_srf = np.interp(new_solar_x, single_wl, single_srf)
-            weights_srf = resamp_srf / np.sum(resamp_srf)
-            ESUN = np.sum(solar_df['mW/m2/nm'].values * weights_srf)  # units matche HYPSO from device.py
-
-            # Earth-Sun distance (from day of year) using julian date
-            # http://physics.stackexchange.com/questions/177949/earth-sun-distance-on-a-given-day-of-the-year
-            distance_sun = 1 - 0.01672 * np.cos(0.9856 * (
-                    julian_day - 4))
-
-            # Get toa_reflectance
-            solar_angle_correction = np.cos(np.radians(solar_zenith))
-            multiplier = (ESUN * solar_angle_correction) / (np.pi * distance_sun ** 2)
-            toa_reflectance[:, :, band_number] = toa_radiance[:, :, band_number] / multiplier
-
-            band_number = band_number + 1
-
-        return toa_reflectance
-
-    # TODO
-    def get_spectra(self, position_dict: dict, product: Literal["L1C", "L2-6SV1", "L2-ACOLITE"] = "L1C",
-                    filename: Union[str, None] = None, plot: bool = True) -> Union[pd.DataFrame, None]:
-        """
-        Get spectra values from the indicated coordinated or pixel.
-
-        :param position_dict: Dictionary with the inputs required.\n
-            *** If Coordinates are Input *** \n
-            ``{"lat":59.5,"lon":10}``\n
-            *** If pixel location passed *** \n
-            ``{"X":200,"Y":83}``
-        :param product: Product of which to retrieve the spectral signal. Can either be "L1C", "L2-ACOLITE" or "L2-6SV1"
-        :param filename: Path on which to save the spectra as a .csv file. Filename should contain the ".csv" extension.
-            Example: "/Documents/export_signal.csv". If None, the spectral signal won´t be saved as a file.
-        :param plot: If True, the spectral signal will be plotted.
-
-        :return: None if the coordinates/pixel location are not withing the captured image. Otherwise, a pandas dataframe
-            containing the spectral signal is returned.
-        """
-
-        position_keys = list(position_dict.keys())
-        if "lat" in position_keys or "lon" in position_keys:
-            postype = "coord"
-        elif "X" in position_keys or "Y" in position_keys:
-            postype = "pix"
-        else:
-            raise Exception("Keys of ")
-
-        # To Store data
-        spectra_data = []
-        multiplier = 1  # Multiplier for the signal. In case signal is compressed differently.
-        posX = None
-        posY = None
-        lat = None
-        lon = None
-        transformed_lon = None
-        transformed_lat = None
-        # Open the raster
-
-        # Find Geotiffs
-        self.find_geotiffs()
-
-        # Check if full (120 band) tiff exists
-        if self.l1cgeotiffFilePath is None and self.l2geotiffFilePath is None:
-            raise Exception("No Full-Band GeoTiff, Force Restart")
-
-        path_to_read = None
-        cols = []
-        if product == "L1C":
-            if self.l1cgeotiffFilePath is None:
-                raise Exception("L1C product does not exist.")
-            elif self.l1cgeotiffFilePath is not None:
-                path_to_read = self.l1cgeotiffFilePath
-                cols = ["wl", "radiance"]
-        elif "L2" in product:
-            l2_engine = product.split("-")[1]
-            if self.l2geotiffFilePath is None:
-                raise Exception("L2 product does not exist.")
-            elif self.l2geotiffFilePath is not None:
-                try:
-                    path_to_read = self.l2geotiffFilePath[l2_engine.upper()]
-                except:
-                    raise Exception(f"There is no L2 Geotiff for {l2_engine.upper()}")
-
-                cols = ["wl", "rrs"]
-
-        else:
-            raise Exception("Wrong product type.")
-
-        with rasterio.open(str(path_to_read)) as dataset:
-            dataset_crs = dataset.crs
-            print("Dataset CRS: ", dataset_crs)
-
-            # Create Projection with Dataset CRS
-            dataset_proj = prj.Proj(dataset_crs)  # your data crs
-
-            # Find Corners of Image (For Development)
-            boundbox = dataset.bounds
-            left_bottom = dataset_proj(
-                boundbox[0], boundbox[1], inverse=True)
-            right_top = dataset_proj(
-                boundbox[2], boundbox[3], inverse=True)
-
-            if postype == 'coord':
-                # Get list to two variables
-                lat = position_dict["lat"]
-                lon = position_dict["lon"]
-                # lat, lon = position
-                # Transform Coordinates to Image CRS
-                transformed_lon, transformed_lat = dataset_proj(
-                    lon, lat, inverse=False)
-                # Get pixel coordinates from map coordinates
-                posY, posX = dataset.index(
-                    transformed_lon, transformed_lat)
-
-            elif postype == 'pix':
-                posX = int(position_dict["X"])
-                posY = int(position_dict["Y"])
-
-                # posX = int(position[0])
-                # posY = int(position[1])
-
-                transformed_lon = dataset.xy(posX, posY)[0]
-                transformed_lat = dataset.xy(posX, posY)[1]
-
-                # Transform from the GeoTiff CRS
-                lon, lat = dataset_proj(
-                    transformed_lon, transformed_lat, inverse=True)
-
-            # Window size is 1 for a Single Pixel or 3 for a 3x3 windowd
-            N = 3
-            # Build an NxN window
-            window = rasterio.windows.Window(
-                posX - (N // 2), posY - (N // 2), N, N)
-
-            # Read the data in the window
-            # clip is a nbands * N * N numpy array
-            clip = dataset.read(window=window)
-            if N != 1:
-                clip = np.mean(clip, axis=(1, 2))
-
-            clip = np.squeeze(clip)
-
-            # Append data to Array
-            # Multiplier for Values like Sentinel 2 which need 1/10000
-            spectra_data = clip * multiplier
-
-        # Return None if outside of boundaries or alpha channel is 0
-        if posX < 0 or posY < 0 or self.projection_metadata["rgba_data"][3, posY, posX] == 0:
-            print("Location not covered by image --------------------------\n")
-            return None
-
-        # Print Coordinate and Pixel Matching
-        print("(lat, lon) -→ (X, Y) : (%s, %s) -→ (%s, %s)" %
-              (lat, lon, posX, posY))
-
-        df_band = pd.DataFrame(np.column_stack((self.wavelengths, spectra_data)), columns=cols)
-        df_band["lat"] = lat
-        df_band["lon"] = lon
-        df_band["X"] = posX
-        df_band["Y"] = posY
-
-        if filename is not None:
-            df_band.to_csv(filename, index=False)
-
-        if plot:
-            import matplotlib.pyplot as plt
-            plt.figure(figsize=(10, 5))
-            plt.plot(self.wavelengths, spectra_data)
-            if product == "L1C":
-                plt.ylabel(self.units)
-            elif "L2" in product:
-                plt.ylabel("Rrs [0,1]")
-                plt.ylim([0, 1])
-            plt.xlabel("Wavelength (nm)")
-            plt.title(f"(lat, lon) -→ (X, Y) : ({lat}, {lon}) -→ ({posX}, {posY})")
-            plt.grid(True)
-            plt.show()
-
-        return df_band
-
-
-    def write_l1b_nc_file(self) -> None:
-
-        self._write_l1b_nc_file()
-
-        return None
+    # L1b file output
 
     def _write_l1b_nc_file(self) -> None:
         """
@@ -2338,6 +1876,453 @@ class Hypso1(Hypso):
         self.write_l1b_nc_file_has_run = True
 
         return None
+
+    # TODO refactor
+    def _check_write_l1b_nc_file_has_run(self, run_on_false: bool = True) -> bool:
+
+        return False
+    
+        self.write_l1b_nc_file_has_run
+
+        if run_on_false:
+            if not self.geometry_computation_has_run:
+
+                if self.verbose:
+                    print("[INFO] L1b .nc file has not been created yet. Creating it now...")
+    
+                self._write_l1b_nc_file()
+                return True
+
+        if self.geometry_computation_has_run:
+            return True
+
+        return False     
+
+
+
+    # Other functions
+
+    def _get_flipped_cube(self, cube: np.ndarray) -> np.ndarray:
+
+        if self.datacube_flipped is None:
+            return cube
+        else:
+            if self.datacube_flipped:
+                return cube[:, ::-1, :]
+
+            else:
+                return cube
+
+        return cube
+
+    def _check_l1a_file_format(self) -> None:
+
+        # Check that hypso_path file is a NetCDF file:
+        #if not self.hypso_path.suffix == '.nc':
+        #    raise Exception("Incorrect HYPSO Path. Only .nc files supported")
+
+        match self.hypso_path.suffix:
+            case '.nc':
+                return None
+            case '.bip':
+                raise Exception("Incorrect HYPSO Path. Only .nc files supported")
+            case _:
+                raise Exception("Incorrect HYPSO Path. Only .nc files supported")
+    
+        return None
+
+    # TODO: use active land and cloud masks
+    def _get_unified_mask(self, 
+                          land_mask: str=None,
+                          cloud_mask: str=None
+                          ) -> np.ndarray:
+        
+        if land_mask in self.land_masks.keys():
+            land_mask = self.land_masks[land_mask]
+        else:
+            land_mask = np.full(self.spatial_dimensions, False, dtype=bool)
+
+        if cloud_mask in self.cloud_masks.keys():
+            cloud_mask = self.cloud_masks[cloud_mask]
+        else:
+            cloud_mask = np.full(self.spatial_dimensions, False, dtype=bool)
+
+        unified_mask = land_mask | cloud_mask
+
+        return unified_mask
+
+
+    # Public methods
+
+    def geometry_summary(self) -> None:
+
+        # Notes:
+        # - along_track, frame_count, lines, rows, y, latitude: 956, 598
+        # - cross_track, row_count, image_height, samples, cols, x, longitude: 684, 1092
+        # - spectral, image_width, bands, z: 120
+        print('Spatial dimensions: ' + str(self.spatial_dimensions))
+        print('Standard dimensions: ' + str(self.standard_dimensions))
+        print('Row count: ' + str(self.capture_config['row_count']))
+        print('Image height: ' + str(self.info['image_height']))
+        print('Image width: ' + str(self.info['image_width']))
+        print('Frame count: ' + str(self.capture_config['frame_count']))
+        #print('Frame height: ' + str(frame_height))
+        print('Lines: ' + str(self.dimensions['lines']))
+        print('Samples: ' + str(self.dimensions['samples']))
+        print('Bands: ' + str(self.dimensions['bands']))
+
+        return None
+
+    def get_l1a_cube(self) -> np.ndarray:
+
+        return self.l1a_cube
+
+    def generate_l1b_cube(self) -> None:
+
+        self._run_calibration()
+
+        return None
+
+    def get_l1b_cube(self) -> np.ndarray:
+
+        if self._check_calibration_has_run():
+
+            return self.l1b_cube
+
+        if self.verbose:
+            print("[ERROR] L1b cube has not yet been generated.")
+
+        return None
+
+    def generate_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = "6sv1") -> None:
+
+        self._run_atmospheric_correction(product=product)
+
+        return None
+
+    def get_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = "6sv1") -> np.ndarray:
+
+        if product and self._check_atmospheric_correction_has_run(product=product):
+
+            return self.l2a_cube[product.lower()]
+        
+        if self.verbose:
+            print("[ERROR] " + product.upper() + " L2a cube has not yet been generated.")
+
+        return None
+
+    def generate_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global") -> None:
+
+        self._run_land_mask(land_mask=land_mask)
+
+        return None
+
+    def get_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global") -> np.ndarray:
+
+        if land_mask and self._check_land_mask_has_run(land_mask=land_mask):
+
+            return self.land_masks[land_mask.lower()]
+        
+        if self.verbose:
+            print("[ERROR] " + land_mask + " land mask has not yet been generated.")
+
+        return None
+
+    def get_land_mask_dict(self) -> dict:
+
+        return self.land_masks     
+    
+    def set_active_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global"):
+
+        self._update_active_land_mask(self, land_mask=land_mask, override=True)
+
+    def get_active_land_mask(self) -> np.ndarray:
+
+        return self.land_mask
+
+    def generate_cloud_mask(self, cloud_mask: Literal["default"] = "default"):
+
+        self._run_cloud_mask(cloud_mask=cloud_mask)
+
+        return None
+
+    def get_cloud_mask(self, cloud_mask: str = None) -> np.ndarray:
+
+        if cloud_mask and self._check_cloud_mask_has_run(cloud_mask=cloud_mask):
+
+            return self.cloud_masks[cloud_mask.lower()]
+        
+        if self.verbose:
+            print("[ERROR] " + cloud_mask + " cloud mask has not yet been generated.")
+        
+        return None
+    
+    def get_cloud_mask_dict(self) -> dict:
+
+        return self.cloud_masks 
+
+    def set_active_cloud_mask(self, cloud_mask: Literal["default"] = "default"):
+
+        self._update_active_cloud_mask(self, cloud_mask=cloud_mask, override=True)
+
+    def get_active_cloud_mask(self) -> np.ndarray:
+
+        return self.cloud_mask
+
+    def generate_chlorophyll_estimates(self, 
+                                       product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',
+                                       model = None):
+
+        self._run_chlorophyll_estimation(self, product=product)
+
+    def get_chlorophyll_estimates(self, 
+                                 product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',
+                                 ) -> np.ndarray:
+
+        key = product.lower()
+
+        return self.chl[key]
+
+    def get_chlorophyll_estimates_dict(self) -> dict:
+
+        return self.chl
+
+    def generate_product(self):
+
+        pass
+
+    def get_product(self):
+
+        pass
+
+    def get_products(self) -> dict:
+
+        return self.products
+
+    # TODO
+    def get_toa_reflectance(self) -> np.ndarray:
+        """
+        Convert Top Of Atmosphere (TOA) Radiance to TOA Reflectance.
+
+        :return: Array with TOA Reflectance.
+        """
+        # Get Local variables
+        srf = self.srf
+        toa_radiance = self.l1b_cube
+
+        scene_date = parser.isoparse(self.info['iso_time'])
+        julian_day = scene_date.timetuple().tm_yday
+        solar_zenith = self.info['solar_zenith_angle']
+
+        # Read Solar Data
+        solar_data_path = str(files('hypso.atmospheric').joinpath("Solar_irradiance_Thuillier_2002.csv"))
+        solar_df = pd.read_csv(solar_data_path)
+
+        # Create new solar X with a new delta
+        solar_array = np.array(solar_df)
+        current_num = solar_array[0, 0]
+        delta = 0.01
+        new_solar_x = [solar_array[0, 0]]
+        while current_num <= solar_array[-1, 0]:
+            current_num = current_num + delta
+            new_solar_x.append(current_num)
+
+        # Interpolate for Y with original solar data
+        new_solar_y = np.interp(new_solar_x, solar_array[:, 0], solar_array[:, 1])
+
+        # Replace solar Dataframe
+        solar_df = pd.DataFrame(np.column_stack((new_solar_x, new_solar_y)), columns=solar_df.columns)
+
+        # Estimation of TOA Reflectance
+        band_number = 0
+        toa_reflectance = np.empty_like(toa_radiance)
+        for single_wl, single_srf in srf:
+            # Resample HYPSO SRF to new solar wavelength
+            resamp_srf = np.interp(new_solar_x, single_wl, single_srf)
+            weights_srf = resamp_srf / np.sum(resamp_srf)
+            ESUN = np.sum(solar_df['mW/m2/nm'].values * weights_srf)  # units matche HYPSO from device.py
+
+            # Earth-Sun distance (from day of year) using julian date
+            # http://physics.stackexchange.com/questions/177949/earth-sun-distance-on-a-given-day-of-the-year
+            distance_sun = 1 - 0.01672 * np.cos(0.9856 * (
+                    julian_day - 4))
+
+            # Get toa_reflectance
+            solar_angle_correction = np.cos(np.radians(solar_zenith))
+            multiplier = (ESUN * solar_angle_correction) / (np.pi * distance_sun ** 2)
+            toa_reflectance[:, :, band_number] = toa_radiance[:, :, band_number] / multiplier
+
+            band_number = band_number + 1
+
+        return toa_reflectance
+
+    # TODO
+    def get_spectra(self, position_dict: dict, product: Literal["L1C", "L2-6SV1", "L2-ACOLITE"] = "L1C",
+                    filename: Union[str, None] = None, plot: bool = True) -> Union[pd.DataFrame, None]:
+        """
+        Get spectra values from the indicated coordinated or pixel.
+
+        :param position_dict: Dictionary with the inputs required.\n
+            *** If Coordinates are Input *** \n
+            ``{"lat":59.5,"lon":10}``\n
+            *** If pixel location passed *** \n
+            ``{"X":200,"Y":83}``
+        :param product: Product of which to retrieve the spectral signal. Can either be "L1C", "L2-ACOLITE" or "L2-6SV1"
+        :param filename: Path on which to save the spectra as a .csv file. Filename should contain the ".csv" extension.
+            Example: "/Documents/export_signal.csv". If None, the spectral signal won´t be saved as a file.
+        :param plot: If True, the spectral signal will be plotted.
+
+        :return: None if the coordinates/pixel location are not withing the captured image. Otherwise, a pandas dataframe
+            containing the spectral signal is returned.
+        """
+
+        position_keys = list(position_dict.keys())
+        if "lat" in position_keys or "lon" in position_keys:
+            postype = "coord"
+        elif "X" in position_keys or "Y" in position_keys:
+            postype = "pix"
+        else:
+            raise Exception("Keys of ")
+
+        # To Store data
+        spectra_data = []
+        multiplier = 1  # Multiplier for the signal. In case signal is compressed differently.
+        posX = None
+        posY = None
+        lat = None
+        lon = None
+        transformed_lon = None
+        transformed_lat = None
+        # Open the raster
+
+        # Find Geotiffs
+        self.find_geotiffs()
+
+        # Check if full (120 band) tiff exists
+        if self.l1cgeotiffFilePath is None and self.l2geotiffFilePath is None:
+            raise Exception("No Full-Band GeoTiff, Force Restart")
+
+        path_to_read = None
+        cols = []
+        if product == "L1C":
+            if self.l1cgeotiffFilePath is None:
+                raise Exception("L1C product does not exist.")
+            elif self.l1cgeotiffFilePath is not None:
+                path_to_read = self.l1cgeotiffFilePath
+                cols = ["wl", "radiance"]
+        elif "L2" in product:
+            l2_engine = product.split("-")[1]
+            if self.l2geotiffFilePath is None:
+                raise Exception("L2 product does not exist.")
+            elif self.l2geotiffFilePath is not None:
+                try:
+                    path_to_read = self.l2geotiffFilePath[l2_engine.upper()]
+                except:
+                    raise Exception(f"There is no L2 Geotiff for {l2_engine.upper()}")
+
+                cols = ["wl", "rrs"]
+
+        else:
+            raise Exception("Wrong product type.")
+
+        with rasterio.open(str(path_to_read)) as dataset:
+            dataset_crs = dataset.crs
+            print("Dataset CRS: ", dataset_crs)
+
+            # Create Projection with Dataset CRS
+            dataset_proj = prj.Proj(dataset_crs)  # your data crs
+
+            # Find Corners of Image (For Development)
+            boundbox = dataset.bounds
+            left_bottom = dataset_proj(
+                boundbox[0], boundbox[1], inverse=True)
+            right_top = dataset_proj(
+                boundbox[2], boundbox[3], inverse=True)
+
+            if postype == 'coord':
+                # Get list to two variables
+                lat = position_dict["lat"]
+                lon = position_dict["lon"]
+                # lat, lon = position
+                # Transform Coordinates to Image CRS
+                transformed_lon, transformed_lat = dataset_proj(
+                    lon, lat, inverse=False)
+                # Get pixel coordinates from map coordinates
+                posY, posX = dataset.index(
+                    transformed_lon, transformed_lat)
+
+            elif postype == 'pix':
+                posX = int(position_dict["X"])
+                posY = int(position_dict["Y"])
+
+                # posX = int(position[0])
+                # posY = int(position[1])
+
+                transformed_lon = dataset.xy(posX, posY)[0]
+                transformed_lat = dataset.xy(posX, posY)[1]
+
+                # Transform from the GeoTiff CRS
+                lon, lat = dataset_proj(
+                    transformed_lon, transformed_lat, inverse=True)
+
+            # Window size is 1 for a Single Pixel or 3 for a 3x3 windowd
+            N = 3
+            # Build an NxN window
+            window = rasterio.windows.Window(
+                posX - (N // 2), posY - (N // 2), N, N)
+
+            # Read the data in the window
+            # clip is a nbands * N * N numpy array
+            clip = dataset.read(window=window)
+            if N != 1:
+                clip = np.mean(clip, axis=(1, 2))
+
+            clip = np.squeeze(clip)
+
+            # Append data to Array
+            # Multiplier for Values like Sentinel 2 which need 1/10000
+            spectra_data = clip * multiplier
+
+        # Return None if outside of boundaries or alpha channel is 0
+        if posX < 0 or posY < 0 or self.projection_metadata["rgba_data"][3, posY, posX] == 0:
+            print("Location not covered by image --------------------------\n")
+            return None
+
+        # Print Coordinate and Pixel Matching
+        print("(lat, lon) -→ (X, Y) : (%s, %s) -→ (%s, %s)" %
+              (lat, lon, posX, posY))
+
+        df_band = pd.DataFrame(np.column_stack((self.wavelengths, spectra_data)), columns=cols)
+        df_band["lat"] = lat
+        df_band["lon"] = lon
+        df_band["X"] = posX
+        df_band["Y"] = posY
+
+        if filename is not None:
+            df_band.to_csv(filename, index=False)
+
+        if plot:
+            import matplotlib.pyplot as plt
+            plt.figure(figsize=(10, 5))
+            plt.plot(self.wavelengths, spectra_data)
+            if product == "L1C":
+                plt.ylabel(self.units)
+            elif "L2" in product:
+                plt.ylabel("Rrs [0,1]")
+                plt.ylim([0, 1])
+            plt.xlabel("Wavelength (nm)")
+            plt.title(f"(lat, lon) -→ (X, Y) : ({lat}, {lon}) -→ ({posX}, {posY})")
+            plt.grid(True)
+            plt.show()
+
+        return df_band
+
+    def write_l1b_nc_file(self) -> None:
+
+        self._write_l1b_nc_file()
+
+        return None
+
 
 
 class Hypso2(Hypso):
