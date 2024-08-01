@@ -646,6 +646,9 @@ class Hypso1(Hypso):
 
     def _update_active_land_mask(self, land_mask: str = None, override: bool = False) -> None:
 
+        if land_mask is None:
+            return None
+
         land_mask = land_mask.lower()
 
         if land_mask not in self.land_masks.keys():
@@ -657,6 +660,9 @@ class Hypso1(Hypso):
         return None
 
     def _update_active_cloud_mask(self, cloud_mask: str = None, override: bool = False) -> None:
+
+        if cloud_mask is None:
+            return None
 
         cloud_mask = cloud_mask.lower()
 
@@ -1353,7 +1359,11 @@ class Hypso1(Hypso):
             
         return False
     
+    # TODO refactor
     def _check_land_mask_has_run(self, land_mask: str = None, run_on_false: bool = True) -> bool:
+
+
+        land_mask = land_mask.lower()
 
         if self.land_mask_has_run:
              if land_mask in self.land_masks.keys():
@@ -1370,12 +1380,19 @@ class Hypso1(Hypso):
 
         return False
 
+    # TODO refactor
     def _check_cloud_mask_has_run(self, cloud_mask: str = None, run_on_false: bool = True) -> bool:
 
         if self.cloud_mask_has_run:
-             if cloud_mask in self.cloud_mask.keys():
+             
+            if cloud_mask is None:
                 return True
-             else: 
+            
+            cloud_mask = cloud_mask.lower()
+
+            if cloud_mask in self.cloud_masks.keys():
+                return True
+            else: 
                 if self.verbose:
                     print("[ERROR] " + cloud_mask.upper() + " cloud mask has not yet been generated.")
                 return False
