@@ -199,16 +199,17 @@ class Hypso1(Hypso):
         self.atmospheric_correction_has_run = False
         self.land_mask_has_run = False
         self.cloud_mask_has_run = False
+        self.chlorophyll_estimation_has_run = False
 
  
         # Load L1a file -----------------------------------------------------
         self._load_l1a_file()
 
-        # Calibration -----------------------------------------------------
-        self._run_calibration()
-
         # Georeferencing -----------------------------------------------------
         self._run_georeferencing()
+
+        # Calibration -----------------------------------------------------
+        #self._run_calibration()
 
         # Atmospheric correction -----------------------------------------------------
         # TODO: add flags to make sure run in the correct orders
@@ -965,7 +966,6 @@ class Hypso1(Hypso):
         self._check_calibration_has_run()
         self._check_geometry_computation_has_run()
 
-
         # TODO: which values should we use?
         if self.latitudes is None:
             latitudes = self.latitudes_original # fall back on geometry computed values
@@ -1175,6 +1175,10 @@ class Hypso1(Hypso):
 
                 print("[WARNING] No such chlorophyll estimation product supported!")
 
+        self.chlorophyll_estimation_has_run = True
+
+        return None
+
     def _run_band_ratio_chlorophyll_estimation(self, land_mask: str = None, 
                                                cloud_mask: str = None, 
                                                factor: float = 0.1, 
@@ -1295,16 +1299,34 @@ class Hypso1(Hypso):
 
         return False     
 
+    # TODO add match case for products
     def _check_atmospheric_correction_has_run(self, product: str = None, run: bool = True) -> bool:
-        if run:
-            if not self.atmospheric_correction_has_run:
-                self._run_atmospheric_correction(product=product)
-                return True
 
         if self.atmospheric_correction_has_run:
-            return True
+             if product in self.l2a_cube.keys():
+                return True
 
+        if not self.atmospheric_correction_has_run:
+            if run:
+                self._run_atmospheric_correction(product=product)
+                return True
+            
         return False
+    
+
+    def _check_chlorophyll_estimation_has_run(self, product: str = None, run: bool = True) -> bool:
+
+        if self.chlorophyll_estimation_has_run:
+             if product in self.chl.keys():
+                return True
+
+        if not self.chlorophyll_estimation_has_run:
+            if run:
+                self._run_chlorophyll_estimation(product=product)
+                return True
+            
+        return False
+
     
     def _check_l1a_file_format(self) -> None:
 
@@ -1358,6 +1380,170 @@ class Hypso1(Hypso):
         print('Bands: ' + str(self.dimensions['bands']))
 
         return None
+
+    def get_l1a_cube(self) -> np.ndarray:
+
+        return self.l1a_cube
+
+    def generate_l1b_cube(self) -> None:
+
+        self._check_calibration_has_run()
+
+        return None
+
+    def get_l1b_cube(self) -> np.ndarray:
+
+        if not self._check_calibration_has_run(run=False):
+            print("[WARNING] L1b cube has not yet been generated.")
+            return None
+
+        return self.l1b_cube
+
+    def generate_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = "6sv1") -> None:
+
+        self._check_atmospheric_correction_has_run(product=product)
+
+        return None
+
+    def get_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = "6sv1") -> np.ndarray:
+
+        #self._check_geometry_computation_has_run()
+
+        if not self._check_atmospheric_correction_has_run(run=False, product=product):
+            print("[WARNING] " + product.upper() + " L2a cube has not yet been generated.")
+            return None
+
+        if product is not None:    
+            product = product.lower()
+
+        return self.l2a_cube[product]
+    
+    def generate_land_mask(self):
+
+        pass
+
+    def get_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global") -> np.ndarray:
+
+        if land_mask not in self.land_masks.keys():
+            self._run_land_mask(product=land_mask)
+
+            if land_mask not in self.land_masks.keys():
+                return None
+
+        return self.land_masks[land_mask]
+
+    def get_land_mask_dict(self) -> dict:
+
+
+        return self.land_masks     
+    
+    def generate_cloud_mask(self):
+
+        pass
+
+    def get_cloud_mask(self, cloud_mask: str = None) -> np.ndarray:
+
+        if cloud_mask not in self.cloud_masks.keys():
+            self._run_cloud_mask(cloud_mask=cloud_mask)
+
+            if cloud_mask not in self.cloud_masks.keys():
+                return None
+
+        return self.cloud_masks[cloud_mask]
+    
+    def get_cloud_mask_dict(self) -> dict:
+
+        return self.cloud_masks 
+
+
+    def generate_chlorophyll_estimates(self):
+
+        pass
+
+    def get_chlorophyll_estimates(self, 
+                                 product:  Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',
+                                 model=None
+                                 ) -> np.ndarray:
+
+        self._run_chlorophyll_estimation(product=product)
+
+        key = 'chl_' + product
+
+        return self.chl[key]
+
+    def get_chlorophyll_estimates_dict(self) -> dict:
+
+        return self.chl
+
+
+    def generate_product(self):
+
+        pass
+
+    def get_product(self):
+
+        pass
+
+    def get_products(self) -> dict:
+
+        return self.products
+
+    # TODO
+    def get_toa_reflectance(self) -> np.ndarray:
+        """
+        Convert Top Of Atmosphere (TOA) Radiance to TOA Reflectance.
+
+        :return: Array with TOA Reflectance.
+        """
+        # Get Local variables
+        srf = self.srf
+        toa_radiance = self.l1b_cube
+
+        scene_date = parser.isoparse(self.info['iso_time'])
+        julian_day = scene_date.timetuple().tm_yday
+        solar_zenith = self.info['solar_zenith_angle']
+
+        # Read Solar Data
+        solar_data_path = str(files('hypso.atmospheric').joinpath("Solar_irradiance_Thuillier_2002.csv"))
+        solar_df = pd.read_csv(solar_data_path)
+
+        # Create new solar X with a new delta
+        solar_array = np.array(solar_df)
+        current_num = solar_array[0, 0]
+        delta = 0.01
+        new_solar_x = [solar_array[0, 0]]
+        while current_num <= solar_array[-1, 0]:
+            current_num = current_num + delta
+            new_solar_x.append(current_num)
+
+        # Interpolate for Y with original solar data
+        new_solar_y = np.interp(new_solar_x, solar_array[:, 0], solar_array[:, 1])
+
+        # Replace solar Dataframe
+        solar_df = pd.DataFrame(np.column_stack((new_solar_x, new_solar_y)), columns=solar_df.columns)
+
+        # Estimation of TOA Reflectance
+        band_number = 0
+        toa_reflectance = np.empty_like(toa_radiance)
+        for single_wl, single_srf in srf:
+            # Resample HYPSO SRF to new solar wavelength
+            resamp_srf = np.interp(new_solar_x, single_wl, single_srf)
+            weights_srf = resamp_srf / np.sum(resamp_srf)
+            ESUN = np.sum(solar_df['mW/m2/nm'].values * weights_srf)  # units matche HYPSO from device.py
+
+            # Earth-Sun distance (from day of year) using julian date
+            # http://physics.stackexchange.com/questions/177949/earth-sun-distance-on-a-given-day-of-the-year
+            distance_sun = 1 - 0.01672 * np.cos(0.9856 * (
+                    julian_day - 4))
+
+            # Get toa_reflectance
+            solar_angle_correction = np.cos(np.radians(solar_zenith))
+            multiplier = (ESUN * solar_angle_correction) / (np.pi * distance_sun ** 2)
+            toa_reflectance[:, :, band_number] = toa_radiance[:, :, band_number] / multiplier
+
+            band_number = band_number + 1
+
+        return toa_reflectance
 
     # TODO
     def get_spectra(self, position_dict: dict, product: Literal["L1C", "L2-6SV1", "L2-ACOLITE"] = "L1C",
@@ -1520,162 +1706,6 @@ class Hypso1(Hypso):
 
         return df_band
 
-    def get_l1a_cube(self) -> np.ndarray:
-
-        return self.l1a_cube
-
-    def generate_l1b_cube(self):
-
-        pass
-
-    def get_l1b_cube(self) -> np.ndarray:
-
-        self._check_calibration_has_run()
-
-        return self.l1b_cube
-
-    def generate_l2a_cube(self):
-
-        pass
-
-    def get_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = "6sv1") -> dict:
-
-        #self._check_geometry_computation_has_run()
-
-        if not self._check_atmospheric_correction_has_run(run=False):
-            self._run_atmospheric_correction(product=product)
-
-        if product is not None:    
-            product = product.lower()
-
-        return self.l2a_cube[product]
-    
-    def generate_land_mask(self):
-
-        pass
-
-    def get_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global") -> np.ndarray:
-
-        if land_mask not in self.land_masks.keys():
-            self._run_land_mask(product=land_mask)
-
-            if land_mask not in self.land_masks.keys():
-                return None
-
-        return self.land_masks[land_mask]
-
-    def get_land_mask_dict(self) -> dict:
-
-
-        return self.land_masks     
-    
-    def generate_cloud_mask(self):
-
-        pass
-
-    def get_cloud_mask(self, cloud_mask: str = None) -> np.ndarray:
-
-        if cloud_mask not in self.cloud_masks.keys():
-            self._run_cloud_mask(cloud_mask=cloud_mask)
-
-            if cloud_mask not in self.cloud_masks.keys():
-                return None
-
-        return self.cloud_masks[cloud_mask]
-    
-    def get_cloud_mask_dict(self) -> dict:
-
-        return self.cloud_masks 
-
-
-    def generate_chlorophyll_estimates(self):
-
-        pass
-
-    def get_chlorophyll_estimates(self, 
-                                 product:  Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',
-                                 model=None
-                                 ) -> np.ndarray:
-
-        self._run_chlorophyll_estimation(product=product)
-
-        key = 'chl_' + product
-
-        return self.chl[key]
-
-    def get_chlorophyll_estimates_dict(self) -> dict:
-
-        return self.chl
-
-
-    def generate_product(self):
-
-        pass
-
-    def get_product(self):
-
-        pass
-
-    def get_products(self) -> dict:
-
-        return self.products
-
-    # TODO
-    def get_toa_reflectance(self) -> np.ndarray:
-        """
-        Convert Top Of Atmosphere (TOA) Radiance to TOA Reflectance.
-
-        :return: Array with TOA Reflectance.
-        """
-        # Get Local variables
-        srf = self.srf
-        toa_radiance = self.l1b_cube
-
-        scene_date = parser.isoparse(self.info['iso_time'])
-        julian_day = scene_date.timetuple().tm_yday
-        solar_zenith = self.info['solar_zenith_angle']
-
-        # Read Solar Data
-        solar_data_path = str(files('hypso.atmospheric').joinpath("Solar_irradiance_Thuillier_2002.csv"))
-        solar_df = pd.read_csv(solar_data_path)
-
-        # Create new solar X with a new delta
-        solar_array = np.array(solar_df)
-        current_num = solar_array[0, 0]
-        delta = 0.01
-        new_solar_x = [solar_array[0, 0]]
-        while current_num <= solar_array[-1, 0]:
-            current_num = current_num + delta
-            new_solar_x.append(current_num)
-
-        # Interpolate for Y with original solar data
-        new_solar_y = np.interp(new_solar_x, solar_array[:, 0], solar_array[:, 1])
-
-        # Replace solar Dataframe
-        solar_df = pd.DataFrame(np.column_stack((new_solar_x, new_solar_y)), columns=solar_df.columns)
-
-        # Estimation of TOA Reflectance
-        band_number = 0
-        toa_reflectance = np.empty_like(toa_radiance)
-        for single_wl, single_srf in srf:
-            # Resample HYPSO SRF to new solar wavelength
-            resamp_srf = np.interp(new_solar_x, single_wl, single_srf)
-            weights_srf = resamp_srf / np.sum(resamp_srf)
-            ESUN = np.sum(solar_df['mW/m2/nm'].values * weights_srf)  # units matche HYPSO from device.py
-
-            # Earth-Sun distance (from day of year) using julian date
-            # http://physics.stackexchange.com/questions/177949/earth-sun-distance-on-a-given-day-of-the-year
-            distance_sun = 1 - 0.01672 * np.cos(0.9856 * (
-                    julian_day - 4))
-
-            # Get toa_reflectance
-            solar_angle_correction = np.cos(np.radians(solar_zenith))
-            multiplier = (ESUN * solar_angle_correction) / (np.pi * distance_sun ** 2)
-            toa_reflectance[:, :, band_number] = toa_radiance[:, :, band_number] / multiplier
-
-            band_number = band_number + 1
-
-        return toa_reflectance
 
     def write_l1b_nc_file(self) -> None:
 
