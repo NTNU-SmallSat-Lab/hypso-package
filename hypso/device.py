@@ -784,6 +784,17 @@ class Hypso1(Hypso):
 
         return None
 
+    def _run_georeferencing_guard(self) -> None:
+
+        if self.georeferencing_has_run is False:
+
+            if self.verbose:
+                    print("[INFO] Georeferencing has not been run yet. Running now...")
+
+            self._run_georeferencing()
+
+        return None
+
     def _run_georeferencing(self) -> None:
 
         # Compute latitude and longitudes arrays if a points file is available
@@ -976,6 +987,19 @@ class Hypso1(Hypso):
 
         return None
 
+
+    # TODO
+    def _run_atmospheric_correction_guard(self, product: str) -> None:
+
+        if self.atmospheric_correction_has_run is False:
+
+            if self.verbose:
+                    print("[INFO] Atmospheric correction has not been run yet. Running now...")
+
+            self._run_atmospheric_correction(product=product)
+
+        return None
+
     def _run_atmospheric_correction(self, product: str) -> None:
 
         if self.l2a_cube is None:
@@ -1146,7 +1170,7 @@ class Hypso1(Hypso):
 
     def _run_global_land_mask(self) -> np.ndarray:
 
-        self._check_georeferencing_has_run(run_on_false=True)
+        self._run_georeferencing_guard()
 
         land_mask = run_global_land_mask(spatial_dimensions=self.spatial_dimensions,
                                         latitudes=self.latitudes,
@@ -1311,6 +1335,7 @@ class Hypso1(Hypso):
         return cube
 
 
+    '''
     # TODO refactor
     def _check_georeferencing_has_run(self, run_on_false: bool = True) -> bool:
         if run_on_false:
@@ -1326,7 +1351,8 @@ class Hypso1(Hypso):
             return True
 
         return False
-    
+    '''
+        
     '''
     # TODO refactor
     def _check_calibration_has_run(self, run_on_false: bool = True) -> bool:
@@ -1380,6 +1406,7 @@ class Hypso1(Hypso):
         return False     
 
     # TODO refactor
+    '''
     def _check_atmospheric_correction_has_run(self, product: str = None, run_on_false: bool = True) -> bool:
 
         if self.atmospheric_correction_has_run:
@@ -1402,7 +1429,8 @@ class Hypso1(Hypso):
                 return True
             
         return False
-    
+    '''
+        
     # TODO refactor
     def _check_land_mask_has_run(self, land_mask: str = None, run_on_false: bool = True) -> bool:
 
@@ -1549,20 +1577,23 @@ class Hypso1(Hypso):
 
     def generate_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = "6sv1") -> None:
 
-        self._check_atmospheric_correction_has_run(product=product)
+        self._run_atmospheric_correction_guard(product=product)
 
         return None
 
+    # TODO
     def get_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = "6sv1") -> np.ndarray:
 
-        if not self._check_atmospheric_correction_has_run(run_on_false=False, product=product):
-            print("[WARNING] " + product.upper() + " L2a cube has not yet been generated.")
-            return None
+        #if not self._check_atmospheric_correction_has_run(run_on_false=False, product=product):
+        #    print("[WARNING] " + product.upper() + " L2a cube has not yet been generated.")
+        #    return None
 
-        if product is not None:    
-            product = product.lower()
+        #if product is not None:    
+        #    product = product.lower()
 
-        return self.l2a_cube[product]
+        #return self.l2a_cube[product]
+
+        return None
     
     def generate_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global") -> None:
 
