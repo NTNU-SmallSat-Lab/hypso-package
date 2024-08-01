@@ -758,35 +758,11 @@ class Hypso1(Hypso):
 
     # Runners
 
-    def _run_calibration_guard(self) -> None:
 
-        if self.calibration_has_run is False:
 
-            if self.verbose:
-                    print("[INFO] Calibration has not been run yet. Running now...")
+    def _run_georeferencing_wrapper(self) -> None:
 
-            self._run_calibration()
-
-        return None
-
-    def _run_calibration(self) -> None:
-
-        if self.verbose:
-            print('[INFO] Running calibration routines...')
-
-        self._set_calibration_coeff_files()
-        self._set_calibration_coeffs()
-        self._set_wavelengths()
-        self._set_srf()
-        self._generate_l1b_cube()
-
-        self.calibration_has_run = True
-
-        return None
-
-    def _run_georeferencing_guard(self) -> None:
-
-        if self.georeferencing_has_run is False:
+        if self._check_georeferencing_has_run() is False:
 
             if self.verbose:
                     print("[INFO] Georeferencing has not been run yet. Running now...")
@@ -860,6 +836,40 @@ class Hypso1(Hypso):
 
         return None
 
+
+
+
+    '''
+    def _run_calibration_wrapper(self) -> None:
+
+        if self._check_calibration_has_run() is False:
+
+            if self.verbose:
+                    print("[INFO] Calibration has not been run yet. Running now...")
+
+            self._run_calibration()
+
+        return None
+    '''
+        
+    def _run_calibration(self, overwrite: bool = False) -> None:
+
+        if self._check_calibration_has_run() and not overwrite:
+            return None
+
+        if self.verbose:
+            print('[INFO] Running calibration routines...')
+
+        self._set_calibration_coeff_files()
+        self._set_calibration_coeffs()
+        self._set_wavelengths()
+        self._set_srf()
+        self._generate_l1b_cube()
+
+        self.calibration_has_run = True
+
+        return None
+
     def _run_radiometric_calibration(self, cube: np.ndarray = None) -> np.ndarray:
 
         # Radiometric calibration
@@ -926,9 +936,12 @@ class Hypso1(Hypso):
 
         return cube
 
-    def _run_geometry_computation_guard(self) -> None:
 
-        if self.geometry_computation_has_run is False:
+
+    '''
+    def _run_geometry_computation_wrapper(self) -> None:
+
+        if self._check_geometry_has_run() is False:
 
             if self.verbose:
                     print("[INFO] Geometry computations have not been run yet. Running now...")
@@ -936,10 +949,15 @@ class Hypso1(Hypso):
             self._run_geometry_computation()
 
         return None
+    '''
 
-    def _run_geometry_computation(self) -> None:
+    def _run_geometry_computation(self, overwrite: bool = False) -> None:
 
-        print("[INFO] Running frame interpolation...")
+        if self._check_geometry_has_run() and not overwrite:
+            return None
+
+        if self.verbose:
+            print("[INFO] Running frame interpolation...")
 
         framepose_data = interpolate_at_frame(adcs_pos_df=self.adcs_pos_df,
                                               adcs_quat_df=self.adcs_quat_df,
@@ -950,7 +968,8 @@ class Hypso1(Hypso):
                                               verbose=self.verbose
                                               )
 
-        print("[INFO] Running geometry computation...")
+        if self.verbose:
+            print("[INFO] Running geometry computation...")
 
         wkt_linestring_footprint, \
            prj_file_contents, \
@@ -988,19 +1007,27 @@ class Hypso1(Hypso):
         return None
 
 
-    # TODO
-    def _run_atmospheric_correction_guard(self, product: str) -> None:
 
-        if self.atmospheric_correction_has_run is False:
+
+    '''
+
+    def _run_atmospheric_correction_wrapper(self, product: str) -> None:
+
+        if self._check_atmospheric_correction_has_run(product=product) is False:
 
             if self.verbose:
-                    print("[INFO] Atmospheric correction has not been run yet. Running now...")
+                    print("[INFO] " + product + " atmospheric correction has not been run yet. Running now...")
 
             self._run_atmospheric_correction(product=product)
 
         return None
 
-    def _run_atmospheric_correction(self, product: str) -> None:
+    '''
+
+    def _run_atmospheric_correction(self, product: str, overwrite: bool = False) -> None:
+
+        if self._check_atmospheric_correction_has_run(product=product) and not overwrite:
+            return None
 
         if self.l2a_cube is None:
             self.l2a_cube = {}
@@ -1043,8 +1070,8 @@ class Hypso1(Hypso):
         # }
         # AOT550 parameter gotten from: https://giovanni.gsfc.nasa.gov/giovanni/
 
-        self._run_calibration_guard()
-        self._run_geometry_computation_guard()
+        self._run_calibration()
+        self._run_geometry_computation()
 
         # TODO: which values should we use?
         if self.latitudes is None:
@@ -1080,11 +1107,8 @@ class Hypso1(Hypso):
 
     def _run_acolite_atmospheric_correction(self) -> None:
 
-        # TODO
-        print("[WARNING] ACOLITE atmospheric correction has not been enabled.")
-
-        self._run_calibration_guard()
-        self._run_geometry_computation_guard()
+        self._run_calibration()
+        self._run_geometry_computation()
         self._check_write_l1b_nc_file_has_run(run_on_false=True)
 
         # user and password from https://urs.earthdata.nasa.gov/profile
@@ -1110,14 +1134,34 @@ class Hypso1(Hypso):
 
         return None
 
-        self._run_calibration_guard()
-        self._run_geometry_computation_guard()
+        self._run_calibration()
+        self._run_geometry_computation()
 
         return None
 
         #T, A, objs = run_machi(cube=self.l1b_cube, verbose=self.verbose)
 
-    def _run_land_mask(self, land_mask: str) -> None:
+
+
+
+    '''
+    def _run_land_mask_wrapper(self, land_mask: str) -> None:
+
+        if self._check_land_mask_has_run(land_mask=land_mask) is False:
+
+            if self.verbose:
+                    print("[INFO] " + land_mask + " land mask has not been run yet. Running now...")
+
+            self._run_land_mask(land_mask=land_mask)
+
+        return None
+
+    '''
+
+    def _run_land_mask(self, land_mask: str, overwrite: bool = False) -> None:
+
+        if self._check_land_mask_has_run(land_mask=land_mask) and not overwrite:
+            return None
 
         if self.land_masks is None:
             self.land_masks = {}
@@ -1170,7 +1214,7 @@ class Hypso1(Hypso):
 
     def _run_global_land_mask(self) -> np.ndarray:
 
-        self._run_georeferencing_guard()
+        self._run_georeferencing_wrapper()
 
         land_mask = run_global_land_mask(spatial_dimensions=self.spatial_dimensions,
                                         latitudes=self.latitudes,
@@ -1181,7 +1225,7 @@ class Hypso1(Hypso):
 
     def _run_ndwi_land_mask(self) -> np.ndarray:
 
-        self._run_calibration_guard()
+        self._run_calibration_wrapper()
 
         land_mask = run_ndwi_land_mask(cube=self.l1b_cube, 
                                        wavelengths=self.wavelengths,
@@ -1191,7 +1235,7 @@ class Hypso1(Hypso):
     
     def _run_threshold_land_mask(self) -> np.ndarray:
 
-        self._run_calibration_guard()
+        self._run_calibration_wrapper()
 
         land_mask = run_threshold_land_mask(cube=self.l1b_cube,
                                             wavelengths=self.wavelengths,
@@ -1199,7 +1243,15 @@ class Hypso1(Hypso):
     
         return land_mask
 
-    def _run_cloud_mask(self, cloud_mask: str='default') -> None:
+
+
+
+
+
+    def _run_cloud_mask(self, cloud_mask: str='default', overwrite: bool = False) -> None:
+
+        if self._check_cloud_mask_has_run(cloud_mask=cloud_mask) and not overwrite:
+            return None
 
         if self.cloud_masks is None:
             self.cloud_masks = {}
@@ -1277,7 +1329,7 @@ class Hypso1(Hypso):
                                                factor: float = 0.1, 
                                                threshold: float = 0.88) -> None:
 
-        self._run_calibration_guard()
+        self._run_calibration_wrapper()
 
         numerator_wavelength = 549
         denominator_wavelength = 663
@@ -1335,6 +1387,12 @@ class Hypso1(Hypso):
         return cube
 
 
+
+
+    def _check_georeferencing_has_run(self) -> bool:
+
+        return self.georeferencing_has_run
+    
     '''
     # TODO refactor
     def _check_georeferencing_has_run(self, run_on_false: bool = True) -> bool:
@@ -1353,6 +1411,11 @@ class Hypso1(Hypso):
         return False
     '''
         
+
+    def _check_calibration_has_run(self) -> bool:
+
+        return self.calibration_has_run
+
     '''
     # TODO refactor
     def _check_calibration_has_run(self, run_on_false: bool = True) -> bool:
@@ -1371,6 +1434,10 @@ class Hypso1(Hypso):
         return False
     '''
     
+    def _check_geometry_has_run(self) -> bool:
+
+        return self.geometry_computation_has_run
+
     '''
     # TODO refactor
     def _check_geometry_computation_has_run(self, run_on_false: bool = True) -> bool:
@@ -1405,6 +1472,26 @@ class Hypso1(Hypso):
 
         return False     
 
+
+
+
+    def _check_atmospheric_correction_has_run(self, product: str = None) -> bool:
+
+        if self.atmospheric_correction_has_run:
+
+            if product is None:
+                return True
+            
+            elif product.lower() in self.l2a_cube.keys():
+                return True
+            
+            else:
+                return False
+
+        return False
+
+
+
     # TODO refactor
     '''
     def _check_atmospheric_correction_has_run(self, product: str = None, run_on_false: bool = True) -> bool:
@@ -1431,6 +1518,27 @@ class Hypso1(Hypso):
         return False
     '''
         
+
+
+    def _check_land_mask_has_run(self, land_mask: str = None) -> bool:
+
+        if self.land_mask_has_run:
+
+            if land_mask is None:
+                return True
+            
+            elif land_mask.lower() in self.land_masks.keys():
+                return True
+            
+            else:
+                return False
+
+        return False
+
+
+
+
+    '''
     # TODO refactor
     def _check_land_mask_has_run(self, land_mask: str = None, run_on_false: bool = True) -> bool:
 
@@ -1454,30 +1562,26 @@ class Hypso1(Hypso):
                 return True
 
         return False
-
-    # TODO refactor
-    def _check_cloud_mask_has_run(self, cloud_mask: str = None, run_on_false: bool = True) -> bool:
+    '''
+        
+    def _check_cloud_mask_has_run(self, cloud_mask: str = None) -> bool:
 
         if self.cloud_mask_has_run:
-             
+
             if cloud_mask is None:
                 return True
             
-            cloud_mask = cloud_mask.lower()
-
-            if cloud_mask in self.cloud_masks.keys():
-                return True
-            else: 
-                if self.verbose:
-                    print("[ERROR] " + cloud_mask.upper() + " cloud mask has not yet been generated.")
-                return False
-                 
-        if not self.cloud_mask_has_run:
-            if run_on_false:
-                self._run_cloud_mask(cloud_mask=cloud_mask)
+            elif cloud_mask.lower() in self.land_masks.keys():
                 return True
             
+            else:
+                return False
+
         return False
+
+
+
+
 
     # TODO refactor
     def _check_chlorophyll_estimation_has_run(self, product: str = None, run_on_false: bool = True) -> bool:
@@ -1563,59 +1667,66 @@ class Hypso1(Hypso):
 
     def generate_l1b_cube(self) -> None:
 
-        self._run_calibration_guard()
+        self._run_calibration()
 
         return None
 
     def get_l1b_cube(self) -> np.ndarray:
 
-        if self.calibration_has_run is False:
-            print("[WARNING] L1b cube has not yet been generated.")
-            return None
+        if self._check_calibration_has_run():
 
-        return self.l1b_cube
+            return self.l1b_cube
+
+        if self.verbose:
+            print("[ERROR] L1b cube has not yet been generated.")
+
+        return None
 
     def generate_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = "6sv1") -> None:
 
-        self._run_atmospheric_correction_guard(product=product)
+        self._run_atmospheric_correction(product=product)
 
         return None
 
-    # TODO
+
     def get_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = "6sv1") -> np.ndarray:
 
-        #if not self._check_atmospheric_correction_has_run(run_on_false=False, product=product):
-        #    print("[WARNING] " + product.upper() + " L2a cube has not yet been generated.")
-        #    return None
+        if product and self._check_atmospheric_correction_has_run(product=product):
 
-        #if product is not None:    
-        #    product = product.lower()
-
-        #return self.l2a_cube[product]
+            return self.l2a_cube[product.lower()]
+        
+        if self.verbose:
+            print("[ERROR] " + product.upper() + " L2a cube has not yet been generated.")
 
         return None
+
+
     
     def generate_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global") -> None:
 
-        self._check_land_mask_has_run(land_mask=land_mask)
+        self._run_land_mask(land_mask=land_mask)
 
         return None
 
+
+
     def get_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global") -> np.ndarray:
 
-        if self._check_land_mask_has_run(run_on_false=False, land_mask=land_mask):
+        if land_mask and self._check_land_mask_has_run(land_mask=land_mask):
 
-            if land_mask is not None:    
-                land_mask = land_mask.lower()
-
-            return self.land_masks[land_mask]
+            return self.land_masks[land_mask.lower()]
         
+        if self.verbose:
+            print("[ERROR] " + land_mask + " land mask has not yet been generated.")
+
         return None
 
     def get_land_mask_dict(self) -> dict:
 
         return self.land_masks     
     
+
+
     def set_active_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global"):
 
         self._update_active_land_mask(self, land_mask=land_mask, override=True)
@@ -1624,23 +1735,26 @@ class Hypso1(Hypso):
 
         return self.land_mask
 
-    # TODO
-    def generate_cloud_mask(self):
 
-        pass
 
+
+
+    def generate_cloud_mask(self, cloud_mask: Literal["default"] = "default"):
+
+        self._run_cloud_mask(cloud_mask=cloud_mask)
+
+        return None
 
     def get_cloud_mask(self, cloud_mask: str = None) -> np.ndarray:
 
-        if self._check_cloud_mask_has_run(run_on_false=False, cloud_mask=cloud_mask):
+        if cloud_mask and self._check_cloud_mask_has_run(cloud_mask=cloud_mask):
 
-            if cloud_mask is not None:    
-                cloud_mask = cloud_mask.lower()
-
-            return self.cloud_masks[cloud_mask]
+            return self.cloud_masks[cloud_mask.lower()]
+        
+        if self.verbose:
+            print("[ERROR] " + cloud_mask + " cloud mask has not yet been generated.")
         
         return None
-
     
     def get_cloud_mask_dict(self) -> dict:
 
@@ -1653,6 +1767,14 @@ class Hypso1(Hypso):
     def get_active_cloud_mask(self) -> np.ndarray:
 
         return self.cloud_mask
+
+
+
+
+
+
+
+
 
     def generate_chlorophyll_estimates(self, 
                                        product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',
