@@ -543,6 +543,22 @@ class Hypso1(Hypso):
 
         return None
 
+    def _check_l1a_file_format(self) -> None:
+
+        # Check that hypso_path file is a NetCDF file:
+        #if not self.hypso_path.suffix == '.nc':
+        #    raise Exception("Incorrect HYPSO Path. Only .nc files supported")
+
+        match self.hypso_path.suffix:
+            case '.nc':
+                return None
+            case '.bip':
+                raise Exception("Incorrect HYPSO Path. Only .nc files supported")
+            case _:
+                raise Exception("Incorrect HYPSO Path. Only .nc files supported")
+    
+        return None
+
     def _load_l1a_cube(self) -> None:
 
         self._load_l1a_nc_cube()
@@ -1426,10 +1442,21 @@ class Hypso1(Hypso):
         return False
 
 
+    # L1a file output
+
+    # TODO
+    def _write_l1a_nc_file(self, path: str = None, overwrite: bool = False) -> None:
+
+        return None
+
+    # TODO
+    def _check_write_l1a_nc_file_has_run(self) -> bool:
+        return False
+
     # L1b file output
 
     # TODO: refactor
-    def _write_l1b_nc_file(self) -> None:
+    def _write_l1b_nc_file(self, path: str = None, overwrite: bool = False) -> None:
         """
         Create a l1b.nc file using the radiometrically corrected data. Same structure from the original l1a.nc file
         is used. Required to run ACOLITE as the input is a radiometrically corrected .nc file.
@@ -1437,20 +1464,29 @@ class Hypso1(Hypso):
         :return: Nothing.
         """
 
+        #hypso_nc_path = self.l1a_nc_file
+        #old_nc = nc.Dataset(hypso_nc_path, 'r', format='NETCDF4')
 
-        hypso_nc_path = self.l1a_nc_file
-        old_nc = nc.Dataset(hypso_nc_path, 'r', format='NETCDF4')
+        #new_path = hypso_nc_path
+        #new_path = str(new_path).replace('l1a.nc', 'l1b.nc')
 
-        new_path = hypso_nc_path
-        new_path = str(new_path).replace('l1a.nc', 'l1b.nc')
+        #if Path(new_path).is_file():
+        #    print("L1b.nc file already exists. Not creating it.")
+        #    self.l1b_nc_file = Path(new_path)
+        #    return
 
-        if Path(new_path).is_file():
-            print("L1b.nc file already exists. Not creating it.")
-            self.l1b_nc_file = Path(new_path)
-            return
+        if self._check_write_l1b_nc_file_has_run() and not overwrite:
+
+            if self.verbose:
+                    print("[INFO] L1b NetCDF file has already been generated. Skipping.")
+
+            return None
+
+        # Open L1a file
+        old_nc = nc.Dataset(self.l1a_nc_file, 'r', format='NETCDF4')
 
         # Create a new NetCDF file
-        with (nc.Dataset(new_path, 'w', format='NETCDF4') as netfile):
+        with (nc.Dataset(self.l1b_nc_file, 'w', format='NETCDF4') as netfile):
             bands = self.image_width
             lines = self.capture_config["frame_count"]  # AKA Frames AKA Rows
             samples = self.image_height  # AKA Cols
@@ -1915,30 +1951,33 @@ class Hypso1(Hypso):
         old_nc.close()
 
         # Update
-        self.l1b_nc_file = Path(new_path)
+        #self.l1b_nc_file = Path(new_path)
 
         self.write_l1b_nc_file_has_run = True
 
         return None
 
-    # TODO refactor
     def _check_write_l1b_nc_file_has_run(self) -> bool:
 
-        hypso_nc_path = self.l1a_nc_file
-        old_nc = nc.Dataset(hypso_nc_path, 'r', format='NETCDF4')
+        l1b_nc_file_exists = Path(self.l1b_nc_file).is_file()
 
-        new_path = hypso_nc_path
-        new_path = str(new_path).replace('l1a.nc', 'l1b.nc')
-
-        if Path(new_path).is_file():
-            print("L1b.nc file already exists. Not creating it.")
-            self.l1b_nc_file = Path(new_path)
-            return
+        if self.write_l1b_nc_file_has_run and l1b_nc_file_exists:
+            return True
+        
+        return False
 
 
+    # L2a file output
 
-        return self.write_l1b_nc_file_has_run
- 
+    # TODO
+    def _write_l2a_nc_file(self, path: str = None, product: str = None, overwrite: bool = False) -> None:
+
+        return None
+
+    # TODO
+    def _check_write_l2a_nc_file_has_run(self, product: str = None) -> bool:
+        return False
+
 
     # Other functions
 
@@ -1954,22 +1993,6 @@ class Hypso1(Hypso):
                 return cube
 
         return cube
-
-    def _check_l1a_file_format(self) -> None:
-
-        # Check that hypso_path file is a NetCDF file:
-        #if not self.hypso_path.suffix == '.nc':
-        #    raise Exception("Incorrect HYPSO Path. Only .nc files supported")
-
-        match self.hypso_path.suffix:
-            case '.nc':
-                return None
-            case '.bip':
-                raise Exception("Incorrect HYPSO Path. Only .nc files supported")
-            case _:
-                raise Exception("Incorrect HYPSO Path. Only .nc files supported")
-    
-        return None
 
     # TODO: use active land and cloud masks
     def _get_unified_mask(self, 
@@ -2357,13 +2380,26 @@ class Hypso1(Hypso):
 
         return df_band
 
-    def write_l1b_nc_file(self) -> None:
+    # TODO
+    def write_l1a_nc_file(self, path: str = None) -> None:
 
-        self._write_l1b_nc_file()
+        self._write_l1a_nc_file(path=path)
 
         return None
 
+    # TODO: path override
+    def write_l1b_nc_file(self, path: str = None) -> None:
 
+        self._write_l1b_nc_file(path=path)
+
+        return None
+
+    # TODO
+    def write_l2a_nc_file(self, path: str = None, product: str = None) -> None:
+
+        self._write_l1b_nc_file(path=path, product=product)
+
+        return None
 
 class Hypso2(Hypso):
 
