@@ -493,7 +493,7 @@ class Hypso1(Hypso):
 
         return None
 
-    def _set_time_info(self) -> None:
+    def _set_timestamps(self) -> None:
 
         self.start_timestamp_capture = int(self.timing['capture_start_unix']) + UNIX_TIME_OFFSET
 
@@ -538,8 +538,9 @@ class Hypso1(Hypso):
         self._set_background_value()
         self._set_exposure()
         self._set_aoi()
-        self._set_capture_type()
         self._set_dimensions()
+        self._set_timestamps()
+        self._set_capture_type()
         self._set_adcs_dataframes()
         self._set_target_area()
 
@@ -617,12 +618,8 @@ class Hypso1(Hypso):
             
             self._run_georeferencing_orientation()
 
-            # TODO remove lat and lon in info dict
-            self.lat = self.latitudes
-            self.lon = self.longitudes
-
-            self.lat_original = self.latitudes
-            self.lon_original = self.longitudes
+            self.latitudes_original = self.latitudes
+            self.longitudes_original = self.longitudes
 
 
         else:
@@ -806,12 +803,16 @@ class Hypso1(Hypso):
             return None
 
         match self.capture_type:
+
             case "custom":
-                csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1.csv"    
+                csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1.csv"
+
             case "nominal":
                 csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_nominal_v1.csv"
+
             case "wide":
                 csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_wide_v1.csv"
+
             case _:
                 csv_file_radiometric = None
 
@@ -839,12 +840,16 @@ class Hypso1(Hypso):
             return None
 
         match self.capture_type:
+
             case "custom":
-                csv_file_smile = "spectral_calibration_matrix_HYPSO-1_full_v1.csv"    
+                csv_file_smile = "spectral_calibration_matrix_HYPSO-1_full_v1.csv"   
+
             case "nominal":
                 csv_file_smile = "smile_correction_matrix_HYPSO-1_nominal_v1.csv"
+
             case "wide":
                 csv_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.csv"
+
             case _:
                 csv_file_smile = None
 
@@ -872,12 +877,16 @@ class Hypso1(Hypso):
             return None
 
         match self.capture_type:
+
             case "custom":
                 csv_file_destriping = None
+
             case "nominal":
                 csv_file_destriping = "destriping_matrix_HYPSO-1_nominal_v1.csv"
+
             case "wide":
                 csv_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.csv"
+
             case _:
                 csv_file_destriping = None
 
