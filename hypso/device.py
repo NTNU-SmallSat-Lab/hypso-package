@@ -2158,7 +2158,7 @@ class Hypso1(Hypso):
 
         pass
 
-    def get_products(self) -> dict:
+    def get_product_dict(self) -> dict:
 
         return self.products
 
