@@ -364,9 +364,6 @@ class Hypso1(Hypso):
 
         return None
 
-
-
-
     def _set_wavelengths(self) -> None:
 
         if self.spectral_coeffs is not None:
@@ -418,11 +415,6 @@ class Hypso1(Hypso):
         self.adcs_quat_df = quat_df
 
         return None
-
-
-
-
-# Info metadata
 
     def _set_nc_files(self) -> None:
 
@@ -523,7 +515,8 @@ class Hypso1(Hypso):
 
         return None
 
-    # Loading L1b
+
+    # Loading L1a
 
     def _load_l1a_file(self) -> None:
 
