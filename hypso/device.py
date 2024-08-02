@@ -90,8 +90,6 @@ class Hypso:
         self.capture_config = {}
         self.timing = {}
         self.adcs = {}
-        #self.target_coords = {}
-        #self.dimensions = {}
 
         # Initialize timing info
         self.capture_datetime = None
@@ -171,13 +169,15 @@ class Hypso:
 
 
         # Initilize land mask dict
-        self.land_mask = None
         self.land_masks = {}
-
+        self.active_land_mask = None
+        self.active_land_mask_name = None
+        
 
         # Initilize cloud mask dict
-        self.cloud_mask = None
         self.cloud_masks = {}
+        self.active_cloud_mask = None
+        self.active_cloud_mask_name = None
 
 
         # Initialize products dict
@@ -616,18 +616,14 @@ class Hypso1(Hypso):
 
     # Georeferencing functions
 
-    def _run_georeferencing_wrapper(self) -> None:
+    def _run_georeferencing(self, overwrite: bool = False) -> None:
 
-        if self._check_georeferencing_has_run() is False:
+        if self._check_georeferencing_has_run() and not overwrite:
 
             if self.verbose:
-                    print("[INFO] Georeferencing has not been run yet. Running now...")
+                    print("[INFO] Georeferencing has already been run. Skipping.")
 
-            self._run_georeferencing()
-
-        return None
-
-    def _run_georeferencing(self) -> None:
+            return None
 
         # Compute latitude and longitudes arrays if a points file is available
         if self.points_path is not None:
@@ -1248,7 +1244,7 @@ class Hypso1(Hypso):
                 returned_land_mask = self._run_global_land_mask()
 
                 self.land_masks[key] = returned_land_mask
-                self._update_active_land_mask(land_mask=returned_land_mask, override=False)
+                self._update_active_land_mask(land_mask=key, override=False)
 
             case "ndwi":
 
@@ -1258,7 +1254,7 @@ class Hypso1(Hypso):
                 returned_land_mask = self._run_ndwi_land_mask()
 
                 self.land_masks[key] = returned_land_mask
-                self._update_active_land_mask(land_mask=returned_land_mask, override=False)
+                self._update_active_land_mask(land_mask=key, override=False)
 
             case "threshold":
 
@@ -1268,7 +1264,7 @@ class Hypso1(Hypso):
                 returned_land_mask = self._run_threshold_land_mask()
 
                 self.land_masks[key] = returned_land_mask
-                self._update_active_land_mask(land_mask=returned_land_mask, override=False)
+                self._update_active_land_mask(land_mask=key, override=False)
 
             case _:
 
@@ -1281,7 +1277,7 @@ class Hypso1(Hypso):
 
     def _run_global_land_mask(self) -> np.ndarray:
 
-        self._run_georeferencing_wrapper()
+        self._run_georeferencing()
 
         land_mask = run_global_land_mask(spatial_dimensions=self.spatial_dimensions,
                                         latitudes=self.latitudes,
@@ -1292,7 +1288,7 @@ class Hypso1(Hypso):
 
     def _run_ndwi_land_mask(self) -> np.ndarray:
 
-        self._run_calibration_wrapper()
+        self._run_calibration()
 
         land_mask = run_ndwi_land_mask(cube=self.l1b_cube, 
                                        wavelengths=self.wavelengths,
@@ -1302,7 +1298,7 @@ class Hypso1(Hypso):
     
     def _run_threshold_land_mask(self) -> np.ndarray:
 
-        self._run_calibration_wrapper()
+        self._run_calibration()
 
         land_mask = run_threshold_land_mask(cube=self.l1b_cube,
                                             wavelengths=self.wavelengths,
@@ -1318,8 +1314,9 @@ class Hypso1(Hypso):
         if land_mask.lower() not in self.land_masks.keys():
             return None
 
-        if self.land_mask is None or override:
-            self.land_mask = self.land_masks[land_mask.lower()]
+        if self.active_land_mask is None or override:
+            self.active_land_mask = self.land_masks[land_mask.lower()]
+            self.active_land_mask_name = land_mask.lower()
 
         return None
 
@@ -1365,7 +1362,7 @@ class Hypso1(Hypso):
                 returned_cloud_mask = run_cloud_mask()
 
                 self.cloud_masks[key] = returned_cloud_mask
-                self._update_active_cloud_mask(cloud_mask=returned_cloud_mask, override=False)
+                self._update_active_cloud_mask(cloud_mask=key, override=False)
 
             case _:
                 print("[WARNING] No such cloud mask supported!")
@@ -1383,8 +1380,9 @@ class Hypso1(Hypso):
         if cloud_mask.lower() not in self.cloud_masks.keys():
             return None
 
-        if self.cloud_mask is None or override:
-            self.cloud_mask = self.cloud_masks[cloud_mask.lower()]
+        if self.active_cloud_mask is None or override:
+            self.active_cloud_mask = self.cloud_masks[cloud_mask.lower()]
+            self.active_cloud_mask_name = cloud_mask.lower()
 
         return None
 
@@ -1489,12 +1487,12 @@ class Hypso1(Hypso):
         return chl
 
     # TODO: complete
-    def _run_6sv1_aqua_chlorophyll_estimation(self, model: str = None) -> None:
+    def _run_6sv1_aqua_chlorophyll_estimation(self, model: Path = None) -> None:
 
         pass
 
     # TODO: complete
-    def _run_acolite_aqua_chlorophyll_estimation(self, model: str = None) -> None:
+    def _run_acolite_aqua_chlorophyll_estimation(self, model: Path = None) -> None:
 
         pass
 
@@ -1520,6 +1518,7 @@ class Hypso1(Hypso):
     # TODO
     def _check_write_l1a_nc_file_has_run(self) -> bool:
         return False
+
 
     # L1b file output
 
@@ -2123,6 +2122,10 @@ class Hypso1(Hypso):
 
         return None
 
+    def get_l2a_cube_dict(self) -> dict:
+
+        return self.l2a_cubes
+
     def generate_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global") -> None:
 
         self._run_land_mask(land_mask=land_mask)
@@ -2146,11 +2149,11 @@ class Hypso1(Hypso):
     
     def set_active_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global"):
 
-        self._update_active_land_mask(self, land_mask=land_mask, override=True)
+        self._update_active_land_mask(land_mask=land_mask, override=True)
 
     def get_active_land_mask(self) -> np.ndarray:
 
-        return self.land_mask
+        return self.active_land_mask_name, self.active_land_mask
 
     def generate_cloud_mask(self, cloud_mask: Literal["default"] = "default"):
 
@@ -2158,7 +2161,7 @@ class Hypso1(Hypso):
 
         return None
 
-    def get_cloud_mask(self, cloud_mask: str = None) -> np.ndarray:
+    def get_cloud_mask(self, cloud_mask: Literal["default"] = "default") -> np.ndarray:
 
         if cloud_mask and self._check_cloud_mask_has_run(cloud_mask=cloud_mask):
 
@@ -2177,9 +2180,9 @@ class Hypso1(Hypso):
 
         self._update_active_cloud_mask(self, cloud_mask=cloud_mask, override=True)
 
-    def get_active_cloud_mask(self) -> np.ndarray:
+    def get_active_cloud_mask(self) -> tuple[str, np.ndarray]:
 
-        return self.cloud_mask
+        return self.active_cloud_mask_name, self.active_cloud_mask
 
     def generate_chlorophyll_estimates(self, 
                                        product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',

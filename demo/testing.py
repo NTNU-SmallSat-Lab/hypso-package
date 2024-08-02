@@ -71,20 +71,20 @@ from hypso import Hypso1
 #nc_file = os.path.join(dir_path, 'frohavet_2024-04-19_1014Z-l1a.nc')
 #points_file = os.path.join(dir_path, 'frohavet_2024-04-19_1014Z-bin3.points')
 
-#dir_path = '/home/cameron/Dokumenter/Data/frohavet'
-#nc_file = os.path.join(dir_path, 'frohavet_2024-04-26_1049Z-l1a.nc')
-#points_file = os.path.join(dir_path, 'frohavet_2024-04-26_1049Z-bin3.points')
-
 dir_path = '/home/cameron/Dokumenter/Data/frohavet'
-nc_file = os.path.join(dir_path, 'frohavet_2024-05-06_1017Z-l1a.nc')
-points_file = os.path.join(dir_path, 'frohavet_2024-05-06_1017Z-bin3.points')
+nc_file = os.path.join(dir_path, 'frohavet_2024-04-26_1049Z-l1a.nc')
+points_file = os.path.join(dir_path, 'frohavet_2024-04-26_1049Z-bin3.points')
+
+#dir_path = '/home/cameron/Dokumenter/Data/frohavet'
+#nc_file = os.path.join(dir_path, 'frohavet_2024-05-06_1017Z-l1a.nc')
+#points_file = os.path.join(dir_path, 'frohavet_2024-05-06_1017Z-bin3.points')
 
 
 satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
 
 
-print(type(satobj.l1b_nc_file))
-print(satobj.l1b_nc_name)
+#print(type(satobj.l1b_nc_file))
+#print(satobj.l1b_nc_name)
 #satobj._run_land_mask(product="global")
 
 #print("get_l1a_cube")
@@ -92,13 +92,28 @@ print(satobj.l1b_nc_name)
 #print("get_l1b_cube attempt 1")
 #satobj.get_l1b_cube()
 #print("generate_l1b_cube attempt 1")
-#satobj.generate_l1b_cube()
+satobj.generate_l1b_cube()
 #print("get_l1b_cube attempt 2")
 #satobj.get_l1b_cube()
 #print("generate_l1b_cube attempt 2")
 #satobj.generate_l1b_cube()
 
+satobj.generate_land_mask('ndwi')
 
+satobj.get_land_mask('threshold')
+
+z = satobj.get_active_land_mask()
+print(z)
+
+satobj.generate_land_mask('threshold')
+
+z = satobj.get_active_land_mask()
+print(z)
+
+satobj.set_active_land_mask('threshold')
+
+z = satobj.get_active_land_mask()
+print(z)
 
 exit()
 land_mask = satobj.get_land_mask('global')
@@ -131,12 +146,9 @@ plt.imsave(fname='band_ratio.png', arr=band_ratio)
 #print(l2a_cube['acolite'])
 #print(l2a_cube['acolite'].shape)
 
-#satobj._run_calibration()
 
 #print(satobj.latitudes.shape)
-#satobj.display_geometry_information()
 
-#satobj.run_geometry_computation()
 
 #satobj.run_atmospheric_correction(product='6SV1')
 
