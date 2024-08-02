@@ -679,7 +679,7 @@ class Hypso1(Hypso):
         if self._check_calibration_has_run() and not overwrite:
 
             if self.verbose:
-                    print("[INFO] Geometry computation has already been run. Skipping.")
+                    print("[INFO] Calibration has already been run. Skipping.")
 
             return None
 
