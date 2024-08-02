@@ -345,19 +345,22 @@ class Hypso1(Hypso):
     def _set_capture_type(self) -> None:
 
         if self.capture_config["frame_count"] == self.standard_dimensions["nominal"]:
-            self.info["capture_type"] = "nominal"
 
-        elif self.info["image_height"] == self.standard_dimensions["wide"]:
-            self.info["capture_type"] = "wide"
+            self.capture_type = "nominal"
+
+        elif self.image_height == self.standard_dimensions["wide"]:
+
+            self.capture_type = "wide"
         else:
+
             if EXPERIMENTAL_FEATURES:
                 print("Number of Rows (AKA frame_count) Is Not Standard")
-                self.info["capture_type"] = "custom"
+                self.capture_type = "custom"
             else:
                 raise Exception("Number of Rows (AKA frame_count) Is Not Standard")
 
         if self.verbose:
-            print(f"[INFO] Capture capture type: {self.info['capture_type']}")
+            print(f"[INFO] Capture capture type: {self.capture_type}")
 
         return None
 
@@ -472,6 +475,9 @@ class Hypso1(Hypso):
 
     def _set_dimensions(self) -> None:
 
+        self.row_count = self.capture_config["row_count"]
+        self.frame_count = self.capture_config["frame_count"]
+
         self.image_height = self.capture_config["row_count"]
         self.image_width = int(self.capture_config["column_count"] / self.capture_config["bin_factor"])
         self.im_size = self.image_height * self.image_width
@@ -512,88 +518,6 @@ class Hypso1(Hypso):
         self.iso_time = datetime.utcfromtimestamp(self.unixtime).isoformat()
 
         return None
-
-
-    # TODO: move info dictionary into object variables
-    def _set_info_dict(self) -> None:
-
-        info = {}
-
-        info["nc_file"] = self.hypso_path
-        info["nc_name"] = self.hypso_path.stem
-
-        file_path = str(self.hypso_path)
-
-        info["l1a_nc_file"] = Path(file_path)
-        info["l1b_nc_file"] = Path(file_path.replace("-l1a", "-l1b"))
-        info["l2a_nc_file"] = Path(file_path.replace("-l1a", "-l2a"))
-
-        info["tmp_dir"] =  Path(info["nc_file"].parent.absolute(), info["nc_name"].replace("-l1a", "") + "_tmp")
-        info["top_folder_name"] = info["tmp_dir"]
-
-        if all([self.target_coords.get('latc'), self.target_coords.get('lonc')]):
-            info['target_area'] = self.target_coords['latc'] + ' ' + self.target_coords['lonc']
-            self.target_area = self.target_coords['latc'] + ' ' + self.target_coords['lonc']
-        else:
-            info['target_area'] = None
-            self.target_area = None
-
-        info["background_value"] = 8 * self.capture_config["bin_factor"]
-        
-        info["x_start"] = self.capture_config["aoi_x"]
-        info["x_stop"] = self.capture_config["aoi_x"] + self.capture_config["column_count"]
-        info["y_start"] = self.capture_config["aoi_y"]
-        info["y_stop"] = self.capture_config["aoi_y"] + self.capture_config["row_count"]
-        info["exp"] = self.capture_config["exposure"] / 1000  # in seconds
-
-        info["image_height"] = self.capture_config["row_count"]
-        info["image_width"] = int(self.capture_config["column_count"] / self.capture_config["bin_factor"])
-        info["im_size"] = info["image_height"] * info["image_width"]
-
-        info["bands"] = info["image_width"]
-        info["lines"] = self.capture_config["frame_count"]  # AKA Frames AKA Rows
-        info["samples"] = info["image_height"]  # AKA Cols
-
-
-
-        info["start_timestamp_capture"] = int(self.timing['capture_start_unix']) + UNIX_TIME_OFFSET
-        
-
-        # Get END_TIMESTAMP_CAPTURE
-        # can't compute end timestamp using frame count and frame rate
-        # assuming some default value if fps and exposure not available
-        try:
-            info["end_timestamp_capture"] = info["start_timestamp_capture"] + self.capture_config["frame_count"] / self.capture_config["fps"] + self.capture_config["exposure"] / 1000.0
-            self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config["frame_count"] / self.capture_config["fps"] + self.capture_config["exposure"] / 1000.0
-        except:
-            if self.verbose:
-                print("[WARNING] FPS or exposure values not found. Assuming 20.0 for each.")
-            info["end_timestamp_capture"] = info["start_timestamp_capture"] + self.capture_config["frame_count"] / 20.0 + 20.0 / 1000.0
-            self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config["frame_count"] / 20.0 + 20.0 / 1000.0
-
-        # using 'awk' for floating point arithmetic ('expr' only support integer arithmetic): {printf \"%.2f\n\", 100/3}"
-        time_margin_start = 641.0  # 70.0
-        time_margin_end = 180.0  # 70.0
-
-        info["start_timestamp_adcs"] = info["start_timestamp_capture"] - time_margin_start
-        info["end_timestamp_adcs"] = info["end_timestamp_capture"] + time_margin_end
-
-        self.start_timestamp_adcs = self.start_timestamp_capture - time_margin_start
-        self.end_timestamp_adcs = self.end_timestamp_capture + time_margin_end
-
-        info["unixtime"] = info["start_timestamp_capture"]
-        info["iso_time"] = datetime.utcfromtimestamp(info["unixtime"]).isoformat()
-
-        self.unixtime = self.start_timestamp_capture
-        self.iso_time = datetime.utcfromtimestamp(self.unixtime).isoformat()
-
-        self.info = info
-
-        return None
-
-
-
-
 
     # Loading
 
@@ -698,11 +622,11 @@ class Hypso1(Hypso):
             self._run_georeferencing_orientation()
 
             # TODO remove lat and lon in info dict
-            self.info["lat"] = self.latitudes
-            self.info["lon"] = self.longitudes
+            self.lat = self.latitudes
+            self.lon = self.longitudes
 
-            self.info["lat_original"] = self.latitudes
-            self.info["lon_original"] = self.longitudes
+            self.lat_original = self.latitudes
+            self.lon_original = self.longitudes
 
 
         else:
@@ -795,17 +719,16 @@ class Hypso1(Hypso):
         cube = self._get_flipped_cube(cube=cube)
 
         cube = run_radiometric_calibration(cube=cube, 
-                                           background_value=self.info['background_value'],
-                                           exp=self.info['exp'],
-                                           image_height=self.info['image_height'],
-                                           image_width=self.info['image_width'],
-                                           frame_count=self.capture_config['frame_count'],
+                                           background_value=self.background_value,
+                                           exp=self.exposure,
+                                           image_height=self.image_height,
+                                           image_width=self.image_width,
+                                           frame_count=self.frame_count,
                                            rad_coeffs=self.rad_coeffs)
 
         cube = self._get_flipped_cube(cube=cube)
 
         # TODO: The factor by 10 is to fix a bug in which the coeff have a factor of 10
-        #cube_calibrated = run_radiometric_calibration(self.info, self.rawcube, self.calibration_coefficients_dict) / 10
         cube = cube / 10
 
         return cube
@@ -886,7 +809,7 @@ class Hypso1(Hypso):
             self.rad_coeff_file = rad_coeff_file
             return None
 
-        match self.info["capture_type"]:
+        match self.capture_type:
             case "custom":
                 csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1.csv"    
             case "nominal":
@@ -919,7 +842,7 @@ class Hypso1(Hypso):
             self.smile_coeff_file = smile_coeff_file
             return None
 
-        match self.info["capture_type"]:
+        match self.capture_type:
             case "custom":
                 csv_file_smile = "spectral_calibration_matrix_HYPSO-1_full_v1.csv"    
             case "nominal":
@@ -952,7 +875,7 @@ class Hypso1(Hypso):
             self.destriping_coeff_file = destriping_coeff_file
             return None
 
-        match self.info["capture_type"]:
+        match self.capture_type:
             case "custom":
                 csv_file_destriping = None
             case "nominal":
@@ -1032,7 +955,7 @@ class Hypso1(Hypso):
            sun_zenith, \
            sat_azimuth, \
            sat_zenith = geometry_computation(framepose_data=framepose_data,
-                                             image_height=self.info['image_height'],
+                                             image_height=self.image_height,
                                              verbose=self.verbose
                                              )
 
@@ -1130,7 +1053,7 @@ class Hypso1(Hypso):
             'aot550': 0.0580000256
         }
 
-        time_capture = parser.parse(self.info['iso_time'])
+        time_capture = parser.parse(self.iso_time)
 
         atmos_corrected_cube = run_py6s(wavelengths=self.wavelengths, 
                                         hypercube_L1=self.l1b_cube, 
@@ -1140,7 +1063,7 @@ class Hypso1(Hypso):
                                         solar_zenith_angles=self.solar_zenith_angles,
                                         sat_azimuth_angles=self.sat_azimuth_angles,
                                         sat_zenith_angles=self.sat_zenith_angles,
-                                        iso_time=self.info['iso_time'],
+                                        iso_time=self.iso_time,
                                         py6s_dict=atmos_params, 
                                         time_capture=time_capture,
                                         srf=self.srf)
@@ -1160,12 +1083,12 @@ class Hypso1(Hypso):
             'password':'nwz7xmu8dak.UDG9kqz'
         }
 
-        if not self.info["l1b_nc_file"].is_file():
+        if not self.l1b_nc_file.is_file():
             raise Exception("No -l1b.nc file found")
         
-        atmos_corrected_cube = run_acolite(output_path=self.info["top_folder_name"], 
+        atmos_corrected_cube = run_acolite(output_path=self.top_folder_name, 
                                           atmos_dict=atmos_params, 
-                                          nc_file_acoliteready=self.info["l1b_nc_file"])
+                                          nc_file_acoliteready=self.l1b_nc_file)
 
         return atmos_corrected_cube
     
@@ -1499,7 +1422,7 @@ class Hypso1(Hypso):
 
         # TODO: can this be implemented with satpy NetCDF reader?
 
-        hypso_nc_path = self.info["l1a_nc_file"]
+        hypso_nc_path = self.l1a_nc_file
         old_nc = nc.Dataset(hypso_nc_path, 'r', format='NETCDF4')
 
         new_path = hypso_nc_path
@@ -1507,14 +1430,14 @@ class Hypso1(Hypso):
 
         if Path(new_path).is_file():
             print("L1b.nc file already exists. Not creating it.")
-            self.info["l1b_nc_file"] = Path(new_path)
+            self.l1b_nc_file = Path(new_path)
             return
 
         # Create a new NetCDF file
         with (nc.Dataset(new_path, 'w', format='NETCDF4') as netfile):
-            bands = self.info["image_width"]
+            bands = self.image_width
             lines = self.capture_config["frame_count"]  # AKA Frames AKA Rows
-            samples = self.info["image_height"]  # AKA Cols
+            samples = self.image_height  # AKA Cols
 
             # Set top level attributes -------------------------------------------------
             for md in old_nc.ncattrs():
@@ -1878,7 +1801,7 @@ class Hypso1(Hypso):
 
                 # Unix time -----------------------
                 time = netfile.createVariable('navigation/unixtime', 'u8', ('lines',))
-                frametime_pose_file = find_file(self.info["top_folder_name"], "frametime-pose", ".csv")
+                frametime_pose_file = find_file(self.top_folder_name, "frametime-pose", ".csv")
                 df = pd.read_csv(frametime_pose_file)
                 time[:] = df["timestamp"].values
 
@@ -1976,7 +1899,7 @@ class Hypso1(Hypso):
         old_nc.close()
 
         # Update
-        self.info["l1b_nc_file"] = Path(new_path)
+        self.l1b_nc_file = Path(new_path)
 
         self.write_l1b_nc_file_has_run = True
 
@@ -2068,8 +1991,8 @@ class Hypso1(Hypso):
         print('Spatial dimensions: ' + str(self.spatial_dimensions))
         print('Standard dimensions: ' + str(self.standard_dimensions))
         print('Row count: ' + str(self.capture_config['row_count']))
-        print('Image height: ' + str(self.info['image_height']))
-        print('Image width: ' + str(self.info['image_width']))
+        print('Image height: ' + str(self.image_height))
+        print('Image width: ' + str(self.image_width))
         print('Frame count: ' + str(self.capture_config['frame_count']))
         #print('Frame height: ' + str(frame_height))
         print('Lines: ' + str(self.dimensions['lines']))
@@ -2215,9 +2138,9 @@ class Hypso1(Hypso):
         srf = self.srf
         toa_radiance = self.l1b_cube
 
-        scene_date = parser.isoparse(self.info['iso_time'])
+        scene_date = parser.isoparse(self.iso_time)
         julian_day = scene_date.timetuple().tm_yday
-        solar_zenith = self.info['solar_zenith_angle']
+        solar_zenith = self.solar_zenith_angle
 
         # Read Solar Data
         solar_data_path = str(files('hypso.atmospheric').joinpath("Solar_irradiance_Thuillier_2002.csv"))
