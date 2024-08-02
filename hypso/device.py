@@ -54,7 +54,100 @@ class Hypso:
         self._set_hypso_path(hypso_path=hypso_path)
         self._set_points_path(points_path=points_path)
 
-        # Initialize calibration file paths:
+
+        # Initialize platform and sensor names
+        self.platform = None
+        self.sensor = None
+
+
+        # Initialize capture name and target
+        self.capture_name = None
+        self.capture_region = None
+
+
+        # Initialize directory and file info
+        self.tmp_dir = None
+
+        self.nc_file = None
+        self.nc_name = None
+
+        self.l1a_nc_file = None
+        self.l1b_nc_file = None
+        self.l2a_nc_file = None
+
+        self.l1a_nc_name = None
+        self.l1b_nc_name = None
+        self.l2a_nc_name = None
+
+
+        # Initialize datacubes
+        self.l1a_cube = None
+        self.l1b_cube = None
+        self.l2a_cubes = {}
+
+
+        # Initialize metadata dictionaries
+        self.capture_config = {}
+        self.timing = {}
+        self.adcs = {}
+        self.target_coords = {}
+        self.dimensions = {}
+
+        # Initialize timing info
+        self.capture_datetime = None
+        
+        self.start_timestamp_capture = None
+        self.end_timestamp_capture = None
+
+        self.start_timestamp_adcs = None
+        self.end_timestamp_adcs = None
+
+        self.unixtime = None
+        self.iso_time = None
+
+
+        # Initialize dimensions
+        self.capture_type = None
+        self.spatial_dimensions = (956, 684)  # 1092 x variable
+        self.standard_dimensions = {
+            "nominal": 956,  # Along frame_count
+            "wide": 1092  # Along image_height (row_count)
+        }
+
+        self.x_start = None
+        self.x_stop = None
+        self.y_start = None
+        self.y_stop = None
+
+        self.bin_factor = 8
+
+        self.row_count = None
+        self.frame_count = None
+        self.column_count = None
+
+        self.image_height = None
+        self.image_width = None
+        self.im_size = None
+
+        self.bands = None
+        self.lines = None
+        self.samples = None
+
+
+        # Misc metadata
+        #self.target_area = None
+        self.background_value = None
+        self.exposure = None
+
+
+        # Initialize georeferencing info
+        self.projection_metadata = None
+        self.latitudes = None
+        self.longitudes = None
+        self.datacube_flipped = False
+
+
+       # Initialize calibration file paths:
         self.rad_coeff_file = None
         self.smile_coeff_file = None
         self.destriping_coeff_file = None
@@ -66,42 +159,6 @@ class Hypso:
         self.destriping_coeffs = None
         self.spectral_coeffs = None
 
-        # Initialize raw datacube
-        self.l1a_cube = None
-
-        # Initialize calibrated datacube
-        self.l1b_cube = None
-
-        # Initialize atms corr datacubes dict
-        self.l2a_cubes = {}
-
-        # Initialize platform and sensor names
-        self.platform = None
-        self.sensor = None
-
-        # Initialize capture name and target
-        self.capture_name = None
-        self.capture_region = None
-
-        # Initialize capture date and time
-        self.capture_datetime = None
-
-        # Initialize dimensions
-        self.dimensions = None
-        self.spatial_dimensions = (956, 684)  # 1092 x variable
-        self.standard_dimensions = {
-            "nominal": 956,  # Along frame_count
-            "wide": 1092  # Along image_height (row_count)
-        }
-
-        # Initialize projection information
-        self.projection_metadata = None
-
-         # Initialize latitude and longitude variables
-        self.latitudes = None
-        self.longitudes = None
-        self.datacube_flipped = False
-
         # Initialize wavelengths
         self.wavelengths = None
         self.wavelengths_units = r'$nm$'
@@ -112,24 +169,30 @@ class Hypso:
         # Initialize units
         self.units = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
 
+
         # Initilize land mask dict
         self.land_mask = None
         self.land_masks = {}
+
 
         # Initilize cloud mask dict
         self.cloud_mask = None
         self.cloud_masks = {}
 
+
         # Initialize products dict
         self.products = {}
 
+
         # Initialize chlorophyll estimates dict
         self.chl = {}
+
 
         # Initialize ADCS data
         self.adcs = None
         self.adcs_pos_df = None
         self.adcs_quat_df = None
+
 
         # Initialize geometry data
         self.wkt_linestring_footprint = None
@@ -143,13 +206,10 @@ class Hypso:
         self.latitudes_original = None
         self.longitudes_original = None
 
+
         # DEBUG
         self.DEBUG = False
         self.verbose = False
-
-        #self.rgbGeotiffFilePath = None
-        #self.l1cgeotiffFilePath = None
-        #self.l2geotiffFilePath = None
 
     def _set_hypso_path(self, hypso_path=None) -> None:
 
@@ -255,69 +315,13 @@ class Hypso1(Hypso):
 
         return None
 
+    # TODO
     def _set_capture_datetime(self) -> None:
 
-        # TODO: implement this function
         self.capture_datetime = None
 
         return None
 
-    def _set_srf(self) -> None:
-        """
-        Get Spectral Response Functions (SRF) from HYPSO for each of the 120 bands. Theoretical FWHM of 3.33nm is
-        used to estimate Sigma for an assumed gaussian distribution of each SRF per band.
-        """
-
-        if not any(self.wavelengths):
-            self.srf = None
-
-        fwhm_nm = 3.33
-        sigma_nm = fwhm_nm / (2 * np.sqrt(2 * np.log(2)))
-
-        srf = []
-        for band in self.wavelengths:
-            center_lambda_nm = band
-            start_lambda_nm = np.round(center_lambda_nm - (3 * sigma_nm), 4)
-            soft_end_lambda_nm = np.round(center_lambda_nm + (3 * sigma_nm), 4)
-
-            srf_wl = [center_lambda_nm]
-            lower_wl = []
-            upper_wl = []
-            for ele in self.wavelengths:
-                if start_lambda_nm < ele < center_lambda_nm:
-                    lower_wl.append(ele)
-                elif center_lambda_nm < ele < soft_end_lambda_nm:
-                    upper_wl.append(ele)
-
-            # Make symmetric
-            while len(lower_wl) > len(upper_wl):
-                lower_wl.pop(0)
-            while len(upper_wl) > len(lower_wl):
-                upper_wl.pop(-1)
-
-            srf_wl = lower_wl + srf_wl + upper_wl
-
-            good_idx = [(True if ele in srf_wl else False) for ele in self.wavelengths]
-
-            # Delta based on Hypso Sampling (Wavelengths)
-            gx = None
-            if len(srf_wl) == 1:
-                gx = [0]
-            else:
-                gx = np.linspace(-3 * sigma_nm, 3 * sigma_nm, len(srf_wl))
-            gaussian_srf = np.exp(
-                -(gx / sigma_nm) ** 2 / 2)  # Not divided by the sum, because we want peak to 1.0
-
-            # Get final wavelength and SRF
-            srf_wl_single = self.wavelengths
-            srf_single = np.zeros_like(srf_wl_single)
-            srf_single[good_idx] = gaussian_srf
-
-            srf.append([srf_wl_single, srf_single])
-
-        self.srf = srf
-
-        return None
 
     def _set_capture_name(self) -> None:
 
@@ -327,9 +331,6 @@ class Hypso1(Hypso):
 
             if "-" + pl in capture_name:
                 capture_name = capture_name.replace("-" + pl, "")
-
-        #if "-l1a" in capture_name:
-        #    capture_name = capture_name.replace("-l1a", "")
 
         self.capture_name = capture_name
 
@@ -364,14 +365,7 @@ class Hypso1(Hypso):
 
         return None
 
-    def _set_wavelengths(self) -> None:
 
-        if self.spectral_coeffs is not None:
-            self.wavelengths = self.spectral_coeffs
-        else:
-            self.wavelengths = None
-
-        return None
 
     def _set_adcs_dataframes(self) -> None:
 
@@ -380,9 +374,10 @@ class Hypso1(Hypso):
 
         return None
 
+    # TODO move DataFrame formatting related code to geometry
     def _set_adcs_pos_dataframe(self) -> None:
 
-        # TODO move DataFrame formatting related code to geometry
+        
         position_headers = ["timestamp", "eci x [m]", "eci y [m]", "eci z [m]"]
         
         timestamps = self.adcs["timestamps"]
@@ -397,9 +392,10 @@ class Hypso1(Hypso):
 
         return None
 
+    # TODO move DataFrame formatting related code to geometry
     def _set_adcs_quat_dataframe(self) -> None:
 
-        # TODO move DataFrame formatting related code to geometry
+        
         quaternion_headers = ["timestamp", "quat_0", "quat_1", "quat_2", "quat_3", "Control error [deg]"]
 
         timestamps = self.adcs["timestamps"]
@@ -433,13 +429,14 @@ class Hypso1(Hypso):
 
         return None
 
-    def _set_directory(self) -> None:
+    def _set_tmp_dir(self) -> None:
 
         self.tmp_dir = Path(self.nc_file.parent.absolute(), self.nc_name.replace("-l1a", "") + "_tmp")
-        self.top_folder_name = self.tmp_dir
 
         return None
 
+    # TODO: is this used for anything?
+    '''
     def _set_target_area(self) -> None:
 
         if all([self.target_coords.get('latc'), self.target_coords.get('lonc')]):
@@ -448,6 +445,7 @@ class Hypso1(Hypso):
             self.target_area = None
 
         return None
+    '''
 
     def _set_background_value(self) -> None:
 
@@ -457,8 +455,7 @@ class Hypso1(Hypso):
 
     def _set_exposure(self) -> None:
 
-        self.exp = self.capture_config["exposure"] / 1000  # in seconds
-        self.exposure = self.exp
+        self.exposure = self.capture_config["exposure"] / 1000  # in seconds
 
         return None
 
@@ -469,10 +466,14 @@ class Hypso1(Hypso):
         self.y_start = self.capture_config["aoi_y"]
         self.y_stop = self.capture_config["aoi_y"] + self.capture_config["row_count"]
 
+
     def _set_dimensions(self) -> None:
+
+        self.bin_factor = self.capture_config["bin_factor"]
 
         self.row_count = self.capture_config["row_count"]
         self.frame_count = self.capture_config["frame_count"]
+        self.column_count = self.capture_config["column_count"]
 
         self.image_height = self.capture_config["row_count"]
         self.image_width = int(self.capture_config["column_count"] / self.capture_config["bin_factor"])
@@ -530,7 +531,7 @@ class Hypso1(Hypso):
         self._load_l1a_metadata()
 
         self._set_nc_files()
-        self._set_directory()
+        self._set_tmp_dir()
 
         self._set_background_value()
         self._set_exposure()
@@ -949,6 +950,73 @@ class Hypso1(Hypso):
 
         return None
 
+    def _set_wavelengths(self) -> None:
+
+        if self.spectral_coeffs is not None:
+            self.wavelengths = self.spectral_coeffs
+        else:
+            self.wavelengths = None
+
+        return None
+
+    # TODO: move to calibration module?
+    def _set_srf(self) -> None:
+        """
+        Get Spectral Response Functions (SRF) from HYPSO for each of the 120 bands. Theoretical FWHM of 3.33nm is
+        used to estimate Sigma for an assumed gaussian distribution of each SRF per band.
+        """
+
+        if not any(self.wavelengths):
+            self.srf = None
+
+        fwhm_nm = 3.33
+        sigma_nm = fwhm_nm / (2 * np.sqrt(2 * np.log(2)))
+
+        srf = []
+        for band in self.wavelengths:
+            center_lambda_nm = band
+            start_lambda_nm = np.round(center_lambda_nm - (3 * sigma_nm), 4)
+            soft_end_lambda_nm = np.round(center_lambda_nm + (3 * sigma_nm), 4)
+
+            srf_wl = [center_lambda_nm]
+            lower_wl = []
+            upper_wl = []
+            for ele in self.wavelengths:
+                if start_lambda_nm < ele < center_lambda_nm:
+                    lower_wl.append(ele)
+                elif center_lambda_nm < ele < soft_end_lambda_nm:
+                    upper_wl.append(ele)
+
+            # Make symmetric
+            while len(lower_wl) > len(upper_wl):
+                lower_wl.pop(0)
+            while len(upper_wl) > len(lower_wl):
+                upper_wl.pop(-1)
+
+            srf_wl = lower_wl + srf_wl + upper_wl
+
+            good_idx = [(True if ele in srf_wl else False) for ele in self.wavelengths]
+
+            # Delta based on Hypso Sampling (Wavelengths)
+            gx = None
+            if len(srf_wl) == 1:
+                gx = [0]
+            else:
+                gx = np.linspace(-3 * sigma_nm, 3 * sigma_nm, len(srf_wl))
+            gaussian_srf = np.exp(
+                -(gx / sigma_nm) ** 2 / 2)  # Not divided by the sum, because we want peak to 1.0
+
+            # Get final wavelength and SRF
+            srf_wl_single = self.wavelengths
+            srf_single = np.zeros_like(srf_wl_single)
+            srf_single[good_idx] = gaussian_srf
+
+            srf.append([srf_wl_single, srf_single])
+
+        self.srf = srf
+
+        return None
+
     def _check_calibration_has_run(self) -> bool:
 
         return self.calibration_has_run
@@ -1119,7 +1187,7 @@ class Hypso1(Hypso):
         if not self.l1b_nc_file.is_file():
             raise Exception("No -l1b.nc file found")
         
-        atmos_corrected_cube = run_acolite(output_path=self.top_folder_name, 
+        atmos_corrected_cube = run_acolite(output_path=self.tmp_dir, 
                                           atmos_dict=atmos_params, 
                                           nc_file_acoliteready=self.l1b_nc_file)
 
@@ -1853,7 +1921,7 @@ class Hypso1(Hypso):
 
                 # Unix time -----------------------
                 time = netfile.createVariable('navigation/unixtime', 'u8', ('lines',))
-                frametime_pose_file = find_file(self.top_folder_name, "frametime-pose", ".csv")
+                frametime_pose_file = find_file(self.tmp_dir, "frametime-pose", ".csv")
                 df = pd.read_csv(frametime_pose_file)
                 time[:] = df["timestamp"].values
 
