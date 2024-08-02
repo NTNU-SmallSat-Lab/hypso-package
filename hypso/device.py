@@ -532,12 +532,8 @@ class Hypso1(Hypso):
         self._load_l1a_cube()
         self._load_l1a_metadata()
 
-        # TODO remove
-        self._set_info_dict()
-
         self._set_nc_files()
         self._set_directory()
-
 
         self._set_background_value()
         self._set_exposure()
