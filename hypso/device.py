@@ -29,6 +29,7 @@ from hypso.masks import run_global_land_mask, run_ndwi_land_mask, run_threshold_
 from hypso.reading import load_l1a_nc_cube, load_l1a_nc_metadata
 from hypso.utils import find_dir, find_file, find_all_files
 from hypso.atmospheric import run_py6s, run_acolite, run_machi
+from hypso.chlorophyll import run_tuned_chlorophyll_estimation, run_band_ratio_chlorophyll_estimation
 
 
 EXPERIMENTAL_FEATURES = True
@@ -178,6 +179,10 @@ class Hypso:
         self.cloud_masks = {}
         self.active_cloud_mask = None
         self.active_cloud_mask_name = None
+
+
+        # Intialize active mask
+        self.active_mask = None
 
 
         # Initialize products dict
@@ -465,7 +470,6 @@ class Hypso1(Hypso):
         self.x_stop = self.capture_config["aoi_x"] + self.capture_config["column_count"]
         self.y_start = self.capture_config["aoi_y"]
         self.y_stop = self.capture_config["aoi_y"] + self.capture_config["row_count"]
-
 
     def _set_dimensions(self) -> None:
 
@@ -1318,7 +1322,13 @@ class Hypso1(Hypso):
             self.active_land_mask = self.land_masks[land_mask.lower()]
             self.active_land_mask_name = land_mask.lower()
 
+        self._update_active_mask(self)
+
         return None
+
+    def _get_active_land_mask(self) -> tuple[str, np.ndarray]:
+
+        return self.active_land_mask_name, self.active_land_mask
 
     def _check_land_mask_has_run(self, land_mask: str = None) -> bool:
 
@@ -1384,7 +1394,13 @@ class Hypso1(Hypso):
             self.active_cloud_mask = self.cloud_masks[cloud_mask.lower()]
             self.active_cloud_mask_name = cloud_mask.lower()
 
+        self._update_active_mask(self)
+
         return None
+
+    def _get_active_cloud_mask(self) -> tuple[str, np.ndarray]:
+
+        return self.active_cloud_mask_name, self.active_cloud_mask
 
     def _check_cloud_mask_has_run(self, cloud_mask: str = None) -> bool:
 
@@ -1397,6 +1413,32 @@ class Hypso1(Hypso):
                 return False
 
         return False
+
+
+    # Unified mask functions
+
+    def _update_active_mask(self) -> None:
+
+        land_mask_name, land_mask = self._get_active_land_mask()
+        cloud_mask_name, cloud_mask = self._get_active_cloud_mask()
+
+        if land_mask is None and cloud_mask is None:
+            return None
+        
+        elif land_mask is None:
+            self.active_mask = cloud_mask
+        
+        elif cloud_mask is None:
+            self.active_mask = land_mask
+        
+        else:
+            self.active_mask = land_mask | cloud_mask
+
+        return None
+
+    def _get_active_mask(self) -> np.ndarray:
+
+        return self.active_mask
 
 
     # Chlorophyll estimation functions
@@ -1432,14 +1474,14 @@ class Hypso1(Hypso):
                 if self.verbose:
                     print("[INFO] Running 6SV1 AQUA Tuned chlorophyll estimation...")
 
-                self.chl[key] = self._run_6sv1_aqua_chlorophyll_estimation()
+                self.chl[key] = self._run_6sv1_aqua_tuned_chlorophyll_estimation()
 
             case "acolite_aqua":
 
                 if self.verbose:
                     print("[INFO] Running ACOLITE AQUA Tuned chlorophyll estimation...")
 
-                self.chl[key] = self._run_acolite_aqua_chlorophyll_estimation()
+                self.chl[key] = self._run_acolite_aqua_tuned_chlorophyll_estimation()
 
             case _:
                 print("[ERROR] No such chlorophyll estimation product supported!")
@@ -1449,50 +1491,27 @@ class Hypso1(Hypso):
 
         return None
 
-    # TODO: move this code to chlorophyll module
-    def _run_band_ratio_chlorophyll_estimation(self, land_mask: str = None, 
-                                               cloud_mask: str = None, 
-                                               factor: float = 0.1, 
-                                               threshold: float = 0.88) -> None:
+    def _run_band_ratio_chlorophyll_estimation(self) -> None:
 
         self._run_calibration()
 
-        numerator_wavelength = 549
-        denominator_wavelength = 663
-
-        a = abs(self.wavelengths - numerator_wavelength)
-        numerator_index = np.argmin(a)
-        
-        a = abs(self.wavelengths - denominator_wavelength)
-        denominator_index = np.argmin(a)
-    
-        print(self.wavelengths[numerator_index])
-        print(self.wavelengths[denominator_index])
-
-        chl = self.l1b_cube[:,:,numerator_index] / self.l1b_cube[:,:,denominator_index]
-
-        unified_mask = self._get_unified_mask(land_mask=land_mask, cloud_mask=cloud_mask)
-
-        # TODO
-
-        chl = np.ma.masked_array(chl, unified_mask, fill_value=np.nan)
-
-        # Only get maximum from unmasked data
-        chl = chl - factor*chl.compressed().max()
-        chl = chl - threshold*chl.compressed().max()
-        chl[chl < 0] = 0
-
-        #chl = chl[:,::-1]
+        chl = run_band_ratio_chlorophyll_estimation(cube=self.l1b_cube,
+                                                    mask=self.active_mask, 
+                                                    wavelengths=self.wavelengths,
+                                                    spatial_dimensions=self.spatial_dimensions
+                                                    )
 
         return chl
 
     # TODO: complete
-    def _run_6sv1_aqua_chlorophyll_estimation(self, model: Path = None) -> None:
+    def _run_6sv1_aqua_tuned_chlorophyll_estimation(self, model: Path = None) -> None:
+
+        run_tuned_chlorophyll_estimation
 
         pass
 
     # TODO: complete
-    def _run_acolite_aqua_chlorophyll_estimation(self, model: Path = None) -> None:
+    def _run_acolite_aqua_tuned_chlorophyll_estimation(self, model: Path = None) -> None:
 
         pass
 
@@ -2061,25 +2080,6 @@ class Hypso1(Hypso):
 
         return cube
 
-    # TODO: use active land and cloud masks
-    def _get_unified_mask(self, 
-                          land_mask: str=None,
-                          cloud_mask: str=None
-                          ) -> np.ndarray:
-        
-        if land_mask in self.land_masks.keys():
-            land_mask = self.land_masks[land_mask]
-        else:
-            land_mask = np.full(self.spatial_dimensions, False, dtype=bool)
-
-        if cloud_mask in self.cloud_masks.keys():
-            cloud_mask = self.cloud_masks[cloud_mask]
-        else:
-            cloud_mask = np.full(self.spatial_dimensions, False, dtype=bool)
-
-        unified_mask = land_mask | cloud_mask
-
-        return unified_mask
 
 
     # Public methods
@@ -2151,9 +2151,9 @@ class Hypso1(Hypso):
 
         self._update_active_land_mask(land_mask=land_mask, override=True)
 
-    def get_active_land_mask(self) -> np.ndarray:
+    def get_active_land_mask(self) -> tuple[str, np.ndarray]:
 
-        return self.active_land_mask_name, self.active_land_mask
+        return self._get_active_cloud_mask()
 
     def generate_cloud_mask(self, cloud_mask: Literal["default"] = "default"):
 
@@ -2182,7 +2182,7 @@ class Hypso1(Hypso):
 
     def get_active_cloud_mask(self) -> tuple[str, np.ndarray]:
 
-        return self.active_cloud_mask_name, self.active_cloud_mask
+        return self._get_active_land_mask()
 
     def generate_chlorophyll_estimates(self, 
                                        product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',

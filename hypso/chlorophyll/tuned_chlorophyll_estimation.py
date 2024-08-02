@@ -12,9 +12,94 @@ from typing import Tuple
 
 simplefilter("ignore", category=ConvergenceWarning)
 
+def run_tuned_chlorophyll_estimation(l2a_cube: np.ndarray, 
+                         model_path: str,
+                         mask: np.ndarray = None, 
+                         spatial_dimensions: tuple[int, int] = None
+                         ) -> np.ndarray:
+    """
+    Estimates the chlorophyll using a trained ML Scikit-Learn Model
 
-def get_best_features(X_train_rrs: np.ndarray, y_train_rrs: np.ndarray, X_test_rrs: np.ndarray, y_test_rrs: np.ndarray,
-                      dataset_name: str = "hypso") -> Tuple[pd.DataFrame, pd.DataFrame]:
+    :param model_path: Absolute path for the pre-trained Scikit-Learn model
+
+    :return: np.ndarray
+    """
+    
+    if not validate_model_path(model_path=model_path):
+        return None
+    
+    if spatial_dimensions is None:
+        return None
+    
+    if mask is None:
+        mask = np.zeros(spatial_dimensions, dtype=bool)
+
+    # Load Model -----------------------------------------------------
+    model = load(model_path)
+
+    # Get Cube with proper data -------------------------------------
+    rrs_cube = l2a_cube
+
+    # Processing mask only for water pixels
+    mask = ~mask
+
+    # Reshape 3D to 2D array --------------------------------------------------
+    channels = rrs_cube.shape[2]
+    rrs_array = rrs_cube.reshape((-1, channels))
+
+    # Get DF with proper headers ---------------------------------------------
+    hypso_headers = files('hypso.chlorophyll').joinpath('hypso_wl_headers.csv')
+    
+    # TODO: use wavelengths?
+    hypso_string_wl = list(np.loadtxt(hypso_headers, delimiter=",", dtype=str))
+
+    rrs_df = pd.DataFrame(rrs_array, columns=hypso_string_wl)
+
+    chl = None
+
+
+    # Features -----------------------------------------------------------------
+    hypso_optimal_features_df, _ = get_best_features(rrs_df, None, rrs_df, None,
+                                                        dataset_name="hypso")
+    hypso_optimal_features_df = hypso_optimal_features_df.loc[:,
+                                hypso_optimal_features_df.columns != 'Chla']
+
+    # Filter -----------------------------------------------------------------
+    sub_params = ["bratio"]
+    sub_params = ["bratio", "bratio_log", "tbvi", "diff"]
+    pre_filter = [k for k in hypso_optimal_features_df.columns for w in k.split("-") if w in sub_params]
+
+    hypso_optimal_features_df = hypso_optimal_features_df[
+        hypso_optimal_features_df.columns.intersection(pre_filter)]
+
+    chl = model.predict(hypso_optimal_features_df)
+    chl = np.reshape(chl, spatial_dimensions)
+
+    # Smoothing ------------------------------------------------------------
+    kernel = np.array([[1 / 16, 1 / 8, 1 / 16],  # 3x3 kernel
+                        [1 / 8, 1 / 4, 1 / 8],
+                        [1 / 16, 1 / 8, 1 / 16]], dtype=float)
+    estimation = convolve2d(estimation, kernel, max_missing=0.5, verbose=True)
+
+
+    # Masking -----------------------------------------------------------------
+    estimation = np.multiply(estimation, mask.astype(int))
+
+    for r in range(mask.shape[0]):
+        for c in range(mask.shape[1]):
+            if not mask[r, c]:
+                estimation[r, c] = np.nan
+
+    return estimation
+
+
+
+def get_best_features(X_train_rrs: np.ndarray, 
+                      y_train_rrs: np.ndarray, 
+                      X_test_rrs: np.ndarray, 
+                      y_test_rrs: np.ndarray,
+                      dataset_name: str = "hypso"
+                      ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Compute the optimal features based on the findings of the Master thesis "Improving Ocean Chlorophyll Estimation in
     Satellite Hyperspectral Images Using Ensemble Machine Learning" by Flores-Romero Alvaro
@@ -185,97 +270,23 @@ def get_best_features(X_train_rrs: np.ndarray, y_train_rrs: np.ndarray, X_test_r
 
     return tmp_train_features, tmp_test_features
 
+def validate_model_path(model_path: str) -> bool:
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-def start_chl_estimation(sat_obj, model_path=None) -> None:
-    """
-    Estimates the chlorophyll using a trained ML Scikit-Learn Model
-
-    :param sat_obj: Hypso satellite object
-    :param model_path: Absolute path for the pre-trained Scikit-Learn model
-
-    :return: No return.
-    """
-    # Load Mode -----------------------------------------------------
     if model_path is None:
-        raise Exception("Please specify the model path")
-    else:
-        model_path = pathlib.Path(model_path)
+        return False
 
-    model = load(model_path)
+    if "tuned" not in model_path.stem:
+        return False
 
-    # Processing mask only for water pixels
-    waterMask = sat_obj.waterMask
+    if "acolite" in model_path.stem or "6sv1" in model_path.stem:
 
-    # Get Cube with proper data -------------------------------------
-    try:
-        if "acolite" in model_path.stem:
-            rrs_cube = sat_obj.l2a_cube["ACOLITE"]
-        elif "6sv1" in model_path.stem:
-            rrs_cube = sat_obj.l2a_cube["6SV1"]
-        else:
-            raise Exception("Only ACOLITE and 6SV1 correction are supported. Check model supplied")
-    except TypeError as e:
-        raise Exception("Generate ACOLITE and 6SV1 L2 Cube First. ", e)
+        return True
+    
+    return False
 
-    # Reshape 3D to 2D array --------------------------------------------------
-    channels = rrs_cube.shape[2]
-    rrs_array = rrs_cube.reshape((-1, channels))
 
-    # Get DF with proper headers ---------------------------------------------
-    hypso_headers = files(
-        'hypso.experimental').joinpath('chlorophyll/hypso_wl_headers.csv')
-    hypso_string_wl = list(np.loadtxt(hypso_headers, delimiter=",", dtype=str))
 
-    rrs_df = pd.DataFrame(rrs_array, columns=hypso_string_wl)
 
-    estimation = None
-    if "tuned" in model_path.stem:
-        hypso_optimal_features_df, _ = get_best_features(rrs_df, None, rrs_df, None,
-                                                         dataset_name="hypso")
-        hypso_optimal_features_df = hypso_optimal_features_df.loc[:,
-                                    hypso_optimal_features_df.columns != 'Chla']
-
-        # Filter -----------------------------------------------------------------
-        sub_params = ["bratio"]
-        sub_params = ["bratio", "bratio_log", "tbvi", "diff"]
-        pre_filter = [k for k in hypso_optimal_features_df.columns for w in k.split("-") if w in sub_params]
-
-        hypso_optimal_features_df = hypso_optimal_features_df[
-            hypso_optimal_features_df.columns.intersection(pre_filter)]
-
-        estimation = model.predict(hypso_optimal_features_df)
-        estimation = np.reshape(estimation, sat_obj.spatialDim)
-
-        # smooth ------------------------------------------------------------
-        kernel = np.array([[1 / 16, 1 / 8, 1 / 16],  # 3x3 kernel
-                           [1 / 8, 1 / 4, 1 / 8],
-                           [1 / 16, 1 / 8, 1 / 16]], dtype=float)
-        estimation = convolve2d(estimation, kernel, max_missing=0.5, verbose=True)
-
-    else:
-        raise Exception("No valid method found from model name.")
-
-    estimation = np.multiply(estimation, waterMask.astype(int))
-
-    for r in range(waterMask.shape[0]):
-        for c in range(waterMask.shape[1]):
-            if not waterMask[r, c]:
-                estimation[r, c] = np.nan
-
-    sat_obj.chl = estimation
 
 
 

@@ -82,7 +82,11 @@ points_file = os.path.join(dir_path, 'frohavet_2024-04-26_1049Z-bin3.points')
 
 satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
 
+print(satobj.spatial_dimensions)
 
+print(type(satobj.spatial_dimensions))
+
+exit()
 #print(type(satobj.l1b_nc_file))
 #print(satobj.l1b_nc_name)
 #satobj._run_land_mask(product="global")
@@ -114,6 +118,10 @@ satobj.set_active_land_mask('threshold')
 
 z = satobj.get_active_land_mask()
 print(z)
+
+
+z = satobj._get_unified_mask()
+
 
 exit()
 land_mask = satobj.get_land_mask('global')
