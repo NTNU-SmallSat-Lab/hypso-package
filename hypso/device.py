@@ -73,7 +73,7 @@ class Hypso:
         self.l1b_cube = None
 
         # Initialize atms corr datacubes dict
-        self.l2a_cube = {}
+        self.l2a_cubes = {}
 
         # Initialize platform and sensor names
         self.platform = None
@@ -678,10 +678,10 @@ class Hypso1(Hypso):
             if self.l1b_cube is not None:  
                 self.l1b_cube = self.l1b_cube[:, ::-1, :]
                 
-            if self.l2a_cube is not None:
-                if isinstance(self.l2a_cube, dict):
-                    for key in self.l2a_cube.keys():
-                        self.l2a_cube = self.l2a_cube[key][:, ::-1, :]
+            if self.l2a_cubes is not None:
+                if isinstance(self.l2a_cubes, dict):
+                    for key in self.l2a_cubes.keys():
+                        self.l2a_cubes = self.l2a_cubes[key][:, ::-1, :]
 
         self.datacube_flipped = datacube_flipped
 
@@ -1029,8 +1029,8 @@ class Hypso1(Hypso):
 
             return None
 
-        if self.l2a_cube is None:
-            self.l2a_cube = {}
+        if self.l2a_cubes is None:
+            self.l2a_cubes = {}
 
         if product is not None:
             product = product.lower()
@@ -1039,15 +1039,15 @@ class Hypso1(Hypso):
             case "6sv1":
                 if self.verbose: 
                     print("[INFO] Running 6SV1 atmospheric correction")
-                self.l2a_cube[product] = self._run_6sv1_atmospheric_correction()
+                self.l2a_cubes[product] = self._run_6sv1_atmospheric_correction()
             case "acolite":
                 if self.verbose: 
                     print("[INFO] Running ACOLITE atmospheric correction")
-                self.l2a_cube[product] = self._run_acolite_atmospheric_correction()
+                self.l2a_cubes[product] = self._run_acolite_atmospheric_correction()
             case "machi":
                 if self.verbose: 
                     print("[INFO] Running MACHI atmospheric correction")
-                self.l2a_cube[product] = self._run_machi_atmospheric_correction()  
+                self.l2a_cubes[product] = self._run_machi_atmospheric_correction()  
 
             case _:
                 print("[ERROR] No such atmospheric correction product supported!")
@@ -1144,7 +1144,7 @@ class Hypso1(Hypso):
         if self.atmospheric_correction_has_run:
             if product is None:
                 return True
-            elif product.lower() in self.l2a_cube.keys():
+            elif product.lower() in self.l2a_cubes.keys():
                 return True
             else:
                 return False
@@ -2067,7 +2067,7 @@ class Hypso1(Hypso):
 
         if product and self._check_atmospheric_correction_has_run(product=product):
 
-            return self.l2a_cube[product.lower()]
+            return self.l2a_cubes[product.lower()]
         
         if self.verbose:
             print("[ERROR] " + product.upper() + " L2a cube has not yet been generated.")
