@@ -540,7 +540,7 @@ class Hypso1(Hypso):
         self._set_timestamps()
         self._set_capture_type()
         self._set_adcs_dataframes()
-        self._set_target_area()
+        #self._set_target_area()
 
         return None
 
