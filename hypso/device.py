@@ -90,8 +90,8 @@ class Hypso:
         self.capture_config = {}
         self.timing = {}
         self.adcs = {}
-        self.target_coords = {}
-        self.dimensions = {}
+        #self.target_coords = {}
+        #self.dimensions = {}
 
         # Initialize timing info
         self.capture_datetime = None
@@ -584,9 +584,9 @@ class Hypso1(Hypso):
 
         self.capture_config, \
             self.timing, \
-            self.target_coords, \
+            target_coords, \
             self.adcs, \
-            self.dimensions = load_l1a_nc_metadata(self.hypso_path)
+            dimensions = load_l1a_nc_metadata(self.hypso_path)
         
         return None
 
@@ -2084,25 +2084,6 @@ class Hypso1(Hypso):
 
 
     # Public methods
-
-    def geometry_summary(self) -> None:
-
-        # Notes:
-        # - along_track, frame_count, lines, rows, y, latitude: 956, 598
-        # - cross_track, row_count, image_height, samples, cols, x, longitude: 684, 1092
-        # - spectral, image_width, bands, z: 120
-        print('Spatial dimensions: ' + str(self.spatial_dimensions))
-        print('Standard dimensions: ' + str(self.standard_dimensions))
-        print('Row count: ' + str(self.capture_config['row_count']))
-        print('Image height: ' + str(self.image_height))
-        print('Image width: ' + str(self.image_width))
-        print('Frame count: ' + str(self.capture_config['frame_count']))
-        #print('Frame height: ' + str(frame_height))
-        print('Lines: ' + str(self.dimensions['lines']))
-        print('Samples: ' + str(self.dimensions['samples']))
-        print('Bands: ' + str(self.dimensions['bands']))
-
-        return None
 
     def get_l1a_cube(self) -> np.ndarray:
 
