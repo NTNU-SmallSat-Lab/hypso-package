@@ -82,19 +82,21 @@ points_file = os.path.join(dir_path, 'frohavet_2024-05-06_1017Z-bin3.points')
 
 satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
 
+
+print(satobj.l1b_nc_file)
+print(satobj.l1b_nc_name)
 #satobj._run_land_mask(product="global")
-print("get_l1a_cube")
-satobj.get_l1a_cube()
-print("get_l1b_cube attempt 1")
-satobj.get_l1b_cube()
-print("generate_l1b_cube attempt 1")
-satobj.generate_l1b_cube()
 
-print("get_l1b_cube attempt 2")
-satobj.get_l1b_cube()
-
-print("generate_l1b_cube attempt 2")
-satobj.generate_l1b_cube()
+#print("get_l1a_cube")
+#satobj.get_l1a_cube()
+#print("get_l1b_cube attempt 1")
+#satobj.get_l1b_cube()
+#print("generate_l1b_cube attempt 1")
+#satobj.generate_l1b_cube()
+#print("get_l1b_cube attempt 2")
+#satobj.get_l1b_cube()
+#print("generate_l1b_cube attempt 2")
+#satobj.generate_l1b_cube()
 
 
 

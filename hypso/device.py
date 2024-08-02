@@ -435,6 +435,10 @@ class Hypso1(Hypso):
         self.l1b_nc_file = Path(file_path.replace("-l1a", "-l1b"))
         self.l2a_nc_file = Path(file_path.replace("-l1a", "-l2a"))
 
+        self.l1a_nc_name = self.l1a_nc_file.stem
+        self.l1b_nc_name = self.l1b_nc_file.stem
+        self.l2a_nc_name = self.l2a_nc_file.stem
+
         return None
 
     def _set_directory(self) -> None:
@@ -519,7 +523,7 @@ class Hypso1(Hypso):
 
         return None
 
-    # Loading
+    # Loading L1b
 
     def _load_l1a_file(self) -> None:
 
@@ -582,6 +586,21 @@ class Hypso1(Hypso):
 
     def _load_l1a_bip_metadata(self) -> None:
         
+        return None
+
+
+    # Loading L1b
+
+    # TODO
+    def _load_l1b_file(self) -> None:
+        return None
+
+    # TODO
+    def _load_l1b_cube(self) -> None:
+        return None
+    
+    # TODO
+    def _load_l1b_metadata(self) -> None:
         return None
 
 
@@ -1414,9 +1433,9 @@ class Hypso1(Hypso):
         return False
 
 
-
     # L1b file output
 
+    # TODO: refactor
     def _write_l1b_nc_file(self) -> None:
         """
         Create a l1b.nc file using the radiometrically corrected data. Same structure from the original l1a.nc file
@@ -1425,7 +1444,6 @@ class Hypso1(Hypso):
         :return: Nothing.
         """
 
-        # TODO: can this be implemented with satpy NetCDF reader?
 
         hypso_nc_path = self.l1a_nc_file
         old_nc = nc.Dataset(hypso_nc_path, 'r', format='NETCDF4')
@@ -1911,27 +1929,23 @@ class Hypso1(Hypso):
         return None
 
     # TODO refactor
-    def _check_write_l1b_nc_file_has_run(self, run_on_false: bool = True) -> bool:
+    def _check_write_l1b_nc_file_has_run(self) -> bool:
 
-        return False
-    
-        self.write_l1b_nc_file_has_run
+        hypso_nc_path = self.l1a_nc_file
+        old_nc = nc.Dataset(hypso_nc_path, 'r', format='NETCDF4')
 
-        if run_on_false:
-            if not self.geometry_computation_has_run:
+        new_path = hypso_nc_path
+        new_path = str(new_path).replace('l1a.nc', 'l1b.nc')
 
-                if self.verbose:
-                    print("[INFO] L1b .nc file has not been created yet. Creating it now...")
-    
-                self._write_l1b_nc_file()
-                return True
-
-        if self.geometry_computation_has_run:
-            return True
-
-        return False     
+        if Path(new_path).is_file():
+            print("L1b.nc file already exists. Not creating it.")
+            self.l1b_nc_file = Path(new_path)
+            return
 
 
+
+        return self.write_l1b_nc_file_has_run
+ 
 
     # Other functions
 
