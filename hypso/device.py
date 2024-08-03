@@ -80,6 +80,9 @@ class Hypso:
         self.l1b_nc_name = None
         self.l2a_nc_name = None
 
+        # Initialize datasets
+        # TODO: store all products, data, etc in dataset object/dict?
+        self.datasets = {}
 
         # Initialize datacubes
         self.l1a_cube = None
