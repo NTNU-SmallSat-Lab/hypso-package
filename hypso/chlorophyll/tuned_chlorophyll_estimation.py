@@ -79,18 +79,18 @@ def run_tuned_chlorophyll_estimation(l2a_cube: np.ndarray,
     kernel = np.array([[1 / 16, 1 / 8, 1 / 16],  # 3x3 kernel
                         [1 / 8, 1 / 4, 1 / 8],
                         [1 / 16, 1 / 8, 1 / 16]], dtype=float)
-    estimation = convolve2d(estimation, kernel, max_missing=0.5, verbose=True)
+    chl = convolve2d(chl, kernel, max_missing=0.5, verbose=True)
 
 
     # Masking -----------------------------------------------------------------
-    estimation = np.multiply(estimation, mask.astype(int))
+    chl = np.multiply(chl, mask.astype(int))
 
     for r in range(mask.shape[0]):
         for c in range(mask.shape[1]):
             if not mask[r, c]:
-                estimation[r, c] = np.nan
+                chl[r, c] = np.nan
 
-    return estimation
+    return chl
 
 
 
