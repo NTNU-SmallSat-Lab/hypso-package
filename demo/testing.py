@@ -116,7 +116,7 @@ z = satobj.get_active_land_mask()
 print(z)
 
 
-z = satobj._get_unified_mask()
+z = satobj._get_active_mask()
 
 
 exit()
