@@ -1325,7 +1325,7 @@ class Hypso1(Hypso):
             self.active_land_mask = self.land_masks[land_mask.lower()]
             self.active_land_mask_name = land_mask.lower()
 
-        self._update_active_mask(self)
+        self._update_active_mask()
 
         return None
 
@@ -1397,7 +1397,7 @@ class Hypso1(Hypso):
             self.active_cloud_mask = self.cloud_masks[cloud_mask.lower()]
             self.active_cloud_mask_name = cloud_mask.lower()
 
-        self._update_active_mask(self)
+        self._update_active_mask()
 
         return None
 
