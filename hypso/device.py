@@ -9,6 +9,9 @@ from dateutil import parser
 import netCDF4 as nc
 import pyproj as prj
 
+from pyresample import SwathDefinition
+from pyresample import geometry
+from pyresample.kd_tree import get_neighbour_info
 
 from typing import Literal, Union
 from datetime import datetime
@@ -2281,8 +2284,48 @@ class Hypso1(Hypso):
         return toa_reflectance
 
 
+
+
+
+
+    def get_nearest_pixel(self, latitude: float, longitude: float) -> tuple[int, int]:
+        """
+        Find the nearest pixel in a SwathDefinition given a target latitude and longitude.
+
+        Parameters:
+        - swath_def: SwathDefinition object containing latitude and longitude arrays
+        - target_lat: Target latitude
+        - target_lon: Target longitude
+
+        Returns:
+        - (i, j): Indices of the nearest pixel in the swath definition
+        """
+        # Wrap target coordinates in arrays
+
+        if self.latitudes is None or self.longitudes is None:
+            return None
+
+        target_latitudes = np.array([latitude])
+        target_longitudes = np.array([longitude])
+        
+        source_swath_def = geometry.SwathDefinition(lons=self.longitudes, lats=self.latitudes)
+        target_swath_def = geometry.SwathDefinition(lons=target_longitudes, lats=target_latitudes)
+
+        # Find nearest neighbor info
+        valid_input_index, valid_output_index, index_array, distance_array = get_neighbour_info(
+            source_swath_def, target_swath_def, radius_of_influence=np.inf, neighbours=1
+        )
+
+        if len(valid_input_index) > 0:
+            nearest_index = np.unravel_index(index_array[0], source_swath_def.shape)
+            return nearest_index
+        else:
+            return None
+
+
+
     # TODO check that this works and does image flip need to apply?
-    def _haversine(lat1, lon1, lat2, lon2):
+    def _haversine(self, lat1, lon1, lat2, lon2):
         """
         WARNING: ChatGPT wrote this... ()
 
@@ -2299,7 +2342,8 @@ class Hypso1(Hypso):
 
         return R * c
 
-    def get_nearest_pixel(self, target_lat: float, target_lon: float):
+
+    def get_nearest_pixel_haversine(self, latitude: float, longitude: float):
         """
         Find the nearest index in 2D latitude and longitude matrices
         to the given target latitude and longitude.
@@ -2315,7 +2359,7 @@ class Hypso1(Hypso):
         lat_matrix = self.latitudes
         lon_matrix = self.longitudes
 
-        distances = self._haversine(lat_matrix, lon_matrix, target_lat, target_lon)
+        distances = self._haversine(lat_matrix, lon_matrix, latitude, longitude)
         nearest_index = np.unravel_index(np.argmin(distances), distances.shape)
         return nearest_index
 
@@ -2325,7 +2369,6 @@ class Hypso1(Hypso):
     
     def get_spectra(self, latitude=None, longitude=None):
 
-        from pyresample import geometry
         swath_def = geometry.SwathDefinition(lons=self.longitudes, lats=self.latitudes)
 
         swath_def.compute_bb_proj_params()

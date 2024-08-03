@@ -8,8 +8,7 @@ from pyproj import CRS
 from pyresample import geometry
 import numpy as np
 import numpy as np
-from pyresample import SwathDefinition
-from pyresample.kd_tree import get_neighbour_info
+
 
 sys.path.insert(0, '/home/cameron/Projects/hypso-package')
 
@@ -90,47 +89,17 @@ satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
 
 
 
-target_lat = satobj.latitudes[100,200]
-target_lon = satobj.longitudes[100,200]
+lat = satobj.latitudes[100,300]
+lon = satobj.longitudes[100,300]
 
-swath_def = geometry.SwathDefinition(lons=satobj.longitudes, lats=satobj.latitudes)
+print(lat)
+print(lon)
 
-
-def find_nearest_pixel(swath_def, target_lat, target_lon):
-    """
-    Find the nearest pixel in a SwathDefinition given a target latitude and longitude.
-
-    Parameters:
-    - swath_def: SwathDefinition object containing latitude and longitude arrays
-    - target_lat: Target latitude
-    - target_lon: Target longitude
-
-    Returns:
-    - (i, j): Indices of the nearest pixel in the swath definition
-    """
-    # Wrap target coordinates in arrays
-    target_lats = np.array([target_lat])
-    target_lons = np.array([target_lon])
-    
-    target_swath_def = geometry.SwathDefinition(lons=target_lons, lats=target_lats)
-
-
-    # Find nearest neighbor info
-    valid_input_index, valid_output_index, index_array, distance_array = get_neighbour_info(
-        swath_def, target_swath_def, radius_of_influence=np.inf, neighbours=1
-    )
-
-    if len(valid_input_index) > 0:
-        nearest_index = np.unravel_index(index_array[0], swath_def.shape)
-        return nearest_index
-    else:
-        return None
-
-
-
-index = find_nearest_pixel(swath_def, target_lat, target_lon)
+index = satobj.get_nearest_pixel_2(latitude=lat, longitude=lon)
 
 print(index)
+
+
 
 
 
