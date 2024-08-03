@@ -4,8 +4,8 @@ import pandas as pd
 import numpy as np
 from warnings import simplefilter
 from sklearn.exceptions import ConvergenceWarning
-from hypso.experimental.chlorophyll.utilities_chl import convolve2d
-from hypso.experimental.chlorophyll.indices import *
+from hypso.chlorophyll.utilities_chl import convolve2d
+from hypso.chlorophyll.indices import *
 from importlib.resources import files
 from joblib import dump, load
 from typing import Tuple
