@@ -271,6 +271,12 @@ class Hypso1(Hypso):
         self.cloud_mask_has_run = False
         self.chlorophyll_estimation_has_run = False
 
+        # L1a: raw
+        # L1b: radiance
+        # L1c: radiance
+        # L2a: Rrs
+
+
         # Load L1a file -----------------------------------------------------
         self._load_l1a_file()
 
@@ -2274,8 +2280,60 @@ class Hypso1(Hypso):
 
         return toa_reflectance
 
+
+    # TODO check that this works and does image flip need to apply?
+    def _haversine(lat1, lon1, lat2, lon2):
+        """
+        WARNING: ChatGPT wrote this... ()
+
+        Calculate the great-circle distance between two points 
+        on the Earth using the Haversine formula.
+        """
+        R = 6371.0  # Radius of the Earth in kilometers
+        phi1, phi2 = np.radians(lat1), np.radians(lat2)
+        delta_phi = np.radians(lat2 - lat1)
+        delta_lambda = np.radians(lon2 - lon1)
+
+        a = np.sin(delta_phi / 2.0)**2 + np.cos(phi1) * np.cos(phi2) * np.sin(delta_lambda / 2.0)**2
+        c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
+
+        return R * c
+
+    def get_nearest_pixel(self, target_lat: float, target_lon: float):
+        """
+        Find the nearest index in 2D latitude and longitude matrices
+        to the given target latitude and longitude.
+
+        Parameters:
+        - target_lat: Target latitude
+        - target_lon: Target longitude
+
+        Returns:
+        - (i, j): Tuple of indices in the matrices closest to the target coordinate
+        """
+
+        lat_matrix = self.latitudes
+        lon_matrix = self.longitudes
+
+        distances = self._haversine(lat_matrix, lon_matrix, target_lat, target_lon)
+        nearest_index = np.unravel_index(np.argmin(distances), distances.shape)
+        return nearest_index
+
+
+
+
+    
+    def get_spectra(self, latitude=None, longitude=None):
+
+        from pyresample import geometry
+        swath_def = geometry.SwathDefinition(lons=self.longitudes, lats=self.latitudes)
+
+        swath_def.compute_bb_proj_params()
+
+        return None
+
     # TODO
-    def get_spectra(self, position_dict: dict, product: Literal["L1C", "L2-6SV1", "L2-ACOLITE"] = "L1C",
+    def get_spectra_old(self, position_dict: dict, product: Literal["L1C", "L2-6SV1", "L2-ACOLITE"] = "L1C",
                     filename: Union[str, None] = None, plot: bool = True) -> Union[pd.DataFrame, None]:
         """
         Get spectra values from the indicated coordinated or pixel.
