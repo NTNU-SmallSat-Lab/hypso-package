@@ -2363,17 +2363,92 @@ class Hypso1(Hypso):
         nearest_index = np.unravel_index(np.argmin(distances), distances.shape)
         return nearest_index
 
+        
+
+    def get_l1a_spectra(self, 
+                        latitude=None, 
+                        longitude=None
+                        ) -> np.ndarray:
+
+        if self.l1a_cube is None:
+            return None
+
+        idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
+
+        spectrum = self.l1a_cube[idx[0], idx[1], :]
+
+        return spectrum
 
 
+    def get_l1b_spectra(self, 
+                        latitude=None, 
+                        longitude=None
+                        ) -> np.ndarray:
+
+        if self.l1b_cube is None:
+            return None
+
+        idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
+
+        spectrum = self.l1b_cube[idx[0], idx[1], :]
+
+        return spectrum
 
     
-    def get_spectra(self, latitude=None, longitude=None):
+    def get_l2a_spectra(self, 
+                        product: Literal["acolite", "6sv1", "machi"] = "6sv1",
+                        latitude=None, 
+                        longitude=None
+                        ) -> np.ndarray:
 
-        swath_def = geometry.SwathDefinition(lons=self.longitudes, lats=self.latitudes)
+        idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
 
-        swath_def.compute_bb_proj_params()
+        match product.lower():
 
-        return None
+            case "acolite":
+
+                if self.l2a_cubes['acolite'] is None:
+                    return None
+
+                spectrum = self.l2a_cubes['acolite'][idx[0], idx[1], :]
+
+            case "6sv1":
+
+                if self.l2a_cubes['6sv1'] is None:
+                    return None
+
+                spectrum = self.l2a_cubes['6sv1'][idx[0], idx[1], :]
+
+            case "machi":
+
+                if self.l2a_cubes['machi'] is None:
+                    return None
+
+                spectrum = self.l2a_cubes['machi'][idx[0], idx[1], :]
+
+            case _:
+
+                return None
+
+        return spectrum
+
+
+
+    def plot_spectra(self, latitude=None, longitude=None):
+
+        import matplotlib.pyplot as plt
+        plt.figure(figsize=(10, 5))
+        plt.plot(self.wavelengths, spectra_data)
+        if product == "L1C":
+            plt.ylabel(self.units)
+        elif "L2" in product:
+            plt.ylabel("Rrs [0,1]")
+            plt.ylim([0, 1])
+        plt.xlabel("Wavelength (nm)")
+        plt.title(f"(lat, lon) -→ (X, Y) : ({lat}, {lon}) -→ ({posX}, {posY})")
+        plt.grid(True)
+        plt.show()
+
 
     # TODO
     def get_spectra_old(self, position_dict: dict, product: Literal["L1C", "L2-6SV1", "L2-ACOLITE"] = "L1C",
