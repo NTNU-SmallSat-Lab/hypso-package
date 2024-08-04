@@ -8,6 +8,7 @@ from pathlib import Path
 from dateutil import parser
 import netCDF4 as nc
 import pyproj as prj
+import matplotlib.pyplot as plt
 
 from pyresample import SwathDefinition
 from pyresample import geometry
@@ -173,6 +174,9 @@ class Hypso:
 
         # Initialize units
         self.units = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
+        self.l1a_units = "Raw sensor values (a.u.)"
+        self.l1b_units = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
+        self.l2a_units = "Rrs [0,1] (a.u.)"
 
 
         # Initilize land mask dict
@@ -2382,7 +2386,7 @@ class Hypso1(Hypso):
 
     def get_l1b_spectra(self, 
                         latitude=None, 
-                        longitude=None
+                        longitude=None,
                         ) -> np.ndarray:
 
         if self.l1b_cube is None:
@@ -2403,213 +2407,91 @@ class Hypso1(Hypso):
 
         idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
 
-        match product.lower():
-
-            case "acolite":
-
-                if self.l2a_cubes['acolite'] is None:
-                    return None
-
-                spectrum = self.l2a_cubes['acolite'][idx[0], idx[1], :]
-
-            case "6sv1":
-
-                if self.l2a_cubes['6sv1'] is None:
-                    return None
-
-                spectrum = self.l2a_cubes['6sv1'][idx[0], idx[1], :]
-
-            case "machi":
-
-                if self.l2a_cubes['machi'] is None:
-                    return None
-
-                spectrum = self.l2a_cubes['machi'][idx[0], idx[1], :]
-
-            case _:
-
-                return None
+        try:
+            spectrum = self.l2a_cubes[product][idx[0], idx[1], :]
+        except KeyError:
+            return None
 
         return spectrum
 
 
 
-    def plot_spectra(self, latitude=None, longitude=None):
 
-        import matplotlib.pyplot as plt
+
+    # TODO: add path to plotting functions
+
+    def plot_l1a_spectra(self, 
+                        latitude=None, 
+                        longitude=None
+                        ) -> np.ndarray:
+        
+        idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
+
+        spectrum = self.l1a_cube[idx[0], idx[1], :]
+
+        bands = range(0, len(spectrum))
+
         plt.figure(figsize=(10, 5))
-        plt.plot(self.wavelengths, spectra_data)
-        if product == "L1C":
-            plt.ylabel(self.units)
-        elif "L2" in product:
-            plt.ylabel("Rrs [0,1]")
-            plt.ylim([0, 1])
+        plt.plot(bands, spectrum)
+        plt.ylabel(self.l1a_units)
         plt.xlabel("Wavelength (nm)")
-        plt.title(f"(lat, lon) -→ (X, Y) : ({lat}, {lon}) -→ ({posX}, {posY})")
+        plt.title(f"(lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
         plt.grid(True)
-        plt.show()
+        plt.savefig('l1b_plot.png')
 
 
-    # TODO
-    def get_spectra_old(self, position_dict: dict, product: Literal["L1C", "L2-6SV1", "L2-ACOLITE"] = "L1C",
-                    filename: Union[str, None] = None, plot: bool = True) -> Union[pd.DataFrame, None]:
-        """
-        Get spectra values from the indicated coordinated or pixel.
 
-        :param position_dict: Dictionary with the inputs required.\n
-            *** If Coordinates are Input *** \n
-            ``{"lat":59.5,"lon":10}``\n
-            *** If pixel location passed *** \n
-            ``{"X":200,"Y":83}``
-        :param product: Product of which to retrieve the spectral signal. Can either be "L1C", "L2-ACOLITE" or "L2-6SV1"
-        :param filename: Path on which to save the spectra as a .csv file. Filename should contain the ".csv" extension.
-            Example: "/Documents/export_signal.csv". If None, the spectral signal won´t be saved as a file.
-        :param plot: If True, the spectral signal will be plotted.
+    def plot_l1b_spectra(self, 
+                        latitude=None, 
+                        longitude=None
+                        ) -> np.ndarray:
+        
+        idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
 
-        :return: None if the coordinates/pixel location are not withing the captured image. Otherwise, a pandas dataframe
-            containing the spectral signal is returned.
-        """
+        spectrum = self.l1b_cube[idx[0], idx[1], :]
 
-        position_keys = list(position_dict.keys())
-        if "lat" in position_keys or "lon" in position_keys:
-            postype = "coord"
-        elif "X" in position_keys or "Y" in position_keys:
-            postype = "pix"
-        else:
-            raise Exception("Keys of ")
+        bands = self.wavelengths
 
-        # To Store data
-        spectra_data = []
-        multiplier = 1  # Multiplier for the signal. In case signal is compressed differently.
-        posX = None
-        posY = None
-        lat = None
-        lon = None
-        transformed_lon = None
-        transformed_lat = None
-        # Open the raster
+        plt.figure(figsize=(10, 5))
+        plt.plot(bands, spectrum)
+        plt.ylabel(self.l1b_units)
+        plt.xlabel("Wavelength (nm)")
+        plt.title(f"(lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
+        plt.grid(True)
+        plt.savefig('l1b_plot.png')
 
-        # Find Geotiffs
-        self.find_geotiffs()
 
-        # Check if full (120 band) tiff exists
-        if self.l1cgeotiffFilePath is None and self.l2geotiffFilePath is None:
-            raise Exception("No Full-Band GeoTiff, Force Restart")
+    def plot_l2a_spectra(self, 
+                         product: Literal["acolite", "6sv1", "machi"] = "6sv1",
+                         latitude=None, 
+                         longitude=None
+                         ) -> np.ndarray:
+        
+        idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
 
-        path_to_read = None
-        cols = []
-        if product == "L1C":
-            if self.l1cgeotiffFilePath is None:
-                raise Exception("L1C product does not exist.")
-            elif self.l1cgeotiffFilePath is not None:
-                path_to_read = self.l1cgeotiffFilePath
-                cols = ["wl", "radiance"]
-        elif "L2" in product:
-            l2_engine = product.split("-")[1]
-            if self.l2geotiffFilePath is None:
-                raise Exception("L2 product does not exist.")
-            elif self.l2geotiffFilePath is not None:
-                try:
-                    path_to_read = self.l2geotiffFilePath[l2_engine.upper()]
-                except:
-                    raise Exception(f"There is no L2 Geotiff for {l2_engine.upper()}")
-
-                cols = ["wl", "rrs"]
-
-        else:
-            raise Exception("Wrong product type.")
-
-        with rasterio.open(str(path_to_read)) as dataset:
-            dataset_crs = dataset.crs
-            print("Dataset CRS: ", dataset_crs)
-
-            # Create Projection with Dataset CRS
-            dataset_proj = prj.Proj(dataset_crs)  # your data crs
-
-            # Find Corners of Image (For Development)
-            boundbox = dataset.bounds
-            left_bottom = dataset_proj(
-                boundbox[0], boundbox[1], inverse=True)
-            right_top = dataset_proj(
-                boundbox[2], boundbox[3], inverse=True)
-
-            if postype == 'coord':
-                # Get list to two variables
-                lat = position_dict["lat"]
-                lon = position_dict["lon"]
-                # lat, lon = position
-                # Transform Coordinates to Image CRS
-                transformed_lon, transformed_lat = dataset_proj(
-                    lon, lat, inverse=False)
-                # Get pixel coordinates from map coordinates
-                posY, posX = dataset.index(
-                    transformed_lon, transformed_lat)
-
-            elif postype == 'pix':
-                posX = int(position_dict["X"])
-                posY = int(position_dict["Y"])
-
-                # posX = int(position[0])
-                # posY = int(position[1])
-
-                transformed_lon = dataset.xy(posX, posY)[0]
-                transformed_lat = dataset.xy(posX, posY)[1]
-
-                # Transform from the GeoTiff CRS
-                lon, lat = dataset_proj(
-                    transformed_lon, transformed_lat, inverse=True)
-
-            # Window size is 1 for a Single Pixel or 3 for a 3x3 windowd
-            N = 3
-            # Build an NxN window
-            window = rasterio.windows.Window(
-                posX - (N // 2), posY - (N // 2), N, N)
-
-            # Read the data in the window
-            # clip is a nbands * N * N numpy array
-            clip = dataset.read(window=window)
-            if N != 1:
-                clip = np.mean(clip, axis=(1, 2))
-
-            clip = np.squeeze(clip)
-
-            # Append data to Array
-            # Multiplier for Values like Sentinel 2 which need 1/10000
-            spectra_data = clip * multiplier
-
-        # Return None if outside of boundaries or alpha channel is 0
-        if posX < 0 or posY < 0 or self.projection_metadata["rgba_data"][3, posY, posX] == 0:
-            print("Location not covered by image --------------------------\n")
+        try:
+            cube = self.l2a_cubes[product.lower()]
+        except KeyError:
             return None
 
-        # Print Coordinate and Pixel Matching
-        print("(lat, lon) -→ (X, Y) : (%s, %s) -→ (%s, %s)" %
-              (lat, lon, posX, posY))
+        spectrum = cube[idx[0], idx[1], :]
 
-        df_band = pd.DataFrame(np.column_stack((self.wavelengths, spectra_data)), columns=cols)
-        df_band["lat"] = lat
-        df_band["lon"] = lon
-        df_band["X"] = posX
-        df_band["Y"] = posY
+        bands = self.wavelengths
 
-        if filename is not None:
-            df_band.to_csv(filename, index=False)
+        plt.figure(figsize=(10, 5))
+        plt.plot(bands, spectrum)
+        plt.ylabel(self.l2a_units)
+        plt.ylim([0, 1])
+        plt.xlabel("Wavelength (nm)")
+        plt.title(f"(lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
+        plt.grid(True)
+        plt.savefig('l2a_' + str(product) + 'plot.png')
 
-        if plot:
-            import matplotlib.pyplot as plt
-            plt.figure(figsize=(10, 5))
-            plt.plot(self.wavelengths, spectra_data)
-            if product == "L1C":
-                plt.ylabel(self.units)
-            elif "L2" in product:
-                plt.ylabel("Rrs [0,1]")
-                plt.ylim([0, 1])
-            plt.xlabel("Wavelength (nm)")
-            plt.title(f"(lat, lon) -→ (X, Y) : ({lat}, {lon}) -→ ({posX}, {posY})")
-            plt.grid(True)
-            plt.show()
 
-        return df_band
+
+
+
+
 
     # TODO
     def write_l1a_nc_file(self, path: str = None) -> None:

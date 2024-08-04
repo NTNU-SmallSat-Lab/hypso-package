@@ -89,17 +89,18 @@ satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
 
 #satobj.generate_l1b_cube()
 
-lat = satobj.latitudes[100,300]
-lon = satobj.longitudes[100,300]
+lat = satobj.latitudes[200,500]
+lon = satobj.longitudes[200,500]
 
 print(lat)
 print(lon)
 
 spectrum = satobj.get_l1a_spectra(latitude=lat, longitude=lon)
 
-
 print(spectrum)
 print(spectrum.shape)
+
+satobj.plot_l1a_spectra(latitude=lat, longitude=lon)
 
 exit()
 lat = satobj.latitudes[100,300]
