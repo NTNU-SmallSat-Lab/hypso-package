@@ -42,7 +42,7 @@ def run_tuned_chlorophyll_estimation(l2a_cube: np.ndarray,
     rrs_array = rrs_cube.reshape((-1, channels))
 
     # Get DF with proper headers ---------------------------------------------
-    hypso_headers = files('hypso.chlorophyll').joinpath('hypso_wl_headers.csv')
+    hypso_headers = files('hypso.chlorophyll').joinpath('data/hypso_wl_headers.csv')
     
     # TODO: use wavelengths?
     hypso_string_wl = list(np.loadtxt(hypso_headers, delimiter=",", dtype=str))
@@ -280,29 +280,6 @@ def validate_tuned_model(model: str) -> bool:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-'''
 def start_chl_estimation(sat_obj, model=None) -> None:
     """
     Estimates the chlorophyll using a trained ML Scikit-Learn Model
@@ -340,7 +317,7 @@ def start_chl_estimation(sat_obj, model=None) -> None:
 
     # Get DF with proper headers ---------------------------------------------
     hypso_headers = files(
-        'hypso.experimental').joinpath('chlorophyll/hypso_wl_headers.csv')
+        'hypso.experimental').joinpath('chlorophyll/data/hypso_wl_headers.csv')
     hypso_string_wl = list(np.loadtxt(hypso_headers, delimiter=",", dtype=str))
 
     rrs_df = pd.DataFrame(rrs_array, columns=hypso_string_wl)
@@ -380,4 +357,4 @@ def start_chl_estimation(sat_obj, model=None) -> None:
                 estimation[r, c] = np.nan
 
     sat_obj.chl = estimation
-    '''
+    
