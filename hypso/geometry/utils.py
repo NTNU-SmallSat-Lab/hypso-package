@@ -2,10 +2,12 @@ import math as m
 import numpy as np
 import scipy.spatial as ss
 # from .time_process import get_greenwich_mean_sidereal_time_seconds
-import hypso.georeference.georef as gref
 import datetime
 from typing import Tuple
+import datetime
 
+
+from .time import get_greenwich_mean_sidereal_time_seconds
 
 # source: https://stackoverflow.com/questions/13542855/algorithm-to-find-the-minimum-area-rectangle-for-given-points-in-order-to-comput/33619018#33619018
 def minimum_bounding_rectangle(points) -> np.ndarray:
@@ -231,7 +233,7 @@ def eci_lon_to_ecef_lon(datetime_utc, lon, time_offset) -> float:
 
     :return:
     """
-    s_sdrl = gref.get_greenwich_mean_sidereal_time_seconds(datetime_utc) + time_offset
+    s_sdrl = get_greenwich_mean_sidereal_time_seconds(datetime_utc) + time_offset
     sdrl_rad = s_sdrl * 2.0 * m.pi / (24 * 3600)
     return lon - sdrl_rad
 

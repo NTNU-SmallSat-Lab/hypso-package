@@ -12,7 +12,14 @@ import astropy.time
 
 import scipy.interpolate as si
 from typing import Tuple, List
-import georef as gref
+
+from .utils import mat_from_quat, \
+                   rotate_axis_angle, \
+                   ellipsoid_line_intersection, \
+                   ecef_to_lat_lon_alt
+
+from .time import get_julian_day_number, \
+                  get_greenwich_mean_sidereal_time_seconds
 
 # PARAMETERS ----------------------------------------------------------------------
 
@@ -491,7 +498,7 @@ def geometry_computation(framepose_data: pd.DataFrame,
     for i in range(frame_count):
         # for i in range(3):
         time_astropy = astropy.time.Time(times[i] + additional_time_offset, format='unix')
-        mat = gref.mat_from_quat(quat_teme[i, :])
+        mat = mat_from_quat(quat_teme[i, :])
 
         body_x_body = np.array([1.0, 0.0, 0.0])
         body_z_body = np.array([0.0, 0.0, 1.0])
@@ -542,17 +549,17 @@ def geometry_computation(framepose_data: pd.DataFrame,
         mid_bot_pixel_angle = pixel_index_to_angle(image_height / 4 - 1, 266, fov, hypso_height_sensor)
         bot_pixel_angle = pixel_index_to_angle(0, 266, fov, image_height)
 
-        view_dir_top = gref.rotate_axis_angle(body_z_itrs[i, :], body_x_itrs[i, :], top_pixel_angle)
-        view_dir_mid_top = gref.rotate_axis_angle(body_z_itrs[i, :], body_x_itrs[i, :], mid_top_pixel_angle)
-        view_dir_mid = gref.rotate_axis_angle(body_z_itrs[i, :], body_x_itrs[i, :], mid_pixel_angle)
-        view_dir_mid_bot = gref.rotate_axis_angle(body_z_itrs[i, :], body_x_itrs[i, :], mid_bot_pixel_angle)
-        view_dir_bot = gref.rotate_axis_angle(body_z_itrs[i, :], body_x_itrs[i, :], bot_pixel_angle)
+        view_dir_top = rotate_axis_angle(body_z_itrs[i, :], body_x_itrs[i, :], top_pixel_angle)
+        view_dir_mid_top = rotate_axis_angle(body_z_itrs[i, :], body_x_itrs[i, :], mid_top_pixel_angle)
+        view_dir_mid = rotate_axis_angle(body_z_itrs[i, :], body_x_itrs[i, :], mid_pixel_angle)
+        view_dir_mid_bot = rotate_axis_angle(body_z_itrs[i, :], body_x_itrs[i, :], mid_bot_pixel_angle)
+        view_dir_bot = rotate_axis_angle(body_z_itrs[i, :], body_x_itrs[i, :], bot_pixel_angle)
 
-        pos_itrs_viewpoint_top, t1 = gref.ellipsoid_line_intersection(campos_itrs[i, :], view_dir_top)
-        pos_itrs_viewpoint_mid_top, t2 = gref.ellipsoid_line_intersection(campos_itrs[i, :], view_dir_mid_top)
-        pos_itrs_viewpoint_mid, t3 = gref.ellipsoid_line_intersection(campos_itrs[i, :], view_dir_mid)
-        pos_itrs_viewpoint_mid_bot, t4 = gref.ellipsoid_line_intersection(campos_itrs[i, :], view_dir_mid_bot)
-        pos_itrs_viewpoint_bot, t5 = gref.ellipsoid_line_intersection(campos_itrs[i, :], view_dir_bot)
+        pos_itrs_viewpoint_top, t1 = ellipsoid_line_intersection(campos_itrs[i, :], view_dir_top)
+        pos_itrs_viewpoint_mid_top, t2 = ellipsoid_line_intersection(campos_itrs[i, :], view_dir_mid_top)
+        pos_itrs_viewpoint_mid, t3 = ellipsoid_line_intersection(campos_itrs[i, :], view_dir_mid)
+        pos_itrs_viewpoint_mid_bot, t4 = ellipsoid_line_intersection(campos_itrs[i, :], view_dir_mid_bot)
+        pos_itrs_viewpoint_bot, t5 = ellipsoid_line_intersection(campos_itrs[i, :], view_dir_bot)
 
         pos_itrs_viewpoint_top_astropy_certesian = astropy.coordinates.CartesianRepresentation(
             pos_itrs_viewpoint_top * astropy.units.m)
@@ -601,8 +608,8 @@ def geometry_computation(framepose_data: pd.DataFrame,
 
             dt = datetime.datetime.fromtimestamp(times[i], tz=datetime.timezone.utc)
             if verbose:
-                print(f'JD number: {gref.get_julian_day_number(dt)} + {(3600 * dt.hour + 60 * dt.minute + dt.second) / ((24 * 3600))}')
-                print(f'GMST radians: {2 * m.pi * gref.get_greenwich_mean_sidereal_time_seconds(dt) / (24 * 3600)}')
+                print(f'JD number: {get_julian_day_number(dt)} + {(3600 * dt.hour + 60 * dt.minute + dt.second) / ((24 * 3600))}')
+                print(f'GMST radians: {2 * m.pi * get_greenwich_mean_sidereal_time_seconds(dt) / (24 * 3600)}')
                 
                 print(f'campos TEME: [{pos_teme[i, 0]}, {pos_teme[i, 1]}, {pos_teme[i, 2]}]')
                 print(f'campos ITRF: [{campos_itrs[i, 0]}, {campos_itrs[i, 1]}, {campos_itrs[i, 2]}]')
@@ -617,7 +624,7 @@ def geometry_computation(framepose_data: pd.DataFrame,
                 print(f'latlon bot: {latlon_bot[i, 0]}, {latlon_bot[i, 1]}')
 
     # Setting altitude to zero to compute satellite ground track from lat lon
-    satpos_lat_lon_alt = gref.ecef_to_lat_lon_alt(campos_itrs)
+    satpos_lat_lon_alt = ecef_to_lat_lon_alt(campos_itrs)
     satpos_lat_lon = satpos_lat_lon_alt.copy()
     satpos_lat_lon[:, 2] = np.zeros([satpos_lat_lon.shape[0], 1])[:, 0]
 

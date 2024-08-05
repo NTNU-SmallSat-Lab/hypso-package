@@ -4,11 +4,14 @@ import pandas as pd
 import numpy as np
 from warnings import simplefilter
 from sklearn.exceptions import ConvergenceWarning
-from hypso.chlorophyll.utilities_chl import convolve2d
-from hypso.chlorophyll.indices import *
 from importlib.resources import files
 from joblib import dump, load
 from typing import Tuple
+
+#from hypso.chlorophyll.utilities_chl import convolve2d
+#from hypso.chlorophyll.indices import *
+from .indices import TBVI, TBM, BR, BR_LOG, BDIFF
+from .utils import convolve2d
 
 simplefilter("ignore", category=ConvergenceWarning)
 

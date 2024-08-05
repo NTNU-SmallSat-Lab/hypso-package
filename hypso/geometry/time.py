@@ -1,4 +1,6 @@
 import datetime
+from typing import Tuple
+import datetime
 
 
 def get_julian_day_number(date_time) -> float:
@@ -48,3 +50,4 @@ def get_greenwich_mean_sidereal_time_seconds(date_time) -> float:
         s_sdrl = s_sdrl - 24 * 3600;
 
     return s_sdrl
+
