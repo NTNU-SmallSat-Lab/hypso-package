@@ -540,7 +540,7 @@ def recursive_print_nc(nc_file: nc.Dataset, path: str = '', depth: int = 0) -> N
             newname = path + nc_file.name + '/'
         recursive_print_nc(nc_file.groups[g], path=newname, depth=depth + 1)
 
-
+'''
 def find_closest_water_lat_lon_match(sat_obj, target_lat: float, target_lon: float, water_pixel_filter:bool=False) -> Tuple[int, int, float]:
     """
     Find the closest Image lat and lon to the targat specificed that is also a water pixel.
@@ -602,6 +602,7 @@ def find_closest_water_lat_lon_match(sat_obj, target_lat: float, target_lon: flo
 
     else:
         raise Exception("Lat and Lon not within Capture 2D Array Lat/Lon values")
+'''
 
 def haversine(lon1, lat1, lon2, lat2):
     """
