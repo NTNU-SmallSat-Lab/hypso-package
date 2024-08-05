@@ -347,7 +347,6 @@ class Hypso1(Hypso):
 
         return None
 
-
     def _set_capture_name(self) -> None:
 
         capture_name = self.hypso_path.stem
@@ -389,8 +388,6 @@ class Hypso1(Hypso):
             print(f"[INFO] Capture capture type: {self.capture_type}")
 
         return None
-
-
 
     def _set_adcs_dataframes(self) -> None:
 
@@ -465,18 +462,6 @@ class Hypso1(Hypso):
         self.nc_dir = Path(self.nc_file.parent.absolute())
 
         return None
-
-    # TODO: is this used for anything?
-    '''
-    def _set_target_area(self) -> None:
-
-        if all([self.target_coords.get('latc'), self.target_coords.get('lonc')]):
-            self.target_area = self.target_coords['latc'] + ' ' + self.target_coords['lonc']
-        else:
-            self.target_area = None
-
-        return None
-    '''
 
     def _set_background_value(self) -> None:
 
@@ -2169,164 +2154,8 @@ class Hypso1(Hypso):
                 return cube
 
         return cube
-
-
-
-    # Public methods
-
-    def get_l1a_cube(self) -> np.ndarray:
-
-        return self.l1a_cube
-
-    def generate_l1b_cube(self) -> None:
-
-        self._run_calibration()
-
-        return None
-
-    def get_l1b_cube(self) -> np.ndarray:
-
-        if self._check_calibration_has_run():
-
-            return self.l1b_cube
-
-        if self.verbose:
-            print("[ERROR] L1b cube has not yet been generated.")
-
-        return None
-
-    def generate_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = "6sv1") -> None:
-
-        self._run_atmospheric_correction(product=product)
-
-        return None
-
-    def get_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = "6sv1") -> np.ndarray:
-
-        if product and self._check_atmospheric_correction_has_run(product=product):
-
-            return self.l2a_cubes[product.lower()]
-        
-        if self.verbose:
-            print("[ERROR] " + product.upper() + " L2a cube has not yet been generated.")
-
-        return None
-
-    def get_l2a_cube_dict(self) -> dict:
-
-        return self.l2a_cubes
-
-    def generate_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global") -> None:
-
-        self._run_land_mask(land_mask=land_mask)
-
-        return None
-
-    def get_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global") -> np.ndarray:
-
-        if land_mask and self._check_land_mask_has_run(land_mask=land_mask):
-
-            return self.land_masks[land_mask.lower()]
-        
-        if self.verbose:
-            print("[ERROR] " + land_mask + " land mask has not yet been generated.")
-
-        return None
-
-    def get_land_mask_dict(self) -> dict:
-
-        return self.land_masks     
     
-    def set_active_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global"):
-
-        self._update_active_land_mask(land_mask=land_mask, override=True)
-
-    def get_active_land_mask(self) -> tuple[str, np.ndarray]:
-
-        return self._get_active_cloud_mask()
-
-    def generate_cloud_mask(self, cloud_mask: Literal["default"] = "default"):
-
-        self._run_cloud_mask(cloud_mask=cloud_mask)
-
-        return None
-
-    def get_cloud_mask(self, cloud_mask: Literal["default"] = "default") -> np.ndarray:
-
-        if cloud_mask and self._check_cloud_mask_has_run(cloud_mask=cloud_mask):
-
-            return self.cloud_masks[cloud_mask.lower()]
-        
-        if self.verbose:
-            print("[ERROR] " + cloud_mask + " cloud mask has not yet been generated.")
-        
-        return None
-    
-    def get_cloud_mask_dict(self) -> dict:
-
-        return self.cloud_masks 
-
-    def set_active_cloud_mask(self, cloud_mask: Literal["default"] = "default"):
-
-        self._update_active_cloud_mask(self, cloud_mask=cloud_mask, override=True)
-
-    def get_active_cloud_mask(self) -> tuple[str, np.ndarray]:
-
-        return self._get_active_land_mask()
-
-    def generate_chlorophyll_estimates(self, 
-                                       product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',
-                                       model = None):
-
-        self._run_chlorophyll_estimation(self, product=product)
-
-    def get_chlorophyll_estimates(self, 
-                                 product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',
-                                 ) -> np.ndarray:
-
-        key = product.lower()
-
-        return self.chl[key]
-
-    def get_chlorophyll_estimates_dict(self) -> dict:
-
-        return self.chl
-
-    def generate_product(self):
-
-        pass
-
-    def get_product(self):
-
-        pass
-
-    def get_product_dict(self) -> dict:
-
-        return self.products
-
-    def generate_toa_reflectance(self) -> np.ndarray:
-
-        self._run_toa_reflectance()
-
-    def get_toa_reflectance(self) -> np.ndarray:
-        """
-        Convert Top Of Atmosphere (TOA) Radiance to TOA Reflectance.
-
-        :return: Array with TOA Reflectance.
-        """
-
-        if self._check_toa_reflectance_has_run():
-
-            return self.toa_reflectance
-
-        if self.verbose:
-            print("[ERROR] Top of atmosphere (TOA) reflectance has not yet been generated.")
-
-        return None
-
-
-
-    def get_nearest_pixel(self, latitude: float, longitude: float) -> tuple[int, int]:
+    def _get_nearest_pixel(self, latitude: float, longitude: float) -> tuple[int, int]:
         """
         Find the nearest pixel in a SwathDefinition given a target latitude and longitude.
 
@@ -2378,7 +2207,7 @@ class Hypso1(Hypso):
 
         return R * c
 
-    def get_nearest_pixel_haversine(self, latitude: float, longitude: float):
+    def _get_nearest_pixel_haversine(self, latitude: float, longitude: float):
         """
         Find the nearest index in 2D latitude and longitude matrices
         to the given target latitude and longitude.
@@ -2398,6 +2227,15 @@ class Hypso1(Hypso):
         nearest_index = np.unravel_index(np.argmin(distances), distances.shape)
         return nearest_index
 
+
+
+
+    # Public L1a methods
+
+    def get_l1a_cube(self) -> np.ndarray:
+
+        return self.l1a_cube
+
     def get_l1a_spectrum(self, 
                         latitude=None, 
                         longitude=None,
@@ -2409,7 +2247,7 @@ class Hypso1(Hypso):
             return None
         
         if latitude is not None and longitude is not None:
-            idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
+            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
 
         elif x is not None and y is not None:
             idx = (x,y)
@@ -2421,54 +2259,6 @@ class Hypso1(Hypso):
 
         return spectrum, self.l1a_units
 
-    def get_l1b_spectrum(self, 
-                        latitude=None, 
-                        longitude=None,
-                        x: int = None,
-                        y: int = None
-                        ) -> tuple[np.ndarray, str]:
-
-        if self.l1b_cube is None:
-            return None
-        
-        if latitude is not None and longitude is not None:
-            idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
-
-        elif x is not None and y is not None:
-            idx = (x,y)
-            
-        else:
-            return None
-
-        spectrum = self.l1b_cube[idx[0], idx[1], :]
-
-        return spectrum, self.l1b_units
-
-    def get_l2a_spectrum(self, 
-                        product: Literal["acolite", "6sv1", "machi"] = "6sv1",
-                        latitude=None, 
-                        longitude=None,
-                        x: int = None,
-                        y: int = None
-                        ) -> tuple[np.ndarray, str]:
-
-
-        if latitude is not None and longitude is not None:
-            idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
-
-        elif x is not None and y is not None:
-            idx = (x,y)
-            
-        else:
-            return None
-
-        try:
-            spectrum = self.l2a_cubes[product][idx[0], idx[1], :]
-        except KeyError:
-            return None
-
-        return spectrum, self.l2a_units
-
     def plot_l1a_spectrum(self, 
                         latitude=None, 
                         longitude=None,
@@ -2477,7 +2267,7 @@ class Hypso1(Hypso):
                         ) -> np.ndarray:
         
         if latitude is not None and longitude is not None:
-            idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
+            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
 
         elif x is not None and y is not None:
             idx = (x,y)
@@ -2499,6 +2289,56 @@ class Hypso1(Hypso):
         plt.grid(True)
         plt.savefig(output_file)
 
+    # TODO
+    def write_l1a_nc_file(self, path: str = None) -> None:
+
+        self._write_l1a_nc_file(path=path)
+
+        return None
+
+
+    # Public L1b methods
+
+    def generate_l1b_cube(self) -> None:
+
+        self._run_calibration()
+
+        return None
+
+    def get_l1b_cube(self) -> np.ndarray:
+
+        if self._check_calibration_has_run():
+
+            return self.l1b_cube
+
+        if self.verbose:
+            print("[ERROR] L1b cube has not yet been generated.")
+
+        return None
+
+    def get_l1b_spectrum(self, 
+                        latitude=None, 
+                        longitude=None,
+                        x: int = None,
+                        y: int = None
+                        ) -> tuple[np.ndarray, str]:
+
+        if self.l1b_cube is None:
+            return None
+        
+        if latitude is not None and longitude is not None:
+            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
+
+        elif x is not None and y is not None:
+            idx = (x,y)
+            
+        else:
+            return None
+
+        spectrum = self.l1b_cube[idx[0], idx[1], :]
+
+        return spectrum, self.l1b_units
+
     def plot_l1b_spectrum(self, 
                         latitude=None, 
                         longitude=None,
@@ -2507,7 +2347,7 @@ class Hypso1(Hypso):
                         ) -> np.ndarray:
         
         if latitude is not None and longitude is not None:
-            idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
+            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
 
         elif x is not None and y is not None:
             idx = (x,y)
@@ -2527,6 +2367,62 @@ class Hypso1(Hypso):
         plt.grid(True)
         plt.savefig(output_file)
 
+    # TODO: path override
+    def write_l1b_nc_file(self, path: str = None) -> None:
+
+        self._write_l1b_nc_file(path=path)
+
+        return None
+
+
+    # Public L2a methods
+
+    def generate_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = "6sv1") -> None:
+
+        self._run_atmospheric_correction(product=product)
+
+        return None
+
+    def get_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = "6sv1") -> np.ndarray:
+
+        if product and self._check_atmospheric_correction_has_run(product=product):
+
+            return self.l2a_cubes[product.lower()]
+        
+        if self.verbose:
+            print("[ERROR] " + product.upper() + " L2a cube has not yet been generated.")
+
+        return None
+
+    def get_l2a_cube_dict(self) -> dict:
+
+        return self.l2a_cubes
+
+    def get_l2a_spectrum(self, 
+                        product: Literal["acolite", "6sv1", "machi"] = "6sv1",
+                        latitude=None, 
+                        longitude=None,
+                        x: int = None,
+                        y: int = None
+                        ) -> tuple[np.ndarray, str]:
+
+
+        if latitude is not None and longitude is not None:
+            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
+
+        elif x is not None and y is not None:
+            idx = (x,y)
+            
+        else:
+            return None
+
+        try:
+            spectrum = self.l2a_cubes[product][idx[0], idx[1], :]
+        except KeyError:
+            return None
+
+        return spectrum, self.l2a_units
+
     def plot_l2a_spectrum(self, 
                          product: Literal["acolite", "6sv1", "machi"] = "6sv1",
                          latitude=None, 
@@ -2536,7 +2432,7 @@ class Hypso1(Hypso):
                          ) -> np.ndarray:
         
         if latitude is not None and longitude is not None:
-            idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
+            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
 
         elif x is not None and y is not None:
             idx = (x,y)
@@ -2561,25 +2457,138 @@ class Hypso1(Hypso):
         plt.savefig(output_file)
 
     # TODO
-    def write_l1a_nc_file(self, path: str = None) -> None:
-
-        self._write_l1a_nc_file(path=path)
-
-        return None
-
-    # TODO: path override
-    def write_l1b_nc_file(self, path: str = None) -> None:
-
-        self._write_l1b_nc_file(path=path)
-
-        return None
-
-    # TODO
     def write_l2a_nc_file(self, path: str = None, product: str = None) -> None:
 
         self._write_l1b_nc_file(path=path, product=product)
 
         return None
+
+
+    # Public land mask methods
+
+    def generate_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global") -> None:
+
+        self._run_land_mask(land_mask=land_mask)
+
+        return None
+
+    def get_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global") -> np.ndarray:
+
+        if land_mask and self._check_land_mask_has_run(land_mask=land_mask):
+
+            return self.land_masks[land_mask.lower()]
+        
+        if self.verbose:
+            print("[ERROR] " + land_mask + " land mask has not yet been generated.")
+
+        return None
+
+    def get_land_mask_dict(self) -> dict:
+
+        return self.land_masks     
+    
+    def set_active_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global"):
+
+        self._update_active_land_mask(land_mask=land_mask, override=True)
+
+    def get_active_land_mask(self) -> tuple[str, np.ndarray]:
+
+        return self._get_active_cloud_mask()
+
+
+    # Public cloud mask methods
+
+    def generate_cloud_mask(self, cloud_mask: Literal["default"] = "default"):
+
+        self._run_cloud_mask(cloud_mask=cloud_mask)
+
+        return None
+
+    def get_cloud_mask(self, cloud_mask: Literal["default"] = "default") -> np.ndarray:
+
+        if cloud_mask and self._check_cloud_mask_has_run(cloud_mask=cloud_mask):
+
+            return self.cloud_masks[cloud_mask.lower()]
+        
+        if self.verbose:
+            print("[ERROR] " + cloud_mask + " cloud mask has not yet been generated.")
+        
+        return None
+    
+    def get_cloud_mask_dict(self) -> dict:
+
+        return self.cloud_masks 
+
+    def set_active_cloud_mask(self, cloud_mask: Literal["default"] = "default"):
+
+        self._update_active_cloud_mask(self, cloud_mask=cloud_mask, override=True)
+
+    def get_active_cloud_mask(self) -> tuple[str, np.ndarray]:
+
+        return self._get_active_land_mask()
+
+
+    # Public chlorophyll mask methods
+
+    def generate_chlorophyll_estimates(self, 
+                                       product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',
+                                       model = None):
+
+        self._run_chlorophyll_estimation(self, product=product)
+
+    def get_chlorophyll_estimates(self, 
+                                 product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',
+                                 ) -> np.ndarray:
+
+        key = product.lower()
+
+        return self.chl[key]
+
+    def get_chlorophyll_estimates_dict(self) -> dict:
+
+        return self.chl
+
+
+    # Public products methods
+
+    def generate_product(self):
+
+        pass
+
+    def get_product(self):
+
+        pass
+
+    def get_product_dict(self) -> dict:
+
+        return self.products
+
+
+    # Public top of atmosphere (TOA) reflectance methods
+
+    def generate_toa_reflectance(self) -> np.ndarray:
+
+        self._run_toa_reflectance()
+
+    def get_toa_reflectance(self) -> np.ndarray:
+        """
+        Convert Top Of Atmosphere (TOA) Radiance to TOA Reflectance.
+
+        :return: Array with TOA Reflectance.
+        """
+
+        if self._check_toa_reflectance_has_run():
+
+            return self.toa_reflectance
+
+        if self.verbose:
+            print("[ERROR] Top of atmosphere (TOA) reflectance has not yet been generated.")
+
+        return None
+
+
+
+
 
 class Hypso2(Hypso):
 
