@@ -455,6 +455,12 @@ class Hypso1(Hypso):
         self.tmp_dir = Path(self.nc_file.parent.absolute(), self.nc_name.replace("-l1a", "") + "_tmp")
 
         return None
+    
+    def _set_nc_dir(self) -> None:
+
+        self.nc_dir = Path(self.nc_file.parent.absolute())
+
+        return None
 
     # TODO: is this used for anything?
     '''
@@ -2359,7 +2365,6 @@ class Hypso1(Hypso):
         nearest_index = np.unravel_index(np.argmin(distances), distances.shape)
         return nearest_index
 
-
     def get_l1a_spectrum(self, 
                         latitude=None, 
                         longitude=None,
@@ -2382,7 +2387,6 @@ class Hypso1(Hypso):
         spectrum = self.l1a_cube[idx[0], idx[1], :]
 
         return spectrum, self.l1a_units
-
 
     def get_l1b_spectrum(self, 
                         latitude=None, 
@@ -2407,7 +2411,6 @@ class Hypso1(Hypso):
 
         return spectrum, self.l1b_units
 
-    
     def get_l2a_spectrum(self, 
                         product: Literal["acolite", "6sv1", "machi"] = "6sv1",
                         latitude=None, 
@@ -2434,11 +2437,7 @@ class Hypso1(Hypso):
         return spectrum, self.l2a_units
 
 
-
-
-
     # TODO: add path to plotting functions
-
     def plot_l1a_spectrum(self, 
                         latitude=None, 
                         longitude=None,
@@ -2467,8 +2466,6 @@ class Hypso1(Hypso):
         plt.grid(True)
         plt.savefig('l1a_plot.png')
 
-
-
     def plot_l1b_spectrum(self, 
                         latitude=None, 
                         longitude=None,
@@ -2494,7 +2491,6 @@ class Hypso1(Hypso):
         plt.title(f"(lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
         plt.grid(True)
         plt.savefig('l1b_plot.png')
-
 
     def plot_l2a_spectrum(self, 
                          product: Literal["acolite", "6sv1", "machi"] = "6sv1",
