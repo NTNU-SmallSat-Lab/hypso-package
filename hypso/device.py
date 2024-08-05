@@ -2287,11 +2287,6 @@ class Hypso1(Hypso):
 
         return toa_reflectance
 
-
-
-
-
-
     def get_nearest_pixel(self, latitude: float, longitude: float) -> tuple[int, int]:
         """
         Find the nearest pixel in a SwathDefinition given a target latitude and longitude.
@@ -2326,8 +2321,6 @@ class Hypso1(Hypso):
         else:
             return None
 
-
-
     # TODO check that this works and does image flip need to apply?
     def _haversine(self, lat1, lon1, lat2, lon2):
         """
@@ -2345,7 +2338,6 @@ class Hypso1(Hypso):
         c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
 
         return R * c
-
 
     def get_nearest_pixel_haversine(self, latitude: float, longitude: float):
         """
@@ -2367,52 +2359,79 @@ class Hypso1(Hypso):
         nearest_index = np.unravel_index(np.argmin(distances), distances.shape)
         return nearest_index
 
-        
 
-    def get_l1a_spectra(self, 
+    def get_l1a_spectrum(self, 
                         latitude=None, 
-                        longitude=None
-                        ) -> np.ndarray:
+                        longitude=None,
+                        x: int = None,
+                        y: int = None
+                        ) -> tuple[np.ndarray, str]:
 
         if self.l1a_cube is None:
             return None
+        
+        if latitude is not None and longitude is not None:
+            idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
 
-        idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
+        elif x is not None and y is not None:
+            idx = (x,y)
+
+        else:
+            return None
 
         spectrum = self.l1a_cube[idx[0], idx[1], :]
 
-        return spectrum
+        return spectrum, self.l1a_units
 
 
-    def get_l1b_spectra(self, 
+    def get_l1b_spectrum(self, 
                         latitude=None, 
                         longitude=None,
-                        ) -> np.ndarray:
+                        x: int = None,
+                        y: int = None
+                        ) -> tuple[np.ndarray, str]:
 
         if self.l1b_cube is None:
             return None
+        
+        if latitude is not None and longitude is not None:
+            idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
 
-        idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
+        elif x is not None and y is not None:
+            idx = (x,y)
+            
+        else:
+            return None
 
         spectrum = self.l1b_cube[idx[0], idx[1], :]
 
-        return spectrum
+        return spectrum, self.l1b_units
 
     
-    def get_l2a_spectra(self, 
+    def get_l2a_spectrum(self, 
                         product: Literal["acolite", "6sv1", "machi"] = "6sv1",
                         latitude=None, 
-                        longitude=None
-                        ) -> np.ndarray:
+                        longitude=None,
+                        x: int = None,
+                        y: int = None
+                        ) -> tuple[np.ndarray, str]:
 
-        idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
+
+        if latitude is not None and longitude is not None:
+            idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
+
+        elif x is not None and y is not None:
+            idx = (x,y)
+            
+        else:
+            return None
 
         try:
             spectrum = self.l2a_cubes[product][idx[0], idx[1], :]
         except KeyError:
             return None
 
-        return spectrum
+        return spectrum, self.l2a_units
 
 
 
@@ -2420,12 +2439,21 @@ class Hypso1(Hypso):
 
     # TODO: add path to plotting functions
 
-    def plot_l1a_spectra(self, 
+    def plot_l1a_spectrum(self, 
                         latitude=None, 
-                        longitude=None
+                        longitude=None,
+                        x: int = None,
+                        y: int = None
                         ) -> np.ndarray:
         
-        idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
+        if latitude is not None and longitude is not None:
+            idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
+
+        elif x is not None and y is not None:
+            idx = (x,y)
+
+        else:
+            return None
 
         spectrum = self.l1a_cube[idx[0], idx[1], :]
 
@@ -2437,23 +2465,30 @@ class Hypso1(Hypso):
         plt.xlabel("Wavelength (nm)")
         plt.title(f"(lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
         plt.grid(True)
-        plt.savefig('l1b_plot.png')
+        plt.savefig('l1a_plot.png')
 
 
 
-    def plot_l1b_spectra(self, 
+    def plot_l1b_spectrum(self, 
                         latitude=None, 
-                        longitude=None
+                        longitude=None,
+                        x: int = None,
+                        y: int = None
                         ) -> np.ndarray:
         
-        idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
+        if latitude is not None and longitude is not None:
+            idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
+
+        elif x is not None and y is not None:
+            idx = (x,y)
+
+        else:
+            return None
 
         spectrum = self.l1b_cube[idx[0], idx[1], :]
 
-        bands = self.wavelengths
-
         plt.figure(figsize=(10, 5))
-        plt.plot(bands, spectrum)
+        plt.plot(self.wavelengths, spectrum)
         plt.ylabel(self.l1b_units)
         plt.xlabel("Wavelength (nm)")
         plt.title(f"(lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
@@ -2461,25 +2496,30 @@ class Hypso1(Hypso):
         plt.savefig('l1b_plot.png')
 
 
-    def plot_l2a_spectra(self, 
+    def plot_l2a_spectrum(self, 
                          product: Literal["acolite", "6sv1", "machi"] = "6sv1",
                          latitude=None, 
-                         longitude=None
+                         longitude=None,
+                         x: int = None,
+                         y: int = None
                          ) -> np.ndarray:
         
-        idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
+        if latitude is not None and longitude is not None:
+            idx = self.get_nearest_pixel(latitude=latitude, longitude=longitude)
+
+        elif x is not None and y is not None:
+            idx = (x,y)
+
+        else:
+            return None
 
         try:
-            cube = self.l2a_cubes[product.lower()]
+            spectrum = self.l2a_cubes[product.lower()][idx[0], idx[1], :]
         except KeyError:
             return None
 
-        spectrum = cube[idx[0], idx[1], :]
-
-        bands = self.wavelengths
-
         plt.figure(figsize=(10, 5))
-        plt.plot(bands, spectrum)
+        plt.plot(self.wavelengths, spectrum)
         plt.ylabel(self.l2a_units)
         plt.ylim([0, 1])
         plt.xlabel("Wavelength (nm)")
