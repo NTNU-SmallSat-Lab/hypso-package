@@ -17,8 +17,9 @@ from pyresample.kd_tree import get_neighbour_info
 from typing import Literal, Union
 from datetime import datetime
 
-from hypso.georeferencing import georeferencing
-from hypso.georeferencing.utils import check_star_tracker_orientation
+from hypso.georeference import georeferencing
+from hypso.georeference.utils import check_star_tracker_orientation
+
 from hypso.calibration import read_coeffs_from_file, \
                               run_radiometric_calibration, \
                               run_destriping_correction, \
