@@ -35,6 +35,7 @@ from hypso.utils import find_file
 from hypso.atmospheric import run_py6s, run_acolite, run_machi
 from hypso.chlorophyll import run_tuned_chlorophyll_estimation, run_band_ratio_chlorophyll_estimation, validate_tuned_model
 
+from hypso.writing import set_or_create_attr
 
 EXPERIMENTAL_FEATURES = True
 SUPPORTED_PRODUCT_LEVELS = ["l1a", "l1b", "l2a"]
@@ -220,6 +221,7 @@ class Hypso:
 
 
         # Initialize geometry data
+        self.framepose_df = None
         self.wkt_linestring_footprint = None
         self.prj_file_contents = None
         self.local_angles = None
@@ -282,7 +284,9 @@ class Hypso1(Hypso):
         self.georeferencing_has_run = False
         self.calibration_has_run = False
         self.geometry_computation_has_run = False
+        self.write_l1a_nc_file_has_run = False
         self.write_l1b_nc_file_has_run = False
+        self.write_l2a_nc_file_has_run = False
         self.atmospheric_correction_has_run = False
         self.land_mask_has_run = False
         self.cloud_mask_has_run = False
@@ -1078,6 +1082,8 @@ class Hypso1(Hypso):
                                              verbose=self.verbose
                                              )
 
+        self.framepose_df = framepose_data
+
         self.wkt_linestring_footprint = wkt_linestring_footprint
         self.prj_file_contents = prj_file_contents
         self.local_angles = local_angles
@@ -1193,7 +1199,9 @@ class Hypso1(Hypso):
 
         self._run_calibration()
         self._run_geometry_computation()
-        self._check_write_l1b_nc_file_has_run(run_on_false=True)
+
+        if not self._check_write_l1b_nc_file_has_run():
+            return None
 
         # user and password from https://urs.earthdata.nasa.gov/profile
         # optional but good
@@ -1662,13 +1670,14 @@ class Hypso1(Hypso):
 
     # TODO
     def _check_write_l1a_nc_file_has_run(self) -> bool:
-        return False
+        
+        return self.write_l1a_nc_file_has_run
 
 
     # L1b file output
 
-    # TODO: refactor
-    def _write_l1b_nc_file(self, path: str = None, overwrite: bool = False) -> None:
+    # TODO: refactor, work on navigation group
+    def _write_l1b_nc_file(self, overwrite: bool = False) -> None:
         """
         Create a l1b.nc file using the radiometrically corrected data. Same structure from the original l1a.nc file
         is used. Required to run ACOLITE as the input is a radiometrically corrected .nc file.
@@ -2065,8 +2074,12 @@ class Hypso1(Hypso):
 
                 # Unix time -----------------------
                 time = netfile.createVariable('navigation/unixtime', 'u8', ('lines',))
-                frametime_pose_file = find_file(self.tmp_dir, "frametime-pose", ".csv") # TODO
-                df = pd.read_csv(frametime_pose_file)
+                
+                #frametime_pose_file = find_file(self.tmp_dir, "frametime-pose", ".csv") # TODO
+                #df = pd.read_csv(frametime_pose_file)
+
+                df = self.framepose_df
+
                 time[:] = df["timestamp"].values
 
                 # Sensor Zenith --------------------------
@@ -2188,7 +2201,8 @@ class Hypso1(Hypso):
 
     # TODO
     def _check_write_l2a_nc_file_has_run(self, product: str = None) -> bool:
-        return False
+        
+        return self.write_l2a_nc_file_has_run
 
 
     # Other functions
@@ -2343,7 +2357,7 @@ class Hypso1(Hypso):
     # TODO
     def write_l1a_nc_file(self, path: Union[str, Path] = None) -> None:
 
-        self._write_l1a_nc_file(path=path)
+        self._write_l1a_nc_file()
 
         return None
 
@@ -2418,10 +2432,9 @@ class Hypso1(Hypso):
         plt.grid(True)
         plt.savefig(output_file)
 
-    # TODO: path override
-    def write_l1b_nc_file(self, path: Union[str, Path] = None) -> None:
+    def write_l1b_nc_file(self) -> None:
 
-        self._write_l1b_nc_file(path=path)
+        self._write_l1b_nc_file()
 
         return None
 
@@ -2510,7 +2523,7 @@ class Hypso1(Hypso):
     # TODO
     def write_l2a_nc_file(self, path: Union[str, Path] = None, product: str = None) -> None:
 
-        self._write_l1b_nc_file(path=path, product=product)
+        self._write_l2a_nc_file(path=path, product=product)
 
         return None
 
@@ -2638,9 +2651,6 @@ class Hypso1(Hypso):
         return None
 
 
-
-
-
 class Hypso2(Hypso):
 
     def __init__(self, hypso_path: Union[str, Path], points_path: Union[str, Path, None] = None) -> None:
@@ -2659,23 +2669,7 @@ class Hypso2(Hypso):
         self.platform = 'hypso2'
         self.sensor = 'hypso2_hsi'
 
-def set_or_create_attr(var, attr_name, attr_value) -> None:
-    """
-    Set or create an attribute on ".nc" file.
 
-    :param var: Variable on to which assign the attribute
-    :param attr_name: Attribute name
-    :param attr_value: Attribute value
-
-    :return: No return value
-    """
-
-    if attr_name in var.ncattrs():
-        var.setncattr(attr_name, attr_value)
-        return
-    var.UnusedNameAttribute = attr_value
-    var.renameAttribute("UnusedNameAttribute", attr_name)
-    return
 
 
 
