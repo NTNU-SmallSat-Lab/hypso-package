@@ -72,6 +72,7 @@ class Hypso:
 
         # Initialize directory and file info
         self.tmp_dir = None
+        self.nc_dir = None
 
         self.nc_file = None
         self.nc_name = None
@@ -558,6 +559,7 @@ class Hypso1(Hypso):
 
         self._set_nc_files()
         self._set_tmp_dir()
+        self._set_nc_dir()
 
         self._set_background_value()
         self._set_exposure()
@@ -2436,8 +2438,6 @@ class Hypso1(Hypso):
 
         return spectrum, self.l2a_units
 
-
-    # TODO: add path to plotting functions
     def plot_l1a_spectrum(self, 
                         latitude=None, 
                         longitude=None,
@@ -2458,13 +2458,15 @@ class Hypso1(Hypso):
 
         bands = range(0, len(spectrum))
 
+        output_file = Path(self.nc_dir, self.capture_name + '_l1a_plot.png')
+
         plt.figure(figsize=(10, 5))
         plt.plot(bands, spectrum)
         plt.ylabel(self.l1a_units)
         plt.xlabel("Wavelength (nm)")
         plt.title(f"(lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
         plt.grid(True)
-        plt.savefig('l1a_plot.png')
+        plt.savefig(output_file)
 
     def plot_l1b_spectrum(self, 
                         latitude=None, 
@@ -2484,13 +2486,15 @@ class Hypso1(Hypso):
 
         spectrum = self.l1b_cube[idx[0], idx[1], :]
 
+        output_file = Path(self.nc_dir, self.capture_name + '_l1b_plot.png')
+
         plt.figure(figsize=(10, 5))
         plt.plot(self.wavelengths, spectrum)
         plt.ylabel(self.l1b_units)
         plt.xlabel("Wavelength (nm)")
         plt.title(f"(lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
         plt.grid(True)
-        plt.savefig('l1b_plot.png')
+        plt.savefig(output_file)
 
     def plot_l2a_spectrum(self, 
                          product: Literal["acolite", "6sv1", "machi"] = "6sv1",
@@ -2514,6 +2518,8 @@ class Hypso1(Hypso):
         except KeyError:
             return None
 
+        output_file = Path(self.nc_dir, self.capture_name + '_l2a_' + str(product) + '_plot.png')
+
         plt.figure(figsize=(10, 5))
         plt.plot(self.wavelengths, spectrum)
         plt.ylabel(self.l2a_units)
@@ -2521,13 +2527,7 @@ class Hypso1(Hypso):
         plt.xlabel("Wavelength (nm)")
         plt.title(f"(lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
         plt.grid(True)
-        plt.savefig('l2a_' + str(product) + 'plot.png')
-
-
-
-
-
-
+        plt.savefig(output_file)
 
     # TODO
     def write_l1a_nc_file(self, path: str = None) -> None:

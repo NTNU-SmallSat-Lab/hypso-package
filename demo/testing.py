@@ -87,10 +87,6 @@ points_file = os.path.join(dir_path, 'erie_2022-07-20_1539Z-bin3.points')
 
 satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
 
-print(satobj.nc_file.parent.absolute())
-
-exit()
-
 lat = satobj.latitudes[200,500]
 lon = satobj.longitudes[200,500]
 
