@@ -33,7 +33,7 @@ from hypso.masks import run_global_land_mask, run_ndwi_land_mask, run_threshold_
 from hypso.reading import load_l1a_nc_cube, load_l1a_nc_metadata
 from hypso.utils import find_dir, find_file, find_all_files
 from hypso.atmospheric import run_py6s, run_acolite, run_machi
-from hypso.chlorophyll import run_tuned_chlorophyll_estimation, run_band_ratio_chlorophyll_estimation
+from hypso.chlorophyll import run_tuned_chlorophyll_estimation, run_band_ratio_chlorophyll_estimation, validate_tuned_model
 
 
 EXPERIMENTAL_FEATURES = True
@@ -45,7 +45,7 @@ UNIX_TIME_OFFSET = 20 # TODO: Verify offset validity. Sivert had 20 here
 
 class Hypso:
 
-    def __init__(self, hypso_path: str, points_path: Union[str, None] = None):
+    def __init__(self, hypso_path: Union[str, Path], points_path: Union[str, Path, None] = None):
 
         """
         Initialization of HYPSO Class.
@@ -176,11 +176,18 @@ class Hypso:
         self.srf = None
 
         # Initialize units
-        self.units = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
-        self.l1a_units = "Raw sensor values (a.u.)"
+        self.l1a_units = "a.u."
         self.l1b_units = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
-        self.l2a_units = "Rrs [0,1] (a.u.)"
+        self.l2a_units = "a.u."
 
+
+        # Initialize description
+        self.l1a_description = "Raw sensor values"
+        self.l1b_description = "Radiance"
+        self.l2a_description = "Reflectance (Rrs)"
+
+        # Initialize units for chlorophyll
+        self.chl_units = {}
 
         # Initilize land mask dict
         self.land_masks = {}
@@ -253,7 +260,7 @@ class Hypso:
 
 class Hypso1(Hypso):
 
-    def __init__(self, hypso_path: str, points_path: Union[str, None] = None, verbose=False) -> None:
+    def __init__(self, hypso_path: Union[str, Path], points_path: Union[str, Path, None] = None, verbose=False) -> None:
         
         """
         Initialization of HYPSO-1 Class.
@@ -1518,7 +1525,10 @@ class Hypso1(Hypso):
 
     # Chlorophyll estimation functions
 
-    def _run_chlorophyll_estimation(self, product: str = None, overwrite: bool = False) -> None:
+    def _run_chlorophyll_estimation(self, 
+                                    product: str = None, 
+                                    model: Union[str, Path] = None,
+                                    overwrite: bool = False) -> None:
 
         if self._check_chlorophyll_estimation_has_run(product=product) and not overwrite:
 
@@ -1526,6 +1536,8 @@ class Hypso1(Hypso):
                 print("[INFO] Chlorophyll estimation has already been run. Skipping.")
 
             return None
+
+        model = Path(model)
 
         if self.chl is None:
             self.chl = {}
@@ -1543,20 +1555,23 @@ class Hypso1(Hypso):
                     print("[INFO] Running band ratio chlorophyll estimation...")
 
                 self.chl[key] = self._run_band_ratio_chlorophyll_estimation()
+                self.chl_units[key] = "a.u."
 
             case "6sv1_aqua":
 
                 if self.verbose:
                     print("[INFO] Running 6SV1 AQUA Tuned chlorophyll estimation...")
 
-                self.chl[key] = self._run_6sv1_aqua_tuned_chlorophyll_estimation()
+                self.chl[key] = self._run_6sv1_aqua_tuned_chlorophyll_estimation(model=model)
+                self.chl_units[key] = r'$mg \cdot m^{-3}$'
 
             case "acolite_aqua":
 
                 if self.verbose:
                     print("[INFO] Running ACOLITE AQUA Tuned chlorophyll estimation...")
 
-                self.chl[key] = self._run_acolite_aqua_tuned_chlorophyll_estimation()
+                self.chl[key] = self._run_acolite_aqua_tuned_chlorophyll_estimation(model=model)
+                self.chl_units[key] = r'$mg \cdot m^{-3}$'
 
             case _:
                 print("[ERROR] No such chlorophyll estimation product supported!")
@@ -1570,25 +1585,61 @@ class Hypso1(Hypso):
 
         self._run_calibration()
 
-        chl = run_band_ratio_chlorophyll_estimation(cube=self.l1b_cube,
-                                                    mask=self.active_mask, 
-                                                    wavelengths=self.wavelengths,
-                                                    spatial_dimensions=self.spatial_dimensions
+        chl = run_band_ratio_chlorophyll_estimation(cube = self.l1b_cube,
+                                                    mask = self.active_mask, 
+                                                    wavelengths = self.wavelengths,
+                                                    spatial_dimensions = self.spatial_dimensions
                                                     )
 
         return chl
 
-    # TODO: complete
     def _run_6sv1_aqua_tuned_chlorophyll_estimation(self, model: Path = None) -> None:
 
-        run_tuned_chlorophyll_estimation
+        self._run_calibration()
+        self._run_geometry_computation()
+        self._run_atmospheric_correction(product='6sv1')
 
-        pass
+        model = Path(model)
 
-    # TODO: complete
+        if not validate_tuned_model(model = model):
+            print("[ERROR] Invalid model.")
+            return None
+        
+        if self.spatial_dimensions is None:
+            print("[ERROR] No spatial dimensions provided.")
+            return None
+
+        chl = run_tuned_chlorophyll_estimation(l2a_cube = self.l2a_cubes['6sv1'],
+                                               model = model,
+                                               mask = self.active_mask,
+                                               spatial_dimensions = self.spatial_dimensions
+                                               )
+
+        return chl
+
     def _run_acolite_aqua_tuned_chlorophyll_estimation(self, model: Path = None) -> None:
 
-        pass
+        self._run_calibration()
+        self._run_geometry_computation()
+        self._run_atmospheric_correction(product='acolite')
+
+        model = Path(model)
+
+        if not validate_tuned_model(model = model):
+            print("[ERROR] Invalid model.")
+            return None
+        
+        if self.spatial_dimensions is None:
+            print("[ERROR] No spatial dimensions provided.")
+            return None
+
+        chl = run_tuned_chlorophyll_estimation(l2a_cube = self.l2a_cubes['acolite'],
+                                               model = model,
+                                               mask = self.active_mask,
+                                               spatial_dimensions = self.spatial_dimensions
+                                               )
+
+        return chl
 
     def _check_chlorophyll_estimation_has_run(self, product: str = None) -> bool:
 
@@ -2290,7 +2341,7 @@ class Hypso1(Hypso):
         plt.savefig(output_file)
 
     # TODO
-    def write_l1a_nc_file(self, path: str = None) -> None:
+    def write_l1a_nc_file(self, path: Union[str, Path] = None) -> None:
 
         self._write_l1a_nc_file(path=path)
 
@@ -2368,7 +2419,7 @@ class Hypso1(Hypso):
         plt.savefig(output_file)
 
     # TODO: path override
-    def write_l1b_nc_file(self, path: str = None) -> None:
+    def write_l1b_nc_file(self, path: Union[str, Path] = None) -> None:
 
         self._write_l1b_nc_file(path=path)
 
@@ -2457,7 +2508,7 @@ class Hypso1(Hypso):
         plt.savefig(output_file)
 
     # TODO
-    def write_l2a_nc_file(self, path: str = None, product: str = None) -> None:
+    def write_l2a_nc_file(self, path: Union[str, Path] = None, product: str = None) -> None:
 
         self._write_l1b_nc_file(path=path, product=product)
 
@@ -2532,9 +2583,9 @@ class Hypso1(Hypso):
 
     def generate_chlorophyll_estimates(self, 
                                        product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',
-                                       model = None):
+                                       model: Union[str, Path] = None):
 
-        self._run_chlorophyll_estimation(self, product=product)
+        self._run_chlorophyll_estimation(product=product, model=model)
 
     def get_chlorophyll_estimates(self, 
                                  product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',
@@ -2592,7 +2643,7 @@ class Hypso1(Hypso):
 
 class Hypso2(Hypso):
 
-    def __init__(self, hypso_path: str, points_path: Union[str, None] = None) -> None:
+    def __init__(self, hypso_path: Union[str, Path], points_path: Union[str, Path, None] = None) -> None:
         
         """
         Initialization of (planned) HYPSO-2 Class.

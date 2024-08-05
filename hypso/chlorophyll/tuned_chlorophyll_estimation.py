@@ -13,29 +13,23 @@ from typing import Tuple
 simplefilter("ignore", category=ConvergenceWarning)
 
 def run_tuned_chlorophyll_estimation(l2a_cube: np.ndarray, 
-                         model_path: str,
-                         mask: np.ndarray = None, 
-                         spatial_dimensions: tuple[int, int] = None
+                         model: str,
+                         spatial_dimensions: tuple[int, int],
+                         mask: np.ndarray = None
                          ) -> np.ndarray:
     """
     Estimates the chlorophyll using a trained ML Scikit-Learn Model
 
-    :param model_path: Absolute path for the pre-trained Scikit-Learn model
+    :param model: Absolute path for the pre-trained Scikit-Learn model
 
     :return: np.ndarray
     """
-    
-    if not validate_model_path(model_path=model_path):
-        return None
-    
-    if spatial_dimensions is None:
-        return None
     
     if mask is None:
         mask = np.zeros(spatial_dimensions, dtype=bool)
 
     # Load Model -----------------------------------------------------
-    model = load(model_path)
+    model = load(model)
 
     # Get Cube with proper data -------------------------------------
     rrs_cube = l2a_cube
@@ -270,15 +264,15 @@ def get_best_features(X_train_rrs: np.ndarray,
 
     return tmp_train_features, tmp_test_features
 
-def validate_model_path(model_path: str) -> bool:
+def validate_tuned_model(model: str) -> bool:
 
-    if model_path is None:
+    if model is None:
         return False
 
-    if "tuned" not in model_path.stem:
+    if "tuned" not in model.stem:
         return False
 
-    if "acolite" in model_path.stem or "6sv1" in model_path.stem:
+    if "acolite" in model.stem or "6sv1" in model.stem:
 
         return True
     
@@ -309,31 +303,31 @@ def validate_model_path(model_path: str) -> bool:
 
 
 '''
-def start_chl_estimation(sat_obj, model_path=None) -> None:
+def start_chl_estimation(sat_obj, model=None) -> None:
     """
     Estimates the chlorophyll using a trained ML Scikit-Learn Model
 
     :param sat_obj: Hypso satellite object
-    :param model_path: Absolute path for the pre-trained Scikit-Learn model
+    :param model: Absolute path for the pre-trained Scikit-Learn model
 
     :return: No return.
     """
     # Load Mode -----------------------------------------------------
-    if model_path is None:
+    if model is None:
         raise Exception("Please specify the model path")
     else:
-        model_path = pathlib.Path(model_path)
+        model = pathlib.Path(model)
 
-    model = load(model_path)
+    model = load(model)
 
     # Processing mask only for water pixels
     waterMask = sat_obj.waterMask
 
     # Get Cube with proper data -------------------------------------
     try:
-        if "acolite" in model_path.stem:
+        if "acolite" in model.stem:
             rrs_cube = sat_obj.l2a_cube["ACOLITE"]
-        elif "6sv1" in model_path.stem:
+        elif "6sv1" in model.stem:
             rrs_cube = sat_obj.l2a_cube["6SV1"]
         else:
             raise Exception("Only ACOLITE and 6SV1 correction are supported. Check model supplied")
@@ -352,7 +346,7 @@ def start_chl_estimation(sat_obj, model_path=None) -> None:
     rrs_df = pd.DataFrame(rrs_array, columns=hypso_string_wl)
 
     estimation = None
-    if "tuned" in model_path.stem:
+    if "tuned" in model.stem:
         hypso_optimal_features_df, _ = get_best_features(rrs_df, None, rrs_df, None,
                                                          dataset_name="hypso")
         hypso_optimal_features_df = hypso_optimal_features_df.loc[:,

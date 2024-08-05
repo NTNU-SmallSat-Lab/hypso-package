@@ -87,9 +87,12 @@ points_file = os.path.join(dir_path, 'erie_2022-07-20_1539Z-bin3.points')
 
 satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
 
-for key in satobj.target_coords.keys():
-    print(key)
-    print(satobj.target_coords[key])
+model = "/home/cameron/Dokumenter/Chlorophyll_NN_Models/model_6sv1_aqua_tuned.joblib"
+
+satobj.generate_chlorophyll_estimates(product='6sv1_aqua', model=model)
+
+print(satobj.chl)
+
 
 exit()
 
