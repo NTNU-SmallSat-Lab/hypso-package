@@ -1664,7 +1664,7 @@ class Hypso1(Hypso):
     # L1a file output
 
     # TODO
-    def _write_l1a_nc_file(self, path: str = None, overwrite: bool = False) -> None:
+    def _write_l1a_nc_file(self, overwrite: bool = False) -> None:
 
         return None
 
@@ -2175,9 +2175,6 @@ class Hypso1(Hypso):
 
         old_nc.close()
 
-        # Update
-        #self.l1b_nc_file = Path(new_path)
-
         self.write_l1b_nc_file_has_run = True
 
         return None
@@ -2195,7 +2192,7 @@ class Hypso1(Hypso):
     # L2a file output
 
     # TODO
-    def _write_l2a_nc_file(self, path: str = None, product: str = None, overwrite: bool = False) -> None:
+    def _write_l2a_nc_file(self, product: str = None, overwrite: bool = False) -> None:
 
         return None
 
