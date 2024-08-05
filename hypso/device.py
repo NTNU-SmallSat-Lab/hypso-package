@@ -183,6 +183,10 @@ class Hypso:
 
 
         # Initialize description
+        # L1a: raw
+        # L1b: radiance
+        # L1c: radiance
+        # L2a: reflectance (Rrs)
         self.l1a_description = "Raw sensor values"
         self.l1b_description = "Radiance"
         self.l2a_description = "Reflectance (Rrs)"
@@ -293,40 +297,8 @@ class Hypso1(Hypso):
         self.chlorophyll_estimation_has_run = False
         self.toa_reflectance_has_run = False
 
-        # L1a: raw
-        # L1b: radiance
-        # L1c: radiance
-        # L2a: Rrs
-
-
-        # Load L1a file -----------------------------------------------------
         self._load_l1a_file()
-
-        # Georeferencing -----------------------------------------------------
         self._run_georeferencing()
-
-        # Calibration -----------------------------------------------------
-        #self._run_calibration()
-
-        # Atmospheric correction -----------------------------------------------------
-        #self._run_geometry_computation()
-        #self._run_atmospheric_correction(product='6SV1')
-
-        # Land Mask -----------------------------------------------------
-        # self._run_land_mask()
-
-        # Cloud Mask -----------------------------------------------------
-        #self._run_cloud_mask()
-
-        # Chlorophyll -----------------------------------------------------
-        # self.chl
-
-        # Products
-        # TODO
-        #self.products['chl'] = None
-        #self.products['tsm'] = None
-        #self.products['pca'] = None
-        #self.products['ica'] = None
 
         return None
 
@@ -2378,6 +2350,8 @@ class Hypso1(Hypso):
 
         return None
 
+
+    # TODO return DataFrame like before
     def get_l1b_spectrum(self, 
                         latitude=None, 
                         longitude=None,
