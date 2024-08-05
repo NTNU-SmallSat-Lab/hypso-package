@@ -94,6 +94,8 @@ class Hypso:
         self.l1b_cube = None
         self.l2a_cubes = {}
 
+        # Initialize top of atmpshere (TOA) reflectance
+        self.toa_reflectance = None
 
         # Initialize metadata dictionaries
         self.capture_config = {}
@@ -278,6 +280,7 @@ class Hypso1(Hypso):
         self.land_mask_has_run = False
         self.cloud_mask_has_run = False
         self.chlorophyll_estimation_has_run = False
+        self.toa_reflectance_has_run = False
 
         # L1a: raw
         # L1b: radiance
@@ -727,7 +730,6 @@ class Hypso1(Hypso):
 
         :return: None
         """
-
 
         if self._check_calibration_has_run() and not overwrite:
 
@@ -1241,6 +1243,70 @@ class Hypso1(Hypso):
             else:
                 return False
         return False
+
+
+    # Top of atmosphere reflectance functions
+
+    def _run_toa_reflectance(self) -> np.ndarray:
+
+        self._run_calibration()
+        self._run_geometry_computation()
+        
+        # Get Local variables
+        srf = self.srf
+        toa_radiance = self.l1b_cube
+
+        scene_date = parser.isoparse(self.iso_time)
+        julian_day = scene_date.timetuple().tm_yday
+        solar_zenith = self.solar_zenith_angles
+
+        # Read Solar Data
+        solar_data_path = str(files('hypso.atmospheric').joinpath("Solar_irradiance_Thuillier_2002.csv"))
+        solar_df = pd.read_csv(solar_data_path)
+
+        # Create new solar X with a new delta
+        solar_array = np.array(solar_df)
+        current_num = solar_array[0, 0]
+        delta = 0.01
+        new_solar_x = [solar_array[0, 0]]
+        while current_num <= solar_array[-1, 0]:
+            current_num = current_num + delta
+            new_solar_x.append(current_num)
+
+        # Interpolate for Y with original solar data
+        new_solar_y = np.interp(new_solar_x, solar_array[:, 0], solar_array[:, 1])
+
+        # Replace solar Dataframe
+        solar_df = pd.DataFrame(np.column_stack((new_solar_x, new_solar_y)), columns=solar_df.columns)
+
+        # Estimation of TOA Reflectance
+        band_number = 0
+        toa_reflectance = np.empty_like(toa_radiance)
+        for single_wl, single_srf in srf:
+            # Resample HYPSO SRF to new solar wavelength
+            resamp_srf = np.interp(new_solar_x, single_wl, single_srf)
+            weights_srf = resamp_srf / np.sum(resamp_srf)
+            ESUN = np.sum(solar_df['mW/m2/nm'].values * weights_srf)  # units matche HYPSO from device.py
+
+            # Earth-Sun distance (from day of year) using julian date
+            # http://physics.stackexchange.com/questions/177949/earth-sun-distance-on-a-given-day-of-the-year
+            distance_sun = 1 - 0.01672 * np.cos(0.9856 * (
+                    julian_day - 4))
+
+            # Get toa_reflectance
+            solar_angle_correction = np.cos(np.radians(solar_zenith))
+            multiplier = (ESUN * solar_angle_correction) / (np.pi * distance_sun ** 2)
+            toa_reflectance[:, :, band_number] = toa_radiance[:, :, band_number] / multiplier
+
+            band_number = band_number + 1
+
+        self.toa_reflectance = toa_reflectance
+
+        return None
+
+    def _check_toa_reflectance_has_run(self) -> bool:
+
+        return self.toa_reflectance_has_run
 
 
     # Land mask functions
@@ -2238,62 +2304,27 @@ class Hypso1(Hypso):
 
         return self.products
 
-    # TODO
+    def generate_toa_reflectance(self) -> np.ndarray:
+
+        self._run_toa_reflectance()
+
     def get_toa_reflectance(self) -> np.ndarray:
         """
         Convert Top Of Atmosphere (TOA) Radiance to TOA Reflectance.
 
         :return: Array with TOA Reflectance.
         """
-        # Get Local variables
-        srf = self.srf
-        toa_radiance = self.l1b_cube
 
-        scene_date = parser.isoparse(self.iso_time)
-        julian_day = scene_date.timetuple().tm_yday
-        solar_zenith = self.solar_zenith_angle
+        if self._check_toa_reflectance_has_run():
 
-        # Read Solar Data
-        solar_data_path = str(files('hypso.atmospheric').joinpath("Solar_irradiance_Thuillier_2002.csv"))
-        solar_df = pd.read_csv(solar_data_path)
+            return self.toa_reflectance
 
-        # Create new solar X with a new delta
-        solar_array = np.array(solar_df)
-        current_num = solar_array[0, 0]
-        delta = 0.01
-        new_solar_x = [solar_array[0, 0]]
-        while current_num <= solar_array[-1, 0]:
-            current_num = current_num + delta
-            new_solar_x.append(current_num)
+        if self.verbose:
+            print("[ERROR] Top of atmosphere (TOA) reflectance has not yet been generated.")
 
-        # Interpolate for Y with original solar data
-        new_solar_y = np.interp(new_solar_x, solar_array[:, 0], solar_array[:, 1])
+        return None
 
-        # Replace solar Dataframe
-        solar_df = pd.DataFrame(np.column_stack((new_solar_x, new_solar_y)), columns=solar_df.columns)
 
-        # Estimation of TOA Reflectance
-        band_number = 0
-        toa_reflectance = np.empty_like(toa_radiance)
-        for single_wl, single_srf in srf:
-            # Resample HYPSO SRF to new solar wavelength
-            resamp_srf = np.interp(new_solar_x, single_wl, single_srf)
-            weights_srf = resamp_srf / np.sum(resamp_srf)
-            ESUN = np.sum(solar_df['mW/m2/nm'].values * weights_srf)  # units matche HYPSO from device.py
-
-            # Earth-Sun distance (from day of year) using julian date
-            # http://physics.stackexchange.com/questions/177949/earth-sun-distance-on-a-given-day-of-the-year
-            distance_sun = 1 - 0.01672 * np.cos(0.9856 * (
-                    julian_day - 4))
-
-            # Get toa_reflectance
-            solar_angle_correction = np.cos(np.radians(solar_zenith))
-            multiplier = (ESUN * solar_angle_correction) / (np.pi * distance_sun ** 2)
-            toa_reflectance[:, :, band_number] = toa_radiance[:, :, band_number] / multiplier
-
-            band_number = band_number + 1
-
-        return toa_reflectance
 
     def get_nearest_pixel(self, latitude: float, longitude: float) -> tuple[int, int]:
         """
