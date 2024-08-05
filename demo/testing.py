@@ -87,30 +87,34 @@ points_file = os.path.join(dir_path, 'erie_2022-07-20_1539Z-bin3.points')
 
 satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
 
-model = "/home/cameron/Dokumenter/Chlorophyll_NN_Models/model_6sv1_aqua_tuned.joblib"
 
-satobj.generate_chlorophyll_estimates(product='6sv1_aqua', model=model)
-
-print(satobj.chl)
-
-
-exit()
 
 lat = satobj.latitudes[200,500]
 lon = satobj.longitudes[200,500]
 
 satobj.generate_l1b_cube()
-satobj.generate_l2a_cube()
+#satobj.generate_l2a_cube()
+satobj._run_geometry_computation()
 
-satobj.plot_l1a_spectrum(latitude=lat, longitude=lon)
-satobj.plot_l1b_spectrum(latitude=lat, longitude=lon)
-satobj.plot_l2a_spectrum(latitude=lat, longitude=lon)
+satobj.write_l1b_nc_file()
 
-print(lat)
-print(lon)
+#satobj.plot_l1a_spectrum(latitude=lat, longitude=lon)
+#satobj.plot_l1b_spectrum(latitude=lat, longitude=lon)
+#satobj.plot_l2a_spectrum(latitude=lat, longitude=lon)
+
+
 
 
 exit()
+
+
+model = "/home/cameron/Dokumenter/Chlorophyll_NN_Models/model_6sv1_aqua_tuned.joblib"
+satobj.generate_chlorophyll_estimates(product='6sv1_aqua', model=model)
+print(satobj.chl)
+
+exit()
+
+
 lat = satobj.latitudes[100,300]
 lon = satobj.longitudes[100,300]
 
