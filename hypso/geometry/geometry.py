@@ -12,7 +12,7 @@ import astropy.time
 
 import scipy.interpolate as si
 from typing import Tuple, List
-from hypso.georeference import georef as gref
+import georef as gref
 
 # PARAMETERS ----------------------------------------------------------------------
 

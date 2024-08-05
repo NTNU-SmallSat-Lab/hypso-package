@@ -22,7 +22,7 @@ r_band_index = 61  # Old 59 (120-59=61)
 g_band_index = 50  # Old 70 (120-70=50)
 b_band_index = 31  # Old 89 (120-89=31)
 
-
+'''
 def generate_rgb_geotiff(satObj, overwrite: bool = False) -> None:
     """
     Generate RGB GeoTiff image
@@ -111,7 +111,10 @@ def generate_rgb_geotiff(satObj, overwrite: bool = False) -> None:
 
     print('Done RGB/RGBA Geotiff')
 
+'''
+    
 
+'''
 def generate_full_geotiff(satObj, product: Literal["L1C", "L2-6SV1", "L2-ACOLITE"] = "L1C") -> None:
     """
     Generate Full 120 Band GeoTiff image
@@ -181,8 +184,9 @@ def generate_full_geotiff(satObj, product: Literal["L1C", "L2-6SV1", "L2-ACOLITE
     dst_ds_full.FlushCache()  # write to disk
 
     print('Done Full Geotiff')
+'''
 
-
+'''
 def generate_geotiff(satObj, bands: list, cube_data: np.ndarray) -> None:
     """
     Generate geotiff (RGB or Full 120 bands)
@@ -414,7 +418,9 @@ def generate_geotiff(satObj, bands: list, cube_data: np.ndarray) -> None:
 
     return grid_dims, geotransform, destination_epsg, grid_data_all_bands, contain_mask
 
+'''
 
+'''
 def interpolate_geotiff(band_number: int, cube_data: np.ndarray, pixel_coords_map_list: np.ndarray,
                         grid_points: np.ndarray, resampling_method: str, contain_mask: np.ndarray, geotiff_info: tuple,
                         grid_data_all_bands: np.ndarray) -> None:
@@ -453,8 +459,9 @@ def interpolate_geotiff(band_number: int, cube_data: np.ndarray, pixel_coords_ma
                                    geotiff_info[0], geotiff_info[1], geotiff_info[2], geotiff_info[3])
 
     print(f'      Done with band {band_number}')
+'''
 
-
+'''
 def export_single_band_geotiff(filename: Path, raster_data: np.ndarray, grid_dims: List[int], grid_origin: list,
                                grid_res: int, grid_epsg: int) -> None:
     """
@@ -482,3 +489,4 @@ def export_single_band_geotiff(filename: Path, raster_data: np.ndarray, grid_dim
     dst_ds.GetRasterBand(1).WriteArray(
         raster_data)
     dst_ds.FlushCache()  # write to disk
+'''

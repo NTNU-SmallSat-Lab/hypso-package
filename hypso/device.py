@@ -28,10 +28,9 @@ from hypso.calibration import read_coeffs_from_file, \
 from hypso.geometry import interpolate_at_frame, \
                            geometry_computation
 
-from hypso.georeference import start_coordinate_correction, generate_full_geotiff, generate_rgb_geotiff
 from hypso.masks import run_global_land_mask, run_ndwi_land_mask, run_threshold_land_mask, run_cloud_mask
 from hypso.reading import load_l1a_nc_cube, load_l1a_nc_metadata
-from hypso.utils import find_dir, find_file, find_all_files
+from hypso.utils import find_file
 from hypso.atmospheric import run_py6s, run_acolite, run_machi
 from hypso.chlorophyll import run_tuned_chlorophyll_estimation, run_band_ratio_chlorophyll_estimation, validate_tuned_model
 
@@ -2065,7 +2064,7 @@ class Hypso1(Hypso):
 
                 # Unix time -----------------------
                 time = netfile.createVariable('navigation/unixtime', 'u8', ('lines',))
-                frametime_pose_file = find_file(self.tmp_dir, "frametime-pose", ".csv")
+                frametime_pose_file = find_file(self.tmp_dir, "frametime-pose", ".csv") # TODO
                 df = pd.read_csv(frametime_pose_file)
                 time[:] = df["timestamp"].values
 

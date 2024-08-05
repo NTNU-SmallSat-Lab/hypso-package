@@ -322,7 +322,6 @@ def find_file(path: Path, str_in_file: str, suffix: Union[str, None] = None,
 
     return None
 
-
 def find_dir(path: Path, str_in_dir: str, type: Literal["partial", "exact"] = "partial") -> Union[Path, None]:
     """
     Find recursively a directory (or first occurance) in a specified directory.
@@ -359,7 +358,6 @@ def is_integer_num(n) -> bool:
     if isinstance(n, float):
         return n.is_integer()
     return False
-
 
 def navigate_recursive_nc(nc_file: nc.Dataset, path: str = '', depth: int = 0) -> dict:
     """
@@ -426,7 +424,6 @@ def navigate_recursive_nc(nc_file: nc.Dataset, path: str = '', depth: int = 0) -
 
     return tree_structure
 
-
 def print_nc(nc_file_path: str) -> None:
     """
     Print the contents of a .nc file
@@ -463,7 +460,6 @@ def list_array_1d_to_string(arr: Union[np.ndarray, list, tuple]) -> Union[tuple,
     var_str += end_var_str
 
     return var_str
-
 
 def recursive_print_nc(nc_file: nc.Dataset, path: str = '', depth: int = 0) -> None:
     """
@@ -606,7 +602,6 @@ def find_closest_water_lat_lon_match(sat_obj, target_lat: float, target_lon: flo
 
     else:
         raise Exception("Lat and Lon not within Capture 2D Array Lat/Lon values")
-
 
 def haversine(lon1, lat1, lon2, lat2):
     """
