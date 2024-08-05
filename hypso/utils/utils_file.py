@@ -424,7 +424,7 @@ def navigate_recursive_nc(nc_file: nc.Dataset, path: str = '', depth: int = 0) -
 
     return tree_structure
 
-def print_nc(nc_file_path: str) -> None:
+def print_nc(nc_file: str) -> None:
     """
     Print the contents of a .nc file
     :param nc_file_path: Absolute path to a .nc file
