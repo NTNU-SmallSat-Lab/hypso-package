@@ -87,16 +87,54 @@ points_file = os.path.join(dir_path, 'erie_2022-07-20_1539Z-bin3.points')
 
 satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
 
+satobj.get_l1a_cube()
 
+satobj.generate_l1b_cube()
+satobj.get_l1b_cube()
+
+satobj.generate_l2a_cube(product="6sv1")
+satobj.get_l2a_cube(product="6sv1")
 
 lat = satobj.latitudes[200,500]
 lon = satobj.longitudes[200,500]
 
-satobj.generate_l1b_cube()
-#satobj.generate_l2a_cube()
-satobj._run_geometry_computation()
+satobj.get_l1a_spectrum(latitude=lat, longitude=lon)
+satobj.get_l1b_spectrum(latitude=lat, longitude=lon)
+satobj.get_l2a_spectrum(latitude=lat, longitude=lon, product="6sv1")
 
-satobj.write_l1b_nc_file()
+satobj.plot_l1a_spectrum(latitude=lat, longitude=lon)
+satobj.plot_l1b_spectrum(latitude=lat, longitude=lon)
+satobj.plot_l2a_spectrum(latitude=lat, longitude=lon, product="6sv1")
+
+satobj.generate_toa_reflectance()
+satobj.get_toa_reflectance()
+
+
+satobj.generate_chlorophyll_estimates('band_ratio')
+satobj.get_chlorophyll_estimates(product='band_ratio')
+
+model = "/home/cameron/Dokumenter/Chlorophyll_NN_Models/model_6sv1_aqua_tuned.joblib"
+satobj.generate_chlorophyll_estimates(product='6sv1_aqua', model=model)
+satobj.get_chlorophyll_estimates(product="6sv1_aqua")
+
+
+exit()
+
+
+
+
+
+print(satobj.get_l1a_spectrum(latitude=lat, longitude=lon))
+print(type(satobj.get_l1a_spectrum(latitude=lat, longitude=lon)))
+print(satobj.get_l1a_spectrum(latitude=lat, longitude=lon).dims)
+
+print(satobj.plot_l1a_spectrum(latitude=lat, longitude=lon))
+
+#satobj.generate_l1b_cube()
+#satobj.generate_l2a_cube()
+#satobj._run_geometry_computation()
+
+#satobj.write_l1b_nc_file()
 
 #satobj.plot_l1a_spectrum(latitude=lat, longitude=lon)
 #satobj.plot_l1b_spectrum(latitude=lat, longitude=lon)
@@ -108,8 +146,7 @@ satobj.write_l1b_nc_file()
 exit()
 
 
-model = "/home/cameron/Dokumenter/Chlorophyll_NN_Models/model_6sv1_aqua_tuned.joblib"
-satobj.generate_chlorophyll_estimates(product='6sv1_aqua', model=model)
+
 print(satobj.chl)
 
 exit()
@@ -176,7 +213,7 @@ plt.imsave(fname='unified_mask.png', arr=unified_mask)
 
 #cube = satobj.get_l2a_cube(product="6SV1")
 
-band_ratio = satobj.get_chlorophyll_estimate('band_ratio')
+band_ratio = 
 plt.imsave(fname='band_ratio.png', arr=band_ratio)
 
 #print(satobj.info["nc_file"])

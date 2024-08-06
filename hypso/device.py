@@ -6,6 +6,7 @@ from pathlib import Path
 from dateutil import parser
 import netCDF4 as nc
 import matplotlib.pyplot as plt
+import xarray as xr
 
 from pyresample import geometry
 from pyresample.kd_tree import get_neighbour_info
@@ -141,12 +142,9 @@ class Hypso:
         self.lines = None
         self.samples = None
 
-
         # Misc metadata
-        #self.target_area = None
         self.background_value = None
         self.exposure = None
-
 
         # Initialize georeferencing info
         self.projection_metadata = None
@@ -175,9 +173,9 @@ class Hypso:
         self.srf = None
 
         # Initialize units (TODO: move into xarray)
-        self.l1a_units = "a.u."
-        self.l1b_units = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
-        self.l2a_units = "a.u."
+        #self.l1a_units = "a.u."
+        #self.l1b_units = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
+        #self.l2a_units = "a.u."
 
 
         # Initialize description (TODO: move into xarray)
@@ -185,9 +183,9 @@ class Hypso:
         # L1b: radiance
         # L1c: radiance
         # L2a: reflectance (Rrs)
-        self.l1a_description = "Raw sensor values"
-        self.l1b_description = "Radiance"
-        self.l2a_description = "Reflectance (Rrs)"
+        #self.l1a_description = "Raw sensor values"
+        #self.l1b_description = "Radiance"
+        #self.l2a_description = "Reflectance (Rrs)"
 
         # Initialize units for chlorophyll (TODO: move into xarray)
         self.chl_units = {}
@@ -559,39 +557,22 @@ class Hypso1(Hypso):
 
     def _load_l1a_cube(self) -> None:
 
-        self._load_l1a_nc_cube()
-        #self._load_l1a_bip_cube()
-        
+        cube = load_l1a_nc_cube(self.hypso_path)
+
+        self.l1a_cube = xr.DataArray(cube, dims=["x", "y", "band"])
+        self.l1a_cube.attrs['level'] = "L1a"
+        self.l1a_cube.attrs['units'] = "a.u."
+        self.l1a_cube.attrs['description'] = "Raw sensor values"
+
         return None
 
     def _load_l1a_metadata(self) -> None:
         
-        self._load_l1a_nc_metadata()
-        self._load_l1a_bip_metadata()
-
-        return None
-
-    def _load_l1a_nc_cube(self) -> None:
-
-        self.l1a_cube = load_l1a_nc_cube(self.hypso_path)
-
-        return None
-
-    def _load_l1a_nc_metadata(self) -> None:
-
         self.capture_config, \
             self.timing, \
             target_coords, \
             self.adcs, \
             dimensions = load_l1a_nc_metadata(self.hypso_path)
-        
-        return None
-
-    def _load_l1a_bip_cube(self) -> None:
-        
-        return None
-
-    def _load_l1a_bip_metadata(self) -> None:
         
         return None
 
@@ -712,20 +693,24 @@ class Hypso1(Hypso):
         self._set_wavelengths()
         self._set_srf()
 
-        self.l1b_cube = self._run_radiometric_calibration()
-        self.l1b_cube = self._run_smile_correction(cube=self.l1b_cube)
-        self.l1b_cube = self._run_destriping_correction(cube=self.l1b_cube)
+        cube = self.l1a_cube.to_numpy()
+
+        cube = self._run_radiometric_calibration(cube=cube)
+        cube = self._run_smile_correction(cube=cube)
+        cube = self._run_destriping_correction(cube=cube)
+
+        self.l1b_cube = xr.DataArray(cube, dims=["x", "y", "band"])
+        self.l1b_cube.attrs['level'] = "L1b"
+        self.l1b_cube.attrs['units'] = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
+        self.l1b_cube.attrs['description'] = "Radiance"
 
         self.calibration_has_run = True
 
         return None
 
-    def _run_radiometric_calibration(self, cube: np.ndarray = None) -> np.ndarray:
+    def _run_radiometric_calibration(self, cube: np.ndarray) -> np.ndarray:
 
         # Radiometric calibration
-
-        if cube is None:
-            cube = self.l1a_cube
 
         if self.verbose:
             print("[INFO] Running radiometric calibration...")
@@ -747,12 +732,9 @@ class Hypso1(Hypso):
 
         return cube
 
-    def _run_smile_correction(self, cube: np.ndarray = None) -> np.ndarray:
+    def _run_smile_correction(self, cube: np.ndarray) -> np.ndarray:
 
         # Smile correction
-
-        if cube is None:
-            cube = self.l1a_cube
 
         if self.verbose:
             print("[INFO] Running smile correction...")
@@ -766,12 +748,9 @@ class Hypso1(Hypso):
 
         return cube
 
-    def _run_destriping_correction(self, cube: np.ndarray = None) -> np.ndarray:
+    def _run_destriping_correction(self, cube: np.ndarray) -> np.ndarray:
 
         # Destriping
-
-        if cube is None:
-            cube = self.l1a_cube
 
         if self.verbose:
             print("[INFO] Running destriping correction...")
@@ -1119,7 +1098,7 @@ class Hypso1(Hypso):
 
         return None
 
-    def _run_6sv1_atmospheric_correction(self) -> np.ndarray:
+    def _run_6sv1_atmospheric_correction(self) -> xr.DataArray:
 
         # Py6S Atmospheric Correction
         # aot value: https://neo.gsfc.nasa.gov/view.php?datasetId=MYDAL2_D_AER_OD&date=2023-01-01
@@ -1150,22 +1129,30 @@ class Hypso1(Hypso):
 
         time_capture = parser.parse(self.iso_time)
 
-        atmos_corrected_cube = run_py6s(wavelengths=self.wavelengths, 
-                                        hypercube_L1=self.l1b_cube, 
-                                        lat_2d_array=latitudes,
-                                        lon_2d_array=longitudes,
-                                        solar_azimuth_angles=self.solar_azimuth_angles,
-                                        solar_zenith_angles=self.solar_zenith_angles,
-                                        sat_azimuth_angles=self.sat_azimuth_angles,
-                                        sat_zenith_angles=self.sat_zenith_angles,
-                                        iso_time=self.iso_time,
-                                        py6s_dict=atmos_params, 
-                                        time_capture=time_capture,
-                                        srf=self.srf)
-        
-        return atmos_corrected_cube
+        cube = self.l1b_cube.to_numpy()
 
-    def _run_acolite_atmospheric_correction(self) -> None:
+        cube = run_py6s(wavelengths=self.wavelengths, 
+                        hypercube_L1=cube, 
+                        lat_2d_array=latitudes,
+                        lon_2d_array=longitudes,
+                        solar_azimuth_angles=self.solar_azimuth_angles,
+                        solar_zenith_angles=self.solar_zenith_angles,
+                        sat_azimuth_angles=self.sat_azimuth_angles,
+                        sat_zenith_angles=self.sat_zenith_angles,
+                        iso_time=self.iso_time,
+                        py6s_dict=atmos_params, 
+                        time_capture=time_capture,
+                        srf=self.srf)
+        
+        cube = xr.DataArray(cube, dims=["x", "y", "band"])
+        cube.attrs['level'] = "L2a"
+        cube.attrs['units'] = "a.u."
+        cube.attrs['description'] = "Reflectance"
+        cube.attrs['correction'] = "6sv1"
+
+        return cube
+
+    def _run_acolite_atmospheric_correction(self) -> xr.DataArray:
 
         self._run_calibration()
         self._run_geometry_computation()
@@ -1183,14 +1170,20 @@ class Hypso1(Hypso):
         if not self.l1b_nc_file.is_file():
             raise Exception("No -l1b.nc file found")
         
-        atmos_corrected_cube = run_acolite(output_path=self.tmp_dir, 
-                                          atmos_dict=atmos_params, 
-                                          nc_file_acoliteready=self.l1b_nc_file)
+        cube = run_acolite(output_path=self.tmp_dir, 
+                           atmos_dict=atmos_params, 
+                           nc_file_acoliteready=self.l1b_nc_file)
 
-        return atmos_corrected_cube
+        cube = xr.DataArray(cube, dims=["x", "y", "band"])
+        cube.attrs['level'] = "L2a"
+        cube.attrs['units'] = "a.u."
+        cube.attrs['description'] = "Reflectance"
+        cube.attrs['correction'] = "acolite"
+
+        return cube
     
     # TODO
-    def _run_machi_atmospheric_correction(self) -> None:
+    def _run_machi_atmospheric_correction(self) -> xr.DataArray:
 
         print("[WARNING] Minimal Atmospheric Compensation for Hyperspectral Imagers (MACHI) atmospheric correction has not been enabled.")
 
@@ -1199,9 +1192,17 @@ class Hypso1(Hypso):
         self._run_calibration()
         self._run_geometry_computation()
 
-        return None
+        cube = self.l1b_cube.to_numpy()
+        
+        #T, A, objs = run_machi(cube=cube, verbose=self.verbose)
 
-        #T, A, objs = run_machi(cube=self.l1b_cube, verbose=self.verbose)
+        cube = xr.DataArray(cube, dims=["x", "y", "band"])
+        cube.attrs['level'] = "L2a"
+        cube.attrs['units'] = "a.u."
+        cube.attrs['description'] = "Reflectance"
+        cube.attrs['correction'] = "machi"
+
+        return cube
     
     def _check_atmospheric_correction_has_run(self, product: str = None) -> bool:
 
@@ -1217,14 +1218,15 @@ class Hypso1(Hypso):
 
     # Top of atmosphere reflectance functions
 
-    def _run_toa_reflectance(self) -> np.ndarray:
+    # TODO: move code to atmospheric module
+    def _run_toa_reflectance(self) -> None:
 
         self._run_calibration()
         self._run_geometry_computation()
         
         # Get Local variables
         srf = self.srf
-        toa_radiance = self.l1b_cube
+        toa_radiance = self.l1b_cube.to_numpy()
 
         scene_date = parser.isoparse(self.iso_time)
         julian_day = scene_date.timetuple().tm_yday
@@ -1270,7 +1272,9 @@ class Hypso1(Hypso):
 
             band_number = band_number + 1
 
-        self.toa_reflectance = toa_reflectance
+        self.toa_reflectance = xr.DataArray(toa_reflectance, dims=("x", "y", "band"))
+        self.toa_reflectance.attrs['units'] = "a.u."
+        self.toa_reflectance.attrs['description'] = "Top of atmosphere (TOA) reflectance"
 
         self.toa_reflectance_has_run = True
 
@@ -1356,7 +1360,9 @@ class Hypso1(Hypso):
 
         self._run_calibration()
 
-        land_mask = run_ndwi_land_mask(cube=self.l1b_cube, 
+        cube = self.l1b_cube.to_numpy()
+
+        land_mask = run_ndwi_land_mask(cube=cube, 
                                        wavelengths=self.wavelengths,
                                        verbose=self.verbose)
 
@@ -1366,7 +1372,9 @@ class Hypso1(Hypso):
 
         self._run_calibration()
 
-        land_mask = run_threshold_land_mask(cube=self.l1b_cube,
+        cube = self.l1b_cube.to_numpy()
+
+        land_mask = run_threshold_land_mask(cube=cube,
                                             wavelengths=self.wavelengths,
                                             verbose=self.verbose)
     
@@ -1565,7 +1573,9 @@ class Hypso1(Hypso):
 
         self._run_calibration()
 
-        chl = run_band_ratio_chlorophyll_estimation(cube = self.l1b_cube,
+        cube = self.l1b_cube.to_numpy()
+
+        chl = run_band_ratio_chlorophyll_estimation(cube = cube,
                                                     mask = self.active_mask, 
                                                     wavelengths = self.wavelengths,
                                                     spatial_dimensions = self.spatial_dimensions
@@ -1588,8 +1598,10 @@ class Hypso1(Hypso):
         if self.spatial_dimensions is None:
             print("[ERROR] No spatial dimensions provided.")
             return None
+        
+        cube = self.l2a_cubes['6sv1'].to_numpy()
 
-        chl = run_tuned_chlorophyll_estimation(l2a_cube = self.l2a_cubes['6sv1'],
+        chl = run_tuned_chlorophyll_estimation(l2a_cube = cube,
                                                model = model,
                                                mask = self.active_mask,
                                                spatial_dimensions = self.spatial_dimensions
@@ -1613,7 +1625,9 @@ class Hypso1(Hypso):
             print("[ERROR] No spatial dimensions provided.")
             return None
 
-        chl = run_tuned_chlorophyll_estimation(l2a_cube = self.l2a_cubes['acolite'],
+        cube = self.l2a_cubes['acolite'].to_numpy()
+
+        chl = run_tuned_chlorophyll_estimation(l2a_cube = cube,
                                                model = model,
                                                mask = self.active_mask,
                                                spatial_dimensions = self.spatial_dimensions
@@ -1786,7 +1800,7 @@ class Hypso1(Hypso):
             Lt.wavelength_units = "nanometers"
             Lt.fwhm = [5.5] * bands
             Lt.wavelengths = np.around(self.spectral_coeffs, 1)
-            Lt[:] = self.l1b_cube
+            Lt[:] = self.l1b_cube.to_numpy()
 
             # ADCS Timestamps ----------------------------------------------------
             len_timestamps = old_nc.dimensions["adcssamples"].size
@@ -2263,7 +2277,7 @@ class Hypso1(Hypso):
 
     # Public L1a methods
 
-    def get_l1a_cube(self) -> np.ndarray:
+    def get_l1a_cube(self) -> xr.DataArray:
 
         return self.l1a_cube
 
@@ -2272,7 +2286,7 @@ class Hypso1(Hypso):
                         longitude=None,
                         x: int = None,
                         y: int = None
-                        ) -> tuple[np.ndarray, str]:
+                        ) -> xr.DataArray:
 
         if self.l1a_cube is None:
             return None
@@ -2288,14 +2302,14 @@ class Hypso1(Hypso):
 
         spectrum = self.l1a_cube[idx[0], idx[1], :]
 
-        return spectrum, self.l1a_units
+        return spectrum
 
     def plot_l1a_spectrum(self, 
                         latitude=None, 
                         longitude=None,
                         x: int = None,
                         y: int = None
-                        ) -> np.ndarray:
+                        ) -> None:
         
         if latitude is not None and longitude is not None:
             idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
@@ -2307,18 +2321,18 @@ class Hypso1(Hypso):
             return None
 
         spectrum = self.l1a_cube[idx[0], idx[1], :]
-
         bands = range(0, len(spectrum))
-
-        output_file = Path(self.nc_dir, self.capture_name + '_l1a_plot.png')
+        units = spectrum.attrs["units"]
 
         plt.figure(figsize=(10, 5))
         plt.plot(bands, spectrum)
-        plt.ylabel(self.l1a_units)
-        plt.xlabel("Wavelength (nm)")
-        plt.title(f"(lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
+        plt.ylabel(units)
+        plt.xlabel("Band number")
+        plt.title(f"L1a (lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
         plt.grid(True)
-        plt.savefig(output_file)
+        plt.show()
+
+        return None
 
     # TODO
     def write_l1a_nc_file(self, path: Union[str, Path] = None) -> None:
@@ -2336,7 +2350,7 @@ class Hypso1(Hypso):
 
         return None
 
-    def get_l1b_cube(self) -> np.ndarray:
+    def get_l1b_cube(self) -> xr.DataArray:
 
         if self._check_calibration_has_run():
 
@@ -2347,8 +2361,6 @@ class Hypso1(Hypso):
 
         return None
 
-
-    # TODO return DataFrame like before
     def get_l1b_spectrum(self, 
                         latitude=None, 
                         longitude=None,
@@ -2370,14 +2382,14 @@ class Hypso1(Hypso):
 
         spectrum = self.l1b_cube[idx[0], idx[1], :]
 
-        return spectrum, self.l1b_units
+        return spectrum
 
     def plot_l1b_spectrum(self, 
                         latitude=None, 
                         longitude=None,
                         x: int = None,
                         y: int = None
-                        ) -> np.ndarray:
+                        ) -> None:
         
         if latitude is not None and longitude is not None:
             idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
@@ -2389,16 +2401,18 @@ class Hypso1(Hypso):
             return None
 
         spectrum = self.l1b_cube[idx[0], idx[1], :]
-
-        output_file = Path(self.nc_dir, self.capture_name + '_l1b_plot.png')
+        bands = self.wavelengths
+        units = spectrum.attrs["units"]
 
         plt.figure(figsize=(10, 5))
-        plt.plot(self.wavelengths, spectrum)
-        plt.ylabel(self.l1b_units)
+        plt.plot(bands, spectrum)
+        plt.ylabel(units)
         plt.xlabel("Wavelength (nm)")
-        plt.title(f"(lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
+        plt.title(f"L1b (lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
         plt.grid(True)
-        plt.savefig(output_file)
+        plt.show()
+
+        return None
 
     def write_l1b_nc_file(self) -> None:
 
@@ -2415,7 +2429,7 @@ class Hypso1(Hypso):
 
         return None
 
-    def get_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = "6sv1") -> np.ndarray:
+    def get_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = "6sv1") -> xr.DataArray:
 
         if product and self._check_atmospheric_correction_has_run(product=product):
 
@@ -2436,7 +2450,7 @@ class Hypso1(Hypso):
                         longitude=None,
                         x: int = None,
                         y: int = None
-                        ) -> tuple[np.ndarray, str]:
+                        ) -> xr.DataArray:
 
 
         if latitude is not None and longitude is not None:
@@ -2453,7 +2467,7 @@ class Hypso1(Hypso):
         except KeyError:
             return None
 
-        return spectrum, self.l2a_units
+        return spectrum
 
     def plot_l2a_spectrum(self, 
                          product: Literal["acolite", "6sv1", "machi"] = "6sv1",
@@ -2477,16 +2491,17 @@ class Hypso1(Hypso):
         except KeyError:
             return None
 
-        output_file = Path(self.nc_dir, self.capture_name + '_l2a_' + str(product) + '_plot.png')
+        bands = self.wavelengths
+        units = spectrum.attrs["units"]
 
         plt.figure(figsize=(10, 5))
-        plt.plot(self.wavelengths, spectrum)
-        plt.ylabel(self.l2a_units)
+        plt.plot(bands, spectrum)
+        plt.ylabel(units)
         plt.ylim([0, 1])
         plt.xlabel("Wavelength (nm)")
-        plt.title(f"(lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
+        plt.title(f"L2a {product} (lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
         plt.grid(True)
-        plt.savefig(output_file)
+        plt.show()
 
     # TODO
     def write_l2a_nc_file(self, path: Union[str, Path] = None, product: str = None) -> None:
@@ -2598,11 +2613,13 @@ class Hypso1(Hypso):
 
     # Public top of atmosphere (TOA) reflectance methods
 
-    def generate_toa_reflectance(self) -> np.ndarray:
+    def generate_toa_reflectance(self) -> None:
 
         self._run_toa_reflectance()
 
-    def get_toa_reflectance(self) -> np.ndarray:
+        return None
+
+    def get_toa_reflectance(self) -> xr.DataArray:
         """
         Convert Top Of Atmosphere (TOA) Radiance to TOA Reflectance.
 
