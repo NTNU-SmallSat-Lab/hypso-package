@@ -10,7 +10,6 @@ import netCDF4 as nc
 import pyproj as prj
 import matplotlib.pyplot as plt
 
-from pyresample import SwathDefinition
 from pyresample import geometry
 from pyresample.kd_tree import get_neighbour_info
 
