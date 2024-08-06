@@ -172,21 +172,6 @@ class Hypso:
         # Initialize spectral response function
         self.srf = None
 
-        # Initialize units (TODO: move into xarray)
-        #self.l1a_units = "a.u."
-        #self.l1b_units = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
-        #self.l2a_units = "a.u."
-
-
-        # Initialize description (TODO: move into xarray)
-        # L1a: raw
-        # L1b: radiance
-        # L1c: radiance
-        # L2a: reflectance (Rrs)
-        #self.l1a_description = "Raw sensor values"
-        #self.l1b_description = "Radiance"
-        #self.l2a_description = "Reflectance (Rrs)"
-
         # Initialize units for chlorophyll (TODO: move into xarray)
         self.chl_units = {}
 
@@ -1073,10 +1058,7 @@ class Hypso1(Hypso):
         if self.l2a_cubes is None:
             self.l2a_cubes = {}
 
-        if product is not None:
-            product = product.lower()
-
-        match product:
+        match product.lower():
             case "6sv1":
                 if self.verbose: 
                     print("[INFO] Running 6SV1 atmospheric correction")
@@ -1147,7 +1129,7 @@ class Hypso1(Hypso):
         cube = xr.DataArray(cube, dims=["x", "y", "band"])
         cube.attrs['level'] = "L2a"
         cube.attrs['units'] = "a.u."
-        cube.attrs['description'] = "Reflectance"
+        cube.attrs['description'] = "Reflectance (Rrs)"
         cube.attrs['correction'] = "6sv1"
 
         return cube
@@ -1177,7 +1159,7 @@ class Hypso1(Hypso):
         cube = xr.DataArray(cube, dims=["x", "y", "band"])
         cube.attrs['level'] = "L2a"
         cube.attrs['units'] = "a.u."
-        cube.attrs['description'] = "Reflectance"
+        cube.attrs['description'] = "Reflectance (Rrs)"
         cube.attrs['correction'] = "acolite"
 
         return cube
@@ -1199,7 +1181,7 @@ class Hypso1(Hypso):
         cube = xr.DataArray(cube, dims=["x", "y", "band"])
         cube.attrs['level'] = "L2a"
         cube.attrs['units'] = "a.u."
-        cube.attrs['description'] = "Reflectance"
+        cube.attrs['description'] = "Reflectance (Rrs)"
         cube.attrs['correction'] = "machi"
 
         return cube
@@ -1514,7 +1496,7 @@ class Hypso1(Hypso):
     # Chlorophyll estimation functions
 
     def _run_chlorophyll_estimation(self, 
-                                    product: str = None, 
+                                    product: str, 
                                     model: Union[str, Path] = None,
                                     overwrite: bool = False) -> None:
 
@@ -1525,41 +1507,37 @@ class Hypso1(Hypso):
 
             return None
 
-        model = Path(model)
-
         if self.chl is None:
             self.chl = {}
 
-        key = product
+        try:
+            model = Path(model)
+        except:
+            pass
 
-        if key is not None:
-            key = product.lower()
-
-        match product:
+        match product.lower():
 
             case "band_ratio":
 
                 if self.verbose:
                     print("[INFO] Running band ratio chlorophyll estimation...")
 
-                self.chl[key] = self._run_band_ratio_chlorophyll_estimation()
-                self.chl_units[key] = "a.u."
+                self.chl[product] = self._run_band_ratio_chlorophyll_estimation()
+                
 
             case "6sv1_aqua":
 
                 if self.verbose:
                     print("[INFO] Running 6SV1 AQUA Tuned chlorophyll estimation...")
 
-                self.chl[key] = self._run_6sv1_aqua_tuned_chlorophyll_estimation(model=model)
-                self.chl_units[key] = r'$mg \cdot m^{-3}$'
+                self.chl[product] = self._run_6sv1_aqua_tuned_chlorophyll_estimation(model=model)
 
             case "acolite_aqua":
 
                 if self.verbose:
                     print("[INFO] Running ACOLITE AQUA Tuned chlorophyll estimation...")
 
-                self.chl[key] = self._run_acolite_aqua_tuned_chlorophyll_estimation(model=model)
-                self.chl_units[key] = r'$mg \cdot m^{-3}$'
+                self.chl[product] = self._run_acolite_aqua_tuned_chlorophyll_estimation(model=model)
 
             case _:
                 print("[ERROR] No such chlorophyll estimation product supported!")
@@ -1569,7 +1547,7 @@ class Hypso1(Hypso):
 
         return None
 
-    def _run_band_ratio_chlorophyll_estimation(self) -> None:
+    def _run_band_ratio_chlorophyll_estimation(self) -> xr.DataArray:
 
         self._run_calibration()
 
@@ -1581,9 +1559,14 @@ class Hypso1(Hypso):
                                                     spatial_dimensions = self.spatial_dimensions
                                                     )
 
+        chl = xr.DataArray(chl, dims=["x", "y"])
+        chl.attrs['units'] = "a.u."
+        chl.attrs['description'] = "Chlorophyll concentration"
+        chl.attrs['method'] = "549 nm over 663 nm band ratio"
+
         return chl
 
-    def _run_6sv1_aqua_tuned_chlorophyll_estimation(self, model: Path = None) -> None:
+    def _run_6sv1_aqua_tuned_chlorophyll_estimation(self, model: Path = None) -> xr.DataArray:
 
         self._run_calibration()
         self._run_geometry_computation()
@@ -1606,10 +1589,16 @@ class Hypso1(Hypso):
                                                mask = self.active_mask,
                                                spatial_dimensions = self.spatial_dimensions
                                                )
+        
+        chl = xr.DataArray(chl, dims=["x", "y"])
+        chl.attrs['units'] = r'$mg \cdot m^{-3}$'
+        chl.attrs['description'] = "Chlorophyll concentration"
+        chl.attrs['method'] = "6SV1 AQUA Tuned"
+        chl.attrs['model'] = model
 
         return chl
 
-    def _run_acolite_aqua_tuned_chlorophyll_estimation(self, model: Path = None) -> None:
+    def _run_acolite_aqua_tuned_chlorophyll_estimation(self, model: Path = None) -> xr.DataArray:
 
         self._run_calibration()
         self._run_geometry_computation()
@@ -1632,6 +1621,12 @@ class Hypso1(Hypso):
                                                mask = self.active_mask,
                                                spatial_dimensions = self.spatial_dimensions
                                                )
+
+        chl = xr.DataArray(chl, dims=["x", "y"])
+        chl.attrs['units'] = r'$mg \cdot m^{-3}$'
+        chl.attrs['description'] = "Chlorophyll concentration"
+        chl.attrs['method'] = "ACOLITE AQUA Tuned"
+        chl.attrs['model'] = model
 
         return chl
 

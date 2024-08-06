@@ -213,7 +213,7 @@ plt.imsave(fname='unified_mask.png', arr=unified_mask)
 
 #cube = satobj.get_l2a_cube(product="6SV1")
 
-band_ratio = 
+
 plt.imsave(fname='band_ratio.png', arr=band_ratio)
 
 #print(satobj.info["nc_file"])
