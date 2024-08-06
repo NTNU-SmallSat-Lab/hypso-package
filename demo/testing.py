@@ -88,10 +88,7 @@ points_file = os.path.join(dir_path, 'erie_2022-07-20_1539Z-bin3.points')
 satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
 
 #satobj.generate_l1b_cube()
-
 #satobj.write_l1b_nc_file()
-
-
 
 if True:
     satobj.get_l1a_cube()
@@ -127,9 +124,8 @@ if True:
     satobj.set_active_land_mask(land_mask="ndwi")
     satobj.get_active_mask()
 
-
-    #satobj.generate_l2a_cube(product="6sv1")
-    #satobj.get_l2a_cube(product="6sv1")
+    satobj.generate_l2a_cube(product="6sv1")
+    satobj.get_l2a_cube(product="6sv1")
 
     lat = satobj.latitudes[200,500]
     lon = satobj.longitudes[200,500]
@@ -138,19 +134,19 @@ if True:
     satobj.get_l1b_spectrum(latitude=lat, longitude=lon)
     satobj.get_l2a_spectrum(latitude=lat, longitude=lon, product="6sv1")
 
-    #satobj.plot_l1a_spectrum(latitude=lat, longitude=lon)
-    #satobj.plot_l1b_spectrum(latitude=lat, longitude=lon)
-    #satobj.plot_l2a_spectrum(latitude=lat, longitude=lon, product="6sv1")
+    satobj.plot_l1a_spectrum(latitude=lat, longitude=lon)
+    satobj.plot_l1b_spectrum(latitude=lat, longitude=lon)
+    satobj.plot_l2a_spectrum(latitude=lat, longitude=lon, product="6sv1")
 
-    #satobj.generate_toa_reflectance()
-    #satobj.get_toa_reflectance()
+    satobj.generate_toa_reflectance()
+    satobj.get_toa_reflectance()
 
 
-    satobj.generate_chlorophyll_estimates('band_ratio')
-    satobj.get_chlorophyll_estimates(product='band_ratio')
+    satobj.generate_chlorophyll_estimates(product="band_ratio")
+    satobj.get_chlorophyll_estimates(product="band_ratio")
 
     model = "/home/cameron/Dokumenter/Chlorophyll_NN_Models/model_6sv1_aqua_tuned.joblib"
-    satobj.generate_chlorophyll_estimates(product='6sv1_aqua', model=model)
+    satobj.generate_chlorophyll_estimates(product="6sv1_aqua", model=model)
     satobj.get_chlorophyll_estimates(product="6sv1_aqua")
 
 
