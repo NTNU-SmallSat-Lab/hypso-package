@@ -2,7 +2,7 @@
 
 [tool.setuptools_scm]
 write_to = "hypso/_version.py"
-fallback_version = "1.9.9"
+fallback_version = "2.0.0"
 
 [build-system]
 requires=[
@@ -17,7 +17,7 @@ build-backend="setuptools.build_meta"
 [project]
 name="hypso"
 authors = [
-  { name="Alvaro Flores", email="alvaro.f.romero@ntnu.no" },
+  { name="Cameron Penne", email="cameron.l.penne@ntnu.no" },
 ]
 description = "HYPSO Toolbox For Satellite Image Processing"
 readme = "README.md"
@@ -55,6 +55,7 @@ dependencies=[
   "scikit-learn >=1.4",
   "py-xgboost",
   "joblib",
+  "pyresample"
 ]
 
 # dynamic properties set by tools
