@@ -2390,6 +2390,11 @@ class Hypso1(Hypso):
 
         return None
 
+    # TODO
+    def write_georeferencing(self, path: str) -> None:
+
+        return None
+    
 
 
     # Public geometry functions
@@ -2405,6 +2410,11 @@ class Hypso1(Hypso):
 
         return None
 
+    # TODO
+    def write_geometry(self, path: str) -> None:
+
+        return None
+
 
     # Public land mask methods
 
@@ -2412,7 +2422,6 @@ class Hypso1(Hypso):
     def load_land_mask(self, path: str) -> None:
 
         return None
-
 
     def generate_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global") -> None:
 
@@ -2443,6 +2452,10 @@ class Hypso1(Hypso):
 
         return self._get_active_land_mask()
 
+    # TODO
+    def write_land_mask(self, path: str) -> None:
+
+        return None
 
     # Public cloud mask methods
 
@@ -2480,6 +2493,10 @@ class Hypso1(Hypso):
 
         return self._get_active_cloud_mask()
 
+    # TODO
+    def write_cloud_mask(self, path: str) -> None:
+
+        return None
 
     # Public unified mask methods
 
@@ -2491,7 +2508,7 @@ class Hypso1(Hypso):
     # Public chlorophyll methods
 
     # TODO
-    def _load_chlorophyll_estimates(self, path: str) -> None:
+    def load_chlorophyll_estimates(self, path: str) -> None:
 
         return None
 
@@ -2513,7 +2530,11 @@ class Hypso1(Hypso):
 
         return self.chl
 
+    # TODO
+    def write_chlorophyll_estimates(self, path: str) -> None:
 
+        return None
+    
 
     # Public top of atmosphere (TOA) reflectance methods
 
