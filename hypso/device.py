@@ -31,7 +31,6 @@ from hypso.geometry import interpolate_at_frame, \
 
 from hypso.masks import run_global_land_mask, run_ndwi_land_mask, run_threshold_land_mask, run_cloud_mask
 from hypso.reading import load_l1a_nc_cube, load_l1a_nc_metadata
-from hypso.utils import find_file
 from hypso.atmospheric import run_py6s, run_acolite, run_machi
 from hypso.chlorophyll import run_tuned_chlorophyll_estimation, run_band_ratio_chlorophyll_estimation, validate_tuned_model
 
@@ -1274,6 +1273,8 @@ class Hypso1(Hypso):
 
         self.toa_reflectance = toa_reflectance
 
+        self.toa_reflectance_has_run = True
+
         return None
 
     def _check_toa_reflectance_has_run(self) -> bool:
@@ -2046,9 +2047,6 @@ class Hypso1(Hypso):
 
                 # Unix time -----------------------
                 time = netfile.createVariable('navigation/unixtime', 'u8', ('lines',))
-                
-                #frametime_pose_file = find_file(self.tmp_dir, "frametime-pose", ".csv") # TODO
-                #df = pd.read_csv(frametime_pose_file)
 
                 df = self.framepose_df
 
