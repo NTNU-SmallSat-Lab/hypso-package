@@ -1095,7 +1095,7 @@ class Hypso1(Hypso):
             case "global":
 
                 if self.VERBOSE:
-                    print("[INFO] Running land mask generation...")
+                    print("[INFO] Running global land mask generation...")
 
                 self.land_masks[land_mask] = self._run_global_land_mask()
                 self._update_active_land_mask(land_mask=land_mask, override=False)
@@ -1384,8 +1384,12 @@ class Hypso1(Hypso):
         self._run_calibration()
 
         cube = self.l1b_cube.to_numpy()
-        mask = self.active_mask.to_numpy()
         factor = 0.1
+
+        try:
+            mask = self.active_mask.to_numpy()
+        except:
+            mask = None
 
         chl = run_band_ratio_chlorophyll_estimation(cube = cube,
                                                     mask = mask, 
@@ -1419,7 +1423,11 @@ class Hypso1(Hypso):
             return None
         
         cube = self.l2a_cubes['6sv1'].to_numpy()
-        mask = self.active_mask.to_numpy()
+
+        try:
+            mask = self.active_mask.to_numpy()
+        except:
+            mask = None
 
         chl = run_tuned_chlorophyll_estimation(l2a_cube = cube,
                                                model = model,
@@ -1452,8 +1460,12 @@ class Hypso1(Hypso):
             return None
 
         cube = self.l2a_cubes['acolite'].to_numpy()
-        mask = self.active_mask.to_numpy()
 
+        try:
+            mask = self.active_mask.to_numpy()
+        except:
+            mask = None
+        
         chl = run_tuned_chlorophyll_estimation(l2a_cube = cube,
                                                model = model,
                                                mask = mask,
