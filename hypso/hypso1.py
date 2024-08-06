@@ -2565,6 +2565,10 @@ class Hypso1(Hypso):
 
         return None
 
+    # TODO
+    def write_toa_reflectance(self, path: str) -> None:
+        
+        return None
 
 
 
