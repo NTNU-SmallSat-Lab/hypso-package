@@ -1,13 +1,10 @@
 from typing import Union
-from osgeo import gdal, osr
 import numpy as np
 import pandas as pd
 from importlib.resources import files
-import rasterio
 from pathlib import Path
 from dateutil import parser
 import netCDF4 as nc
-import pyproj as prj
 import matplotlib.pyplot as plt
 
 from pyresample import geometry
@@ -32,8 +29,11 @@ from hypso.masks import run_global_land_mask, run_ndwi_land_mask, run_threshold_
 from hypso.reading import load_l1a_nc_cube, load_l1a_nc_metadata
 from hypso.atmospheric import run_py6s, run_acolite, run_machi
 from hypso.chlorophyll import run_tuned_chlorophyll_estimation, run_band_ratio_chlorophyll_estimation, validate_tuned_model
-
 from hypso.writing import set_or_create_attr
+
+#import pyproj as prj
+#import rasterio
+#from osgeo import gdal, osr
 
 EXPERIMENTAL_FEATURES = True
 SUPPORTED_PRODUCT_LEVELS = ["l1a", "l1b", "l2a"]
