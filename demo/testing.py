@@ -92,6 +92,32 @@ satobj.get_l1a_cube()
 satobj.generate_l1b_cube()
 satobj.get_l1b_cube()
 
+satobj.generate_land_mask(land_mask="global")
+satobj.get_active_land_mask()
+
+satobj.generate_land_mask(land_mask="ndwi")
+satobj.get_active_land_mask()
+
+satobj.generate_land_mask(land_mask="threshold")
+satobj.get_active_land_mask()
+
+satobj.get_land_mask(land_mask="global")
+satobj.get_land_mask(land_mask="ndwi")
+satobj.get_land_mask(land_mask="threshold")
+
+satobj.set_active_land_mask(land_mask="ndwi")
+satobj.set_active_land_mask(land_mask="threshold")
+satobj.set_active_land_mask(land_mask="global")
+
+satobj.get_active_mask()
+
+satobj.generate_cloud_mask(cloud_mask="global")
+satobj.get_cloud_mask(cloud_mask="global")
+satobj.get_active_cloud_mask()
+
+satobj.get_active_mask()
+
+
 satobj.generate_l2a_cube(product="6sv1")
 satobj.get_l2a_cube(product="6sv1")
 

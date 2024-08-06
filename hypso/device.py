@@ -59,35 +59,25 @@ class Hypso:
         self._set_hypso_path(hypso_path=hypso_path)
         self._set_points_path(points_path=points_path)
 
-
         # Initialize platform and sensor names
         self.platform = None
         self.sensor = None
-
 
         # Initialize capture name and target
         self.capture_name = None
         self.capture_region = None
 
-
         # Initialize directory and file info
         self.tmp_dir = None
         self.nc_dir = None
-
         self.nc_file = None
         self.nc_name = None
-
         self.l1a_nc_file = None
         self.l1b_nc_file = None
         self.l2a_nc_file = None
-
         self.l1a_nc_name = None
         self.l1b_nc_name = None
         self.l2a_nc_name = None
-
-        # Initialize datasets
-        # TODO: store all products, data, etc in dataset object/dict?
-        self.datasets = {}
 
         # Initialize datacubes
         self.l1a_cube = None
@@ -104,13 +94,10 @@ class Hypso:
 
         # Initialize timing info
         self.capture_datetime = None
-        
         self.start_timestamp_capture = None
         self.end_timestamp_capture = None
-
         self.start_timestamp_adcs = None
         self.end_timestamp_adcs = None
-
         self.unixtime = None
         self.iso_time = None
 
@@ -127,17 +114,13 @@ class Hypso:
         self.x_stop = None
         self.y_start = None
         self.y_stop = None
-
         self.bin_factor = 8
-
         self.row_count = None
         self.frame_count = None
         self.column_count = None
-
         self.image_height = None
         self.image_width = None
         self.im_size = None
-
         self.bands = None
         self.lines = None
         self.samples = None
@@ -151,7 +134,6 @@ class Hypso:
         self.latitudes = None
         self.longitudes = None
         self.datacube_flipped = False
-
 
        # Initialize calibration file paths:
         self.rad_coeff_file = None
@@ -180,30 +162,24 @@ class Hypso:
         self.active_land_mask = None
         self.active_land_mask_name = None
         
-
         # Initilize cloud mask dict
         self.cloud_masks = {}
         self.active_cloud_mask = None
         self.active_cloud_mask_name = None
 
-
         # Intialize active mask
         self.active_mask = None
-
 
         # Initialize products dict
         self.products = {}
 
-
         # Initialize chlorophyll estimates dict
         self.chl = {}
-
 
         # Initialize ADCS data
         self.adcs = None
         self.adcs_pos_df = None
         self.adcs_quat_df = None
-
 
         # Initialize geometry data
         self.framepose_df = None
@@ -218,10 +194,9 @@ class Hypso:
         self.latitudes_original = None
         self.longitudes_original = None
 
-
         # DEBUG
         self.DEBUG = False
-        self.verbose = False
+        self.VERBOSE = False
 
     def _set_hypso_path(self, hypso_path=None) -> None:
 
@@ -288,7 +263,7 @@ class Hypso1(Hypso):
 
     def _set_verbose(self, verbose=False) -> None:
 
-        self.verbose = verbose
+        self.VERBOSE = verbose
 
         return None
 
@@ -348,7 +323,7 @@ class Hypso1(Hypso):
             else:
                 raise Exception("Number of Rows (AKA frame_count) Is Not Standard")
 
-        if self.verbose:
+        if self.VERBOSE:
             print(f"[INFO] Capture capture type: {self.capture_type}")
 
         return None
@@ -464,7 +439,7 @@ class Hypso1(Hypso):
 
         self.spatial_dimensions = (self.capture_config["frame_count"], self.image_height)
 
-        if self.verbose:
+        if self.VERBOSE:
             print(f"[INFO] Capture spatial dimensions: {self.spatial_dimensions}")
 
         return None
@@ -479,7 +454,7 @@ class Hypso1(Hypso):
         try:
             self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config["frame_count"] / self.capture_config["fps"] + self.capture_config["exposure"] / 1000.0
         except:
-            if self.verbose:
+            if self.VERBOSE:
                 print("[WARNING] FPS or exposure values not found. Assuming 20.0 for each.")
             self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config["frame_count"] / 20.0 + 20.0 / 1000.0
 
@@ -583,7 +558,7 @@ class Hypso1(Hypso):
 
         if self._check_georeferencing_has_run() and not overwrite:
 
-            if self.verbose:
+            if self.VERBOSE:
                     print("[INFO] Georeferencing has already been run. Skipping.")
 
             return None
@@ -591,7 +566,7 @@ class Hypso1(Hypso):
         # Compute latitude and longitudes arrays if a points file is available
         if self.points_path is not None:
 
-            if self.verbose:
+            if self.VERBOSE:
                 print('[INFO] Running georeferencing...')
 
             gr = georeferencing.Georeferencer(filename=self.points_path,
@@ -612,7 +587,7 @@ class Hypso1(Hypso):
 
         else:
 
-            if self.verbose:
+            if self.VERBOSE:
                 print('[INFO] No georeferencing .points file provided. Skipping georeferencing.')
 
         self.georeferencing_has_run = True
@@ -665,12 +640,12 @@ class Hypso1(Hypso):
 
         if self._check_calibration_has_run() and not overwrite:
 
-            if self.verbose:
+            if self.VERBOSE:
                     print("[INFO] Calibration has already been run. Skipping.")
 
             return None
 
-        if self.verbose:
+        if self.VERBOSE:
             print('[INFO] Running calibration routines...')
 
         self._set_calibration_coeff_files()
@@ -697,7 +672,7 @@ class Hypso1(Hypso):
 
         # Radiometric calibration
 
-        if self.verbose:
+        if self.VERBOSE:
             print("[INFO] Running radiometric calibration...")
 
         cube = self._get_flipped_cube(cube=cube)
@@ -721,7 +696,7 @@ class Hypso1(Hypso):
 
         # Smile correction
 
-        if self.verbose:
+        if self.VERBOSE:
             print("[INFO] Running smile correction...")
 
         cube = self._get_flipped_cube(cube=cube)
@@ -737,7 +712,7 @@ class Hypso1(Hypso):
 
         # Destriping
 
-        if self.verbose:
+        if self.VERBOSE:
             print("[INFO] Running destriping correction...")
 
         cube = self._get_flipped_cube(cube=cube)
@@ -984,12 +959,12 @@ class Hypso1(Hypso):
 
         if self._check_geometry_computation_has_run() and not overwrite:
 
-            if self.verbose:
+            if self.VERBOSE:
                     print("[INFO] Geometry computation has already been run. Skipping.")
 
             return None
 
-        if self.verbose:
+        if self.VERBOSE:
             print("[INFO] Running geometry computation...")
 
         framepose_data = interpolate_at_frame(adcs_pos_df=self.adcs_pos_df,
@@ -998,7 +973,7 @@ class Hypso1(Hypso):
                                               frame_count=self.capture_config['frame_count'],
                                               fps=self.capture_config['fps'],
                                               exposure=self.capture_config['exposure'],
-                                              verbose=self.verbose
+                                              verbose=self.VERBOSE
                                               )
 
 
@@ -1013,7 +988,7 @@ class Hypso1(Hypso):
            sat_azimuth, \
            sat_zenith = geometry_computation(framepose_data=framepose_data,
                                              image_height=self.image_height,
-                                             verbose=self.verbose
+                                             verbose=self.VERBOSE
                                              )
 
         self.framepose_df = framepose_data
@@ -1050,7 +1025,7 @@ class Hypso1(Hypso):
 
         if self._check_atmospheric_correction_has_run(product=product) and not overwrite:
 
-            if self.verbose:
+            if self.VERBOSE:
                 print("[INFO] Atmospheric correction has already been run. Skipping.")
 
             return None
@@ -1060,15 +1035,15 @@ class Hypso1(Hypso):
 
         match product.lower():
             case "6sv1":
-                if self.verbose: 
+                if self.VERBOSE: 
                     print("[INFO] Running 6SV1 atmospheric correction")
                 self.l2a_cubes[product] = self._run_6sv1_atmospheric_correction()
             case "acolite":
-                if self.verbose: 
+                if self.VERBOSE: 
                     print("[INFO] Running ACOLITE atmospheric correction")
                 self.l2a_cubes[product] = self._run_acolite_atmospheric_correction()
             case "machi":
-                if self.verbose: 
+                if self.VERBOSE: 
                     print("[INFO] Running MACHI atmospheric correction")
                 self.l2a_cubes[product] = self._run_machi_atmospheric_correction()  
 
@@ -1176,7 +1151,7 @@ class Hypso1(Hypso):
 
         cube = self.l1b_cube.to_numpy()
         
-        #T, A, objs = run_machi(cube=cube, verbose=self.verbose)
+        #T, A, objs = run_machi(cube=cube, verbose=self.VERBOSE)
 
         cube = xr.DataArray(cube, dims=["x", "y", "band"])
         cube.attrs['level'] = "L2a"
@@ -1269,11 +1244,11 @@ class Hypso1(Hypso):
 
     # Land mask functions
 
-    def _run_land_mask(self, land_mask: str, overwrite: bool = False) -> None:
+    def _run_land_mask(self, land_mask: str="global", overwrite: bool = False) -> None:
 
         if self._check_land_mask_has_run(land_mask=land_mask) and not overwrite:
 
-            if self.verbose:
+            if self.VERBOSE:
                 print("[INFO] Land mask has already been run. Skipping.")
 
             return None
@@ -1281,42 +1256,33 @@ class Hypso1(Hypso):
         if self.land_masks is None:
             self.land_masks = {}
 
-        key = land_mask
+        land_mask = land_mask.lower()
 
-        if key is not None:
-            key = key.lower()
-
-        match key:
+        match land_mask:
 
             case "global":
 
-                if self.verbose:
+                if self.VERBOSE:
                     print("[INFO] Running land mask generation...")
 
-                returned_land_mask = self._run_global_land_mask()
-
-                self.land_masks[key] = returned_land_mask
-                self._update_active_land_mask(land_mask=key, override=False)
+                self.land_masks[land_mask] = self._run_global_land_mask()
+                self._update_active_land_mask(land_mask=land_mask, override=False)
 
             case "ndwi":
 
-                if self.verbose:
+                if self.VERBOSE:
                     print("[INFO] Running NDWI land mask generation...")
 
-                returned_land_mask = self._run_ndwi_land_mask()
-
-                self.land_masks[key] = returned_land_mask
-                self._update_active_land_mask(land_mask=key, override=False)
+                self.land_masks[land_mask] = self._run_ndwi_land_mask()
+                self._update_active_land_mask(land_mask=land_mask, override=False)
 
             case "threshold":
 
-                if self.verbose:
+                if self.VERBOSE:
                     print("[INFO] Running threshold land mask generation...")
 
-                returned_land_mask = self._run_threshold_land_mask()
-
-                self.land_masks[key] = returned_land_mask
-                self._update_active_land_mask(land_mask=key, override=False)
+                self.land_masks[land_mask] = self._run_threshold_land_mask()
+                self._update_active_land_mask(land_mask=land_mask, override=False)
 
             case _:
 
@@ -1336,6 +1302,10 @@ class Hypso1(Hypso):
                                         longitudes=self.longitudes
                                         )
         
+        land_mask = xr.DataArray(land_mask, dims=("x", "y"))
+        land_mask.attrs['description'] = "Land mask"
+        land_mask.attrs['method'] = "global"
+
         return land_mask
 
     def _run_ndwi_land_mask(self) -> np.ndarray:
@@ -1346,7 +1316,11 @@ class Hypso1(Hypso):
 
         land_mask = run_ndwi_land_mask(cube=cube, 
                                        wavelengths=self.wavelengths,
-                                       verbose=self.verbose)
+                                       verbose=self.VERBOSE)
+
+        land_mask = xr.DataArray(land_mask, dims=("x", "y"))
+        land_mask.attrs['description'] = "Land mask"
+        land_mask.attrs['method'] = "ndwi"
 
         return land_mask
     
@@ -1358,8 +1332,12 @@ class Hypso1(Hypso):
 
         land_mask = run_threshold_land_mask(cube=cube,
                                             wavelengths=self.wavelengths,
-                                            verbose=self.verbose)
+                                            verbose=self.VERBOSE)
     
+        land_mask = xr.DataArray(land_mask, dims=("x", "y"))
+        land_mask.attrs['description'] = "Land mask"
+        land_mask.attrs['method'] = "threshold"
+
         return land_mask
 
     def _update_active_land_mask(self, land_mask: str = None, override: bool = False) -> None:
@@ -1367,20 +1345,22 @@ class Hypso1(Hypso):
         if land_mask is None:
             return None
 
-        if land_mask.lower() not in self.land_masks.keys():
+        land_mask = land_mask.lower()
+
+        if land_mask not in self.land_masks.keys():
             return None
 
         if self.active_land_mask is None or override:
-            self.active_land_mask = self.land_masks[land_mask.lower()]
-            self.active_land_mask_name = land_mask.lower()
+            self.active_land_mask = self.land_masks[land_mask]
+            self.active_land_mask.attrs['description'] = "Active land mask"
 
         self._update_active_mask()
 
         return None
 
-    def _get_active_land_mask(self) -> tuple[str, np.ndarray]:
+    def _get_active_land_mask(self) -> xr.DataArray:
 
-        return self.active_land_mask_name, self.active_land_mask
+        return self.active_land_mask
 
     def _check_land_mask_has_run(self, land_mask: str = None) -> bool:
 
@@ -1400,7 +1380,7 @@ class Hypso1(Hypso):
 
         if self._check_cloud_mask_has_run(cloud_mask=cloud_mask) and not overwrite:
 
-            if self.verbose:
+            if self.VERBOSE:
                 print("[INFO] Cloud mask has already been run. Skipping.")
 
             return None
@@ -1408,23 +1388,19 @@ class Hypso1(Hypso):
         if self.cloud_masks is None:
             self.cloud_masks = {}
 
-        key = cloud_mask
+        cloud_mask = cloud_mask.lower()
 
-        if key is not None:
-            key = key.lower()
-
-        match key:
+        match cloud_mask:
 
             case 'default':
 
-                if self.verbose:
+                if self.VERBOSE:
                     print("[INFO] Running cloud mask generation...")
                     print("[WARNING] Cloud mask generation has not been implemented.")
 
-                returned_cloud_mask = run_cloud_mask()
-
-                self.cloud_masks[key] = returned_cloud_mask
-                self._update_active_cloud_mask(cloud_mask=key, override=False)
+                self.cloud_masks[cloud_mask] = run_cloud_mask()
+                
+                self._update_active_cloud_mask(cloud_mask=cloud_mask, override=False)
 
             case _:
                 print("[WARNING] No such cloud mask supported!")
@@ -1439,27 +1415,29 @@ class Hypso1(Hypso):
         if cloud_mask is None:
             return None
 
-        if cloud_mask.lower() not in self.cloud_masks.keys():
+        cloud_mask = cloud_mask.lower()
+
+        if cloud_mask not in self.cloud_masks.keys():
             return None
 
         if self.active_cloud_mask is None or override:
-            self.active_cloud_mask = self.cloud_masks[cloud_mask.lower()]
-            self.active_cloud_mask_name = cloud_mask.lower()
+            self.active_cloud_mask = self.cloud_masks[cloud_mask]
+            self.active_cloud_mask.attrs['description'] = "Active cloud mask"
 
         self._update_active_mask()
 
         return None
 
-    def _get_active_cloud_mask(self) -> tuple[str, np.ndarray]:
+    def _get_active_cloud_mask(self) -> xr.DataArray:
 
-        return self.active_cloud_mask_name, self.active_cloud_mask
+        return self.active_cloud_mask
 
     def _check_cloud_mask_has_run(self, cloud_mask: str = None) -> bool:
 
         if self.cloud_mask_has_run:
             if cloud_mask is None:
                 return True     
-            elif cloud_mask.lower() in self.land_masks.keys():
+            elif cloud_mask.lower() in self.cloud_masks.keys():
                 return True     
             else:
                 return False
@@ -1471,24 +1449,47 @@ class Hypso1(Hypso):
 
     def _update_active_mask(self) -> None:
 
-        land_mask_name, land_mask = self._get_active_land_mask()
-        cloud_mask_name, cloud_mask = self._get_active_cloud_mask()
+        land_mask = self._get_active_land_mask()
+        cloud_mask = self._get_active_cloud_mask()
 
         if land_mask is None and cloud_mask is None:
             return None
         
         elif land_mask is None:
-            self.active_mask = cloud_mask
+
+            active_mask = cloud_mask.to_numpy()
+            active_mask = xr.DataArray(active_mask, dims=("x", "y"))
+            active_mask.attrs['description'] = "Active mask"
+            active_mask.attrs['land_mask_method'] = None
+            active_mask.attrs['cloud_mask_method'] = cloud_mask.attrs['method']
+
+            self.active_mask = active_mask
+
         
         elif cloud_mask is None:
-            self.active_mask = land_mask
+            
+            active_mask = land_mask.to_numpy()
+            active_mask = xr.DataArray(active_mask, dims=("x", "y"))
+            active_mask.attrs['description'] = "Active mask"
+            active_mask.attrs['land_mask_method'] = land_mask.attrs['method']
+            active_mask.attrs['cloud_mask_method'] = None
+
+            self.active_mask = active_mask
         
         else:
-            self.active_mask = land_mask | cloud_mask
+
+            active_mask = land_mask.to_numpy() | cloud_mask.to_numpy()
+            active_mask = xr.DataArray(active_mask, dims=("x", "y"))
+            active_mask.attrs['description'] = "Active mask"
+            active_mask.attrs['land_mask_method'] = land_mask.attrs['method']
+            active_mask.attrs['cloud_mask_method'] = cloud_mask.attrs['method']
+
+            self.active_mask = active_mask
+
 
         return None
 
-    def _get_active_mask(self) -> np.ndarray:
+    def _get_active_mask(self) -> xr.DataArray:
 
         return self.active_mask
 
@@ -1502,7 +1503,7 @@ class Hypso1(Hypso):
 
         if self._check_chlorophyll_estimation_has_run(product=product) and not overwrite:
 
-            if self.verbose:
+            if self.VERBOSE:
                 print("[INFO] Chlorophyll estimation has already been run. Skipping.")
 
             return None
@@ -1519,7 +1520,7 @@ class Hypso1(Hypso):
 
             case "band_ratio":
 
-                if self.verbose:
+                if self.VERBOSE:
                     print("[INFO] Running band ratio chlorophyll estimation...")
 
                 self.chl[product] = self._run_band_ratio_chlorophyll_estimation()
@@ -1527,14 +1528,14 @@ class Hypso1(Hypso):
 
             case "6sv1_aqua":
 
-                if self.verbose:
+                if self.VERBOSE:
                     print("[INFO] Running 6SV1 AQUA Tuned chlorophyll estimation...")
 
                 self.chl[product] = self._run_6sv1_aqua_tuned_chlorophyll_estimation(model=model)
 
             case "acolite_aqua":
 
-                if self.verbose:
+                if self.VERBOSE:
                     print("[INFO] Running ACOLITE AQUA Tuned chlorophyll estimation...")
 
                 self.chl[product] = self._run_acolite_aqua_tuned_chlorophyll_estimation(model=model)
@@ -1552,9 +1553,10 @@ class Hypso1(Hypso):
         self._run_calibration()
 
         cube = self.l1b_cube.to_numpy()
+        mask = self.active_mask.to_numpy()
 
         chl = run_band_ratio_chlorophyll_estimation(cube = cube,
-                                                    mask = self.active_mask, 
+                                                    mask = mask, 
                                                     wavelengths = self.wavelengths,
                                                     spatial_dimensions = self.spatial_dimensions
                                                     )
@@ -1583,10 +1585,11 @@ class Hypso1(Hypso):
             return None
         
         cube = self.l2a_cubes['6sv1'].to_numpy()
+        mask = self.active_mask.to_numpy()
 
         chl = run_tuned_chlorophyll_estimation(l2a_cube = cube,
                                                model = model,
-                                               mask = self.active_mask,
+                                               mask = mask,
                                                spatial_dimensions = self.spatial_dimensions
                                                )
         
@@ -1615,10 +1618,11 @@ class Hypso1(Hypso):
             return None
 
         cube = self.l2a_cubes['acolite'].to_numpy()
+        mask = self.active_mask.to_numpy()
 
         chl = run_tuned_chlorophyll_estimation(l2a_cube = cube,
                                                model = model,
-                                               mask = self.active_mask,
+                                               mask = mask,
                                                spatial_dimensions = self.spatial_dimensions
                                                )
 
@@ -1679,7 +1683,7 @@ class Hypso1(Hypso):
 
         if self._check_write_l1b_nc_file_has_run() and not overwrite:
 
-            if self.verbose:
+            if self.VERBOSE:
                     print("[INFO] L1b NetCDF file has already been generated. Skipping.")
 
             return None
@@ -2351,7 +2355,7 @@ class Hypso1(Hypso):
 
             return self.l1b_cube
 
-        if self.verbose:
+        if self.VERBOSE:
             print("[ERROR] L1b cube has not yet been generated.")
 
         return None
@@ -2430,7 +2434,7 @@ class Hypso1(Hypso):
 
             return self.l2a_cubes[product.lower()]
         
-        if self.verbose:
+        if self.VERBOSE:
             print("[ERROR] " + product.upper() + " L2a cube has not yet been generated.")
 
         return None
@@ -2506,6 +2510,15 @@ class Hypso1(Hypso):
         return None
 
 
+    # Public geometry functions
+
+    def generate_geometry(self) -> None:
+
+        self._run_geometry_computation()
+
+        return None
+
+
     # Public land mask methods
 
     def generate_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global") -> None:
@@ -2520,7 +2533,7 @@ class Hypso1(Hypso):
 
             return self.land_masks[land_mask.lower()]
         
-        if self.verbose:
+        if self.VERBOSE:
             print("[ERROR] " + land_mask + " land mask has not yet been generated.")
 
         return None
@@ -2533,9 +2546,9 @@ class Hypso1(Hypso):
 
         self._update_active_land_mask(land_mask=land_mask, override=True)
 
-    def get_active_land_mask(self) -> tuple[str, np.ndarray]:
+    def get_active_land_mask(self) -> xr.DataArray:
 
-        return self._get_active_cloud_mask()
+        return self._get_active_land_mask()
 
 
     # Public cloud mask methods
@@ -2552,7 +2565,7 @@ class Hypso1(Hypso):
 
             return self.cloud_masks[cloud_mask.lower()]
         
-        if self.verbose:
+        if self.VERBOSE:
             print("[ERROR] " + cloud_mask + " cloud mask has not yet been generated.")
         
         return None
@@ -2565,12 +2578,19 @@ class Hypso1(Hypso):
 
         self._update_active_cloud_mask(self, cloud_mask=cloud_mask, override=True)
 
-    def get_active_cloud_mask(self) -> tuple[str, np.ndarray]:
+    def get_active_cloud_mask(self) -> xr.DataArray:
 
-        return self._get_active_land_mask()
+        return self._get_active_cloud_mask()
 
 
-    # Public chlorophyll mask methods
+    # Public unified mask methods
+
+    def get_active_mask(self) -> xr.DataArray:
+
+        return self._get_active_mask()
+
+
+    # Public chlorophyll methods
 
     def generate_chlorophyll_estimates(self, 
                                        product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',
@@ -2625,7 +2645,7 @@ class Hypso1(Hypso):
 
             return self.toa_reflectance
 
-        if self.verbose:
+        if self.VERBOSE:
             print("[ERROR] Top of atmosphere (TOA) reflectance has not yet been generated.")
 
         return None
