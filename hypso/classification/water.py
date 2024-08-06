@@ -8,7 +8,7 @@ from typing import Literal
 
 
 
-
+# TODO
 def ndwi_watermask(cube: np.ndarray, verbose=False) -> np.ndarray:
     """
     Compute the Water Mask using the Normalized Difference Water Index (NDWI). This method was originally developed by
