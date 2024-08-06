@@ -431,7 +431,7 @@ def print_nc(nc_file: str) -> None:
 
     :return: No return
     """
-    recursive_print_nc(nc.Dataset(nc_file_path, format="NETCDF4"))
+    recursive_print_nc(nc.Dataset(nc_file, format="NETCDF4"))
 
 
 def list_array_1d_to_string(arr: Union[np.ndarray, list, tuple]) -> Union[tuple, str, Number]:
