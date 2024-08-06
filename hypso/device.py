@@ -170,9 +170,6 @@ class Hypso:
         # Intialize active mask
         self.active_mask = None
 
-        # Initialize products dict
-        self.products = {}
-
         # Initialize chlorophyll estimates dict
         self.chl = {}
 
@@ -253,7 +250,7 @@ class Hypso1(Hypso):
         self.chlorophyll_estimation_has_run = False
         self.toa_reflectance_has_run = False
 
-        self._load_l1a_file()
+        self._load_l1a()
         self._run_georeferencing()
 
         return None
@@ -473,7 +470,10 @@ class Hypso1(Hypso):
 
     # Loading L1a
 
-    def _load_l1a_file(self) -> None:
+    def _load_l1a_nc_file(self, path: str = None) -> None:
+
+        if path is not None:
+            self.hypso_path = path
 
         self._check_l1a_file_format()
 
@@ -2275,6 +2275,12 @@ class Hypso1(Hypso):
 
     # Public L1a methods
 
+    def load_l1a_nc_file(self, path: str) -> None:
+
+        self._load_l1a_nc_file(path=path)
+
+        return None
+
     def get_l1a_cube(self) -> xr.DataArray:
 
         return self.l1a_cube
@@ -2348,6 +2354,11 @@ class Hypso1(Hypso):
 
 
     # Public L1b methods
+
+    # TODO
+    def load_l1b_nc_file(self, path: str) -> None:
+
+        return None
 
     def generate_l1b_cube(self) -> None:
 
@@ -2434,6 +2445,11 @@ class Hypso1(Hypso):
 
 
     # Public L2a methods
+
+    # TODO
+    def load_l2a_cube(self, path: str, product: Literal["acolite", "6sv1", "machi"] = "6sv1") -> None:
+
+        return None
 
     def generate_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = "6sv1") -> None:
 
@@ -2530,7 +2546,31 @@ class Hypso1(Hypso):
         return None
 
 
+    # Public georeferencing functions
+
+    # TODO
+    def load_georeferencing(self, path: str) -> None:
+
+        return None
+    
+    # TODO
+    def generate_georeferencing(self) -> None:
+
+        return None
+    
+    # TODO
+    def get_ground_control_points(self) -> None:
+
+        return None
+
+
+
     # Public geometry functions
+
+    # TODO
+    def load_geometry(self, path: str) -> None:
+
+        return None
 
     def generate_geometry(self) -> None:
 
@@ -2540,6 +2580,12 @@ class Hypso1(Hypso):
 
 
     # Public land mask methods
+
+    # TODO
+    def load_land_mask(self, path: str) -> None:
+
+        return None
+
 
     def generate_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = "global") -> None:
 
@@ -2572,6 +2618,11 @@ class Hypso1(Hypso):
 
 
     # Public cloud mask methods
+
+    # TODO
+    def load_cloud_mask(self, path: str) -> None:
+
+        return None
 
     def generate_cloud_mask(self, cloud_mask: Literal["default"] = "default"):
 
@@ -2612,6 +2663,11 @@ class Hypso1(Hypso):
 
     # Public chlorophyll methods
 
+    # TODO
+    def _load_chlorophyll_estimates(self, path: str) -> None:
+
+        return None
+
     def generate_chlorophyll_estimates(self, 
                                        product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]='band_ratio',
                                        model: Union[str, Path] = None):
@@ -2631,22 +2687,13 @@ class Hypso1(Hypso):
         return self.chl
 
 
-    # Public products methods
-
-    def generate_product(self):
-
-        pass
-
-    def get_product(self):
-
-        pass
-
-    def get_product_dict(self) -> dict:
-
-        return self.products
-
 
     # Public top of atmosphere (TOA) reflectance methods
+
+    # TODO
+    def load_toa_reflectance(self, path: str) -> None:
+        
+        return None
 
     def generate_toa_reflectance(self) -> None:
 
