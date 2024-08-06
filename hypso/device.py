@@ -174,13 +174,13 @@ class Hypso:
         # Initialize spectral response function
         self.srf = None
 
-        # Initialize units
+        # Initialize units (TODO: move into xarray)
         self.l1a_units = "a.u."
         self.l1b_units = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
         self.l2a_units = "a.u."
 
 
-        # Initialize description
+        # Initialize description (TODO: move into xarray)
         # L1a: raw
         # L1b: radiance
         # L1c: radiance
@@ -189,7 +189,7 @@ class Hypso:
         self.l1b_description = "Radiance"
         self.l2a_description = "Reflectance (Rrs)"
 
-        # Initialize units for chlorophyll
+        # Initialize units for chlorophyll (TODO: move into xarray)
         self.chl_units = {}
 
         # Initilize land mask dict
