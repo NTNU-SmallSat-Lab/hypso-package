@@ -87,215 +87,71 @@ points_file = os.path.join(dir_path, 'erie_2022-07-20_1539Z-bin3.points')
 
 satobj = Hypso1(hypso_path=nc_file, points_path=points_file, verbose=True)
 
-satobj.get_l1a_cube()
-
-satobj.generate_l1b_cube()
-satobj.get_l1b_cube()
-
-satobj.generate_land_mask(land_mask="global")
-satobj.get_active_land_mask()
-
-satobj.generate_land_mask(land_mask="ndwi")
-satobj.get_active_land_mask()
-
-satobj.generate_land_mask(land_mask="threshold")
-satobj.get_active_land_mask()
-
-satobj.get_land_mask(land_mask="global")
-satobj.get_land_mask(land_mask="ndwi")
-satobj.get_land_mask(land_mask="threshold")
-
-satobj.set_active_land_mask(land_mask="ndwi")
-satobj.set_active_land_mask(land_mask="threshold")
-satobj.set_active_land_mask(land_mask="global")
-
-satobj.get_active_mask()
-
-satobj.generate_cloud_mask(cloud_mask="global")
-satobj.get_cloud_mask(cloud_mask="global")
-satobj.get_active_cloud_mask()
-
-satobj.get_active_mask()
-
-
-satobj.generate_l2a_cube(product="6sv1")
-satobj.get_l2a_cube(product="6sv1")
-
-lat = satobj.latitudes[200,500]
-lon = satobj.longitudes[200,500]
-
-satobj.get_l1a_spectrum(latitude=lat, longitude=lon)
-satobj.get_l1b_spectrum(latitude=lat, longitude=lon)
-satobj.get_l2a_spectrum(latitude=lat, longitude=lon, product="6sv1")
-
-satobj.plot_l1a_spectrum(latitude=lat, longitude=lon)
-satobj.plot_l1b_spectrum(latitude=lat, longitude=lon)
-satobj.plot_l2a_spectrum(latitude=lat, longitude=lon, product="6sv1")
-
-satobj.generate_toa_reflectance()
-satobj.get_toa_reflectance()
-
-
-satobj.generate_chlorophyll_estimates('band_ratio')
-satobj.get_chlorophyll_estimates(product='band_ratio')
-
-model = "/home/cameron/Dokumenter/Chlorophyll_NN_Models/model_6sv1_aqua_tuned.joblib"
-satobj.generate_chlorophyll_estimates(product='6sv1_aqua', model=model)
-satobj.get_chlorophyll_estimates(product="6sv1_aqua")
-
-
-exit()
-
-
-
-
-
-print(satobj.get_l1a_spectrum(latitude=lat, longitude=lon))
-print(type(satobj.get_l1a_spectrum(latitude=lat, longitude=lon)))
-print(satobj.get_l1a_spectrum(latitude=lat, longitude=lon).dims)
-
-print(satobj.plot_l1a_spectrum(latitude=lat, longitude=lon))
-
 #satobj.generate_l1b_cube()
-#satobj.generate_l2a_cube()
-#satobj._run_geometry_computation()
 
 #satobj.write_l1b_nc_file()
 
-#satobj.plot_l1a_spectrum(latitude=lat, longitude=lon)
-#satobj.plot_l1b_spectrum(latitude=lat, longitude=lon)
-#satobj.plot_l2a_spectrum(latitude=lat, longitude=lon)
 
 
+if True:
+    satobj.get_l1a_cube()
+
+    satobj.generate_l1b_cube()
+    satobj.get_l1b_cube()
+
+    satobj.write_l1b_nc_file()
+
+    satobj.generate_land_mask(land_mask="global")
+    satobj.get_active_land_mask()
+
+    satobj.generate_land_mask(land_mask="ndwi")
+    satobj.get_active_land_mask()
+
+    satobj.generate_land_mask(land_mask="threshold")
+    satobj.get_active_land_mask()
+
+    satobj.get_land_mask(land_mask="global")
+    satobj.get_land_mask(land_mask="ndwi")
+    satobj.get_land_mask(land_mask="threshold")
+
+    satobj.set_active_land_mask(land_mask="ndwi")
+    satobj.set_active_land_mask(land_mask="threshold")
+    satobj.set_active_land_mask(land_mask="global")
+
+    satobj.get_active_mask()
+
+    satobj.generate_cloud_mask(cloud_mask="global")
+    satobj.get_cloud_mask(cloud_mask="global")
+    satobj.get_active_cloud_mask()
+
+    satobj.set_active_land_mask(land_mask="ndwi")
+    satobj.get_active_mask()
+
+
+    #satobj.generate_l2a_cube(product="6sv1")
+    #satobj.get_l2a_cube(product="6sv1")
+
+    lat = satobj.latitudes[200,500]
+    lon = satobj.longitudes[200,500]
+
+    satobj.get_l1a_spectrum(latitude=lat, longitude=lon)
+    satobj.get_l1b_spectrum(latitude=lat, longitude=lon)
+    satobj.get_l2a_spectrum(latitude=lat, longitude=lon, product="6sv1")
+
+    #satobj.plot_l1a_spectrum(latitude=lat, longitude=lon)
+    #satobj.plot_l1b_spectrum(latitude=lat, longitude=lon)
+    #satobj.plot_l2a_spectrum(latitude=lat, longitude=lon, product="6sv1")
+
+    #satobj.generate_toa_reflectance()
+    #satobj.get_toa_reflectance()
+
+
+    satobj.generate_chlorophyll_estimates('band_ratio')
+    satobj.get_chlorophyll_estimates(product='band_ratio')
+
+    model = "/home/cameron/Dokumenter/Chlorophyll_NN_Models/model_6sv1_aqua_tuned.joblib"
+    satobj.generate_chlorophyll_estimates(product='6sv1_aqua', model=model)
+    satobj.get_chlorophyll_estimates(product="6sv1_aqua")
 
 
 exit()
-
-
-
-print(satobj.chl)
-
-exit()
-
-
-lat = satobj.latitudes[100,300]
-lon = satobj.longitudes[100,300]
-
-print(lat)
-print(lon)
-
-index = satobj.get_nearest_pixel_haversine(latitude=lat, longitude=lon)
-print(index)
-
-index = satobj.get_nearest_pixel(latitude=lat, longitude=lon)
-print(index)
-
-
-#print(type(satobj.l1b_nc_file))
-#print(satobj.l1b_nc_name)
-#satobj._run_land_mask(product="global")
-
-#print("get_l1a_cube")
-#satobj.get_l1a_cube()
-#print("get_l1b_cube attempt 1")
-#satobj.get_l1b_cube()
-#print("generate_l1b_cube attempt 1")
-satobj.generate_l1b_cube()
-#print("get_l1b_cube attempt 2")
-#satobj.get_l1b_cube()
-#print("generate_l1b_cube attempt 2")
-#satobj.generate_l1b_cube()
-
-satobj.generate_land_mask('ndwi')
-
-satobj.get_land_mask('threshold')
-
-z = satobj.get_active_land_mask()
-print(z)
-
-satobj.generate_land_mask('threshold')
-
-z = satobj.get_active_land_mask()
-print(z)
-
-satobj.set_active_land_mask('threshold')
-
-z = satobj.get_active_land_mask()
-print(z)
-
-
-z = satobj._get_active_mask()
-
-
-exit()
-land_mask = satobj.get_land_mask('global')
-
-unified_mask = satobj._get_unified_mask(land_mask="global")
-
-
-plt.imsave(fname='land_mask.png', arr=land_mask)
-plt.imsave(fname='unified_mask.png', arr=unified_mask)
-
-
-#cube = satobj.get_l2a_cube(product="6SV1")
-
-
-plt.imsave(fname='band_ratio.png', arr=band_ratio)
-
-#print(satobj.info["nc_file"])
-#print(satobj.info["l1a_nc_file"])
-#print(satobj.info["l1b_nc_file"])
-#print(satobj.info["l2a_nc_file"])
-
-#satobj._run_geometry_computation()
-#satobj.write_l1b_nc_file()
-
-#print(satobj.get_land_mask(product='global'))
-#print(satobj.get_land_masks())
-
-#l2a_cube = satobj.get_l2a_cube(product="acolite")
-
-#print(l2a_cube['acolite'])
-#print(l2a_cube['acolite'].shape)
-
-
-#print(satobj.latitudes.shape)
-
-
-#satobj.run_atmospheric_correction(product='6SV1')
-
-#print(satobj.l1b_cube)
-#print(satobj.l1b_cube.shape)
-
-#print(satobj.l2a_cube)
-#print(satobj.l2a_cube['6SV1'].shape)
-
-#l1b_cube = satobj.get_l1b_cube()
-#l2a_cube = satobj.get_l2a_cube(product="MACHI")
-
-#print(l1b_cube)
-#print(l2a_cube)
-
-
-#satobj._run_land_mask(product="global")
-#plt.imshow(arr=satobj.land_mask)
-#plt.imsave(fname='global.png', arr=satobj.land_mask)
-
-#satobj._run_land_mask(product="threshold")
-#plt.imshow(satobj.land_mask)
-#plt.imsave(fname='threshold.png', arr=satobj.land_mask)
-
-#satobj._run_land_mask(product="NDWI")
-#plt.imshow(satobj.land_mask)
-#plt.imsave(fname='NDWI.png', arr=satobj.land_mask)
-
-#plt.imsave(fname='l1b_40.png', arr=satobj.get_l1b_cube()[:,:,40])
-#plt.imsave(fname='l1a_40.png', arr=satobj.get_l1a_cube()[:,:,40])
-#plt.imsave(fname='latitudes.png', arr=satobj.latitudes)
-#plt.imsave(fname='longitudes.png', arr=satobj.longitudes)
-#print(satobj.datacube_flipped)
-
-#print(satobj.latitudes[0,0])
-#print(satobj.latitudes[-1,-1])
-#print(satobj.longitudes[0,0])
-#print(satobj.longitudes[-1,-1])

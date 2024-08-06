@@ -1554,17 +1554,20 @@ class Hypso1(Hypso):
 
         cube = self.l1b_cube.to_numpy()
         mask = self.active_mask.to_numpy()
+        factor = 0.1
 
         chl = run_band_ratio_chlorophyll_estimation(cube = cube,
                                                     mask = mask, 
                                                     wavelengths = self.wavelengths,
-                                                    spatial_dimensions = self.spatial_dimensions
+                                                    spatial_dimensions = self.spatial_dimensions,
+                                                    factor = factor
                                                     )
 
         chl = xr.DataArray(chl, dims=["x", "y"])
         chl.attrs['units'] = "a.u."
         chl.attrs['description'] = "Chlorophyll concentration"
         chl.attrs['method'] = "549 nm over 663 nm band ratio"
+        chl.attrs['factor'] = factor
 
         return chl
 
@@ -1661,7 +1664,7 @@ class Hypso1(Hypso):
 
     # L1b file output
 
-    # TODO: refactor, work on navigation group
+    # TODO: move to different module?
     def _write_l1b_nc_file(self, overwrite: bool = False) -> None:
         """
         Create a l1b.nc file using the radiometrically corrected data. Same structure from the original l1a.nc file
@@ -1669,17 +1672,6 @@ class Hypso1(Hypso):
 
         :return: Nothing.
         """
-
-        #hypso_nc_path = self.l1a_nc_file
-        #old_nc = nc.Dataset(hypso_nc_path, 'r', format='NETCDF4')
-
-        #new_path = hypso_nc_path
-        #new_path = str(new_path).replace('l1a.nc', 'l1b.nc')
-
-        #if Path(new_path).is_file():
-        #    print("L1b.nc file already exists. Not creating it.")
-        #    self.l1b_nc_file = Path(new_path)
-        #    return
 
         if self._check_write_l1b_nc_file_has_run() and not overwrite:
 
@@ -2049,8 +2041,45 @@ class Hypso1(Hypso):
             timestamps_srv[:] = old_nc['metadata']["timing"]["timestamps_srv"][:]
             
             # Create Navigation Group --------------------------------------
+            navigation_group = netfile.createGroup('navigation')
+
             try:
-                navigation_group = netfile.createGroup('navigation')
+                # Latitude ---------------------------------
+                latitude = netfile.createVariable(
+                    'navigation/latitude', 'f4', ('lines', 'samples'),
+                    # compression=COMP_SCHEME,
+                    # complevel=COMP_LEVEL,
+                    # shuffle=COMP_SHUFFLE,
+                )
+                # latitude[:] = lat.reshape(frames, lines)
+                latitude[:] = self.latitudes
+                latitude.long_name = "Latitude"
+                latitude.units = "degrees"
+                # latitude.valid_range = [-180, 180]
+                latitude.valid_min = -180
+                latitude.valid_max = 180
+
+                # Longitude ----------------------------------
+                longitude = netfile.createVariable(
+                    'navigation/longitude', 'f4', ('lines', 'samples'),
+                    # compression=COMP_SCHEME,
+                    # complevel=COMP_LEVEL,
+                    # shuffle=COMP_SHUFFLE,
+                )
+                # longitude[:] = lon.reshape(frames, lines)
+                longitude[:] = self.longitudes
+                longitude.long_name = "Longitude"
+                longitude.units = "degrees"
+                # longitude.valid_range = [-180, 180]
+                longitude.valid_min = -180
+                longitude.valid_max = 180
+
+            except Exception as ex:
+                print("[WARNING] Unable to write latitude and longitude information to NetCDF file.")
+                print("[WARNING] Encountered exception: " + str(ex))
+
+
+            try:
                 sat_zenith_angle = self.sat_zenith_angles
                 sat_azimuth_angle = self.sat_azimuth_angles
 
@@ -2120,39 +2149,9 @@ class Hypso1(Hypso):
                 solar_a.valid_min = -180
                 solar_a.valid_max = 180
         
-                # Latitude ---------------------------------
-                latitude = netfile.createVariable(
-                    'navigation/latitude', 'f4', ('lines', 'samples'),
-                    # compression=COMP_SCHEME,
-                    # complevel=COMP_LEVEL,
-                    # shuffle=COMP_SHUFFLE,
-                )
-                # latitude[:] = lat.reshape(frames, lines)
-                latitude[:] = self.latitudes
-                latitude.long_name = "Latitude"
-                latitude.units = "degrees"
-                # latitude.valid_range = [-180, 180]
-                latitude.valid_min = -180
-                latitude.valid_max = 180
-
-                # Longitude ----------------------------------
-                longitude = netfile.createVariable(
-                    'navigation/longitude', 'f4', ('lines', 'samples'),
-                    # compression=COMP_SCHEME,
-                    # complevel=COMP_LEVEL,
-                    # shuffle=COMP_SHUFFLE,
-                )
-                # longitude[:] = lon.reshape(frames, lines)
-                longitude[:] = self.longitudes
-                longitude.long_name = "Longitude"
-                longitude.units = "degrees"
-                # longitude.valid_range = [-180, 180]
-                longitude.valid_min = -180
-                longitude.valid_max = 180
-
             except Exception as ex:
-                print("Navigation Group and Attributes already exist")
-                print(ex)
+                print("[WARNING] Unable to write navigation angles to NetCDF file.")
+                print("[WARNING] Encountered exception: " + str(ex))
 
 
         old_nc.close()
@@ -2304,11 +2303,12 @@ class Hypso1(Hypso):
         return spectrum
 
     def plot_l1a_spectrum(self, 
-                        latitude=None, 
-                        longitude=None,
-                        x: int = None,
-                        y: int = None
-                        ) -> None:
+                         latitude=None, 
+                         longitude=None,
+                         x: int = None,
+                         y: int = None,
+                         save: bool = False
+                         ) -> None:
         
         if latitude is not None and longitude is not None:
             idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
@@ -2323,13 +2323,19 @@ class Hypso1(Hypso):
         bands = range(0, len(spectrum))
         units = spectrum.attrs["units"]
 
+        output_file = Path(self.nc_dir, self.capture_name + '_l1a_plot.png')
+
         plt.figure(figsize=(10, 5))
         plt.plot(bands, spectrum)
         plt.ylabel(units)
         plt.xlabel("Band number")
         plt.title(f"L1a (lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
         plt.grid(True)
-        plt.show()
+
+        if save:
+            plt.imsave(output_file)
+        else:
+            plt.show()
 
         return None
 
@@ -2387,7 +2393,8 @@ class Hypso1(Hypso):
                         latitude=None, 
                         longitude=None,
                         x: int = None,
-                        y: int = None
+                        y: int = None,
+                        save: bool = False
                         ) -> None:
         
         if latitude is not None and longitude is not None:
@@ -2403,13 +2410,19 @@ class Hypso1(Hypso):
         bands = self.wavelengths
         units = spectrum.attrs["units"]
 
+        output_file = Path(self.nc_dir, self.capture_name + '_l1a_plot.png')
+
         plt.figure(figsize=(10, 5))
         plt.plot(bands, spectrum)
         plt.ylabel(units)
         plt.xlabel("Wavelength (nm)")
         plt.title(f"L1b (lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
         plt.grid(True)
-        plt.show()
+
+        if save:
+            plt.imsave(output_file)
+        else:
+            plt.show()
 
         return None
 
@@ -2473,7 +2486,8 @@ class Hypso1(Hypso):
                          latitude=None, 
                          longitude=None,
                          x: int = None,
-                         y: int = None
+                         y: int = None,
+                         save: bool = False
                          ) -> np.ndarray:
         
         if latitude is not None and longitude is not None:
@@ -2493,6 +2507,8 @@ class Hypso1(Hypso):
         bands = self.wavelengths
         units = spectrum.attrs["units"]
 
+        output_file = Path(self.nc_dir, self.capture_name + '_l2a_' + str(product) + '_plot.png')
+
         plt.figure(figsize=(10, 5))
         plt.plot(bands, spectrum)
         plt.ylabel(units)
@@ -2500,7 +2516,11 @@ class Hypso1(Hypso):
         plt.xlabel("Wavelength (nm)")
         plt.title(f"L2a {product} (lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
         plt.grid(True)
-        plt.show()
+
+        if save:
+            plt.imsave(output_file)
+        else:
+            plt.show()
 
     # TODO
     def write_l2a_nc_file(self, path: Union[str, Path] = None, product: str = None) -> None:
