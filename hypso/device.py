@@ -261,7 +261,7 @@ class Hypso:
         return None
         
 
-# TODO move cubes and chl to xarray
+# TODO move cubes, chl, land_mask, cloud_mask to xarray
 class Hypso1(Hypso):
 
     def __init__(self, hypso_path: Union[str, Path], points_path: Union[str, Path, None] = None, verbose=False) -> None:
