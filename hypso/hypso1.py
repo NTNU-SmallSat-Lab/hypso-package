@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 import xarray as xr
 import re
 
-from pyresample import geometry
-from pyresample.kd_tree import get_neighbour_info
+
+
 
 from typing import Literal, Union
 from datetime import datetime
@@ -34,6 +34,21 @@ from hypso.chlorophyll import run_tuned_chlorophyll_estimation, run_band_ratio_c
 from hypso.writing import set_or_create_attr
 
 from .hypso import Hypso
+
+
+
+from satpy import Scene
+from satpy.dataset.dataid import WavelengthRange
+from pyresample import image
+from pyresample import geometry
+from pyresample.geometry import SwathDefinition
+from pyresample import load_area
+from satpy.composites import GenericCompositor
+from satpy.writers import to_image
+from pyresample import geometry
+from pyresample.kd_tree import get_neighbour_info
+
+
 
 #import pyproj as prj
 #import rasterio
@@ -353,7 +368,7 @@ class Hypso1(Hypso):
 
         cube = load_l1a_nc_cube(self.hypso_path)
 
-        self.l1a_cube = xr.DataArray(cube, dims=["x", "y", "band"])
+        self.l1a_cube = xr.DataArray(cube, dims=["y", "x", "band"])
         self.l1a_cube.attrs['level'] = "L1a"
         self.l1a_cube.attrs['units'] = "a.u."
         self.l1a_cube.attrs['description'] = "Raw sensor values"
@@ -428,6 +443,7 @@ class Hypso1(Hypso):
 
         return None
 
+    # TODO: works with xarray?
     def _run_georeferencing_orientation(self) -> None:
 
         datacube_flipped = check_star_tracker_orientation(adcs_samples=self.adcs['adcssamples'],
@@ -493,7 +509,7 @@ class Hypso1(Hypso):
         cube = self._run_smile_correction(cube=cube)
         cube = self._run_destriping_correction(cube=cube)
 
-        self.l1b_cube = xr.DataArray(cube, dims=["x", "y", "band"])
+        self.l1b_cube = xr.DataArray(cube, dims=["y", "x", "band"])
         self.l1b_cube.attrs['level'] = "L1b"
         self.l1b_cube.attrs['units'] = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
         self.l1b_cube.attrs['description'] = "Radiance"
@@ -935,7 +951,7 @@ class Hypso1(Hypso):
                         time_capture=time_capture,
                         srf=self.srf)
         
-        cube = xr.DataArray(cube, dims=["x", "y", "band"])
+        cube = xr.DataArray(cube, dims=["y", "x", "band"])
         cube.attrs['level'] = "L2a"
         cube.attrs['units'] = "a.u."
         cube.attrs['description'] = "Reflectance (Rrs)"
@@ -965,7 +981,7 @@ class Hypso1(Hypso):
                            atmos_dict=atmos_params, 
                            nc_file_acoliteready=self.l1b_nc_file)
 
-        cube = xr.DataArray(cube, dims=["x", "y", "band"])
+        cube = xr.DataArray(cube, dims=["y", "x", "band"])
         cube.attrs['level'] = "L2a"
         cube.attrs['units'] = "a.u."
         cube.attrs['description'] = "Reflectance (Rrs)"
@@ -987,7 +1003,7 @@ class Hypso1(Hypso):
         
         #T, A, objs = run_machi(cube=cube, verbose=self.VERBOSE)
 
-        cube = xr.DataArray(cube, dims=["x", "y", "band"])
+        cube = xr.DataArray(cube, dims=["y", "x", "band"])
         cube.attrs['level'] = "L2a"
         cube.attrs['units'] = "a.u."
         cube.attrs['description'] = "Reflectance (Rrs)"
@@ -1063,7 +1079,7 @@ class Hypso1(Hypso):
 
             band_number = band_number + 1
 
-        self.toa_reflectance = xr.DataArray(toa_reflectance, dims=("x", "y", "band"))
+        self.toa_reflectance = xr.DataArray(toa_reflectance, dims=("y", "x", "band"))
         self.toa_reflectance.attrs['units'] = "a.u."
         self.toa_reflectance.attrs['description'] = "Top of atmosphere (TOA) reflectance"
 
@@ -1136,7 +1152,7 @@ class Hypso1(Hypso):
                                         longitudes=self.longitudes
                                         )
         
-        land_mask = xr.DataArray(land_mask, dims=("x", "y"))
+        land_mask = xr.DataArray(land_mask, dims=("y", "x"))
         land_mask.attrs['description'] = "Land mask"
         land_mask.attrs['method'] = "global"
 
@@ -1152,7 +1168,7 @@ class Hypso1(Hypso):
                                        wavelengths=self.wavelengths,
                                        verbose=self.VERBOSE)
 
-        land_mask = xr.DataArray(land_mask, dims=("x", "y"))
+        land_mask = xr.DataArray(land_mask, dims=("y", "x"))
         land_mask.attrs['description'] = "Land mask"
         land_mask.attrs['method'] = "ndwi"
 
@@ -1168,7 +1184,7 @@ class Hypso1(Hypso):
                                             wavelengths=self.wavelengths,
                                             verbose=self.VERBOSE)
     
-        land_mask = xr.DataArray(land_mask, dims=("x", "y"))
+        land_mask = xr.DataArray(land_mask, dims=("y", "x"))
         land_mask.attrs['description'] = "Land mask"
         land_mask.attrs['method'] = "threshold"
 
@@ -1292,7 +1308,7 @@ class Hypso1(Hypso):
         elif land_mask is None:
 
             active_mask = cloud_mask.to_numpy()
-            active_mask = xr.DataArray(active_mask, dims=("x", "y"))
+            active_mask = xr.DataArray(active_mask, dims=("y", "x"))
             active_mask.attrs['description'] = "Active mask"
             active_mask.attrs['land_mask_method'] = None
             active_mask.attrs['cloud_mask_method'] = cloud_mask.attrs['method']
@@ -1303,7 +1319,7 @@ class Hypso1(Hypso):
         elif cloud_mask is None:
             
             active_mask = land_mask.to_numpy()
-            active_mask = xr.DataArray(active_mask, dims=("x", "y"))
+            active_mask = xr.DataArray(active_mask, dims=("y", "x"))
             active_mask.attrs['description'] = "Active mask"
             active_mask.attrs['land_mask_method'] = land_mask.attrs['method']
             active_mask.attrs['cloud_mask_method'] = None
@@ -1313,7 +1329,7 @@ class Hypso1(Hypso):
         else:
 
             active_mask = land_mask.to_numpy() | cloud_mask.to_numpy()
-            active_mask = xr.DataArray(active_mask, dims=("x", "y"))
+            active_mask = xr.DataArray(active_mask, dims=("y", "x"))
             active_mask.attrs['description'] = "Active mask"
             active_mask.attrs['land_mask_method'] = land_mask.attrs['method']
             active_mask.attrs['cloud_mask_method'] = cloud_mask.attrs['method']
@@ -1400,7 +1416,7 @@ class Hypso1(Hypso):
                                                     factor = factor
                                                     )
 
-        chl = xr.DataArray(chl, dims=["x", "y"])
+        chl = xr.DataArray(chl, dims=["y", "x"])
         chl.attrs['units'] = "a.u."
         chl.attrs['description'] = "Chlorophyll concentration"
         chl.attrs['method'] = "549 nm over 663 nm band ratio"
@@ -1437,7 +1453,7 @@ class Hypso1(Hypso):
                                                spatial_dimensions = self.spatial_dimensions
                                                )
         
-        chl = xr.DataArray(chl, dims=["x", "y"])
+        chl = xr.DataArray(chl, dims=["y", "x"])
         chl.attrs['units'] = r'$mg \cdot m^{-3}$'
         chl.attrs['description'] = "Chlorophyll concentration"
         chl.attrs['method'] = "6SV1 AQUA Tuned"
@@ -1474,7 +1490,7 @@ class Hypso1(Hypso):
                                                spatial_dimensions = self.spatial_dimensions
                                                )
 
-        chl = xr.DataArray(chl, dims=["x", "y"])
+        chl = xr.DataArray(chl, dims=["y", "x"])
         chl.attrs['units'] = r'$mg \cdot m^{-3}$'
         chl.attrs['description'] = "Chlorophyll concentration"
         chl.attrs['method'] = "ACOLITE AQUA Tuned"
@@ -2590,4 +2606,130 @@ class Hypso1(Hypso):
 
 
 
+
+
+    def _generate_satpy_latlons(self) -> tuple[xr.DataArray, xr.DataArray]:
+
+        latitudes = xr.DataArray(self.latitudes, dims=["y", "x"])
+        longitudes = xr.DataArray(self.longitudes, dims=["y", "x"])
+
+        return latitudes, longitudes
+
+    def _generate_swath_definition(self) -> SwathDefinition:
+
+        latitudes, longitudes = self._generate_satpy_latlons()
+        swath_def = SwathDefinition(lons=longitudes, lats=latitudes)
+
+        return swath_def
+
+    def _generate_satpy_scene(self) -> Scene:
+
+        scene = Scene()
+
+        latitudes, longitudes = self._generate_satpy_latlons()
+
+        latitude_attrs = {
+                         'file_type': None,
+                         'resolution': None,
+                         'standard_name': 'latitude',
+                         'units': 'degrees_north',
+                         'resolution': -999,
+                         'start_time': self.capture_datetime,
+                         'end_time': self.capture_datetime,
+                         'modifiers': (),
+                         'ancillary_variables': []
+                         }
+
+        longitude_attrs = {
+                          'file_type': None,
+                          'resolution': None,
+                          'standard_name': 'longitude',
+                          'units': 'degrees_east',
+                          'resolution': -999,
+                          'start_time': self.capture_datetime,
+                          'end_time': self.capture_datetime,
+                          'modifiers': (),
+                          'ancillary_variables': []
+                          }
+
+        scene['latitude'] = latitudes
+        scene['latitude'].attrs.update(latitude_attrs)
+        #scn['latitude'].attrs['area'] = swath_def
+
+        scene['longitude'] = longitudes
+        scene['longitude'].attrs.update(longitude_attrs)
+        #scn['longitude'].attrs['area'] = swath_def
+
+        return scene
+
+
+    def get_l1a_satpy_scene(self) -> Scene:
+
+        scene = self._generate_satpy_scene()
+        swath_def= self._generate_swath_definition()
+
+        wavelengths = range(0,120)
+        cube = self.l1a_cube
+
+        attrs = {
+                'file_type': None,
+                'resolution': -999,
+                'name': None,
+                'standard_name': cube.attrs['description'],
+                'coordinates': ['latitude', 'longitude'],
+                'units': cube.attrs['units'],
+                'start_time': self.capture_datetime,
+                'end_time': self.capture_datetime,
+                'modifiers': (),
+                'ancillary_variables': []
+                }   
+
+        for i, wl in enumerate(wavelengths):
+
+            data = cube[:,:,i].to_numpy()
+            name = 'band_' + str(wl)
+            scene[name] = xr.DataArray(data, dims=["y", "x"])
+            scene[name].attrs.update(attrs)
+            scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="band")
+            scene[name].attrs['area'] = swath_def
+
+        return scene
+    
+
+    def get_l1b_satpy_scene(self) -> Scene:
+
+        scene = self._generate_satpy_scene()
+        swath_def= self._generate_swath_definition()
+
+        wavelengths = self.wavelengths
+        cube = self.l1a_cube
+
+        attrs = {
+                'file_type': None,
+                'resolution': -999,
+                'name': None,
+                'standard_name': cube.attrs['description'],
+                'coordinates': ['latitude', 'longitude'],
+                'units': cube.attrs['units'],
+                'start_time': self.capture_datetime,
+                'end_time': self.capture_datetime,
+                'modifiers': (),
+                'ancillary_variables': []
+                }   
+
+        for i, wl in enumerate(wavelengths):
+
+            data = cube[:,:,i].to_numpy()
+            name = 'rad_' + str(wl)
+            scene[name] = xr.DataArray(data, dims=["y", "x"])
+            scene[name].attrs.update(attrs)
+            scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
+            scene[name].attrs['area'] = swath_def
+
+        return scene
+
+
+    def get_bbox(self) -> tuple[float, float, float, float]:
+
+        return None
 

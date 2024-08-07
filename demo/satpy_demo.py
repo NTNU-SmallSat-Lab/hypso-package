@@ -96,8 +96,6 @@ scn = Scene()
 latitudes = xr.DataArray(satobj.latitudes, dims=["y", "x"])
 longitudes = xr.DataArray(satobj.longitudes, dims=["y", "x"])
 
-
-
 swath_def = SwathDefinition(lons=longitudes, lats=latitudes)
 
 scn['latitude'] = latitudes
