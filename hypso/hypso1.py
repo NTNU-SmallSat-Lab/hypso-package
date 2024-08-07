@@ -7,6 +7,7 @@ from dateutil import parser
 import netCDF4 as nc
 import matplotlib.pyplot as plt
 import xarray as xr
+import re
 
 from pyresample import geometry
 from pyresample.kd_tree import get_neighbour_info
@@ -49,7 +50,7 @@ DEFAULT_CLOUD_MASK = "default"
 
 UNIX_TIME_OFFSET = 20 # TODO: Verify offset validity. Sivert had 20 here
 
-
+# TODO: store latitude and longitude as xarray
 class Hypso1(Hypso):
 
     def __init__(self, hypso_path: Union[str, Path], points_path: Union[str, Path, None] = None, verbose=False) -> None:
@@ -109,10 +110,11 @@ class Hypso1(Hypso):
 
         return None
 
-    # TODO
     def _set_capture_datetime(self) -> None:
-
-        self.capture_datetime = None
+        
+        parts = self.capture_name.split("_", 1)
+        dt = datetime.strptime(parts[1], "%Y-%m-%d_%H%MZ")
+        self.capture_datetime = dt
 
         return None
 
