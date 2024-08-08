@@ -2668,8 +2668,11 @@ class Hypso1(Hypso):
         scene = self._generate_satpy_scene()
         swath_def= self._generate_swath_definition()
 
-        wavelengths = range(0,120)
-        cube = self.l1a_cube
+        try:
+            cube = self.l1a_cube
+            wavelengths = range(0,120)
+        except:
+            return None
 
         attrs = {
                 'file_type': None,
@@ -2701,8 +2704,11 @@ class Hypso1(Hypso):
         scene = self._generate_satpy_scene()
         swath_def= self._generate_swath_definition()
 
-        wavelengths = self.wavelengths
-        cube = self.l1a_cube
+        try:
+            cube = self.l1b_cube
+            wavelengths = self.wavelengths
+        except:
+            return None
 
         attrs = {
                 'file_type': None,
@@ -2720,7 +2726,44 @@ class Hypso1(Hypso):
         for i, wl in enumerate(wavelengths):
 
             data = cube[:,:,i].to_numpy()
-            name = 'rad_' + str(wl)
+            name = 'radiance_' + str(int(wl)) + '_nm'
+            scene[name] = xr.DataArray(data, dims=["y", "x"])
+            scene[name].attrs.update(attrs)
+            scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
+            scene[name].attrs['area'] = swath_def
+
+        return scene
+    
+
+
+    def get_l2a_satpy_scene(self, product: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> Scene:
+
+        scene = self._generate_satpy_scene()
+        swath_def= self._generate_swath_definition()
+
+        try:
+            cube = self.l2a_cubes[product.lower()]
+            wavelengths = self.wavelengths
+        except:
+            return None
+
+        attrs = {
+                'file_type': None,
+                'resolution': -999,
+                'name': None,
+                'standard_name': cube.attrs['description'],
+                'coordinates': ['latitude', 'longitude'],
+                'units': cube.attrs['units'],
+                'start_time': self.capture_datetime,
+                'end_time': self.capture_datetime,
+                'modifiers': (),
+                'ancillary_variables': []
+                }   
+
+        for i, wl in enumerate(wavelengths):
+
+            data = cube[:,:,i].to_numpy()
+            name = 'reflectance_' + str(int(wl)) + '_nm'
             scene[name] = xr.DataArray(data, dims=["y", "x"])
             scene[name].attrs.update(attrs)
             scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
@@ -2729,6 +2772,7 @@ class Hypso1(Hypso):
         return scene
 
 
+    # TODO
     def get_bbox(self) -> tuple[float, float, float, float]:
 
         return None
