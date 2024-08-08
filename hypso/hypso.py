@@ -92,6 +92,11 @@ class Hypso:
         self.latitudes = None
         self.longitudes = None
         self.datacube_flipped = False
+        self.along_track_gsd = None
+        self.across_track_gsd = None
+        self.along_track_mean_gsd = None
+        self.across_track_mean_gsd = None
+        self.resolution = None
 
        # Initialize calibration file paths:
         self.rad_coeff_file = None
