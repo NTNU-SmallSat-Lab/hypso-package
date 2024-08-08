@@ -605,7 +605,7 @@ class Hypso1(Hypso):
         self.l1b_cube = xr.DataArray(cube, dims=["y", "x", "band"])
         self.l1b_cube.attrs['level'] = "L1b"
         self.l1b_cube.attrs['units'] = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
-        self.l1b_cube.attrs['description'] = "Radiance"
+        self.l1b_cube.attrs['description'] = "Radiance (L)"
 
         self.calibration_has_run = True
 
@@ -2195,7 +2195,6 @@ class Hypso1(Hypso):
 
         try:
             cube = self.l1a_cube
-            wavelengths = range(0,120)
         except:
             return None
 
@@ -2212,13 +2211,16 @@ class Hypso1(Hypso):
                 'ancillary_variables': []
                 }   
 
+        wavelengths = range(0,120)
+
         for i, wl in enumerate(wavelengths):
 
             data = cube[:,:,i].to_numpy()
-            name = 'band_' + str(wl)
+            name = 'band_' + str(i)
             scene[name] = xr.DataArray(data, dims=["y", "x"])
             scene[name].attrs.update(attrs)
             scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="band")
+            scene[name].attrs['band'] = i
             scene[name].attrs['area'] = swath_def
 
         return scene
@@ -2250,10 +2252,11 @@ class Hypso1(Hypso):
         for i, wl in enumerate(wavelengths):
 
             data = cube[:,:,i].to_numpy()
-            name = 'radiance_' + str(int(wl)) + '_nm'
+            name = 'band_' + str(i)
             scene[name] = xr.DataArray(data, dims=["y", "x"])
             scene[name].attrs.update(attrs)
             scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
+            scene[name].attrs['band'] = i
             scene[name].attrs['area'] = swath_def
 
         return scene
@@ -2285,42 +2288,48 @@ class Hypso1(Hypso):
         for i, wl in enumerate(wavelengths):
 
             data = cube[:,:,i].to_numpy()
-            name = 'reflectance_' + str(int(wl)) + '_nm'
+            name = 'band_' + str(i)
             scene[name] = xr.DataArray(data, dims=["y", "x"])
             scene[name].attrs.update(attrs)
             scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
+            scene[name].attrs['band'] = i
             scene[name].attrs['area'] = swath_def
 
         return scene
 
-    def _generate_chlorophyll_satpy_scene(self, product: str) -> Scene:
+    def _generate_chlorophyll_satpy_scene(self) -> Scene:
 
         scene = self._generate_satpy_scene()
         swath_def= self._generate_swath_definition()
 
-        try:
-            cube = self.chl[product.lower()]
-        except:
-            return None
+        #try:
+        #    cube = self.chl[product.lower()]
+        #except:
+        #    return None
 
         attrs = {
                 'file_type': None,
                 'resolution': self.resolution,
                 'name': None,
-                'standard_name': cube.attrs['description'],
+                #'standard_name': cube.attrs['description'],
                 'coordinates': ['latitude', 'longitude'],
-                'units': cube.attrs['units'],
+                #'units': cube.attrs['units'],
                 'start_time': self.capture_datetime,
                 'end_time': self.capture_datetime,
                 'modifiers': (),
                 'ancillary_variables': []
                 }   
 
-        data = cube.to_numpy()
-        name = 'chl_a'
-        scene[name] = xr.DataArray(data, dims=["y", "x"])
-        scene[name].attrs.update(attrs)
-        scene[name].attrs['area'] = swath_def
+        for key, chl in self.chl.items():
+            #chl = item[1]
+            #key = item[0]
+            data = chl.to_numpy()
+            name = 'chl_' + key
+            scene[name] = xr.DataArray(data, dims=["y", "x"])
+            scene[name].attrs.update(attrs)
+            scene[name].attrs['standard_name'] = chl.attrs['description']
+            scene[name].attrs['units'] = chl.attrs['units']
+            scene[name].attrs['area'] = swath_def
 
         return scene
 
@@ -2899,9 +2908,9 @@ class Hypso1(Hypso):
 
         return self._generate_l2a_satpy_scene()
 
-    def get_chlorophyll_satpy_scene(self, product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"] = DEFAULT_CHL_EST_PRODUCT) -> Scene:
+    def get_chlorophyll_satpy_scene(self) -> Scene:
 
-        return self._generate_chlorophyll_satpy_scene(product=product)
+        return self._generate_chlorophyll_satpy_scene()
 
     def get_bbox(self) -> tuple:
         
