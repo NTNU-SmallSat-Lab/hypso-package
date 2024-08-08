@@ -1483,8 +1483,7 @@ class Hypso1(Hypso):
 
         chl = xr.DataArray(chl, dims=["y", "x"])
         chl.attrs['units'] = "a.u."
-        chl.attrs['description'] = "Chlorophyll concentration"
-        chl.attrs['method'] = "549 nm over 663 nm band ratio"
+        chl.attrs['description'] = "Chlorophyll concentration 549 nm over 663 nm band ratio"
         chl.attrs['factor'] = factor
 
         return chl
@@ -1520,8 +1519,7 @@ class Hypso1(Hypso):
         
         chl = xr.DataArray(chl, dims=["y", "x"])
         chl.attrs['units'] = r'$mg \cdot m^{-3}$'
-        chl.attrs['description'] = "Chlorophyll concentration"
-        chl.attrs['method'] = "6SV1 AQUA Tuned"
+        chl.attrs['description'] = "Chlorophyll concentration 6SV1 AQUA Tuned"
         chl.attrs['model'] = model
 
         return chl
@@ -1557,8 +1555,7 @@ class Hypso1(Hypso):
 
         chl = xr.DataArray(chl, dims=["y", "x"])
         chl.attrs['units'] = r'$mg \cdot m^{-3}$'
-        chl.attrs['description'] = "Chlorophyll concentration"
-        chl.attrs['method'] = "ACOLITE AQUA Tuned"
+        chl.attrs['description'] = "Chlorophyll concentration ACOLITE AQUA Tuned"
         chl.attrs['model'] = model
 
         return chl
@@ -2771,14 +2768,13 @@ class Hypso1(Hypso):
 
         return None
 
-    def generate_chlorophyll_estimates(self, 
-                                       product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"] = DEFAULT_CHL_EST_PRODUCT,
-                                       model: Union[str, Path] = None):
+    def generate_chlorophyll_estimates(self, product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"] = DEFAULT_CHL_EST_PRODUCT,
+                                       model: Union[str, Path] = None
+                                       ) -> None:
 
         self._run_chlorophyll_estimation(product=product, model=model)
 
-    def get_chlorophyll_estimates(self, 
-                                 product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"] = DEFAULT_CHL_EST_PRODUCT,
+    def get_chlorophyll_estimates(self, product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"] = DEFAULT_CHL_EST_PRODUCT,
                                  ) -> np.ndarray:
 
         key = product.lower()
@@ -2841,12 +2837,11 @@ class Hypso1(Hypso):
 
         return self._generate_l2a_satpy_scene()
 
-    # TODO
-    def get_chl_satpy_scene(self, product: str) -> Scene:
 
-        return None
-    
-    # TODO
+    def get_chl_satpy_scene(self, product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"] = DEFAULT_CHL_EST_PRODUCT) -> Scene:
+
+        return self._generate_chl_satpy_scene(product=)
+
     def _generate_chl_satpy_scene(self, product: str) -> Scene:
 
         scene = self._generate_satpy_scene()
@@ -2854,7 +2849,6 @@ class Hypso1(Hypso):
 
         try:
             cube = self.chl[product.lower()]
-            wavelengths = self.wavelengths
         except:
             return None
 
@@ -2871,16 +2865,14 @@ class Hypso1(Hypso):
                 'ancillary_variables': []
                 }   
 
-        for i, wl in enumerate(wavelengths):
-
-            data = cube[:,:,i].to_numpy()
-            name = 'reflectance_' + str(int(wl)) + '_nm'
-            scene[name] = xr.DataArray(data, dims=["y", "x"])
-            scene[name].attrs.update(attrs)
-            scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
-            scene[name].attrs['area'] = swath_def
+        data = cube.to_numpy()
+        name = 'chl_a'
+        scene[name] = xr.DataArray(data, dims=["y", "x"])
+        scene[name].attrs.update(attrs)
+        scene[name].attrs['area'] = swath_def
 
         return scene
+
     # TODO
     def get_bbox(self) -> tuple[float, float, float, float]:
 
