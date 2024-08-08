@@ -2685,8 +2685,6 @@ class Hypso1(Hypso):
 
 
 
-
-
     def _generate_satpy_latlons(self) -> tuple[xr.DataArray, xr.DataArray]:
 
         latitudes = xr.DataArray(self.latitudes, dims=["y", "x"])
@@ -2739,7 +2737,7 @@ class Hypso1(Hypso):
 
         return scene
 
-    def get_l1a_satpy_scene(self) -> Scene:
+    def _generate_l1a_satpy_scene(self) -> Scene:
 
         scene = self._generate_satpy_scene()
         swath_def= self._generate_swath_definition()
@@ -2773,8 +2771,16 @@ class Hypso1(Hypso):
             scene[name].attrs['area'] = swath_def
 
         return scene
-    
+
+    def get_l1a_satpy_scene(self) -> Scene:
+
+        return self._generate_l1a_satpy_scene()
+
     def get_l1b_satpy_scene(self) -> Scene:
+
+        return self._generate_l1b_satpy_scene()
+    
+    def _generate_l1b_satpy_scene(self) -> Scene:
 
         scene = self._generate_satpy_scene()
         swath_def= self._generate_swath_definition()
@@ -2808,8 +2814,12 @@ class Hypso1(Hypso):
             scene[name].attrs['area'] = swath_def
 
         return scene
-    
+
     def get_l2a_satpy_scene(self, product: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> Scene:
+
+        return self._generate_l2a_satpy_scene()
+
+    def _generate_l2a_satpy_scene(self, product: str) -> Scene:
 
         scene = self._generate_satpy_scene()
         swath_def= self._generate_swath_definition()
@@ -2843,6 +2853,16 @@ class Hypso1(Hypso):
             scene[name].attrs['area'] = swath_def
 
         return scene
+
+    # TODO
+    def get_chl_satpy_scene(self, product: str) -> Scene:
+
+        return None
+    
+    # TODO
+    def _generate_chl_satpy_scene(self, product: str) -> Scene
+
+        return None
 
 
     # TODO
