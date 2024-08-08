@@ -469,7 +469,10 @@ class Hypso1(Hypso):
         latitudes = self.latitudes
         longitudes = self.longitudes
 
-        bbox = self.bbox
+        try:
+            bbox = self.bbox
+        except:
+            self._compute_bbox()
 
         aoi = prj.aoi.AreaOfInterest(west_lon_degree=bbox[0],
                                      south_lat_degree=bbox[1],
