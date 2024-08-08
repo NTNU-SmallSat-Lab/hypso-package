@@ -2870,7 +2870,7 @@ class Hypso1(Hypso):
 
     def get_chl_satpy_scene(self, product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"] = DEFAULT_CHL_EST_PRODUCT) -> Scene:
 
-        return self._generate_chl_satpy_scene(product=)
+        return self._generate_chl_satpy_scene(product=product)
 
     # TODO
     def get_bbox(self) -> tuple[float, float, float, float]:
