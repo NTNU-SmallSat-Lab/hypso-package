@@ -141,6 +141,10 @@ resampled_scn = scn.resample(area_def, resampler='bilinear', fill_value=np.NaN)
 
 alpha = np.where(np.isnan(resampled_scn['band_70']), 0, 1)
 
+#alpha = scene._datasets.keys()[0]
+#alpha = np.where(np.isnan(resampled_scene[alpha]), 0, 1)
+
+
 s = scn
 compositor = GenericCompositor("overview")
 composite = compositor([s['band_89'][:,::3], s['band_70'][:,::3], s['band_59'][:,::3], s['band_89'][:,::3]]) # Red, Green, Blue, Alpha
