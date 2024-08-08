@@ -551,7 +551,6 @@ class Hypso1(Hypso):
 
         return None
 
-
     def _check_georeferencing_has_run(self) -> bool:
 
         return self.georeferencing_has_run
@@ -2740,7 +2739,6 @@ class Hypso1(Hypso):
 
         return scene
 
-    # TODO: use GSD forresolution?
     def get_l1a_satpy_scene(self) -> Scene:
 
         scene = self._generate_satpy_scene()
@@ -2776,7 +2774,6 @@ class Hypso1(Hypso):
 
         return scene
     
-
     def get_l1b_satpy_scene(self) -> Scene:
 
         scene = self._generate_satpy_scene()
@@ -2812,8 +2809,6 @@ class Hypso1(Hypso):
 
         return scene
     
-
-
     def get_l2a_satpy_scene(self, product: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> Scene:
 
         scene = self._generate_satpy_scene()
