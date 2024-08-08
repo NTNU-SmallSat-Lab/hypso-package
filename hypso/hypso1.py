@@ -2265,7 +2265,7 @@ class Hypso1(Hypso):
 
         return scene
 
-    def _generate_chl_satpy_scene(self, product: str) -> Scene:
+    def _generate_chlorophyll_satpy_scene(self, product: str) -> Scene:
 
         scene = self._generate_satpy_scene()
         swath_def= self._generate_swath_definition()
@@ -2868,9 +2868,9 @@ class Hypso1(Hypso):
 
         return self._generate_l2a_satpy_scene()
 
-    def get_chl_satpy_scene(self, product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"] = DEFAULT_CHL_EST_PRODUCT) -> Scene:
+    def get_chlorophyll_satpy_scene(self, product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"] = DEFAULT_CHL_EST_PRODUCT) -> Scene:
 
-        return self._generate_chl_satpy_scene(product=product)
+        return self._generate_chlorophyll_satpy_scene(product=product)
 
     # TODO
     def get_bbox(self) -> tuple[float, float, float, float]:
