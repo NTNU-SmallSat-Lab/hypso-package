@@ -2109,6 +2109,166 @@ class Hypso1(Hypso):
         return self.write_l2a_nc_file_has_run
 
 
+    # SatPy functions
+
+    def _generate_satpy_scene(self) -> Scene:
+
+        scene = Scene()
+
+        latitudes, longitudes = self._generate_satpy_latlons()
+
+        latitude_attrs = {
+                         'file_type': None,
+                         'resolution': self.resolution,
+                         'standard_name': 'latitude',
+                         'units': 'degrees_north',
+                         'start_time': self.capture_datetime,
+                         'end_time': self.capture_datetime,
+                         'modifiers': (),
+                         'ancillary_variables': []
+                         }
+
+        longitude_attrs = {
+                          'file_type': None,
+                          'resolution': self.resolution,
+                          'standard_name': 'longitude',
+                          'units': 'degrees_east',
+                          'start_time': self.capture_datetime,
+                          'end_time': self.capture_datetime,
+                          'modifiers': (),
+                          'ancillary_variables': []
+                          }
+
+        scene['latitude'] = latitudes
+        scene['latitude'].attrs.update(latitude_attrs)
+        #scn['latitude'].attrs['area'] = swath_def
+
+        scene['longitude'] = longitudes
+        scene['longitude'].attrs.update(longitude_attrs)
+        #scn['longitude'].attrs['area'] = swath_def
+
+        return scene
+
+    def _generate_satpy_latlons(self) -> tuple[xr.DataArray, xr.DataArray]:
+
+        latitudes = xr.DataArray(self.latitudes, dims=["y", "x"])
+        longitudes = xr.DataArray(self.longitudes, dims=["y", "x"])
+
+        return latitudes, longitudes
+
+    def _generate_swath_definition(self) -> SwathDefinition:
+
+        latitudes, longitudes = self._generate_satpy_latlons()
+        swath_def = SwathDefinition(lons=longitudes, lats=latitudes)
+
+        return swath_def
+
+    def _generate_l1a_satpy_scene(self) -> Scene:
+
+        scene = self._generate_satpy_scene()
+        swath_def= self._generate_swath_definition()
+
+        try:
+            cube = self.l1a_cube
+            wavelengths = range(0,120)
+        except:
+            return None
+
+        attrs = {
+                'file_type': None,
+                'resolution': self.resolution,
+                'name': None,
+                'standard_name': cube.attrs['description'],
+                'coordinates': ['latitude', 'longitude'],
+                'units': cube.attrs['units'],
+                'start_time': self.capture_datetime,
+                'end_time': self.capture_datetime,
+                'modifiers': (),
+                'ancillary_variables': []
+                }   
+
+        for i, wl in enumerate(wavelengths):
+
+            data = cube[:,:,i].to_numpy()
+            name = 'band_' + str(wl)
+            scene[name] = xr.DataArray(data, dims=["y", "x"])
+            scene[name].attrs.update(attrs)
+            scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="band")
+            scene[name].attrs['area'] = swath_def
+
+        return scene
+    
+    def _generate_l1b_satpy_scene(self) -> Scene:
+
+        scene = self._generate_satpy_scene()
+        swath_def= self._generate_swath_definition()
+
+        try:
+            cube = self.l1b_cube
+            wavelengths = self.wavelengths
+        except:
+            return None
+
+        attrs = {
+                'file_type': None,
+                'resolution': self.resolution,
+                'name': None,
+                'standard_name': cube.attrs['description'],
+                'coordinates': ['latitude', 'longitude'],
+                'units': cube.attrs['units'],
+                'start_time': self.capture_datetime,
+                'end_time': self.capture_datetime,
+                'modifiers': (),
+                'ancillary_variables': []
+                }   
+
+        for i, wl in enumerate(wavelengths):
+
+            data = cube[:,:,i].to_numpy()
+            name = 'radiance_' + str(int(wl)) + '_nm'
+            scene[name] = xr.DataArray(data, dims=["y", "x"])
+            scene[name].attrs.update(attrs)
+            scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
+            scene[name].attrs['area'] = swath_def
+
+        return scene
+
+    def _generate_l2a_satpy_scene(self, product: str) -> Scene:
+
+        scene = self._generate_satpy_scene()
+        swath_def= self._generate_swath_definition()
+
+        try:
+            cube = self.l2a_cubes[product.lower()]
+            wavelengths = self.wavelengths
+        except:
+            return None
+
+        attrs = {
+                'file_type': None,
+                'resolution': self.resolution,
+                'name': None,
+                'standard_name': cube.attrs['description'],
+                'coordinates': ['latitude', 'longitude'],
+                'units': cube.attrs['units'],
+                'start_time': self.capture_datetime,
+                'end_time': self.capture_datetime,
+                'modifiers': (),
+                'ancillary_variables': []
+                }   
+
+        for i, wl in enumerate(wavelengths):
+
+            data = cube[:,:,i].to_numpy()
+            name = 'reflectance_' + str(int(wl)) + '_nm'
+            scene[name] = xr.DataArray(data, dims=["y", "x"])
+            scene[name].attrs.update(attrs)
+            scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
+            scene[name].attrs['area'] = swath_def
+
+        return scene
+
+
     # Other functions
 
     def _get_flipped_cube(self, cube: np.ndarray) -> np.ndarray:
@@ -2495,7 +2655,6 @@ class Hypso1(Hypso):
         return None
     
 
-
     # Public geometry functions
 
     # TODO
@@ -2555,6 +2714,7 @@ class Hypso1(Hypso):
     def write_land_mask(self, path: str) -> None:
 
         return None
+
 
     # Public cloud mask methods
 
@@ -2669,93 +2829,6 @@ class Hypso1(Hypso):
         
         return None
 
-    def _generate_satpy_latlons(self) -> tuple[xr.DataArray, xr.DataArray]:
-
-        latitudes = xr.DataArray(self.latitudes, dims=["y", "x"])
-        longitudes = xr.DataArray(self.longitudes, dims=["y", "x"])
-
-        return latitudes, longitudes
-
-    def _generate_swath_definition(self) -> SwathDefinition:
-
-        latitudes, longitudes = self._generate_satpy_latlons()
-        swath_def = SwathDefinition(lons=longitudes, lats=latitudes)
-
-        return swath_def
-
-    def _generate_satpy_scene(self) -> Scene:
-
-        scene = Scene()
-
-        latitudes, longitudes = self._generate_satpy_latlons()
-
-        latitude_attrs = {
-                         'file_type': None,
-                         'resolution': self.resolution,
-                         'standard_name': 'latitude',
-                         'units': 'degrees_north',
-                         'start_time': self.capture_datetime,
-                         'end_time': self.capture_datetime,
-                         'modifiers': (),
-                         'ancillary_variables': []
-                         }
-
-        longitude_attrs = {
-                          'file_type': None,
-                          'resolution': self.resolution,
-                          'standard_name': 'longitude',
-                          'units': 'degrees_east',
-                          'start_time': self.capture_datetime,
-                          'end_time': self.capture_datetime,
-                          'modifiers': (),
-                          'ancillary_variables': []
-                          }
-
-        scene['latitude'] = latitudes
-        scene['latitude'].attrs.update(latitude_attrs)
-        #scn['latitude'].attrs['area'] = swath_def
-
-        scene['longitude'] = longitudes
-        scene['longitude'].attrs.update(longitude_attrs)
-        #scn['longitude'].attrs['area'] = swath_def
-
-        return scene
-
-    def _generate_l1a_satpy_scene(self) -> Scene:
-
-        scene = self._generate_satpy_scene()
-        swath_def= self._generate_swath_definition()
-
-        try:
-            cube = self.l1a_cube
-            wavelengths = range(0,120)
-        except:
-            return None
-
-        attrs = {
-                'file_type': None,
-                'resolution': self.resolution,
-                'name': None,
-                'standard_name': cube.attrs['description'],
-                'coordinates': ['latitude', 'longitude'],
-                'units': cube.attrs['units'],
-                'start_time': self.capture_datetime,
-                'end_time': self.capture_datetime,
-                'modifiers': (),
-                'ancillary_variables': []
-                }   
-
-        for i, wl in enumerate(wavelengths):
-
-            data = cube[:,:,i].to_numpy()
-            name = 'band_' + str(wl)
-            scene[name] = xr.DataArray(data, dims=["y", "x"])
-            scene[name].attrs.update(attrs)
-            scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="band")
-            scene[name].attrs['area'] = swath_def
-
-        return scene
-
     def get_l1a_satpy_scene(self) -> Scene:
 
         return self._generate_l1a_satpy_scene()
@@ -2763,53 +2836,24 @@ class Hypso1(Hypso):
     def get_l1b_satpy_scene(self) -> Scene:
 
         return self._generate_l1b_satpy_scene()
-    
-    def _generate_l1b_satpy_scene(self) -> Scene:
-
-        scene = self._generate_satpy_scene()
-        swath_def= self._generate_swath_definition()
-
-        try:
-            cube = self.l1b_cube
-            wavelengths = self.wavelengths
-        except:
-            return None
-
-        attrs = {
-                'file_type': None,
-                'resolution': self.resolution,
-                'name': None,
-                'standard_name': cube.attrs['description'],
-                'coordinates': ['latitude', 'longitude'],
-                'units': cube.attrs['units'],
-                'start_time': self.capture_datetime,
-                'end_time': self.capture_datetime,
-                'modifiers': (),
-                'ancillary_variables': []
-                }   
-
-        for i, wl in enumerate(wavelengths):
-
-            data = cube[:,:,i].to_numpy()
-            name = 'radiance_' + str(int(wl)) + '_nm'
-            scene[name] = xr.DataArray(data, dims=["y", "x"])
-            scene[name].attrs.update(attrs)
-            scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
-            scene[name].attrs['area'] = swath_def
-
-        return scene
 
     def get_l2a_satpy_scene(self, product: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> Scene:
 
         return self._generate_l2a_satpy_scene()
 
-    def _generate_l2a_satpy_scene(self, product: str) -> Scene:
+    # TODO
+    def get_chl_satpy_scene(self, product: str) -> Scene:
+
+        return None
+    
+    # TODO
+    def _generate_chl_satpy_scene(self, product: str) -> Scene:
 
         scene = self._generate_satpy_scene()
         swath_def= self._generate_swath_definition()
 
         try:
-            cube = self.l2a_cubes[product.lower()]
+            cube = self.chl[product.lower()]
             wavelengths = self.wavelengths
         except:
             return None
@@ -2837,18 +2881,6 @@ class Hypso1(Hypso):
             scene[name].attrs['area'] = swath_def
 
         return scene
-
-    # TODO
-    def get_chl_satpy_scene(self, product: str) -> Scene:
-
-        return None
-    
-    # TODO
-    def _generate_chl_satpy_scene(self, product: str) -> Scene
-
-        return None
-
-
     # TODO
     def get_bbox(self) -> tuple[float, float, float, float]:
 

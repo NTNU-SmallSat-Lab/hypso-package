@@ -117,9 +117,6 @@ class Hypso:
         # Initialize spectral response function
         self.srf = None
 
-        # Initialize units for chlorophyll (TODO: move into xarray)
-        self.chl_units = {}
-
         # Initilize land mask dict
         self.land_masks = {}
         self.active_land_mask = None
