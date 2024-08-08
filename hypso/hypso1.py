@@ -1442,6 +1442,7 @@ class Hypso1(Hypso):
     def _run_chlorophyll_estimation(self, 
                                     product: str, 
                                     model: Union[str, Path] = None,
+                                    factor: float = None,
                                     overwrite: bool = False) -> None:
 
         if self._check_chlorophyll_estimation_has_run(product=product) and not overwrite:
@@ -1466,7 +1467,7 @@ class Hypso1(Hypso):
                 if self.VERBOSE:
                     print("[INFO] Running band ratio chlorophyll estimation...")
 
-                self.chl[product] = self._run_band_ratio_chlorophyll_estimation()
+                self.chl[product] = self._run_band_ratio_chlorophyll_estimation(factor=factor)
                 
             case "6sv1_aqua":
 
@@ -1490,12 +1491,11 @@ class Hypso1(Hypso):
 
         return None
 
-    def _run_band_ratio_chlorophyll_estimation(self) -> xr.DataArray:
+    def _run_band_ratio_chlorophyll_estimation(self, factor: float = None) -> xr.DataArray:
 
         self._run_calibration()
 
         cube = self.l1b_cube.to_numpy()
-        factor = 0.1
 
         try:
             mask = self.active_mask.to_numpy()
@@ -2828,11 +2828,13 @@ class Hypso1(Hypso):
 
         return None
 
-    def generate_chlorophyll_estimates(self, product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"] = DEFAULT_CHL_EST_PRODUCT,
-                                       model: Union[str, Path] = None
+    def generate_chlorophyll_estimates(self, 
+                                       product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"] = DEFAULT_CHL_EST_PRODUCT,
+                                       model: Union[str, Path] = None,
+                                       factor: float = 0.1
                                        ) -> None:
 
-        self._run_chlorophyll_estimation(product=product, model=model)
+        self._run_chlorophyll_estimation(product=product, model=model, factor=factor)
 
     def get_chlorophyll_estimates(self, product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"] = DEFAULT_CHL_EST_PRODUCT,
                                  ) -> np.ndarray:
