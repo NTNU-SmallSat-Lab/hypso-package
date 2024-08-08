@@ -2265,6 +2265,37 @@ class Hypso1(Hypso):
 
         return scene
 
+    def _generate_chl_satpy_scene(self, product: str) -> Scene:
+
+        scene = self._generate_satpy_scene()
+        swath_def= self._generate_swath_definition()
+
+        try:
+            cube = self.chl[product.lower()]
+        except:
+            return None
+
+        attrs = {
+                'file_type': None,
+                'resolution': self.resolution,
+                'name': None,
+                'standard_name': cube.attrs['description'],
+                'coordinates': ['latitude', 'longitude'],
+                'units': cube.attrs['units'],
+                'start_time': self.capture_datetime,
+                'end_time': self.capture_datetime,
+                'modifiers': (),
+                'ancillary_variables': []
+                }   
+
+        data = cube.to_numpy()
+        name = 'chl_a'
+        scene[name] = xr.DataArray(data, dims=["y", "x"])
+        scene[name].attrs.update(attrs)
+        scene[name].attrs['area'] = swath_def
+
+        return scene
+
 
     # Other functions
 
@@ -2837,41 +2868,9 @@ class Hypso1(Hypso):
 
         return self._generate_l2a_satpy_scene()
 
-
     def get_chl_satpy_scene(self, product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"] = DEFAULT_CHL_EST_PRODUCT) -> Scene:
 
         return self._generate_chl_satpy_scene(product=)
-
-    def _generate_chl_satpy_scene(self, product: str) -> Scene:
-
-        scene = self._generate_satpy_scene()
-        swath_def= self._generate_swath_definition()
-
-        try:
-            cube = self.chl[product.lower()]
-        except:
-            return None
-
-        attrs = {
-                'file_type': None,
-                'resolution': self.resolution,
-                'name': None,
-                'standard_name': cube.attrs['description'],
-                'coordinates': ['latitude', 'longitude'],
-                'units': cube.attrs['units'],
-                'start_time': self.capture_datetime,
-                'end_time': self.capture_datetime,
-                'modifiers': (),
-                'ancillary_variables': []
-                }   
-
-        data = cube.to_numpy()
-        name = 'chl_a'
-        scene[name] = xr.DataArray(data, dims=["y", "x"])
-        scene[name].attrs.update(attrs)
-        scene[name].attrs['area'] = swath_def
-
-        return scene
 
     # TODO
     def get_bbox(self) -> tuple[float, float, float, float]:
