@@ -97,7 +97,7 @@ class Hypso:
         self.along_track_mean_gsd = None
         self.across_track_mean_gsd = None
         self.resolution = None
-        self.bbox
+        self.bbox = None
 
        # Initialize calibration file paths:
         self.rad_coeff_file = None
