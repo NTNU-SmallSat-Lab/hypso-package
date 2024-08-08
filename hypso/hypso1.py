@@ -415,6 +415,7 @@ class Hypso1(Hypso):
             self.longitudes = gr.longitudes[:, ::-1]
             
             self._run_georeferencing_orientation()
+            self._compute_bbox()
             self._compute_gsd()
             self._compute_resolution()
 
@@ -468,18 +469,29 @@ class Hypso1(Hypso):
         latitudes = self.latitudes
         longitudes = self.longitudes
 
-        bbox_geodetic = [np.min(latitudes), 
-                         np.max(latitudes), 
-                         np.min(longitudes), 
-                         np.max(longitudes)]
+        bbox = self.bbox
 
-        utm_crs_list = prj.database.query_utm_crs_info(datum_name="WGS 84",
-                                                        area_of_interest=prj.aoi.AreaOfInterest(
-                                                        west_lon_degree=bbox_geodetic[2],
-                                                        south_lat_degree=bbox_geodetic[0],
-                                                        east_lon_degree=bbox_geodetic[3],
-                                                        north_lat_degree=bbox_geodetic[1], )
-                                                    )
+        aoi = prj.aoi.AreaOfInterest(west_lon_degree=bbox[0],
+                                     south_lat_degree=bbox[1],
+                                     east_lon_degree=bbox[2],
+                                     north_lat_degree=bbox[3], 
+                                    )
+
+        utm_crs_list = prj.database.query_utm_crs_info(datum_name="WGS 84", area_of_interest=aoi)
+
+
+        #bbox_geodetic = [np.min(latitudes), 
+        #                 np.max(latitudes), 
+        #                 np.min(longitudes), 
+        #                 np.max(longitudes)]
+
+        #utm_crs_list = prj.database.query_utm_crs_info(datum_name="WGS 84",
+        #                                                area_of_interest=prj.aoi.AreaOfInterest(
+        #                                                west_lon_degree=bbox_geodetic[2],
+        #                                                south_lat_degree=bbox_geodetic[0],
+        #                                                east_lon_degree=bbox_geodetic[3],
+        #                                                north_lat_degree=bbox_geodetic[1], )
+        #                                            )
         
         if self.VERBOSE:
             print(f'[INFO] Using UTM map: ' + utm_crs_list[0].name, 'EPSG:', utm_crs_list[0].code)
@@ -534,6 +546,19 @@ class Hypso1(Hypso):
             resolution = 0
 
         self.resolution = resolution
+
+        return None
+
+    def _compute_bbox(self) -> None:
+
+        lon_min = self.longitudes.min()
+        lon_max = self.longitudes.max()
+        lat_min = self.latitudes.min()
+        lat_max = self.latitudes.max()
+
+        bbox = (lon_min,lat_min,lon_max,lat_max)
+        
+        self.bbox = bbox
 
         return None
 
@@ -2785,6 +2810,7 @@ class Hypso1(Hypso):
 
         return None
 
+
     # Public unified mask methods
 
     def get_active_mask(self) -> xr.DataArray:
@@ -2873,7 +2899,20 @@ class Hypso1(Hypso):
         return self._generate_chlorophyll_satpy_scene(product=product)
 
     # TODO
-    def get_bbox(self) -> tuple[float, float, float, float]:
+    def get_bbox(self) -> tuple:
+        
+        return self.bbox
+    
+    def _compute_bbox(self) -> None:
+
+        lon_min = self.longitudes.min()
+        lon_max = self.longitudes.max()
+        lat_min = self.latitudes.min()
+        lat_max = self.latitudes.max()
+
+        bbox = (lon_min,lat_min,lon_max,lat_max)
+        
+        self.bbox = bbox
 
         return None
 
