@@ -1,58 +1,44 @@
-from typing import Union
+from datetime import datetime
+from dateutil import parser
+from importlib.resources import files
+#from osgeo import gdal, osr
+from pathlib import Path
+from typing import Literal, Union
+
+import matplotlib.pyplot as plt
+import netCDF4 as nc
 import numpy as np
 import pandas as pd
-from importlib.resources import files
-from pathlib import Path
-from dateutil import parser
-import netCDF4 as nc
-import matplotlib.pyplot as plt
-import xarray as xr
-import re
 import pyproj as prj
+#import rasterio
+#import re
+import xarray as xr
 
-
-
-from typing import Literal, Union
-from datetime import datetime
-
-from hypso.georeference import georeferencing
-from hypso.georeference.utils import check_star_tracker_orientation
-
+from .hypso import Hypso
+from hypso.atmospheric import run_py6s, run_acolite, run_machi
 from hypso.calibration import read_coeffs_from_file, \
                               run_radiometric_calibration, \
                               run_destriping_correction, \
                               run_smile_correction
-
-
+from hypso.chlorophyll import run_tuned_chlorophyll_estimation, run_band_ratio_chlorophyll_estimation, validate_tuned_model
 from hypso.geometry import interpolate_at_frame, \
                            geometry_computation
-
+from hypso.georeference import georeferencing
+from hypso.georeference.utils import check_star_tracker_orientation
 from hypso.masks import run_global_land_mask, run_ndwi_land_mask, run_threshold_land_mask, run_cloud_mask
 from hypso.reading import load_l1a_nc_cube, load_l1a_nc_metadata
-from hypso.atmospheric import run_py6s, run_acolite, run_machi
-from hypso.chlorophyll import run_tuned_chlorophyll_estimation, run_band_ratio_chlorophyll_estimation, validate_tuned_model
 from hypso.writing import set_or_create_attr
 
-from .hypso import Hypso
-
-
-
 from satpy import Scene
+#from satpy.composites import GenericCompositor
 from satpy.dataset.dataid import WavelengthRange
-from pyresample import image
+#from satpy.writers import to_image
+
 from pyresample import geometry
+#from pyresample import image
+#from pyresample import load_area
 from pyresample.geometry import SwathDefinition
-from pyresample import load_area
-from satpy.composites import GenericCompositor
-from satpy.writers import to_image
-from pyresample import geometry
 from pyresample.kd_tree import get_neighbour_info
-
-
-
-#import pyproj as prj
-#import rasterio
-#from osgeo import gdal, osr
 
 SUPPORTED_PRODUCT_LEVELS = ["l1a", "l1b", "l2a"]
 SUPPORTED_ATM_CORR_PRODUCTS = ["6sv1", "acolite", "machi"]
@@ -2682,8 +2668,6 @@ class Hypso1(Hypso):
     def write_toa_reflectance(self, path: str) -> None:
         
         return None
-
-
 
     def _generate_satpy_latlons(self) -> tuple[xr.DataArray, xr.DataArray]:
 
