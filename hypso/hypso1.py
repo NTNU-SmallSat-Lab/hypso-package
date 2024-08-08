@@ -537,10 +537,8 @@ class Hypso1(Hypso):
 
     def _compute_resolution(self) -> None:
 
-        distances = [self.along_track_gsd, 
-                      self.across_track_gsd, 
-                      self.along_track_mean_gsd, 
-                      self.across_track_mean_gsd]
+        distances = [self.along_track_mean_gsd, 
+                     self.across_track_mean_gsd]
 
         filtered_distances = [d for d in distances if d is not None]
 
@@ -887,10 +885,9 @@ class Hypso1(Hypso):
 
     # Geometry computation functions
 
-    # TODO: rename
-    def _run_geometry_computation(self, overwrite: bool = False) -> None:
+    def _run_geometry(self, overwrite: bool = False) -> None:
 
-        if self._check_geometry_computation_has_run() and not overwrite:
+        if self._check_geometry_has_run() and not overwrite:
 
             if self.VERBOSE:
                     print("[INFO] Geometry computation has already been run. Skipping.")
@@ -947,7 +944,7 @@ class Hypso1(Hypso):
 
         return None
 
-    def _check_geometry_computation_has_run(self) -> bool:
+    def _check_geometry_has_run(self) -> bool:
 
         return self.geometry_computation_has_run
 
@@ -1000,7 +997,7 @@ class Hypso1(Hypso):
         # AOT550 parameter gotten from: https://giovanni.gsfc.nasa.gov/giovanni/
 
         self._run_calibration()
-        self._run_geometry_computation()
+        self._run_geometry()
 
         # TODO: which values should we use?
         if self.latitudes is None:
@@ -1045,7 +1042,7 @@ class Hypso1(Hypso):
     def _run_acolite_atmospheric_correction(self) -> xr.DataArray:
 
         self._run_calibration()
-        self._run_geometry_computation()
+        self._run_geometry()
 
         if not self._check_write_l1b_nc_file_has_run():
             return None
@@ -1080,7 +1077,7 @@ class Hypso1(Hypso):
         return None
 
         self._run_calibration()
-        self._run_geometry_computation()
+        self._run_geometry()
 
         cube = self.l1b_cube.to_numpy()
         
@@ -1112,7 +1109,7 @@ class Hypso1(Hypso):
     def _run_toa_reflectance(self) -> None:
 
         self._run_calibration()
-        self._run_geometry_computation()
+        self._run_geometry()
         
         # Get Local variables
         srf = self.srf
@@ -1510,7 +1507,7 @@ class Hypso1(Hypso):
     def _run_6sv1_aqua_tuned_chlorophyll_estimation(self, model: Path = None) -> xr.DataArray:
 
         self._run_calibration()
-        self._run_geometry_computation()
+        self._run_geometry()
         self._run_atmospheric_correction(product='6sv1')
 
         model = Path(model)
@@ -1547,7 +1544,7 @@ class Hypso1(Hypso):
     def _run_acolite_aqua_tuned_chlorophyll_estimation(self, model: Path = None) -> xr.DataArray:
 
         self._run_calibration()
-        self._run_geometry_computation()
+        self._run_geometry()
         self._run_atmospheric_correction(product='acolite')
 
         model = Path(model)
@@ -2523,7 +2520,7 @@ class Hypso1(Hypso):
 
     def generate_geometry(self) -> None:
 
-        self._run_geometry_computation()
+        self._run_geometry()
 
         return None
 
@@ -2716,7 +2713,6 @@ class Hypso1(Hypso):
                          'resolution': self.resolution,
                          'standard_name': 'latitude',
                          'units': 'degrees_north',
-                         'resolution': -999,
                          'start_time': self.capture_datetime,
                          'end_time': self.capture_datetime,
                          'modifiers': (),
@@ -2728,7 +2724,6 @@ class Hypso1(Hypso):
                           'resolution': self.resolution,
                           'standard_name': 'longitude',
                           'units': 'degrees_east',
-                          'resolution': -999,
                           'start_time': self.capture_datetime,
                           'end_time': self.capture_datetime,
                           'modifiers': (),
