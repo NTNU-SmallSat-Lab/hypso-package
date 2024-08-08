@@ -2901,23 +2901,10 @@ class Hypso1(Hypso):
 
         return self._generate_chlorophyll_satpy_scene(product=product)
 
-    # TODO
     def get_bbox(self) -> tuple:
         
         return self.bbox
     
-    def _compute_bbox(self) -> None:
-
-        lon_min = self.longitudes.min()
-        lon_max = self.longitudes.max()
-        lat_min = self.latitudes.min()
-        lat_max = self.latitudes.max()
-
-        bbox = (lon_min,lat_min,lon_max,lat_max)
-        
-        self.bbox = bbox
-
-        return None
 
 
 
