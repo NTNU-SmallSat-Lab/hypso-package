@@ -134,6 +134,8 @@ class Hypso:
         # Initialize chlorophyll estimates dict
         self.chl = {}
 
+        # Initialize products dict
+
         # Initialize ADCS data
         self.adcs = None
         self.adcs_pos_df = None
