@@ -2223,7 +2223,7 @@ class Hypso1(Hypso):
         for i, wl in enumerate(wavelengths):
 
             data = cube[:,:,i].to_numpy()
-            name = 'band_' + str(i)
+            name = 'band_' + str(i+1)
             scene[name] = xr.DataArray(data, dims=["y", "x"])
             scene[name].attrs.update(attrs)
             scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="band")
@@ -2259,7 +2259,7 @@ class Hypso1(Hypso):
         for i, wl in enumerate(wavelengths):
 
             data = cube[:,:,i].to_numpy()
-            name = 'band_' + str(i)
+            name = 'band_' + str(i+1)
             scene[name] = xr.DataArray(data, dims=["y", "x"])
             scene[name].attrs.update(attrs)
             scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
@@ -2295,7 +2295,7 @@ class Hypso1(Hypso):
         for i, wl in enumerate(wavelengths):
 
             data = cube[:,:,i].to_numpy()
-            name = 'band_' + str(i)
+            name = 'band_' + str(i+1)
             scene[name] = xr.DataArray(data, dims=["y", "x"])
             scene[name].attrs.update(attrs)
             scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
@@ -2340,6 +2340,11 @@ class Hypso1(Hypso):
 
         return scene
 
+
+    # TODO
+    def _generate_products_satpy_scne(self) -> Scene:
+
+        return None
 
     # Other functions
 
@@ -2924,7 +2929,7 @@ class Hypso1(Hypso):
         return self.bbox
     
 
-    def get_closest_index(self, wavelength: Union[float, int]) -> int:
+    def get_closest_wavelength_index(self, wavelength: Union[float, int]) -> int:
 
         wavelengths = np.array(self.wavelengths)
         differences = np.abs(wavelengths - wavelength)
