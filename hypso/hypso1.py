@@ -572,7 +572,11 @@ class Hypso1(Hypso):
 
     # Calibration functions
         
-    def _run_calibration(self, overwrite: bool = False) -> None:
+    def _run_calibration(self, 
+                         overwrite: bool = False,
+                         rad_cal = True,
+                         smile_corr = True,
+                         destriping_corr = True) -> None:
         """
         Get calibrated and corrected cube. Includes Radiometric, Smile and Destriping Correction.
             Assumes all coefficients has been adjusted to the frame size (cropped and
@@ -598,9 +602,12 @@ class Hypso1(Hypso):
 
         cube = self.l1a_cube.to_numpy()
 
-        cube = self._run_radiometric_calibration(cube=cube)
-        cube = self._run_smile_correction(cube=cube)
-        cube = self._run_destriping_correction(cube=cube)
+        if rad_cal:
+            cube = self._run_radiometric_calibration(cube=cube)
+        if smile_corr:
+            cube = self._run_smile_correction(cube=cube)
+        if destriping_corr:
+            cube = self._run_destriping_correction(cube=cube)
 
         self.l1b_cube = xr.DataArray(cube, dims=["y", "x", "band"])
         self.l1b_cube.attrs['level'] = "L1b"
@@ -2917,5 +2924,12 @@ class Hypso1(Hypso):
         return self.bbox
     
 
+    def get_closest_index(self, wavelength: Union[float, int]) -> int:
+
+        wavelengths = np.array(self.wavelengths)
+        differences = np.abs(wavelengths - wavelength)
+        closest_index = np.argmin(differences)
+
+        return closest_index
 
 
