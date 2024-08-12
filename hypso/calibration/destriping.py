@@ -1,4 +1,5 @@
 import numpy as np
+import skimage.morphology as morph
 
 def run_destriping_correction(cube: np.ndarray, 
                               destriping_coeffs: np.ndarray) -> np.ndarray:
@@ -26,3 +27,39 @@ def run_destriping_correction(cube: np.ndarray,
     # From previous hypso-package
     cube_destriped= np.multiply(cube, destriping_coeffs)
     return cube_destriped
+
+
+def get_destriping_correction_matrix(cube, water_mask, plot=False, plot_min_val=-1, plot_max_val=1):
+    ''' Use masked ocean cube to create a destriping correction matrix 
+    (cumulative correction frame). Must be calibrated with the same calibration
+    coefficients (and smile correction or other correction steps) that will be
+    used before the destriping correction is used on any other cube.
+
+    Based on Joe's jupyter code.
+    '''
+    num_frames, image_height, image_width = cube.shape
+    # Determine correction
+    wm = morph.dilation(water_mask, morph.square(7))
+    diff = cube[:,1:,100] - cube[:,:-1,100] 
+    wm_t = wm[:,:-1]
+    wm_t[wm[:,1:]] = 1 
+    diff[wm_t]=0
+    diff = np.zeros((num_frames,image_height-1,image_width))
+    diff[:] = cube[:,1:,:] - cube[:,:-1,:]
+    diff[wm_t]=0
+    corrections = np.zeros((image_height,image_width))
+    for i in range(0,image_height-1):
+        corrections[i,:] = np.median(diff[:,i][~wm_t[:,i]], axis=0)
+    corrections[:] -= np.mean(corrections, axis=0)
+    cumulative = np.zeros((image_height, image_width))
+    cumulative[0] = corrections[0]
+    for i in range(1,image_height):
+        cumulative[i] = corrections[i] + cumulative[i-1]
+    if plot:
+        fig, ax = plt.subplots()
+        plt.imshow(cumulative, vmin=plot_min_val, vmax=plot_max_val)
+        plt.xlabel('Spectral axis [pixel]')
+        plt.ylabel('Spatial axis [pixel]')
+        plt.title('Cumulative correction frame')
+        plt.colorbar()
+    return cumulative
