@@ -19,7 +19,9 @@ from hypso.atmospheric import run_py6s, run_acolite, run_machi
 from hypso.calibration import read_coeffs_from_file, \
                               run_radiometric_calibration, \
                               run_destriping_correction, \
-                              run_smile_correction
+                              run_smile_correction, \
+                              make_mask, \
+                              make_overexposed_mask
 from hypso.chlorophyll import run_tuned_chlorophyll_estimation, run_band_ratio_chlorophyll_estimation, validate_tuned_model
 from hypso.geometry import interpolate_at_frame, \
                            geometry_computation
@@ -613,6 +615,7 @@ class Hypso1(Hypso):
         if smile_corr:
             cube = self._run_smile_correction(cube=cube)
         if destriping_corr:
+            water_mask = cal_func.make_mask(cube, sat_val_scale=0.25)
             cube = self._run_destriping_correction(cube=cube)
 
         self.l1b_cube = xr.DataArray(cube, dims=["y", "x", "band"])
