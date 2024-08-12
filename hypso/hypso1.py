@@ -25,7 +25,13 @@ from hypso.geometry import interpolate_at_frame, \
                            geometry_computation
 from hypso.georeference import georeferencing
 from hypso.georeference.utils import check_star_tracker_orientation
-from hypso.masks import run_global_land_mask, run_ndwi_land_mask, run_threshold_land_mask, run_cloud_mask
+from hypso.masks import run_global_land_mask, \
+                        run_ndwi_land_mask, \
+                        run_threshold_land_mask
+
+from hypso.masks import run_cloud_mask, \
+                        run_quantile_threshold_cloud_mask
+
 from hypso.reading import load_l1a_nc_cube, load_l1a_nc_metadata
 from hypso.writing import set_or_create_attr
 
@@ -971,6 +977,7 @@ class Hypso1(Hypso):
 
     # Atmospheric correction functions
 
+    # TODO: split into individual functions
     def _run_atmospheric_correction(self, product: str, overwrite: bool = False) -> None:
 
         if self._check_atmospheric_correction_has_run(product=product) and not overwrite:
@@ -1194,6 +1201,8 @@ class Hypso1(Hypso):
 
     # Land mask functions
 
+    # TODO: split into individual functions
+    # TODO: Rename land_mask to land_mask_key
     def _run_land_mask(self, land_mask: str="global", overwrite: bool = False) -> None:
 
         if self._check_land_mask_has_run(land_mask=land_mask) and not overwrite:
@@ -1326,7 +1335,9 @@ class Hypso1(Hypso):
 
     # Cloud mask functions
 
-    def _run_cloud_mask(self, cloud_mask: str='default', overwrite: bool = False) -> None:
+    # TODO: split into individual functions
+    '''
+    def _run_cloud_mask(self, cloud_mask: str='default', quantile: float=None, overwrite: bool = False) -> None:
 
         if self._check_cloud_mask_has_run(cloud_mask=cloud_mask) and not overwrite:
 
@@ -1352,6 +1363,16 @@ class Hypso1(Hypso):
                 
                 self._update_active_cloud_mask(cloud_mask=cloud_mask, override=False)
 
+            case 'quantile_threshold':
+
+                if self.VERBOSE:
+                    print("[INFO] Running quanitle threshold cloud mask generation...")
+                    print("[WARNING] Cloud mask generation has not been implemented.")
+
+                self.cloud_masks[cloud_mask] = self._run_quantile_threshold_cloud_mask(quantile=quantile)
+
+                self._update_active_cloud_mask(cloud_mask=cloud_mask, override=False)
+
             case _:
                 print("[WARNING] No such cloud mask supported!")
                 return None
@@ -1359,19 +1380,49 @@ class Hypso1(Hypso):
         self.cloud_mask_has_run = True
 
         return None
+    '''
+        
+    def _run_quantile_threshold_cloud_mask(self, quantile: float, overwrite: bool = False) -> None:
 
-    def _update_active_cloud_mask(self, cloud_mask: str = None, override: bool = False) -> None:
+        cloud_mask_key = "quantile_threshold"
 
-        if cloud_mask is None:
+        if self._check_cloud_mask_has_run(cloud_mask_key) and not overwrite:
+
+            if self.VERBOSE:
+                print("[INFO] Cloud mask has already been run. Skipping.")
+
             return None
 
-        cloud_mask = cloud_mask.lower()
+        if self.cloud_masks is None:
+            self.cloud_masks = {}
 
-        if cloud_mask not in self.cloud_masks.keys():
+        mask = run_quantile_threshold_cloud_mask(cube=self.l1b_cube,
+                                                quantile=quantile)
+
+        cloud_mask = xr.DataArray(mask, dims=("y", "x"))
+        cloud_mask.attrs['description'] = "Cloud mask"
+        cloud_mask.attrs['method'] = "quantile threshold"
+
+        self.cloud_masks[cloud_mask_key] = cloud_mask
+
+        self._update_active_cloud_mask(cloud_mask_key=cloud_mask_key, override=False)
+
+        self.cloud_mask_has_run = True
+
+        return None
+
+    def _update_active_cloud_mask(self, cloud_mask_key: str = None, override: bool = False) -> None:
+
+        if cloud_mask_key is None:
+            return None
+
+        cloud_mask_key = cloud_mask_key.lower()
+
+        if cloud_mask_key not in self.cloud_masks.keys():
             return None
 
         if self.active_cloud_mask is None or override:
-            self.active_cloud_mask = self.cloud_masks[cloud_mask]
+            self.active_cloud_mask = self.cloud_masks[cloud_mask_key]
             self.active_cloud_mask.attrs['description'] = "Active cloud mask"
 
         self._update_active_mask()
@@ -1446,6 +1497,7 @@ class Hypso1(Hypso):
 
     # Chlorophyll estimation functions
 
+    # TODO: split into individual functions
     def _run_chlorophyll_estimation(self, 
                                     product: str, 
                                     model: Union[str, Path] = None,
