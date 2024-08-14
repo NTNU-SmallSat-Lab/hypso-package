@@ -21,7 +21,9 @@ from hypso.calibration import read_coeffs_from_file, \
                               run_destriping_correction, \
                               run_smile_correction, \
                               make_mask, \
-                              make_overexposed_mask
+                              make_overexposed_mask, \
+                              get_destriping_correction_matrix, \
+                              run_destriping_correction_with_computed_matrix
 from hypso.chlorophyll import run_tuned_chlorophyll_estimation, run_band_ratio_chlorophyll_estimation, validate_tuned_model
 from hypso.geometry import interpolate_at_frame, \
                            geometry_computation
@@ -584,7 +586,8 @@ class Hypso1(Hypso):
                          overwrite: bool = False,
                          rad_cal = True,
                          smile_corr = True,
-                         destriping_corr = True) -> None:
+                         destriping_corr = True,
+                         **kwargs) -> None:
         """
         Get calibrated and corrected cube. Includes Radiometric, Smile and Destriping Correction.
             Assumes all coefficients has been adjusted to the frame size (cropped and
@@ -615,8 +618,7 @@ class Hypso1(Hypso):
         if smile_corr:
             cube = self._run_smile_correction(cube=cube)
         if destriping_corr:
-            water_mask = cal_func.make_mask(cube, sat_val_scale=0.25)
-            cube = self._run_destriping_correction(cube=cube)
+            cube = self._run_destriping_correction(cube=cube, **kwargs)
 
         self.l1b_cube = xr.DataArray(cube, dims=["y", "x", "band"])
         self.l1b_cube.attrs['level'] = "L1b"
@@ -634,7 +636,7 @@ class Hypso1(Hypso):
         if self.VERBOSE:
             print("[INFO] Running radiometric calibration...")
 
-        cube = self._get_flipped_cube(cube=cube)
+        #cube = self._get_flipped_cube(cube=cube)
 
         cube = run_radiometric_calibration(cube=cube, 
                                            background_value=self.background_value,
@@ -644,7 +646,7 @@ class Hypso1(Hypso):
                                            frame_count=self.frame_count,
                                            rad_coeffs=self.rad_coeffs)
 
-        cube = self._get_flipped_cube(cube=cube)
+        #cube = self._get_flipped_cube(cube=cube)
 
         # TODO: The factor by 10 is to fix a bug in which the coeff have a factor of 10
         cube = cube / 10
@@ -658,28 +660,50 @@ class Hypso1(Hypso):
         if self.VERBOSE:
             print("[INFO] Running smile correction...")
 
-        cube = self._get_flipped_cube(cube=cube)
+        #cube = self._get_flipped_cube(cube=cube)
 
         cube = run_smile_correction(cube=cube, 
                                     smile_coeffs=self.smile_coeffs)
 
-        cube = self._get_flipped_cube(cube=cube)
+        #cube = self._get_flipped_10cube(cube=cube)
 
         return cube
 
-    def _run_destriping_correction(self, cube: np.ndarray) -> np.ndarray:
+    def _run_destriping_correction(self, cube: np.ndarray, compute_destriping_matrix=False) -> np.ndarray:
+        """
+        Apply destriping correction to L1a datacube.
 
-        # Destriping
+        :param cube: Radiometrically and smile corrected L1a datacube.
+
+        :return: Destriped datacube.
+        """
 
         if self.VERBOSE:
             print("[INFO] Running destriping correction...")
 
-        cube = self._get_flipped_cube(cube=cube)
+        #cube = self._get_flipped_cube(cube=cube)
 
-        cube = run_destriping_correction(cube=cube, 
+        if compute_destriping_matrix:
+            water_mask = make_mask(cube=cube, sat_val_scale=0.25)
+            
+            #overexposed_mask = make_overexposed_mask(cube=cube)
+            #overexposed_mask = overexposed_mask.astype(bool)
+            #self.water_mask = water_mask
+            #self.overexposed_mask = overexposed_mask
+            #mask = water_mask | ~overexposed_mask
+            #mask = np.full(self.spatial_dimensions, False)
+            #self.mask = mask
+
+            self.destriping_coeffs = get_destriping_correction_matrix(cube, water_mask=water_mask)
+
+            cube = run_destriping_correction_with_computed_matrix(cube=cube, 
                                          destriping_coeffs=self.destriping_coeffs)
+            
+        else:
 
-        cube = self._get_flipped_cube(cube=cube)
+            cube = run_destriping_correction(cube=cube, destriping_coeffs=self.destriping_coeffs[:,:])
+        
+        #cube = self._get_flipped_cube(cube=cube)
 
         return cube
 
@@ -689,6 +713,21 @@ class Hypso1(Hypso):
         self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file)
         self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
         self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
+
+        return None
+
+    # TODO
+    def _set_radiometric_coeffs(self) -> None:
+
+        return None
+
+    # TODO
+    def _set_smile_coeffs(self) -> None:
+
+        return None
+    
+    # TODO
+    def _set_destriping_coeffs(self) -> None:
 
         return None
 
@@ -1015,7 +1054,7 @@ class Hypso1(Hypso):
 
         return None
 
-    def _run_6sv1_atmospheric_correction(self) -> xr.DataArray:
+    def _run_6sv1_atmospheric_correction(self, **kwargs) -> xr.DataArray:
 
         # Py6S Atmospheric Correction
         # aot value: https://neo.gsfc.nasa.gov/view.php?datasetId=MYDAL2_D_AER_OD&date=2023-01-01
@@ -1026,7 +1065,7 @@ class Hypso1(Hypso):
         # }
         # AOT550 parameter gotten from: https://giovanni.gsfc.nasa.gov/giovanni/
 
-        self._run_calibration()
+        self._run_calibration(**kwargs)
         self._run_geometry()
 
         # TODO: which values should we use?
@@ -1364,7 +1403,8 @@ class Hypso1(Hypso):
 
                 self.cloud_masks[cloud_mask] = run_cloud_mask()
                 
-                self._update_active_cloud_mask(cloud_mask=cloud_mask, override=False)
+                self._update_active_cl
+                oud_mask(cloud_mask=cloud_mask, override=False)
 
             case 'quantile_threshold':
 
@@ -2396,10 +2436,47 @@ class Hypso1(Hypso):
         return scene
 
 
-    # TODO
-    def _generate_products_satpy_scne(self) -> Scene:
+    def _generate_products_satpy_scene(self) -> Scene:
 
-        return None
+        scene = self._generate_satpy_scene()
+        swath_def= self._generate_swath_definition()
+
+        attrs = {
+                'file_type': None,
+                'resolution': self.resolution,
+                'name': None,
+                'standard_name': None,
+                'coordinates': ['latitude', 'longitude'],
+                'units': None,
+                'start_time': self.capture_datetime,
+                'end_time': self.capture_datetime,
+                'modifiers': (),
+                'ancillary_variables': []
+                }
+
+        for key, product in self.products.items():
+
+            if type(product) is xr.DataArray:
+                data = product.to_numpy()
+            elif type(product) is np.ndarray:
+                data = product
+            else:
+                break
+
+            scene[key] = xr.DataArray(data, dims=["y", "x"])
+            scene[key].attrs.update(attrs)
+
+            scene[key].attrs['name'] = key
+            scene[key].attrs['standard_name'] = key
+            scene[key].attrs['area'] = swath_def
+
+            try:
+                scene[key].attrs.update(product.attrs)
+            except AttributeError:
+                pass
+
+
+        return scene
 
     # Other functions
 
@@ -2578,9 +2655,9 @@ class Hypso1(Hypso):
 
         return None
 
-    def generate_l1b_cube(self) -> None:
+    def generate_l1b_cube(self, **kwargs) -> None:
 
-        self._run_calibration()
+        self._run_calibration(**kwargs)
 
         return None
 
