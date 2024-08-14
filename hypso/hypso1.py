@@ -2435,7 +2435,7 @@ class Hypso1(Hypso):
 
         return scene
 
-
+    # TODO: validate dimensions
     def _generate_products_satpy_scene(self) -> Scene:
 
         scene = self._generate_satpy_scene()
@@ -2461,6 +2461,11 @@ class Hypso1(Hypso):
             elif type(product) is np.ndarray:
                 data = product
             else:
+                print('[WARNING] Product ' + str(key) + ' is not an xarray DataArray or NumPy ndarray object. Skipping.')
+                break
+
+            if data.shape != self.spatial_dimensions:
+                print('[WARNING] Product ' + str(key) + ' does not have dimensions ' + str(self.spatial_dimensions) + '. Skipping.')
                 break
 
             scene[key] = xr.DataArray(data, dims=["y", "x"])
