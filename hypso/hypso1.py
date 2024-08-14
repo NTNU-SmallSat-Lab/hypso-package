@@ -1172,9 +1172,20 @@ class Hypso1(Hypso):
         return False
 
     # TODO
-    def _add_atmospheric_corrected_cube(self, product_name: str, cube: Union[np.ndarray, xr.DataArray]) -> None:
+    def _add_atmospheric_corrected_product(self, product_name: str, cube: Union[np.ndarray, xr.DataArray]) -> None:
 
         return None
+
+    # TODO
+    def _validate_atmospheric_corrected_product(self, cube: Union[np.ndarray, xr.DataArray]) -> bool:
+
+        return None
+    
+    # TODO
+    def _get_atmospheric_corrected_product(self, product_name: str) -> xr.DataArray:
+
+        return None
+
 
     # Top of atmosphere reflectance functions
 
@@ -1384,6 +1395,11 @@ class Hypso1(Hypso):
         return None
     
     # TODO
+    def _validate_land_mask(self, land_mask: Union[np.ndarray, xr.DataArray]) -> bool:
+
+        return None
+
+    # TODO
     def _get_land_mask(self, land_mask_name: str) -> xr.DataArray:
 
         return None
@@ -1506,6 +1522,11 @@ class Hypso1(Hypso):
 
         return None
     
+    # TODO
+    def _validate_cloud_mask(self, cloud_mask: Union[np.ndarray, xr.DataArray]) -> bool:
+
+        return None
+
     # TODO
     def _get_cloud_mask(self, cloud_mask_name: str) -> xr.DataArray:
 
@@ -1723,6 +1744,21 @@ class Hypso1(Hypso):
             else:
                 return False
         return False
+
+    # TODO
+    def _add_chlorophyll_estimation_product(self, product_name: str, cube: Union[np.ndarray, xr.DataArray]) -> None:
+
+        return None
+
+    # TODO
+    def _validate_chlorophyll_estimation_product(self, cube: Union[np.ndarray, xr.DataArray]) -> bool:
+
+        return None
+    
+    # TODO
+    def _get_chlorophyll_estimation_product(self, product_name: str) -> xr.DataArray:
+
+        return None
 
 
     # L1a file output
@@ -3096,6 +3132,10 @@ class Hypso1(Hypso):
         
         return None
 
+
+
+    # TODO: organize
+
     def get_l1a_satpy_scene(self) -> Scene:
 
         return self._generate_l1a_satpy_scene()
@@ -3112,11 +3152,14 @@ class Hypso1(Hypso):
 
         return self._generate_chlorophyll_satpy_scene()
 
+    def get_products_satpy_scene(self) -> Scene:
+
+        return self._generate_products_satpy_scene()
+
     def get_bbox(self) -> tuple:
         
         return self.bbox
     
-
     def get_closest_wavelength_index(self, wavelength: Union[float, int]) -> int:
 
         wavelengths = np.array(self.wavelengths)
