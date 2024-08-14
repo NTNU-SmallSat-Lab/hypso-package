@@ -2478,9 +2478,9 @@ class Hypso1(Hypso):
 
         for key, product in self.products.items():
 
-            if type(product) is xr.DataArray:
+            if self._is_xarray_dataarray(product):
                 data = product.to_numpy()
-            elif type(product) is np.ndarray:
+            elif self._is_numpy_ndarray(product):
                 data = product
             else:
                 print('[WARNING] Product ' + str(key) + ' is not an xarray DataArray or NumPy ndarray object. Skipping.')
@@ -2507,15 +2507,33 @@ class Hypso1(Hypso):
 
     # Other functions
 
-
     def _matches_spatial_dimensions(self, data: Union[np.ndarray, xr.DataArray]) -> bool:
 
-        if data.shape != self.spatial_dimensions:
-            return False
+        if data.shape[0:2] == self.spatial_dimensions:
+            return True
         
-        return True
+        return False
+    
+    def _is_2d(self, data) -> bool:
 
+        if data.ndim == 2:
+            return True
+        
+        return False
 
+    def _is_numpy_ndarray(self, data) -> bool:
+
+        if type(data) is np.ndarray:
+            return True
+        
+        return False
+    
+    def _is_xarray_dataarray(self, data) -> bool:
+        
+        if type(data) is xr.DataArray:
+            return True
+        
+        return False
 
     def _get_flipped_cube(self, cube: np.ndarray) -> np.ndarray:
 
