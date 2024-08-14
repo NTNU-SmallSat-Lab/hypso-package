@@ -2435,7 +2435,6 @@ class Hypso1(Hypso):
 
         return scene
 
-    # TODO: validate dimensions
     def _generate_products_satpy_scene(self) -> Scene:
 
         scene = self._generate_satpy_scene()
@@ -2464,7 +2463,7 @@ class Hypso1(Hypso):
                 print('[WARNING] Product ' + str(key) + ' is not an xarray DataArray or NumPy ndarray object. Skipping.')
                 break
 
-            if data.shape != self.spatial_dimensions:
+            if not self._matches_spatial_dimensions(data):
                 print('[WARNING] Product ' + str(key) + ' does not have dimensions ' + str(self.spatial_dimensions) + '. Skipping.')
                 break
 
@@ -2484,6 +2483,16 @@ class Hypso1(Hypso):
         return scene
 
     # Other functions
+
+
+    def _matches_spatial_dimensions(self, data: Union[np.ndarray, xr.DataArray]) -> bool:
+
+        if data.shape != self.spatial_dimensions:
+            return False
+        
+        return True
+
+
 
     def _get_flipped_cube(self, cube: np.ndarray) -> np.ndarray:
 
