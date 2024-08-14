@@ -135,6 +135,7 @@ class Hypso:
         self.chl = {}
 
         # Initialize products dict
+        self.products = {}
 
         # Initialize ADCS data
         self.adcs = None

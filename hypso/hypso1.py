@@ -1404,6 +1404,7 @@ class Hypso1(Hypso):
 
         return None
 
+
     # Cloud mask functions
 
     # TODO: split into individual functions
@@ -1759,6 +1760,31 @@ class Hypso1(Hypso):
     def _get_chlorophyll_estimation_product(self, product_name: str) -> xr.DataArray:
 
         return None
+
+
+
+    # Custom products function
+
+    # TODO
+    def _add_product(self, product_name: str, product: Union[np.ndarray, xr.DataArray]) -> None:
+
+        return None
+    
+    # TODO
+    def _validate_product(self, land_mask: Union[np.ndarray, xr.DataArray]) -> bool:
+
+        return None
+
+    # TODO
+    def _get_product(self, product_name: str) -> xr.DataArray:
+
+        return None
+
+
+
+
+
+
 
 
     # L1a file output
@@ -3097,6 +3123,35 @@ class Hypso1(Hypso):
 
         return None
     
+
+
+    # Public custom products methods
+    
+    # TODO
+    def load_products(self, path: str) -> None:
+
+        return None
+
+    def add_product(self, product_name: str, product: Union[np.ndarray, xr.DataArray]) -> None:
+
+        self._add_product(product_name=product_name, product=product)
+
+        return None
+    
+    def get_product(self, product_name: str) -> xr.DataArray:
+
+        return self._get_product(product_name=product_name)
+
+    def get_products_dict(self) -> dict:
+
+        return self.products
+
+    # TODO
+    def write_products(self, path: str) -> None:
+
+        return None
+
+
 
     # Public top of atmosphere (TOA) reflectance methods
 
