@@ -12,5 +12,3 @@ frohavet:
   area_extent:
     lower_left_xy: [-100000, -2950000]
     upper_right_xy: [100000, -2650000]
-    #lower_left_xy: [-1268854.126638295, -4150234.8425892727]
-    #upper_right_xy: [779145.8733617051, -2102234.8425892727]
