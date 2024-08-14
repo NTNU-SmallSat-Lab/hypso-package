@@ -1020,9 +1020,9 @@ class Hypso1(Hypso):
     # Atmospheric correction functions
 
     # TODO: split into individual functions
-    def _run_atmospheric_correction(self, product: str, overwrite: bool = False) -> None:
+    def _run_atmospheric_correction(self, product_name: str, overwrite: bool = False) -> None:
 
-        if self._check_atmospheric_correction_has_run(product=product) and not overwrite:
+        if self._check_atmospheric_correction_has_run(product_name=product_name) and not overwrite:
 
             if self.VERBOSE:
                 print("[INFO] Atmospheric correction has already been run. Skipping.")
@@ -1032,19 +1032,19 @@ class Hypso1(Hypso):
         if self.l2a_cubes is None:
             self.l2a_cubes = {}
 
-        match product.lower():
+        match product_name.lower():
             case "6sv1":
                 if self.VERBOSE: 
                     print("[INFO] Running 6SV1 atmospheric correction")
-                self.l2a_cubes[product] = self._run_6sv1_atmospheric_correction()
+                self.l2a_cubes[product_name] = self._run_6sv1_atmospheric_correction()
             case "acolite":
                 if self.VERBOSE: 
                     print("[INFO] Running ACOLITE atmospheric correction")
-                self.l2a_cubes[product] = self._run_acolite_atmospheric_correction()
+                self.l2a_cubes[product_name] = self._run_acolite_atmospheric_correction()
             case "machi":
                 if self.VERBOSE: 
                     print("[INFO] Running MACHI atmospheric correction")
-                self.l2a_cubes[product] = self._run_machi_atmospheric_correction()  
+                self.l2a_cubes[product_name] = self._run_machi_atmospheric_correction()  
 
             case _:
                 print("[ERROR] No such atmospheric correction product supported!")
@@ -1160,17 +1160,21 @@ class Hypso1(Hypso):
 
         return cube
     
-    def _check_atmospheric_correction_has_run(self, product: str = None) -> bool:
+    def _check_atmospheric_correction_has_run(self, product_name: str = None) -> bool:
 
         if self.atmospheric_correction_has_run:
-            if product is None:
+            if product_name is None:
                 return True
-            elif product.lower() in self.l2a_cubes.keys():
+            elif product_name.lower() in self.l2a_cubes.keys():
                 return True
             else:
                 return False
         return False
 
+    # TODO
+    def _add_atmospheric_corrected_cube(self, product_name: str, cube: Union[np.ndarray, xr.DataArray]) -> None:
+
+        return None
 
     # Top of atmosphere reflectance functions
 
@@ -1245,9 +1249,9 @@ class Hypso1(Hypso):
 
     # TODO: split into individual functions
     # TODO: Rename land_mask to land_mask_key
-    def _run_land_mask(self, land_mask: str="global", overwrite: bool = False) -> None:
+    def _run_land_mask(self, land_mask_name: str="global", overwrite: bool = False) -> None:
 
-        if self._check_land_mask_has_run(land_mask=land_mask) and not overwrite:
+        if self._check_land_mask_has_run(land_mask_name=land_mask_name) and not overwrite:
 
             if self.VERBOSE:
                 print("[INFO] Land mask has already been run. Skipping.")
@@ -1257,33 +1261,33 @@ class Hypso1(Hypso):
         if self.land_masks is None:
             self.land_masks = {}
 
-        land_mask = land_mask.lower()
+        land_mask_name = land_mask_name.lower()
 
-        match land_mask:
+        match land_mask_name:
 
             case "global":
 
                 if self.VERBOSE:
                     print("[INFO] Running global land mask generation...")
 
-                self.land_masks[land_mask] = self._run_global_land_mask()
-                self._update_active_land_mask(land_mask=land_mask, override=False)
+                self.land_masks[land_mask_name] = self._run_global_land_mask()
+                self._update_active_land_mask(land_mask_name=land_mask_name, override=False)
 
             case "ndwi":
 
                 if self.VERBOSE:
                     print("[INFO] Running NDWI land mask generation...")
 
-                self.land_masks[land_mask] = self._run_ndwi_land_mask()
-                self._update_active_land_mask(land_mask=land_mask, override=False)
+                self.land_masks[land_mask_name] = self._run_ndwi_land_mask()
+                self._update_active_land_mask(land_mask_name=land_mask_name, override=False)
 
             case "threshold":
 
                 if self.VERBOSE:
                     print("[INFO] Running threshold land mask generation...")
 
-                self.land_masks[land_mask] = self._run_threshold_land_mask()
-                self._update_active_land_mask(land_mask=land_mask, override=False)
+                self.land_masks[land_mask_name] = self._run_threshold_land_mask()
+                self._update_active_land_mask(land_mask_name=land_mask_name, override=False)
 
             case _:
 
@@ -1341,18 +1345,18 @@ class Hypso1(Hypso):
 
         return land_mask
 
-    def _update_active_land_mask(self, land_mask: str = None, override: bool = False) -> None:
+    def _update_active_land_mask(self, land_mask_name: str = None, override: bool = False) -> None:
 
-        if land_mask is None:
+        if land_mask_name is None:
             return None
 
-        land_mask = land_mask.lower()
+        land_mask_name = land_mask_name.lower()
 
-        if land_mask not in self.land_masks.keys():
+        if land_mask_name not in self.land_masks.keys():
             return None
 
         if self.active_land_mask is None or override:
-            self.active_land_mask = self.land_masks[land_mask]
+            self.active_land_mask = self.land_masks[land_mask_name]
             self.active_land_mask.attrs['description'] = "Active land mask"
 
         self._update_active_mask()
@@ -1363,17 +1367,26 @@ class Hypso1(Hypso):
 
         return self.active_land_mask
 
-    def _check_land_mask_has_run(self, land_mask: str = None) -> bool:
+    def _check_land_mask_has_run(self, land_mask_name: str = None) -> bool:
 
         if self.land_mask_has_run:
-            if land_mask is None:
+            if land_mask_name is None:
                 return True  
-            elif land_mask.lower() in self.land_masks.keys():
+            elif land_mask_name.lower() in self.land_masks.keys():
                 return True  
             else:
                 return False
         return False
-       
+
+    # TODO
+    def _add_land_mask(self, land_mask_name: str, land_mask: Union[np.ndarray, xr.DataArray]) -> None:
+
+        return None
+    
+    # TODO
+    def _get_land_mask(self, land_mask_name: str) -> xr.DataArray:
+
+        return None
 
     # Cloud mask functions
 
@@ -1454,18 +1467,18 @@ class Hypso1(Hypso):
 
         return None
 
-    def _update_active_cloud_mask(self, cloud_mask_key: str = None, override: bool = False) -> None:
+    def _update_active_cloud_mask(self, cloud_mask_name: str = None, override: bool = False) -> None:
 
-        if cloud_mask_key is None:
+        if cloud_mask_name is None:
             return None
 
-        cloud_mask_key = cloud_mask_key.lower()
+        cloud_mask_name = cloud_mask_name.lower()
 
-        if cloud_mask_key not in self.cloud_masks.keys():
+        if cloud_mask_name not in self.cloud_masks.keys():
             return None
 
         if self.active_cloud_mask is None or override:
-            self.active_cloud_mask = self.cloud_masks[cloud_mask_key]
+            self.active_cloud_mask = self.cloud_masks[cloud_mask_name]
             self.active_cloud_mask.attrs['description'] = "Active cloud mask"
 
         self._update_active_mask()
@@ -1476,17 +1489,27 @@ class Hypso1(Hypso):
 
         return self.active_cloud_mask
 
-    def _check_cloud_mask_has_run(self, cloud_mask: str = None) -> bool:
+    def _check_cloud_mask_has_run(self, cloud_mask_name: str = None) -> bool:
 
         if self.cloud_mask_has_run:
-            if cloud_mask is None:
+            if cloud_mask_name is None:
                 return True     
-            elif cloud_mask.lower() in self.cloud_masks.keys():
+            elif cloud_mask_name.lower() in self.cloud_masks.keys():
                 return True     
             else:
                 return False
 
         return False
+
+    # TODO
+    def _add_cloud_mask(self, cloud_mask_name: str, cloud_mask: Union[np.ndarray, xr.DataArray]) -> None:
+
+        return None
+    
+    # TODO
+    def _get_cloud_mask(self, cloud_mask_name: str) -> xr.DataArray:
+
+        return None
 
 
     # Unified mask functions
@@ -1542,12 +1565,12 @@ class Hypso1(Hypso):
 
     # TODO: split into individual functions
     def _run_chlorophyll_estimation(self, 
-                                    product: str, 
+                                    product_name: str, 
                                     model: Union[str, Path] = None,
                                     factor: float = None,
                                     overwrite: bool = False) -> None:
 
-        if self._check_chlorophyll_estimation_has_run(product=product) and not overwrite:
+        if self._check_chlorophyll_estimation_has_run(product_name=product_name) and not overwrite:
 
             if self.VERBOSE:
                 print("[INFO] Chlorophyll estimation has already been run. Skipping.")
@@ -1562,28 +1585,28 @@ class Hypso1(Hypso):
         except:
             pass
 
-        match product.lower():
+        match product_name.lower():
 
             case "band_ratio":
 
                 if self.VERBOSE:
                     print("[INFO] Running band ratio chlorophyll estimation...")
 
-                self.chl[product] = self._run_band_ratio_chlorophyll_estimation(factor=factor)
+                self.chl[product_name] = self._run_band_ratio_chlorophyll_estimation(factor=factor)
                 
             case "6sv1_aqua":
 
                 if self.VERBOSE:
                     print("[INFO] Running 6SV1 AQUA Tuned chlorophyll estimation...")
 
-                self.chl[product] = self._run_6sv1_aqua_tuned_chlorophyll_estimation(model=model)
+                self.chl[product_name] = self._run_6sv1_aqua_tuned_chlorophyll_estimation(model=model)
 
             case "acolite_aqua":
 
                 if self.VERBOSE:
                     print("[INFO] Running ACOLITE AQUA Tuned chlorophyll estimation...")
 
-                self.chl[product] = self._run_acolite_aqua_tuned_chlorophyll_estimation(model=model)
+                self.chl[product_name] = self._run_acolite_aqua_tuned_chlorophyll_estimation(model=model)
 
             case _:
                 print("[ERROR] No such chlorophyll estimation product supported!")
@@ -1622,7 +1645,7 @@ class Hypso1(Hypso):
 
         self._run_calibration()
         self._run_geometry()
-        self._run_atmospheric_correction(product='6sv1')
+        self._run_atmospheric_correction(product_name='6sv1')
 
         model = Path(model)
 
@@ -1658,7 +1681,7 @@ class Hypso1(Hypso):
 
         self._run_calibration()
         self._run_geometry()
-        self._run_atmospheric_correction(product='acolite')
+        self._run_atmospheric_correction(product_name='acolite')
 
         model = Path(model)
 
@@ -1690,12 +1713,12 @@ class Hypso1(Hypso):
 
         return chl
 
-    def _check_chlorophyll_estimation_has_run(self, product: str = None) -> bool:
+    def _check_chlorophyll_estimation_has_run(self, product_name: str = None) -> bool:
 
         if self.chlorophyll_estimation_has_run:
-            if product is None:
+            if product_name is None:
                 return True
-            elif product.lower() in self.chl.keys():
+            elif product_name.lower() in self.chl.keys():
                 return True
             else:
                 return False
@@ -2226,12 +2249,12 @@ class Hypso1(Hypso):
     # L2a file output
 
     # TODO
-    def _write_l2a_nc_file(self, product: str = None, overwrite: bool = False) -> None:
+    def _write_l2a_nc_file(self, product_name: str = None, overwrite: bool = False) -> None:
 
         return None
 
     # TODO
-    def _check_write_l2a_nc_file_has_run(self, product: str = None) -> bool:
+    def _check_write_l2a_nc_file_has_run(self, product_name: str = None) -> bool:
         
         return self.write_l2a_nc_file_has_run
 
@@ -2363,13 +2386,13 @@ class Hypso1(Hypso):
 
         return scene
 
-    def _generate_l2a_satpy_scene(self, product: str) -> Scene:
+    def _generate_l2a_satpy_scene(self, product_name: str) -> Scene:
 
         scene = self._generate_satpy_scene()
         swath_def= self._generate_swath_definition()
 
         try:
-            cube = self.l2a_cubes[product.lower()]
+            cube = self.l2a_cubes[product_name.lower()]
             wavelengths = self.wavelengths
         except:
             return None
@@ -2756,24 +2779,24 @@ class Hypso1(Hypso):
     # Public L2a methods
 
     # TODO
-    def load_l2a_cube(self, path: str, product: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> None:
+    def load_l2a_cube(self, path: str, product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> None:
 
         return None
 
-    def generate_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> None:
+    def generate_l2a_cube(self, product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> None:
 
-        self._run_atmospheric_correction(product=product)
+        self._run_atmospheric_correction(product_name=product_name)
 
         return None
 
-    def get_l2a_cube(self, product: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> xr.DataArray:
+    def get_l2a_cube(self, product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> xr.DataArray:
 
-        if product and self._check_atmospheric_correction_has_run(product=product):
+        if product_name and self._check_atmospheric_correction_has_run(product_name=product_name):
 
-            return self.l2a_cubes[product.lower()]
+            return self.l2a_cubes[product_name.lower()]
         
         if self.VERBOSE:
-            print("[ERROR] " + product.upper() + " L2a cube has not yet been generated.")
+            print("[ERROR] " + product_name.upper() + " L2a cube has not yet been generated.")
 
         return None
 
@@ -2782,7 +2805,7 @@ class Hypso1(Hypso):
         return self.l2a_cubes
 
     def get_l2a_spectrum(self, 
-                        product: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT,
+                        product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT,
                         latitude=None, 
                         longitude=None,
                         x: int = None,
@@ -2800,14 +2823,14 @@ class Hypso1(Hypso):
             return None
 
         try:
-            spectrum = self.l2a_cubes[product][idx[0], idx[1], :]
+            spectrum = self.l2a_cubes[product_name][idx[0], idx[1], :]
         except KeyError:
             return None
 
         return spectrum
 
     def plot_l2a_spectrum(self, 
-                         product: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT,
+                         product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT,
                          latitude=None, 
                          longitude=None,
                          x: int = None,
@@ -2825,21 +2848,21 @@ class Hypso1(Hypso):
             return None
 
         try:
-            spectrum = self.l2a_cubes[product.lower()][idx[0], idx[1], :]
+            spectrum = self.l2a_cubes[product_name.lower()][idx[0], idx[1], :]
         except KeyError:
             return None
 
         bands = self.wavelengths
         units = spectrum.attrs["units"]
 
-        output_file = Path(self.nc_dir, self.capture_name + '_l2a_' + str(product) + '_plot.png')
+        output_file = Path(self.nc_dir, self.capture_name + '_l2a_' + str(product_name) + '_plot.png')
 
         plt.figure(figsize=(10, 5))
         plt.plot(bands, spectrum)
         plt.ylabel(units)
         plt.ylim([0, 1])
         plt.xlabel("Wavelength (nm)")
-        plt.title(f"L2a {product} (lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
+        plt.title(f"L2a {product_name} (lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
         plt.grid(True)
 
         if save:
@@ -2848,9 +2871,9 @@ class Hypso1(Hypso):
             plt.show()
 
     # TODO
-    def write_l2a_nc_file(self, path: Union[str, Path] = None, product: str = None) -> None:
+    def write_l2a_nc_file(self, path: Union[str, Path] = None, product_name: str = None) -> None:
 
-        self._write_l2a_nc_file(path=path, product=product)
+        self._write_l2a_nc_file(path=path, product_name=product_name)
 
         return None
 
@@ -2904,17 +2927,17 @@ class Hypso1(Hypso):
 
         return None
 
-    def generate_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = DEFAULT_LAND_MASK) -> None:
+    def generate_land_mask(self, land_mask_name: Literal["global", "ndwi", "threshold"] = DEFAULT_LAND_MASK) -> None:
 
-        self._run_land_mask(land_mask=land_mask)
+        self._run_land_mask(land_mask_name=land_mask_name)
 
         return None
 
-    def get_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = DEFAULT_LAND_MASK) -> np.ndarray:
+    def get_land_mask(self, land_mask_name: Literal["global", "ndwi", "threshold"] = DEFAULT_LAND_MASK) -> np.ndarray:
 
-        if land_mask and self._check_land_mask_has_run(land_mask=land_mask):
+        if land_mask_name and self._check_land_mask_has_run(land_mask_name=land_mask_name):
 
-            return self.land_masks[land_mask.lower()]
+            return self.land_masks[land_mask_name.lower()]
         
         if self.VERBOSE:
             print("[ERROR] " + land_mask + " land mask has not yet been generated.")
@@ -2925,9 +2948,9 @@ class Hypso1(Hypso):
 
         return self.land_masks     
     
-    def set_active_land_mask(self, land_mask: Literal["global", "ndwi", "threshold"] = DEFAULT_LAND_MASK):
+    def set_active_land_mask(self, land_mask_name: Literal["global", "ndwi", "threshold"] = DEFAULT_LAND_MASK):
 
-        self._update_active_land_mask(land_mask=land_mask, override=True)
+        self._update_active_land_mask(land_mask_name=land_mask_name, override=True)
 
     def get_active_land_mask(self) -> xr.DataArray:
 
@@ -2946,17 +2969,18 @@ class Hypso1(Hypso):
 
         return None
 
-    def generate_cloud_mask(self, cloud_mask: Literal["default"] = DEFAULT_CLOUD_MASK):
+    # TODO
+    def generate_cloud_mask(self, cloud_mask_name: Literal["default"] = DEFAULT_CLOUD_MASK):
 
-        self._run_cloud_mask(cloud_mask=cloud_mask)
+        #self._run_cloud_mask(cloud_mask_name=cloud_mask_name)
 
         return None
 
-    def get_cloud_mask(self, cloud_mask: Literal["default"] = DEFAULT_CLOUD_MASK) -> np.ndarray:
+    def get_cloud_mask(self, cloud_mask_name: Literal["default"] = DEFAULT_CLOUD_MASK) -> np.ndarray:
 
-        if cloud_mask and self._check_cloud_mask_has_run(cloud_mask=cloud_mask):
+        if cloud_mask_name and self._check_cloud_mask_has_run(cloud_mask_name=cloud_mask_name):
 
-            return self.cloud_masks[cloud_mask.lower()]
+            return self.cloud_masks[cloud_mask_name.lower()]
         
         if self.VERBOSE:
             print("[ERROR] " + cloud_mask + " cloud mask has not yet been generated.")
@@ -2967,9 +2991,9 @@ class Hypso1(Hypso):
 
         return self.cloud_masks 
 
-    def set_active_cloud_mask(self, cloud_mask: Literal["default"] = DEFAULT_CLOUD_MASK):
+    def set_active_cloud_mask(self, cloud_mask_name: Literal["default"] = DEFAULT_CLOUD_MASK):
 
-        self._update_active_cloud_mask(self, cloud_mask=cloud_mask, override=True)
+        self._update_active_cloud_mask(self, cloud_mask_name=cloud_mask_name, override=True)
 
     def get_active_cloud_mask(self) -> xr.DataArray:
 
@@ -2996,17 +3020,17 @@ class Hypso1(Hypso):
         return None
 
     def generate_chlorophyll_estimates(self, 
-                                       product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"] = DEFAULT_CHL_EST_PRODUCT,
+                                       product_name: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"] = DEFAULT_CHL_EST_PRODUCT,
                                        model: Union[str, Path] = None,
                                        factor: float = 0.1
                                        ) -> None:
 
-        self._run_chlorophyll_estimation(product=product, model=model, factor=factor)
+        self._run_chlorophyll_estimation(product_name=product_name, model=model, factor=factor)
 
-    def get_chlorophyll_estimates(self, product: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"] = DEFAULT_CHL_EST_PRODUCT,
+    def get_chlorophyll_estimates(self, product_name: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"] = DEFAULT_CHL_EST_PRODUCT,
                                  ) -> np.ndarray:
 
-        key = product.lower()
+        key = product_name.lower()
 
         return self.chl[key]
 
@@ -3062,9 +3086,9 @@ class Hypso1(Hypso):
 
         return self._generate_l1b_satpy_scene()
 
-    def get_l2a_satpy_scene(self, product: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> Scene:
+    def get_l2a_satpy_scene(self, product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> Scene:
 
-        return self._generate_l2a_satpy_scene()
+        return self._generate_l2a_satpy_scene(product_name=product_name)
 
     def get_chlorophyll_satpy_scene(self) -> Scene:
 
