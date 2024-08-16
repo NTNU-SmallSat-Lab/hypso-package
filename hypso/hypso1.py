@@ -59,9 +59,18 @@ DEFAULT_CHL_EST_PRODUCT = "band_ratio"
 DEFAULT_LAND_MASK = "global"
 DEFAULT_CLOUD_MASK = "default"
 
+DIM_NAMES_3D = ["y", "x", "band"]
+DIM_NAMES_2D = ["y", "x"]
+
 UNIX_TIME_OFFSET = 20 # TODO: Verify offset validity. Sivert had 20 here
 
 # TODO: store latitude and longitude as xarray
+# TODO: make some type of class for the products stored in dictionaries? Extend dict class?
+# TODO: remove validate functions
+# TODO: setattr for setting class variables?
+
+
+
 class Hypso1(Hypso):
 
     def __init__(self, hypso_path: Union[str, Path], points_path: Union[str, Path, None] = None, verbose=False) -> None:
@@ -104,25 +113,47 @@ class Hypso1(Hypso):
     # Setters
 
     def _set_verbose(self, verbose=False) -> None:
+        """
+        Set the verbose option. Running with "verbose=True" will enable more messages to be produced when hypso-package is run.
+
+        :param verbose: bool.
+
+        :return: None.
+        """
 
         self.VERBOSE = verbose
 
         return None
 
     def _set_platform(self) -> None:
+        """
+        Set the identifier of the platform or satellite.
+
+        :return: None.
+        """
 
         self.platform = 'hypso1'
 
         return None
 
     def _set_sensor(self) -> None:
+        """
+        Set the identifier of the sensor.
+
+        :return: None.
+        """
 
         self.sensor = 'hypso1_hsi'
 
         return None
 
     def _set_capture_datetime(self) -> None:
-        
+        """
+        Format and set the datetime of the capture using information derived from the capture name.
+
+        :return: None.
+        """
+
         parts = self.capture_name.split("_", 1)
         dt = datetime.strptime(parts[1], "%Y-%m-%d_%H%MZ")
         self.capture_datetime = dt
@@ -130,6 +161,11 @@ class Hypso1(Hypso):
         return None
 
     def _set_capture_name(self) -> None:
+        """
+        Format and set the capture name using information derived from the capture file path.
+
+        :return: None.
+        """
 
         capture_name = self.hypso_path.stem
 
@@ -143,13 +179,22 @@ class Hypso1(Hypso):
         return None
 
     def _set_capture_region(self) -> None:
+        """
+        Format and set the capture region using information derived from the capture name.
 
-        self._set_capture_name()
+        :return: None.
+        """
+
         self.capture_region = self.capture_name.split('_')[0].strip('_')
 
         return None
 
     def _set_capture_type(self) -> None:
+        """
+        Format and set the capture region using information derived from the capture name.
+
+        :return: None.
+        """
 
         if self.capture_config["frame_count"] == self.standard_dimensions["nominal"]:
 
@@ -320,7 +365,7 @@ class Hypso1(Hypso):
         if path is not None:
             self.hypso_path = path
 
-        self._check_l1a_file_format()
+        self._validate_l1a_file()
 
         self._set_capture_name()
         self._set_capture_region()
@@ -344,7 +389,7 @@ class Hypso1(Hypso):
 
         return None
 
-    def _check_l1a_file_format(self) -> None:
+    def _validate_l1a_file(self) -> None:
 
         # Check that hypso_path file is a NetCDF file:
         #if not self.hypso_path.suffix == '.nc':
@@ -360,17 +405,26 @@ class Hypso1(Hypso):
     
         return None
 
+    def _set_l1a_cube_xarray_attrs(self, l1a_cube: xr.DataArray) -> xr.DataArray:
+
+        l1a_cube.attrs['level'] = "L1a"
+        l1a_cube.attrs['units'] = "a.u."
+        l1a_cube.attrs['description'] = "Raw sensor values"
+
+        return l1a_cube
+
     def _load_l1a_cube(self) -> None:
 
-        cube = load_l1a_nc_cube(self.hypso_path)
+        l1a_cube = load_l1a_nc_cube(self.hypso_path)
 
-        self.l1a_cube = xr.DataArray(cube, dims=["y", "x", "band"])
-        self.l1a_cube.attrs['level'] = "L1a"
-        self.l1a_cube.attrs['units'] = "a.u."
-        self.l1a_cube.attrs['description'] = "Raw sensor values"
+        l1a_cube = self._create_3d_xarray(data=l1a_cube)
+        l1a_cube = self._set_l1a_cube_xarray_attrs(l1a_cube=l1a_cube)
+
+        self.l1a_cube = l1a_cube
 
         return None
 
+    # TODO: use setattr here?
     def _load_l1a_metadata(self) -> None:
         
         self.capture_config, \
@@ -381,12 +435,25 @@ class Hypso1(Hypso):
         
         return None
 
+    def _get_l1a_cube(self) -> xr.DataArray:
 
-    # Loading L1b
+        return self.l1a_cube
+
+
+
+    # L1b functions
 
     # TODO
     def _load_l1b_file(self) -> None:
         return None
+
+    def _set_l1b_cube_xarray_attrs(self, l1b_cube: xr.DataArray) -> xr.DataArray:
+
+        l1b_cube.attrs['level'] = "L1b"
+        l1b_cube.attrs['units'] = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
+        l1b_cube.attrs['description'] = "Radiance (L)"
+
+        return l1b_cube
 
     # TODO
     def _load_l1b_cube(self) -> None:
@@ -395,6 +462,74 @@ class Hypso1(Hypso):
     # TODO
     def _load_l1b_metadata(self) -> None:
         return None
+    
+    # TODO
+    def _get_l1b_cube(self) -> xr.DataArray:
+
+        return self.l1b_cube
+    
+
+    # L2a functions
+
+    # TODO
+    def _load_l2a_file(self) -> None:
+        return None
+
+    def _create_l2a_cube_xarray(self, l2a_cube: np.ndarray) -> xr.DataArray:
+
+        l2a_cube = self._create_3d_xarray(data=l2a_cube)
+        l2a_cube = self._set_l2a_cube_xarray_attrs(l2a_cube=l2a_cube)
+
+        return l2a_cube
+
+    def _set_l2a_cube_xarray_attrs(self, l2a_cube: xr.DataArray) -> xr.DataArray:
+
+        l2a_cube.attrs['level'] = "L2a"
+        l2a_cube.attrs['units'] = "a.u."
+        l2a_cube.attrs['description'] = "Reflectance (Rrs)"
+
+        return l2a_cube
+
+    # TODO
+    def _load_l2a_cube(self) -> None:
+        return None
+    
+    # TODO
+    def _load_l2a_metadata(self) -> None:
+        return None
+
+    def _add_l2a_cube(self, product_name: str, l2a_cube: Union[np.ndarray, xr.DataArray]) -> None:
+
+        if self._validate_array_dims(array=l2a_cube, ndim=3):
+
+            if type(l2a_cube) is np.ndarray:
+                l2a_cube = self._create_2d_xarray(data=l2a_cube)
+                l2a_cube = self._set_land_mask_xarray_attrs(l2a_cube=l2a_cube)
+            elif type(l2a_cube) is xr.DataArray:
+                l2a_cube = self._set_land_mask_xarray_attrs(l2a_cube=l2a_cube)
+            else:
+                return None
+
+            key = product_name.lower()
+
+            self.land_masks[key] = l2a_cube
+
+        return None
+    
+    def _get_l2a_cube(self, product_name: str) -> xr.DataArray:
+
+        try:
+            key = product_name.lower()
+            return self.l2a_cubes[key]
+        except KeyError:
+            return None
+
+        return None
+
+
+
+
+
 
 
     # Georeferencing functions
@@ -580,6 +715,9 @@ class Hypso1(Hypso):
         return self.georeferencing_has_run
             
 
+
+
+
     # Calibration functions
         
     def _run_calibration(self, 
@@ -611,19 +749,19 @@ class Hypso1(Hypso):
         self._set_wavelengths()
         self._set_srf()
 
-        cube = self.l1a_cube.to_numpy()
+        l1a_cube = self.l1a_cube.to_numpy()
 
         if rad_cal:
-            cube = self._run_radiometric_calibration(cube=cube)
+            l1b_cube = self._run_radiometric_calibration(cube=l1a_cube)
         if smile_corr:
-            cube = self._run_smile_correction(cube=cube)
+            l1b_cube = self._run_smile_correction(cube=l1b_cube)
         if destriping_corr:
-            cube = self._run_destriping_correction(cube=cube, **kwargs)
+            l1b_cube = self._run_destriping_correction(cube=l1b_cube, **kwargs)
 
-        self.l1b_cube = xr.DataArray(cube, dims=["y", "x", "band"])
-        self.l1b_cube.attrs['level'] = "L1b"
-        self.l1b_cube.attrs['units'] = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
-        self.l1b_cube.attrs['description'] = "Radiance (L)"
+        l1b_cube = self._create_3d_xarray(data=l1b_cube)
+        l1b_cube = self._set_l1b_cube_xarray_attrs(l1b_cube=l1b_cube)
+
+        self.l1b_cube = l1b_cube
 
         self.calibration_has_run = True
 
@@ -708,26 +846,61 @@ class Hypso1(Hypso):
         return cube
 
     def _set_calibration_coeffs(self) -> None:
+        """
+        Set the calibration coefficients included in the package. This includes radiometric,
+        smile and destriping correction.
+
+        :return: None.
+        """
+        
+        self._set_radiometric_coeffs()
+        self._set_smile_coeffs()
+        self._set_destriping_coeffs()
+        self._set_spectral_coeffs()
+        
+        return None
+
+    def _set_radiometric_coeffs(self) -> None:
+        """
+        Set the radiometric calibration coefficients included in the package.
+
+        :return: None.
+        """
 
         self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file)
-        self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file)
-        self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
-        self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
 
         return None
 
-    # TODO
-    def _set_radiometric_coeffs(self) -> None:
-
-        return None
-
-    # TODO
     def _set_smile_coeffs(self) -> None:
+        """
+        Set the smile calibration coefficients included in the package.
+
+        :return: None.
+        """
+
+        self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file)
 
         return None
     
-    # TODO
     def _set_destriping_coeffs(self) -> None:
+        """
+        Set the destriping calibration coefficients included in the package.
+
+        :return: None.
+        """
+
+        self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
+
+        return None
+    
+    def _set_spectral_coeffs(self) -> None:
+        """
+        Set the spectral calibration coefficients included in the package.
+
+        :return: None.
+        """
+
+        self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
 
         return None
 
@@ -747,9 +920,8 @@ class Hypso1(Hypso):
         return None
 
     def _set_rad_coeff_file(self, rad_coeff_file: Union[str, Path, None] = None) -> None:
-
         """
-        Get the absolute path for the radiometric coefficients.
+        Set the absolute path for the radiometric coefficients based on the detected capture type (wide, nominal, or custom).
 
         :param rad_coeff_file: Path to radiometric coefficients file (optional)
 
@@ -786,7 +958,7 @@ class Hypso1(Hypso):
     def _set_smile_coeff_file(self, smile_coeff_file: Union[str, Path, None] = None) -> None:
 
         """
-        Get the absolute path for the smile coefficients.
+        Set the absolute path for the smile coefficients based on the detected capture type (wide, nominal, or custom).
 
         :param smile_coeff_file: Path to smile coefficients file (optional)
 
@@ -823,7 +995,7 @@ class Hypso1(Hypso):
     def _set_destriping_coeff_file(self, destriping_coeff_file: Union[str, Path, None] = None) -> None:
 
         """
-        Get the absolute path for the destriping coefficients.
+        Set the absolute path for the destriping coefficients based on the detected capture type (wide, nominal, or custom).
 
         :param destriping_coeff_file: Path to destriping coefficients file (optional)
 
@@ -858,9 +1030,8 @@ class Hypso1(Hypso):
         return None
 
     def _set_spectral_coeff_file(self, spectral_coeff_file: Union[str, Path, None] = None) -> None:
-
         """
-        Get the absolute path for the spectral coefficients (wavelengths).
+        Set the absolute path for the spectral coefficients (wavelengths) based on the detected capture type (wide, nominal, or custom).
 
         :param spectral_coeff_file: Path to spectral coefficients file (optional)
 
@@ -880,6 +1051,11 @@ class Hypso1(Hypso):
         return None
 
     def _set_wavelengths(self) -> None:
+        """
+        Set the wavelengths corresponding to each of the 120 bands of the HYPSO datacube using information from the spectral coefficients.
+
+        :return: None.
+        """
 
         if self.spectral_coeffs is not None:
             self.wavelengths = self.spectral_coeffs
@@ -891,8 +1067,10 @@ class Hypso1(Hypso):
     # TODO: move to calibration module?
     def _set_srf(self) -> None:
         """
-        Get Spectral Response Functions (SRF) from HYPSO for each of the 120 bands. Theoretical FWHM of 3.33nm is
+        Set Spectral Response Functions (SRF) from HYPSO for each of the 120 bands. Theoretical FWHM of 3.33nm is
         used to estimate Sigma for an assumed gaussian distribution of each SRF per band.
+
+        :return: None.
         """
 
         if not any(self.wavelengths):
@@ -1100,10 +1278,8 @@ class Hypso1(Hypso):
                         time_capture=time_capture,
                         srf=self.srf)
         
-        cube = xr.DataArray(cube, dims=["y", "x", "band"])
-        cube.attrs['level'] = "L2a"
-        cube.attrs['units'] = "a.u."
-        cube.attrs['description'] = "Reflectance (Rrs)"
+        cube = self._create_l2a_cube_xarray(l2a_cube=cube)
+
         cube.attrs['correction'] = "6sv1"
 
         return cube
@@ -1130,10 +1306,8 @@ class Hypso1(Hypso):
                            atmos_dict=atmos_params, 
                            nc_file_acoliteready=self.l1b_nc_file)
 
-        cube = xr.DataArray(cube, dims=["y", "x", "band"])
-        cube.attrs['level'] = "L2a"
-        cube.attrs['units'] = "a.u."
-        cube.attrs['description'] = "Reflectance (Rrs)"
+        cube = self._create_l2a_cube_xarray(l2a_cube=cube)
+
         cube.attrs['correction'] = "acolite"
 
         return cube
@@ -1152,10 +1326,8 @@ class Hypso1(Hypso):
         
         #T, A, objs = run_machi(cube=cube, verbose=self.VERBOSE)
 
-        cube = xr.DataArray(cube, dims=["y", "x", "band"])
-        cube.attrs['level'] = "L2a"
-        cube.attrs['units'] = "a.u."
-        cube.attrs['description'] = "Reflectance (Rrs)"
+        cube = self._create_l2a_cube_xarray(l2a_cube=cube)
+
         cube.attrs['correction'] = "machi"
 
         return cube
@@ -1171,25 +1343,13 @@ class Hypso1(Hypso):
                 return False
         return False
 
-    # TODO
-    def _add_atmospheric_corrected_product(self, product_name: str, cube: Union[np.ndarray, xr.DataArray]) -> None:
 
-        return None
-
-    # TODO
-    def _validate_atmospheric_corrected_product(self, cube: Union[np.ndarray, xr.DataArray]) -> bool:
-
-        return None
-    
-    # TODO
-    def _get_atmospheric_corrected_product(self, product_name: str) -> xr.DataArray:
-
-        return None
 
 
     # Top of atmosphere reflectance functions
 
     # TODO: move code to atmospheric module
+    # TODO: add set functions
     def _run_toa_reflectance(self) -> None:
 
         self._run_calibration()
@@ -1259,7 +1419,6 @@ class Hypso1(Hypso):
     # Land mask functions
 
     # TODO: split into individual functions
-    # TODO: Rename land_mask to land_mask_key
     def _run_land_mask(self, land_mask_name: str="global", overwrite: bool = False) -> None:
 
         if self._check_land_mask_has_run(land_mask_name=land_mask_name) and not overwrite:
@@ -1318,8 +1477,8 @@ class Hypso1(Hypso):
                                         longitudes=self.longitudes
                                         )
         
-        land_mask = xr.DataArray(land_mask, dims=("y", "x"))
-        land_mask.attrs['description'] = "Land mask"
+        land_mask = self._create_2d_xarray(data=land_mask)
+        land_mask = self._set_land_mask_xarray_attrs(land_mask=land_mask)
         land_mask.attrs['method'] = "global"
 
         return land_mask
@@ -1334,13 +1493,13 @@ class Hypso1(Hypso):
                                        wavelengths=self.wavelengths,
                                        verbose=self.VERBOSE)
 
-        land_mask = xr.DataArray(land_mask, dims=("y", "x"))
-        land_mask.attrs['description'] = "Land mask"
+        land_mask = self._create_2d_xarray(data=land_mask)
+        land_mask = self._set_land_mask_xarray_attrs(land_mask=land_mask)
         land_mask.attrs['method'] = "ndwi"
 
         return land_mask
     
-    def _run_threshold_land_mask(self) -> np.ndarray:
+    def _run_threshold_land_mask(self) -> xr.DataArray:
 
         self._run_calibration()
 
@@ -1349,10 +1508,16 @@ class Hypso1(Hypso):
         land_mask = run_threshold_land_mask(cube=cube,
                                             wavelengths=self.wavelengths,
                                             verbose=self.VERBOSE)
-    
-        land_mask = xr.DataArray(land_mask, dims=("y", "x"))
-        land_mask.attrs['description'] = "Land mask"
+        
+        land_mask = self._create_2d_xarray(data=land_mask)
+        land_mask = self._set_land_mask_xarray_attrs(land_mask=land_mask)
         land_mask.attrs['method'] = "threshold"
+
+        return land_mask
+     
+    def _set_land_mask_xarray_attrs(self, land_mask: xr.DataArray) -> xr.DataArray:
+
+        land_mask.attrs['description'] = "Land mask"
 
         return land_mask
 
@@ -1389,71 +1554,36 @@ class Hypso1(Hypso):
                 return False
         return False
 
-    # TODO
     def _add_land_mask(self, land_mask_name: str, land_mask: Union[np.ndarray, xr.DataArray]) -> None:
 
-        return None
-    
-    # TODO
-    def _validate_land_mask(self, land_mask: Union[np.ndarray, xr.DataArray]) -> bool:
+        if self._validate_array_dims(array=land_mask, ndim=2):
+
+            if type(land_mask) is np.ndarray:
+                land_mask = self._create_2d_xarray(data=land_mask)
+                land_mask = self._set_land_mask_xarray_attrs(land_mask=land_mask)
+            elif type(land_mask) is xr.DataArray:
+                land_mask = self._set_land_mask_xarray_attrs(land_mask=land_mask)
+            else:
+                return None
+
+            key = land_mask_name.lower()
+
+            self.land_masks[key] = land_mask
 
         return None
 
-    # TODO
     def _get_land_mask(self, land_mask_name: str) -> xr.DataArray:
+
+        try:
+            key = land_mask_name.lower()
+            return self.land_masks[key]
+        except KeyError:
+            return None
 
         return None
 
 
     # Cloud mask functions
-
-    # TODO: split into individual functions
-    '''
-    def _run_cloud_mask(self, cloud_mask: str='default', quantile: float=None, overwrite: bool = False) -> None:
-
-        if self._check_cloud_mask_has_run(cloud_mask=cloud_mask) and not overwrite:
-
-            if self.VERBOSE:
-                print("[INFO] Cloud mask has already been run. Skipping.")
-
-            return None
-
-        if self.cloud_masks is None:
-            self.cloud_masks = {}
-
-        cloud_mask = cloud_mask.lower()
-
-        match cloud_mask:
-
-            case 'default':
-
-                if self.VERBOSE:
-                    print("[INFO] Running cloud mask generation...")
-                    print("[WARNING] Cloud mask generation has not been implemented.")
-
-                self.cloud_masks[cloud_mask] = run_cloud_mask()
-                
-                self._update_active_cl
-                oud_mask(cloud_mask=cloud_mask, override=False)
-
-            case 'quantile_threshold':
-
-                if self.VERBOSE:
-                    print("[INFO] Running quanitle threshold cloud mask generation...")
-                    print("[WARNING] Cloud mask generation has not been implemented.")
-
-                self.cloud_masks[cloud_mask] = self._run_quantile_threshold_cloud_mask(quantile=quantile)
-
-                self._update_active_cloud_mask(cloud_mask=cloud_mask, override=False)
-
-            case _:
-                print("[WARNING] No such cloud mask supported!")
-                return None
-
-        self.cloud_mask_has_run = True
-
-        return None
-    '''
         
     def _run_quantile_threshold_cloud_mask(self, quantile: float, overwrite: bool = False) -> None:
 
@@ -1469,10 +1599,11 @@ class Hypso1(Hypso):
         if self.cloud_masks is None:
             self.cloud_masks = {}
 
-        mask = run_quantile_threshold_cloud_mask(cube=self.l1b_cube,
+        cloud_mask = run_quantile_threshold_cloud_mask(cube=self.l1b_cube,
                                                 quantile=quantile)
 
-        cloud_mask = xr.DataArray(mask, dims=("y", "x"))
+        cloud_mask = self._create_2d_xarray(data=cloud_mask)
+        cloud_mask = self._set_cloud_mask_xarray_attrs(cloud_mask=cloud_mask)
         cloud_mask.attrs['description'] = "Cloud mask"
         cloud_mask.attrs['method'] = "quantile threshold"
 
@@ -1483,6 +1614,12 @@ class Hypso1(Hypso):
         self.cloud_mask_has_run = True
 
         return None
+
+    def _set_cloud_mask_xarray_attrs(self, cloud_mask: xr.DataArray) -> xr.DataArray:
+
+        cloud_mask.attrs['description'] = "Cloud mask"
+
+        return cloud_mask
 
     def _update_active_cloud_mask(self, cloud_mask_name: str = None, override: bool = False) -> None:
 
@@ -1518,18 +1655,31 @@ class Hypso1(Hypso):
 
         return False
 
-    # TODO
     def _add_cloud_mask(self, cloud_mask_name: str, cloud_mask: Union[np.ndarray, xr.DataArray]) -> None:
+
+        if self._validate_array_dims(array=cloud_mask, ndim=2):
+
+            if type(cloud_mask) is np.ndarray:
+                cloud_mask = self._create_2d_xarray(data=cloud_mask)
+                cloud_mask = self._set_cloud_mask_xarray_attrs(cloud_mask=cloud_mask)
+            elif type(cloud_mask) is xr.DataArray:
+                cloud_mask = self._set_cloud_mask_xarray_attrs(cloud_mask=cloud_mask)
+            else:
+                return None
+
+            key = cloud_mask_name.lower()
+
+            self.cloud_masks[key] = cloud_mask
 
         return None
     
-    # TODO
-    def _validate_cloud_mask(self, cloud_mask: Union[np.ndarray, xr.DataArray]) -> bool:
-
-        return None
-
-    # TODO
     def _get_cloud_mask(self, cloud_mask_name: str) -> xr.DataArray:
+
+        try:
+            key = cloud_mask_name.lower()
+            return self.cloud_masks[key]
+        except KeyError:
+            return None
 
         return None
 
@@ -1547,7 +1697,7 @@ class Hypso1(Hypso):
         elif land_mask is None:
 
             active_mask = cloud_mask.to_numpy()
-            active_mask = xr.DataArray(active_mask, dims=("y", "x"))
+            active_mask = xr.DataArray(active_mask, dims=DIM_NAMES_2D)
             active_mask.attrs['description'] = "Active mask"
             active_mask.attrs['land_mask_method'] = None
             active_mask.attrs['cloud_mask_method'] = cloud_mask.attrs['method']
@@ -1558,7 +1708,7 @@ class Hypso1(Hypso):
         elif cloud_mask is None:
             
             active_mask = land_mask.to_numpy()
-            active_mask = xr.DataArray(active_mask, dims=("y", "x"))
+            active_mask = xr.DataArray(active_mask, dims=DIM_NAMES_2D)
             active_mask.attrs['description'] = "Active mask"
             active_mask.attrs['land_mask_method'] = land_mask.attrs['method']
             active_mask.attrs['cloud_mask_method'] = None
@@ -1568,7 +1718,7 @@ class Hypso1(Hypso):
         else:
 
             active_mask = land_mask.to_numpy() | cloud_mask.to_numpy()
-            active_mask = xr.DataArray(active_mask, dims=("y", "x"))
+            active_mask = xr.DataArray(active_mask, dims=DIM_NAMES_2D)
             active_mask.attrs['description'] = "Active mask"
             active_mask.attrs['land_mask_method'] = land_mask.attrs['method']
             active_mask.attrs['cloud_mask_method'] = cloud_mask.attrs['method']
@@ -1656,9 +1806,10 @@ class Hypso1(Hypso):
                                                     factor = factor
                                                     )
 
-        chl = xr.DataArray(chl, dims=["y", "x"])
+        chl = self._create_2d_xarray(data=chl)
+        chl = self._set_chlorophyll_estimation_xarray_attrs(chl=chl)
         chl.attrs['units'] = "a.u."
-        chl.attrs['description'] = "Chlorophyll concentration 549 nm over 663 nm band ratio"
+        chl.attrs['method'] = "549 nm over 663 nm band ratio"
         chl.attrs['factor'] = factor
 
         return chl
@@ -1692,9 +1843,10 @@ class Hypso1(Hypso):
                                                spatial_dimensions = self.spatial_dimensions
                                                )
         
-        chl = xr.DataArray(chl, dims=["y", "x"])
+        chl = self._create_2d_xarray(data=chl)
+        chl = self._set_chlorophyll_estimation_xarray_attrs(chl=chl)
         chl.attrs['units'] = r'$mg \cdot m^{-3}$'
-        chl.attrs['description'] = "Chlorophyll concentration 6SV1 AQUA Tuned"
+        chl.attrs['method'] = "6SV1 AQUA Tuned"
         chl.attrs['model'] = model
 
         return chl
@@ -1728,10 +1880,17 @@ class Hypso1(Hypso):
                                                spatial_dimensions = self.spatial_dimensions
                                                )
 
-        chl = xr.DataArray(chl, dims=["y", "x"])
+        chl = self._create_2d_xarray(data=chl)
+        chl = self._set_chlorophyll_estimation_xarray_attrs(chl=chl)
         chl.attrs['units'] = r'$mg \cdot m^{-3}$'
-        chl.attrs['description'] = "Chlorophyll concentration ACOLITE AQUA Tuned"
+        chl.attrs['method'] = "ACOLITE AQUA Tuned"
         chl.attrs['model'] = model
+
+        return chl
+
+    def _set_chlorophyll_estimation_xarray_attrs(self, chl: xr.DataArray) -> xr.DataArray:
+
+        chl.attrs['description'] = "Chlorophyll estimates"
 
         return chl
 
@@ -1746,42 +1905,1011 @@ class Hypso1(Hypso):
                 return False
         return False
 
-    # TODO
-    def _add_chlorophyll_estimation_product(self, product_name: str, cube: Union[np.ndarray, xr.DataArray]) -> None:
+    def _add_chlorophyll_estimation_product(self, product_name: str, chl: Union[np.ndarray, xr.DataArray]) -> None:
 
-        return None
+        if self._validate_array_dims(array=chl, ndim=2):
 
-    # TODO
-    def _validate_chlorophyll_estimation_product(self, cube: Union[np.ndarray, xr.DataArray]) -> bool:
+            if type(chl) is np.ndarray:
+                chl = self._create_2d_xarray(data=chl)
+                chl = self._set_chlorophyll_estimation_xarray_attrs(chl=chl)
+            elif type(chl) is xr.DataArray:
+                chl = self._set_chlorophyll_estimation_xarray_attrs(chl=chl)
+            else:
+                return None
+
+            key = product_name.lower()
+
+            self.chl[key] = chl
 
         return None
     
-    # TODO
     def _get_chlorophyll_estimation_product(self, product_name: str) -> xr.DataArray:
 
-        return None
+            key = product_name.lower()
+
+            return self.chl[key]
 
 
 
     # Custom products function
 
-    # TODO
     def _add_product(self, product_name: str, product: Union[np.ndarray, xr.DataArray]) -> None:
+
+        if self._validate_array_dims(array=product, ndim=2):
+
+            if type(product) is np.ndarray:
+                product = self._create_2d_xarray(data=product)
+            elif type(product) is xr.DataArray:
+                pass
+            else:
+                return None
+
+            key = product_name.lower()
+
+            self.products[key] = product
+
+        return None
+    
+    def _get_product(self, product_name: str) -> xr.DataArray:
+
+        try:
+            key = product_name.lower()
+            return self.products[key]
+        except KeyError:
+            return None
+
+        return None
+
+
+
+
+
+
+
+
+
+    # SatPy functions
+
+    def _generate_satpy_scene(self) -> Scene:
+
+        scene = Scene()
+
+        latitudes, longitudes = self._generate_satpy_latlons()
+
+        latitude_attrs = {
+                         'file_type': None,
+                         'resolution': self.resolution,
+                         'standard_name': 'latitude',
+                         'units': 'degrees_north',
+                         'start_time': self.capture_datetime,
+                         'end_time': self.capture_datetime,
+                         'modifiers': (),
+                         'ancillary_variables': []
+                         }
+
+        longitude_attrs = {
+                          'file_type': None,
+                          'resolution': self.resolution,
+                          'standard_name': 'longitude',
+                          'units': 'degrees_east',
+                          'start_time': self.capture_datetime,
+                          'end_time': self.capture_datetime,
+                          'modifiers': (),
+                          'ancillary_variables': []
+                          }
+
+        scene['latitude'] = latitudes
+        scene['latitude'].attrs.update(latitude_attrs)
+        #scn['latitude'].attrs['area'] = swath_def
+
+        scene['longitude'] = longitudes
+        scene['longitude'].attrs.update(longitude_attrs)
+        #scn['longitude'].attrs['area'] = swath_def
+
+        return scene
+
+    def _generate_satpy_latlons(self) -> tuple[xr.DataArray, xr.DataArray]:
+
+        latitudes = xr.DataArray(self.latitudes, dims=DIM_NAMES_2D)
+        longitudes = xr.DataArray(self.longitudes, dims=DIM_NAMES_2D)
+
+        return latitudes, longitudes
+
+    def _generate_swath_definition(self) -> SwathDefinition:
+
+        latitudes, longitudes = self._generate_satpy_latlons()
+        swath_def = SwathDefinition(lons=longitudes, lats=latitudes)
+
+        return swath_def
+
+    def _generate_l1a_satpy_scene(self) -> Scene:
+
+        scene = self._generate_satpy_scene()
+        swath_def= self._generate_swath_definition()
+
+        try:
+            cube = self.l1a_cube
+        except:
+            return None
+
+        attrs = {
+                'file_type': None,
+                'resolution': self.resolution,
+                'name': None,
+                'standard_name': cube.attrs['description'],
+                'coordinates': ['latitude', 'longitude'],
+                'units': cube.attrs['units'],
+                'start_time': self.capture_datetime,
+                'end_time': self.capture_datetime,
+                'modifiers': (),
+                'ancillary_variables': []
+                }   
+
+        wavelengths = range(0,120)
+
+        for i, wl in enumerate(wavelengths):
+
+            data = cube[:,:,i].to_numpy()
+
+            if self._validate_array_dims(data, ndim=2):
+                
+                name = 'band_' + str(i+1)
+                scene[name] = xr.DataArray(data, dims=DIM_NAMES_2D)
+                scene[name].attrs.update(attrs)
+                scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="band")
+                scene[name].attrs['band'] = i
+                scene[name].attrs['area'] = swath_def
+
+        return scene
+    
+    def _generate_l1b_satpy_scene(self) -> Scene:
+
+        scene = self._generate_satpy_scene()
+        swath_def= self._generate_swath_definition()
+
+        try:
+            cube = self.l1b_cube
+            wavelengths = self.wavelengths
+        except:
+            return None
+
+        attrs = {
+                'file_type': None,
+                'resolution': self.resolution,
+                'name': None,
+                'standard_name': cube.attrs['description'],
+                'coordinates': ['latitude', 'longitude'],
+                'units': cube.attrs['units'],
+                'start_time': self.capture_datetime,
+                'end_time': self.capture_datetime,
+                'modifiers': (),
+                'ancillary_variables': []
+                }   
+
+        for i, wl in enumerate(wavelengths):
+
+            data = cube[:,:,i].to_numpy()
+
+            if self._validate_array_dims(data, ndim=2):
+
+                name = 'band_' + str(i+1)
+                scene[name] = xr.DataArray(data, dims=DIM_NAMES_2D)
+                scene[name].attrs.update(attrs)
+                scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
+                scene[name].attrs['band'] = i
+                scene[name].attrs['area'] = swath_def
+
+        return scene
+
+    def _generate_l2a_satpy_scene(self, product_name: str) -> Scene:
+
+        scene = self._generate_satpy_scene()
+        swath_def= self._generate_swath_definition()
+
+        try:
+            cube = self.l2a_cubes[product_name.lower()]
+            wavelengths = self.wavelengths
+        except:
+            return None
+
+        attrs = {
+                'file_type': None,
+                'resolution': self.resolution,
+                'name': None,
+                'standard_name': cube.attrs['description'],
+                'coordinates': ['latitude', 'longitude'],
+                'units': cube.attrs['units'],
+                'start_time': self.capture_datetime,
+                'end_time': self.capture_datetime,
+                'modifiers': (),
+                'ancillary_variables': []
+                }   
+
+        for i, wl in enumerate(wavelengths):
+
+            data = cube[:,:,i].to_numpy()
+
+            if self._validate_array_dims(data, ndim=2):
+
+                name = 'band_' + str(i+1)
+                scene[name] = xr.DataArray(data, dims=DIM_NAMES_2D)
+                scene[name].attrs.update(attrs)
+                scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
+                scene[name].attrs['band'] = i
+                scene[name].attrs['area'] = swath_def
+
+        return scene
+
+    def _generate_chlorophyll_satpy_scene(self) -> Scene:
+
+        scene = self._generate_satpy_scene()
+        swath_def= self._generate_swath_definition()
+
+        #try:
+        #    cube = self.chl[product.lower()]
+        #except:
+        #    return None
+
+        attrs = {
+                'file_type': None,
+                'resolution': self.resolution,
+                'name': None,
+                #'standard_name': cube.attrs['description'],
+                'coordinates': ['latitude', 'longitude'],
+                #'units': cube.attrs['units'],
+                'start_time': self.capture_datetime,
+                'end_time': self.capture_datetime,
+                'modifiers': (),
+                'ancillary_variables': []
+                }   
+
+        for key, chl in self.chl.items():
+
+            if self._validate_array_dims(chl, ndim=2):
+
+                #chl = item[1]
+                #key = item[0]
+                data = chl.to_numpy()
+                name = 'chl_' + key
+                scene[name] = xr.DataArray(data, dims=DIM_NAMES_2D)
+                scene[name].attrs.update(attrs)
+                scene[name].attrs['standard_name'] = chl.attrs['description']
+                scene[name].attrs['units'] = chl.attrs['units']
+                scene[name].attrs['area'] = swath_def
+
+        return scene
+
+    def _generate_products_satpy_scene(self) -> Scene:
+
+        scene = self._generate_satpy_scene()
+        swath_def= self._generate_swath_definition()
+
+        attrs = {
+                'file_type': None,
+                'resolution': self.resolution,
+                'name': None,
+                'standard_name': None,
+                'coordinates': ['latitude', 'longitude'],
+                'units': None,
+                'start_time': self.capture_datetime,
+                'end_time': self.capture_datetime,
+                'modifiers': (),
+                'ancillary_variables': []
+                }
+
+        for key, product in self.products.items():
+
+            if self._validate_array_dims(product, ndim=2):
+
+                if self._is_xarray_dataarray(product):
+                    data = product.to_numpy()
+                else:
+                    data = product
+
+                scene[key] = xr.DataArray(data, dims=DIM_NAMES_2D)
+                scene[key].attrs.update(attrs)
+
+                scene[key].attrs['name'] = key
+                scene[key].attrs['standard_name'] = key
+                scene[key].attrs['area'] = swath_def
+
+                try:
+                    scene[key].attrs.update(product.attrs)
+                except AttributeError:
+                    pass
+
+
+        return scene
+
+
+
+
+    # Other functions
+
+    def _create_2d_xarray(self, data: np.ndarray) -> xr.DataArray:
+
+        return xr.DataArray(data, dims=DIM_NAMES_2D)
+
+    def _create_3d_xarray(self, data: np.ndarray) -> xr.DataArray:
+
+        return xr.DataArray(data, dims=DIM_NAMES_3D)
+
+
+    
+
+
+
+
+
+    def _validate_array_dims(self, array: Union[np.ndarray, xr.DataArray], ndim: int = None) -> bool:
+
+        # Check if the array is numpy or xarray format
+        if not self._is_numpy_ndarray(array) and not self._is_xarray_dataarray(array):
+
+            if self.VERBOSE:
+                print('[WARNING] The array is not an xarray DataArray or NumPy ndarray object. Skipping.')
+                
+            return False
+        
+        # Check if number of dimensions in array is more than 2
+        if array.ndim < 2:
+            return False
+
+        # Check if number of dimensions matches provided ndim
+        if ndim:
+            if not ndim == array.ndim:
+                return False
+
+        # Check if y and x dimensions of xarray match the capture spatial dimensions
+        if not self._matches_spatial_dimensions(array):
+
+            if self.VERBOSE:
+                print('[WARNING] The array does not have dimensions ' + str(self.spatial_dimensions) + '. Skipping.')
+                
+            return False
+        
+        return True
+
+
+    def _matches_spatial_dimensions(self, data: Union[np.ndarray, xr.DataArray]) -> bool:
+
+        if data.shape[0:2] == self.spatial_dimensions:
+            return True
+        
+        return False
+    
+    def _is_2d(self, data) -> bool:
+
+        if data.ndim == 2:
+            return True
+        
+        return False
+
+    def _is_numpy_ndarray(self, data) -> bool:
+
+        if type(data) is np.ndarray:
+            return True
+        
+        return False
+    
+    def _is_xarray_dataarray(self, data) -> bool:
+        
+        if type(data) is xr.DataArray:
+            return True
+        
+        return False
+
+    def _get_flipped_cube(self, cube: np.ndarray) -> np.ndarray:
+
+        if self.datacube_flipped is None:
+            return cube
+        else:
+            if self.datacube_flipped:
+                return cube[:, ::-1, :]
+
+            else:
+                return cube
+
+        return cube
+    
+    def _get_nearest_pixel(self, latitude: float, longitude: float) -> tuple[int, int]:
+        """
+        Find the nearest pixel in a SwathDefinition given a target latitude and longitude.
+
+        Parameters:
+        - swath_def: SwathDefinition object containing latitude and longitude arrays
+        - target_lat: Target latitude
+        - target_lon: Target longitude
+
+        Returns:
+        - (i, j): Indices of the nearest pixel in the swath definition
+        """
+        # Wrap target coordinates in arrays
+
+        if self.latitudes is None or self.longitudes is None:
+            return None
+
+        target_latitudes = np.array([latitude])
+        target_longitudes = np.array([longitude])
+        
+        source_swath_def = geometry.SwathDefinition(lons=self.longitudes, lats=self.latitudes)
+        target_swath_def = geometry.SwathDefinition(lons=target_longitudes, lats=target_latitudes)
+
+        # Find nearest neighbor info
+        valid_input_index, valid_output_index, index_array, distance_array = get_neighbour_info(
+            source_swath_def, target_swath_def, radius_of_influence=np.inf, neighbours=1
+        )
+
+        if len(valid_input_index) > 0:
+            nearest_index = np.unravel_index(index_array[0], source_swath_def.shape)
+            return nearest_index
+        else:
+            return None
+
+    # TODO check that this works and does image flip need to apply?
+    def _haversine(self, lat1, lon1, lat2, lon2):
+        """
+        WARNING: ChatGPT wrote this... ()
+
+        Calculate the great-circle distance between two points 
+        on the Earth using the Haversine formula.
+        """
+        R = 6371.0  # Radius of the Earth in kilometers
+        phi1, phi2 = np.radians(lat1), np.radians(lat2)
+        delta_phi = np.radians(lat2 - lat1)
+        delta_lambda = np.radians(lon2 - lon1)
+
+        a = np.sin(delta_phi / 2.0)**2 + np.cos(phi1) * np.cos(phi2) * np.sin(delta_lambda / 2.0)**2
+        c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
+
+        return R * c
+
+    def _get_nearest_pixel_haversine(self, latitude: float, longitude: float):
+        """
+        Find the nearest index in 2D latitude and longitude matrices
+        to the given target latitude and longitude.
+
+        Parameters:
+        - target_lat: Target latitude
+        - target_lon: Target longitude
+
+        Returns:
+        - (i, j): Tuple of indices in the matrices closest to the target coordinate
+        """
+
+        lat_matrix = self.latitudes
+        lon_matrix = self.longitudes
+
+        distances = self._haversine(lat_matrix, lon_matrix, latitude, longitude)
+        nearest_index = np.unravel_index(np.argmin(distances), distances.shape)
+        return nearest_index
+
+
+
+
+    # Public L1a methods
+
+    def load_l1a_nc_file(self, path: str) -> None:
+
+        self._load_l1a_nc_file(path=path)
+
+        return None
+
+    def get_l1a_cube(self) -> xr.DataArray:
+
+        return self._get_l1a_cube()
+
+    def get_l1a_spectrum(self, 
+                        latitude=None, 
+                        longitude=None,
+                        x: int = None,
+                        y: int = None
+                        ) -> xr.DataArray:
+
+        if self.l1a_cube is None:
+            return None
+        
+        if latitude is not None and longitude is not None:
+            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
+
+        elif x is not None and y is not None:
+            idx = (x,y)
+
+        else:
+            return None
+
+        spectrum = self.l1a_cube[idx[0], idx[1], :]
+
+        return spectrum
+
+    def plot_l1a_spectrum(self, 
+                         latitude=None, 
+                         longitude=None,
+                         x: int = None,
+                         y: int = None,
+                         save: bool = False
+                         ) -> None:
+        
+        if latitude is not None and longitude is not None:
+            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
+
+        elif x is not None and y is not None:
+            idx = (x,y)
+
+        else:
+            return None
+
+        spectrum = self.l1a_cube[idx[0], idx[1], :]
+        bands = range(0, len(spectrum))
+        units = spectrum.attrs["units"]
+
+        output_file = Path(self.nc_dir, self.capture_name + '_l1a_plot.png')
+
+        plt.figure(figsize=(10, 5))
+        plt.plot(bands, spectrum)
+        plt.ylabel(units)
+        plt.xlabel("Band number")
+        plt.title(f"L1a (lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
+        plt.grid(True)
+
+        if save:
+            plt.imsave(output_file)
+        else:
+            plt.show()
+
+        return None
+
+    # TODO
+    def write_l1a_nc_file(self, path: Union[str, Path] = None) -> None:
+
+        self._write_l1a_nc_file()
+
+        return None
+
+
+    # Public L1b methods
+
+    # TODO
+    def load_l1b_nc_file(self, path: str) -> None:
+
+        return None
+
+    def generate_l1b_cube(self, **kwargs) -> None:
+
+        self._run_calibration(**kwargs)
+
+        return None
+
+    def get_l1b_cube(self) -> xr.DataArray:
+
+        return self._get_l1b_cube()
+
+    def get_l1b_spectrum(self, 
+                        latitude=None, 
+                        longitude=None,
+                        x: int = None,
+                        y: int = None
+                        ) -> tuple[np.ndarray, str]:
+
+        if self.l1b_cube is None:
+            return None
+        
+        if latitude is not None and longitude is not None:
+            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
+
+        elif x is not None and y is not None:
+            idx = (x,y)
+            
+        else:
+            return None
+
+        spectrum = self.l1b_cube[idx[0], idx[1], :]
+
+        return spectrum
+
+    def plot_l1b_spectrum(self, 
+                        latitude=None, 
+                        longitude=None,
+                        x: int = None,
+                        y: int = None,
+                        save: bool = False
+                        ) -> None:
+        
+        if latitude is not None and longitude is not None:
+            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
+
+        elif x is not None and y is not None:
+            idx = (x,y)
+
+        else:
+            return None
+
+        spectrum = self.l1b_cube[idx[0], idx[1], :]
+        bands = self.wavelengths
+        units = spectrum.attrs["units"]
+
+        output_file = Path(self.nc_dir, self.capture_name + '_l1a_plot.png')
+
+        plt.figure(figsize=(10, 5))
+        plt.plot(bands, spectrum)
+        plt.ylabel(units)
+        plt.xlabel("Wavelength (nm)")
+        plt.title(f"L1b (lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
+        plt.grid(True)
+
+        if save:
+            plt.imsave(output_file)
+        else:
+            plt.show()
+
+        return None
+
+    def write_l1b_nc_file(self) -> None:
+
+        self._write_l1b_nc_file()
+
+        return None
+
+
+    # Public L2a methods
+
+    # TODO
+    def load_l2a_cube(self, path: str, product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> None:
+
+        return None
+
+    def generate_l2a_cube(self, product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> None:
+
+        self._run_atmospheric_correction(product_name=product_name)
+
+        return None
+
+    def get_l2a_cube(self, product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> xr.DataArray:
+
+        return self._get_l2a_cube(product_name=product_name)
+
+    def get_l2a_cube_dict(self) -> dict:
+
+        return self.l2a_cubes
+
+    def get_l2a_spectrum(self, 
+                        product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT,
+                        latitude=None, 
+                        longitude=None,
+                        x: int = None,
+                        y: int = None
+                        ) -> xr.DataArray:
+
+
+        if latitude is not None and longitude is not None:
+            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
+
+        elif x is not None and y is not None:
+            idx = (x,y)
+            
+        else:
+            return None
+
+        try:
+            spectrum = self.l2a_cubes[product_name][idx[0], idx[1], :]
+        except KeyError:
+            return None
+
+        return spectrum
+
+    def plot_l2a_spectrum(self, 
+                         product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT,
+                         latitude=None, 
+                         longitude=None,
+                         x: int = None,
+                         y: int = None,
+                         save: bool = False
+                         ) -> np.ndarray:
+        
+        if latitude is not None and longitude is not None:
+            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
+
+        elif x is not None and y is not None:
+            idx = (x,y)
+
+        else:
+            return None
+
+        try:
+            spectrum = self.l2a_cubes[product_name.lower()][idx[0], idx[1], :]
+        except KeyError:
+            return None
+
+        bands = self.wavelengths
+        units = spectrum.attrs["units"]
+
+        output_file = Path(self.nc_dir, self.capture_name + '_l2a_' + str(product_name) + '_plot.png')
+
+        plt.figure(figsize=(10, 5))
+        plt.plot(bands, spectrum)
+        plt.ylabel(units)
+        plt.ylim([0, 1])
+        plt.xlabel("Wavelength (nm)")
+        plt.title(f"L2a {product_name} (lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
+        plt.grid(True)
+
+        if save:
+            plt.imsave(output_file)
+        else:
+            plt.show()
+
+    # TODO
+    def write_l2a_nc_file(self, path: Union[str, Path] = None, product_name: str = None) -> None:
+
+        self._write_l2a_nc_file(path=path, product_name=product_name)
+
+        return None
+
+
+    # Public georeferencing functions
+
+    # TODO
+    def load_georeferencing(self, path: str) -> None:
 
         return None
     
     # TODO
-    def _validate_product(self, land_mask: Union[np.ndarray, xr.DataArray]) -> bool:
+    def generate_georeferencing(self) -> None:
+
+        return None
+    
+    # TODO
+    def get_ground_control_points(self) -> None:
 
         return None
 
     # TODO
-    def _get_product(self, product_name: str) -> xr.DataArray:
+    def write_georeferencing(self, path: str) -> None:
+
+        return None
+    
+
+    # Public geometry functions
+
+    # TODO
+    def load_geometry(self, path: str) -> None:
+
+        return None
+
+    def generate_geometry(self) -> None:
+
+        self._run_geometry()
+
+        return None
+
+    # TODO
+    def write_geometry(self, path: str) -> None:
+
+        return None
+
+
+    # Public land mask methods
+
+    # TODO
+    def load_land_mask(self, path: str) -> None:
+
+        return None
+
+    def generate_land_mask(self, land_mask_name: Literal["global", "ndwi", "threshold"] = DEFAULT_LAND_MASK) -> None:
+
+        self._run_land_mask(land_mask_name=land_mask_name)
+
+        return None
+
+    def get_land_mask(self, land_mask_name: Literal["global", "ndwi", "threshold"] = DEFAULT_LAND_MASK) -> np.ndarray:
+
+        if land_mask_name and self._check_land_mask_has_run(land_mask_name=land_mask_name):
+
+            return self.land_masks[land_mask_name.lower()]
+        
+        if self.VERBOSE:
+            print("[ERROR] " + land_mask + " land mask has not yet been generated.")
+
+        return None
+
+    def get_land_mask_dict(self) -> dict:
+
+        return self.land_masks     
+    
+    def set_active_land_mask(self, land_mask_name: Literal["global", "ndwi", "threshold"] = DEFAULT_LAND_MASK):
+
+        self._update_active_land_mask(land_mask_name=land_mask_name, override=True)
+
+    def get_active_land_mask(self) -> xr.DataArray:
+
+        return self._get_active_land_mask()
+
+    # TODO
+    def write_land_mask(self, path: str) -> None:
+
+        return None
+
+
+    # Public cloud mask methods
+
+    # TODO
+    def load_cloud_mask(self, path: str) -> None:
+
+        return None
+
+    # TODO
+    def generate_cloud_mask(self, cloud_mask_name: Literal["default"] = DEFAULT_CLOUD_MASK):
+
+        #self._run_cloud_mask(cloud_mask_name=cloud_mask_name)
+
+        return None
+
+    def get_cloud_mask(self, cloud_mask_name: Literal["default"] = DEFAULT_CLOUD_MASK) -> np.ndarray:
+
+        if cloud_mask_name and self._check_cloud_mask_has_run(cloud_mask_name=cloud_mask_name):
+
+            return self.cloud_masks[cloud_mask_name.lower()]
+        
+        if self.VERBOSE:
+            print("[ERROR] " + cloud_mask + " cloud mask has not yet been generated.")
+        
+        return None
+    
+    def get_cloud_mask_dict(self) -> dict:
+
+        return self.cloud_masks 
+
+    def set_active_cloud_mask(self, cloud_mask_name: Literal["default"] = DEFAULT_CLOUD_MASK):
+
+        self._update_active_cloud_mask(self, cloud_mask_name=cloud_mask_name, override=True)
+
+    def get_active_cloud_mask(self) -> xr.DataArray:
+
+        return self._get_active_cloud_mask()
+
+    # TODO
+    def write_cloud_mask(self, path: str) -> None:
+
+        return None
+
+
+    # Public unified mask methods
+
+    def get_active_mask(self) -> xr.DataArray:
+
+        return self._get_active_mask()
+
+
+    # Public chlorophyll methods
+
+    # TODO
+    def load_chlorophyll_estimates(self, path: str) -> None:
+
+        return None
+
+    def generate_chlorophyll_estimates(self, 
+                                       product_name: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"] = DEFAULT_CHL_EST_PRODUCT,
+                                       model: Union[str, Path] = None,
+                                       factor: float = 0.1
+                                       ) -> None:
+
+        self._run_chlorophyll_estimation(product_name=product_name, model=model, factor=factor)
+
+    def get_chlorophyll_estimates(self, product_name: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"] = DEFAULT_CHL_EST_PRODUCT,
+                                 ) -> np.ndarray:
+
+        key = product_name.lower()
+
+        return self.chl[key]
+
+    def get_chlorophyll_estimates_dict(self) -> dict:
+
+        return self.chl
+
+    # TODO
+    def write_chlorophyll_estimates(self, path: str) -> None:
+
+        return None
+    
+
+
+    # Public custom products methods
+    
+    # TODO
+    def load_products(self, path: str) -> None:
+
+        return None
+
+    def add_product(self, product_name: str, product: Union[np.ndarray, xr.DataArray]) -> None:
+
+        self._add_product(product_name=product_name, product=product)
+
+        return None
+    
+    def get_product(self, product_name: str) -> xr.DataArray:
+
+        return self._get_product(product_name=product_name)
+
+    def get_products_dict(self) -> dict:
+
+        return self.products
+
+    # TODO
+    def write_products(self, path: str) -> None:
 
         return None
 
 
 
+    # Public top of atmosphere (TOA) reflectance methods
+
+    # TODO
+    def load_toa_reflectance(self, path: str) -> None:
+        
+        return None
+
+    def generate_toa_reflectance(self) -> None:
+
+        self._run_toa_reflectance()
+
+        return None
+
+    def get_toa_reflectance(self) -> xr.DataArray:
+        """
+        Convert Top Of Atmosphere (TOA) Radiance to TOA Reflectance.
+
+        :return: Array with TOA Reflectance.
+        """
+
+        if self._check_toa_reflectance_has_run():
+
+            return self.toa_reflectance
+
+        if self.VERBOSE:
+            print("[ERROR] Top of atmosphere (TOA) reflectance has not yet been generated.")
+
+        return None
+
+    # TODO
+    def write_toa_reflectance(self, path: str) -> None:
+        
+        return None
+
+
+
+    # TODO: organize
+
+    def get_l1a_satpy_scene(self) -> Scene:
+
+        return self._generate_l1a_satpy_scene()
+
+    def get_l1b_satpy_scene(self) -> Scene:
+
+        return self._generate_l1b_satpy_scene()
+
+    def get_l2a_satpy_scene(self, product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> Scene:
+
+        return self._generate_l2a_satpy_scene(product_name=product_name)
+
+    def get_chlorophyll_satpy_scene(self) -> Scene:
+
+        return self._generate_chlorophyll_satpy_scene()
+
+    def get_products_satpy_scene(self) -> Scene:
+
+        return self._generate_products_satpy_scene()
+
+    def get_bbox(self) -> tuple:
+        
+        return self.bbox
+    
+    def get_closest_wavelength_index(self, wavelength: Union[float, int]) -> int:
+
+        wavelengths = np.array(self.wavelengths)
+        differences = np.abs(wavelengths - wavelength)
+        closest_index = np.argmin(differences)
+
+        return closest_index
 
 
 
@@ -2319,908 +3447,3 @@ class Hypso1(Hypso):
     def _check_write_l2a_nc_file_has_run(self, product_name: str = None) -> bool:
         
         return self.write_l2a_nc_file_has_run
-
-
-    # SatPy functions
-
-    def _generate_satpy_scene(self) -> Scene:
-
-        scene = Scene()
-
-        latitudes, longitudes = self._generate_satpy_latlons()
-
-        latitude_attrs = {
-                         'file_type': None,
-                         'resolution': self.resolution,
-                         'standard_name': 'latitude',
-                         'units': 'degrees_north',
-                         'start_time': self.capture_datetime,
-                         'end_time': self.capture_datetime,
-                         'modifiers': (),
-                         'ancillary_variables': []
-                         }
-
-        longitude_attrs = {
-                          'file_type': None,
-                          'resolution': self.resolution,
-                          'standard_name': 'longitude',
-                          'units': 'degrees_east',
-                          'start_time': self.capture_datetime,
-                          'end_time': self.capture_datetime,
-                          'modifiers': (),
-                          'ancillary_variables': []
-                          }
-
-        scene['latitude'] = latitudes
-        scene['latitude'].attrs.update(latitude_attrs)
-        #scn['latitude'].attrs['area'] = swath_def
-
-        scene['longitude'] = longitudes
-        scene['longitude'].attrs.update(longitude_attrs)
-        #scn['longitude'].attrs['area'] = swath_def
-
-        return scene
-
-    def _generate_satpy_latlons(self) -> tuple[xr.DataArray, xr.DataArray]:
-
-        latitudes = xr.DataArray(self.latitudes, dims=["y", "x"])
-        longitudes = xr.DataArray(self.longitudes, dims=["y", "x"])
-
-        return latitudes, longitudes
-
-    def _generate_swath_definition(self) -> SwathDefinition:
-
-        latitudes, longitudes = self._generate_satpy_latlons()
-        swath_def = SwathDefinition(lons=longitudes, lats=latitudes)
-
-        return swath_def
-
-    def _generate_l1a_satpy_scene(self) -> Scene:
-
-        scene = self._generate_satpy_scene()
-        swath_def= self._generate_swath_definition()
-
-        try:
-            cube = self.l1a_cube
-        except:
-            return None
-
-        attrs = {
-                'file_type': None,
-                'resolution': self.resolution,
-                'name': None,
-                'standard_name': cube.attrs['description'],
-                'coordinates': ['latitude', 'longitude'],
-                'units': cube.attrs['units'],
-                'start_time': self.capture_datetime,
-                'end_time': self.capture_datetime,
-                'modifiers': (),
-                'ancillary_variables': []
-                }   
-
-        wavelengths = range(0,120)
-
-        for i, wl in enumerate(wavelengths):
-
-            data = cube[:,:,i].to_numpy()
-            name = 'band_' + str(i+1)
-            scene[name] = xr.DataArray(data, dims=["y", "x"])
-            scene[name].attrs.update(attrs)
-            scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="band")
-            scene[name].attrs['band'] = i
-            scene[name].attrs['area'] = swath_def
-
-        return scene
-    
-    def _generate_l1b_satpy_scene(self) -> Scene:
-
-        scene = self._generate_satpy_scene()
-        swath_def= self._generate_swath_definition()
-
-        try:
-            cube = self.l1b_cube
-            wavelengths = self.wavelengths
-        except:
-            return None
-
-        attrs = {
-                'file_type': None,
-                'resolution': self.resolution,
-                'name': None,
-                'standard_name': cube.attrs['description'],
-                'coordinates': ['latitude', 'longitude'],
-                'units': cube.attrs['units'],
-                'start_time': self.capture_datetime,
-                'end_time': self.capture_datetime,
-                'modifiers': (),
-                'ancillary_variables': []
-                }   
-
-        for i, wl in enumerate(wavelengths):
-
-            data = cube[:,:,i].to_numpy()
-            name = 'band_' + str(i+1)
-            scene[name] = xr.DataArray(data, dims=["y", "x"])
-            scene[name].attrs.update(attrs)
-            scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
-            scene[name].attrs['band'] = i
-            scene[name].attrs['area'] = swath_def
-
-        return scene
-
-    def _generate_l2a_satpy_scene(self, product_name: str) -> Scene:
-
-        scene = self._generate_satpy_scene()
-        swath_def= self._generate_swath_definition()
-
-        try:
-            cube = self.l2a_cubes[product_name.lower()]
-            wavelengths = self.wavelengths
-        except:
-            return None
-
-        attrs = {
-                'file_type': None,
-                'resolution': self.resolution,
-                'name': None,
-                'standard_name': cube.attrs['description'],
-                'coordinates': ['latitude', 'longitude'],
-                'units': cube.attrs['units'],
-                'start_time': self.capture_datetime,
-                'end_time': self.capture_datetime,
-                'modifiers': (),
-                'ancillary_variables': []
-                }   
-
-        for i, wl in enumerate(wavelengths):
-
-            data = cube[:,:,i].to_numpy()
-            name = 'band_' + str(i+1)
-            scene[name] = xr.DataArray(data, dims=["y", "x"])
-            scene[name].attrs.update(attrs)
-            scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
-            scene[name].attrs['band'] = i
-            scene[name].attrs['area'] = swath_def
-
-        return scene
-
-    def _generate_chlorophyll_satpy_scene(self) -> Scene:
-
-        scene = self._generate_satpy_scene()
-        swath_def= self._generate_swath_definition()
-
-        #try:
-        #    cube = self.chl[product.lower()]
-        #except:
-        #    return None
-
-        attrs = {
-                'file_type': None,
-                'resolution': self.resolution,
-                'name': None,
-                #'standard_name': cube.attrs['description'],
-                'coordinates': ['latitude', 'longitude'],
-                #'units': cube.attrs['units'],
-                'start_time': self.capture_datetime,
-                'end_time': self.capture_datetime,
-                'modifiers': (),
-                'ancillary_variables': []
-                }   
-
-        for key, chl in self.chl.items():
-            #chl = item[1]
-            #key = item[0]
-            data = chl.to_numpy()
-            name = 'chl_' + key
-            scene[name] = xr.DataArray(data, dims=["y", "x"])
-            scene[name].attrs.update(attrs)
-            scene[name].attrs['standard_name'] = chl.attrs['description']
-            scene[name].attrs['units'] = chl.attrs['units']
-            scene[name].attrs['area'] = swath_def
-
-        return scene
-
-    def _generate_products_satpy_scene(self) -> Scene:
-
-        scene = self._generate_satpy_scene()
-        swath_def= self._generate_swath_definition()
-
-        attrs = {
-                'file_type': None,
-                'resolution': self.resolution,
-                'name': None,
-                'standard_name': None,
-                'coordinates': ['latitude', 'longitude'],
-                'units': None,
-                'start_time': self.capture_datetime,
-                'end_time': self.capture_datetime,
-                'modifiers': (),
-                'ancillary_variables': []
-                }
-
-        for key, product in self.products.items():
-
-            if self._is_xarray_dataarray(product):
-                data = product.to_numpy()
-            elif self._is_numpy_ndarray(product):
-                data = product
-            else:
-                print('[WARNING] Product ' + str(key) + ' is not an xarray DataArray or NumPy ndarray object. Skipping.')
-                break
-
-            if not self._matches_spatial_dimensions(data):
-                print('[WARNING] Product ' + str(key) + ' does not have dimensions ' + str(self.spatial_dimensions) + '. Skipping.')
-                break
-
-            scene[key] = xr.DataArray(data, dims=["y", "x"])
-            scene[key].attrs.update(attrs)
-
-            scene[key].attrs['name'] = key
-            scene[key].attrs['standard_name'] = key
-            scene[key].attrs['area'] = swath_def
-
-            try:
-                scene[key].attrs.update(product.attrs)
-            except AttributeError:
-                pass
-
-
-        return scene
-
-    # Other functions
-
-    def _matches_spatial_dimensions(self, data: Union[np.ndarray, xr.DataArray]) -> bool:
-
-        if data.shape[0:2] == self.spatial_dimensions:
-            return True
-        
-        return False
-    
-    def _is_2d(self, data) -> bool:
-
-        if data.ndim == 2:
-            return True
-        
-        return False
-
-    def _is_numpy_ndarray(self, data) -> bool:
-
-        if type(data) is np.ndarray:
-            return True
-        
-        return False
-    
-    def _is_xarray_dataarray(self, data) -> bool:
-        
-        if type(data) is xr.DataArray:
-            return True
-        
-        return False
-
-    def _get_flipped_cube(self, cube: np.ndarray) -> np.ndarray:
-
-        if self.datacube_flipped is None:
-            return cube
-        else:
-            if self.datacube_flipped:
-                return cube[:, ::-1, :]
-
-            else:
-                return cube
-
-        return cube
-    
-    def _get_nearest_pixel(self, latitude: float, longitude: float) -> tuple[int, int]:
-        """
-        Find the nearest pixel in a SwathDefinition given a target latitude and longitude.
-
-        Parameters:
-        - swath_def: SwathDefinition object containing latitude and longitude arrays
-        - target_lat: Target latitude
-        - target_lon: Target longitude
-
-        Returns:
-        - (i, j): Indices of the nearest pixel in the swath definition
-        """
-        # Wrap target coordinates in arrays
-
-        if self.latitudes is None or self.longitudes is None:
-            return None
-
-        target_latitudes = np.array([latitude])
-        target_longitudes = np.array([longitude])
-        
-        source_swath_def = geometry.SwathDefinition(lons=self.longitudes, lats=self.latitudes)
-        target_swath_def = geometry.SwathDefinition(lons=target_longitudes, lats=target_latitudes)
-
-        # Find nearest neighbor info
-        valid_input_index, valid_output_index, index_array, distance_array = get_neighbour_info(
-            source_swath_def, target_swath_def, radius_of_influence=np.inf, neighbours=1
-        )
-
-        if len(valid_input_index) > 0:
-            nearest_index = np.unravel_index(index_array[0], source_swath_def.shape)
-            return nearest_index
-        else:
-            return None
-
-    # TODO check that this works and does image flip need to apply?
-    def _haversine(self, lat1, lon1, lat2, lon2):
-        """
-        WARNING: ChatGPT wrote this... ()
-
-        Calculate the great-circle distance between two points 
-        on the Earth using the Haversine formula.
-        """
-        R = 6371.0  # Radius of the Earth in kilometers
-        phi1, phi2 = np.radians(lat1), np.radians(lat2)
-        delta_phi = np.radians(lat2 - lat1)
-        delta_lambda = np.radians(lon2 - lon1)
-
-        a = np.sin(delta_phi / 2.0)**2 + np.cos(phi1) * np.cos(phi2) * np.sin(delta_lambda / 2.0)**2
-        c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
-
-        return R * c
-
-    def _get_nearest_pixel_haversine(self, latitude: float, longitude: float):
-        """
-        Find the nearest index in 2D latitude and longitude matrices
-        to the given target latitude and longitude.
-
-        Parameters:
-        - target_lat: Target latitude
-        - target_lon: Target longitude
-
-        Returns:
-        - (i, j): Tuple of indices in the matrices closest to the target coordinate
-        """
-
-        lat_matrix = self.latitudes
-        lon_matrix = self.longitudes
-
-        distances = self._haversine(lat_matrix, lon_matrix, latitude, longitude)
-        nearest_index = np.unravel_index(np.argmin(distances), distances.shape)
-        return nearest_index
-
-
-
-
-    # Public L1a methods
-
-    def load_l1a_nc_file(self, path: str) -> None:
-
-        self._load_l1a_nc_file(path=path)
-
-        return None
-
-    def get_l1a_cube(self) -> xr.DataArray:
-
-        return self.l1a_cube
-
-    def get_l1a_spectrum(self, 
-                        latitude=None, 
-                        longitude=None,
-                        x: int = None,
-                        y: int = None
-                        ) -> xr.DataArray:
-
-        if self.l1a_cube is None:
-            return None
-        
-        if latitude is not None and longitude is not None:
-            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
-
-        elif x is not None and y is not None:
-            idx = (x,y)
-
-        else:
-            return None
-
-        spectrum = self.l1a_cube[idx[0], idx[1], :]
-
-        return spectrum
-
-    def plot_l1a_spectrum(self, 
-                         latitude=None, 
-                         longitude=None,
-                         x: int = None,
-                         y: int = None,
-                         save: bool = False
-                         ) -> None:
-        
-        if latitude is not None and longitude is not None:
-            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
-
-        elif x is not None and y is not None:
-            idx = (x,y)
-
-        else:
-            return None
-
-        spectrum = self.l1a_cube[idx[0], idx[1], :]
-        bands = range(0, len(spectrum))
-        units = spectrum.attrs["units"]
-
-        output_file = Path(self.nc_dir, self.capture_name + '_l1a_plot.png')
-
-        plt.figure(figsize=(10, 5))
-        plt.plot(bands, spectrum)
-        plt.ylabel(units)
-        plt.xlabel("Band number")
-        plt.title(f"L1a (lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
-        plt.grid(True)
-
-        if save:
-            plt.imsave(output_file)
-        else:
-            plt.show()
-
-        return None
-
-    # TODO
-    def write_l1a_nc_file(self, path: Union[str, Path] = None) -> None:
-
-        self._write_l1a_nc_file()
-
-        return None
-
-
-    # Public L1b methods
-
-    # TODO
-    def load_l1b_nc_file(self, path: str) -> None:
-
-        return None
-
-    def generate_l1b_cube(self, **kwargs) -> None:
-
-        self._run_calibration(**kwargs)
-
-        return None
-
-    def get_l1b_cube(self) -> xr.DataArray:
-
-        if self._check_calibration_has_run():
-
-            return self.l1b_cube
-
-        if self.VERBOSE:
-            print("[ERROR] L1b cube has not yet been generated.")
-
-        return None
-
-    def get_l1b_spectrum(self, 
-                        latitude=None, 
-                        longitude=None,
-                        x: int = None,
-                        y: int = None
-                        ) -> tuple[np.ndarray, str]:
-
-        if self.l1b_cube is None:
-            return None
-        
-        if latitude is not None and longitude is not None:
-            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
-
-        elif x is not None and y is not None:
-            idx = (x,y)
-            
-        else:
-            return None
-
-        spectrum = self.l1b_cube[idx[0], idx[1], :]
-
-        return spectrum
-
-    def plot_l1b_spectrum(self, 
-                        latitude=None, 
-                        longitude=None,
-                        x: int = None,
-                        y: int = None,
-                        save: bool = False
-                        ) -> None:
-        
-        if latitude is not None and longitude is not None:
-            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
-
-        elif x is not None and y is not None:
-            idx = (x,y)
-
-        else:
-            return None
-
-        spectrum = self.l1b_cube[idx[0], idx[1], :]
-        bands = self.wavelengths
-        units = spectrum.attrs["units"]
-
-        output_file = Path(self.nc_dir, self.capture_name + '_l1a_plot.png')
-
-        plt.figure(figsize=(10, 5))
-        plt.plot(bands, spectrum)
-        plt.ylabel(units)
-        plt.xlabel("Wavelength (nm)")
-        plt.title(f"L1b (lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
-        plt.grid(True)
-
-        if save:
-            plt.imsave(output_file)
-        else:
-            plt.show()
-
-        return None
-
-    def write_l1b_nc_file(self) -> None:
-
-        self._write_l1b_nc_file()
-
-        return None
-
-
-    # Public L2a methods
-
-    # TODO
-    def load_l2a_cube(self, path: str, product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> None:
-
-        return None
-
-    def generate_l2a_cube(self, product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> None:
-
-        self._run_atmospheric_correction(product_name=product_name)
-
-        return None
-
-    def get_l2a_cube(self, product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> xr.DataArray:
-
-        if product_name and self._check_atmospheric_correction_has_run(product_name=product_name):
-
-            return self.l2a_cubes[product_name.lower()]
-        
-        if self.VERBOSE:
-            print("[ERROR] " + product_name.upper() + " L2a cube has not yet been generated.")
-
-        return None
-
-    def get_l2a_cube_dict(self) -> dict:
-
-        return self.l2a_cubes
-
-    def get_l2a_spectrum(self, 
-                        product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT,
-                        latitude=None, 
-                        longitude=None,
-                        x: int = None,
-                        y: int = None
-                        ) -> xr.DataArray:
-
-
-        if latitude is not None and longitude is not None:
-            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
-
-        elif x is not None and y is not None:
-            idx = (x,y)
-            
-        else:
-            return None
-
-        try:
-            spectrum = self.l2a_cubes[product_name][idx[0], idx[1], :]
-        except KeyError:
-            return None
-
-        return spectrum
-
-    def plot_l2a_spectrum(self, 
-                         product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT,
-                         latitude=None, 
-                         longitude=None,
-                         x: int = None,
-                         y: int = None,
-                         save: bool = False
-                         ) -> np.ndarray:
-        
-        if latitude is not None and longitude is not None:
-            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
-
-        elif x is not None and y is not None:
-            idx = (x,y)
-
-        else:
-            return None
-
-        try:
-            spectrum = self.l2a_cubes[product_name.lower()][idx[0], idx[1], :]
-        except KeyError:
-            return None
-
-        bands = self.wavelengths
-        units = spectrum.attrs["units"]
-
-        output_file = Path(self.nc_dir, self.capture_name + '_l2a_' + str(product_name) + '_plot.png')
-
-        plt.figure(figsize=(10, 5))
-        plt.plot(bands, spectrum)
-        plt.ylabel(units)
-        plt.ylim([0, 1])
-        plt.xlabel("Wavelength (nm)")
-        plt.title(f"L2a {product_name} (lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
-        plt.grid(True)
-
-        if save:
-            plt.imsave(output_file)
-        else:
-            plt.show()
-
-    # TODO
-    def write_l2a_nc_file(self, path: Union[str, Path] = None, product_name: str = None) -> None:
-
-        self._write_l2a_nc_file(path=path, product_name=product_name)
-
-        return None
-
-
-    # Public georeferencing functions
-
-    # TODO
-    def load_georeferencing(self, path: str) -> None:
-
-        return None
-    
-    # TODO
-    def generate_georeferencing(self) -> None:
-
-        return None
-    
-    # TODO
-    def get_ground_control_points(self) -> None:
-
-        return None
-
-    # TODO
-    def write_georeferencing(self, path: str) -> None:
-
-        return None
-    
-
-    # Public geometry functions
-
-    # TODO
-    def load_geometry(self, path: str) -> None:
-
-        return None
-
-    def generate_geometry(self) -> None:
-
-        self._run_geometry()
-
-        return None
-
-    # TODO
-    def write_geometry(self, path: str) -> None:
-
-        return None
-
-
-    # Public land mask methods
-
-    # TODO
-    def load_land_mask(self, path: str) -> None:
-
-        return None
-
-    def generate_land_mask(self, land_mask_name: Literal["global", "ndwi", "threshold"] = DEFAULT_LAND_MASK) -> None:
-
-        self._run_land_mask(land_mask_name=land_mask_name)
-
-        return None
-
-    def get_land_mask(self, land_mask_name: Literal["global", "ndwi", "threshold"] = DEFAULT_LAND_MASK) -> np.ndarray:
-
-        if land_mask_name and self._check_land_mask_has_run(land_mask_name=land_mask_name):
-
-            return self.land_masks[land_mask_name.lower()]
-        
-        if self.VERBOSE:
-            print("[ERROR] " + land_mask + " land mask has not yet been generated.")
-
-        return None
-
-    def get_land_mask_dict(self) -> dict:
-
-        return self.land_masks     
-    
-    def set_active_land_mask(self, land_mask_name: Literal["global", "ndwi", "threshold"] = DEFAULT_LAND_MASK):
-
-        self._update_active_land_mask(land_mask_name=land_mask_name, override=True)
-
-    def get_active_land_mask(self) -> xr.DataArray:
-
-        return self._get_active_land_mask()
-
-    # TODO
-    def write_land_mask(self, path: str) -> None:
-
-        return None
-
-
-    # Public cloud mask methods
-
-    # TODO
-    def load_cloud_mask(self, path: str) -> None:
-
-        return None
-
-    # TODO
-    def generate_cloud_mask(self, cloud_mask_name: Literal["default"] = DEFAULT_CLOUD_MASK):
-
-        #self._run_cloud_mask(cloud_mask_name=cloud_mask_name)
-
-        return None
-
-    def get_cloud_mask(self, cloud_mask_name: Literal["default"] = DEFAULT_CLOUD_MASK) -> np.ndarray:
-
-        if cloud_mask_name and self._check_cloud_mask_has_run(cloud_mask_name=cloud_mask_name):
-
-            return self.cloud_masks[cloud_mask_name.lower()]
-        
-        if self.VERBOSE:
-            print("[ERROR] " + cloud_mask + " cloud mask has not yet been generated.")
-        
-        return None
-    
-    def get_cloud_mask_dict(self) -> dict:
-
-        return self.cloud_masks 
-
-    def set_active_cloud_mask(self, cloud_mask_name: Literal["default"] = DEFAULT_CLOUD_MASK):
-
-        self._update_active_cloud_mask(self, cloud_mask_name=cloud_mask_name, override=True)
-
-    def get_active_cloud_mask(self) -> xr.DataArray:
-
-        return self._get_active_cloud_mask()
-
-    # TODO
-    def write_cloud_mask(self, path: str) -> None:
-
-        return None
-
-
-    # Public unified mask methods
-
-    def get_active_mask(self) -> xr.DataArray:
-
-        return self._get_active_mask()
-
-
-    # Public chlorophyll methods
-
-    # TODO
-    def load_chlorophyll_estimates(self, path: str) -> None:
-
-        return None
-
-    def generate_chlorophyll_estimates(self, 
-                                       product_name: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"] = DEFAULT_CHL_EST_PRODUCT,
-                                       model: Union[str, Path] = None,
-                                       factor: float = 0.1
-                                       ) -> None:
-
-        self._run_chlorophyll_estimation(product_name=product_name, model=model, factor=factor)
-
-    def get_chlorophyll_estimates(self, product_name: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"] = DEFAULT_CHL_EST_PRODUCT,
-                                 ) -> np.ndarray:
-
-        key = product_name.lower()
-
-        return self.chl[key]
-
-    def get_chlorophyll_estimates_dict(self) -> dict:
-
-        return self.chl
-
-    # TODO
-    def write_chlorophyll_estimates(self, path: str) -> None:
-
-        return None
-    
-
-
-    # Public custom products methods
-    
-    # TODO
-    def load_products(self, path: str) -> None:
-
-        return None
-
-    def add_product(self, product_name: str, product: Union[np.ndarray, xr.DataArray]) -> None:
-
-        self._add_product(product_name=product_name, product=product)
-
-        return None
-    
-    def get_product(self, product_name: str) -> xr.DataArray:
-
-        return self._get_product(product_name=product_name)
-
-    def get_products_dict(self) -> dict:
-
-        return self.products
-
-    # TODO
-    def write_products(self, path: str) -> None:
-
-        return None
-
-
-
-    # Public top of atmosphere (TOA) reflectance methods
-
-    # TODO
-    def load_toa_reflectance(self, path: str) -> None:
-        
-        return None
-
-    def generate_toa_reflectance(self) -> None:
-
-        self._run_toa_reflectance()
-
-        return None
-
-    def get_toa_reflectance(self) -> xr.DataArray:
-        """
-        Convert Top Of Atmosphere (TOA) Radiance to TOA Reflectance.
-
-        :return: Array with TOA Reflectance.
-        """
-
-        if self._check_toa_reflectance_has_run():
-
-            return self.toa_reflectance
-
-        if self.VERBOSE:
-            print("[ERROR] Top of atmosphere (TOA) reflectance has not yet been generated.")
-
-        return None
-
-    # TODO
-    def write_toa_reflectance(self, path: str) -> None:
-        
-        return None
-
-
-
-    # TODO: organize
-
-    def get_l1a_satpy_scene(self) -> Scene:
-
-        return self._generate_l1a_satpy_scene()
-
-    def get_l1b_satpy_scene(self) -> Scene:
-
-        return self._generate_l1b_satpy_scene()
-
-    def get_l2a_satpy_scene(self, product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> Scene:
-
-        return self._generate_l2a_satpy_scene(product_name=product_name)
-
-    def get_chlorophyll_satpy_scene(self) -> Scene:
-
-        return self._generate_chlorophyll_satpy_scene()
-
-    def get_products_satpy_scene(self) -> Scene:
-
-        return self._generate_products_satpy_scene()
-
-    def get_bbox(self) -> tuple:
-        
-        return self.bbox
-    
-    def get_closest_wavelength_index(self, wavelength: Union[float, int]) -> int:
-
-        wavelengths = np.array(self.wavelengths)
-        differences = np.abs(wavelengths - wavelength)
-        closest_index = np.argmin(differences)
-
-        return closest_index
-
-
