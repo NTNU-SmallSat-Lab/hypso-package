@@ -40,6 +40,8 @@ from hypso.masks import run_cloud_mask, \
 from hypso.reading import load_l1a_nc_cube, load_l1a_nc_metadata
 from hypso.writing import set_or_create_attr
 
+from .DataArrayDict import DataArrayDict
+
 from satpy import Scene
 from satpy.dataset.dataid import WavelengthRange
 from pyresample.geometry import SwathDefinition
@@ -103,6 +105,35 @@ class Hypso1(Hypso):
         self.cloud_mask_has_run = False
         self.chlorophyll_estimation_has_run = False
         self.toa_reflectance_has_run = False
+
+
+
+
+
+
+
+        
+
+        self.l2a_attributes = {'level': "L2a",
+                               'units': "a.u.",
+                               'description': "Reflectance (Rrs)"
+                              }
+
+
+        chl_attributes = {}
+        product_attributes = {}
+        
+        #self.l1b_cubes = DataArrayDict(dims_shape=self.spatial_dimensions, attributes=l1b_attributes)
+        #self.l2a_cubes = DataArrayDict(dims_shape=self.spatial_dimensions, attributes=l2a_attributes)
+
+        #self.land_masks = DataArrayDict(dims_shape=self.spatial_dimensions, attributes=land_mask_attributes)
+        #self.cloud_masks = DataArrayDict(dims_shape=self.spatial_dimensions, attributes=cloud_mask_attributes)
+        #self.active_masks = DataArrayDict(dims_shape=self.spatial_dimensions, attributes=active_mask_attributes)
+
+        self.chl = DataArrayDict(dims_shape=self.spatial_dimensions, attributes=chl_attributes)
+
+        self.products = DataArrayDict(dims_shape=self.spatial_dimensions, attributes=product_attributes)
+
 
         self._load_l1a_nc_file()
         self._run_georeferencing()
@@ -370,22 +401,24 @@ class Hypso1(Hypso):
     
         return None
 
-    def _set_l1a_cube_xarray_attrs(self, l1a_cube: xr.DataArray) -> xr.DataArray:
-
-        l1a_cube.attrs['level'] = "L1a"
-        l1a_cube.attrs['units'] = "a.u."
-        l1a_cube.attrs['description'] = "Raw sensor values"
-
-        return l1a_cube
-
     def _load_l1a_cube(self) -> None:
 
         l1a_cube = load_l1a_nc_cube(self.hypso_path)
 
-        l1a_cube = self._create_3d_xarray(data=l1a_cube)
-        l1a_cube = self._set_l1a_cube_xarray_attrs(l1a_cube=l1a_cube)
+        self._update_l1a_cube(data=l1a_cube)
 
-        self.l1a_cube = l1a_cube
+        return None
+
+    def _update_l1a_cube(self, data: Union[np.ndarray, xr.DataArray]) -> None:
+
+        l1a_attributes = {'level': "L1a",
+                          'units': "a.u.",
+                          'description': "Raw sensor value"
+                         }
+
+        self.da = DataArrayDict(attributes=l1a_attributes)
+        self.da['default'] = data
+        self.l1a_cube = self.da['default']
 
         return None
 
@@ -412,18 +445,23 @@ class Hypso1(Hypso):
     def _load_l1b_file(self) -> None:
         return None
 
-    def _set_l1b_cube_xarray_attrs(self, l1b_cube: xr.DataArray) -> xr.DataArray:
-
-        l1b_cube.attrs['level'] = "L1b"
-        l1b_cube.attrs['units'] = r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$'
-        l1b_cube.attrs['description'] = "Radiance (L)"
-
-        return l1b_cube
-
     # TODO
     def _load_l1b_cube(self) -> None:
         return None
     
+    def _update_l1b_cube(self, data: Union[np.ndarray, xr.DataArray]) -> None:
+
+        l1b_attributes = {'level': "L1b",
+                          'units': r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$',
+                          'description': "Radiance (L)"
+                         }
+
+        da = DataArrayDict(attributes=l1b_attributes)
+        da['default'] = data
+        self.l1b_cube = da['default']
+
+        return None
+
     # TODO
     def _load_l1b_metadata(self) -> None:
         return None
@@ -723,11 +761,9 @@ class Hypso1(Hypso):
         if destriping_corr:
             l1b_cube = self._run_destriping_correction(cube=l1b_cube, **kwargs)
 
-        l1b_cube = self._create_3d_xarray(data=l1b_cube)
-        l1b_cube = self._set_l1b_cube_xarray_attrs(l1b_cube=l1b_cube)
 
-        self.l1b_cube = l1b_cube
-
+        self._update_l1b_cube(data=l1b_cube)
+ 
         self.calibration_has_run = True
 
         return None

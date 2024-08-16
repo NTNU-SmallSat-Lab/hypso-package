@@ -159,6 +159,8 @@ class Hypso:
         self.DEBUG = False
         self.VERBOSE = False
 
+        self.da = None
+
     def _set_hypso_path(self, hypso_path=None) -> None:
 
         if hypso_path is None:
