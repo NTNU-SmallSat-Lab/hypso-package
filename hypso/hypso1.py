@@ -51,13 +51,16 @@ from pyresample.geometry import SwathDefinition
 from pyresample.kd_tree import get_neighbour_info
 
 SUPPORTED_PRODUCT_LEVELS = ["l1a", "l1b", "l2a"]
-SUPPORTED_ATM_CORR_PRODUCTS = ["6sv1", "acolite", "machi"]
-SUPPORTED_CHL_EST_PRODUCTS = ["band_ratio", "6sv1_aqua", "acolite_aqua"]
+
+ATM_CORR_PRODUCTS = Literal["6sv1", "acolite", "machi"]
+CHL_EST_PRODUCTS = Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]
+LAND_MASK_PRODUCTS = Literal["global", "ndwi", "threshold"]
+CLOUD_MASK_PRODUCTS = Literal["default"]
 
 DEFAULT_ATM_CORR_PRODUCT = "6sv1"
 DEFAULT_CHL_EST_PRODUCT = "band_ratio"
-DEFAULT_LAND_MASK = "global"
-DEFAULT_CLOUD_MASK = "default"
+DEFAULT_LAND_MASK_PRODUCT = "global"
+DEFAULT_CLOUD_MASK_PRODUCT = "default"
 
 DIM_NAMES_3D = ["y", "x", "band"]
 DIM_NAMES_2D = ["y", "x"]
@@ -2554,17 +2557,17 @@ class Hypso1(Hypso):
     # Public L2a methods
 
     # TODO
-    def load_l2a_cube(self, path: str, product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> None:
+    def load_l2a_cube(self, path: str, product_name: ATM_CORR_PRODUCTS = DEFAULT_ATM_CORR_PRODUCT) -> None:
 
         return None
 
-    def generate_l2a_cube(self, product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> None:
+    def generate_l2a_cube(self, product_name: ATM_CORR_PRODUCTS = DEFAULT_ATM_CORR_PRODUCT) -> None:
 
         self._run_atmospheric_correction(product_name=product_name)
 
         return None
 
-    def get_l2a_cube(self, product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> xr.DataArray:
+    def get_l2a_cube(self, product_name: ATM_CORR_PRODUCTS = DEFAULT_ATM_CORR_PRODUCT) -> xr.DataArray:
 
         return self._get_l2a_cube(product_name=product_name)
 
@@ -2573,7 +2576,7 @@ class Hypso1(Hypso):
         return self.l2a_cubes
 
     def get_l2a_spectrum(self, 
-                        product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT,
+                        product_name: ATM_CORR_PRODUCTS = DEFAULT_ATM_CORR_PRODUCT,
                         latitude=None, 
                         longitude=None,
                         x: int = None,
@@ -2598,7 +2601,7 @@ class Hypso1(Hypso):
         return spectrum
 
     def plot_l2a_spectrum(self, 
-                         product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT,
+                         product_name: ATM_CORR_PRODUCTS = DEFAULT_ATM_CORR_PRODUCT,
                          latitude=None, 
                          longitude=None,
                          x: int = None,
@@ -2695,13 +2698,13 @@ class Hypso1(Hypso):
 
         return None
 
-    def generate_land_mask(self, land_mask_name: Literal["global", "ndwi", "threshold"] = DEFAULT_LAND_MASK) -> None:
+    def generate_land_mask(self, land_mask_name: LAND_MASK_PRODUCTS = DEFAULT_LAND_MASK_PRODUCT) -> None:
 
         self._run_land_mask(land_mask_name=land_mask_name)
 
         return None
 
-    def get_land_mask(self, land_mask_name: Literal["global", "ndwi", "threshold"] = DEFAULT_LAND_MASK) -> np.ndarray:
+    def get_land_mask(self, land_mask_name: LAND_MASK_PRODUCTS = DEFAULT_LAND_MASK_PRODUCT) -> np.ndarray:
 
         if land_mask_name and self._check_land_mask_has_run(land_mask_name=land_mask_name):
 
@@ -2716,7 +2719,7 @@ class Hypso1(Hypso):
 
         return self.land_masks     
     
-    def set_active_land_mask(self, land_mask_name: Literal["global", "ndwi", "threshold"] = DEFAULT_LAND_MASK):
+    def set_active_land_mask(self, land_mask_name: LAND_MASK_PRODUCTS = DEFAULT_LAND_MASK_PRODUCT):
 
         self._update_active_land_mask(land_mask_name=land_mask_name, override=True)
 
@@ -2738,13 +2741,13 @@ class Hypso1(Hypso):
         return None
 
     # TODO
-    def generate_cloud_mask(self, cloud_mask_name: Literal["default"] = DEFAULT_CLOUD_MASK):
+    def generate_cloud_mask(self, cloud_mask_name: CLOUD_MASK_PRODUCTS = DEFAULT_CLOUD_MASK_PRODUCT):
 
         #self._run_cloud_mask(cloud_mask_name=cloud_mask_name)
 
         return None
 
-    def get_cloud_mask(self, cloud_mask_name: Literal["default"] = DEFAULT_CLOUD_MASK) -> np.ndarray:
+    def get_cloud_mask(self, cloud_mask_name: CLOUD_MASK_PRODUCTS = DEFAULT_CLOUD_MASK_PRODUCT) -> np.ndarray:
 
         if cloud_mask_name and self._check_cloud_mask_has_run(cloud_mask_name=cloud_mask_name):
 
@@ -2759,7 +2762,7 @@ class Hypso1(Hypso):
 
         return self.cloud_masks 
 
-    def set_active_cloud_mask(self, cloud_mask_name: Literal["default"] = DEFAULT_CLOUD_MASK):
+    def set_active_cloud_mask(self, cloud_mask_name: CLOUD_MASK_PRODUCTS = DEFAULT_CLOUD_MASK_PRODUCT):
 
         self._update_active_cloud_mask(self, cloud_mask_name=cloud_mask_name, override=True)
 
@@ -2788,14 +2791,14 @@ class Hypso1(Hypso):
         return None
 
     def generate_chlorophyll_estimates(self, 
-                                       product_name: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"] = DEFAULT_CHL_EST_PRODUCT,
+                                       product_name: CHL_EST_PRODUCTS = DEFAULT_CHL_EST_PRODUCT,
                                        model: Union[str, Path] = None,
                                        factor: float = 0.1
                                        ) -> None:
 
         self._run_chlorophyll_estimation(product_name=product_name, model=model, factor=factor)
 
-    def get_chlorophyll_estimates(self, product_name: Literal["band_ratio", "6sv1_aqua", "acolite_aqua"] = DEFAULT_CHL_EST_PRODUCT,
+    def get_chlorophyll_estimates(self, product_name: CHL_EST_PRODUCTS = DEFAULT_CHL_EST_PRODUCT,
                                  ) -> np.ndarray:
 
         key = product_name.lower()
@@ -2887,7 +2890,7 @@ class Hypso1(Hypso):
 
         return self._generate_l1b_satpy_scene()
 
-    def get_l2a_satpy_scene(self, product_name: Literal["acolite", "6sv1", "machi"] = DEFAULT_ATM_CORR_PRODUCT) -> Scene:
+    def get_l2a_satpy_scene(self, product_name: ATM_CORR_PRODUCTS = DEFAULT_ATM_CORR_PRODUCT) -> Scene:
 
         return self._generate_l2a_satpy_scene(product_name=product_name)
 
