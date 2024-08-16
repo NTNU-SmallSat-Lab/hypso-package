@@ -68,6 +68,7 @@ UNIX_TIME_OFFSET = 20 # TODO: Verify offset validity. Sivert had 20 here
 # TODO: make some type of class for the products stored in dictionaries? Extend dict class?
 # TODO: remove validate functions
 # TODO: setattr, hasattr, getattr for setting class variables, especially those from geometry
+# TODO: add variable to track what atm corr method was used to create l2a_cube
 
 
 class Hypso1(Hypso):
@@ -100,7 +101,10 @@ class Hypso1(Hypso):
         self.write_l1a_nc_file_has_run = False
         self.write_l1b_nc_file_has_run = False
         self.write_l2a_nc_file_has_run = False
-        self.atmospheric_correction_has_run = False
+        #self.atmospheric_correction_has_run = False
+        #self.atmospheric_correction_6sv1_has_run = False
+        #self.atmospheric_correction_acolite_has_run = False
+        #self.atmospheric_correction_machi_has_run = False
         self.land_mask_has_run = False
         self.cloud_mask_has_run = False
         self.chlorophyll_estimation_has_run = False
@@ -114,10 +118,7 @@ class Hypso1(Hypso):
 
         
 
-        self.l2a_attributes = {'level': "L2a",
-                               'units': "a.u.",
-                               'description': "Reflectance (Rrs)"
-                              }
+
 
 
         chl_attributes = {}
@@ -416,9 +417,9 @@ class Hypso1(Hypso):
                           'description': "Raw sensor value"
                          }
 
-        self.da = DataArrayDict(attributes=l1a_attributes)
-        self.da['default'] = data
-        self.l1a_cube = self.da['default']
+        da = DataArrayDict(attributes=l1a_attributes)
+        da['default'] = data
+        self.l1a_cube = da['default']
 
         return None
 
@@ -449,6 +450,14 @@ class Hypso1(Hypso):
     def _load_l1b_cube(self) -> None:
         return None
     
+    # TODO
+    def _load_l1b_metadata(self) -> None:
+        return None
+    
+    def _get_l1b_cube(self) -> xr.DataArray:
+
+        return self.l1b_cube
+    
     def _update_l1b_cube(self, data: Union[np.ndarray, xr.DataArray]) -> None:
 
         l1b_attributes = {'level': "L1b",
@@ -462,15 +471,6 @@ class Hypso1(Hypso):
 
         return None
 
-    # TODO
-    def _load_l1b_metadata(self) -> None:
-        return None
-    
-    # TODO
-    def _get_l1b_cube(self) -> xr.DataArray:
-
-        return self.l1b_cube
-    
 
     # L2a functions
 
@@ -521,15 +521,21 @@ class Hypso1(Hypso):
     
     def _get_l2a_cube(self, product_name: str) -> xr.DataArray:
 
-        try:
-            key = product_name.lower()
-            return self.l2a_cubes[key]
-        except KeyError:
-            return None
+        return self.l2a_cube
+
+    def _update_l2a_cube(self, data: Union[np.ndarray, xr.DataArray]) -> None:
+
+        l2a_attributes = {'level': "L2a",
+                          'units': "a.u.",
+                          'description': "Reflectance (Rrs)"
+                         }
+        
+
+        da = DataArrayDict(attributes=l2a_attributes)
+        da['default'] = data
+        self.l2a_cube = da['default']
 
         return None
-
-
 
 
 
@@ -600,10 +606,9 @@ class Hypso1(Hypso):
             if self.l1b_cube is not None:  
                 self.l1b_cube = self.l1b_cube[:, ::-1, :]
                 
-            if self.l2a_cubes is not None:
-                if isinstance(self.l2a_cubes, dict):
-                    for key in self.l2a_cubes.keys():
-                        self.l2a_cubes = self.l2a_cubes[key][:, ::-1, :]
+            if self.l2a_cube is not None:  
+                self.l2a_cube = self.l2a_cube[:, ::-1, :]
+
 
         self.datacube_flipped = datacube_flipped
 
@@ -1199,37 +1204,35 @@ class Hypso1(Hypso):
     # Atmospheric correction functions
 
     # TODO: split into individual functions
-    def _run_atmospheric_correction(self, product_name: str, overwrite: bool = False) -> None:
+    def _run_atmospheric_correction(self, product_name: str) -> None:
 
-        if self._check_atmospheric_correction_has_run(product_name=product_name) and not overwrite:
-
-            if self.VERBOSE:
-                print("[INFO] Atmospheric correction has already been run. Skipping.")
-
-            return None
-
-        if self.l2a_cubes is None:
-            self.l2a_cubes = {}
+        #if self.atmospheric_correction_has_run:
+        #
+        #    if self.VERBOSE:
+        #        print("[INFO] Atmospheric correction has already been run. Skipping.")
+        #
+        #    return None
 
         match product_name.lower():
             case "6sv1":
                 if self.VERBOSE: 
                     print("[INFO] Running 6SV1 atmospheric correction")
-                self.l2a_cubes[product_name] = self._run_6sv1_atmospheric_correction()
+                self.l2a_cube = self._run_6sv1_atmospheric_correction()
+                #self.atmospheric_correction_6sv1_has_run = True
             case "acolite":
                 if self.VERBOSE: 
                     print("[INFO] Running ACOLITE atmospheric correction")
-                self.l2a_cubes[product_name] = self._run_acolite_atmospheric_correction()
+                self.l2a_cube = self._run_acolite_atmospheric_correction()
+                #self.atmospheric_correction_acolite_has_run = True
             case "machi":
                 if self.VERBOSE: 
                     print("[INFO] Running MACHI atmospheric correction")
-                self.l2a_cubes[product_name] = self._run_machi_atmospheric_correction()  
+                self.l2a_cube = self._run_machi_atmospheric_correction() 
+                #self.atmospheric_correction_machi_has_run = True 
 
             case _:
                 print("[ERROR] No such atmospheric correction product supported!")
                 return None
-
-        self.atmospheric_correction_has_run = True
 
         return None
 
@@ -1333,16 +1336,7 @@ class Hypso1(Hypso):
 
         return cube
     
-    def _check_atmospheric_correction_has_run(self, product_name: str = None) -> bool:
 
-        if self.atmospheric_correction_has_run:
-            if product_name is None:
-                return True
-            elif product_name.lower() in self.l2a_cubes.keys():
-                return True
-            else:
-                return False
-        return False
 
 
 
@@ -1831,7 +1825,7 @@ class Hypso1(Hypso):
             print("[ERROR] No spatial dimensions provided.")
             return None
         
-        cube = self.l2a_cubes['6sv1'].to_numpy()
+        cube = self.l2a_cube.to_numpy()
 
         try:
             mask = self.active_mask.to_numpy()
@@ -1868,7 +1862,7 @@ class Hypso1(Hypso):
             print("[ERROR] No spatial dimensions provided.")
             return None
 
-        cube = self.l2a_cubes['acolite'].to_numpy()
+        cube = self.l2a_cube.to_numpy()
 
         try:
             mask = self.active_mask.to_numpy()
@@ -2102,13 +2096,13 @@ class Hypso1(Hypso):
 
         return scene
 
-    def _generate_l2a_satpy_scene(self, product_name: str) -> Scene:
+    def _generate_l2a_satpy_scene(self) -> Scene:
 
         scene = self._generate_satpy_scene()
         swath_def= self._generate_swath_definition()
 
         try:
-            cube = self.l2a_cubes[product_name.lower()]
+            cube = self.l2a_cube
             wavelengths = self.wavelengths
         except:
             return None
@@ -2510,12 +2504,7 @@ class Hypso1(Hypso):
 
         return self._get_l2a_cube(product_name=product_name)
 
-    def get_l2a_cube_dict(self) -> dict:
-
-        return self.l2a_cubes
-
-    def get_l2a_spectrum(self, 
-                        product_name: ATM_CORR_PRODUCTS = DEFAULT_ATM_CORR_PRODUCT,
+    def get_l2a_spectrum(self,
                         latitude=None, 
                         longitude=None,
                         x: int = None,
@@ -2536,14 +2525,13 @@ class Hypso1(Hypso):
             return None
 
         try:
-            spectrum = self.l2a_cubes[product_name][idx[0], idx[1], :]
+            spectrum = self.l2a_cube[idx[0], idx[1], :]
         except KeyError:
             return None
 
         return spectrum
 
-    def plot_l2a_spectrum(self, 
-                         product_name: ATM_CORR_PRODUCTS = DEFAULT_ATM_CORR_PRODUCT,
+    def plot_l2a_spectrum(self,
                          latitude=None, 
                          longitude=None,
                          x: int = None,
@@ -2564,21 +2552,21 @@ class Hypso1(Hypso):
             return None
 
         try:
-            spectrum = self.l2a_cubes[product_name.lower()][idx[0], idx[1], :]
+            spectrum = self.l2a_cube[idx[0], idx[1], :]
         except KeyError:
             return None
 
         bands = self.wavelengths
         units = spectrum.attrs["units"]
 
-        output_file = Path(self.nc_dir, self.capture_name + '_l2a_' + str(product_name) + '_plot.png')
+        output_file = Path(self.nc_dir, self.capture_name + '_l2a_plot.png')
 
         plt.figure(figsize=(10, 5))
         plt.plot(bands, spectrum)
         plt.ylabel(units)
         plt.ylim([0, 1])
         plt.xlabel("Wavelength (nm)")
-        plt.title(f"L2a {product_name} (lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
+        plt.title(f"L2a (lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
         plt.grid(True)
 
         if save:

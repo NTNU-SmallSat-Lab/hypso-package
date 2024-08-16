@@ -40,7 +40,7 @@ class Hypso:
         # Initialize datacubes
         self.l1a_cube = None
         self.l1b_cube = None
-        self.l2a_cubes = {}
+        self.l2a_cube = None
 
         # Initialize top of atmpshere (TOA) reflectance
         self.toa_reflectance = None
@@ -158,8 +158,6 @@ class Hypso:
         # DEBUG
         self.DEBUG = False
         self.VERBOSE = False
-
-        self.da = None
 
     def _set_hypso_path(self, hypso_path=None) -> None:
 
