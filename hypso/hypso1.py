@@ -112,29 +112,7 @@ class Hypso1(Hypso):
 
     # Setters
 
-    def _set_verbose(self, verbose=False) -> None:
-        """
-        Set the verbose option. Running with "verbose=True" will enable more messages to be produced when hypso-package is run.
 
-        :param verbose: bool.
-
-        :return: None.
-        """
-
-        self.VERBOSE = verbose
-
-        return None
-
-    def _set_platform(self) -> None:
-        """
-        Set the identifier of the platform or satellite.
-
-        :return: None.
-        """
-
-        self.platform = 'hypso1'
-
-        return None
 
     def _set_sensor(self) -> None:
         """
