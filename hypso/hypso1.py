@@ -84,9 +84,12 @@ class Hypso1(Hypso):
         super().__init__(hypso_path=hypso_path, points_path=points_path)
 
         # General -----------------------------------------------------
-        self._set_platform()
-        self._set_sensor()
-        self._set_verbose(verbose=verbose)
+        self.platform = 'hypso1'
+        self.sensor = 'hypso1_hsi'
+        self.VERBOSE = verbose
+        #self._set_platform()
+        #self._set_sensor()
+        #self._set_verbose(verbose=verbose)
 
         # Booleans to check if certain processes have been run
         self.georeferencing_has_run = False
