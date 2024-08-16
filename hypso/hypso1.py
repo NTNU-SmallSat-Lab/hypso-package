@@ -112,19 +112,6 @@ class Hypso1(Hypso):
 
     # Setters
 
-
-
-    def _set_sensor(self) -> None:
-        """
-        Set the identifier of the sensor.
-
-        :return: None.
-        """
-
-        self.sensor = 'hypso1_hsi'
-
-        return None
-
     def _set_capture_datetime(self) -> None:
         """
         Format and set the datetime of the capture using information derived from the capture name.
