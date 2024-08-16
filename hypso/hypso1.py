@@ -26,7 +26,8 @@ from hypso.calibration import read_coeffs_from_file, \
                               run_destriping_correction_with_computed_matrix
 from hypso.chlorophyll import run_tuned_chlorophyll_estimation, run_band_ratio_chlorophyll_estimation, validate_tuned_model
 from hypso.geometry import interpolate_at_frame, \
-                           geometry_computation
+                           geometry_computation, \
+                           get_nearest_pixel
 from hypso.georeference import georeferencing
 from hypso.georeference.utils import check_star_tracker_orientation
 from hypso.masks import run_global_land_mask, \
@@ -40,15 +41,9 @@ from hypso.reading import load_l1a_nc_cube, load_l1a_nc_metadata
 from hypso.writing import set_or_create_attr
 
 from satpy import Scene
-#from satpy.composites import GenericCompositor
 from satpy.dataset.dataid import WavelengthRange
-#from satpy.writers import to_image
-
-from pyresample import geometry
-#from pyresample import image
-#from pyresample import load_area
 from pyresample.geometry import SwathDefinition
-from pyresample.kd_tree import get_neighbour_info
+
 
 SUPPORTED_PRODUCT_LEVELS = ["l1a", "l1b", "l2a"]
 
@@ -70,8 +65,7 @@ UNIX_TIME_OFFSET = 20 # TODO: Verify offset validity. Sivert had 20 here
 # TODO: store latitude and longitude as xarray
 # TODO: make some type of class for the products stored in dictionaries? Extend dict class?
 # TODO: remove validate functions
-# TODO: setattr for setting class variables?
-
+# TODO: setattr, hasattr, getattr for setting class variables, especially those from geometry
 
 
 class Hypso1(Hypso):
@@ -2315,77 +2309,6 @@ class Hypso1(Hypso):
 
         return cube
     
-    def _get_nearest_pixel(self, latitude: float, longitude: float) -> tuple[int, int]:
-        """
-        Find the nearest pixel in a SwathDefinition given a target latitude and longitude.
-
-        Parameters:
-        - swath_def: SwathDefinition object containing latitude and longitude arrays
-        - target_lat: Target latitude
-        - target_lon: Target longitude
-
-        Returns:
-        - (i, j): Indices of the nearest pixel in the swath definition
-        """
-        # Wrap target coordinates in arrays
-
-        if self.latitudes is None or self.longitudes is None:
-            return None
-
-        target_latitudes = np.array([latitude])
-        target_longitudes = np.array([longitude])
-        
-        source_swath_def = geometry.SwathDefinition(lons=self.longitudes, lats=self.latitudes)
-        target_swath_def = geometry.SwathDefinition(lons=target_longitudes, lats=target_latitudes)
-
-        # Find nearest neighbor info
-        valid_input_index, valid_output_index, index_array, distance_array = get_neighbour_info(
-            source_swath_def, target_swath_def, radius_of_influence=np.inf, neighbours=1
-        )
-
-        if len(valid_input_index) > 0:
-            nearest_index = np.unravel_index(index_array[0], source_swath_def.shape)
-            return nearest_index
-        else:
-            return None
-
-    # TODO check that this works and does image flip need to apply?
-    def _haversine(self, lat1, lon1, lat2, lon2):
-        """
-        WARNING: ChatGPT wrote this... ()
-
-        Calculate the great-circle distance between two points 
-        on the Earth using the Haversine formula.
-        """
-        R = 6371.0  # Radius of the Earth in kilometers
-        phi1, phi2 = np.radians(lat1), np.radians(lat2)
-        delta_phi = np.radians(lat2 - lat1)
-        delta_lambda = np.radians(lon2 - lon1)
-
-        a = np.sin(delta_phi / 2.0)**2 + np.cos(phi1) * np.cos(phi2) * np.sin(delta_lambda / 2.0)**2
-        c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
-
-        return R * c
-
-    def _get_nearest_pixel_haversine(self, latitude: float, longitude: float):
-        """
-        Find the nearest index in 2D latitude and longitude matrices
-        to the given target latitude and longitude.
-
-        Parameters:
-        - target_lat: Target latitude
-        - target_lon: Target longitude
-
-        Returns:
-        - (i, j): Tuple of indices in the matrices closest to the target coordinate
-        """
-
-        lat_matrix = self.latitudes
-        lon_matrix = self.longitudes
-
-        distances = self._haversine(lat_matrix, lon_matrix, latitude, longitude)
-        nearest_index = np.unravel_index(np.argmin(distances), distances.shape)
-        return nearest_index
 
 
 
@@ -2413,7 +2336,10 @@ class Hypso1(Hypso):
             return None
         
         if latitude is not None and longitude is not None:
-            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
+            idx = get_nearest_pixel(target_latitude=latitude, 
+                                    target_longitude=longitude,
+                                    latitudes=self.latitudes,
+                                    longitudes=self.longitudes)
 
         elif x is not None and y is not None:
             idx = (x,y)
@@ -2434,7 +2360,10 @@ class Hypso1(Hypso):
                          ) -> None:
         
         if latitude is not None and longitude is not None:
-            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
+            idx = get_nearest_pixel(target_latitude=latitude, 
+                                    target_longitude=longitude,
+                                    latitudes=self.latitudes,
+                                    longitudes=self.longitudes)
 
         elif x is not None and y is not None:
             idx = (x,y)
@@ -2498,7 +2427,10 @@ class Hypso1(Hypso):
             return None
         
         if latitude is not None and longitude is not None:
-            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
+            idx = get_nearest_pixel(target_latitude=latitude, 
+                                    target_longitude=longitude,
+                                    latitudes=self.latitudes,
+                                    longitudes=self.longitudes)
 
         elif x is not None and y is not None:
             idx = (x,y)
@@ -2519,7 +2451,10 @@ class Hypso1(Hypso):
                         ) -> None:
         
         if latitude is not None and longitude is not None:
-            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
+            idx = get_nearest_pixel(target_latitude=latitude, 
+                                    target_longitude=longitude,
+                                    latitudes=self.latitudes,
+                                    longitudes=self.longitudes)
 
         elif x is not None and y is not None:
             idx = (x,y)
@@ -2585,7 +2520,10 @@ class Hypso1(Hypso):
 
 
         if latitude is not None and longitude is not None:
-            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
+            idx = get_nearest_pixel(target_latitude=latitude, 
+                                    target_longitude=longitude,
+                                    latitudes=self.latitudes,
+                                    longitudes=self.longitudes)
 
         elif x is not None and y is not None:
             idx = (x,y)
@@ -2610,7 +2548,10 @@ class Hypso1(Hypso):
                          ) -> np.ndarray:
         
         if latitude is not None and longitude is not None:
-            idx = self._get_nearest_pixel(latitude=latitude, longitude=longitude)
+            idx = get_nearest_pixel(target_latitude=latitude, 
+                                    target_longitude=longitude,
+                                    latitudes=self.latitudes,
+                                    longitudes=self.longitudes)
 
         elif x is not None and y is not None:
             idx = (x,y)
