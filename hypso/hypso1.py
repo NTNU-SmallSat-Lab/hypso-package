@@ -40,7 +40,7 @@ from hypso.masks import run_cloud_mask, \
 from hypso.reading import load_l1a_nc_cube, load_l1a_nc_metadata
 from hypso.writing import set_or_create_attr
 
-from .DataArrayDict import DataArrayDict
+from hypso.dataarray_utils import DataArrayDict, DataArrayValidator
 
 from satpy import Scene
 from satpy.dataset.dataid import WavelengthRange
@@ -90,9 +90,6 @@ class Hypso1(Hypso):
         self.platform = 'hypso1'
         self.sensor = 'hypso1_hsi'
         self.VERBOSE = verbose
-        #self._set_platform()
-        #self._set_sensor()
-        #self._set_verbose(verbose=verbose)
 
         # Booleans to check if certain processes have been run
         self.georeferencing_has_run = False
@@ -102,42 +99,19 @@ class Hypso1(Hypso):
         self.write_l1b_nc_file_has_run = False
         self.write_l2a_nc_file_has_run = False
         #self.atmospheric_correction_has_run = False
-        #self.atmospheric_correction_6sv1_has_run = False
-        #self.atmospheric_correction_acolite_has_run = False
-        #self.atmospheric_correction_machi_has_run = False
         self.land_mask_has_run = False
         self.cloud_mask_has_run = False
         self.chlorophyll_estimation_has_run = False
         self.toa_reflectance_has_run = False
 
-
-
-
-
-
-
-        
-
-
-
+        self._load_l1a_nc_file()
+        self._run_georeferencing()
 
         chl_attributes = {}
         product_attributes = {}
-        
-        #self.l1b_cubes = DataArrayDict(dims_shape=self.spatial_dimensions, attributes=l1b_attributes)
-        #self.l2a_cubes = DataArrayDict(dims_shape=self.spatial_dimensions, attributes=l2a_attributes)
 
-        #self.land_masks = DataArrayDict(dims_shape=self.spatial_dimensions, attributes=land_mask_attributes)
-        #self.cloud_masks = DataArrayDict(dims_shape=self.spatial_dimensions, attributes=cloud_mask_attributes)
-        #self.active_masks = DataArrayDict(dims_shape=self.spatial_dimensions, attributes=active_mask_attributes)
-
-        self.chl = DataArrayDict(dims_shape=self.spatial_dimensions, attributes=chl_attributes)
-
-        self.products = DataArrayDict(dims_shape=self.spatial_dimensions, attributes=product_attributes)
-
-
-        self._load_l1a_nc_file()
-        self._run_georeferencing()
+        self.chl = DataArrayDict(dims_shape=self.spatial_dimensions, attributes=chl_attributes, dims_names=DIM_NAMES_2D)
+        self.products = DataArrayDict(dims_shape=self.spatial_dimensions, attributes=product_attributes, dims_names=DIM_NAMES_2D)
 
         return None
 
@@ -410,19 +384,6 @@ class Hypso1(Hypso):
 
         return None
 
-    def _update_l1a_cube(self, data: Union[np.ndarray, xr.DataArray]) -> None:
-
-        l1a_attributes = {'level': "L1a",
-                          'units': "a.u.",
-                          'description': "Raw sensor value"
-                         }
-
-        da = DataArrayDict(attributes=l1a_attributes)
-        da['default'] = data
-        self.l1a_cube = da['default']
-
-        return None
-
     # TODO: use setattr here?
     def _load_l1a_metadata(self) -> None:
         
@@ -437,6 +398,20 @@ class Hypso1(Hypso):
     def _get_l1a_cube(self) -> xr.DataArray:
 
         return self.l1a_cube
+
+    def _update_l1a_cube(self, data: Union[np.ndarray, xr.DataArray]) -> None:
+
+        l1a_attributes = {'level': "L1a",
+                          'units': "a.u.",
+                          'description': "Raw sensor value"
+                         }
+
+        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=DIM_NAMES_3D)
+
+        self.l1a_cube = v.validate(data=data)
+        self.l1a_cube.assign_attrs(attributes=l1a_attributes)
+
+        return None
 
 
 
@@ -465,9 +440,10 @@ class Hypso1(Hypso):
                           'description': "Radiance (L)"
                          }
 
-        da = DataArrayDict(attributes=l1b_attributes)
-        da['default'] = data
-        self.l1b_cube = da['default']
+        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=DIM_NAMES_3D)
+
+        self.l1b_cube = v.validate(data=data)
+        self.l1b_cube.assign_attrs(attributes=l1b_attributes)
 
         return None
 
@@ -530,10 +506,10 @@ class Hypso1(Hypso):
                           'description': "Reflectance (Rrs)"
                          }
         
+        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=DIM_NAMES_3D)
 
-        da = DataArrayDict(attributes=l2a_attributes)
-        da['default'] = data
-        self.l2a_cube = da['default']
+        self.l2a_cube = v.validate(data=data)
+        self.l2a_cube.assign_attrs(attributes=l2a_attributes)
 
         return None
 
@@ -1203,32 +1179,18 @@ class Hypso1(Hypso):
 
     # Atmospheric correction functions
 
-    # TODO: split into individual functions
     def _run_atmospheric_correction(self, product_name: str) -> None:
-
-        #if self.atmospheric_correction_has_run:
-        #
-        #    if self.VERBOSE:
-        #        print("[INFO] Atmospheric correction has already been run. Skipping.")
-        #
-        #    return None
 
         match product_name.lower():
             case "6sv1":
-                if self.VERBOSE: 
-                    print("[INFO] Running 6SV1 atmospheric correction")
+
                 self.l2a_cube = self._run_6sv1_atmospheric_correction()
-                #self.atmospheric_correction_6sv1_has_run = True
             case "acolite":
-                if self.VERBOSE: 
-                    print("[INFO] Running ACOLITE atmospheric correction")
+
                 self.l2a_cube = self._run_acolite_atmospheric_correction()
-                #self.atmospheric_correction_acolite_has_run = True
             case "machi":
-                if self.VERBOSE: 
-                    print("[INFO] Running MACHI atmospheric correction")
+
                 self.l2a_cube = self._run_machi_atmospheric_correction() 
-                #self.atmospheric_correction_machi_has_run = True 
 
             case _:
                 print("[ERROR] No such atmospheric correction product supported!")
@@ -1249,6 +1211,9 @@ class Hypso1(Hypso):
 
         self._run_calibration(**kwargs)
         self._run_geometry()
+
+        if self.VERBOSE: 
+            print("[INFO] Running 6SV1 atmospheric correction")
 
         # TODO: which values should we use?
         if self.latitudes is None:
@@ -1282,9 +1247,8 @@ class Hypso1(Hypso):
                         time_capture=time_capture,
                         srf=self.srf)
         
-        cube = self._create_l2a_cube_xarray(l2a_cube=cube)
-
-        cube.attrs['correction'] = "6sv1"
+        self._update_l2a_cube(data=cube)
+        self.l2a_cube.attrs['correction'] = "6sv1"
 
         return cube
 
@@ -1295,6 +1259,9 @@ class Hypso1(Hypso):
 
         if not self._check_write_l1b_nc_file_has_run():
             return None
+
+        if self.VERBOSE: 
+            print("[INFO] Running ACOLITE atmospheric correction")
 
         # user and password from https://urs.earthdata.nasa.gov/profile
         # optional but good
@@ -1310,9 +1277,8 @@ class Hypso1(Hypso):
                            atmos_dict=atmos_params, 
                            nc_file_acoliteready=self.l1b_nc_file)
 
-        cube = self._create_l2a_cube_xarray(l2a_cube=cube)
-
-        cube.attrs['correction'] = "acolite"
+        self._update_l2a_cube(data=cube)
+        self.l2a_cube.attrs['correction'] = "acolite"
 
         return cube
     
@@ -1326,13 +1292,15 @@ class Hypso1(Hypso):
         self._run_calibration()
         self._run_geometry()
 
+        if self.VERBOSE: 
+            print("[INFO] Running MACHI atmospheric correction")
+
         cube = self.l1b_cube.to_numpy()
         
         #T, A, objs = run_machi(cube=cube, verbose=self.VERBOSE)
 
-        cube = self._create_l2a_cube_xarray(l2a_cube=cube)
-
-        cube.attrs['correction'] = "machi"
+        self._update_l2a_cube(data=cube)
+        self.l2a_cube.attrs['correction'] = "machi"
 
         return cube
     
@@ -1418,8 +1386,7 @@ class Hypso1(Hypso):
 
         if self._check_land_mask_has_run(land_mask_name=land_mask_name) and not overwrite:
 
-            if self.VERBOSE:
-                print("[INFO] Land mask has already been run. Skipping.")
+
 
             return None
 
@@ -1432,27 +1399,18 @@ class Hypso1(Hypso):
 
             case "global":
 
-                if self.VERBOSE:
-                    print("[INFO] Running global land mask generation...")
-
-                self.land_masks[land_mask_name] = self._run_global_land_mask()
-                self._update_active_land_mask(land_mask_name=land_mask_name, override=False)
+                self.land_mask = self._run_global_land_mask()
+                self._update_active_land_mask()
 
             case "ndwi":
 
-                if self.VERBOSE:
-                    print("[INFO] Running NDWI land mask generation...")
-
-                self.land_masks[land_mask_name] = self._run_ndwi_land_mask()
-                self._update_active_land_mask(land_mask_name=land_mask_name, override=False)
+                self.land_mask = self._run_ndwi_land_mask()
+                self._update_active_land_mask()
 
             case "threshold":
 
-                if self.VERBOSE:
-                    print("[INFO] Running threshold land mask generation...")
-
-                self.land_masks[land_mask_name] = self._run_threshold_land_mask()
-                self._update_active_land_mask(land_mask_name=land_mask_name, override=False)
+                self.land_mask = self._run_threshold_land_mask()
+                self._update_active_land_mask()
 
             case _:
 
@@ -1466,6 +1424,9 @@ class Hypso1(Hypso):
     def _run_global_land_mask(self) -> np.ndarray:
 
         self._run_georeferencing()
+
+        if self.VERBOSE:
+            print("[INFO] Running global land mask generation...")
 
         land_mask = run_global_land_mask(spatial_dimensions=self.spatial_dimensions,
                                         latitudes=self.latitudes,
@@ -1482,6 +1443,9 @@ class Hypso1(Hypso):
 
         self._run_calibration()
 
+        if self.VERBOSE:
+            print("[INFO] Running NDWI land mask generation...")
+
         cube = self.l1b_cube.to_numpy()
 
         land_mask = run_ndwi_land_mask(cube=cube, 
@@ -1497,6 +1461,9 @@ class Hypso1(Hypso):
     def _run_threshold_land_mask(self) -> xr.DataArray:
 
         self._run_calibration()
+
+        if self.VERBOSE:
+            print("[INFO] Running threshold land mask generation...")
 
         cube = self.l1b_cube.to_numpy()
 
@@ -1534,10 +1501,13 @@ class Hypso1(Hypso):
 
         return None
 
+    """
     def _get_active_land_mask(self) -> xr.DataArray:
 
         return self.active_land_mask
+    """
 
+    """
     def _check_land_mask_has_run(self, land_mask_name: str = None) -> bool:
 
         if self.land_mask_has_run:
@@ -1548,7 +1518,8 @@ class Hypso1(Hypso):
             else:
                 return False
         return False
-
+    """
+        
     def _add_land_mask(self, land_mask_name: str, land_mask: Union[np.ndarray, xr.DataArray]) -> None:
 
         if self._validate_array_dims(array=land_mask, ndim=2):
@@ -1567,6 +1538,7 @@ class Hypso1(Hypso):
 
         return None
 
+    """
     def _get_land_mask(self, land_mask_name: str) -> xr.DataArray:
 
         try:
@@ -1576,7 +1548,7 @@ class Hypso1(Hypso):
             return None
 
         return None
-
+    """
 
     # Cloud mask functions
         
@@ -1683,8 +1655,8 @@ class Hypso1(Hypso):
 
     def _update_active_mask(self) -> None:
 
-        land_mask = self._get_active_land_mask()
-        cloud_mask = self._get_active_cloud_mask()
+        land_mask = self.land_mask
+        cloud_mask = self.cloud_mask
 
         if land_mask is None and cloud_mask is None:
             return None
@@ -1813,7 +1785,9 @@ class Hypso1(Hypso):
 
         self._run_calibration()
         self._run_geometry()
-        self._run_atmospheric_correction(product_name='6sv1')
+
+        if self.l2a_cube is None or self.l2a_cube['correction'] != '6sv1':
+            self._run_atmospheric_correction(product_name='6sv1')
 
         model = Path(model)
 
@@ -1850,7 +1824,9 @@ class Hypso1(Hypso):
 
         self._run_calibration()
         self._run_geometry()
-        self._run_atmospheric_correction(product_name='acolite')
+
+        if self.l2a_cube is None or self.l2a_cube['correction'] != 'acolite':
+            self._run_atmospheric_correction(product_name='acolite')
 
         model = Path(model)
 

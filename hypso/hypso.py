@@ -119,14 +119,10 @@ class Hypso:
         self.srf = None
 
         # Initilize land mask dict
-        self.land_masks = {}
-        self.active_land_mask = None
-        self.active_land_mask_name = None
-        
+        self.land_mask = None
+
         # Initilize cloud mask dict
-        self.cloud_masks = {}
-        self.active_cloud_mask = None
-        self.active_cloud_mask_name = None
+        self.cloud_mask = None
 
         # Intialize active mask
         self.active_mask = None

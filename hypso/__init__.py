@@ -26,7 +26,7 @@ from .hypso import Hypso
 from .hypso1 import Hypso1
 from .hypso2 import Hypso2
 from .download import download_nc_files
-from .DataArrayDict import DataArrayDict
+from .dataarray_utils import DataArrayDict, DataArrayValidator
 
 try:
     from ._version import __version__  # noqa
