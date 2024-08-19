@@ -1190,13 +1190,13 @@ class Hypso1(Hypso):
         match product_name.lower():
             case "6sv1":
 
-                self.l2a_cube = self._run_6sv1_atmospheric_correction()
+                self._run_6sv1_atmospheric_correction()
             case "acolite":
 
-                self.l2a_cube = self._run_acolite_atmospheric_correction()
+                self._run_acolite_atmospheric_correction()
             case "machi":
 
-                self.l2a_cube = self._run_machi_atmospheric_correction() 
+                self._run_machi_atmospheric_correction() 
 
             case _:
                 print("[ERROR] No such atmospheric correction product supported!")
@@ -1311,10 +1311,6 @@ class Hypso1(Hypso):
         return self.l2a_cube
     
 
-
-
-
-
     # Top of atmosphere reflectance functions
 
     # TODO: move code to atmospheric module
@@ -1387,7 +1383,6 @@ class Hypso1(Hypso):
 
     # Land mask functions
 
-    # TODO: split into individual functions
     def _run_land_mask(self, land_mask_name: str="global", **kwargs) -> None:
 
         land_mask_name = land_mask_name.lower()
@@ -1422,7 +1417,9 @@ class Hypso1(Hypso):
                                         )
         
         self._update_land_mask(land_mask=land_mask)
-        land_mask.attrs['method'] = "global"
+        self.land_mask.attrs['method'] = "global"
+
+        self.land_mask_has_run = True
 
         return self.land_mask
 
@@ -1439,9 +1436,10 @@ class Hypso1(Hypso):
                                        wavelengths=self.wavelengths,
                                        verbose=self.VERBOSE)
 
-        land_mask = self._create_2d_xarray(data=land_mask)
-        land_mask = self._set_land_mask_xarray_attrs(land_mask=land_mask)
-        land_mask.attrs['method'] = "ndwi"
+        self._update_land_mask(land_mask=land_mask)
+        self.land_mask.attrs['method'] = "ndwi"
+
+        self.land_mask_has_run = True
 
         return self.land_mask
     
@@ -1458,203 +1456,76 @@ class Hypso1(Hypso):
                                             wavelengths=self.wavelengths,
                                             verbose=self.VERBOSE)
         
-        land_mask = self._create_2d_xarray(data=land_mask)
-        land_mask = self._set_land_mask_xarray_attrs(land_mask=land_mask)
-        land_mask.attrs['method'] = "threshold"
+        self._update_land_mask(land_mask=land_mask)
+        self.land_mask.attrs['method'] = "threshold"
 
-        return land_mask
+        self.land_mask_has_run = True
+
+        return self.land_mask
      
-    """
-    def _set_land_mask_xarray_attrs(self, land_mask: xr.DataArray) -> xr.DataArray:
-
-        land_mask.attrs['description'] = "Land mask"
-
-        return land_mask
-    """
-        
-    """
-    def _update_active_land_mask(self, land_mask_name: str = None, override: bool = False) -> None:
-
-        if land_mask_name is None:
-            return None
-
-        land_mask_name = land_mask_name.lower()
-
-        if land_mask_name not in self.land_masks.keys():
-            return None
-
-        if self.active_land_mask is None or override:
-            self.active_land_mask = self.land_masks[land_mask_name]
-            self.active_land_mask.attrs['description'] = "Active land mask"
-
-        self._update_active_mask()
-
-        return None
-    """
-
     def _update_land_mask(self, land_mask: Union[np.ndarray, xr.DataArray]) -> None:
 
-        land_mask_attributes = {'description': "Land mask"
-                         }
+        land_mask_attributes = {
+                                'description': "Land mask"
+                               }
         
         v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=DIM_NAMES_2D)
 
-        data = v.validate(data=data)
+        data = v.validate(data=land_mask)
         data = data.assign_attrs(land_mask_attributes)
 
         self.land_mask = data
 
         return self.land_mask
-    """
-    def _get_active_land_mask(self) -> xr.DataArray:
 
-        return self.active_land_mask
-    """
 
-    """
-    def _check_land_mask_has_run(self, land_mask_name: str = None) -> bool:
-
-        if self.land_mask_has_run:
-            if land_mask_name is None:
-                return True  
-            elif land_mask_name.lower() in self.land_masks.keys():
-                return True  
-            else:
-                return False
-        return False
-    """
-
-    """
-    def _add_land_mask(self, land_mask_name: str, land_mask: Union[np.ndarray, xr.DataArray]) -> None:
-
-        if self._validate_array_dims(array=land_mask, ndim=2):
-
-            if type(land_mask) is np.ndarray:
-                land_mask = self._create_2d_xarray(data=land_mask)
-                land_mask = self._set_land_mask_xarray_attrs(land_mask=land_mask)
-            elif type(land_mask) is xr.DataArray:
-                land_mask = self._set_land_mask_xarray_attrs(land_mask=land_mask)
-            else:
-                return None
-
-            key = land_mask_name.lower()
-
-            self.land_masks[key] = land_mask
-
-        return None
-    """
-        
-    """
-    def _get_land_mask(self, land_mask_name: str) -> xr.DataArray:
-
-        try:
-            key = land_mask_name.lower()
-            return self.land_masks[key]
-        except KeyError:
-            return None
-
-        return None
-    """
 
     # Cloud mask functions
         
-    def _run_quantile_threshold_cloud_mask(self, quantile: float, overwrite: bool = False) -> None:
+    def _run_cloud_mask(self, cloud_mask_name: str="quantile_threshold", **kwargs) -> None:
 
-        cloud_mask_key = "quantile_threshold"
+        cloud_mask_name = cloud_mask_name.lower()
 
-        if self._check_cloud_mask_has_run(cloud_mask_key) and not overwrite:
+        match cloud_mask_name:
+            case "quantile_threshold":
+                self._run_quantile_threshold_cloud_mask(**kwargs)
 
-            if self.VERBOSE:
-                print("[INFO] Cloud mask has already been run. Skipping.")
-
-            return None
-
-        if self.cloud_masks is None:
-            self.cloud_masks = {}
-
-        cloud_mask = run_quantile_threshold_cloud_mask(cube=self.l1b_cube,
-                                                quantile=quantile)
-
-        cloud_mask = self._create_2d_xarray(data=cloud_mask)
-        cloud_mask = self._set_cloud_mask_xarray_attrs(cloud_mask=cloud_mask)
-        cloud_mask.attrs['description'] = "Cloud mask"
-        cloud_mask.attrs['method'] = "quantile threshold"
-
-        self.cloud_masks[cloud_mask_key] = cloud_mask
-
-        self._update_active_cloud_mask(cloud_mask_key=cloud_mask_key, override=False)
+            case _:
+                print("[WARNING] No such cloud mask supported!")
+                return None
 
         self.cloud_mask_has_run = True
 
         return None
 
-    def _set_cloud_mask_xarray_attrs(self, cloud_mask: xr.DataArray) -> xr.DataArray:
+    def _run_quantile_threshold_cloud_mask(self, quantile: float = 0.075) -> None:
 
-        cloud_mask.attrs['description'] = "Cloud mask"
+        cloud_mask = run_quantile_threshold_cloud_mask(cube=self.l1b_cube,
+                                                        quantile=quantile)
 
-        return cloud_mask
+        self._update_cloud_mask(cloud_mask=cloud_mask)
+        cloud_mask.attrs['method'] = "quantile threshold"
+        cloud_mask.attrs['quantile'] = quantile
 
-    def _update_active_cloud_mask(self, cloud_mask_name: str = None, override: bool = False) -> None:
-
-        if cloud_mask_name is None:
-            return None
-
-        cloud_mask_name = cloud_mask_name.lower()
-
-        if cloud_mask_name not in self.cloud_masks.keys():
-            return None
-
-        if self.active_cloud_mask is None or override:
-            self.active_cloud_mask = self.cloud_masks[cloud_mask_name]
-            self.active_cloud_mask.attrs['description'] = "Active cloud mask"
-
-        self._update_active_mask()
+        self.cloud_mask_has_run = True
 
         return None
 
-    def _get_active_cloud_mask(self) -> xr.DataArray:
+    def _update_cloud_mask(self, cloud_mask: Union[np.ndarray, xr.DataArray]) -> None:
 
-        return self.active_cloud_mask
+        cloud_mask_attributes = {
+                                'description': "Cloud mask"
+                                }
+        
+        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=DIM_NAMES_2D)
 
-    def _check_cloud_mask_has_run(self, cloud_mask_name: str = None) -> bool:
+        data = v.validate(data=cloud_mask)
+        data = data.assign_attrs(cloud_mask_attributes)
 
-        if self.cloud_mask_has_run:
-            if cloud_mask_name is None:
-                return True     
-            elif cloud_mask_name.lower() in self.cloud_masks.keys():
-                return True     
-            else:
-                return False
+        self.cloud_mask = data
 
-        return False
+        return self.cloud_mask
 
-    def _add_cloud_mask(self, cloud_mask_name: str, cloud_mask: Union[np.ndarray, xr.DataArray]) -> None:
-
-        if self._validate_array_dims(array=cloud_mask, ndim=2):
-
-            if type(cloud_mask) is np.ndarray:
-                cloud_mask = self._create_2d_xarray(data=cloud_mask)
-                cloud_mask = self._set_cloud_mask_xarray_attrs(cloud_mask=cloud_mask)
-            elif type(cloud_mask) is xr.DataArray:
-                cloud_mask = self._set_cloud_mask_xarray_attrs(cloud_mask=cloud_mask)
-            else:
-                return None
-
-            key = cloud_mask_name.lower()
-
-            self.cloud_masks[key] = cloud_mask
-
-        return None
-    
-    def _get_cloud_mask(self, cloud_mask_name: str) -> xr.DataArray:
-
-        try:
-            key = cloud_mask_name.lower()
-            return self.cloud_masks[key]
-        except KeyError:
-            return None
-
-        return None
 
 
     # Unified mask functions
