@@ -1256,7 +1256,7 @@ class Hypso1(Hypso):
         self._update_l2a_cube(data=cube)
         self.l2a_cube.attrs['correction'] = "6sv1"
 
-        return cube
+        return self.l2a_cube
 
     def _run_acolite_atmospheric_correction(self) -> xr.DataArray:
 
@@ -1286,7 +1286,7 @@ class Hypso1(Hypso):
         self._update_l2a_cube(data=cube)
         self.l2a_cube.attrs['correction'] = "acolite"
 
-        return cube
+        return self.l2a_cube
     
     # TODO
     def _run_machi_atmospheric_correction(self) -> xr.DataArray:
@@ -1308,7 +1308,7 @@ class Hypso1(Hypso):
         self._update_l2a_cube(data=cube)
         self.l2a_cube.attrs['correction'] = "machi"
 
-        return cube
+        return self.l2a_cube
     
 
 
@@ -1388,35 +1388,17 @@ class Hypso1(Hypso):
     # Land mask functions
 
     # TODO: split into individual functions
-    def _run_land_mask(self, land_mask_name: str="global", overwrite: bool = False) -> None:
-
-        if self._check_land_mask_has_run(land_mask_name=land_mask_name) and not overwrite:
-
-
-
-            return None
-
-        if self.land_masks is None:
-            self.land_masks = {}
+    def _run_land_mask(self, land_mask_name: str="global", **kwargs) -> None:
 
         land_mask_name = land_mask_name.lower()
 
         match land_mask_name:
-
             case "global":
-
-                self.land_mask = self._run_global_land_mask()
-                self._update_active_land_mask()
-
+                self._run_global_land_mask(**kwargs)
             case "ndwi":
-
-                self.land_mask = self._run_ndwi_land_mask()
-                self._update_active_land_mask()
-
+                self._run_ndwi_land_mask(**kwargs)
             case "threshold":
-
-                self.land_mask = self._run_threshold_land_mask()
-                self._update_active_land_mask()
+                self._run_threshold_land_mask(**kwargs)
 
             case _:
 
@@ -1439,11 +1421,10 @@ class Hypso1(Hypso):
                                         longitudes=self.longitudes
                                         )
         
-        land_mask = self._create_2d_xarray(data=land_mask)
-        land_mask = self._set_land_mask_xarray_attrs(land_mask=land_mask)
+        self._update_land_mask(land_mask=land_mask)
         land_mask.attrs['method'] = "global"
 
-        return land_mask
+        return self.land_mask
 
     def _run_ndwi_land_mask(self) -> np.ndarray:
 
@@ -1462,7 +1443,7 @@ class Hypso1(Hypso):
         land_mask = self._set_land_mask_xarray_attrs(land_mask=land_mask)
         land_mask.attrs['method'] = "ndwi"
 
-        return land_mask
+        return self.land_mask
     
     def _run_threshold_land_mask(self) -> xr.DataArray:
 
@@ -1483,12 +1464,15 @@ class Hypso1(Hypso):
 
         return land_mask
      
+    """
     def _set_land_mask_xarray_attrs(self, land_mask: xr.DataArray) -> xr.DataArray:
 
         land_mask.attrs['description'] = "Land mask"
 
         return land_mask
-
+    """
+        
+    """
     def _update_active_land_mask(self, land_mask_name: str = None, override: bool = False) -> None:
 
         if land_mask_name is None:
@@ -1506,7 +1490,21 @@ class Hypso1(Hypso):
         self._update_active_mask()
 
         return None
+    """
 
+    def _update_land_mask(self, land_mask: Union[np.ndarray, xr.DataArray]) -> None:
+
+        land_mask_attributes = {'description': "Land mask"
+                         }
+        
+        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=DIM_NAMES_2D)
+
+        data = v.validate(data=data)
+        data = data.assign_attrs(land_mask_attributes)
+
+        self.land_mask = data
+
+        return self.land_mask
     """
     def _get_active_land_mask(self) -> xr.DataArray:
 
@@ -1525,7 +1523,8 @@ class Hypso1(Hypso):
                 return False
         return False
     """
-        
+
+    """
     def _add_land_mask(self, land_mask_name: str, land_mask: Union[np.ndarray, xr.DataArray]) -> None:
 
         if self._validate_array_dims(array=land_mask, ndim=2):
@@ -1543,7 +1542,8 @@ class Hypso1(Hypso):
             self.land_masks[key] = land_mask
 
         return None
-
+    """
+        
     """
     def _get_land_mask(self, land_mask_name: str) -> xr.DataArray:
 
