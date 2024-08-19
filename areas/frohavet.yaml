@@ -1,0 +1,14 @@
+frohavet:
+  description: Frohavet
+  projection:
+    proj: stere
+    ellps: bessel
+    lat_0: 90.0
+    lon_0: 10.0
+    lat_ts: 63.0
+  shape:
+    height: 512
+    width: 512
+  area_extent:
+    lower_left_xy: [-100000, -2950000]
+    upper_right_xy: [100000, -2650000]
