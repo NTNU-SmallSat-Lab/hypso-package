@@ -1419,7 +1419,7 @@ class Hypso1(Hypso):
         self._update_land_mask(land_mask=land_mask)
         self.land_mask.attrs['method'] = "global"
 
-        self._update_active_mask()
+        self._update_unified_mask()
 
         self.land_mask_has_run = True
 
@@ -1441,7 +1441,7 @@ class Hypso1(Hypso):
         self._update_land_mask(land_mask=land_mask)
         self.land_mask.attrs['method'] = "ndwi"
 
-        self._update_active_mask()
+        self._update_unified_mask()
 
         self.land_mask_has_run = True
 
@@ -1463,7 +1463,7 @@ class Hypso1(Hypso):
         self._update_land_mask(land_mask=land_mask)
         self.land_mask.attrs['method'] = "threshold"
 
-        self._update_active_mask()
+        self._update_unified_mask()
 
         self.land_mask_has_run = True
 
@@ -1510,12 +1510,12 @@ class Hypso1(Hypso):
                                                         quantile=quantile)
 
         self._update_cloud_mask(cloud_mask=cloud_mask)
-        cloud_mask.attrs['method'] = "quantile threshold"
-        cloud_mask.attrs['quantile'] = quantile
+        self.cloud_mask.attrs['method'] = "quantile threshold"
+        self.cloud_mask.attrs['quantile'] = quantile
 
         self.cloud_mask_has_run = True
 
-        self._update_active_mask()
+        self._update_unified_mask()
 
         return None
 
@@ -1538,7 +1538,7 @@ class Hypso1(Hypso):
 
     # Unified mask functions
 
-    def _update_active_mask(self) -> None:
+    def _update_unified_mask(self) -> None:
 
         land_mask = self.land_mask
         cloud_mask = self.cloud_mask
@@ -1548,9 +1548,9 @@ class Hypso1(Hypso):
         
         elif land_mask is None:
 
-            active_mask = cloud_mask.to_numpy()
+            unified_mask = cloud_mask.to_numpy()
 
-            active_mask_attributes = {
+            unified_mask_attributes = {
                                       'description': "Active mask",
                                       'land_mask_method': None,
                                       'cloud_mask_method': cloud_mask.attrs['method'],
@@ -1558,16 +1558,16 @@ class Hypso1(Hypso):
 
             v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=DIM_NAMES_2D)
 
-            data = v.validate(data=active_mask)
-            data = data.assign_attrs(active_mask_attributes)
+            data = v.validate(data=unified_mask)
+            data = data.assign_attrs(unified_mask_attributes)
 
-            self.active_mask = data
+            self.unified_mask = data
         
         elif cloud_mask is None:
             
-            active_mask = land_mask.to_numpy()
+            unified_mask = land_mask.to_numpy()
 
-            active_mask_attributes = {
+            unified_mask_attributes = {
                                       'description': "Active mask",
                                       'land_mask_method': land_mask.attrs['method'],
                                       'cloud_mask_method': None
@@ -1575,16 +1575,16 @@ class Hypso1(Hypso):
 
             v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=DIM_NAMES_2D)
 
-            data = v.validate(data=active_mask)
-            data = data.assign_attrs(active_mask_attributes)
+            data = v.validate(data=unified_mask)
+            data = data.assign_attrs(unified_mask_attributes)
 
-            self.active_mask = data
+            self.unified_mask = data
         
         else:
 
-            active_mask = land_mask.to_numpy() | cloud_mask.to_numpy()
+            unified_mask = land_mask.to_numpy() | cloud_mask.to_numpy()
 
-            active_mask_attributes = {
+            unified_mask_attributes = {
                                       'description': "Active mask",
                                       'land_mask_method': land_mask.attrs['method'],
                                       'cloud_mask_method': cloud_mask.attrs['method']
@@ -1592,10 +1592,10 @@ class Hypso1(Hypso):
 
             v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=DIM_NAMES_2D)
 
-            data = v.validate(data=active_mask)
-            data = data.assign_attrs(active_mask_attributes)
+            data = v.validate(data=unified_mask)
+            data = data.assign_attrs(unified_mask_attributes)
 
-            self.active_mask = data
+            self.unified_mask = data
 
         return None
 
@@ -1663,7 +1663,7 @@ class Hypso1(Hypso):
         cube = self.l1b_cube.to_numpy()
 
         try:
-            mask = self.active_mask.to_numpy()
+            mask = self.unified_mask.to_numpy()
         except:
             mask = None
 
@@ -1703,7 +1703,7 @@ class Hypso1(Hypso):
         cube = self.l2a_cube.to_numpy()
 
         try:
-            mask = self.active_mask.to_numpy()
+            mask = self.unified_mask.to_numpy()
         except:
             mask = None
 
@@ -1742,7 +1742,7 @@ class Hypso1(Hypso):
         cube = self.l2a_cube.to_numpy()
 
         try:
-            mask = self.active_mask.to_numpy()
+            mask = self.unified_mask.to_numpy()
         except:
             mask = None
         
@@ -2549,9 +2549,9 @@ class Hypso1(Hypso):
 
     # Public unified mask methods
 
-    def get_active_mask(self) -> xr.DataArray:
+    def get_unified_mask(self) -> xr.DataArray:
 
-        return self.active_mask
+        return self.unified_mask
 
 
     # Public chlorophyll methods
