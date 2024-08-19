@@ -40,12 +40,12 @@ from hypso.masks import run_cloud_mask, \
 from hypso.reading import load_l1a_nc_cube, load_l1a_nc_metadata
 from hypso.writing import set_or_create_attr
 
-from hypso.dataarray_utils import DataArrayDict, DataArrayValidator
+from hypso.DataArrayValidator import DataArrayValidator'
+from hypso.DataArrayDict import DataArrayDict
 
 from satpy import Scene
 from satpy.dataset.dataid import WavelengthRange
 from pyresample.geometry import SwathDefinition
-
 
 SUPPORTED_PRODUCT_LEVELS = ["l1a", "l1b", "l2a"]
 
@@ -59,17 +59,10 @@ DEFAULT_CHL_EST_PRODUCT = "band_ratio"
 DEFAULT_LAND_MASK_PRODUCT = "global"
 DEFAULT_CLOUD_MASK_PRODUCT = "default"
 
-DIM_NAMES_3D = ["y", "x", "band"]
-DIM_NAMES_2D = ["y", "x"]
-
 UNIX_TIME_OFFSET = 20 # TODO: Verify offset validity. Sivert had 20 here
 
 # TODO: store latitude and longitude as xarray
-# TODO: make some type of class for the products stored in dictionaries? Extend dict class?
-# TODO: remove validate functions
 # TODO: setattr, hasattr, getattr for setting class variables, especially those from geometry
-# TODO: add variable to track what atm corr method was used to create l2a_cube
-
 
 class Hypso1(Hypso):
 
@@ -110,12 +103,21 @@ class Hypso1(Hypso):
         chl_attributes = {}
         product_attributes = {}
 
-        self.chl = DataArrayDict(dims_shape=self.spatial_dimensions, attributes=chl_attributes, dims_names=DIM_NAMES_2D)
-        self.products = DataArrayDict(dims_shape=self.spatial_dimensions, attributes=product_attributes, dims_names=DIM_NAMES_2D)
+        self.chl = DataArrayDict(dims_shape=self.spatial_dimensions, 
+                                 attributes=chl_attributes, 
+                                 dims_names=self.dim_names_2d,
+                                 num_dims=2
+                                 )
+        
+        self.products = DataArrayDict(dims_shape=self.spatial_dimensions, 
+                                      attributes=product_attributes, 
+                                      dims_names=self.dim_names_2d,
+                                      num_dims=2
+                                      )
 
         return None
 
-
+        
     # Setters
 
     def _set_capture_datetime(self) -> None:
@@ -342,7 +344,7 @@ class Hypso1(Hypso):
         self._set_capture_region()
         self._set_capture_datetime()
 
-        self._load_l1a_cube()
+        
         self._load_l1a_metadata()
 
         self._set_nc_files()
@@ -357,6 +359,8 @@ class Hypso1(Hypso):
         self._set_capture_type()
         self._set_adcs_dataframes()
         #self._set_target_area()
+
+        self._load_l1a_cube()
 
         return None
 
@@ -378,9 +382,7 @@ class Hypso1(Hypso):
 
     def _load_l1a_cube(self) -> None:
 
-        l1a_cube = load_l1a_nc_cube(self.hypso_path)
-
-        self._update_l1a_cube(data=l1a_cube)
+        self.l1a_cube = load_l1a_nc_cube(self.hypso_path)
 
         return None
 
@@ -398,23 +400,6 @@ class Hypso1(Hypso):
     def _get_l1a_cube(self) -> xr.DataArray:
 
         return self.l1a_cube
-
-    def _update_l1a_cube(self, data: Union[np.ndarray, xr.DataArray]) -> None:
-
-        l1a_attributes = {'level': "L1a",
-                          'units': "a.u.",
-                          'description': "Raw sensor value"
-                         }
-
-        v = DataArrayValidator(dims_names=DIM_NAMES_3D)
-
-        data = v.validate(data=data)
-        data = data.assign_attrs(l1a_attributes)
-
-        self.l1a_cube = data
-
-        return None
-
 
 
     # L1b functions
@@ -434,22 +419,7 @@ class Hypso1(Hypso):
     def _get_l1b_cube(self) -> xr.DataArray:
 
         return self.l1b_cube
-    
-    def _update_l1b_cube(self, data: Union[np.ndarray, xr.DataArray]) -> None:
 
-        l1b_attributes = {'level': "L1b",
-                          'units': r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$',
-                          'description': "Radiance (L)"
-                         }
-
-        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=DIM_NAMES_3D)
-
-        data = v.validate(data=data)
-        data = data.assign_attrs(l1b_attributes)
-
-        self.l1b_cube = data
-
-        return None
 
 
     # L2a functions
@@ -481,44 +451,21 @@ class Hypso1(Hypso):
     def _load_l2a_metadata(self) -> None:
         return None
 
-    def _add_l2a_cube(self, product_name: str, l2a_cube: Union[np.ndarray, xr.DataArray]) -> None:
-
-        if self._validate_array_dims(array=l2a_cube, ndim=3):
-
-            if type(l2a_cube) is np.ndarray:
-                l2a_cube = self._create_2d_xarray(data=l2a_cube)
-                l2a_cube = self._set_land_mask_xarray_attrs(l2a_cube=l2a_cube)
-            elif type(l2a_cube) is xr.DataArray:
-                l2a_cube = self._set_land_mask_xarray_attrs(l2a_cube=l2a_cube)
-            else:
-                return None
-
-            key = product_name.lower()
-
-            self.land_masks[key] = l2a_cube
-
-        return None
-    
-    def _get_l2a_cube(self, product_name: str) -> xr.DataArray:
-
-        return self.l2a_cube
-
-    def _update_l2a_cube(self, data: Union[np.ndarray, xr.DataArray]) -> None:
+    '''
+    def _format_l2a_cube(self, data: Union[np.ndarray, xr.DataArray]) -> None:
 
         l2a_attributes = {'level': "L2a",
                           'units': "a.u.",
                           'description': "Reflectance (Rrs)"
                          }
         
-        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=DIM_NAMES_3D)
+        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=self.dim_names_3d)
 
         data = v.validate(data=data)
         data = data.assign_attrs(l2a_attributes)
 
-        self.l2a_cube = data
-
-        return None
-
+        return data
+    '''
 
 
 
@@ -527,7 +474,7 @@ class Hypso1(Hypso):
 
     def _run_georeferencing(self, overwrite: bool = False) -> None:
 
-        if self._check_georeferencing_has_run() and not overwrite:
+        if self.georeferencing_has_run and not overwrite:
 
             if self.VERBOSE:
                     print("[INFO] Georeferencing has already been run. Skipping.")
@@ -700,9 +647,7 @@ class Hypso1(Hypso):
 
         return None
 
-    def _check_georeferencing_has_run(self) -> bool:
 
-        return self.georeferencing_has_run
             
 
 
@@ -724,7 +669,7 @@ class Hypso1(Hypso):
         :return: None
         """
 
-        if self._check_calibration_has_run() and not overwrite:
+        if self.calibration_has_run and not overwrite:
 
             if self.VERBOSE:
                     print("[INFO] Calibration has already been run. Skipping.")
@@ -749,7 +694,9 @@ class Hypso1(Hypso):
             l1b_cube = self._run_destriping_correction(cube=l1b_cube, **kwargs)
 
 
-        self._update_l1b_cube(data=l1b_cube)
+        #l1b_cube = self._format_l1b_cube(data=l1b_cube)
+
+        self.l1b_cube = l1b_cube
  
         self.calibration_has_run = True
 
@@ -1112,16 +1059,13 @@ class Hypso1(Hypso):
 
         return None
 
-    def _check_calibration_has_run(self) -> bool:
 
-        return self.calibration_has_run
- 
 
     # Geometry computation functions
 
     def _run_geometry(self, overwrite: bool = False) -> None:
 
-        if self._check_geometry_has_run() and not overwrite:
+        if self.geometry_computation_has_run and not overwrite:
 
             if self.VERBOSE:
                     print("[INFO] Geometry computation has already been run. Skipping.")
@@ -1178,9 +1122,7 @@ class Hypso1(Hypso):
 
         return None
 
-    def _check_geometry_has_run(self) -> bool:
 
-        return self.geometry_computation_has_run
 
 
     # Atmospheric correction functions
@@ -1189,19 +1131,14 @@ class Hypso1(Hypso):
 
         match product_name.lower():
             case "6sv1":
-
-                self._run_6sv1_atmospheric_correction()
+                self.l2a_cube = self._run_6sv1_atmospheric_correction()
             case "acolite":
-
-                self._run_acolite_atmospheric_correction()
+                self.l2a_cube = self._run_acolite_atmospheric_correction()
             case "machi":
-
-                self._run_machi_atmospheric_correction() 
-
+                self.l2a_cube = self._run_machi_atmospheric_correction() 
             case _:
                 print("[ERROR] No such atmospheric correction product supported!")
                 return None
-
         return None
 
     def _run_6sv1_atmospheric_correction(self, **kwargs) -> xr.DataArray:
@@ -1253,10 +1190,10 @@ class Hypso1(Hypso):
                         time_capture=time_capture,
                         srf=self.srf)
         
-        self._update_l2a_cube(data=cube)
-        self.l2a_cube.attrs['correction'] = "6sv1"
+        cube = self._format_l2a_dataarray(cube)
+        cube.attrs['correction'] = "6sv1"
 
-        return self.l2a_cube
+        return cube
 
     def _run_acolite_atmospheric_correction(self) -> xr.DataArray:
 
@@ -1283,10 +1220,10 @@ class Hypso1(Hypso):
                            atmos_dict=atmos_params, 
                            nc_file_acoliteready=self.l1b_nc_file)
 
-        self._update_l2a_cube(data=cube)
-        self.l2a_cube.attrs['correction'] = "acolite"
+        cube = self._format_l2a_dataarray(cube)
+        cube.attrs['correction'] = "acolite"
 
-        return self.l2a_cube
+        return cube
     
     # TODO
     def _run_machi_atmospheric_correction(self) -> xr.DataArray:
@@ -1305,10 +1242,10 @@ class Hypso1(Hypso):
         
         #T, A, objs = run_machi(cube=cube, verbose=self.VERBOSE)
 
-        self._update_l2a_cube(data=cube)
-        self.l2a_cube.attrs['correction'] = "machi"
+        cube = self._format_l2a_dataarray(cube)
+        cube.attrs['correction'] = "machi"
 
-        return self.l2a_cube
+        return cube
     
 
     # Top of atmosphere reflectance functions
@@ -1376,9 +1313,6 @@ class Hypso1(Hypso):
 
         return None
 
-    def _check_toa_reflectance_has_run(self) -> bool:
-
-        return self.toa_reflectance_has_run
 
 
     # Land mask functions
@@ -1389,11 +1323,11 @@ class Hypso1(Hypso):
 
         match land_mask_name:
             case "global":
-                self._run_global_land_mask(**kwargs)
+                self.land_mask = self._run_global_land_mask(**kwargs)
             case "ndwi":
-                self._run_ndwi_land_mask(**kwargs)
+                self.land_mask = self._run_ndwi_land_mask(**kwargs)
             case "threshold":
-                self._run_threshold_land_mask(**kwargs)
+                self.land_mask = self._run_threshold_land_mask(**kwargs)
 
             case _:
 
@@ -1416,14 +1350,10 @@ class Hypso1(Hypso):
                                         longitudes=self.longitudes
                                         )
         
-        self._update_land_mask(land_mask=land_mask)
-        self.land_mask.attrs['method'] = "global"
+        land_mask = self._format_land_mask_dataarray(land_mask)
+        land_mask.attrs['method'] = "global"
 
-        self._update_unified_mask()
-
-        self.land_mask_has_run = True
-
-        return self.land_mask
+        return land_mask
 
     def _run_ndwi_land_mask(self) -> np.ndarray:
 
@@ -1438,14 +1368,10 @@ class Hypso1(Hypso):
                                        wavelengths=self.wavelengths,
                                        verbose=self.VERBOSE)
 
-        self._update_land_mask(land_mask=land_mask)
-        self.land_mask.attrs['method'] = "ndwi"
+        land_mask = self._format_land_mask_dataarray(land_mask)
+        land_mask.attrs['method'] = "ndwi"
 
-        self._update_unified_mask()
-
-        self.land_mask_has_run = True
-
-        return self.land_mask
+        return land_mask
     
     def _run_threshold_land_mask(self) -> xr.DataArray:
 
@@ -1460,29 +1386,23 @@ class Hypso1(Hypso):
                                             wavelengths=self.wavelengths,
                                             verbose=self.VERBOSE)
         
-        self._update_land_mask(land_mask=land_mask)
-        self.land_mask.attrs['method'] = "threshold"
+        land_mask = self._format_land_mask_dataarray(land_mask)
+        land_mask.attrs['method'] = "threshold"
 
-        self._update_unified_mask()
-
-        self.land_mask_has_run = True
-
-        return self.land_mask
+        return land_mask
      
-    def _update_land_mask(self, land_mask: Union[np.ndarray, xr.DataArray]) -> None:
+    def _format_land_mask(self, land_mask: Union[np.ndarray, xr.DataArray]) -> None:
 
         land_mask_attributes = {
                                 'description': "Land mask"
                                }
         
-        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=DIM_NAMES_2D)
+        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=self.dim_names_2d, num_dims=2)
 
         data = v.validate(data=land_mask)
         data = data.assign_attrs(land_mask_attributes)
 
-        self.land_mask = data
-
-        return self.land_mask
+        return data
 
 
 
@@ -1494,7 +1414,11 @@ class Hypso1(Hypso):
 
         match cloud_mask_name:
             case "quantile_threshold":
-                self._run_quantile_threshold_cloud_mask(**kwargs)
+
+                if self.VERBOSE:
+                    print("[INFO] Running quantile threshold cloud mask generation...")
+
+                self.cloud_mask = self._run_quantile_threshold_cloud_mask(**kwargs)
 
             case _:
                 print("[WARNING] No such cloud mask supported!")
@@ -1506,38 +1430,22 @@ class Hypso1(Hypso):
 
     def _run_quantile_threshold_cloud_mask(self, quantile: float = 0.075) -> None:
 
+        self._run_calibration()
+
         cloud_mask = run_quantile_threshold_cloud_mask(cube=self.l1b_cube,
                                                         quantile=quantile)
 
-        self._update_cloud_mask(cloud_mask=cloud_mask)
-        self.cloud_mask.attrs['method'] = "quantile threshold"
-        self.cloud_mask.attrs['quantile'] = quantile
+        cloud_mask = self._format_cloud_mask_dataarray(cloud_mask)
+        cloud_mask.attrs['method'] = "quantile threshold"
+        cloud_mask.attrs['quantile'] = quantile
 
-        self.cloud_mask_has_run = True
-
-        self._update_unified_mask()
-
-        return None
-
-    def _update_cloud_mask(self, cloud_mask: Union[np.ndarray, xr.DataArray]) -> None:
-
-        cloud_mask_attributes = {
-                                'description': "Cloud mask"
-                                }
-        
-        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=DIM_NAMES_2D)
-
-        data = v.validate(data=cloud_mask)
-        data = data.assign_attrs(cloud_mask_attributes)
-
-        self.cloud_mask = data
-
-        return self.cloud_mask
+        return cloud_mask 
 
 
 
     # Unified mask functions
 
+    '''
     def _update_unified_mask(self) -> None:
 
         land_mask = self.land_mask
@@ -1549,81 +1457,34 @@ class Hypso1(Hypso):
         elif land_mask is None:
 
             unified_mask = cloud_mask.to_numpy()
+            self.unified_mask = self._format_unified_mask_dataarray(unified_mask)
+            self.unified_mask.attrs['cloud_mask_method'] = cloud_mask.attrs['method']
 
-            unified_mask_attributes = {
-                                      'description': "Active mask",
-                                      'land_mask_method': None,
-                                      'cloud_mask_method': cloud_mask.attrs['method'],
-                                     }
-
-            v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=DIM_NAMES_2D)
-
-            data = v.validate(data=unified_mask)
-            data = data.assign_attrs(unified_mask_attributes)
-
-            self.unified_mask = data
-        
         elif cloud_mask is None:
             
             unified_mask = land_mask.to_numpy()
-
-            unified_mask_attributes = {
-                                      'description': "Active mask",
-                                      'land_mask_method': land_mask.attrs['method'],
-                                      'cloud_mask_method': None
-                                     }
-
-            v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=DIM_NAMES_2D)
-
-            data = v.validate(data=unified_mask)
-            data = data.assign_attrs(unified_mask_attributes)
-
-            self.unified_mask = data
+            self.unified_mask = self._format_unified_mask_dataarray(unified_mask)
+            self.unified_mask.attrs['land_mask_method'] = land_mask.attrs['method']
         
         else:
 
             unified_mask = land_mask.to_numpy() | cloud_mask.to_numpy()
-
-            unified_mask_attributes = {
-                                      'description': "Active mask",
-                                      'land_mask_method': land_mask.attrs['method'],
-                                      'cloud_mask_method': cloud_mask.attrs['method']
-                                     }
-
-            v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=DIM_NAMES_2D)
-
-            data = v.validate(data=unified_mask)
-            data = data.assign_attrs(unified_mask_attributes)
-
-            self.unified_mask = data
+            self.unified_mask = self._format_unified_mask_dataarray(unified_mask)
+            self.unified_mask.attrs['land_mask_method'] = land_mask.attrs['method']
+            self.unified_mask.attrs['cloud_mask_method'] = cloud_mask.attrs['method']
 
         return None
-
+    '''
 
 
     # Chlorophyll estimation functions
 
-    # TODO: split into individual functions
     def _run_chlorophyll_estimation(self, 
                                     product_name: str, 
                                     model: Union[str, Path] = None,
                                     factor: float = None,
-                                    overwrite: bool = False) -> None:
-
-        if self._check_chlorophyll_estimation_has_run(product_name=product_name) and not overwrite:
-
-            if self.VERBOSE:
-                print("[INFO] Chlorophyll estimation has already been run. Skipping.")
-
-            return None
-
-        if self.chl is None:
-            self.chl = {}
-
-        try:
-            model = Path(model)
-        except:
-            pass
+                                    #overwrite: bool = False,
+                                    **kwargs) -> None:
 
         match product_name.lower():
 
@@ -1632,21 +1493,21 @@ class Hypso1(Hypso):
                 if self.VERBOSE:
                     print("[INFO] Running band ratio chlorophyll estimation...")
 
-                self.chl[product_name] = self._run_band_ratio_chlorophyll_estimation(factor=factor)
+                self.chl[product_name] = self._run_band_ratio_chlorophyll_estimation(factor=factor, **kwargs)
                 
             case "6sv1_aqua":
 
                 if self.VERBOSE:
                     print("[INFO] Running 6SV1 AQUA Tuned chlorophyll estimation...")
 
-                self.chl[product_name] = self._run_6sv1_aqua_tuned_chlorophyll_estimation(model=model)
+                self.chl[product_name] = self._run_6sv1_aqua_tuned_chlorophyll_estimation(model=model, **kwargs)
 
             case "acolite_aqua":
 
                 if self.VERBOSE:
                     print("[INFO] Running ACOLITE AQUA Tuned chlorophyll estimation...")
 
-                self.chl[product_name] = self._run_acolite_aqua_tuned_chlorophyll_estimation(model=model)
+                self.chl[product_name] = self._run_acolite_aqua_tuned_chlorophyll_estimation(model=model, **kwargs)
 
             case _:
                 print("[ERROR] No such chlorophyll estimation product supported!")
@@ -1674,11 +1535,14 @@ class Hypso1(Hypso):
                                                     factor = factor
                                                     )
 
-        chl = self._create_2d_xarray(data=chl)
-        chl = self._set_chlorophyll_estimation_xarray_attrs(chl=chl)
-        chl.attrs['units'] = "a.u."
-        chl.attrs['method'] = "549 nm over 663 nm band ratio"
-        chl.attrs['factor'] = factor
+        chl_attributes = {
+                        'method': "549 nm over 663 nm band ratio",
+                        'factor': factor,
+                        'units': "a.u."
+                        }
+
+        chl = self._format_chl(chl)
+        chl = chl.assign_attrs(chl_attributes)
 
         return chl
 
@@ -1713,11 +1577,14 @@ class Hypso1(Hypso):
                                                spatial_dimensions = self.spatial_dimensions
                                                )
         
-        chl = self._create_2d_xarray(data=chl)
-        chl = self._set_chlorophyll_estimation_xarray_attrs(chl=chl)
-        chl.attrs['units'] = r'$mg \cdot m^{-3}$'
-        chl.attrs['method'] = "6SV1 AQUA Tuned"
-        chl.attrs['model'] = model
+        chl_attributes = {
+                        'method': "6SV1 AQUA Tuned",
+                        'model': model,
+                        'units': r'$mg \cdot m^{-3}$'
+                        }
+
+        chl = self._format_chl(chl)
+        chl = chl.assign_attrs(chl_attributes)
 
         return chl
 
@@ -1752,91 +1619,29 @@ class Hypso1(Hypso):
                                                spatial_dimensions = self.spatial_dimensions
                                                )
 
-        chl = self._create_2d_xarray(data=chl)
-        chl = self._set_chlorophyll_estimation_xarray_attrs(chl=chl)
-        chl.attrs['units'] = r'$mg \cdot m^{-3}$'
-        chl.attrs['method'] = "ACOLITE AQUA Tuned"
-        chl.attrs['model'] = model
+        chl_attributes = {
+                        'method': "ACOLITE AQUA Tuned",
+                        'model': model,
+                        'units': r'$mg \cdot m^{-3}$'
+                        }
+
+        chl = self._format_chl(chl)
+        chl = chl.assign_attrs(chl_attributes)
 
         return chl
 
-    def _set_chlorophyll_estimation_xarray_attrs(self, chl: xr.DataArray) -> xr.DataArray:
+    def _format_chl(self, chl: Union[np.ndarray, xr.DataArray]) -> None:
 
-        chl.attrs['description'] = "Chlorophyll estimates"
+        cloud_mask_attributes = {
+                                'description': "Chlorophyll estimates"
+                                }
+        
+        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=self.dim_names_2d, num_dims=2)
 
-        return chl
+        data = v.validate(data=chl)
+        data = data.assign_attrs(cloud_mask_attributes)
 
-    def _check_chlorophyll_estimation_has_run(self, product_name: str = None) -> bool:
-
-        if self.chlorophyll_estimation_has_run:
-            if product_name is None:
-                return True
-            elif product_name.lower() in self.chl.keys():
-                return True
-            else:
-                return False
-        return False
-
-    def _add_chlorophyll_estimation_product(self, product_name: str, chl: Union[np.ndarray, xr.DataArray]) -> None:
-
-        if self._validate_array_dims(array=chl, ndim=2):
-
-            if type(chl) is np.ndarray:
-                chl = self._create_2d_xarray(data=chl)
-                chl = self._set_chlorophyll_estimation_xarray_attrs(chl=chl)
-            elif type(chl) is xr.DataArray:
-                chl = self._set_chlorophyll_estimation_xarray_attrs(chl=chl)
-            else:
-                return None
-
-            key = product_name.lower()
-
-            self.chl[key] = chl
-
-        return None
-    
-    def _get_chlorophyll_estimation_product(self, product_name: str) -> xr.DataArray:
-
-            key = product_name.lower()
-
-            return self.chl[key]
-
-
-
-    # Custom products function
-
-    def _add_product(self, product_name: str, product: Union[np.ndarray, xr.DataArray]) -> None:
-
-        if self._validate_array_dims(array=product, ndim=2):
-
-            if type(product) is np.ndarray:
-                product = self._create_2d_xarray(data=product)
-            elif type(product) is xr.DataArray:
-                pass
-            else:
-                return None
-
-            key = product_name.lower()
-
-            self.products[key] = product
-
-        return None
-    
-    def _get_product(self, product_name: str) -> xr.DataArray:
-
-        try:
-            key = product_name.lower()
-            return self.products[key]
-        except KeyError:
-            return None
-
-        return None
-
-
-
-
-
-
+        return data
 
 
 
@@ -1882,8 +1687,8 @@ class Hypso1(Hypso):
 
     def _generate_satpy_latlons(self) -> tuple[xr.DataArray, xr.DataArray]:
 
-        latitudes = xr.DataArray(self.latitudes, dims=DIM_NAMES_2D)
-        longitudes = xr.DataArray(self.longitudes, dims=DIM_NAMES_2D)
+        latitudes = xr.DataArray(self.latitudes, dims=self.dim_names_2d)
+        longitudes = xr.DataArray(self.longitudes, dims=self.dim_names_2d)
 
         return latitudes, longitudes
 
@@ -1894,6 +1699,7 @@ class Hypso1(Hypso):
 
         return swath_def
 
+    '''
     def _generate_l1a_satpy_scene(self) -> Scene:
 
         scene = self._generate_satpy_scene()
@@ -1926,7 +1732,7 @@ class Hypso1(Hypso):
             if self._validate_array_dims(data, ndim=2):
                 
                 name = 'band_' + str(i+1)
-                scene[name] = xr.DataArray(data, dims=DIM_NAMES_2D)
+                scene[name] = xr.DataArray(data, dims=self.dim_names_2d)
                 scene[name].attrs.update(attrs)
                 scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="band")
                 scene[name].attrs['band'] = i
@@ -1965,7 +1771,7 @@ class Hypso1(Hypso):
             if self._validate_array_dims(data, ndim=2):
 
                 name = 'band_' + str(i+1)
-                scene[name] = xr.DataArray(data, dims=DIM_NAMES_2D)
+                scene[name] = xr.DataArray(data, dims=self.dim_names_2d)
                 scene[name].attrs.update(attrs)
                 scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
                 scene[name].attrs['band'] = i
@@ -2004,7 +1810,7 @@ class Hypso1(Hypso):
             if self._validate_array_dims(data, ndim=2):
 
                 name = 'band_' + str(i+1)
-                scene[name] = xr.DataArray(data, dims=DIM_NAMES_2D)
+                scene[name] = xr.DataArray(data, dims=self.dim_names_2d)
                 scene[name].attrs.update(attrs)
                 scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
                 scene[name].attrs['band'] = i
@@ -2016,11 +1822,6 @@ class Hypso1(Hypso):
 
         scene = self._generate_satpy_scene()
         swath_def= self._generate_swath_definition()
-
-        #try:
-        #    cube = self.chl[product.lower()]
-        #except:
-        #    return None
 
         attrs = {
                 'file_type': None,
@@ -2043,7 +1844,7 @@ class Hypso1(Hypso):
                 #key = item[0]
                 data = chl.to_numpy()
                 name = 'chl_' + key
-                scene[name] = xr.DataArray(data, dims=DIM_NAMES_2D)
+                scene[name] = xr.DataArray(data, dims=self.dim_names_2d)
                 scene[name].attrs.update(attrs)
                 scene[name].attrs['standard_name'] = chl.attrs['description']
                 scene[name].attrs['units'] = chl.attrs['units']
@@ -2078,7 +1879,196 @@ class Hypso1(Hypso):
                 else:
                     data = product
 
-                scene[key] = xr.DataArray(data, dims=DIM_NAMES_2D)
+                scene[key] = xr.DataArray(data, dims=self.dim_names_2d)
+                scene[key].attrs.update(attrs)
+
+                scene[key].attrs['name'] = key
+                scene[key].attrs['standard_name'] = key
+                scene[key].attrs['area'] = swath_def
+
+                try:
+                    scene[key].attrs.update(product.attrs)
+                except AttributeError:
+                    pass
+
+
+        return scene
+    '''
+
+    def _generate_l1a_satpy_scene(self) -> Scene:
+
+        scene = self._generate_satpy_scene()
+        swath_def= self._generate_swath_definition()
+
+        try:
+            cube = self.l1a_cube
+        except:
+            return None
+
+        attrs = {
+                'file_type': None,
+                'resolution': self.resolution,
+                'name': None,
+                'standard_name': cube.attrs['description'],
+                'coordinates': ['latitude', 'longitude'],
+                'units': cube.attrs['units'],
+                'start_time': self.capture_datetime,
+                'end_time': self.capture_datetime,
+                'modifiers': (),
+                'ancillary_variables': []
+                }   
+
+        wavelengths = range(0,120)
+
+        for i, wl in enumerate(wavelengths):
+
+            data = cube[:,:,i]
+                
+            name = 'band_' + str(i+1)
+            scene[name] = data
+            scene[name].attrs.update(attrs)
+            scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="band")
+            scene[name].attrs['band'] = i
+            scene[name].attrs['area'] = swath_def
+
+        return scene
+    
+    def _generate_l1b_satpy_scene(self) -> Scene:
+
+        scene = self._generate_satpy_scene()
+        swath_def= self._generate_swath_definition()
+
+        try:
+            cube = self.l1b_cube
+            wavelengths = self.wavelengths
+        except:
+            return None
+
+        attrs = {
+                'file_type': None,
+                'resolution': self.resolution,
+                'name': None,
+                'standard_name': cube.attrs['description'],
+                'coordinates': ['latitude', 'longitude'],
+                'units': cube.attrs['units'],
+                'start_time': self.capture_datetime,
+                'end_time': self.capture_datetime,
+                'modifiers': (),
+                'ancillary_variables': []
+                }   
+
+        for i, wl in enumerate(wavelengths):
+
+            data = cube[:,:,i]
+
+            name = 'band_' + str(i+1)
+            scene[name] = xr.DataArray(data, dims=self.dim_names_2d)
+            scene[name].attrs.update(attrs)
+            scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
+            scene[name].attrs['band'] = i
+            scene[name].attrs['area'] = swath_def
+
+        return scene
+
+    def _generate_l2a_satpy_scene(self) -> Scene:
+
+        scene = self._generate_satpy_scene()
+        swath_def= self._generate_swath_definition()
+
+        try:
+            cube = self.l2a_cube
+            wavelengths = self.wavelengths
+        except:
+            return None
+
+        attrs = {
+                'file_type': None,
+                'resolution': self.resolution,
+                'name': None,
+                'standard_name': cube.attrs['description'],
+                'coordinates': ['latitude', 'longitude'],
+                'units': cube.attrs['units'],
+                'start_time': self.capture_datetime,
+                'end_time': self.capture_datetime,
+                'modifiers': (),
+                'ancillary_variables': []
+                }   
+
+        for i, wl in enumerate(wavelengths):
+
+            data = cube[:,:,i]
+
+            name = 'band_' + str(i+1)
+            scene[name] = data
+            scene[name].attrs.update(attrs)
+            scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
+            scene[name].attrs['band'] = i
+            scene[name].attrs['area'] = swath_def
+
+        return scene
+
+    def _generate_chlorophyll_satpy_scene(self) -> Scene:
+
+        scene = self._generate_satpy_scene()
+        swath_def= self._generate_swath_definition()
+
+        attrs = {
+                'file_type': None,
+                'resolution': self.resolution,
+                'name': None,
+                #'standard_name': cube.attrs['description'],
+                'coordinates': ['latitude', 'longitude'],
+                #'units': cube.attrs['units'],
+                'start_time': self.capture_datetime,
+                'end_time': self.capture_datetime,
+                'modifiers': (),
+                'ancillary_variables': []
+                }   
+
+        for key, chl in self.chl.items():
+
+            if self._validate_array_dims(chl, ndim=2):
+
+                #chl = item[1]
+                #key = item[0]
+                data = chl.to_numpy()
+                name = 'chl_' + key
+                scene[name] = xr.DataArray(data, dims=self.dim_names_2d)
+                scene[name].attrs.update(attrs)
+                scene[name].attrs['standard_name'] = chl.attrs['description']
+                scene[name].attrs['units'] = chl.attrs['units']
+                scene[name].attrs['area'] = swath_def
+
+        return scene
+
+    def _generate_products_satpy_scene(self) -> Scene:
+
+        scene = self._generate_satpy_scene()
+        swath_def= self._generate_swath_definition()
+
+        attrs = {
+                'file_type': None,
+                'resolution': self.resolution,
+                'name': None,
+                'standard_name': None,
+                'coordinates': ['latitude', 'longitude'],
+                'units': None,
+                'start_time': self.capture_datetime,
+                'end_time': self.capture_datetime,
+                'modifiers': (),
+                'ancillary_variables': []
+                }
+
+        for key, product in self.products.items():
+
+            if self._validate_array_dims(product, ndim=2):
+
+                if self._is_xarray_dataarray(product):
+                    data = product.to_numpy()
+                else:
+                    data = product
+
+                scene[key] = xr.DataArray(data, dims=self.dim_names_2d)
                 scene[key].attrs.update(attrs)
 
                 scene[key].attrs['name'] = key
@@ -2096,15 +2086,19 @@ class Hypso1(Hypso):
 
 
 
+
+
+
+
     # Other functions
 
     def _create_2d_xarray(self, data: np.ndarray) -> xr.DataArray:
 
-        return xr.DataArray(data, dims=DIM_NAMES_2D)
+        return xr.DataArray(data, dims=self.dim_names_2d)
 
     def _create_3d_xarray(self, data: np.ndarray) -> xr.DataArray:
 
-        return xr.DataArray(data, dims=DIM_NAMES_3D)
+        return xr.DataArray(data, dims=self.dim_names_3d)
 
 
     
@@ -2112,7 +2106,7 @@ class Hypso1(Hypso):
 
 
 
-
+    # Replace with DataArrayValidator
     def _validate_array_dims(self, array: Union[np.ndarray, xr.DataArray], ndim: int = None) -> bool:
 
         # Check if the array is numpy or xarray format
@@ -2377,9 +2371,9 @@ class Hypso1(Hypso):
 
         return None
 
-    def get_l2a_cube(self, product_name: ATM_CORR_PRODUCTS = DEFAULT_ATM_CORR_PRODUCT) -> xr.DataArray:
+    def get_l2a_cube(self) -> xr.DataArray:
 
-        return self._get_l2a_cube(product_name=product_name)
+        return self.l2a_cube
 
     def get_l2a_spectrum(self,
                         latitude=None, 
@@ -2594,20 +2588,6 @@ class Hypso1(Hypso):
 
         return None
 
-    def add_product(self, product_name: str, product: Union[np.ndarray, xr.DataArray]) -> None:
-
-        self._add_product(product_name=product_name, product=product)
-
-        return None
-    
-    def get_product(self, product_name: str) -> xr.DataArray:
-
-        return self._get_product(product_name=product_name)
-
-    def get_products_dict(self) -> dict:
-
-        return self.products
-
     # TODO
     def write_products(self, path: str) -> None:
 
@@ -2635,7 +2615,7 @@ class Hypso1(Hypso):
         :return: Array with TOA Reflectance.
         """
 
-        if self._check_toa_reflectance_has_run():
+        if self.toa_reflectance_has_run:
 
             return self.toa_reflectance
 
@@ -2661,9 +2641,9 @@ class Hypso1(Hypso):
 
         return self._generate_l1b_satpy_scene()
 
-    def get_l2a_satpy_scene(self, product_name: ATM_CORR_PRODUCTS = DEFAULT_ATM_CORR_PRODUCT) -> Scene:
+    def get_l2a_satpy_scene(self) -> Scene:
 
-        return self._generate_l2a_satpy_scene(product_name=product_name)
+        return self._generate_l2a_satpy_scene()
 
     def get_chlorophyll_satpy_scene(self) -> Scene:
 
