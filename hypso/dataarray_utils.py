@@ -100,7 +100,7 @@ class DataArrayDict(dict, DataArrayValidator):
 
         value = v.validate(data=value)
 
-        value.assign_attrs(self.attributes)
+        value = value.assign_attrs(self.attributes)
 
         # Store the xarray.DataArray in the dictionary
         super().__setitem__(key, value)
