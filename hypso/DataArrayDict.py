@@ -1,7 +1,7 @@
 import numpy as np
 import xarray as xr
 
-from .DataArrayDict import DataArrayDict
+from .DataArrayValidator import DataArrayValidator
 
 class DataArrayDict(dict, DataArrayValidator):
     def __init__(self, attributes=None, dims_shape=None, dims_names: tuple[str, str, str] =('y', 'x', 'bands'), num_dims: int=3):
