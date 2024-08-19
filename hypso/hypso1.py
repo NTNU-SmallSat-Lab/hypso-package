@@ -406,7 +406,7 @@ class Hypso1(Hypso):
                           'description': "Raw sensor value"
                          }
 
-        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=DIM_NAMES_3D)
+        v = DataArrayValidator(dims_names=DIM_NAMES_3D)
 
         self.l1a_cube = v.validate(data=data)
         self.l1a_cube.assign_attrs(attributes=l1a_attributes)
