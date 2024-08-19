@@ -1419,6 +1419,8 @@ class Hypso1(Hypso):
         self._update_land_mask(land_mask=land_mask)
         self.land_mask.attrs['method'] = "global"
 
+        self._update_active_mask()
+
         self.land_mask_has_run = True
 
         return self.land_mask
@@ -1439,6 +1441,8 @@ class Hypso1(Hypso):
         self._update_land_mask(land_mask=land_mask)
         self.land_mask.attrs['method'] = "ndwi"
 
+        self._update_active_mask()
+
         self.land_mask_has_run = True
 
         return self.land_mask
@@ -1458,6 +1462,8 @@ class Hypso1(Hypso):
         
         self._update_land_mask(land_mask=land_mask)
         self.land_mask.attrs['method'] = "threshold"
+
+        self._update_active_mask()
 
         self.land_mask_has_run = True
 
@@ -1508,6 +1514,8 @@ class Hypso1(Hypso):
         cloud_mask.attrs['quantile'] = quantile
 
         self.cloud_mask_has_run = True
+
+        self._update_active_mask()
 
         return None
 

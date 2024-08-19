@@ -124,8 +124,8 @@ class Hypso:
         # Initilize cloud mask dict
         self.cloud_mask = None
 
-        # Intialize active mask
-        self.active_mask = None
+        # Intialize unified mask
+        self.unified_mask = None
 
         # Initialize chlorophyll estimates dict
         self.chl = {}
