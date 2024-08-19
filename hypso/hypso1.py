@@ -1541,40 +1541,56 @@ class Hypso1(Hypso):
         elif land_mask is None:
 
             active_mask = cloud_mask.to_numpy()
-            active_mask = xr.DataArray(active_mask, dims=DIM_NAMES_2D)
-            active_mask.attrs['description'] = "Active mask"
-            active_mask.attrs['land_mask_method'] = None
-            active_mask.attrs['cloud_mask_method'] = cloud_mask.attrs['method']
 
-            self.active_mask = active_mask
+            active_mask_attributes = {
+                                      'description': "Active mask",
+                                      'land_mask_method': None,
+                                      'cloud_mask_method': cloud_mask.attrs['method'],
+                                     }
 
+            v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=DIM_NAMES_2D)
+
+            data = v.validate(data=active_mask)
+            data = data.assign_attrs(active_mask_attributes)
+
+            self.active_mask = data
         
         elif cloud_mask is None:
             
             active_mask = land_mask.to_numpy()
-            active_mask = xr.DataArray(active_mask, dims=DIM_NAMES_2D)
-            active_mask.attrs['description'] = "Active mask"
-            active_mask.attrs['land_mask_method'] = land_mask.attrs['method']
-            active_mask.attrs['cloud_mask_method'] = None
 
-            self.active_mask = active_mask
+            active_mask_attributes = {
+                                      'description': "Active mask",
+                                      'land_mask_method': land_mask.attrs['method'],
+                                      'cloud_mask_method': None
+                                     }
+
+            v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=DIM_NAMES_2D)
+
+            data = v.validate(data=active_mask)
+            data = data.assign_attrs(active_mask_attributes)
+
+            self.active_mask = data
         
         else:
 
             active_mask = land_mask.to_numpy() | cloud_mask.to_numpy()
-            active_mask = xr.DataArray(active_mask, dims=DIM_NAMES_2D)
-            active_mask.attrs['description'] = "Active mask"
-            active_mask.attrs['land_mask_method'] = land_mask.attrs['method']
-            active_mask.attrs['cloud_mask_method'] = cloud_mask.attrs['method']
 
-            self.active_mask = active_mask
+            active_mask_attributes = {
+                                      'description': "Active mask",
+                                      'land_mask_method': land_mask.attrs['method'],
+                                      'cloud_mask_method': cloud_mask.attrs['method']
+                                     }
 
+            v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=DIM_NAMES_2D)
+
+            data = v.validate(data=active_mask)
+            data = data.assign_attrs(active_mask_attributes)
+
+            self.active_mask = data
 
         return None
 
-    def _get_active_mask(self) -> xr.DataArray:
-
-        return self.active_mask
 
 
     # Chlorophyll estimation functions
@@ -2484,34 +2500,15 @@ class Hypso1(Hypso):
 
         return None
 
-    def generate_land_mask(self, land_mask_name: LAND_MASK_PRODUCTS = DEFAULT_LAND_MASK_PRODUCT) -> None:
+    def generate_land_mask(self, land_mask_name: LAND_MASK_PRODUCTS = DEFAULT_LAND_MASK_PRODUCT, **kwargs) -> None:
 
-        self._run_land_mask(land_mask_name=land_mask_name)
-
-        return None
-
-    def get_land_mask(self, land_mask_name: LAND_MASK_PRODUCTS = DEFAULT_LAND_MASK_PRODUCT) -> np.ndarray:
-
-        if land_mask_name and self._check_land_mask_has_run(land_mask_name=land_mask_name):
-
-            return self.land_masks[land_mask_name.lower()]
-        
-        if self.VERBOSE:
-            print("[ERROR] " + land_mask + " land mask has not yet been generated.")
+        self._run_land_mask(land_mask_name=land_mask_name, **kwargs)
 
         return None
 
-    def get_land_mask_dict(self) -> dict:
+    def get_land_mask(self) -> xr.DataArray:
 
-        return self.land_masks     
-    
-    def set_active_land_mask(self, land_mask_name: LAND_MASK_PRODUCTS = DEFAULT_LAND_MASK_PRODUCT):
-
-        self._update_active_land_mask(land_mask_name=land_mask_name, override=True)
-
-    def get_active_land_mask(self) -> xr.DataArray:
-
-        return self._get_active_land_mask()
+        return self.land_mask
 
     # TODO
     def write_land_mask(self, path: str) -> None:
@@ -2526,36 +2523,16 @@ class Hypso1(Hypso):
 
         return None
 
-    # TODO
-    def generate_cloud_mask(self, cloud_mask_name: CLOUD_MASK_PRODUCTS = DEFAULT_CLOUD_MASK_PRODUCT):
+    def generate_cloud_mask(self, cloud_mask_name: CLOUD_MASK_PRODUCTS = DEFAULT_CLOUD_MASK_PRODUCT, **kwargs):
 
-        #self._run_cloud_mask(cloud_mask_name=cloud_mask_name)
+        self._run_cloud_mask(cloud_mask_name=cloud_mask_name, **kwargs)
 
         return None
 
-    def get_cloud_mask(self, cloud_mask_name: CLOUD_MASK_PRODUCTS = DEFAULT_CLOUD_MASK_PRODUCT) -> np.ndarray:
+    def get_cloud_mask(self) -> xr.DataArray:
 
-        if cloud_mask_name and self._check_cloud_mask_has_run(cloud_mask_name=cloud_mask_name):
-
-            return self.cloud_masks[cloud_mask_name.lower()]
-        
-        if self.VERBOSE:
-            print("[ERROR] " + cloud_mask + " cloud mask has not yet been generated.")
-        
-        return None
+        return self.cloud_mask
     
-    def get_cloud_mask_dict(self) -> dict:
-
-        return self.cloud_masks 
-
-    def set_active_cloud_mask(self, cloud_mask_name: CLOUD_MASK_PRODUCTS = DEFAULT_CLOUD_MASK_PRODUCT):
-
-        self._update_active_cloud_mask(self, cloud_mask_name=cloud_mask_name, override=True)
-
-    def get_active_cloud_mask(self) -> xr.DataArray:
-
-        return self._get_active_cloud_mask()
-
     # TODO
     def write_cloud_mask(self, path: str) -> None:
 
@@ -2566,7 +2543,7 @@ class Hypso1(Hypso):
 
     def get_active_mask(self) -> xr.DataArray:
 
-        return self._get_active_mask()
+        return self.active_mask
 
 
     # Public chlorophyll methods
