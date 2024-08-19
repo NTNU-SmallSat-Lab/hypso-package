@@ -40,7 +40,7 @@ from hypso.masks import run_cloud_mask, \
 from hypso.reading import load_l1a_nc_cube, load_l1a_nc_metadata
 from hypso.writing import set_or_create_attr
 
-from hypso.DataArrayValidator import DataArrayValidator'
+from hypso.DataArrayValidator import DataArrayValidator
 from hypso.DataArrayDict import DataArrayDict
 
 from satpy import Scene
