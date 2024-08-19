@@ -1250,6 +1250,7 @@ class Hypso1(Hypso):
 
     # Top of atmosphere reflectance functions
 
+    # TODO: run product through validator, add proprty
     # TODO: move code to atmospheric module
     # TODO: add set functions
     def _run_toa_reflectance(self) -> None:
@@ -1551,7 +1552,7 @@ class Hypso1(Hypso):
         self._run_calibration()
         self._run_geometry()
 
-        if self.l2a_cube is None or self.l2a_cube['correction'] != '6sv1':
+        if self.l2a_cube is None or self.l2a_cube.attrs['correction'] != '6sv1':
             self._run_atmospheric_correction(product_name='6sv1')
 
         model = Path(model)
@@ -1593,7 +1594,7 @@ class Hypso1(Hypso):
         self._run_calibration()
         self._run_geometry()
 
-        if self.l2a_cube is None or self.l2a_cube['correction'] != 'acolite':
+        if self.l2a_cube is None or self.l2a_cube.attrs['correction'] != 'acolite':
             self._run_atmospheric_correction(product_name='acolite')
 
         model = Path(model)
@@ -2615,14 +2616,8 @@ class Hypso1(Hypso):
         :return: Array with TOA Reflectance.
         """
 
-        if self.toa_reflectance_has_run:
+        return self.toa_reflectance
 
-            return self.toa_reflectance
-
-        if self.VERBOSE:
-            print("[ERROR] Top of atmosphere (TOA) reflectance has not yet been generated.")
-
-        return None
 
     # TODO
     def write_toa_reflectance(self, path: str) -> None:
