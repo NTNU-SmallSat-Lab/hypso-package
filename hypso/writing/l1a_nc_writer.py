@@ -300,29 +300,29 @@ def l1a_nc_writer(satobj: Hypso, dst_l1a_nc_file: str, src_l1a_nc_file: str) -> 
         meta_capcon_file[()] = old_nc['metadata']["capture_config"]["file"][:]  # [()] assignment of scalar to array
 
         # Metadata: Rad calibration coeff ----------------------------------------------------
-        len_radrows = satobj.rad_coeffs.shape[0]
-        len_radcols = satobj.rad_coeffs.shape[1]
+        #len_radrows = satobj.rad_coeffs.shape[0]
+        #len_radcols = satobj.rad_coeffs.shape[1]
 
-        netfile.createDimension('radrows', len_radrows)
-        netfile.createDimension('radcols', len_radcols)
-        meta_corrections_rad = netfile.createVariable(
-            'metadata/corrections/rad_matrix', 'f4',
-            ('radrows', 'radcols'),
-            compression=COMP_SCHEME,
-            complevel=COMP_LEVEL,
-            shuffle=COMP_SHUFFLE)
-        meta_corrections_rad[:] = satobj.rad_coeffs
+        #netfile.createDimension('radrows', len_radrows)
+        #netfile.createDimension('radcols', len_radcols)
+        #meta_corrections_rad = netfile.createVariable(
+        #    'metadata/corrections/rad_matrix', 'f4',
+        #    ('radrows', 'radcols'),
+        #    compression=COMP_SCHEME,
+        #    complevel=COMP_LEVEL,
+        #    shuffle=COMP_SHUFFLE)
+        #meta_corrections_rad[:] = satobj.rad_coeffs
 
         # Metadata: Spectral coeff ----------------------------------------------------
-        len_spectral = satobj.wavelengths.shape[0]
-        netfile.createDimension('specrows', len_spectral)
-        meta_corrections_spec = netfile.createVariable(
-            'metadata/corrections/spec_coeffs', 'f4',
-            ('specrows',),
-            compression=COMP_SCHEME,
-            complevel=COMP_LEVEL,
-            shuffle=COMP_SHUFFLE)
-        meta_corrections_spec[:] = satobj.spectral_coeffs
+        #len_spectral = satobj.wavelengths.shape[0]
+        #netfile.createDimension('specrows', len_spectral)
+        #meta_corrections_spec = netfile.createVariable(
+        #    'metadata/corrections/spec_coeffs', 'f4',
+        #    ('specrows',),
+        #    compression=COMP_SCHEME,
+        #    complevel=COMP_LEVEL,
+        #    shuffle=COMP_SHUFFLE)
+        #meta_corrections_spec[:] = satobj.spectral_coeffs
 
         # Meta Temperature File ---------------------------------------------------------
         meta_temperature_file = netfile.createVariable(
