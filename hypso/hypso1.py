@@ -1757,17 +1757,12 @@ class Hypso1(Hypso):
 
         for key, chl in self.chl.items():
 
-            if self._validate_array_dims(chl, ndim=2):
-
-                #chl = item[1]
-                #key = item[0]
-                data = chl.to_numpy()
-                name = 'chl_' + key
-                scene[name] = xr.DataArray(data, dims=self.dim_names_2d)
-                scene[name].attrs.update(attrs)
-                scene[name].attrs['standard_name'] = chl.attrs['description']
-                scene[name].attrs['units'] = chl.attrs['units']
-                scene[name].attrs['area'] = swath_def
+            name = 'chl_' + key
+            scene[name] = chl
+            scene[name].attrs.update(attrs)
+            scene[name].attrs['standard_name'] = chl.attrs['description']
+            scene[name].attrs['units'] = chl.attrs['units']
+            scene[name].attrs['area'] = swath_def
 
         return scene
 
@@ -1791,16 +1786,8 @@ class Hypso1(Hypso):
 
         for key, product in self.products.items():
 
-            if self._validate_array_dims(product, ndim=2):
-
-                if self._is_xarray_dataarray(product):
-                    data = product.to_numpy()
-                else:
-                    data = product
-
-                scene[key] = xr.DataArray(data, dims=self.dim_names_2d)
+                scene[key] = product
                 scene[key].attrs.update(attrs)
-
                 scene[key].attrs['name'] = key
                 scene[key].attrs['standard_name'] = key
                 scene[key].attrs['area'] = swath_def
@@ -1815,72 +1802,6 @@ class Hypso1(Hypso):
 
 
     # Other functions
-
-
-
-
-    
-
-
-
-
-    # TODO: Replace with DataArrayValidator
-    def _validate_array_dims(self, array: Union[np.ndarray, xr.DataArray], ndim: int = None) -> bool:
-
-        # Check if the array is numpy or xarray format
-        if not self._is_numpy_ndarray(array) and not self._is_xarray_dataarray(array):
-
-            if self.VERBOSE:
-                print('[WARNING] The array is not an xarray DataArray or NumPy ndarray object. Skipping.')
-                
-            return False
-        
-        # Check if number of dimensions in array is more than 2
-        if array.ndim < 2:
-            return False
-
-        # Check if number of dimensions matches provided ndim
-        if ndim:
-            if not ndim == array.ndim:
-                return False
-
-        # Check if y and x dimensions of xarray match the capture spatial dimensions
-        if not self._matches_spatial_dimensions(array):
-
-            if self.VERBOSE:
-                print('[WARNING] The array does not have dimensions ' + str(self.spatial_dimensions) + '. Skipping.')
-                
-            return False
-        
-        return True
-
-    def _matches_spatial_dimensions(self, data: Union[np.ndarray, xr.DataArray]) -> bool:
-
-        if data.shape[0:2] == self.spatial_dimensions:
-            return True
-        
-        return False
-    
-    def _is_2d(self, data) -> bool:
-
-        if data.ndim == 2:
-            return True
-        
-        return False
-
-    def _is_numpy_ndarray(self, data) -> bool:
-
-        if type(data) is np.ndarray:
-            return True
-        
-        return False
-    
-    def _is_xarray_dataarray(self, data) -> bool:
-        
-        if type(data) is xr.DataArray:
-            return True
-        
-        return False
 
     def _get_flipped_cube(self, cube: np.ndarray) -> np.ndarray:
 
