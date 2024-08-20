@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Union
 import xarray as xr
-from hypso.DataArrayValidator import DataArrayValidator
+from .DataArrayValidator import DataArrayValidator
 import numpy as np
 
 class Hypso:
