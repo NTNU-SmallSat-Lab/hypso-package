@@ -235,7 +235,7 @@ class Hypso:
     def _format_l2a_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
 
         attributes = {'level': "L2a",
-                      'units': "a.u.",
+                      'units': r"sr^{-1}",
                       'description': "Reflectance (Rrs)",
                       'correction': None
                      }

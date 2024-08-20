@@ -1105,8 +1105,8 @@ class Hypso1(Hypso):
         # }
         # AOT550 parameter gotten from: https://giovanni.gsfc.nasa.gov/giovanni/
 
-        self._run_calibration(**kwargs)
-        self._run_geometry()
+        #self._run_calibration(**kwargs)
+        #self._run_geometry()
 
         if self.VERBOSE: 
             print("[INFO] Running 6SV1 atmospheric correction")
@@ -1150,11 +1150,11 @@ class Hypso1(Hypso):
 
     def _run_acolite_atmospheric_correction(self) -> xr.DataArray:
 
-        self._run_calibration()
-        self._run_geometry()
-        self._write_l1b_nc_file()
+        #self._run_calibration()
+        #self._run_geometry()
+        #self._write_l1b_nc_file()
 
-        if not self._check_write_l1b_nc_file_has_run():
+        if not self.write_l1b_nc_file_has_run and not self.l1b_nc_file.is_file():
 
             raise RuntimeError(
                 f"[ERROR] No L1b file found. Please generate it before attemping to run ACOLITE."
@@ -1266,7 +1266,7 @@ class Hypso1(Hypso):
             band_number = band_number + 1
 
         self.toa_reflectance = xr.DataArray(toa_reflectance, dims=("y", "x", "band"))
-        self.toa_reflectance.attrs['units'] = "a.u."
+        self.toa_reflectance.attrs['units'] = "sr^-1"
         self.toa_reflectance.attrs['description'] = "Top of atmosphere (TOA) reflectance"
 
         self.toa_reflectance_has_run = True

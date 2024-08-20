@@ -115,18 +115,18 @@ def l2a_nc_writer(satobj: Hypso, dst_l2a_nc_file: str, src_l1a_nc_file: str) -> 
         COMP_SHUFFLE = True  # Default (when scheme != none): True
 
         # Create and populate variables
-        Lt = netfile.createVariable(
+        Rrs = netfile.createVariable(
             'products/Lt', 'uint16',
             ('lines', 'samples', 'bands'),
             compression=COMP_SCHEME,
             complevel=COMP_LEVEL,
             shuffle=COMP_SHUFFLE)
-        Lt.units = "W/m^2/micrometer/sr"
-        Lt.long_name = "Top of Atmosphere Measured Radiance"
-        Lt.wavelength_units = "nanometers"
-        Lt.fwhm = [5.5] * bands
-        Lt.wavelengths = np.around(satobj.spectral_coeffs, 1)
-        Lt[:] = satobj.l2a_cube.to_numpy()
+        Rrs.units = "sr^-1"
+        Rrs.long_name = "Reflectance"
+        Rrs.wavelength_units = "nanometers"
+        Rrs.fwhm = [5.5] * bands
+        Rrs.wavelengths = np.around(satobj.spectral_coeffs, 1)
+        Rrs[:] = satobj.l2a_cube.to_numpy()
 
         # ADCS Timestamps ----------------------------------------------------
         len_timestamps = old_nc.dimensions["adcssamples"].size

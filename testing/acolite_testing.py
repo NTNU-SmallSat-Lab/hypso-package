@@ -18,6 +18,7 @@ satobj.generate_l1b_cube()
 satobj.generate_geometry()
 satobj.write_l1b_nc_file()
 satobj.generate_l2a_cube(product_name='acolite')
+satobj.write_l2a_nc_file()
 
 
 print(satobj.l2a_cube)
