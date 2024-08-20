@@ -39,7 +39,7 @@ from hypso.masks import run_cloud_mask, \
 
 from hypso.reading import load_l1a_nc_cube, load_l1a_nc_metadata
 
-from hypso.writing import l1a_nc_writer, l1b_nc_writer
+from hypso.writing import l1a_nc_writer, l1b_nc_writer, l2a_nc_writer
 
 from hypso.DataArrayValidator import DataArrayValidator
 from hypso.DataArrayDict import DataArrayDict
@@ -101,7 +101,7 @@ class Hypso1(Hypso):
         self._load_l1a_nc_file()
         self._run_georeferencing()
 
-        chl_attributes = {}
+        chl_attributes = {'model': None}
         product_attributes = {}
 
         self.chl = DataArrayDict(dims_shape=self.spatial_dimensions, 
@@ -2112,10 +2112,29 @@ class Hypso1(Hypso):
         else:
             plt.show()
 
-    # TODO
-    def write_l2a_nc_file(self, path: Union[str, Path] = None, product_name: str = None) -> None:
+    def write_l2a_nc_file(self, overwrite: bool = False) -> None:
 
-        self._write_l2a_nc_file(path=path, product_name=product_name)
+        correction = self.l2a_cube.attrs['correction']
+
+        original_path = self.l2a_nc_file
+
+        file_name = original_path.name
+        modified_file_name = file_name.replace('-l2a', '-l2a-' + correction)
+        modified_path = original_path.with_name(modified_file_name)
+
+        dst_l2a_nc_file = modified_path
+        src_l1a_nc_file = self.l1a_nc_file
+
+        if Path(dst_l2a_nc_file).is_file() and not overwrite:
+
+            if self.VERBOSE:
+                print("[INFO] L1b NetCDF file has already been generated. Skipping.")
+
+            return None
+
+        l2a_nc_writer(satobj=self, 
+                      dst_l2a_nc_file=dst_l2a_nc_file, 
+                      src_l1a_nc_file=src_l1a_nc_file)
 
         return None
 
@@ -2327,19 +2346,3 @@ class Hypso1(Hypso):
         return closest_index
 
 
-
-
-
- 
-
-    # L2a file output
-
-    # TODO
-    def _write_l2a_nc_file(self, product_name: str = None, overwrite: bool = False) -> None:
-
-        return None
-
-    # TODO
-    def _check_write_l2a_nc_file_has_run(self, product_name: str = None) -> bool:
-        
-        return self.write_l2a_nc_file_has_run
