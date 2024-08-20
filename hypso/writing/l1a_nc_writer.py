@@ -28,9 +28,6 @@ def l1a_nc_writer(satobj: Hypso, dst_l1a_nc_file: str, src_l1a_nc_file: str) -> 
                                 md,
                                 old_nc.getncattr(md))
 
-
-        set_or_create_attr(netfile, attr_name="spectral_file", attr_value=str(Path(satobj.spectral_coeff_file).name))
-
         set_or_create_attr(netfile, attr_name="processing_level", attr_value="L1A")
 
         # Create dimensions
