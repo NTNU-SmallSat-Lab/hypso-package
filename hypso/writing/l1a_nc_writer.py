@@ -382,7 +382,7 @@ def l1a_nc_writer(satobj: Hypso, dst_l1a_nc_file: str, src_l1a_nc_file: str) -> 
             longitude.valid_max = 180
 
         except Exception as ex:
-            print("[WARNING] Unable to write latitude and longitude information to NetCDF file. L1a may be incomplete. Please run geometry computations.")
+            print("[WARNING] Unable to write latitude and longitude information to NetCDF file. L1a may be incomplete. Please run georeferencing.")
             print("[WARNING] Encountered exception: " + str(ex))
 
 
@@ -457,7 +457,7 @@ def l1a_nc_writer(satobj: Hypso, dst_l1a_nc_file: str, src_l1a_nc_file: str) -> 
             solar_a.valid_max = 180
     
         except Exception as ex:
-            print("[WARNING] Unable to write navigation angles to NetCDF file.")
+            print("[WARNING] Unable to write navigation angles to NetCDF file. L1a may be incomplete. Please run geometry computations.")
             print("[WARNING] Encountered exception: " + str(ex))
 
 
