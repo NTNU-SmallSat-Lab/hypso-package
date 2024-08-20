@@ -398,10 +398,6 @@ class Hypso1(Hypso):
         
         return None
 
-    def _get_l1a_cube(self) -> xr.DataArray:
-
-        return self.l1a_cube
-
 
     # L1b functions
 
@@ -417,32 +413,12 @@ class Hypso1(Hypso):
     def _load_l1b_metadata(self) -> None:
         return None
     
-    def _get_l1b_cube(self) -> xr.DataArray:
-
-        return self.l1b_cube
-
-
 
     # L2a functions
 
     # TODO
     def _load_l2a_file(self) -> None:
         return None
-
-    def _create_l2a_cube_xarray(self, l2a_cube: np.ndarray) -> xr.DataArray:
-
-        l2a_cube = self._create_3d_xarray(data=l2a_cube)
-        l2a_cube = self._set_l2a_cube_xarray_attrs(l2a_cube=l2a_cube)
-
-        return l2a_cube
-
-    def _set_l2a_cube_xarray_attrs(self, l2a_cube: xr.DataArray) -> xr.DataArray:
-
-        l2a_cube.attrs['level'] = "L2a"
-        l2a_cube.attrs['units'] = "a.u."
-        l2a_cube.attrs['description'] = "Reflectance (Rrs)"
-
-        return l2a_cube
 
     # TODO
     def _load_l2a_cube(self) -> None:
@@ -629,11 +605,6 @@ class Hypso1(Hypso):
         self.bbox = bbox
 
         return None
-
-
-            
-
-
 
 
     # Calibration functions
@@ -1843,21 +1814,9 @@ class Hypso1(Hypso):
         return scene
 
 
-
-
-
-
-
-
     # Other functions
 
-    def _create_2d_xarray(self, data: np.ndarray) -> xr.DataArray:
 
-        return xr.DataArray(data, dims=self.dim_names_2d)
-
-    def _create_3d_xarray(self, data: np.ndarray) -> xr.DataArray:
-
-        return xr.DataArray(data, dims=self.dim_names_3d)
 
 
     
@@ -1865,7 +1824,7 @@ class Hypso1(Hypso):
 
 
 
-    # Replace with DataArrayValidator
+    # TODO: Replace with DataArrayValidator
     def _validate_array_dims(self, array: Union[np.ndarray, xr.DataArray], ndim: int = None) -> bool:
 
         # Check if the array is numpy or xarray format
@@ -1894,7 +1853,6 @@ class Hypso1(Hypso):
             return False
         
         return True
-
 
     def _matches_spatial_dimensions(self, data: Union[np.ndarray, xr.DataArray]) -> bool:
 
@@ -1938,11 +1896,9 @@ class Hypso1(Hypso):
         return cube
     
 
-
-
-
     # Public L1a methods
 
+    # TODO
     def load_l1a_nc_file(self, path: str) -> None:
 
         self._load_l1a_nc_file(path=path)
@@ -1951,7 +1907,7 @@ class Hypso1(Hypso):
 
     def get_l1a_cube(self) -> xr.DataArray:
 
-        return self._get_l1a_cube()
+        return self.l1a_cube
 
     def get_l1a_spectrum(self, 
                         latitude=None, 
@@ -2047,9 +2003,6 @@ class Hypso1(Hypso):
         return None
 
 
-
-
-
     # Public L1b methods
 
     # TODO
@@ -2065,7 +2018,7 @@ class Hypso1(Hypso):
 
     def get_l1b_cube(self) -> xr.DataArray:
 
-        return self._get_l1b_cube()
+        return self.l1b_cube
 
     def get_l1b_spectrum(self, 
                         latitude=None, 
