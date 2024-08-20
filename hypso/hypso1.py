@@ -2029,17 +2029,17 @@ class Hypso1(Hypso):
             modified_file_name = file_name.replace('-l1a', '-l1a-modified')
             modified_path = original_path.with_name(modified_file_name)
 
-            dst_l1b_nc_file = modified_path
+            dst_l1a_nc_file = modified_path
 
             if self.VERBOSE:
-                print("[INFO] L1a NetCDF file has already been generated. Writing L1a data to: " + str(dst_l1b_nc_file))
+                print("[INFO] L1a NetCDF file has already been generated. Writing L1a data to: " + str(dst_l1a_nc_file))
 
         else:
-            dst_l1b_nc_file = self.l1a_nc_file
+            dst_l1a_nc_file = self.l1a_nc_file
 
 
         l1a_nc_writer(satobj=self, 
-                      dst_l1b_nc_file=dst_l1b_nc_file, 
+                      dst_l1a_nc_file=dst_l1a_nc_file, 
                       src_l1a_nc_file=self.l1a_nc_file)
 
         self.write_l1a_nc_file_has_run = True
