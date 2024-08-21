@@ -1,7 +1,6 @@
 from datetime import datetime
 from dateutil import parser
 from importlib.resources import files
-#from osgeo import gdal, osr
 from pathlib import Path
 from typing import Literal, Union
 
@@ -10,8 +9,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pyproj as prj
-#import rasterio
-#import re
 import xarray as xr
 
 from .hypso import Hypso
@@ -2256,9 +2253,6 @@ class Hypso1(Hypso):
 
         return self.chl[key]
 
-    def get_chlorophyll_estimates_dict(self) -> dict:
-
-        return self.chl
 
     # TODO
     def write_chlorophyll_estimates(self, path: str) -> None:
@@ -2310,9 +2304,6 @@ class Hypso1(Hypso):
         return None
 
 
-
-    # TODO: organize
-
     def get_l1a_satpy_scene(self) -> Scene:
 
         return self._generate_l1a_satpy_scene()
@@ -2325,7 +2316,7 @@ class Hypso1(Hypso):
 
         return self._generate_l2a_satpy_scene()
 
-    def get_chlorophyll_satpy_scene(self) -> Scene:
+    def get_chlorophyll_estimates_satpy_scene(self) -> Scene:
 
         return self._generate_chlorophyll_satpy_scene()
 
