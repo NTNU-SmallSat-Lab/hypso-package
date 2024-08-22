@@ -3,6 +3,7 @@ from dateutil import parser
 from importlib.resources import files
 from pathlib import Path
 from typing import Literal, Union
+import copy
 
 import matplotlib.pyplot as plt
 
@@ -21,7 +22,11 @@ from hypso.calibration import read_coeffs_from_file, \
                               make_overexposed_mask, \
                               get_destriping_correction_matrix, \
                               run_destriping_correction_with_computed_matrix
-from hypso.chlorophyll import run_tuned_chlorophyll_estimation, run_band_ratio_chlorophyll_estimation, validate_tuned_model
+
+from hypso.chlorophyll import run_tuned_chlorophyll_estimation, \
+                              run_band_ratio_chlorophyll_estimation, \
+                              validate_tuned_model
+
 from hypso.geometry import interpolate_at_frame, \
                            geometry_computation, \
                            get_nearest_pixel
@@ -43,7 +48,9 @@ from hypso.DataArrayDict import DataArrayDict
 
 from satpy import Scene
 from satpy.dataset.dataid import WavelengthRange
+
 from pyresample.geometry import SwathDefinition
+from pyresample.bilinear.xarr import XArrayBilinearResampler 
 
 SUPPORTED_PRODUCT_LEVELS = ["l1a", "l1b", "l2a"]
 
@@ -394,7 +401,6 @@ class Hypso1(Hypso):
             dimensions = load_l1a_nc_metadata(self.hypso_path)
         
         return None
-
 
     # L1b functions
 
@@ -1574,7 +1580,7 @@ class Hypso1(Hypso):
 
         scene = Scene()
 
-        latitudes, longitudes = self._generate_satpy_latlons()
+        latitudes, longitudes = self._generate_latlons()
 
         swath_def = SwathDefinition(lons=longitudes, lats=latitudes)
 
@@ -1610,16 +1616,16 @@ class Hypso1(Hypso):
 
         return scene
 
-    def _generate_satpy_latlons(self) -> tuple[xr.DataArray, xr.DataArray]:
+    def _generate_latlons(self) -> tuple[xr.DataArray, xr.DataArray]:
 
-        latitudes = xr.DataArray(self.latitudes, dims=["y", "x"])
-        longitudes = xr.DataArray(self.longitudes, dims=["y", "x"])
+        latitudes = xr.DataArray(self.latitudes, dims=self.dim_names_2d)
+        longitudes = xr.DataArray(self.longitudes, dims=self.dim_names_2d)
 
         return latitudes, longitudes
 
     def _generate_swath_definition(self) -> SwathDefinition:
 
-        latitudes, longitudes = self._generate_satpy_latlons()
+        latitudes, longitudes = self._generate_latlons()
         swath_def = SwathDefinition(lons=longitudes, lats=latitudes)
 
         return swath_def
@@ -1798,6 +1804,68 @@ class Hypso1(Hypso):
 
 
         return scene
+
+
+    # TODO: make more effient by replacing the for loop and using deepcopy or list to assemble datacube
+    def _resample_dataarray(self, geo_def, data: xr.DataArray) -> xr.DataArray:
+
+        if not self.georeferencing_has_run:
+            return None
+
+        swath_def = self._generate_swath_definition()
+
+        brs = XArrayBilinearResampler(source_geo_def=swath_def, target_geo_def=geo_def, radius_of_influence=50000)
+
+        # Calculate bilinear neighbour info and generate pre-computed resampling LUTs
+        brs.get_bil_info()
+
+        if data.ndim == 2:
+            resampled_data = brs.resample(data=data[:,:], fill_value=np.nan)
+
+        elif data.ndim == 3:
+
+            num_bands = data.shape[2]
+
+            resampled_data = np.zeros((geo_def.shape[0], geo_def.shape[1], num_bands))
+            resampled_data = xr.DataArray(resampled_data, dims=self.dim_names_3d)
+            resampled_data.attrs.update(data.attrs)
+
+            for band in range(0,num_bands):
+                
+                # Resample using pre-computed resampling LUTs
+                resampled_data[:,:,band] = brs.get_sample_from_bil_info(data=data[:,:,band], 
+                                                                        fill_value=np.nan, 
+                                                                        output_shape=geo_def.shape)
+
+                #resampled_data[:,:,band] = brs.resample(data=data[:,:,band], fill_value=np.nan)
+
+        else:
+            return None
+        
+        return resampled_data
+
+    def resample_l1a_cube(self, geo_def) -> xr.DataArray:
+
+        return self._resample_dataarray(geo_def=geo_def, data=self.l1a_cube)
+
+    def resample_l1b_cube(self, geo_def) -> xr.DataArray:
+
+        return self._resample_dataarray(geo_def=geo_def, data=self.l1b_cube)
+    
+    def resample_l2a_cube(self, geo_def) -> xr.DataArray:
+
+        return self._resample_dataarray(geo_def=geo_def, data=self.l2a_cube)
+    
+    def resample_chlorophyll_estimates(self, geo_def) -> xr.DataArray:
+
+        return self._resample_dataarray(geo_def=geo_def, data=self.chl)
+    
+    def resample_products(self, geo_def) -> xr.DataArray:
+
+        return self._resample_dataarray(geo_def=geo_def, data=self.products)
+
+
+
 
 
     # Other functions
