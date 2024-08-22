@@ -1598,20 +1598,20 @@ class Hypso1(Hypso):
                           'ancillary_variables': []
                           }
 
-        scene['latitude'] = latitudes
-        scene['latitude'].attrs.update(latitude_attrs)
-        #scn['latitude'].attrs['area'] = swath_def
+        #scene['latitude'] = latitudes
+        #scene['latitude'].attrs.update(latitude_attrs)
+        ##scn['latitude'].attrs['area'] = swath_def
 
-        scene['longitude'] = longitudes
-        scene['longitude'].attrs.update(longitude_attrs)
-        #scn['longitude'].attrs['area'] = swath_def
+        #scene['longitude'] = longitudes
+        #scene['longitude'].attrs.update(longitude_attrs)
+        ##scn['longitude'].attrs['area'] = swath_def
 
         return scene
 
     def _generate_satpy_latlons(self) -> tuple[xr.DataArray, xr.DataArray]:
 
-        latitudes = xr.DataArray(self.latitudes, dims=self.dim_names_2d)
-        longitudes = xr.DataArray(self.longitudes, dims=self.dim_names_2d)
+        latitudes = xr.DataArray(self.latitudes, dims=["y", "x"])
+        longitudes = xr.DataArray(self.longitudes, dims=["y", "x"])
 
         return latitudes, longitudes
 
