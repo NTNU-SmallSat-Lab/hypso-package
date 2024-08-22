@@ -1576,6 +1576,8 @@ class Hypso1(Hypso):
 
         latitudes, longitudes = self._generate_satpy_latlons()
 
+        swath_def = SwathDefinition(lons=longitudes, lats=latitudes)
+
         latitude_attrs = {
                          'file_type': None,
                          'resolution': self.resolution,
@@ -1600,11 +1602,11 @@ class Hypso1(Hypso):
 
         #scene['latitude'] = latitudes
         #scene['latitude'].attrs.update(latitude_attrs)
-        ##scn['latitude'].attrs['area'] = swath_def
+        #scene['latitude'].attrs['area'] = swath_def
 
         #scene['longitude'] = longitudes
         #scene['longitude'].attrs.update(longitude_attrs)
-        ##scn['longitude'].attrs['area'] = swath_def
+        #scene['longitude'].attrs['area'] = swath_def
 
         return scene
 
