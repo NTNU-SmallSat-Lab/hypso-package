@@ -1807,14 +1807,14 @@ class Hypso1(Hypso):
 
 
     # TODO: make more effient by replacing the for loop and using deepcopy or list to assemble datacube
-    def _resample_dataarray(self, geo_def, data: xr.DataArray) -> xr.DataArray:
+    def _resample_dataarray(self, area_def, data: xr.DataArray) -> xr.DataArray:
 
         if not self.georeferencing_has_run:
             return None
 
         swath_def = self._generate_swath_definition()
 
-        brs = XArrayBilinearResampler(source_geo_def=swath_def, target_geo_def=geo_def, radius_of_influence=50000)
+        brs = XArrayBilinearResampler(source_geo_def=swath_def, target_geo_def=area_def, radius_of_influence=50000)
 
         # Calculate bilinear neighbour info and generate pre-computed resampling LUTs
         brs.get_bil_info()
@@ -1826,7 +1826,7 @@ class Hypso1(Hypso):
 
             num_bands = data.shape[2]
 
-            resampled_data = np.zeros((geo_def.shape[0], geo_def.shape[1], num_bands))
+            resampled_data = np.zeros((area_def.shape[0], area_def.shape[1], num_bands))
             resampled_data = xr.DataArray(resampled_data, dims=self.dim_names_3d)
             resampled_data.attrs.update(data.attrs)
 
@@ -1835,7 +1835,7 @@ class Hypso1(Hypso):
                 # Resample using pre-computed resampling LUTs
                 resampled_data[:,:,band] = brs.get_sample_from_bil_info(data=data[:,:,band], 
                                                                         fill_value=np.nan, 
-                                                                        output_shape=geo_def.shape)
+                                                                        output_shape=area_def.shape)
 
                 #resampled_data[:,:,band] = brs.resample(data=data[:,:,band], fill_value=np.nan)
 
@@ -1844,25 +1844,45 @@ class Hypso1(Hypso):
         
         return resampled_data
 
-    def resample_l1a_cube(self, geo_def) -> xr.DataArray:
+    def resample_l1a_cube(self, area_def) -> xr.DataArray:
 
-        return self._resample_dataarray(geo_def=geo_def, data=self.l1a_cube)
+        return self._resample_dataarray(area_def=area_def, data=self.l1a_cube)
 
-    def resample_l1b_cube(self, geo_def) -> xr.DataArray:
+    def resample_l1b_cube(self, area_def) -> xr.DataArray:
 
-        return self._resample_dataarray(geo_def=geo_def, data=self.l1b_cube)
+        return self._resample_dataarray(area_def=area_def, data=self.l1b_cube)
     
-    def resample_l2a_cube(self, geo_def) -> xr.DataArray:
+    def resample_l2a_cube(self, area_def) -> xr.DataArray:
 
-        return self._resample_dataarray(geo_def=geo_def, data=self.l2a_cube)
+        return self._resample_dataarray(area_def=area_def, data=self.l2a_cube)
     
-    def resample_chlorophyll_estimates(self, geo_def) -> xr.DataArray:
+    def resample_chlorophyll_estimates(self, area_def) -> xr.DataArray:
 
-        return self._resample_dataarray(geo_def=geo_def, data=self.chl)
+        resampled_chl = DataArrayDict(dims_shape=area_def.shape, 
+                                        attributes=self.chl.attributes, 
+                                        dims_names=self.dim_names_2d,
+                                        num_dims=2
+                                        )
+
+        for key, chl in self.chl.items():
+
+            resampled_chl[key] = self._resample_dataarray(area_def=area_def, data=chl)
+
+        return resampled_chl
     
-    def resample_products(self, geo_def) -> xr.DataArray:
+    def resample_products(self, area_def) -> xr.DataArray:
 
-        return self._resample_dataarray(geo_def=geo_def, data=self.products)
+        resampled_products = DataArrayDict(dims_shape=area_def.shape, 
+                                        attributes=self.products.attributes, 
+                                        dims_names=self.dim_names_2d,
+                                        num_dims=2
+                                        )
+
+        for key, product in self.products.items():
+
+            resampled_products[key] = self._resample_dataarray(area_def=area_def, data=product)
+
+        return resampled_products
 
 
 
