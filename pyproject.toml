@@ -16,14 +16,17 @@ build-backend="setuptools.build_meta"
 
 [project]
 name="hypso"
+version = "2.0.0"
 authors = [
+  { name="Cameron Penne", email="cameron.l.penne@ntnu.no" },
+]
+maintainers = [
   { name="Cameron Penne", email="cameron.l.penne@ntnu.no" },
 ]
 description = "HYPSO Toolbox For Satellite Image Processing"
 readme = "README.md"
 license = { text = "MIT" }
 classifiers = [
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -62,9 +65,9 @@ dependencies=[
 ]
 
 # dynamic properties set by tools
-dynamic = [
-  "version",
-]
+#dynamic = [
+#  "version",
+#]
 
 [project.urls]
 "Homepage" = "https://github.com/NTNU-SmallSat-Lab/hypso-package"
