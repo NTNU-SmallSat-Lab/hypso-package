@@ -50,19 +50,27 @@ def read_coeffs_from_file(coeff_path: str) -> np.ndarray:
     """
     Read correction coefficients from file
 
-    :param coeff_path: Coefficient path to read (.csv)
+    :param coeff_path: Coefficient path to read (.csv or .npz)
 
     :return: 2D array of coefficients
     """
     coefficients = None
     try:
+
         # Processing should be Float 32
-        coefficients = np.genfromtxt(
-            coeff_path, delimiter=',', dtype="float64")
-        # coefficients = readCsvFile(coeff_path)
+        if coeff_path.suffix == ".npz":
+            coefficients = np.load(coeff_path)
+            key = list(coefficients.keys())[0]
+            coefficients = coefficients[key]
+
+        elif coeff_path.suffix == ".csv":
+            coefficients = np.genfromtxt(coeff_path, delimiter=',', dtype="float64")
+        else:
+            coefficients = None
+
     except BaseException:
         coefficients = None
-        raise ValueError("Could not read coefficients file.")
+        raise ValueError("[ERROR] Could not read coefficients file.")
 
     return coefficients
 
