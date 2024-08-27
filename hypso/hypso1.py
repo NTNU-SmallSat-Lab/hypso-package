@@ -950,9 +950,10 @@ class Hypso1(Hypso):
             self.spectral_coeff_file = spectral_coeff_file
             return None
         
-        csv_file_spectral = "spectral_bands_HYPSO-1_v1.csv"
+        #csv_file_spectral = "spectral_bands_HYPSO-1_v1.csv"
+        npz_file_spectral = "spectral_bands_HYPSO-1_v1.csv"
 
-        spectral_coeff_file = files('hypso.calibration').joinpath(f'data/{csv_file_spectral}')
+        spectral_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_spectral}')
 
         self.spectral_coeff_file = spectral_coeff_file
 
