@@ -12,7 +12,12 @@ import pandas as pd
 import pyproj as prj
 import xarray as xr
 
-from .hypso import Hypso
+import hypso
+from hypso import Hypso
+
+
+from hypso.utils import find_file
+
 from hypso.atmospheric import run_py6s, run_acolite, run_machi
 from hypso.calibration import read_coeffs_from_file, \
                               run_radiometric_calibration, \

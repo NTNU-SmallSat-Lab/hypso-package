@@ -1,13 +1,23 @@
 import numpy as np
 from importlib.resources import files
 from urllib.parse import urlparse, unquote
-from hypso.utils import MyProgressBar
 import urllib.request
 import tarfile
 from pathlib import Path
-from hypso.utils import find_file
 import netCDF4 as nc
 import shutil
+
+import hypso
+
+#import sys
+#print(sys.path)
+#print(hypso.__path__)
+
+from ..utils import MyProgressBar, find_file
+#from ..utils.utils_file import MyProgressBar, find_file
+#from hypso.utils import MyProgressBar, find_file
+
+
 
 
 def get_acolite_repo() -> None:

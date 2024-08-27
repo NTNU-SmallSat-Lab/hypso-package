@@ -372,3 +372,4 @@ class Hypso:
     @unified_mask.setter
     def unified_mask(self, value):
         self._unified_mask = self._format_unified_mask_dataarray(value)
+
