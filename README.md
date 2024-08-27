@@ -1,15 +1,26 @@
 # HYPSO
-"hypso" is a simple, fast, visualization tool for the hyperspectral
+"hypso" is a simple, fast, processing and visualization tool for the hyperspectral
 images taken by the HYPSO mission from the Norwegian University of Science and
-Technology (NTNU) for Python >3.9
+Technology (NTNU) for Python >3.10
 
-- Documentation: https://ntnu-smallsat-lab.github.io/hypso-package/
+- Documentation: https://ntnu-smallsat-lab.github.io/hypso-package/ (NB: out of date)
+  
+- Development: https://github.com/NTNU-SmallSat-Lab/hypso-package
+  
+- PyPI URL: https://pypi.org/project/hypso/
   
 - Anaconda URL: https://anaconda.org/conda-forge/hypso
 
 - Anaconda Github Feedstock: https://github.com/conda-forge/hypso-feedstock
 
-## How to Install (or Update)
+## Installation
+
+### Pip 
+```
+pip install hypso
+```
+
+### Anaconda
 It is recommended to use mamba as it is less prone to errors in dependency management than the default conda terminal (see https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html)
 
 if conda installed:
