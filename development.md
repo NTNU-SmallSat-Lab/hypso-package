@@ -1,4 +1,16 @@
-# DEVELOPMENT OF CONDA-FORGE PACKAGE
+## Development of the hypso-package
+
+## Development of the pip package
+- [Packaging projects](https://packaging.python.org/en/latest/tutorials/packaging-projects/)
+- Create an account at [PyPI.org](https:/pypi.org) and request access to the hypso project
+- Add your [PyPI.org](https:/pypi.org) login credentials and token to `~/.pypirc`
+- Install the `setuptools` build system and `twine` using pip 
+- Update the version number in `pyproject.toml`
+    - Use the version number format"vX.Y.Z"
+- Upload the newly built package to PyPI: `python3 -m twine upload --repository pypi dist/*`
+- View the project at [pypi.org/project/hypso/](https://pypi.org/project/hypso/)
+
+## Development of the conda-forge package
 
 There are two main repos:
 - Package: https://github.com/NTNU-SmallSat-Lab/hypso-package
@@ -13,10 +25,10 @@ You need to:
 
 ```
 
-# To Update conda-forge Package
+### To Update conda-forge Package
 
 
-### 1. Modify your fork of the hypso package with new improvements
+#### 1. Modify your fork of the hypso package with new improvements
 Do not forget to update the `pyproject.toml` file in the root. The `fallback_version` should match with the next step bundle name.
 ![image](https://github.com/NTNU-SmallSat-Lab/hypso-package/assets/87340855/bab5072e-cecb-4973-888a-26238c95a3ec)
 
@@ -25,7 +37,7 @@ If you added new packages include them in the same file (see image below). Versi
 ![Screenshot 2024-03-17 at 03 40 33](https://github.com/NTNU-SmallSat-Lab/hypso-package/assets/87340855/f61eda77-2830-4956-a7a8-711b5085007b)
 
 
-### 2. Bundle a Sub-Sequent Release
+#### 2. Bundle a Sub-Sequent Release
 You need to create a new release. The recommended format is 3 digits with a lowecase "v" as a prefix. Example: v1.9.9 This number should be the same fone as in Step 1. Create a "tag" when creating a release version or Step 3 wont work.
 
 ![image](https://github.com/NTNU-SmallSat-Lab/hypso-package/assets/87340855/6b920b92-6301-447a-860a-9c11720c2923)
@@ -33,7 +45,7 @@ You need to create a new release. The recommended format is 3 digits with a lowe
 
 ![Screenshot 2024-03-17 at 03 36 36](https://github.com/NTNU-SmallSat-Lab/hypso-package/assets/87340855/3e43d2ef-b464-497c-bad7-a1708e6554a3)
 
-### 3. Generate SHA 256 for the newly released file
+#### 3. Generate SHA 256 for the newly released file
 
 Use the following code and change the version relesed (for linux and mac). Modify the version of the like to match step 1 and 2.
 
@@ -41,7 +53,7 @@ Use the following code and change the version relesed (for linux and mac). Modif
     
 Copy the SHA256 string that you get after running that code above for the next step.
 
-### 4. Modify your fork of hypso-feedstock
+#### 4. Modify your fork of hypso-feedstock
 
 On your fork, modify the file `recipe/meta.yaml`, specifically *lines 2 and 11* in the following image:
 
@@ -54,7 +66,7 @@ If new packages are added they should be included in the *"run"* section with th
 ![image](https://github.com/NTNU-SmallSat-Lab/hypso-package/assets/87340855/e144b135-b42d-4418-b1b1-3e7944675953)
 
 
-### 5. Create a Pull Request (PR) for your hypso-feedstock fork
+#### 5. Create a Pull Request (PR) for your hypso-feedstock fork
 Complete the checklist in the PR template
 
 ![image](https://github.com/NTNU-SmallSat-Lab/hypso-package/assets/87340855/78fdb5e2-b057-42a3-9fb0-9d331b8d93a1)
@@ -68,7 +80,7 @@ After the PR is merged, the new version will be available for install in conda-f
 ![image](https://github.com/NTNU-SmallSat-Lab/hypso-package/assets/87340855/3b1ce72b-bcc0-4b74-8257-165216ab291f)
 
 
-# Important Considerations
+## Important Considerations
 
 1. Importing files needs to be done using package file imports like the following line of code.
 
