@@ -1,5 +1,7 @@
 # -- build
 
+#https://packaging.python.org/en/latest/specifications/core-metadata/
+
 #[tool.setuptools_scm]
 #write_to = "hypso/_version.py"
 #fallback_version = "2.0.0"
