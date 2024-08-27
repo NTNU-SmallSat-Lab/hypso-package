@@ -6,7 +6,9 @@
 - Add your [PyPI.org](https:/pypi.org) login credentials and token to `~/.pypirc`
 - Install the `setuptools` build system and `twine` using pip 
 - Update the version number in `pyproject.toml`
-    - Use the version number format"vX.Y.Z"
+    - Use the version number format "vX.Y.Z" for normal releases 
+    - Use the version number format "vX.Y.Z.a1" for alpha releases 
+    - Use the version number format "vX.Y.Z.b1" for beta releases 
 - Upload the newly built package to PyPI: `python3 -m twine upload --repository pypi dist/*`
 - View the project at [pypi.org/project/hypso/](https://pypi.org/project/hypso/)
 
