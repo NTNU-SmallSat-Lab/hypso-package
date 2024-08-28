@@ -44,7 +44,10 @@ from hypso.masks import run_global_land_mask, \
 from hypso.masks import run_cloud_mask, \
                         run_quantile_threshold_cloud_mask
 
-from hypso.reading import load_l1a_nc_cube, load_l1a_nc_metadata
+from hypso.reading import load_l1a_nc_cube, \
+                          load_l1a_nc_metadata, \
+                          load_l2a_nc_cube, \
+                          load_l2a_nc_metadata
 
 from hypso.writing import l1a_nc_writer, l1b_nc_writer, l2a_nc_writer
 
@@ -107,7 +110,7 @@ class Hypso1(Hypso):
         self.chlorophyll_estimation_has_run = False
         self.toa_reflectance_has_run = False
 
-        self._load_l1a_nc_file()
+        self._load_l1a_file()
         self._run_georeferencing()
 
         chl_attributes = {'model': None}
@@ -171,6 +174,11 @@ class Hypso1(Hypso):
         self.capture_region = self.capture_name.split('_')[0].strip('_')
 
         return None
+
+    def _set_hypso_path(self, path: Path) -> None:
+
+        if path is not None:
+            self.hypso_path = path
 
     def _set_capture_type(self) -> None:
         """
@@ -341,20 +349,23 @@ class Hypso1(Hypso):
         return None
 
 
-    # Loading L1a
+    # L1a functions
+
+    # TODO: add .bip option?
+    def _load_l1a_file(self, path: str = None) -> None:
+
+        self._load_l1a_nc_file(path=path)
 
     def _load_l1a_nc_file(self, path: str = None) -> None:
 
-        if path is not None:
-            self.hypso_path = path
+        self._set_hypso_path(path=path)
 
-        self._validate_l1a_file()
+        self._validate_l1a_file(path=path)
 
         self._set_capture_name()
         self._set_capture_region()
         self._set_capture_datetime()
-
-        
+  
         self._load_l1a_metadata()
 
         self._set_nc_files()
@@ -368,25 +379,18 @@ class Hypso1(Hypso):
         self._set_timestamps()
         self._set_capture_type()
         self._set_adcs_dataframes()
-        #self._set_target_area()
 
         self._load_l1a_cube()
 
         return None
 
-    def _validate_l1a_file(self) -> None:
+    def _validate_l1a_file(self, path: Path) -> None:
 
-        # Check that hypso_path file is a NetCDF file:
-        #if not self.hypso_path.suffix == '.nc':
-        #    raise Exception("Incorrect HYPSO Path. Only .nc files supported")
-
-        match self.hypso_path.suffix:
+        match path.suffix:
             case '.nc':
                 return None
-            case '.bip':
-                raise Exception("Incorrect HYPSO Path. Only .nc files supported")
             case _:
-                raise Exception("Incorrect HYPSO Path. Only .nc files supported")
+                raise Exception("Incorrect L1a path. Only .nc files supported")
     
         return None
 
@@ -396,7 +400,6 @@ class Hypso1(Hypso):
 
         return None
 
-    # TODO: use setattr here?
     def _load_l1a_metadata(self) -> None:
         
         self.capture_config, \
@@ -425,16 +428,65 @@ class Hypso1(Hypso):
     # L2a functions
 
     # TODO
-    def _load_l2a_file(self) -> None:
+    def _load_l2a_file(self, path: str = None) -> None:
+
+        self._load_l2a_nc_file(path=path)
+
+    def _load_l2a_nc_file(self, path: str = None) -> None:
+
+        self._set_hypso_path(path=path)
+
+        self._validate_l2a_file()
+
+        self._set_capture_name()
+        self._set_capture_region()
+        self._set_capture_datetime()
+  
+        self._load_l2a_metadata()
+
+        self._set_nc_files()
+        self._set_tmp_dir()
+        self._set_nc_dir()
+
+        self._set_background_value()
+        self._set_exposure()
+        self._set_aoi()
+        self._set_dimensions()
+        self._set_timestamps()
+        self._set_capture_type()
+        self._set_adcs_dataframes()
+
+        self._load_l2a_cube()
+
         return None
 
-    # TODO
-    def _load_l2a_cube(self) -> None:
-        return None
+    def _validate_l2a_file(self, path: Path) -> None:
+
+        match path.suffix:
+            case '.nc':
+                return None
+            case _:
+                raise Exception("Incorrect L2a path. Only .nc files supported")
     
-    # TODO
-    def _load_l2a_metadata(self) -> None:
         return None
+
+    def _load_l2a_cube(self) -> None:
+        
+        self.l2a_cube = load_l2a_nc_cube(self.hypso_path)
+    
+    def _load_l2a_metadata(self) -> None:
+
+        self.capture_config, \
+            self.timing, \
+            target_coords, \
+            self.adcs, \
+            dimensions = load_l2a_nc_metadata(self.hypso_path)
+        
+        return None
+
+
+
+
 
 
     # Georeferencing functions
@@ -1924,9 +1976,9 @@ class Hypso1(Hypso):
     # Public L1a methods
 
     # TODO
-    def load_l1a_nc_file(self, path: str) -> None:
+    def load_l1a_file(self, path: str) -> None:
 
-        self._load_l1a_nc_file(path=path)
+        self._load_l1a_file(path=path)
 
         return None
 
