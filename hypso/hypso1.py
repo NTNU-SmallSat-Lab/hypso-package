@@ -83,18 +83,18 @@ UNIX_TIME_OFFSET = 20 # TODO: Verify offset validity. Sivert had 20 here
 
 class Hypso1(Hypso):
 
-    def __init__(self, hypso_path: Union[str, Path], points_path: Union[str, Path, None] = None, verbose=False) -> None:
+    def __init__(self, path: Union[str, Path], points_path: Union[str, Path, None] = None, verbose=False) -> None:
         
         """
         Initialization of HYPSO-1 Class.
 
-        :param hypso_path: Absolute path to "L1a.nc" file
+        :param path: Absolute path to NetCDF file
         :param points_path: Absolute path to the corresponding ".points" files generated with QGIS for manual geo
             referencing. (Optional. Default=None)
 
         """
 
-        super().__init__(hypso_path=hypso_path, points_path=points_path)
+        super().__init__(path=path, points_path=points_path)
 
         # General -----------------------------------------------------
         self.platform = 'hypso1'
@@ -114,77 +114,32 @@ class Hypso1(Hypso):
         self.chlorophyll_estimation_has_run = False
         self.toa_reflectance_has_run = False
 
-        self._load_l1a_file(path=hypso_path)
-        self._run_georeferencing()
+        self._load_nc_file(path=path)
+        self._load_points_file(path=points_path)
 
         chl_attributes = {'model': None}
         product_attributes = {}
 
-        self.chl = DataArrayDict(dims_shape=self.spatial_dimensions, 
+        chl = DataArrayDict(dims_shape=self.spatial_dimensions, 
                                  attributes=chl_attributes, 
                                  dims_names=self.dim_names_2d,
                                  num_dims=2
                                  )
         
-        self.products = DataArrayDict(dims_shape=self.spatial_dimensions, 
+        products = DataArrayDict(dims_shape=self.spatial_dimensions, 
                                       attributes=product_attributes, 
                                       dims_names=self.dim_names_2d,
                                       num_dims=2
                                       )
 
+        setattr(self, "chl", chl)
+        setattr(self, "products", products)
+
+
         return None
 
         
     # Setters
-
-    def _parse_nc_filename(self, path: Path) -> None:
-
-        p = Parser("{capture_target}_{capture_datetime:%Y-%m-%d_%H%MZ}-{suffix}.nc")
-        fields = p.parse(str(path.name))
-
-        suffix = fields.pop("suffix")
-        suffix_list = list(suffix.split('-'))
-
-        try:
-            fields["product_level"] = suffix_list[0]
-            fields["atmospheric_correction"] = suffix_list[1]
-        except:
-            fields["product_level"] = suffix_list[0]
-            fields["atmospheric_correction"] = None
-
-        for key, value in fields.items():
-            setattr(self, key, value)
-
-        capture_name = str(path.stem).replace("-" + suffix, "")
-        product_level = fields["product_level"]
-
-        l1a_nc_file = Path(str(path).replace("-" + suffix, "-l1a"))
-        l1b_nc_file = Path(str(path).replace("-" + suffix, "-l1b"))
-        l2a_nc_file = Path(str(path).replace("-" + suffix, "-l2a"))
-
-        setattr(self, "capture_name", capture_name)
-
-        setattr(self, "nc_file", path)
-        setattr(self, "nc_name", path.stem)
-
-        setattr(self, "l1a_nc_file", l1a_nc_file)
-        setattr(self, "l1b_nc_file", l1b_nc_file)
-        setattr(self, "l2a_nc_file", l2a_nc_file)
-
-        setattr(self, "l1a_nc_name", l1a_nc_file.stem)
-        setattr(self, "l1b_nc_name", l1b_nc_file.stem)
-        setattr(self, "l2a_nc_name", l2a_nc_file.stem)
-
-        tmp_dir = Path(path.parent.absolute(), 
-                       path.stem.replace("-" + suffix, "") + "_tmp")
-        
-        nc_dir = Path(path.parent.absolute())
-
-        setattr(self, "tmp_dir", tmp_dir)
-        setattr(self, "nc_dir", nc_dir)
-
-        return None
-
 
     def _set_capture_type(self) -> None:
         """
@@ -326,24 +281,99 @@ class Hypso1(Hypso):
         return None
 
 
+
+    # TODO refactor
+    def _load_nc_file(self, path: str = None) -> None:
+
+        if path:
+            path = Path(path).absolute()
+        else:
+            return None
+
+        p = Parser("{capture_target}_{capture_datetime:%Y-%m-%d_%H%MZ}-{suffix}.{file_type}")
+
+        try:
+            fields = p.parse(str(path.name))
+        except:
+            print("[ERROR] Invalid filename.")
+            return None
+
+        suffix = fields.pop("suffix")
+        suffix_list = list(suffix.split('-'))
+
+        try:
+            fields["product_level"] = suffix_list[0]
+            fields["atmospheric_correction"] = suffix_list[1]
+        except:
+            fields["product_level"] = suffix_list[0]
+            fields["atmospheric_correction"] = None
+
+        for key, value in fields.items():
+            setattr(self, key, value)
+
+        capture_name = str(path.stem).replace("-" + suffix, "")
+        
+        l1a_nc_file = Path(str(path).replace("-" + suffix, "-l1a"))
+        l1b_nc_file = Path(str(path).replace("-" + suffix, "-l1b"))
+        l2a_nc_file = Path(str(path).replace("-" + suffix, "-l2a"))
+
+        setattr(self, "capture_name", capture_name)
+        setattr(self, "nc_file", path)
+        setattr(self, "nc_name", path.stem)
+
+        setattr(self, "l1a_nc_file", l1a_nc_file)
+        setattr(self, "l1b_nc_file", l1b_nc_file)
+        setattr(self, "l2a_nc_file", l2a_nc_file)
+
+        setattr(self, "l1a_nc_name", l1a_nc_file.stem)
+        setattr(self, "l1b_nc_name", l1b_nc_file.stem)
+        setattr(self, "l2a_nc_name", l2a_nc_file.stem)
+
+        tmp_dir = Path(path.parent.absolute(), path.stem.replace("-" + suffix, "") + "_tmp")
+        nc_dir = Path(path.parent.absolute())
+
+        setattr(self, "tmp_dir", tmp_dir)
+        setattr(self, "nc_dir", nc_dir)
+
+        product_level = fields["product_level"]
+
+        match product_level:
+            case "l1a":
+                print("[INFO] Loading L1a NetCDF file")
+                self._load_l1a_nc_metadata(path=path)
+                self._load_l1a_nc_cube(path=path)
+            case "l1b":
+                print("[INFO] Loading L1b NetCDF file")
+                self._load_l1b_nc_metadata(path=path)
+                self._load_l1b_nc_cube(path=path)
+            case "l2a":
+                print("[INFO] Loading L2a NetCDF file")
+                self._load_l2a_nc_metadata(path=path)
+                self._load_l2a_nc_cube(path=path)
+
+        return None
+
+
     # L1a functions
 
-    # TODO: add .bip option?
-    def _load_l1a_file(self, path: str = None) -> None:
+    def _load_l1a_nc_cube(self, path: Path) -> None:
 
-        print(path)
+        self.l1a_cube = load_l1a_nc_cube(nc_file_path=path)
 
-        path = Path(path).absolute()
-        self._set_hypso_path(path=path)
-        self._validate_l1a_file(path=path)
+        return None
+
+    def _load_l1a_nc_metadata(self, path: Path) -> None:
         
-        self._load_l1a_nc_file(path=path)
-
-    def _load_l1a_nc_file(self, path: str = None) -> None:
-
-        self._parse_nc_filename(path=path)
-  
-        self._load_l1a_metadata()
+        capture_config, \
+        timing, \
+        target_coords, \
+        adcs, \
+        dimensions, \
+        navigation = load_l1a_nc_metadata(nc_file_path=path)
+        
+        setattr(self, "capture_config", capture_config)
+        setattr(self, "timing", timing)
+        setattr(self, "adcs", adcs)
 
         self._set_background_value()
         self._set_exposure()
@@ -353,57 +383,29 @@ class Hypso1(Hypso):
         self._set_capture_type()
         self._set_adcs_dataframes()
 
-        self._load_l1a_cube()
-
         return None
-
-    def _validate_l1a_file(self, path: Path) -> None:
-
-        match path.suffix:
-            case '.nc':
-                return None
-            case _:
-                raise Exception("Incorrect L1a path. Only .nc files supported")
-    
-        return None
-
-    def _load_l1a_cube(self) -> None:
-
-        self.l1a_cube = load_l1a_nc_cube(self.hypso_path)
-
-        return None
-
-    def _load_l1a_metadata(self) -> None:
-        
-        self.capture_config, \
-            self.timing, \
-            target_coords, \
-            self.adcs, \
-            dimensions = load_l1a_nc_metadata(self.hypso_path)
-        
-        return None
-
-
-
-
-
 
 
     # L1b functions
 
-    def _load_l1b_file(self, path: str = None) -> None:
+    def _load_l1b_nc_cube(self, path: Path) -> None:
 
-        path = Path(path).absolute()
-        self._set_hypso_path(path=path)
-        self._validate_l1b_file(path=path)
+        self.l1b_cube = load_l1b_nc_cube(nc_file_path=path)
 
-        self._load_l1b_nc_file(path=path)
+        return None
 
-    def _load_l1b_nc_file(self, path: Path = None) -> None:
-
-        self._parse_nc_filename(path=path)
-  
-        self._load_l1b_metadata()
+    def _load_l1b_nc_metadata(self, path: Path) -> None:
+        
+        capture_config, \
+        timing, \
+        target_coords, \
+        adcs, \
+        dimensions, \
+        navigation = load_l1b_nc_metadata(nc_file_path=path)
+        
+        setattr(self, "capture_config", capture_config)
+        setattr(self, "timing", timing)
+        setattr(self, "adcs", adcs)
 
         self._set_background_value()
         self._set_exposure()
@@ -413,58 +415,29 @@ class Hypso1(Hypso):
         self._set_capture_type()
         self._set_adcs_dataframes()
 
-        self._load_l1b_cube()
-
         return None
-
-    def _validate_l1b_file(self, path: Path) -> None:
-
-        match path.suffix:
-            case '.nc':
-                return None
-            case _:
-                raise Exception("Incorrect L1b path. Only .nc files supported")
-    
-        return None
-
-    def _load_l1b_cube(self) -> None:
-        
-        self.l2a_cube = load_l1b_nc_cube(self.hypso_path)
-
-        return None
-    
-    def _load_l1b_metadata(self) -> None:
-
-        self.capture_config, \
-            self.timing, \
-            target_coords, \
-            self.adcs, \
-            dimensions = load_l1b_nc_metadata(self.hypso_path)
-        
-        return None
-
 
     
-
-
-
-
-
     # L2a functions
 
-    def _load_l2a_file(self, path: str = None) -> None:
+    def _load_l2a_nc_cube(self, path: Path) -> None:
 
-        path = Path(path).absolute()
-        self._set_hypso_path(path=path)
-        self._validate_l2a_file(path=path)
+        self.l2a_cube = load_l2a_nc_cube(nc_file_path=path)
 
-        self._load_l2a_nc_file(path=path)
+        return None
 
-    def _load_l2a_nc_file(self, path: Path = None) -> None:
-
-        self._parse_nc_filename(path=path)
-  
-        self._load_l2a_metadata()
+    def _load_l2a_nc_metadata(self, path: Path) -> None:
+        
+        capture_config, \
+        timing, \
+        target_coords, \
+        adcs, \
+        dimensions, \
+        navigation = load_l2a_nc_metadata(nc_file_path=path)
+        
+        setattr(self, "capture_config", capture_config)
+        setattr(self, "timing", timing)
+        setattr(self, "adcs", adcs)
 
         self._set_background_value()
         self._set_exposure()
@@ -474,88 +447,51 @@ class Hypso1(Hypso):
         self._set_capture_type()
         self._set_adcs_dataframes()
 
-        self._load_l2a_cube()
-
         return None
-
-    def _validate_l2a_file(self, path: Path) -> None:
-
-        match path.suffix:
-            case '.nc':
-                return None
-            case _:
-                raise Exception("Incorrect L2a path. Only .nc files supported")
-    
-        return None
-
-    def _load_l2a_cube(self) -> None:
-        
-        self.l2a_cube = load_l2a_nc_cube(self.hypso_path)
-
-        return None
-    
-    def _load_l2a_metadata(self) -> None:
-
-        self.capture_config, \
-            self.timing, \
-            target_coords, \
-            self.adcs, \
-            dimensions = load_l2a_nc_metadata(self.hypso_path)
-        
-        return None
-
-
-
 
 
 
     # Georeferencing functions
 
-    def _run_georeferencing(self, overwrite: bool = False) -> None:
+    # TODO refactor
+    def _load_points_file(self, path: str) -> None:
 
-        if self.georeferencing_has_run and not overwrite:
 
+        if path:
+            path = Path(path).absolute()
+        else:
             if self.VERBOSE:
-                    print("[INFO] Georeferencing has already been run. Skipping.")
-
+                print('[INFO] No georeferencing .points file provided. Skipping georeferencing.')
             return None
 
         # Compute latitude and longitudes arrays if a points file is available
-        if self.points_path is not None:
 
-            if self.VERBOSE:
-                print('[INFO] Running georeferencing...')
+        if self.VERBOSE:
+            print('[INFO] Running georeferencing...')
 
-            gr = georeferencing.Georeferencer(filename=self.points_path,
-                                              cube_height=self.spatial_dimensions[0],
-                                              cube_width=self.spatial_dimensions[1],
-                                              image_mode=None,
-                                              origin_mode='qgis')
-            
-            # Update latitude and longitude arrays with computed values from Georeferencer
-            self.latitudes = gr.latitudes[:, ::-1]
-            self.longitudes = gr.longitudes[:, ::-1]
-            
-            self._run_georeferencing_orientation()
-            self._compute_bbox()
-            self._compute_gsd()
-            self._compute_resolution()
+        gr = georeferencing.Georeferencer(filename=self.points_path,
+                                            cube_height=self.spatial_dimensions[0],
+                                            cube_width=self.spatial_dimensions[1],
+                                            image_mode=None,
+                                            origin_mode='qgis')
+        
+        # Update latitude and longitude arrays with computed values from Georeferencer
+        self.latitudes = gr.latitudes[:, ::-1]
+        self.longitudes = gr.longitudes[:, ::-1]
+        
+        self._compute_flip()
+        self._compute_bbox()
+        self._compute_gsd()
+        self._compute_resolution()
 
-            self.latitudes_original = self.latitudes
-            self.longitudes_original = self.longitudes
-
-
-        else:
-
-            if self.VERBOSE:
-                print('[INFO] No georeferencing .points file provided. Skipping georeferencing.')
+        self.latitudes_original = self.latitudes
+        self.longitudes_original = self.longitudes
 
         self.georeferencing_has_run = True
 
         return None
 
-    # TODO: works with xarray?
-    def _run_georeferencing_orientation(self) -> None:
+    def _compute_flip(self) -> None:
 
         datacube_flipped = check_star_tracker_orientation(adcs_samples=self.adcs['adcssamples'],
                                                          quaternion_s=self.adcs['quaternion_s'],
@@ -1392,8 +1328,6 @@ class Hypso1(Hypso):
 
     def _run_global_land_mask(self) -> np.ndarray:
 
-        self._run_georeferencing()
-
         if self.VERBOSE:
             print("[INFO] Running global land mask generation...")
 
@@ -1993,14 +1927,23 @@ class Hypso1(Hypso):
         return cube
     
 
-    # Public L1a methods
+    # Public functions
 
-    # TODO
-    def load_l1a_file(self, path: str) -> None:
+    def load_nc_file(self, path: str = None) -> None:
 
-        self._load_l1a_file(path=path)
+        self._load_nc_file(path=path)
 
         return None
+    
+
+    def load_points_file(self, path: str = None) -> None:
+
+        self._load_points_file(path=path)
+
+        return None
+
+
+    # Public L1a methods
 
     def get_l1a_cube(self) -> xr.DataArray:
 
@@ -2102,11 +2045,6 @@ class Hypso1(Hypso):
 
     # Public L1b methods
 
-    # TODO
-    def load_l1b_file(self, path: str) -> None:
-
-        return None
-
     def generate_l1b_cube(self, **kwargs) -> None:
 
         self._run_calibration(**kwargs)
@@ -2202,11 +2140,6 @@ class Hypso1(Hypso):
 
 
     # Public L2a methods
-
-    # TODO
-    def load_l2a_file(self, path: str) -> None:
-
-        return self._load_l2a_file(path=path)
 
     def generate_l2a_cube(self, product_name: str = "6sv1") -> None:
 

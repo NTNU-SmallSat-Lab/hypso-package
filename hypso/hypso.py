@@ -6,19 +6,27 @@ import numpy as np
 
 class Hypso:
 
-    def __init__(self, hypso_path: Union[str, Path], points_path: Union[str, Path, None] = None):
+    def __init__(self, path: Union[str, Path] = None, points_path: Union[str, Path, None] = None):
 
         """
         Initialization of HYPSO Class.
 
-        :param hypso_path: Absolute path to "L1a.nc" file
+        :param path: Absolute path to NetCDF file
         :param points_path: Absolute path to the corresponding ".points" files generated with QGIS for manual geo
             referencing. (Optional. Default=None)
 
         """
+
         # Set NetCDF and .points file paths
-        self._set_hypso_path(path=hypso_path)
-        self._set_points_path(path=points_path)
+        if path:
+            self.path = Path(path).absolute()
+        else:
+            self.path = None
+
+        if path:
+            self.points_path = Path(points_path).absolute()
+        else:
+            self.points_path = None
 
         # Initialize platform and sensor names
         self.platform = None
@@ -137,10 +145,10 @@ class Hypso:
         self._unified_mask = None
 
         # Initialize chlorophyll estimates dict
-        self.chl = {}
+        #self.chl = {}
 
         # Initialize products dict
-        self.products = {}
+        #self.products = {}
 
         # Initialize ADCS data
         self.adcs = None
@@ -167,28 +175,6 @@ class Hypso:
         # DEBUG
         self.DEBUG = False
         self.VERBOSE = False
-
-        self._test_variable = None
-
-    def _set_hypso_path(self, path=None) -> None:
-
-        if path is None:
-            path = self.hypso_path
-
-        # Make NetCDF file path an absolute path
-        self.hypso_path = Path(path).absolute()
-
-        return None
-
-    def _set_points_path(self, path=None) -> None:
-
-        # Make .points file path an absolute path (if possible)
-        if path is not None:
-            self.points_path = Path(path).absolute()
-        else:
-            self.points_path = None
-
-        return None
     
 
     def _update_dataarray_attrs(self, data: xr.DataArray, attrs: dict) -> xr.DataArray:
