@@ -44,8 +44,12 @@ from hypso.masks import run_global_land_mask, \
 from hypso.masks import run_cloud_mask, \
                         run_quantile_threshold_cloud_mask
 
-from hypso.reading import load_nc_cube, \
-                          load_nc_metadata
+from hypso.reading import load_l1a_nc_cube, \
+                          load_l1a_nc_metadata, \
+                          load_l1b_nc_cube, \
+                          load_l1b_nc_metadata, \
+                          load_l2a_nc_cube, \
+                          load_l2a_nc_metadata
 
 from hypso.writing import l1a_nc_writer, l1b_nc_writer, l2a_nc_writer
 
@@ -365,7 +369,7 @@ class Hypso1(Hypso):
 
     def _load_l1a_cube(self) -> None:
 
-        self.l1a_cube = load_nc_cube(self.hypso_path)
+        self.l1a_cube = load_l1a_nc_cube(self.hypso_path)
 
         return None
 
@@ -375,7 +379,7 @@ class Hypso1(Hypso):
             self.timing, \
             target_coords, \
             self.adcs, \
-            dimensions = load_nc_metadata(self.hypso_path)
+            dimensions = load_l1a_nc_metadata(self.hypso_path)
         
         return None
 
@@ -425,7 +429,7 @@ class Hypso1(Hypso):
 
     def _load_l1b_cube(self) -> None:
         
-        self.l2a_cube = load_nc_cube(self.hypso_path)
+        self.l2a_cube = load_l1b_nc_cube(self.hypso_path)
 
         return None
     
@@ -435,7 +439,7 @@ class Hypso1(Hypso):
             self.timing, \
             target_coords, \
             self.adcs, \
-            dimensions = load_nc_metadata(self.hypso_path)
+            dimensions = load_l1b_nc_metadata(self.hypso_path)
         
         return None
 
@@ -486,7 +490,7 @@ class Hypso1(Hypso):
 
     def _load_l2a_cube(self) -> None:
         
-        self.l2a_cube = load_nc_cube(self.hypso_path)
+        self.l2a_cube = load_l2a_nc_cube(self.hypso_path)
 
         return None
     
@@ -496,7 +500,7 @@ class Hypso1(Hypso):
             self.timing, \
             target_coords, \
             self.adcs, \
-            dimensions = load_nc_metadata(self.hypso_path)
+            dimensions = load_l2a_nc_metadata(self.hypso_path)
         
         return None
 

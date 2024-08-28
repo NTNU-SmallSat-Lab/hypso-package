@@ -8,7 +8,7 @@ from typing import Tuple
 
 EXPERIMENTAL_FEATURES = True
 
-def load_nc_cube(nc_file_path: Path) -> np.ndarray:
+def load_l1a_nc_cube(nc_file_path: Path) -> np.ndarray:
     """
     Load l1a.nc Hypso Capture file metadata
 
@@ -17,11 +17,11 @@ def load_nc_cube(nc_file_path: Path) -> np.ndarray:
     :return: raw cube numpy array (digital counts)
     """
 
-    nc_cube = load_cube_from_nc_file(nc_file_path)
+    nc_cube = load_l1a_cube_from_nc_file(nc_file_path)
 
     return nc_cube
 
-def load_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict]:
+def load_l1a_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict]:
     """
     Load l1a.nc Hypso Capture file metadata
 
@@ -35,22 +35,141 @@ def load_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict]:
     nc_target_coords = load_target_coords_from_nc_file(nc_file_path)
     nc_adcs = load_adcs_from_nc_file(nc_file_path)
     nc_dimensions = load_dimensions_from_nc_file(nc_file_path)
+    nc_navigation = load_navigation_from_nc_file(nc_file_path)
 
-    return nc_capture_config, nc_timing, nc_target_coords, nc_adcs, nc_dimensions
-
-
-
-
-
-
-
-
+    return nc_capture_config, \
+            nc_timing, \
+            nc_target_coords, \
+            nc_adcs, \
+            nc_dimensions,\
+            nc_navigation
 
 
 
 
 
+def load_l1b_nc_cube(nc_file_path: Path) -> np.ndarray:
+    """
+    Load l1a.nc Hypso Capture file metadata
 
+    :param nc_file_path: Absolute path to the l1a.nc file
+
+    :return: raw cube numpy array (digital counts)
+    """
+
+    nc_cube = load_l1b_cube_from_nc_file(nc_file_path)
+
+    return nc_cube
+
+def load_l1b_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict]:
+    """
+    Load l1a.nc Hypso Capture file metadata
+
+    :param nc_file_path: Absolute path to the l1a.nc file
+
+    :return: "capture_config" dictionary with Hypso capture information, "timing" dictionary with Hypso timing information, "target_coords" dictionary with Hypso target coordinate information, "adcs" dictionary with Hypso ADCS information, and "dimensions" dictionary with Hypso capture spatial dimensions information
+    """
+
+    nc_capture_config = load_capture_config_from_nc_file(nc_file_path)
+    nc_timing = load_timing_from_nc_file(nc_file_path)
+    nc_target_coords = load_target_coords_from_nc_file(nc_file_path)
+    nc_adcs = load_adcs_from_nc_file(nc_file_path)
+    nc_dimensions = load_dimensions_from_nc_file(nc_file_path)
+    nc_navigation = load_navigation_from_nc_file(nc_file_path)
+
+    return nc_capture_config, \
+            nc_timing, \
+            nc_target_coords, \
+            nc_adcs, \
+            nc_dimensions,\
+            nc_navigation
+
+
+
+
+
+def load_l2a_nc_cube(nc_file_path: Path) -> np.ndarray:
+    """
+    Load l1a.nc Hypso Capture file metadata
+
+    :param nc_file_path: Absolute path to the l1a.nc file
+
+    :return: raw cube numpy array (digital counts)
+    """
+
+    nc_cube = load_l2a_cube_from_nc_file(nc_file_path)
+
+    return nc_cube
+
+def load_l2a_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict]:
+    """
+    Load l1a.nc Hypso Capture file metadata
+
+    :param nc_file_path: Absolute path to the l1a.nc file
+
+    :return: "capture_config" dictionary with Hypso capture information, "timing" dictionary with Hypso timing information, "target_coords" dictionary with Hypso target coordinate information, "adcs" dictionary with Hypso ADCS information, and "dimensions" dictionary with Hypso capture spatial dimensions information
+    """
+
+    nc_capture_config = load_capture_config_from_nc_file(nc_file_path)
+    nc_timing = load_timing_from_nc_file(nc_file_path)
+    nc_target_coords = load_target_coords_from_nc_file(nc_file_path)
+    nc_adcs = load_adcs_from_nc_file(nc_file_path)
+    nc_dimensions = load_dimensions_from_nc_file(nc_file_path)
+    nc_navigation = load_navigation_from_nc_file(nc_file_path)
+
+    return nc_capture_config, \
+            nc_timing, \
+            nc_target_coords, \
+            nc_adcs, \
+            nc_dimensions,\
+            nc_navigation
+
+
+
+def load_l1a_cube_from_nc_file(nc_file_path: Path) -> np.ndarray:
+    """
+    Get Raw Cube from Hypso l1a.nc File
+
+    :param nc_file_path: Absolute path to l1a.nc file
+
+    :return: Numpy array with raw Cube (digital counts) extracted from nc file
+    """
+    with nc.Dataset(nc_file_path, format="NETCDF4") as f:
+        group = f.groups["products"]
+        # 16-bit according to Original data Capture
+        cube = np.array(group.variables["Lt"][:], dtype='uint16')
+
+        return cube
+    
+def load_l1b_cube_from_nc_file(nc_file_path: Path) -> np.ndarray:
+    """
+    Get Raw Cube from Hypso l1b.nc File
+
+    :param nc_file_path: Absolute path to l1b.nc file
+
+    :return: Numpy array with radiance cube extracted from nc file
+    """
+    with nc.Dataset(nc_file_path, format="NETCDF4") as f:
+        group = f.groups["products"]
+        # 16-bit according to Original data Capture
+        cube = np.array(group.variables["Lt"][:], dtype='uint16')
+
+        return cube
+    
+def load_l2a_cube_from_nc_file(nc_file_path: Path) -> np.ndarray:
+    """
+    Get Raw Cube from Hypso l2a.nc File
+
+    :param nc_file_path: Absolute path to l2a.nc file
+
+    :return: Numpy array with reflectance cube extracted from nc file
+    """
+    with nc.Dataset(nc_file_path, format="NETCDF4") as f:
+        group = f.groups["products"]
+        # 16-bit according to Original data Capture
+        cube = np.array(group.variables["Lt"][:], dtype='uint16')
+
+        return cube
 
 
 
@@ -89,15 +208,9 @@ def load_adcs_from_nc_file(nc_file_path: Path) -> Tuple[dict, tuple]:
 
     return adcs
 
-# TODO
+
+"""
 def create_tmp_dir(nc_file_path: Path) -> str:
-    """
-    Create empty directory for generated files.
-
-    :param nc_file_path: Path to the name of the NetCDF file
-
-    :return: temp_dir path
-    """
 
     nc_name = nc_file_path.stem
     temp_dir = Path(nc_file_path.parent.absolute(), nc_name.replace("-l1a", "") + "_tmp")
@@ -108,7 +221,8 @@ def create_tmp_dir(nc_file_path: Path) -> str:
     temp_dir.mkdir(parents=True, exist_ok=True)
 
     return str(temp_dir)
-
+"""
+    
 def load_capture_config_from_nc_file(nc_file_path: Path) -> dict:
 
     # ------------------------------------------------------------------------
@@ -186,21 +300,6 @@ def load_target_coords_from_nc_file(nc_file_path: Path) -> dict:
 
     return target_coords
 
-def load_cube_from_nc_file(nc_file_path: Path) -> np.ndarray:
-    """
-    Get Raw Cube from Hypso l1a.nc File
-
-    :param nc_file_path: Absolute path to l1a.nc file
-
-    :return: Numpy array with raw Cube (digital counts) extracted from nc file
-    """
-    with nc.Dataset(nc_file_path, format="NETCDF4") as f:
-        group = f.groups["products"]
-        # 16-bit according to Original data Capture
-        cube = np.array(group.variables["Lt"][:], dtype='uint16')
-
-        return cube
-
 def load_dimensions_from_nc_file(nc_file_path: Path) -> dict:
 
     dimensions = {}
@@ -212,6 +311,32 @@ def load_dimensions_from_nc_file(nc_file_path: Path) -> dict:
             value = group[key]
             dimensions[key] = len(value)
 
-
-                
     return dimensions
+
+
+
+
+
+
+def load_navigation_from_nc_file(nc_file_path: Path) -> dict:
+
+    navigation = {}
+    
+    with nc.Dataset(nc_file_path, format="NETCDF4") as f:
+
+        try:
+            group = f.groups["navigation"]
+
+            for key in group.variables.keys():
+
+                try:
+                    value = group.variables[key][:]
+                    navigation[key] = value
+                except:
+                    pass
+        except:
+            pass
+
+    return navigation
+
+
