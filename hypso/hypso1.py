@@ -181,65 +181,6 @@ class Hypso1(Hypso):
 
         return None
 
-    '''
-    def _set_capture_datetime(self) -> None:
-        """
-        Format and set the datetime of the capture using information derived from the capture name.
-
-        :return: None.
-        """
-
-        parts = self.capture_name.split("_", 1)
-        print(parts)
-        dt = datetime.strptime(parts[1], "%Y-%m-%d_%H%MZ")
-        self.capture_datetime = dt
-
-        return None
-    '''
-        
-    '''
-    def _set_capture_name(self) -> None:
-        """
-        Format and set the capture name using information derived from the capture file path.
-
-        :return: None.
-        """
-
-        capture_name = self.hypso_path.stem
-
-        for pl in SUPPORTED_PRODUCT_LEVELS:
-
-            if "-" + pl in capture_name:
-                capture_name = capture_name.replace("-" + pl, "")
-
-
-        for ac in ATM_CORR_PRODUCTS:
-
-            if "-" + ac in capture_name:
-                capture_name = capture_name.replace("-" + ac, "")
-
-        self.capture_name = capture_name
-
-        return None
-    '''
-    
-    '''
-    def _set_capture_region(self) -> None:
-        """
-        Format and set the capture region using information derived from the capture name.
-
-        :return: None.
-        """
-
-        self.capture_region = self.capture_name.split('_')[0].strip('_')
-
-        return None
-    '''
-        
-    #def _set_hypso_path(self, path: Path) -> None:
-
-    #    if path is not None:
-    #        self.hypso_path = path
 
     def _set_capture_type(self) -> None:
         """
@@ -311,39 +252,6 @@ class Hypso1(Hypso):
         self.adcs_quat_df = quat_df
 
         return None
-
-    """
-    def _set_nc_files(self, product_level="l1a") -> None:
-
-        self.nc_file = self.hypso_path
-        self.nc_name = self.hypso_path.stem
-
-        file_path = str(self.hypso_path)
-
-        self.l1a_nc_file = Path(file_path.replace("-" + product_level, "-l1a"))
-        self.l1b_nc_file = Path(file_path.replace("-" + product_level, "-l1b"))
-        self.l2a_nc_file = Path(file_path.replace("-" + product_level, "-l2a"))
-
-        self.l1a_nc_name = self.l1a_nc_file.stem
-        self.l1b_nc_name = self.l1b_nc_file.stem
-        self.l2a_nc_name = self.l2a_nc_file.stem
-
-        return None
-    """
-    """    
-    def _set_tmp_dir(self) -> None:
-
-        self.tmp_dir = Path(self.nc_file.parent.absolute(), self.nc_name.replace("-l1a", "") + "_tmp")
-
-        return None
-    """
-    """
-    def _set_nc_dir(self) -> None:
-
-        self.nc_dir = Path(self.nc_file.parent.absolute())
-
-        return None
-    """
 
     def _set_background_value(self) -> None:
 
