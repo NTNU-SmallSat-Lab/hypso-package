@@ -17,8 +17,8 @@ class Hypso:
 
         """
         # Set NetCDF and .points file paths
-        self._set_hypso_path(hypso_path=hypso_path)
-        self._set_points_path(points_path=points_path)
+        self._set_hypso_path(path=hypso_path)
+        self._set_points_path(path=points_path)
 
         # Initialize platform and sensor names
         self.platform = None
@@ -170,26 +170,26 @@ class Hypso:
 
         self._test_variable = None
 
-    def _set_hypso_path(self, hypso_path=None) -> None:
+    def _set_hypso_path(self, path=None) -> None:
 
-        if hypso_path is None:
-            hypso_path = self.hypso_path
+        if path is None:
+            path = self.hypso_path
 
         # Make NetCDF file path an absolute path
-        self.hypso_path = Path(hypso_path).absolute()
+        self.hypso_path = Path(path).absolute()
 
         return None
 
-    def _set_points_path(self, points_path=None) -> None:
+    def _set_points_path(self, path=None) -> None:
 
         # Make .points file path an absolute path (if possible)
-        if points_path is not None:
-            self.points_path = Path(points_path).absolute()
+        if path is not None:
+            self.points_path = Path(path).absolute()
         else:
             self.points_path = None
 
         return None
-
+    
 
     def _update_dataarray_attrs(self, data: xr.DataArray, attrs: dict) -> xr.DataArray:
 

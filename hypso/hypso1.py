@@ -44,10 +44,8 @@ from hypso.masks import run_global_land_mask, \
 from hypso.masks import run_cloud_mask, \
                         run_quantile_threshold_cloud_mask
 
-from hypso.reading import load_l1a_nc_cube, \
-                          load_l1a_nc_metadata, \
-                          load_l2a_nc_cube, \
-                          load_l2a_nc_metadata
+from hypso.reading import load_nc_cube, \
+                          load_nc_metadata
 
 from hypso.writing import l1a_nc_writer, l1b_nc_writer, l2a_nc_writer
 
@@ -60,9 +58,11 @@ from satpy.dataset.dataid import WavelengthRange
 from pyresample.geometry import SwathDefinition
 from pyresample.bilinear.xarr import XArrayBilinearResampler 
 
+from trollsift import Parser
+
 SUPPORTED_PRODUCT_LEVELS = ["l1a", "l1b", "l2a"]
 
-ATM_CORR_PRODUCTS = Literal["6sv1", "acolite", "machi"]
+ATM_CORR_PRODUCTS = ["6sv1", "acolite", "machi"]
 CHL_EST_PRODUCTS = Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]
 LAND_MASK_PRODUCTS = Literal["global", "ndwi", "threshold"]
 CLOUD_MASK_PRODUCTS = Literal["default"]
@@ -110,7 +110,7 @@ class Hypso1(Hypso):
         self.chlorophyll_estimation_has_run = False
         self.toa_reflectance_has_run = False
 
-        self._load_l1a_file()
+        self._load_l1a_file(path=hypso_path)
         self._run_georeferencing()
 
         chl_attributes = {'model': None}
@@ -133,6 +133,55 @@ class Hypso1(Hypso):
         
     # Setters
 
+    def _parse_nc_filename(self, path: Path) -> None:
+
+        p = Parser("{capture_target}_{capture_datetime:%Y-%m-%d_%H%MZ}-{suffix}.nc")
+        fields = p.parse(str(path.name))
+
+        suffix = fields.pop("suffix")
+        suffix_list = list(suffix.split('-'))
+
+        try:
+            fields["product_level"] = suffix_list[0]
+            fields["atmospheric_correction"] = suffix_list[1]
+        except:
+            fields["product_level"] = suffix_list[0]
+            fields["atmospheric_correction"] = None
+
+        for key, value in fields.items():
+            setattr(self, key, value)
+
+        capture_name = str(path.stem).replace("-" + suffix, "")
+        product_level = fields["product_level"]
+
+        l1a_nc_file = Path(str(path).replace("-" + suffix, "-l1a"))
+        l1b_nc_file = Path(str(path).replace("-" + suffix, "-l1b"))
+        l2a_nc_file = Path(str(path).replace("-" + suffix, "-l2a"))
+
+        setattr(self, "capture_name", capture_name)
+
+        setattr(self, "nc_file", path)
+        setattr(self, "nc_name", path.stem)
+
+        setattr(self, "l1a_nc_file", l1a_nc_file)
+        setattr(self, "l1b_nc_file", l1b_nc_file)
+        setattr(self, "l2a_nc_file", l2a_nc_file)
+
+        setattr(self, "l1a_nc_name", l1a_nc_file.stem)
+        setattr(self, "l1b_nc_name", l1b_nc_file.stem)
+        setattr(self, "l2a_nc_name", l2a_nc_file.stem)
+
+        tmp_dir = Path(path.parent.absolute(), 
+                       path.stem.replace("-" + suffix, "") + "_tmp")
+        
+        nc_dir = Path(path.parent.absolute())
+
+        setattr(self, "tmp_dir", tmp_dir)
+        setattr(self, "nc_dir", nc_dir)
+
+        return None
+
+    '''
     def _set_capture_datetime(self) -> None:
         """
         Format and set the datetime of the capture using information derived from the capture name.
@@ -141,11 +190,14 @@ class Hypso1(Hypso):
         """
 
         parts = self.capture_name.split("_", 1)
+        print(parts)
         dt = datetime.strptime(parts[1], "%Y-%m-%d_%H%MZ")
         self.capture_datetime = dt
 
         return None
-
+    '''
+        
+    '''
     def _set_capture_name(self) -> None:
         """
         Format and set the capture name using information derived from the capture file path.
@@ -160,10 +212,18 @@ class Hypso1(Hypso):
             if "-" + pl in capture_name:
                 capture_name = capture_name.replace("-" + pl, "")
 
+
+        for ac in ATM_CORR_PRODUCTS:
+
+            if "-" + ac in capture_name:
+                capture_name = capture_name.replace("-" + ac, "")
+
         self.capture_name = capture_name
 
         return None
-
+    '''
+    
+    '''
     def _set_capture_region(self) -> None:
         """
         Format and set the capture region using information derived from the capture name.
@@ -174,11 +234,12 @@ class Hypso1(Hypso):
         self.capture_region = self.capture_name.split('_')[0].strip('_')
 
         return None
+    '''
+        
+    #def _set_hypso_path(self, path: Path) -> None:
 
-    def _set_hypso_path(self, path: Path) -> None:
-
-        if path is not None:
-            self.hypso_path = path
+    #    if path is not None:
+    #        self.hypso_path = path
 
     def _set_capture_type(self) -> None:
         """
@@ -251,34 +312,38 @@ class Hypso1(Hypso):
 
         return None
 
-    def _set_nc_files(self) -> None:
+    """
+    def _set_nc_files(self, product_level="l1a") -> None:
 
         self.nc_file = self.hypso_path
         self.nc_name = self.hypso_path.stem
 
         file_path = str(self.hypso_path)
 
-        self.l1a_nc_file = Path(file_path)
-        self.l1b_nc_file = Path(file_path.replace("-l1a", "-l1b"))
-        self.l2a_nc_file = Path(file_path.replace("-l1a", "-l2a"))
+        self.l1a_nc_file = Path(file_path.replace("-" + product_level, "-l1a"))
+        self.l1b_nc_file = Path(file_path.replace("-" + product_level, "-l1b"))
+        self.l2a_nc_file = Path(file_path.replace("-" + product_level, "-l2a"))
 
         self.l1a_nc_name = self.l1a_nc_file.stem
         self.l1b_nc_name = self.l1b_nc_file.stem
         self.l2a_nc_name = self.l2a_nc_file.stem
 
         return None
-
+    """
+    """    
     def _set_tmp_dir(self) -> None:
 
         self.tmp_dir = Path(self.nc_file.parent.absolute(), self.nc_name.replace("-l1a", "") + "_tmp")
 
         return None
-    
+    """
+    """
     def _set_nc_dir(self) -> None:
 
         self.nc_dir = Path(self.nc_file.parent.absolute())
 
         return None
+    """
 
     def _set_background_value(self) -> None:
 
@@ -354,23 +419,19 @@ class Hypso1(Hypso):
     # TODO: add .bip option?
     def _load_l1a_file(self, path: str = None) -> None:
 
+        print(path)
+
+        path = Path(path).absolute()
+        self._set_hypso_path(path=path)
+        self._validate_l1a_file(path=path)
+        
         self._load_l1a_nc_file(path=path)
 
     def _load_l1a_nc_file(self, path: str = None) -> None:
 
-        self._set_hypso_path(path=path)
-
-        self._validate_l1a_file(path=path)
-
-        self._set_capture_name()
-        self._set_capture_region()
-        self._set_capture_datetime()
+        self._parse_nc_filename(path=path)
   
         self._load_l1a_metadata()
-
-        self._set_nc_files()
-        self._set_tmp_dir()
-        self._set_nc_dir()
 
         self._set_background_value()
         self._set_exposure()
@@ -396,7 +457,7 @@ class Hypso1(Hypso):
 
     def _load_l1a_cube(self) -> None:
 
-        self.l1a_cube = load_l1a_nc_cube(self.hypso_path)
+        self.l1a_cube = load_nc_cube(self.hypso_path)
 
         return None
 
@@ -406,47 +467,92 @@ class Hypso1(Hypso):
             self.timing, \
             target_coords, \
             self.adcs, \
-            dimensions = load_l1a_nc_metadata(self.hypso_path)
+            dimensions = load_nc_metadata(self.hypso_path)
         
         return None
 
+
+
+
+
+
+
     # L1b functions
 
-    # TODO
-    def _load_l1b_file(self) -> None:
+    def _load_l1b_file(self, path: str = None) -> None:
+
+        path = Path(path).absolute()
+        self._set_hypso_path(path=path)
+        self._validate_l1b_file(path=path)
+
+        self._load_l1b_nc_file(path=path)
+
+    def _load_l1b_nc_file(self, path: Path = None) -> None:
+
+        self._parse_nc_filename(path=path)
+  
+        self._load_l1b_metadata()
+
+        self._set_background_value()
+        self._set_exposure()
+        self._set_aoi()
+        self._set_dimensions()
+        self._set_timestamps()
+        self._set_capture_type()
+        self._set_adcs_dataframes()
+
+        self._load_l1b_cube()
+
         return None
 
-    # TODO
+    def _validate_l1b_file(self, path: Path) -> None:
+
+        match path.suffix:
+            case '.nc':
+                return None
+            case _:
+                raise Exception("Incorrect L1b path. Only .nc files supported")
+    
+        return None
+
     def _load_l1b_cube(self) -> None:
+        
+        self.l2a_cube = load_nc_cube(self.hypso_path)
+
         return None
     
-    # TODO
     def _load_l1b_metadata(self) -> None:
+
+        self.capture_config, \
+            self.timing, \
+            target_coords, \
+            self.adcs, \
+            dimensions = load_nc_metadata(self.hypso_path)
+        
         return None
+
+
     
+
+
+
+
 
     # L2a functions
 
-    # TODO
     def _load_l2a_file(self, path: str = None) -> None:
+
+        path = Path(path).absolute()
+        self._set_hypso_path(path=path)
+        self._validate_l2a_file(path=path)
 
         self._load_l2a_nc_file(path=path)
 
-    def _load_l2a_nc_file(self, path: str = None) -> None:
+    def _load_l2a_nc_file(self, path: Path = None) -> None:
 
-        self._set_hypso_path(path=path)
-
-        self._validate_l2a_file()
-
-        self._set_capture_name()
-        self._set_capture_region()
-        self._set_capture_datetime()
+        self._parse_nc_filename(path=path)
   
         self._load_l2a_metadata()
-
-        self._set_nc_files()
-        self._set_tmp_dir()
-        self._set_nc_dir()
 
         self._set_background_value()
         self._set_exposure()
@@ -472,7 +578,9 @@ class Hypso1(Hypso):
 
     def _load_l2a_cube(self) -> None:
         
-        self.l2a_cube = load_l2a_nc_cube(self.hypso_path)
+        self.l2a_cube = load_nc_cube(self.hypso_path)
+
+        return None
     
     def _load_l2a_metadata(self) -> None:
 
@@ -480,7 +588,7 @@ class Hypso1(Hypso):
             self.timing, \
             target_coords, \
             self.adcs, \
-            dimensions = load_l2a_nc_metadata(self.hypso_path)
+            dimensions = load_nc_metadata(self.hypso_path)
         
         return None
 
@@ -2083,7 +2191,7 @@ class Hypso1(Hypso):
     # Public L1b methods
 
     # TODO
-    def load_l1b_nc_file(self, path: str) -> None:
+    def load_l1b_file(self, path: str) -> None:
 
         return None
 
@@ -2184,11 +2292,11 @@ class Hypso1(Hypso):
     # Public L2a methods
 
     # TODO
-    def load_l2a_cube(self, path: str, product_name: ATM_CORR_PRODUCTS = DEFAULT_ATM_CORR_PRODUCT) -> None:
+    def load_l2a_file(self, path: str) -> None:
 
-        return None
+        return self._load_l2a_file(path=path)
 
-    def generate_l2a_cube(self, product_name: ATM_CORR_PRODUCTS = DEFAULT_ATM_CORR_PRODUCT) -> None:
+    def generate_l2a_cube(self, product_name: str = "6sv1") -> None:
 
         self._run_atmospheric_correction(product_name=product_name)
 
@@ -2398,14 +2506,14 @@ class Hypso1(Hypso):
         return None
 
     def generate_chlorophyll_estimates(self, 
-                                       product_name: CHL_EST_PRODUCTS = DEFAULT_CHL_EST_PRODUCT,
+                                       product_name: str = DEFAULT_CHL_EST_PRODUCT,
                                        model: Union[str, Path] = None,
                                        factor: float = 0.1
                                        ) -> None:
 
         self._run_chlorophyll_estimation(product_name=product_name, model=model, factor=factor)
 
-    def get_chlorophyll_estimates(self, product_name: CHL_EST_PRODUCTS = DEFAULT_CHL_EST_PRODUCT,
+    def get_chlorophyll_estimates(self, product_name: str = DEFAULT_CHL_EST_PRODUCT,
                                  ) -> np.ndarray:
 
         key = product_name.lower()

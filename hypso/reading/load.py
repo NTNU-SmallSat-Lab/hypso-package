@@ -8,7 +8,7 @@ from typing import Tuple
 
 EXPERIMENTAL_FEATURES = True
 
-def load_l1a_nc_cube(nc_file_path: Path) -> np.ndarray:
+def load_nc_cube(nc_file_path: Path) -> np.ndarray:
     """
     Load l1a.nc Hypso Capture file metadata
 
@@ -21,7 +21,7 @@ def load_l1a_nc_cube(nc_file_path: Path) -> np.ndarray:
 
     return nc_cube
 
-def load_l1a_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict]:
+def load_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict]:
     """
     Load l1a.nc Hypso Capture file metadata
 
@@ -29,19 +29,6 @@ def load_l1a_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, di
 
     :return: "capture_config" dictionary with Hypso capture information, "timing" dictionary with Hypso timing information, "target_coords" dictionary with Hypso target coordinate information, "adcs" dictionary with Hypso ADCS information, and "dimensions" dictionary with Hypso capture spatial dimensions information
     """
-    # Get metadata
-    #quaternion_csv_path = Path(nc_info["tmp_dir"], "quaternion.csv")
-    #position_csv_path = Path(nc_info["tmp_dir"], "position.csv")
-    #timestamps_srv_path = Path(nc_info["tmp_dir"], "timestamps_services.txt")
-    #frametime_pose_csv_path = Path(nc_info["tmp_dir"], "frametime-pose.csv")
-    # TODO: Check if local-angles.csv is to be used or sun-azimuth.dat and etc
-    #local_angles_csv_path = Path(nc_info["tmp_dir"], "local-angles.csv")
-    #sat_azimuth_path = Path(nc_info["tmp_dir"], "sat-azimuth.dat")
-    #sat_zenith_path = Path(nc_info["tmp_dir"], "sat-zenith.dat")
-    #solar_azimuth_path = Path(nc_info["tmp_dir"], "sun-azimuth.dat")
-    #solar_zenith_path = Path(nc_info["tmp_dir"], "sun-zenith.dat")
-    #latitude_dataPath = Path(nc_info["tmp_dir"], "latitudes.dat")
-    #longitude_dataPath = Path(nc_info["tmp_dir"], "longitudes.dat")
 
     nc_capture_config = load_capture_config_from_nc_file(nc_file_path)
     nc_timing = load_timing_from_nc_file(nc_file_path)
@@ -50,6 +37,28 @@ def load_l1a_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, di
     nc_dimensions = load_dimensions_from_nc_file(nc_file_path)
 
     return nc_capture_config, nc_timing, nc_target_coords, nc_adcs, nc_dimensions
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def load_adcs_from_nc_file(nc_file_path: Path) -> Tuple[dict, tuple]:
     """
