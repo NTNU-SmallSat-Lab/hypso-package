@@ -101,17 +101,6 @@ class Hypso1(Hypso):
         self.sensor = 'hypso1_hsi'
         self.VERBOSE = verbose
 
-        # TODO: remove these if they aren't needed
-        # Booleans to check if certain processes have been run 
-        self.georeferencing_has_run = False
-        self.calibration_has_run = False
-        self.geometry_computation_has_run = False
-        #self.atmospheric_correction_has_run = False
-        self.land_mask_has_run = False
-        self.cloud_mask_has_run = False
-        self.chlorophyll_estimation_has_run = False
-        self.toa_reflectance_has_run = False
-
         self._load_file(path=path)
         self._load_points_file(path=points_path)
 
@@ -684,13 +673,6 @@ class Hypso1(Hypso):
         :return: None
         """
 
-        if self.calibration_has_run and not overwrite:
-
-            if self.VERBOSE:
-                    print("[INFO] Calibration has already been run. Skipping.")
-
-            return None
-
         if self.VERBOSE:
             print('[INFO] Running calibration routines...')
 
@@ -712,8 +694,6 @@ class Hypso1(Hypso):
         #l1b_cube = self._format_l1b_cube(data=l1b_cube)
 
         self.l1b_cube = l1b_cube
- 
-        self.calibration_has_run = True
 
         return None
 
@@ -1091,13 +1071,6 @@ class Hypso1(Hypso):
 
     def _run_geometry(self, overwrite: bool = False) -> None:
 
-        if self.geometry_computation_has_run and not overwrite:
-
-            if self.VERBOSE:
-                    print("[INFO] Geometry computation has already been run. Skipping.")
-
-            return None
-
         if self.VERBOSE:
             print("[INFO] Running geometry computation...")
 
@@ -1144,8 +1117,6 @@ class Hypso1(Hypso):
         self.latitudes_original = pixels_lat.reshape(self.spatial_dimensions)
         self.longitudes_original = pixels_lon.reshape(self.spatial_dimensions)
 
-        self.geometry_computation_has_run = True
-
         return None
 
 
@@ -1155,16 +1126,20 @@ class Hypso1(Hypso):
 
     def _run_atmospheric_correction(self, product_name: str) -> None:
 
-        match product_name.lower():
-            case "6sv1":
-                self.l2a_cube = self._run_6sv1_atmospheric_correction()
-            case "acolite":
-                self.l2a_cube = self._run_acolite_atmospheric_correction()
-            case "machi":
-                self.l2a_cube = self._run_machi_atmospheric_correction() 
-            case _:
-                print("[ERROR] No such atmospheric correction product supported!")
-                return None
+        try:
+            match product_name.lower():
+                case "6sv1":
+                    self.l2a_cube = self._run_6sv1_atmospheric_correction()
+                case "acolite":
+                    self.l2a_cube = self._run_acolite_atmospheric_correction()
+                case "machi":
+                    self.l2a_cube = self._run_machi_atmospheric_correction() 
+                case _:
+                    print("[ERROR] No such atmospheric correction product supported!")
+                    return None
+        except:
+            print("[ERROR] Unable to generate L2a datacube.")
+
         return None
 
     def _run_6sv1_atmospheric_correction(self, **kwargs) -> xr.DataArray:
@@ -1195,7 +1170,7 @@ class Hypso1(Hypso):
         else:
             longitudes = self.longitudes
 
-        atmos_params = {
+        py6s_dict = {
             'aot550': 0.0580000256
         }
 
@@ -1212,7 +1187,7 @@ class Hypso1(Hypso):
                         sat_azimuth_angles=self.sat_azimuth_angles,
                         sat_zenith_angles=self.sat_zenith_angles,
                         iso_time=self.iso_time,
-                        py6s_dict=atmos_params, 
+                        py6s_dict=py6s_dict, 
                         time_capture=time_capture,
                         srf=self.srf)
         
@@ -1221,42 +1196,29 @@ class Hypso1(Hypso):
 
         return cube
 
+
     def _run_acolite_atmospheric_correction(self) -> xr.DataArray:
 
-        #self._run_calibration()
-        #self._run_geometry()
-        #self._write_l1b_nc_file()
+        if hasattr(self, 'acolite_path'):
 
-        if not self.l1b_nc_file.is_file():
+            nc_file_path = str(self.l1b_nc_file)
+            acolite_path = str(self.acolite_path)
 
-            raise RuntimeError(
-                f"[ERROR] No L1b file found. Please generate it before attemping to run ACOLITE."
-                )
+            cube = run_acolite(acolite_path=acolite_path, 
+                               output_path=self.capture_dir, 
+                               nc_file_path=nc_file_path)
 
+            cube = self._format_l2a_dataarray(cube)
+            cube.attrs['correction'] = "acolite"
+
+            return cube
+        else:
+            print("[ERROR] Please set path to ACOLITE source code before generating ACOLITE L2a datacube using \"set_acolite_path()\"")
+            print("[INFO] The ACOLITE source code can be downloaded from https://github.com/acolite/acolite")
             return None
 
-        if self.VERBOSE: 
-            print("[INFO] Running ACOLITE atmospheric correction")
 
-        # user and password from https://urs.earthdata.nasa.gov/profile
-        # optional but good
-        atmos_params = {
-            'user':'alvarof',
-            'password':'nwz7xmu8dak.UDG9kqz'
-        }
 
-        if not self.l1b_nc_file.is_file():
-            raise Exception("No -l1b.nc file found")
-        
-        cube = run_acolite(output_path=self.capture_dir, 
-                           atmos_dict=atmos_params, 
-                           nc_file_acoliteready=self.l1b_nc_file)
-
-        cube = self._format_l2a_dataarray(cube)
-        cube.attrs['correction'] = "acolite"
-
-        return cube
-    
     # TODO
     def _run_machi_atmospheric_correction(self) -> xr.DataArray:
 
@@ -1264,8 +1226,8 @@ class Hypso1(Hypso):
 
         return None
 
-        self._run_calibration()
-        self._run_geometry()
+        #self._run_calibration()
+        #self._run_geometry()
 
         if self.VERBOSE: 
             print("[INFO] Running MACHI atmospheric correction")
@@ -1287,8 +1249,8 @@ class Hypso1(Hypso):
     # TODO: add set functions
     def _run_toa_reflectance(self) -> None:
 
-        self._run_calibration()
-        self._run_geometry()
+        #self._run_calibration()
+        #self._run_geometry()
         
         # Get Local variables
         srf = self.srf
@@ -1342,8 +1304,6 @@ class Hypso1(Hypso):
         self.toa_reflectance.attrs['units'] = "sr^-1"
         self.toa_reflectance.attrs['description'] = "Top of atmosphere (TOA) reflectance"
 
-        self.toa_reflectance_has_run = True
-
         return None
 
 
@@ -1367,8 +1327,6 @@ class Hypso1(Hypso):
                 print("[WARNING] No such land mask supported!")
                 return None
 
-        self.land_mask_has_run = True
-
         return None
 
     def _run_global_land_mask(self) -> np.ndarray:
@@ -1388,7 +1346,7 @@ class Hypso1(Hypso):
 
     def _run_ndwi_land_mask(self) -> np.ndarray:
 
-        self._run_calibration()
+        #self._run_calibration()
 
         if self.VERBOSE:
             print("[INFO] Running NDWI land mask generation...")
@@ -1406,7 +1364,7 @@ class Hypso1(Hypso):
     
     def _run_threshold_land_mask(self) -> xr.DataArray:
 
-        self._run_calibration()
+        #self._run_calibration()
 
         if self.VERBOSE:
             print("[INFO] Running threshold land mask generation...")
@@ -1455,13 +1413,11 @@ class Hypso1(Hypso):
                 print("[WARNING] No such cloud mask supported!")
                 return None
 
-        self.cloud_mask_has_run = True
-
         return None
 
     def _run_quantile_threshold_cloud_mask(self, quantile: float = 0.075) -> None:
 
-        self._run_calibration()
+        #self._run_calibration()
 
         cloud_mask = run_quantile_threshold_cloud_mask(cube=self.l1b_cube,
                                                         quantile=quantile)
@@ -1510,13 +1466,11 @@ class Hypso1(Hypso):
                 print("[ERROR] No such chlorophyll estimation product supported!")
                 return None
 
-        self.chlorophyll_estimation_has_run = True
-
         return None
 
     def _run_band_ratio_chlorophyll_estimation(self, factor: float = None) -> xr.DataArray:
 
-        self._run_calibration()
+        #self._run_calibration()
 
         cube = self.l1b_cube.to_numpy()
 
@@ -1545,8 +1499,8 @@ class Hypso1(Hypso):
 
     def _run_6sv1_aqua_tuned_chlorophyll_estimation(self, model: Path = None) -> xr.DataArray:
 
-        self._run_calibration()
-        self._run_geometry()
+        #self._run_calibration()
+        #self._run_geometry()
 
         if self.l2a_cube is None or self.l2a_cube.attrs['correction'] != '6sv1':
             self._run_atmospheric_correction(product_name='6sv1')
@@ -1587,8 +1541,8 @@ class Hypso1(Hypso):
 
     def _run_acolite_aqua_tuned_chlorophyll_estimation(self, model: Path = None) -> xr.DataArray:
 
-        self._run_calibration()
-        self._run_geometry()
+        #self._run_calibration()
+        #self._run_geometry()
 
         if self.l2a_cube is None or self.l2a_cube.attrs['correction'] != 'acolite':
             self._run_atmospheric_correction(product_name='acolite')
@@ -1876,9 +1830,6 @@ class Hypso1(Hypso):
 
     # TODO: make more effient by replacing the for loop and using deepcopy or list to assemble datacube
     def _resample_dataarray(self, area_def, data: xr.DataArray) -> xr.DataArray:
-
-        if not self.georeferencing_has_run:
-            return None
 
         swath_def = self._generate_swath_definition()
 
@@ -2290,6 +2241,11 @@ class Hypso1(Hypso):
 
         return None
 
+    def set_acolite_path(self, path: str) -> None:
+
+        self.acolite_path = Path(path).absolute()
+
+        return None
 
     # Public georeferencing functions
 
