@@ -94,27 +94,25 @@ class Hypso1(Hypso):
 
         """
 
-        super().__init__(path=path, points_path=points_path)
+        super().__init__(path=path)
 
         # General -----------------------------------------------------
         self.platform = 'hypso1'
         self.sensor = 'hypso1_hsi'
         self.VERBOSE = verbose
 
-        # Booleans to check if certain processes have been run
+        # TODO: remove these if they aren't needed
+        # Booleans to check if certain processes have been run 
         self.georeferencing_has_run = False
         self.calibration_has_run = False
         self.geometry_computation_has_run = False
-        self.write_l1a_nc_file_has_run = False
-        self.write_l1b_nc_file_has_run = False
-        self.write_l2a_nc_file_has_run = False
         #self.atmospheric_correction_has_run = False
         self.land_mask_has_run = False
         self.cloud_mask_has_run = False
         self.chlorophyll_estimation_has_run = False
         self.toa_reflectance_has_run = False
 
-        self._load_nc_file(path=path)
+        self._load_file(path=path)
         self._load_points_file(path=points_path)
 
         chl_attributes = {'model': None}
@@ -280,81 +278,111 @@ class Hypso1(Hypso):
 
         return None
 
-
-
-    # TODO refactor
-    def _load_nc_file(self, path: str = None) -> None:
-
-        if path:
-            path = Path(path).absolute()
-        else:
-            return None
-
-        p = Parser("{capture_target}_{capture_datetime:%Y-%m-%d_%H%MZ}-{suffix}.{file_type}")
-
-        try:
-            fields = p.parse(str(path.name))
-        except:
-            print("[ERROR] Invalid filename.")
-            return None
-
-        suffix = fields.pop("suffix")
-        suffix_list = list(suffix.split('-'))
-
-        try:
-            fields["product_level"] = suffix_list[0]
-            fields["atmospheric_correction"] = suffix_list[1]
-        except:
-            fields["product_level"] = suffix_list[0]
-            fields["atmospheric_correction"] = None
+    def _set_field_info(self, fields: dict) -> None:
 
         for key, value in fields.items():
             setattr(self, key, value)
 
-        capture_name = str(path.stem).replace("-" + suffix, "")
-        
-        l1a_nc_file = Path(str(path).replace("-" + suffix, "-l1a"))
-        l1b_nc_file = Path(str(path).replace("-" + suffix, "-l1b"))
-        l2a_nc_file = Path(str(path).replace("-" + suffix, "-l2a"))
+        return None
+
+    def _set_capture_name(self, fields: dict) -> None:
+
+        capture_name = self._compose_capture_name(fields=fields)
 
         setattr(self, "capture_name", capture_name)
-        setattr(self, "nc_file", path)
-        setattr(self, "nc_name", path.stem)
+
+        return None
+
+    def _set_filenames(self, parent_directory: Path, fields: dict) -> None:
+
+        capture_name = self._compose_capture_name(fields=fields)
+
+        l1a_nc_file = Path(parent_directory, capture_name + "-l1a.nc")
+        l1b_nc_file = Path(parent_directory, capture_name + "-l1b.nc")
+        l2a_nc_file = Path(parent_directory, capture_name + "-l2a.nc")
 
         setattr(self, "l1a_nc_file", l1a_nc_file)
         setattr(self, "l1b_nc_file", l1b_nc_file)
         setattr(self, "l2a_nc_file", l2a_nc_file)
 
-        setattr(self, "l1a_nc_name", l1a_nc_file.stem)
-        setattr(self, "l1b_nc_name", l1b_nc_file.stem)
-        setattr(self, "l2a_nc_name", l2a_nc_file.stem)
+        return None
+    
+    def _set_dirnames(self, parent_directory: Path, fields: dict) -> None:
 
-        tmp_dir = Path(path.parent.absolute(), path.stem.replace("-" + suffix, "") + "_tmp")
-        nc_dir = Path(path.parent.absolute())
+        capture_name = self._compose_capture_name(fields=fields)
 
-        setattr(self, "tmp_dir", tmp_dir)
-        setattr(self, "nc_dir", nc_dir)
+        capture_dir = Path(parent_directory.absolute(), capture_name + "_tmp")
+        parent_dir = Path(parent_directory.absolute())
 
-        product_level = fields["product_level"]
-
-        match product_level:
-            case "l1a":
-                print("[INFO] Loading L1a NetCDF file")
-                self._load_l1a_nc_metadata(path=path)
-                self._load_l1a_nc_cube(path=path)
-            case "l1b":
-                print("[INFO] Loading L1b NetCDF file")
-                self._load_l1b_nc_metadata(path=path)
-                self._load_l1b_nc_cube(path=path)
-            case "l2a":
-                print("[INFO] Loading L2a NetCDF file")
-                self._load_l2a_nc_metadata(path=path)
-                self._load_l2a_nc_cube(path=path)
+        setattr(self, "capture_dir", capture_dir)
+        setattr(self, "parent_dir", parent_dir)
 
         return None
 
 
+
+    # Filename parsing and composing
+
+    def _compose_capture_name(self, fields: dict) -> str:
+
+        p = Parser("{capture_target}_{capture_datetime:%Y-%m-%d_%H%MZ}")
+
+        capture_name = p.compose(fields)
+
+        return capture_name
+
+    def _parse_filename(self, path: str) -> dict:
+
+        path = Path(path).absolute()
+
+        p = Parser("{capture_target}_{capture_datetime:%Y-%m-%d_%H%MZ}-{product_level:3s}{atmospheric_correction:->}.{file_type}")
+
+        fields = p.parse(str(path.name))
+
+        return fields
+
+    def _parse_filename_product_level(self, path: str) -> str:
+
+        return self._parse_filename(path=path)['product_level']
+
+
+    # Loading functions
+
+    def _load_file(self, path: Path) -> None:
+
+        path = Path(path).absolute()
+
+        fields = self._parse_filename(path=path)
+
+        self._set_field_info(fields=fields)
+        self._set_capture_name(fields=fields)
+        self._set_filenames(fields=fields, parent_directory=path.parent)
+        self._set_dirnames(fields=fields, parent_directory=path.parent)
+
+        match fields['product_level']:
+
+            case "l1a":
+                if self.VERBOSE: print('[INFO] Loading L1a capture ' + self.capture_name)
+                self._load_l1a(path=path)
+            case "l1b":
+                if self.VERBOSE: print('[INFO] Loading L1b capture ' + self.capture_name)
+                self._load_l1b(path=path)
+            case "l2a":
+                if self.VERBOSE: print('[INFO] Loading L2a capture ' + self.capture_name)
+                self._load_l2a(path=path)
+            case _:
+                print("[ERROR] Unsupported product level.")
+        return None
+
+
     # L1a functions
+
+    def _load_l1a(self, path: Path) -> None:
+
+        self._load_l1a_nc_metadata(path=path)
+        self._load_l1a_nc_cube(path=path)
+
+        return None
 
     def _load_l1a_nc_cube(self, path: Path) -> None:
 
@@ -374,6 +402,7 @@ class Hypso1(Hypso):
         setattr(self, "capture_config", capture_config)
         setattr(self, "timing", timing)
         setattr(self, "adcs", adcs)
+        setattr(self, "navigation", navigation)
 
         self._set_background_value()
         self._set_exposure()
@@ -387,6 +416,13 @@ class Hypso1(Hypso):
 
 
     # L1b functions
+
+    def _load_l1b(self, path: Path) -> None:
+
+        self._load_l1b_nc_metadata(path=path)
+        self._load_l1b_nc_cube(path=path)
+
+        return None
 
     def _load_l1b_nc_cube(self, path: Path) -> None:
 
@@ -406,6 +442,7 @@ class Hypso1(Hypso):
         setattr(self, "capture_config", capture_config)
         setattr(self, "timing", timing)
         setattr(self, "adcs", adcs)
+        setattr(self, "navigation", navigation)
 
         self._set_background_value()
         self._set_exposure()
@@ -419,6 +456,13 @@ class Hypso1(Hypso):
 
     
     # L2a functions
+
+    def _load_l2a(self, path: Path) -> None:
+
+        self._load_l2a_nc_metadata(path=path)
+        self._load_l2a_nc_cube(path=path)
+
+        return None
 
     def _load_l2a_nc_cube(self, path: Path) -> None:
 
@@ -438,6 +482,7 @@ class Hypso1(Hypso):
         setattr(self, "capture_config", capture_config)
         setattr(self, "timing", timing)
         setattr(self, "adcs", adcs)
+        setattr(self, "navigation", navigation)
 
         self._set_background_value()
         self._set_exposure()
@@ -469,7 +514,7 @@ class Hypso1(Hypso):
         if self.VERBOSE:
             print('[INFO] Running georeferencing...')
 
-        gr = georeferencing.Georeferencer(filename=self.points_path,
+        gr = georeferencing.Georeferencer(filename=path,
                                             cube_height=self.spatial_dimensions[0],
                                             cube_width=self.spatial_dimensions[1],
                                             image_mode=None,
@@ -1182,7 +1227,7 @@ class Hypso1(Hypso):
         #self._run_geometry()
         #self._write_l1b_nc_file()
 
-        if not self.write_l1b_nc_file_has_run and not self.l1b_nc_file.is_file():
+        if not self.l1b_nc_file.is_file():
 
             raise RuntimeError(
                 f"[ERROR] No L1b file found. Please generate it before attemping to run ACOLITE."
@@ -1203,7 +1248,7 @@ class Hypso1(Hypso):
         if not self.l1b_nc_file.is_file():
             raise Exception("No -l1b.nc file found")
         
-        cube = run_acolite(output_path=self.tmp_dir, 
+        cube = run_acolite(output_path=self.capture_dir, 
                            atmos_dict=atmos_params, 
                            nc_file_acoliteready=self.l1b_nc_file)
 
@@ -1929,16 +1974,18 @@ class Hypso1(Hypso):
 
     # Public functions
 
-    def load_nc_file(self, path: str = None) -> None:
+    def load_file(self, path: str = None) -> None:
 
-        self._load_nc_file(path=path)
+        if path:
+            self._load_file(path=path)
 
         return None
     
 
     def load_points_file(self, path: str = None) -> None:
 
-        self._load_points_file(path=path)
+        if path:
+            self._load_points_file(path=path)
 
         return None
 
@@ -1999,7 +2046,7 @@ class Hypso1(Hypso):
         bands = range(0, len(spectrum))
         units = spectrum.attrs["units"]
 
-        output_file = Path(self.nc_dir, self.capture_name + '_l1a_plot.png')
+        output_file = Path(self.parent_dir, self.capture_name + '_l1a_plot.png')
 
         plt.figure(figsize=(10, 5))
         plt.plot(bands, spectrum)
@@ -2037,8 +2084,6 @@ class Hypso1(Hypso):
         l1a_nc_writer(satobj=self, 
                       dst_l1a_nc_file=dst_l1a_nc_file, 
                       src_l1a_nc_file=self.l1a_nc_file)
-
-        self.write_l1a_nc_file_has_run = True
 
         return None
 
@@ -2105,7 +2150,7 @@ class Hypso1(Hypso):
         bands = self.wavelengths
         units = spectrum.attrs["units"]
 
-        output_file = Path(self.nc_dir, self.capture_name + '_l1a_plot.png')
+        output_file = Path(self.parent_dir, self.capture_name + '_l1a_plot.png')
 
         plt.figure(figsize=(10, 5))
         plt.plot(bands, spectrum)
@@ -2133,8 +2178,6 @@ class Hypso1(Hypso):
         l1b_nc_writer(satobj=self, 
                       dst_l1b_nc_file=self.l1b_nc_file, 
                       src_l1a_nc_file=self.l1a_nc_file)
-
-        self.write_l1b_nc_file_has_run = True
 
         return None
 
@@ -2206,7 +2249,7 @@ class Hypso1(Hypso):
         bands = self.wavelengths
         units = spectrum.attrs["units"]
 
-        output_file = Path(self.nc_dir, self.capture_name + '_l2a_plot.png')
+        output_file = Path(self.parent_dir, self.capture_name + '_l2a_plot.png')
 
         plt.figure(figsize=(10, 5))
         plt.plot(bands, spectrum)

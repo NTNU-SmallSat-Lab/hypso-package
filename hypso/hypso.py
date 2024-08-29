@@ -6,27 +6,17 @@ import numpy as np
 
 class Hypso:
 
-    def __init__(self, path: Union[str, Path] = None, points_path: Union[str, Path, None] = None):
+    def __init__(self, path: Union[str, Path] = None):
 
         """
         Initialization of HYPSO Class.
 
         :param path: Absolute path to NetCDF file
-        :param points_path: Absolute path to the corresponding ".points" files generated with QGIS for manual geo
-            referencing. (Optional. Default=None)
 
         """
 
-        # Set NetCDF and .points file paths
-        if path:
-            self.path = Path(path).absolute()
-        else:
-            self.path = None
 
-        if path:
-            self.points_path = Path(points_path).absolute()
-        else:
-            self.points_path = None
+        self.path = Path(path).absolute()
 
         # Initialize platform and sensor names
         self.platform = None
@@ -37,16 +27,12 @@ class Hypso:
         self.capture_region = None
 
         # Initialize directory and file info
-        self.tmp_dir = None
-        self.nc_dir = None
-        self.nc_file = None
-        self.nc_name = None
+        self.capture_dir = None
+        self.parent_dir = None
         self.l1a_nc_file = None
         self.l1b_nc_file = None
         self.l2a_nc_file = None
-        self.l1a_nc_name = None
-        self.l1b_nc_name = None
-        self.l2a_nc_name = None
+
 
         # Initialize datacubes
         #self.l1a_cube = None
