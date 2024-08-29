@@ -374,7 +374,7 @@ def l1b_nc_writer(satobj: Hypso, dst_l1b_nc_file: str, src_l1a_nc_file: str) -> 
         timestamps_srv[:] = old_nc['metadata']["timing"]["timestamps_srv"][:]
         
         # Create Navigation Group --------------------------------------
-        navigation_group = netfile.createGroup('navigation')
+        #navigation_group = netfile.createGroup('navigation')
 
         try:
             # Latitude ---------------------------------
