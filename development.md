@@ -2,13 +2,14 @@
 
 ## Development of the pip package
 - [Packaging projects](https://packaging.python.org/en/latest/tutorials/packaging-projects/)
-- Create an account at [PyPI.org](https:/pypi.org) and request access to the hypso project
+- Create an account at [PyPI.org](https:/pypi.org) and request access to the hypso project (contact Cameron or Sivert, updated 2024-08-29)
 - Add your [PyPI.org](https:/pypi.org) login credentials and token to `~/.pypirc`
 - Install the `setuptools` build system and `twine` using pip 
 - Update the version number in `pyproject.toml`
     - Use the version number format "vX.Y.Z" for normal releases 
     - Use the version number format "vX.Y.Z.a1" for alpha releases 
     - Use the version number format "vX.Y.Z.b1" for beta releases 
+- Build the package with `python3 -m build`
 - Upload the newly built package to PyPI: `python3 -m twine upload --repository pypi dist/*`
 - View the project at [pypi.org/project/hypso/](https://pypi.org/project/hypso/)
 
