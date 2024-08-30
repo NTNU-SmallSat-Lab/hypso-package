@@ -2132,6 +2132,7 @@ class Hypso1(Hypso):
         plt.grid(True)
 
         if save:
+            # TODO: TypeError: imsave() missing 1 required positional argument: 'arr'
             plt.imsave(output_file)
         else:
             plt.show()
