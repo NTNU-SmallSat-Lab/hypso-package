@@ -94,3 +94,4 @@ class DataArrayValidator():
 
 
         return xr.DataArray(data, coords=coords, dims=dims)
+        #return xr.DataArray(data, dims=dims)
