@@ -28,7 +28,6 @@ dir_path = '/home/cameron/Nedlastinger'
 #l1a_nc_file = os.path.join(dir_path, 'virginiabeach_2024-08-22T14-59-41Z-l1a' + '.nc')
 #points_file = os.path.join(dir_path, 'virginiabeach_2024-08-22T14-59-41Z-l1a' + '.points')
 
-
 l1a_nc_file = os.path.join(dir_path, 'grieghammerfest_2024-08-17T10-38-36Z-l1a.nc')
 points_file = os.path.join(dir_path, 'grieghammerfest_2024-08-17T10-38-36Z-l1a.points')
 
