@@ -1729,12 +1729,6 @@ class Hypso1(Hypso):
                 'ancillary_variables': []
                 }   
 
-        coords={self.dims_names[0]: np.arange(data.shape[0]), 
-                self.dims_names[1]: np.arange(data.shape[1]),
-                }
-
-
-
         for i, wl in enumerate(wavelengths):
 
             data = cube[:,:,i]
