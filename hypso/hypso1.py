@@ -314,8 +314,11 @@ class Hypso1(Hypso):
 
     def _compose_capture_name(self, fields: dict) -> str:
 
-        #p = Parser("{capture_target}_{capture_datetime:%Y-%m-%d_%H%MZ}") # Old filename format
-        p = Parser("{capture_target}_{capture_datetime:%Y-%m-%dT%H-%M-%SZ}") # New filename format
+
+        if hasattr(self, '_use_old_filename_format'):
+            p = Parser("{capture_target}_{capture_datetime:%Y-%m-%d_%H%MZ}") # Old filename format
+        else:
+            p = Parser("{capture_target}_{capture_datetime:%Y-%m-%dT%H-%M-%SZ}") # New filename format
 
         capture_name = p.compose(fields)
 
@@ -333,6 +336,7 @@ class Hypso1(Hypso):
             fields = p.parse(str(path.name))
         except:
             # Old filename format
+            setattr(self, '_use_old_filename_format', True)
             p = Parser("{capture_target}_{capture_datetime:%Y-%m-%d_%H%MZ}-{product_level:3s}{atmospheric_correction:->}.{file_type}")
             fields = p.parse(str(path.name))
         
