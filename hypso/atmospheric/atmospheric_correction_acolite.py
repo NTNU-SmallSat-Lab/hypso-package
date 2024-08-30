@@ -58,10 +58,6 @@ def run_acolite(acolite_path: str, output_path: str, nc_file_path: str) -> np.nd
     # process the current bundle
     processed = ac.acolite.acolite_run(settings=settings)
 
-
-    print(processed)
-    print(processed[0]['l2r'][0])
-
     acolite_l2_file = processed[0]['l2r'][0]
 
     # Read .nc
