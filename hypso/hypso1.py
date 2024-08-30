@@ -324,18 +324,18 @@ class Hypso1(Hypso):
     def _parse_filename(self, path: str) -> dict:
 
         path = Path(path).absolute()
+        field = None
 
         try:
             # New filename format
             #aegean_2024-08-22T08-41-46Z-l1a.nc
             p = Parser("{capture_target}_{capture_datetime:%Y-%m-%dT%H-%M-%SZ}-{product_level:3s}{atmospheric_correction:->}.{file_type}")
+            fields = p.parse(str(path.name))
         except:
             # Old filename format
             p = Parser("{capture_target}_{capture_datetime:%Y-%m-%d_%H%MZ}-{product_level:3s}{atmospheric_correction:->}.{file_type}")
+            fields = p.parse(str(path.name))
         
-
-        fields = p.parse(str(path.name))
-
         return fields
 
     def _parse_filename_product_level(self, path: str) -> str:
@@ -496,7 +496,7 @@ class Hypso1(Hypso):
     # Georeferencing functions
 
     # TODO refactor
-    def _load_points_file(self, path: str) -> None:
+    def _load_points_file(self, path: str, image_mode: str = None, origin_mode: str = 'qgis') -> None:
 
 
         if path:
@@ -506,6 +506,10 @@ class Hypso1(Hypso):
                 print('[INFO] No georeferencing .points file provided. Skipping georeferencing.')
             return None
 
+
+        if not origin_mode:
+            origin_mode = 'qgis'
+
         # Compute latitude and longitudes arrays if a points file is available
 
         if self.VERBOSE:
@@ -514,8 +518,8 @@ class Hypso1(Hypso):
         gr = georeferencing.Georeferencer(filename=path,
                                             cube_height=self.spatial_dimensions[0],
                                             cube_width=self.spatial_dimensions[1],
-                                            image_mode=None,
-                                            origin_mode='qgis')
+                                            image_mode=image_mode,
+                                            origin_mode=origin_mode)
         
         # Update latitude and longitude arrays with computed values from Georeferencer
         self.latitudes = gr.latitudes[:, ::-1]
@@ -1688,9 +1692,12 @@ class Hypso1(Hypso):
         for i, wl in enumerate(wavelengths):
 
             data = cube[:,:,i]
+
+            data = data.reset_coords(drop=True)
                 
             name = 'band_' + str(i+1)
             scene[name] = data
+            #scene[name] = xr.DataArray(data, dims=self.dim_names_2d)
             scene[name].attrs.update(attrs)
             scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="band")
             scene[name].attrs['band'] = i
@@ -1722,12 +1729,21 @@ class Hypso1(Hypso):
                 'ancillary_variables': []
                 }   
 
+        coords={self.dims_names[0]: np.arange(data.shape[0]), 
+                self.dims_names[1]: np.arange(data.shape[1]),
+                }
+
+
+
         for i, wl in enumerate(wavelengths):
 
             data = cube[:,:,i]
+            
+            data = data.reset_coords(drop=True)
 
             name = 'band_' + str(i+1)
-            scene[name] = xr.DataArray(data, dims=self.dim_names_2d)
+            scene[name] = data
+            #scene[name] = xr.DataArray(data, dims=self.dim_names_2d)
             scene[name].attrs.update(attrs)
             scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
             scene[name].attrs['band'] = i
@@ -1763,8 +1779,11 @@ class Hypso1(Hypso):
 
             data = cube[:,:,i]
 
+            data = data.reset_coords(drop=True)
+
             name = 'band_' + str(i+1)
             scene[name] = data
+            #scene[name] = xr.DataArray(data, dims=self.dim_names_2d)
             scene[name].attrs.update(attrs)
             scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
             scene[name].attrs['band'] = i
@@ -1941,10 +1960,10 @@ class Hypso1(Hypso):
         return None
     
 
-    def load_points_file(self, path: str = None) -> None:
+    def load_points_file(self, path: str = None, image_mode=None, origin_mode=None) -> None:
 
         if path:
-            self._load_points_file(path=path)
+            self._load_points_file(path=path, image_mode=image_mode, origin_mode=origin_mode)
 
         return None
 

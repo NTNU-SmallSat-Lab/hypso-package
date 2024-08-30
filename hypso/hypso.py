@@ -24,7 +24,7 @@ class Hypso:
 
         # Initialize capture name and target
         self.capture_name = None
-        self.capture_region = None
+        self.capture_target = None
 
         # Initialize directory and file info
         self.capture_dir = None
