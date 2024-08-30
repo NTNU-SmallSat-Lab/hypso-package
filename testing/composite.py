@@ -29,11 +29,11 @@ dir_path = '/home/cameron/Nedlastinger'
 #points_file = os.path.join(dir_path, 'virginiabeach_2024-08-22T14-59-41Z-l1a' + '.points')
 
 
-#l1a_nc_file = os.path.join(dir_path, 'grieghammerfest_2024-08-17T10-38-36Z-l1a.nc')
-#points_file = os.path.join(dir_path, 'grieghammerfest_2024-08-17T10-38-36Z-l1a.points')
+l1a_nc_file = os.path.join(dir_path, 'grieghammerfest_2024-08-17T10-38-36Z-l1a.nc')
+points_file = os.path.join(dir_path, 'grieghammerfest_2024-08-17T10-38-36Z-l1a.points')
 
-l1a_nc_file = os.path.join(dir_path, 'ariake_2024-08-17T01-23-25Z-l1a.nc')
-points_file = os.path.join(dir_path, 'ariake_2024-08-17T01-23-25Z-l1a.points')
+#l1a_nc_file = os.path.join(dir_path, 'ariake_2024-08-17T01-23-25Z-l1a.nc')
+#points_file = os.path.join(dir_path, 'ariake_2024-08-17T01-23-25Z-l1a.points')
 
 
 satobj = Hypso1(path=l1a_nc_file, points_path=points_file, verbose=True)
@@ -132,6 +132,7 @@ alpha_band = 'band_' + str(blue_idx)
 
 composite = compositor([resampled_l1a_scene[red_band], 
                         resampled_l1a_scene[green_band], 
+                        resampled_l1a_scene[blue_band],
                         resampled_l1a_scene[blue_band]]) 
 
 rgb_img = to_image(composite) 
