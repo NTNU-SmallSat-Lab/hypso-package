@@ -36,3 +36,22 @@ frohavet:
     lower_left_xy: [-97518.17195758525, -2982987.1840454927]
     upper_right_xy: [86005.98035194069, -2630840.303822498]
     units: m
+frohavet:
+  description: roi
+  projection:
+    proj: stere
+    lat_0: 90
+    lat_ts: 63.9537056254799
+    lon_0: 9.45716076150201
+    x_0: 0
+    y_0: 0
+    ellps: bessel
+    no_defs: null
+    type: crs
+  shape:
+    height: 1173
+    width: 611
+  area_extent:
+    lower_left_xy: [-97518.17195758525, -2982987.1840454927]
+    upper_right_xy: [86005.98035194069, -2630840.303822498]
+    units: m
