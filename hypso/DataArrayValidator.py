@@ -78,9 +78,19 @@ class DataArrayValidator():
         """Convert a numpy ndarray to an xarray DataArray with specified dimensions."""
         if data.ndim == 2:
             dims = self.dims_names[:2]
+            coords={self.dims_names[0]: np.arange(data.shape[0]), 
+                    self.dims_names[1]: np.arange(data.shape[1]),
+                    }
+
         elif data.ndim == 3:
             dims = self.dims_names
+            coords={self.dims_names[0]: np.arange(data.shape[0]), 
+                    self.dims_names[1]: np.arange(data.shape[1]),
+                    self.dims_names[2]: np.arange(data.shape[2]),
+                    }
         else:
             raise ValueError("[ERROR] Data must be 2D or 3D.")
 
-        return xr.DataArray(data, dims=dims)
+
+
+        return xr.DataArray(data, coords=coords, dims=dims)
