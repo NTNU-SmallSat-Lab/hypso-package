@@ -1,7 +1,0 @@
-rgb_img = to_image(composite) 
-rgb_img.stretch()
-rgb_img.gamma(1.7)
-rgb_img = rgb_img.pil_image()
-combined_img = Image.alpha_composite(base_img, rgb_img)
-combined_img = Image.alpha_composite(combined_img, overlay_img)
-combined_img.save('./' + satobj.capture_name + '_rgb_decorated-' + 'l2a_2' + '.png')
