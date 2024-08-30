@@ -133,7 +133,7 @@ alpha_band = 'band_' + str(blue_idx)
 composite = compositor([resampled_l1a_scene[red_band], 
                         resampled_l1a_scene[green_band], 
                         resampled_l1a_scene[blue_band],
-                        resampled_l1a_scene[blue_band]]) 
+                        resampled_l1a_scene[alpha_band]]) 
 
 rgb_img = to_image(composite) 
 rgb_img.stretch_linear()
