@@ -20,10 +20,7 @@ satobj.generate_l1b_cube()
 satobj.write_l1b_nc_file()
 
 # REQUIRED: Path to your ACOLITE directory
-satobj.set_acolite_path(path='/home/cameron/Projects/acolite/') 
-
-satobj.generate_l2a_cube(product_name="acolite")
-
-satobj.get_l2a_cube()
-
-satobj.write_l2a_nc_file()
+#satobj.set_acolite_path(path='/home/cameron/Projects/acolite/') 
+#satobj.generate_l2a_cube(product_name="acolite")
+#satobj.get_l2a_cube()
+#satobj.write_l2a_nc_file()

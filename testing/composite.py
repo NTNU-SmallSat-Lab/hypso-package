@@ -25,8 +25,8 @@ dir_path = '/home/cameron/Nedlastinger'
 #l1a_nc_file = os.path.join(dir_path, 'adelaide_2024-08-24T00-18-34Z-l1a' + '.nc')
 #points_file = os.path.join(dir_path, 'adelaide_2024-08-24T00-18-34Z-l1a' + '.points')
 
-l1a_nc_file = os.path.join(dir_path, 'virginiabeach_2024-08-22T14-59-41Z-l1a' + '.nc')
-points_file = os.path.join(dir_path, 'virginiabeach_2024-08-22T14-59-41Z-l1a' + '.points')
+#l1a_nc_file = os.path.join(dir_path, 'virginiabeach_2024-08-22T14-59-41Z-l1a' + '.nc')
+#points_file = os.path.join(dir_path, 'virginiabeach_2024-08-22T14-59-41Z-l1a' + '.points')
 
 #l1a_nc_file = os.path.join(dir_path, 'grieghammerfest_2024-08-17T10-38-36Z-l1a.nc')
 #points_file = os.path.join(dir_path, 'grieghammerfest_2024-08-17T10-38-36Z-l1a.points')
@@ -34,6 +34,9 @@ points_file = os.path.join(dir_path, 'virginiabeach_2024-08-22T14-59-41Z-l1a' + 
 #l1a_nc_file = os.path.join(dir_path, 'ariake_2024-08-17T01-23-25Z-l1a.nc')
 #points_file = os.path.join(dir_path, 'ariake_2024-08-17T01-23-25Z-l1a.points')
 
+name = 'mvco_2024-08-30T14-43-39Z-l1a'
+l1a_nc_file = os.path.join(dir_path, name+'.nc')
+points_file = os.path.join(dir_path, name+'.points')
 
 satobj = Hypso1(path=l1a_nc_file, points_path=points_file, verbose=True)
 satobj.load_points_file(path=points_file, image_mode='standard', origin_mode='cube')
@@ -89,6 +92,11 @@ resampled_l1b_scene = l1b_scene.resample(area_def, resampler='bilinear', fill_va
 resampled_l2a_scene = l2a_scene.resample(area_def, resampler='bilinear', fill_value=np.NaN)
 
 
+satobj.generate_l2a_cube(product_name="6sv1")
+l2a_scene = satobj.get_l2a_satpy_scene()
+resampled_l2a_scene_6sv1 = l2a_scene.resample(area_def, resampler='bilinear', fill_value=np.NaN)
+
+
 
 
 size = (area_def.shape[1], area_def.shape[0])
@@ -136,7 +144,7 @@ composite = compositor([resampled_l1a_scene[red_band],
 
 rgb_img = to_image(composite) 
 rgb_img.stretch_linear()
-rgb_img.gamma(1.7)
+#rgb_img.gamma(1.7)
 
 rgb_xr_image = rgb_img
 
@@ -231,6 +239,7 @@ rgb_img = to_image(composite)
 rgb_img.stretch_linear()
 rgb_img.gamma(1.7)
 
+
 rgb_img = rgb_img.pil_image()
 
 combined_img = Image.alpha_composite(base_img, rgb_img)
@@ -242,9 +251,6 @@ combined_img.save('./' + satobj.capture_name + '_rgb_decorated-' + 'l2a_acolite'
 
 
 
-satobj.generate_l2a_cube(product_name="6sv1")
-l2a_scene = satobj.get_l2a_satpy_scene()
-resampled_l2a_scene = l2a_scene.resample(area_def, resampler='bilinear', fill_value=np.NaN)
 
 compositor = GenericCompositor("rgba")
 
@@ -267,9 +273,9 @@ green_band = 'band_' + str(green_idx)
 blue_band = 'band_' + str(blue_idx)
 alpha_band = 'band_' + str(blue_idx)
 
-composite = compositor([resampled_l2a_scene[red_band], 
-                        resampled_l2a_scene[green_band], 
-                        resampled_l2a_scene[blue_band]]) 
+composite = compositor([resampled_l2a_scene_6sv1[red_band], 
+                        resampled_l2a_scene_6sv1[green_band], 
+                        resampled_l2a_scene_6sv1[blue_band]]) 
 
 rgb_img = to_image(composite) 
 rgb_img.stretch_linear()
