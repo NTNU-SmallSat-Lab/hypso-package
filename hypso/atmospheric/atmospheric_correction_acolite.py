@@ -60,6 +60,12 @@ def run_acolite(acolite_path: str, output_path: str, nc_file_path: str) -> np.nd
 
     acolite_l2_file = processed[0]['l2r'][0]
 
+    # Maintainer comment:
+    # Source: https://odnature.naturalsciences.be/remsem/acolite-forum/viewtopic.php?t=311
+    # - L1R, containing the top-of-atmosphere reflectance (rhot_*) as converted to the ACOLITE format from the sensor specific L1 files
+    # - L2R, containing the top-of-atmosphere reflectance (rhot_*) and the surface-level reflectance after atmospheric correction (rhos_*)
+    # - L2W, containing user requested parameters, e.g. water-leaving radiance reflectance (rhow_*), Remote sensing reflectance (Rrs_*), or outputs from any of the included parameter retrieval algorithms
+
     # Read .nc
     final_acolite_l2 = None
 
