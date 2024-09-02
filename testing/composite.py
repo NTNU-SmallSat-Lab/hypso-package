@@ -25,11 +25,11 @@ dir_path = '/home/cameron/Nedlastinger'
 #l1a_nc_file = os.path.join(dir_path, 'adelaide_2024-08-24T00-18-34Z-l1a' + '.nc')
 #points_file = os.path.join(dir_path, 'adelaide_2024-08-24T00-18-34Z-l1a' + '.points')
 
-#l1a_nc_file = os.path.join(dir_path, 'virginiabeach_2024-08-22T14-59-41Z-l1a' + '.nc')
-#points_file = os.path.join(dir_path, 'virginiabeach_2024-08-22T14-59-41Z-l1a' + '.points')
+l1a_nc_file = os.path.join(dir_path, 'virginiabeach_2024-08-22T14-59-41Z-l1a' + '.nc')
+points_file = os.path.join(dir_path, 'virginiabeach_2024-08-22T14-59-41Z-l1a' + '.points')
 
-l1a_nc_file = os.path.join(dir_path, 'grieghammerfest_2024-08-17T10-38-36Z-l1a.nc')
-points_file = os.path.join(dir_path, 'grieghammerfest_2024-08-17T10-38-36Z-l1a.points')
+#l1a_nc_file = os.path.join(dir_path, 'grieghammerfest_2024-08-17T10-38-36Z-l1a.nc')
+#points_file = os.path.join(dir_path, 'grieghammerfest_2024-08-17T10-38-36Z-l1a.points')
 
 #l1a_nc_file = os.path.join(dir_path, 'ariake_2024-08-17T01-23-25Z-l1a.nc')
 #points_file = os.path.join(dir_path, 'ariake_2024-08-17T01-23-25Z-l1a.points')
@@ -235,4 +235,48 @@ rgb_img = rgb_img.pil_image()
 
 combined_img = Image.alpha_composite(base_img, rgb_img)
 combined_img = Image.alpha_composite(combined_img, overlay_img)
-combined_img.save('./' + satobj.capture_name + '_rgb_decorated-' + 'l2a' + '.png')
+combined_img.save('./' + satobj.capture_name + '_rgb_decorated-' + 'l2a_acolite' + '.png')
+
+
+
+
+
+
+satobj.generate_l2a_cube(product_name="6sv1")
+l2a_scene = satobj.get_l2a_satpy_scene()
+resampled_l2a_scene = l2a_scene.resample(area_def, resampler='bilinear', fill_value=np.NaN)
+
+compositor = GenericCompositor("rgba")
+
+try:
+    red_wl = 630
+    green_wl = 550
+    blue_wl = 480
+
+    red_idx = satobj.get_closest_wavelength_index(red_wl)
+    green_idx = satobj.get_closest_wavelength_index(green_wl)
+    blue_idx = satobj.get_closest_wavelength_index(blue_wl)
+
+except:
+    red_idx = 69
+    green_idx = 46
+    blue_idx = 26
+
+red_band = 'band_' + str(red_idx)
+green_band = 'band_' + str(green_idx)
+blue_band = 'band_' + str(blue_idx)
+alpha_band = 'band_' + str(blue_idx)
+
+composite = compositor([resampled_l2a_scene[red_band], 
+                        resampled_l2a_scene[green_band], 
+                        resampled_l2a_scene[blue_band]]) 
+
+rgb_img = to_image(composite) 
+rgb_img.stretch_linear()
+rgb_img.gamma(1.7)
+
+rgb_img = rgb_img.pil_image()
+
+combined_img = Image.alpha_composite(base_img, rgb_img)
+combined_img = Image.alpha_composite(combined_img, overlay_img)
+combined_img.save('./' + satobj.capture_name + '_rgb_decorated-' + 'l2a_6sv1' + '.png')
