@@ -786,6 +786,7 @@ class Hypso1(Hypso):
         else:
 
             cube = run_destriping_correction(cube=cube, destriping_coeffs=self.destriping_coeffs[:,:])
+            #cube = run_destriping_correction(cube=cube, destriping_coeffs=self.destriping_coeffs[:,::-1])
         
         #cube = self._get_flipped_cube(cube=cube)
 
@@ -1018,7 +1019,7 @@ class Hypso1(Hypso):
         if self.spectral_coeffs is not None:
             self.wavelengths = self.spectral_coeffs
         else:
-            self.wavelengths = None
+            self.wavelengths = range(0,120)
 
         return None
 

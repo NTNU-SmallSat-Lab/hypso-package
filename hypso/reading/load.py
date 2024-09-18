@@ -166,8 +166,8 @@ def load_l2a_cube_from_nc_file(nc_file_path: Path) -> np.ndarray:
     """
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
         group = f.groups["products"]
-        # 16-bit according to Original data Capture
-        cube = np.array(group.variables["Lt"][:], dtype='uint16')
+
+        cube = np.array(group.variables["Lt"][:], dtype='double')
 
         return cube
 

@@ -29,13 +29,24 @@ def l2a_nc_writer(satobj: Hypso, dst_l2a_nc_file: str, src_l1a_nc_file: str) -> 
                                 old_nc.getncattr(md))
 
         # Manual Replacement
-        set_or_create_attr(netfile,
-                            attr_name="radiometric_file",
-                            attr_value=str(Path(satobj.rad_coeff_file).name))
 
-        set_or_create_attr(netfile,
-                            attr_name="smile_file",
-                            attr_value=str(Path(satobj.smile_coeff_file).name))
+        if satobj.rad_coeff_file is None:
+            set_or_create_attr(netfile,
+                                attr_name="radiometric_file",
+                                attr_value="No-File")
+        else:
+            set_or_create_attr(netfile,
+                                attr_name="radiometric_file",
+                                attr_value=str(Path(satobj.rad_coeff_file).name))
+
+        if satobj.smile_coeff_file is None:
+            set_or_create_attr(netfile,
+                                attr_name="smile_file",
+                                attr_value="No-File")
+        else:
+            set_or_create_attr(netfile,
+                                attr_name="smile_file",
+                                attr_value=str(Path(satobj.smile_coeff_file).name))
 
         # Destriping Path is the only one which can be None
         if satobj.destriping_coeff_file is None:
@@ -47,11 +58,18 @@ def l2a_nc_writer(satobj: Hypso, dst_l2a_nc_file: str, src_l1a_nc_file: str) -> 
                                 attr_name="destriping",
                                 attr_value=str(Path(satobj.destriping_coeff_file).name))
 
-        set_or_create_attr(netfile, attr_name="spectral_file", attr_value=str(Path(satobj.spectral_coeff_file).name))
+        if satobj.spectral_coeff_file is None:
+            set_or_create_attr(netfile, 
+                               attr_name="spectral_file", 
+                               attr_value="No-File")
+        else:
+            set_or_create_attr(netfile, 
+                               attr_name="spectral_file", 
+                               attr_value=str(Path(satobj.spectral_coeff_file).name))
 
         set_or_create_attr(netfile, attr_name="processing_level", attr_value="L2A")
 
-        set_or_create_attr(netfile, attr_name="atmosperhic_correction", attr_value=satobj.l2a_cube.attrs['correction'])
+        set_or_create_attr(netfile, attr_name="atmospheric_correction", attr_value=satobj.l2a_cube.attrs['correction'])
 
         # Create dimensions
         netfile.createDimension('lines', lines)
@@ -116,7 +134,7 @@ def l2a_nc_writer(satobj: Hypso, dst_l2a_nc_file: str, src_l1a_nc_file: str) -> 
 
         # Create and populate variables
         Rrs = netfile.createVariable(
-            'products/Lt', 'uint16',
+            'products/Lt', 'f8',
             ('lines', 'samples', 'bands'),
             compression=COMP_SCHEME,
             complevel=COMP_LEVEL,
@@ -125,7 +143,10 @@ def l2a_nc_writer(satobj: Hypso, dst_l2a_nc_file: str, src_l1a_nc_file: str) -> 
         Rrs.long_name = "Reflectance"
         Rrs.wavelength_units = "nanometers"
         Rrs.fwhm = [5.5] * bands
-        Rrs.wavelengths = np.around(satobj.spectral_coeffs, 1)
+        try:
+            Rrs.wavelengths = np.around(satobj.spectral_coeffs, 1)
+        except TypeError:
+            print('[WARNING] Unable to write wavelengths to NetCDF file')
         Rrs[:] = satobj.l2a_cube.to_numpy()
 
         # ADCS Timestamps ----------------------------------------------------
@@ -327,30 +348,34 @@ def l2a_nc_writer(satobj: Hypso, dst_l2a_nc_file: str, src_l1a_nc_file: str) -> 
             'metadata/capture_config/file', 'str')  # str seems necessary for storage of an arbitrarily large scalar
         meta_capcon_file[()] = old_nc['metadata']["capture_config"]["file"][:]  # [()] assignment of scalar to array
 
-        # Metadata: Rad calibration coeff ----------------------------------------------------
-        len_radrows = satobj.rad_coeffs.shape[0]
-        len_radcols = satobj.rad_coeffs.shape[1]
 
-        netfile.createDimension('radrows', len_radrows)
-        netfile.createDimension('radcols', len_radcols)
-        meta_corrections_rad = netfile.createVariable(
-            'metadata/corrections/rad_matrix', 'f4',
-            ('radrows', 'radcols'),
-            compression=COMP_SCHEME,
-            complevel=COMP_LEVEL,
-            shuffle=COMP_SHUFFLE)
-        meta_corrections_rad[:] = satobj.rad_coeffs
+        try:
+            # Metadata: Rad calibration coeff ----------------------------------------------------
+            len_radrows = satobj.rad_coeffs.shape[0]
+            len_radcols = satobj.rad_coeffs.shape[1]
 
-        # Metadata: Spectral coeff ----------------------------------------------------
-        len_spectral = satobj.wavelengths.shape[0]
-        netfile.createDimension('specrows', len_spectral)
-        meta_corrections_spec = netfile.createVariable(
-            'metadata/corrections/spec_coeffs', 'f4',
-            ('specrows',),
-            compression=COMP_SCHEME,
-            complevel=COMP_LEVEL,
-            shuffle=COMP_SHUFFLE)
-        meta_corrections_spec[:] = satobj.spectral_coeffs
+            netfile.createDimension('radrows', len_radrows)
+            netfile.createDimension('radcols', len_radcols)
+            meta_corrections_rad = netfile.createVariable(
+                'metadata/corrections/rad_matrix', 'f4',
+                ('radrows', 'radcols'),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE)
+            meta_corrections_rad[:] = satobj.rad_coeffs
+
+            # Metadata: Spectral coeff ----------------------------------------------------
+            len_spectral = satobj.wavelengths.shape[0]
+            netfile.createDimension('specrows', len_spectral)
+            meta_corrections_spec = netfile.createVariable(
+                'metadata/corrections/spec_coeffs', 'f4',
+                ('specrows',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE)
+            meta_corrections_spec[:] = satobj.spectral_coeffs
+        except AttributeError:
+            print('[WARNING] Unable to write calibration group to NetCDF file')
 
         # Meta Temperature File ---------------------------------------------------------
         meta_temperature_file = netfile.createVariable(
