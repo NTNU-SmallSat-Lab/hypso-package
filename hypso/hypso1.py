@@ -500,7 +500,12 @@ class Hypso1(Hypso):
     # Georeferencing functions
 
     # TODO refactor
-    def _load_points_file(self, path: str, image_mode: str = None, origin_mode: str = 'qgis') -> None:
+    def _load_points_file(self, 
+                          path: str, 
+                          image_mode: str = None, 
+                          origin_mode: str = 'qgis',
+                          flip_lats: bool = False,
+                          flip_lons: bool = False) -> None:
 
 
         if path:
@@ -526,13 +531,25 @@ class Hypso1(Hypso):
                                             origin_mode=origin_mode)
         
         # Update latitude and longitude arrays with computed values from Georeferencer
-        self.latitudes = gr.latitudes[:, ::-1]
-        self.longitudes = gr.longitudes[:, ::-1]
+        #self.latitudes = gr.latitudes[:, ::-1]
+        #self.longitudes = gr.longitudes[:, ::-1]
+
+        self.latitudes = gr.latitudes
+        self.longitudes = gr.longitudes
         
         self._compute_flip()
         self._compute_bbox()
         self._compute_gsd()
         self._compute_resolution()
+
+        if flip_lons:
+            self.latitudes = self.latitudes[:,::-1]
+            self.longitudes = self.longitudes[:,::-1]
+
+        if flip_lats:
+            self.latitudes = self.latitudes[::-1,:]
+            self.longitudes = self.longitudes[::-1,:]
+
 
         self.latitudes_original = self.latitudes
         self.longitudes_original = self.longitudes
@@ -1935,6 +1952,23 @@ class Hypso1(Hypso):
 
     # Other functions
 
+
+    def flip_l1a_cube(self) -> None:
+
+        self.l1a_cube = self.l1a_cube[:, ::-1, :]
+
+    def flip_l1b_cube(self) -> None:
+
+        self.l1b_cube = self.l1b_cube[:, ::-1, :]
+
+    def flip_l2a_cube(self) -> None:
+
+        self.l2a_cube = self.l2a_cube[:, ::-1, :]
+
+
+
+
+    # TODO: remove this function
     def _get_flipped_cube(self, cube: np.ndarray) -> np.ndarray:
 
         if self.datacube_flipped is None:
@@ -1959,10 +1993,10 @@ class Hypso1(Hypso):
         return None
     
 
-    def load_points_file(self, path: str = None, image_mode=None, origin_mode=None) -> None:
+    def load_points_file(self, path: str = None, image_mode=None, origin_mode=None, flip_lats=False, flip_lons=False) -> None:
 
         if path:
-            self._load_points_file(path=path, image_mode=image_mode, origin_mode=origin_mode)
+            self._load_points_file(path=path, image_mode=image_mode, origin_mode=origin_mode, flip_lats=flip_lats, flip_lons=flip_lons)
 
         return None
 
