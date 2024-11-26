@@ -33,7 +33,6 @@ class Hypso:
         self.l1b_nc_file = None
         self.l2a_nc_file = None
 
-
         # Initialize datacubes
         #self.l1a_cube = None
         #self.l1b_cube = None
@@ -41,9 +40,10 @@ class Hypso:
         self._l1a_cube = None
         self._l1b_cube = None
         self._l2a_cube = None
+        self._toa_reflectance_cube = None
 
         # Initialize top of atmpshere (TOA) reflectance
-        self.toa_reflectance = None
+        #self.toa_reflectance = None
 
         # Initialize metadata dictionaries
         self.capture_config = {}
@@ -220,6 +220,22 @@ class Hypso:
         return data
 
 
+    def _format_toa_reflectance_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
+
+        attributes = {'level': "toa_refl",
+                      'units': r"sr^{-1}",
+                      'description': "TOA Reflectance (R)",
+                      'correction': None
+                     }
+
+        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=self.dim_names_3d)
+
+        data = v.validate(data=data)
+        data = self._update_dataarray_attrs(data, attributes)
+
+        return data
+
+
     def _format_land_mask_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
 
         attributes = {
@@ -293,6 +309,16 @@ class Hypso:
     @l2a_cube.setter
     def l2a_cube(self, value):
         self._l2a_cube = self._format_l2a_dataarray(value)
+
+
+    @property
+    def toa_reflectance_cube(self):
+        return self._toa_reflectance_cube   
+
+    @toa_reflectance_cube.setter
+    def toa_reflectance_cube(self, value):
+        self._toa_reflectance_cube = self._format_toa_reflectance_dataarray(value)
+
 
 
     @property

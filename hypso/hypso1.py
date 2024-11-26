@@ -1334,9 +1334,9 @@ class Hypso1(Hypso):
 
             band_number = band_number + 1
 
-        self.toa_reflectance = xr.DataArray(toa_reflectance, dims=("y", "x", "band"))
-        self.toa_reflectance.attrs['units'] = "sr^-1"
-        self.toa_reflectance.attrs['description'] = "Top of atmosphere (TOA) reflectance"
+        self.toa_reflectance_cube = xr.DataArray(toa_reflectance, dims=("y", "x", "band"))
+        #self.toa_reflectance_cube.attrs['units'] = "sr^-1"
+        #self.toa_reflectance_cube.attrs['description'] = "Top of atmosphere (TOA) reflectance"
 
         return None
 
@@ -1807,6 +1807,52 @@ class Hypso1(Hypso):
 
         return scene
 
+
+
+
+
+
+    def _generate_toa_reflectance_satpy_scene(self) -> Scene:
+
+        scene = self._generate_satpy_scene()
+        swath_def= self._generate_swath_definition()
+
+        try:
+            cube = self.toa_reflectance_cube
+            wavelengths = self.wavelengths
+        except:
+            return None
+
+        attrs = {
+                'file_type': None,
+                'resolution': self.resolution,
+                'name': None,
+                'standard_name': cube.attrs['description'],
+                'coordinates': ['latitude', 'longitude'],
+                'units': cube.attrs['units'],
+                'start_time': self.capture_datetime,
+                'end_time': self.capture_datetime,
+                'modifiers': (),
+                'ancillary_variables': []
+                }   
+
+        for i, wl in enumerate(wavelengths):
+
+            data = cube[:,:,i]
+
+            data = data.reset_coords(drop=True)
+
+            name = 'band_' + str(i+1)
+            scene[name] = data
+            #scene[name] = xr.DataArray(data, dims=self.dim_names_2d)
+            scene[name].attrs.update(attrs)
+            scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
+            scene[name].attrs['band'] = i
+            scene[name].attrs['area'] = swath_def
+
+        return scene
+
+
     def _generate_chlorophyll_satpy_scene(self) -> Scene:
 
         scene = self._generate_satpy_scene()
@@ -1964,6 +2010,10 @@ class Hypso1(Hypso):
     def flip_l2a_cube(self) -> None:
 
         self.l2a_cube = self.l2a_cube[:, ::-1, :]
+
+    def flip_toa_reflectance_cube(self) -> None:
+
+        self.toa_reflectance_cube = self.toa_reflectance_cube[:, ::-1, :]
 
 
 
@@ -2467,7 +2517,7 @@ class Hypso1(Hypso):
         :return: Array with TOA Reflectance.
         """
 
-        return self.toa_reflectance
+        return self.toa_reflectance_cube
 
 
     # TODO
@@ -2487,6 +2537,10 @@ class Hypso1(Hypso):
     def get_l2a_satpy_scene(self) -> Scene:
 
         return self._generate_l2a_satpy_scene()
+    
+    def get_toa_reflectance_satpy_scene(self) -> Scene:
+
+        return self._generate_toa_reflectance_satpy_scene()
 
     def get_chlorophyll_estimates_satpy_scene(self) -> Scene:
 
