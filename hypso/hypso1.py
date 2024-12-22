@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Literal, Union
 import copy
 
+import hypso.atmospheric
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -61,6 +62,7 @@ from satpy.dataset.dataid import WavelengthRange
 
 from pyresample.geometry import SwathDefinition
 from pyresample.bilinear.xarr import XArrayBilinearResampler 
+from pyresample.future.resamplers.nearest import KDTreeNearestXarrayResampler
 
 from trollsift import Parser
 
@@ -1256,21 +1258,29 @@ class Hypso1(Hypso):
     # TODO
     def _run_machi_atmospheric_correction(self) -> xr.DataArray:
 
-        print("[WARNING] Minimal Atmospheric Compensation for Hyperspectral Imagers (MACHI) atmospheric correction has not been enabled.")
+        #print("[WARNING] Minimal Atmospheric Compensation for Hyperspectral Imagers (MACHI) atmospheric correction has not been enabled.")
+        #return None
 
-        return None
 
-        #self._run_calibration()
-        #self._run_geometry()
+
 
         if self.VERBOSE: 
             print("[INFO] Running MACHI atmospheric correction")
 
-        cube = self.l1b_cube.to_numpy()
+        # start working with ToA reflectance, so we don't have to worry about the solar spectrum
+        cube = self.toa_reflectance_cube.to_numpy()
         
-        #T, A, objs = run_machi(cube=cube, verbose=self.VERBOSE)
+        T, S, objs = hypso.atmospheric.atm_correction(cube.reshape(-1,120), 
+                                                      solar=np.ones(120), 
+                                                      verbose=True,
+                                                      tol=0.01, 
+                                                      est_min_R=0.05)
 
-        cube = self._format_l2a_dataarray(cube)
+        # normalize the whole cube
+        cube_norm = (cube - S) /T
+        cube_norm[self.cloud_mask] = np.nan
+
+        cube = self._format_l2a_dataarray(cube_norm)
         cube.attrs['correction'] = "machi"
 
         return cube
@@ -1443,6 +1453,15 @@ class Hypso1(Hypso):
 
                 self.cloud_mask = self._run_quantile_threshold_cloud_mask(**kwargs)
 
+
+            case "saturated_pixel":
+
+                if self.VERBOSE:
+                    print("[INFO] Running saturated pixel cloud mask generation...")
+
+                self.cloud_mask = self._run_saturated_pixel_cloud_mask(**kwargs)
+
+
             case _:
                 print("[WARNING] No such cloud mask supported!")
                 return None
@@ -1462,6 +1481,16 @@ class Hypso1(Hypso):
 
         return cloud_mask 
 
+
+    def _run_saturated_pixel_cloud_mask(self, threshold: float = 35000):
+
+        sat = np.max(self.l1a_cube.to_numpy(), axis=-1) > threshold
+
+        cloud_mask = self._format_cloud_mask_dataarray(sat)
+        cloud_mask.attrs['method'] = "saturated pixel"
+        cloud_mask.attrs['threshold'] = threshold
+
+        return cloud_mask 
 
 
     # Chlorophyll estimation functions
@@ -1502,11 +1531,12 @@ class Hypso1(Hypso):
 
         return None
 
+    # TODO: use Rrs, not L1b radiance
     def _run_band_ratio_chlorophyll_estimation(self, factor: float = None) -> xr.DataArray:
 
         #self._run_calibration()
 
-        cube = self.l1b_cube.to_numpy()
+        cube = self.l2a_cube.to_numpy()
 
         try:
             mask = self.unified_mask.to_numpy()
@@ -1578,8 +1608,8 @@ class Hypso1(Hypso):
         #self._run_calibration()
         #self._run_geometry()
 
-        if self.l2a_cube is None or self.l2a_cube.attrs['correction'] != 'acolite':
-            self._run_atmospheric_correction(product_name='acolite')
+        #if self.l2a_cube is None or self.l2a_cube.attrs['correction'] != 'acolite':
+        #    self._run_atmospheric_correction(product_name='acolite')
 
         model = Path(model)
 
@@ -1923,6 +1953,8 @@ class Hypso1(Hypso):
         swath_def = self._generate_swath_definition()
 
         brs = XArrayBilinearResampler(source_geo_def=swath_def, target_geo_def=area_def, radius_of_influence=50000)
+        #brs = KDTreeNearestXarrayResampler(source_geo_def=swath_def, target_geo_def=area_def)
+
 
         # Calculate bilinear neighbour info and generate pre-computed resampling LUTs
         brs.get_bil_info()
@@ -2246,7 +2278,7 @@ class Hypso1(Hypso):
 
     # Public L2a methods
 
-    def generate_l2a_cube(self, product_name: str = "6sv1") -> None:
+    def generate_l2a_cube(self, product_name: str = "machi") -> None:
 
         self._run_atmospheric_correction(product_name=product_name)
 

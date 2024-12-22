@@ -9,11 +9,15 @@ jlgarrett 2024.07.08
 joseph.garrett@ntnu.no
 '''
 
-
-
 import numpy as np
 import matplotlib.pyplot as plt
 import copy
+
+def run_machi(cube: np.ndarray) -> np.ndarray:
+    
+
+    T, S, objs = atm_correction(cube.reshape(-1,114), solar=np.ones(114), verbose=True, tol=0.01, est_min_R=0.05)
+
 
 def load_solar(wl):
     '''
@@ -22,6 +26,15 @@ def load_solar(wl):
     solar_spectrum = np.loadtxt("hypso/atmospheric/thuillier_solar_spectrum.csv", skiprows=1, delimiter=';')
     solar_H1 = np.interp(wl, solar_spectrum[:,0], solar_spectrum[:,1] )
     return solar_H1
+
+
+
+def min_smoother(mins):
+    mins_out = np.zeros_like(mins, dtype=np.float32)
+    mins_out[0] = mins[0]
+    for i in range(len(mins)-1):
+        mins_out[i+1] = np.minimum(mins[i+1], mins_out[i])
+    return mins_out
 
 
 def T_update(raw_data, lattice, A, T, weights=1, solar=1):
@@ -136,7 +149,7 @@ class AC:
         
             
 
-def atm_correction(cube, solar = 1, tol=0.01, verbose=False):
+def atm_correction(cube, solar = 1.0, tol=0.01, verbose=False, approach_rate=1, est_min_R = 0.05):
     #generate mins
     mins = np.array([cube[:,i].min() for i in range(cube.shape[-1])])
     weights=1/np.sum(cube**2, axis=-1)
@@ -162,8 +175,15 @@ def atm_correction(cube, solar = 1, tol=0.01, verbose=False):
         l2[i] = connections
     
     #initialize T, obj
-    T = np.ones_like(mins)
-    A = copy.deepcopy(mins)
+    
+    #A = mins*(1-est_min_R)
+    T = (1-2*mins)
+    standardization = np.ones_like(mins)
+    med = int(len(mins)/2)
+    for i in range(len(standardization)):
+        standarization = np.maximum(0, 1-np.abs(i-med)/med)
+    standardization /= standardization.max()
+    A = mins*(1-est_min_R*standardization)
     obj = atm_obj((cube-A)/(solar*T), weights)
     objs.append(obj)
     if verbose:
@@ -175,19 +195,23 @@ def atm_correction(cube, solar = 1, tol=0.01, verbose=False):
         #update transmissions
         Tnew = T_update(cube, l1, A, T,
                   weights=weights, solar=solar)
-        T[list(l1.keys())] = Tnew
+        T[list(l1.keys())] = (1-approach_rate)*T[list(l1.keys())] + approach_rate*Tnew
 
+        T[T > (1-2*A)] = 1-2*A[T > (1-2*A)]
+        T[T<0] = 0
         Tnew = T_update(cube, l2, A, T, 
                   weights=weights, solar=solar)
-        T[list(l2.keys())] = Tnew
+        T[list(l2.keys())] = (1-approach_rate)*T[list(l2.keys())] + approach_rate*Tnew
+        T[T > (1-2*A)] = 1-2*A[T > (1-2*A)]
+        T[T<0] = 0
         
         #update scattering
         Anew = A_update(cube, l1, A, T, mins,
                   weights=weights, solar=solar)
-        A[list(l1.keys())] = Anew
+        A[list(l1.keys())] = (1-approach_rate)*A[list(l1.keys())] + approach_rate*Anew
         Anew = A_update(cube, l2, A, T, mins,
                   weights=weights, solar=solar)
-        A[list(l2.keys())] = Anew
+        A[list(l2.keys())] = (1-approach_rate)*A[list(l2.keys())] + approach_rate*Anew
         
         
         obj_new = atm_obj((cube-A)/(solar*T), weights)
@@ -197,12 +221,4 @@ def atm_correction(cube, solar = 1, tol=0.01, verbose=False):
         if verbose:
             print(obj)
             
-    return T, A, objs
-
-
-
-def run_machi(cube, solar = 1, tol=0.01, verbose=False):
-    
-    T, A, objs = atm_correction(cube=cube, solar=solar, tol=tol, verbose=verbose)
-
     return T, A, objs
