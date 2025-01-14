@@ -1996,6 +1996,10 @@ class Hypso1(Hypso):
 
         return self._resample_dataarray(area_def=area_def, data=self.l2a_cube)
     
+    def resample_toa_reflectance_cube(self, area_def) -> xr.DataArray:
+
+        return self._resample_dataarray(area_def=area_def, data=self.toa_reflectance_cube)
+    
     def resample_chlorophyll_estimates(self, area_def) -> xr.DataArray:
 
         resampled_chl = DataArrayDict(dims_shape=area_def.shape, 
