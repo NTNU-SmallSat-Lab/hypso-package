@@ -114,7 +114,7 @@ def l1b_nc_writer(satobj: Hypso, dst_l1b_nc_file: str, src_l1a_nc_file: str) -> 
 
         # Create and populate variables
         Lt = netfile.createVariable(
-            'products/Lt', 'uint16',
+            'products/Lt', 'f8',
             ('lines', 'samples', 'bands'),
             compression=COMP_SCHEME,
             complevel=COMP_LEVEL,
