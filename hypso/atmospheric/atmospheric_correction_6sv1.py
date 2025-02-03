@@ -8,8 +8,17 @@ import datetime
 from typing import Tuple
 
 
-def BasicParameters(wavelengths: np.ndarray, hypercube_L1: np.ndarray, hypso_info: dict, lat_2d_array: np.ndarray,
-                    lon_2d_array: np.ndarray, time_capture: datetime) -> dict:
+def BasicParameters(wavelengths: np.ndarray, 
+                    hypercube_L1: np.ndarray, 
+                    lat_2d_array: np.ndarray,
+                    lon_2d_array: np.ndarray, 
+                    solar_azimuth_angles: np.ndarray,
+                    solar_zenith_angles: np.ndarray,
+                    sat_azimuth_angles: np.ndarray,
+                    sat_zenith_angles: np.ndarray,
+                    iso_time: str,
+                    time_capture: datetime
+                    ) -> dict:
     """
     Get the parameters you need for 6s atmospheric correction
 
@@ -34,8 +43,8 @@ def BasicParameters(wavelengths: np.ndarray, hypercube_L1: np.ndarray, hypso_inf
     SixsParameters['radiance_cube'] = hypercube_L1
 
     # Solar zenith angle, azimuth (average)
-    SixsParameters["SolarZenithAngle"] = np.mean(hypso_info['solar_zenith_angle'])
-    SixsParameters["SolarAzimuthAngle"] = np.mean(hypso_info['solar_azimuth_angle'])
+    SixsParameters["SolarZenithAngle"] = np.mean(solar_zenith_angles)
+    SixsParameters["SolarAzimuthAngle"] = np.mean(solar_azimuth_angles)
 
     # -------------------------------------------------
     #               Satellite Parameters
@@ -46,8 +55,8 @@ def BasicParameters(wavelengths: np.ndarray, hypercube_L1: np.ndarray, hypso_inf
     # Make an 120 array with the average zenith and azimuth angle for every band
     # Ideally the average should be per band but we only have one 2D array so we use the same for every one
     for i in range(120):
-        ViewZeniths[i] = np.mean(hypso_info['sat_zenith_angle'])
-        ViewAzimuths[i] = np.mean(hypso_info['sat_azimuth_angle'])
+        ViewZeniths[i] = np.mean(sat_zenith_angles)
+        ViewAzimuths[i] = np.mean(sat_azimuth_angles)
 
     SixsParameters["SatZenithAngles"] = ViewZeniths
     SixsParameters["SatAzimuthAngles"] = ViewAzimuths
@@ -56,7 +65,7 @@ def BasicParameters(wavelengths: np.ndarray, hypercube_L1: np.ndarray, hypso_inf
     #                      Date
     # -------------------------------------------------
     # Date:Month, Day
-    Date = dateutil.parser.isoparse(hypso_info['iso_time'])
+    Date = dateutil.parser.isoparse(iso_time)
     SixsParameters["ImgMonth"] = int(Date.month)
     SixsParameters["ImgDay"] = int(Date.day)
 
@@ -485,8 +494,19 @@ def get_corrected_radiance(radiance_band: np.ndarray, py6s_results) -> np.ndarra
     return radiance_corr_band
 
 
-def run_py6s(wavelengths: np.ndarray, hypercube_L1: np.ndarray, hypso_info: dict, lat_2d_array: np.ndarray,
-             lon_2d_array: np.ndarray, py6s_dict: dict, time_capture: datetime, srf: list) -> np.ndarray:
+def run_py6s(wavelengths: np.ndarray, 
+             hypercube_L1: np.ndarray, 
+             lat_2d_array: np.ndarray,
+             lon_2d_array: np.ndarray, 
+             solar_azimuth_angles: np.ndarray,
+             solar_zenith_angles: np.ndarray,
+             sat_azimuth_angles: np.ndarray,
+             sat_zenith_angles: np.ndarray,
+             iso_time: str,
+             py6s_dict: dict, 
+             time_capture: datetime, 
+             srf: list
+             ) -> np.ndarray:
     """
     Run the PY6S atmospheric correction on the Hypso spectral image
 
@@ -515,8 +535,21 @@ def run_py6s(wavelengths: np.ndarray, hypercube_L1: np.ndarray, hypso_info: dict
     # hypercube_L1 = hypercube_L1 / 1000 # mW to W -> W  (m^{-2} sr^{-1} nm^{-1})
     # hypercube_L1 = hypercube_L1 / 0.001
 
-    init_parameters = BasicParameters(wavelengths, hypercube_L1,
-                                      hypso_info, lat_2d_array, lon_2d_array, time_capture)
+
+    init_parameters = BasicParameters(wavelengths=wavelengths, 
+                                      hypercube_L1=hypercube_L1, 
+                                      lat_2d_array=lat_2d_array, 
+                                      lon_2d_array=lon_2d_array, 
+                                      solar_azimuth_angles=solar_azimuth_angles,
+                                      solar_zenith_angles=solar_zenith_angles,
+                                      sat_azimuth_angles=sat_azimuth_angles,
+                                      sat_zenith_angles=sat_zenith_angles,
+                                      iso_time=iso_time,
+                                      time_capture=time_capture)
+
+
+
+
 
     # Combining two dictionaries into init_parameters
     init_parameters.update(py6s_dict)

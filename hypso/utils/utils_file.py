@@ -322,7 +322,6 @@ def find_file(path: Path, str_in_file: str, suffix: Union[str, None] = None,
 
     return None
 
-
 def find_dir(path: Path, str_in_dir: str, type: Literal["partial", "exact"] = "partial") -> Union[Path, None]:
     """
     Find recursively a directory (or first occurance) in a specified directory.
@@ -359,7 +358,6 @@ def is_integer_num(n) -> bool:
     if isinstance(n, float):
         return n.is_integer()
     return False
-
 
 def navigate_recursive_nc(nc_file: nc.Dataset, path: str = '', depth: int = 0) -> dict:
     """
@@ -426,15 +424,14 @@ def navigate_recursive_nc(nc_file: nc.Dataset, path: str = '', depth: int = 0) -
 
     return tree_structure
 
-
-def print_nc(nc_file_path: str) -> None:
+def print_nc(nc_file: str) -> None:
     """
     Print the contents of a .nc file
     :param nc_file_path: Absolute path to a .nc file
 
     :return: No return
     """
-    recursive_print_nc(nc.Dataset(nc_file_path, format="NETCDF4"))
+    recursive_print_nc(nc.Dataset(nc_file, format="NETCDF4"))
 
 
 def list_array_1d_to_string(arr: Union[np.ndarray, list, tuple]) -> Union[tuple, str, Number]:
@@ -463,7 +460,6 @@ def list_array_1d_to_string(arr: Union[np.ndarray, list, tuple]) -> Union[tuple,
     var_str += end_var_str
 
     return var_str
-
 
 def recursive_print_nc(nc_file: nc.Dataset, path: str = '', depth: int = 0) -> None:
     """
@@ -544,7 +540,7 @@ def recursive_print_nc(nc_file: nc.Dataset, path: str = '', depth: int = 0) -> N
             newname = path + nc_file.name + '/'
         recursive_print_nc(nc_file.groups[g], path=newname, depth=depth + 1)
 
-
+'''
 def find_closest_water_lat_lon_match(sat_obj, target_lat: float, target_lon: float, water_pixel_filter:bool=False) -> Tuple[int, int, float]:
     """
     Find the closest Image lat and lon to the targat specificed that is also a water pixel.
@@ -557,8 +553,8 @@ def find_closest_water_lat_lon_match(sat_obj, target_lat: float, target_lon: flo
     :return: Row, col and dist_to_target in km from the closes water pixel
     """
 
-    lat_2d = sat_obj.info["lat"]
-    lon_2d = sat_obj.info["lon"]
+    lat_2d = sat_obj.latitudes
+    lon_2d = sat_obj.longitudes
     waterMask = sat_obj.waterMask
     row = 0
     col = 0
@@ -606,7 +602,7 @@ def find_closest_water_lat_lon_match(sat_obj, target_lat: float, target_lon: flo
 
     else:
         raise Exception("Lat and Lon not within Capture 2D Array Lat/Lon values")
-
+'''
 
 def haversine(lon1, lat1, lon2, lat2):
     """
