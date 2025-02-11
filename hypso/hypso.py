@@ -73,6 +73,7 @@ class Hypso:
         self.y_start = None
         self.y_stop = None
         self.bin_factor = 8
+        self.sample_div = 1
         self.row_count = None
         self.frame_count = None
         self.column_count = None
