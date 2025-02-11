@@ -27,7 +27,8 @@ from hypso.calibration import read_coeffs_from_file, \
                               make_mask, \
                               make_overexposed_mask, \
                               get_destriping_correction_matrix, \
-                              run_destriping_correction_with_computed_matrix
+                              run_destriping_correction_with_computed_matrix, \
+                              get_spectral_response_function
 
 from hypso.chlorophyll import run_tuned_chlorophyll_estimation, \
                               run_band_ratio_chlorophyll_estimation, \
@@ -445,8 +446,14 @@ class Hypso1(Hypso):
 
         self._set_calibration_coeff_files()
         self._set_calibration_coeffs()
-        self._set_wavelengths()
-        self._set_srf()
+
+        if self.spectral_coeffs is not None:
+            self.wavelengths = self.spectral_coeffs
+        else:
+            self.wavelengths = range(0,120)
+
+        
+        self.srf = get_spectral_response_function(wavelengths=self.wavelengths)
 
         l1a_cube = self.l1a_cube.to_numpy()
 
@@ -653,79 +660,9 @@ class Hypso1(Hypso):
 
         return None
 
-    def _set_wavelengths(self) -> None:
-        """
-        Set the wavelengths corresponding to each of the 120 bands of the HYPSO datacube using information from the spectral coefficients.
 
-        :return: None.
-        """
 
-        if self.spectral_coeffs is not None:
-            self.wavelengths = self.spectral_coeffs
-        else:
-            self.wavelengths = range(0,120)
 
-        return None
-
-    # TODO: move to calibration module?
-    def _set_srf(self) -> None:
-        """
-        Set Spectral Response Functions (SRF) from HYPSO for each of the 120 bands. Theoretical FWHM of 3.33nm is
-        used to estimate Sigma for an assumed gaussian distribution of each SRF per band.
-
-        :return: None.
-        """
-
-        if not any(self.wavelengths):
-            self.srf = None
-
-        fwhm_nm = 3.33
-        sigma_nm = fwhm_nm / (2 * np.sqrt(2 * np.log(2)))
-
-        srf = []
-        for band in self.wavelengths:
-            center_lambda_nm = band
-            start_lambda_nm = np.round(center_lambda_nm - (3 * sigma_nm), 4)
-            soft_end_lambda_nm = np.round(center_lambda_nm + (3 * sigma_nm), 4)
-
-            srf_wl = [center_lambda_nm]
-            lower_wl = []
-            upper_wl = []
-            for ele in self.wavelengths:
-                if start_lambda_nm < ele < center_lambda_nm:
-                    lower_wl.append(ele)
-                elif center_lambda_nm < ele < soft_end_lambda_nm:
-                    upper_wl.append(ele)
-
-            # Make symmetric
-            while len(lower_wl) > len(upper_wl):
-                lower_wl.pop(0)
-            while len(upper_wl) > len(lower_wl):
-                upper_wl.pop(-1)
-
-            srf_wl = lower_wl + srf_wl + upper_wl
-
-            good_idx = [(True if ele in srf_wl else False) for ele in self.wavelengths]
-
-            # Delta based on Hypso Sampling (Wavelengths)
-            gx = None
-            if len(srf_wl) == 1:
-                gx = [0]
-            else:
-                gx = np.linspace(-3 * sigma_nm, 3 * sigma_nm, len(srf_wl))
-            gaussian_srf = np.exp(
-                -(gx / sigma_nm) ** 2 / 2)  # Not divided by the sum, because we want peak to 1.0
-
-            # Get final wavelength and SRF
-            srf_wl_single = self.wavelengths
-            srf_single = np.zeros_like(srf_wl_single)
-            srf_single[good_idx] = gaussian_srf
-
-            srf.append([srf_wl_single, srf_single])
-
-        self.srf = srf
-
-        return None
 
 
     # Geometry computation functions
