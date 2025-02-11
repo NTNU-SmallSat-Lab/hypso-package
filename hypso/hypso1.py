@@ -138,17 +138,14 @@ class Hypso1(Hypso):
         """
 
         if self.capture_config["frame_count"] == self.standard_dimensions["nominal"]:
-
             self.capture_type = "nominal"
 
         elif self.image_height == self.standard_dimensions["wide"]:
-
             self.capture_type = "wide"
         else:
             # EXPERIMENTAL_FEATURES
             if self.VERBOSE:
                 print("[WARNING] Number of Rows (AKA frame_count) Is Not Standard.")
-            
             self.capture_type = "custom"
 
         if self.VERBOSE:
@@ -232,48 +229,6 @@ class Hypso1(Hypso):
 
         return None
 
-    def _set_field_info(self, fields: dict) -> None:
-
-        for key, value in fields.items():
-            setattr(self, key, value)
-
-        return None
-
-    def _set_capture_name(self, fields: dict) -> None:
-
-        capture_name = self._compose_capture_name(fields=fields)
-
-        setattr(self, "capture_name", capture_name)
-
-        return None
-
-    def _set_filenames(self, parent_directory: Path, fields: dict) -> None:
-
-        capture_name = self._compose_capture_name(fields=fields)
-
-        l1a_nc_file = Path(parent_directory, capture_name + "-l1a.nc")
-        l1b_nc_file = Path(parent_directory, capture_name + "-l1b.nc")
-        l2a_nc_file = Path(parent_directory, capture_name + "-l2a.nc")
-
-        setattr(self, "l1a_nc_file", l1a_nc_file)
-        setattr(self, "l1b_nc_file", l1b_nc_file)
-        setattr(self, "l2a_nc_file", l2a_nc_file)
-
-        return None
-    
-    def _set_dirnames(self, parent_directory: Path, fields: dict) -> None:
-
-        capture_name = self._compose_capture_name(fields=fields)
-
-        capture_dir = Path(parent_directory.absolute(), capture_name + "_tmp")
-        parent_dir = Path(parent_directory.absolute())
-
-        setattr(self, "capture_dir", capture_dir)
-        setattr(self, "parent_dir", parent_dir)
-
-        return None
-
-
 
     # Filename parsing and composing
 
@@ -320,13 +275,20 @@ class Hypso1(Hypso):
 
         fields = self._parse_filename(path=path)
 
-        self._set_field_info(fields=fields)
-        self._set_capture_name(fields=fields)
-        self._set_filenames(fields=fields, parent_directory=path.parent)
-        self._set_dirnames(fields=fields, parent_directory=path.parent)
+        for key, value in fields.items():
+            setattr(self, key, value)
+
+        capture_name = self._compose_capture_name(fields=fields)
+        setattr(self, "capture_name", capture_name)
+
+        setattr(self, "l1a_nc_file", Path(path.parent, capture_name + "-l1a.nc"))
+        setattr(self, "l1b_nc_file", Path(path.parent, capture_name + "-l1b.nc"))
+        setattr(self, "l2a_nc_file", Path(path.parent, capture_name + "-l2a.nc"))
+
+        setattr(self, "capture_dir", Path(path.parent.absolute(), capture_name + "_tmp"))
+        setattr(self, "parent_dir", Path(path.parent.absolute()))
 
         match fields['product_level']:
-
             case "l1a":
                 if self.VERBOSE: print('[INFO] Loading L1a capture ' + self.capture_name)
                 self._load_l1a(path=path)
@@ -481,7 +443,6 @@ class Hypso1(Hypso):
             self.latitudes = self.latitudes[::-1,:]
             self.longitudes = self.longitudes[::-1,:]
 
-
         self.latitudes_original = self.latitudes
         self.longitudes_original = self.longitudes
 
@@ -491,14 +452,7 @@ class Hypso1(Hypso):
 
     def _compute_flip(self) -> None:
 
-        datacube_flipped = check_star_tracker_orientation(adcs_samples=self.adcs['adcssamples'],
-                                                         quaternion_s=self.adcs['quaternion_s'],
-                                                         quaternion_x=self.adcs['quaternion_x'],
-                                                         quaternion_y=self.adcs['quaternion_y'],
-                                                         quaternion_z=self.adcs['quaternion_z'],
-                                                         velocity_x=self.adcs['velocity_x'],
-                                                         velocity_y=self.adcs['velocity_y'],
-                                                         velocity_z=self.adcs['velocity_z'])
+        datacube_flipped = check_star_tracker_orientation(self.adcs)
 
         if not datacube_flipped:
 
@@ -516,6 +470,7 @@ class Hypso1(Hypso):
 
         return None
     
+    # TODO: move to geometry
     def _compute_gsd(self) -> None:
 
         frame_count = self.frame_count
@@ -647,30 +602,10 @@ class Hypso1(Hypso):
 
         l1a_cube = self.l1a_cube.to_numpy()
 
-        if rad_cal:
-            l1b_cube = self._run_radiometric_calibration(cube=l1a_cube)
-        if smile_corr:
-            l1b_cube = self._run_smile_correction(cube=l1b_cube)
-        if destriping_corr:
-            l1b_cube = self._run_destriping_correction(cube=l1b_cube, **kwargs)
-
-
-        #l1b_cube = self._format_l1b_cube(data=l1b_cube)
-
-        self.l1b_cube = l1b_cube
-
-        return None
-
-    def _run_radiometric_calibration(self, cube: np.ndarray) -> np.ndarray:
-
-        # Radiometric calibration
-
         if self.VERBOSE:
             print("[INFO] Running radiometric calibration...")
 
-        #cube = self._get_flipped_cube(cube=cube)
-
-        cube = run_radiometric_calibration(cube=cube, 
+        l1b_cube = run_radiometric_calibration(cube=l1a_cube, 
                                            background_value=self.background_value,
                                            exp=self.exposure,
                                            image_height=self.image_height,
@@ -678,67 +613,23 @@ class Hypso1(Hypso):
                                            frame_count=self.frame_count,
                                            rad_coeffs=self.rad_coeffs)
 
-        #cube = self._get_flipped_cube(cube=cube)
-
-        # TODO: The factor by 10 is to fix a bug in which the coeff have a factor of 10
-        cube = cube / 10
-
-        return cube
-
-    def _run_smile_correction(self, cube: np.ndarray) -> np.ndarray:
-
-        # Smile correction
-
         if self.VERBOSE:
             print("[INFO] Running smile correction...")
 
-        #cube = self._get_flipped_cube(cube=cube)
-
-        cube = run_smile_correction(cube=cube, 
-                                    smile_coeffs=self.smile_coeffs)
-
-        #cube = self._get_flipped_10cube(cube=cube)
-
-        return cube
-
-    def _run_destriping_correction(self, cube: np.ndarray, compute_destriping_matrix=False) -> np.ndarray:
-        """
-        Apply destriping correction to L1a datacube.
-
-        :param cube: Radiometrically and smile corrected L1a datacube.
-
-        :return: Destriped datacube.
-        """
+        l1b_cube = run_smile_correction(cube=l1b_cube, 
+                                        smile_coeffs=self.smile_coeffs)
 
         if self.VERBOSE:
             print("[INFO] Running destriping correction...")
 
-        #cube = self._get_flipped_cube(cube=cube)
+        l1b_cube = run_destriping_correction(cube=l1b_cube, 
+                                             destriping_coeffs=self.destriping_coeffs)
 
-        if compute_destriping_matrix:
-            water_mask = make_mask(cube=cube, sat_val_scale=0.25)
-            
-            #overexposed_mask = make_overexposed_mask(cube=cube)
-            #overexposed_mask = overexposed_mask.astype(bool)
-            #self.water_mask = water_mask
-            #self.overexposed_mask = overexposed_mask
-            #mask = water_mask | ~overexposed_mask
-            #mask = np.full(self.spatial_dimensions, False)
-            #self.mask = mask
+        self.l1b_cube = l1b_cube
 
-            self.destriping_coeffs = get_destriping_correction_matrix(cube, water_mask=water_mask)
+        return None
 
-            cube = run_destriping_correction_with_computed_matrix(cube=cube, 
-                                         destriping_coeffs=self.destriping_coeffs)
-            
-        else:
 
-            cube = run_destriping_correction(cube=cube, destriping_coeffs=self.destriping_coeffs[:,:])
-            #cube = run_destriping_correction(cube=cube, destriping_coeffs=self.destriping_coeffs[:,::-1])
-        
-        #cube = self._get_flipped_cube(cube=cube)
-
-        return cube
 
     def _set_calibration_coeffs(self) -> None:
         """
@@ -750,7 +641,7 @@ class Hypso1(Hypso):
         
         self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file)
         self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file)
-        self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
+        #self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
         self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
         
         return None
@@ -1074,9 +965,6 @@ class Hypso1(Hypso):
         # }
         # AOT550 parameter gotten from: https://giovanni.gsfc.nasa.gov/giovanni/
 
-        #self._run_calibration(**kwargs)
-        #self._run_geometry()
-
         if self.VERBOSE: 
             print("[INFO] Running 6SV1 atmospheric correction")
 
@@ -1178,8 +1066,6 @@ class Hypso1(Hypso):
     # TODO: add set functions
     def _run_toa_reflectance(self) -> None:
 
-        #self._run_calibration()
-        #self._run_geometry()
         
         # Get Local variables
         srf = self.srf
@@ -1275,8 +1161,6 @@ class Hypso1(Hypso):
 
     def _run_ndwi_land_mask(self) -> np.ndarray:
 
-        #self._run_calibration()
-
         if self.VERBOSE:
             print("[INFO] Running NDWI land mask generation...")
 
@@ -1292,8 +1176,6 @@ class Hypso1(Hypso):
         return land_mask
     
     def _run_threshold_land_mask(self) -> xr.DataArray:
-
-        #self._run_calibration()
 
         if self.VERBOSE:
             print("[INFO] Running threshold land mask generation...")
@@ -1354,8 +1236,6 @@ class Hypso1(Hypso):
         return None
 
     def _run_quantile_threshold_cloud_mask(self, quantile: float = 0.075) -> None:
-
-        #self._run_calibration()
 
         cloud_mask = run_quantile_threshold_cloud_mask(cube=self.l1b_cube,
                                                         quantile=quantile)
@@ -1419,8 +1299,6 @@ class Hypso1(Hypso):
     # TODO: use Rrs, not L1b radiance
     def _run_band_ratio_chlorophyll_estimation(self, factor: float = None) -> xr.DataArray:
 
-        #self._run_calibration()
-
         cube = self.l2a_cube.to_numpy()
 
         try:
@@ -1447,9 +1325,6 @@ class Hypso1(Hypso):
         return chl
 
     def _run_6sv1_aqua_tuned_chlorophyll_estimation(self, model: Path = None) -> xr.DataArray:
-
-        #self._run_calibration()
-        #self._run_geometry()
 
         if self.l2a_cube is None or self.l2a_cube.attrs['correction'] != '6sv1':
             self._run_atmospheric_correction(product_name='6sv1')
@@ -1489,9 +1364,6 @@ class Hypso1(Hypso):
         return chl
 
     def _run_acolite_aqua_tuned_chlorophyll_estimation(self, model: Path = None) -> xr.DataArray:
-
-        #self._run_calibration()
-        #self._run_geometry()
 
         #if self.l2a_cube is None or self.l2a_cube.attrs['correction'] != 'acolite':
         #    self._run_atmospheric_correction(product_name='acolite')

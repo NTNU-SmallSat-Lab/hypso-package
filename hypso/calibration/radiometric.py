@@ -40,6 +40,11 @@ def run_radiometric_calibration(cube: np.ndarray,
 
         cube_rad_calibrated[i, :, :] = frame_rad_calibrated
 
+
+    # TODO: The factor by 10 is to fix a bug in which the coeff have a factor of 10
+    cube_rad_calibrated = cube_rad_calibrated / 10
+
+
     return cube_rad_calibrated
 
 def run_radiometric_calibration_one_frame(frame: np.ndarray,
