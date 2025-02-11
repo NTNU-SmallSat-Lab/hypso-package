@@ -748,56 +748,13 @@ class Hypso1(Hypso):
         :return: None.
         """
         
-        self._set_radiometric_coeffs()
-        self._set_smile_coeffs()
-        self._set_destriping_coeffs()
-        self._set_spectral_coeffs()
+        self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file)
+        self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file)
+        self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
+        self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
         
         return None
 
-    def _set_radiometric_coeffs(self) -> None:
-        """
-        Set the radiometric calibration coefficients included in the package.
-
-        :return: None.
-        """
-
-        self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file)
-
-        return None
-
-    def _set_smile_coeffs(self) -> None:
-        """
-        Set the smile calibration coefficients included in the package.
-
-        :return: None.
-        """
-
-        self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file)
-
-        return None
-    
-    def _set_destriping_coeffs(self) -> None:
-        """
-        Set the destriping calibration coefficients included in the package.
-
-        :return: None.
-        """
-
-        self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
-
-        return None
-    
-    def _set_spectral_coeffs(self) -> None:
-        """
-        Set the spectral calibration coefficients included in the package.
-
-        :return: None.
-        """
-
-        self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
-
-        return None
 
     def _set_calibration_coeff_files(self) -> None:
         """
