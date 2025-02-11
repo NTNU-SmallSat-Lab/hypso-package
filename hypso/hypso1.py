@@ -363,7 +363,6 @@ class Hypso1(Hypso):
         self._set_dimensions()
         self._set_timestamps()
         self._set_capture_type()
-        self._set_adcs_dataframes()
 
         self.l1a_cube = load_l1a_nc_cube(nc_file_path=path)
 
@@ -374,19 +373,6 @@ class Hypso1(Hypso):
 
     def _load_l1b(self, path: Path) -> None:
 
-        self._load_l1b_nc_metadata(path=path)
-        self._load_l1b_nc_cube(path=path)
-
-        return None
-
-    def _load_l1b_nc_cube(self, path: Path) -> None:
-
-        self.l1b_cube = load_l1b_nc_cube(nc_file_path=path)
-
-        return None
-
-    def _load_l1b_nc_metadata(self, path: Path) -> None:
-        
         capture_config, \
         timing, \
         target_coords, \
@@ -405,7 +391,8 @@ class Hypso1(Hypso):
         self._set_dimensions()
         self._set_timestamps()
         self._set_capture_type()
-        self._set_adcs_dataframes()
+
+        self.l1b_cube = load_l1b_nc_cube(nc_file_path=path)
 
         return None
 
