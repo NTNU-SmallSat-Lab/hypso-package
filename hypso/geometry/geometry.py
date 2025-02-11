@@ -38,10 +38,51 @@ R_pl = 6356752.0
 hypso_height_sensor = 1216
 
 
+def format_adcs_pos_dataframe(adcs) -> None:
+
+    
+    position_headers = ["timestamp", "eci x [m]", "eci y [m]", "eci z [m]"]
+    
+    timestamps = adcs["timestamps"]
+    pos_x = adcs["position_x"]
+    pos_y = adcs["position_y"]
+    pos_z = adcs["position_z"]
+
+    pos_array = np.column_stack((timestamps, pos_x, pos_y, pos_z))
+    pos_df = pd.DataFrame(pos_array, columns=position_headers)
+
+    adcs_pos_df = pos_df
+
+    return adcs_pos_df
+
+# TODO move DataFrame formatting related code to geometry
+def format_adcs_quat_dataframe(adcs) -> None:
+
+    
+    quaternion_headers = ["timestamp", "quat_0", "quat_1", "quat_2", "quat_3", "Control error [deg]"]
+
+    timestamps = adcs["timestamps"]
+    quat_s = adcs["quaternion_s"]
+    quat_x = adcs["quaternion_x"]
+    quat_y = adcs["quaternion_y"]
+    quat_z = adcs["quaternion_z"]
+    control_error = adcs["control_error"]
+
+    quat_array = np.column_stack((timestamps, quat_s, quat_x, quat_y, quat_z, control_error))
+    quat_df = pd.DataFrame(quat_array, columns=quaternion_headers)
+
+    adcs_quat_df = quat_df
+
+    return adcs_quat_df
 
 
-def interpolate_at_frame(adcs_pos_df: pd.DataFrame,
-                         adcs_quat_df: pd.DataFrame,
+
+
+
+
+
+
+def interpolate_at_frame(adcs,
                          timestamps_srv: np.ndarray,
                          frame_count: int,
                          additional_time_offset: float=0.0, 
@@ -61,6 +102,9 @@ def interpolate_at_frame(adcs_pos_df: pd.DataFrame,
 
     :return pd.DataFrame:
     """
+
+    adcs_pos_df = format_adcs_pos_dataframe(adcs)
+    adcs_quat_df = format_adcs_quat_dataframe(adcs)
 
     # 1. Reading .csv file with ECI position info
     posdata = adcs_pos_df

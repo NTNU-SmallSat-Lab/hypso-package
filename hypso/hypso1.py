@@ -156,50 +156,7 @@ class Hypso1(Hypso):
 
         return None
 
-    def _set_adcs_dataframes(self) -> None:
-
-        self._set_adcs_pos_dataframe()
-        self._set_adcs_quat_dataframe()
-
-        return None
-
-    # TODO move DataFrame formatting related code to geometry
-    def _set_adcs_pos_dataframe(self) -> None:
-
-        
-        position_headers = ["timestamp", "eci x [m]", "eci y [m]", "eci z [m]"]
-        
-        timestamps = self.adcs["timestamps"]
-        pos_x = self.adcs["position_x"]
-        pos_y = self.adcs["position_y"]
-        pos_z = self.adcs["position_z"]
-
-        pos_array = np.column_stack((timestamps, pos_x, pos_y, pos_z))
-        pos_df = pd.DataFrame(pos_array, columns=position_headers)
-
-        self.adcs_pos_df = pos_df
-
-        return None
-
-    # TODO move DataFrame formatting related code to geometry
-    def _set_adcs_quat_dataframe(self) -> None:
-
-        
-        quaternion_headers = ["timestamp", "quat_0", "quat_1", "quat_2", "quat_3", "Control error [deg]"]
-
-        timestamps = self.adcs["timestamps"]
-        quat_s = self.adcs["quaternion_s"]
-        quat_x = self.adcs["quaternion_x"]
-        quat_y = self.adcs["quaternion_y"]
-        quat_z = self.adcs["quaternion_z"]
-        control_error = self.adcs["control_error"]
-
-        quat_array = np.column_stack((timestamps, quat_s, quat_x, quat_y, quat_z, control_error))
-        quat_df = pd.DataFrame(quat_array, columns=quaternion_headers)
-
-        self.adcs_quat_df = quat_df
-
-        return None
+    
 
     def _set_background_value(self) -> None:
 
@@ -388,19 +345,6 @@ class Hypso1(Hypso):
 
     def _load_l1a(self, path: Path) -> None:
 
-        self._load_l1a_nc_metadata(path=path)
-        self._load_l1a_nc_cube(path=path)
-
-        return None
-
-    def _load_l1a_nc_cube(self, path: Path) -> None:
-
-        self.l1a_cube = load_l1a_nc_cube(nc_file_path=path)
-
-        return None
-
-    def _load_l1a_nc_metadata(self, path: Path) -> None:
-        
         capture_config, \
         timing, \
         target_coords, \
@@ -420,6 +364,8 @@ class Hypso1(Hypso):
         self._set_timestamps()
         self._set_capture_type()
         self._set_adcs_dataframes()
+
+        self.l1a_cube = load_l1a_nc_cube(nc_file_path=path)
 
         return None
 
@@ -1116,8 +1062,7 @@ class Hypso1(Hypso):
         if self.VERBOSE:
             print("[INFO] Running geometry computation...")
 
-        framepose_data = interpolate_at_frame(adcs_pos_df=self.adcs_pos_df,
-                                              adcs_quat_df=self.adcs_quat_df,
+        framepose_data = interpolate_at_frame(adcs=self.adcs,
                                               timestamps_srv=self.timing['timestamps_srv'],
                                               frame_count=self.capture_config['frame_count'],
                                               fps=self.capture_config['fps'],
