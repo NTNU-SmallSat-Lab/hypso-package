@@ -36,8 +36,8 @@ from hypso.chlorophyll import run_tuned_chlorophyll_estimation, \
 from hypso.geometry import interpolate_at_frame, \
                            geometry_computation, \
                            get_nearest_pixel
-from hypso.georeference import georeferencing
-from hypso.georeference.utils import check_star_tracker_orientation
+from hypso.georeferencing import georeferencing
+from hypso.georeferencing.utils import check_star_tracker_orientation
 from hypso.masks import run_global_land_mask, \
                         run_ndwi_land_mask, \
                         run_threshold_land_mask
