@@ -224,6 +224,7 @@ class Hypso1(Hypso):
 
         self.bin_factor = self.capture_config["bin_factor"]
 
+        # Try/except here since not all captures have sample_div
         try:
             self.sample_div = self.capture_config['sample_div']
         except:
