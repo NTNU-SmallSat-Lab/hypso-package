@@ -35,7 +35,11 @@ from hypso.chlorophyll import run_tuned_chlorophyll_estimation, \
 
 from hypso.geometry import interpolate_at_frame, \
                            geometry_computation, \
-                           get_nearest_pixel
+                           get_nearest_pixel, \
+                           compute_gsd, \
+                           compute_bbox, \
+                           compute_resolution
+
 from hypso.georeferencing import georeferencing
 from hypso.georeferencing.utils import check_star_tracker_orientation
 from hypso.masks import run_global_land_mask, \
@@ -153,28 +157,15 @@ class Hypso1(Hypso):
 
         return None
 
-    
-
-    def _set_background_value(self) -> None:
+    def _set_metadata_attributes(self) -> None:
 
         self.background_value = 8 * self.capture_config["bin_factor"]
-
-        return None
-
-    def _set_exposure(self) -> None:
-
         self.exposure = self.capture_config["exposure"] / 1000  # in seconds
-
-        return None
-
-    def _set_aoi(self) -> None:
 
         self.x_start = self.capture_config["aoi_x"]
         self.x_stop = self.capture_config["aoi_x"] + self.capture_config["column_count"]
         self.y_start = self.capture_config["aoi_y"]
         self.y_stop = self.capture_config["aoi_y"] + self.capture_config["row_count"]
-
-    def _set_dimensions(self) -> None:
 
         self.bin_factor = self.capture_config["bin_factor"]
 
@@ -201,9 +192,6 @@ class Hypso1(Hypso):
         if self.VERBOSE:
             print(f"[INFO] Capture spatial dimensions: {self.spatial_dimensions}")
 
-        return None
-
-    def _set_timestamps(self) -> None:
 
         self.start_timestamp_capture = int(self.timing['capture_start_unix']) + UNIX_TIME_OFFSET
 
@@ -319,11 +307,7 @@ class Hypso1(Hypso):
         setattr(self, "adcs", adcs)
         setattr(self, "navigation", navigation)
 
-        self._set_background_value()
-        self._set_exposure()
-        self._set_aoi()
-        self._set_dimensions()
-        self._set_timestamps()
+        self._set_metadata_attributes()
         self._set_capture_type()
 
         self.l1a_cube = load_l1a_nc_cube(nc_file_path=path)
@@ -347,11 +331,7 @@ class Hypso1(Hypso):
         setattr(self, "adcs", adcs)
         setattr(self, "navigation", navigation)
 
-        self._set_background_value()
-        self._set_exposure()
-        self._set_aoi()
-        self._set_dimensions()
-        self._set_timestamps()
+        self._set_metadata_attributes()
         self._set_capture_type()
 
         self.l1b_cube = load_l1b_nc_cube(nc_file_path=path)
@@ -375,11 +355,7 @@ class Hypso1(Hypso):
         setattr(self, "adcs", adcs)
         setattr(self, "navigation", navigation)
 
-        self._set_background_value()
-        self._set_exposure()
-        self._set_aoi()
-        self._set_dimensions()
-        self._set_timestamps()
+        self._set_metadata_attributes()
         self._set_capture_type()
 
         self.l2a_cube = load_l2a_nc_cube(nc_file_path=path)
@@ -423,17 +399,24 @@ class Hypso1(Hypso):
                                             image_mode=image_mode,
                                             origin_mode=origin_mode)
         
-        # Update latitude and longitude arrays with computed values from Georeferencer
-        #self.latitudes = gr.latitudes[:, ::-1]
-        #self.longitudes = gr.longitudes[:, ::-1]
 
         self.latitudes = gr.latitudes
         self.longitudes = gr.longitudes
         
         self._compute_flip()
-        self._compute_bbox()
-        self._compute_gsd()
-        self._compute_resolution()
+
+        self.bbox = compute_bbox(latitudes=self.latitudes, 
+                                 longitudes=self.longitudes)
+
+        self.along_track_gsd, self.across_track_gsd = compute_gsd(frame_count=self.frame_count, 
+                                                                  image_height=self.image_height, 
+                                                                  latitudes=self.latitudes, 
+                                                                  longitudes=self.longitudes,
+                                                                  verbose=self.VERBOSE)
+
+        self.resolution = compute_resolution(latitudes=self.latitudes, 
+                                             longitudes=self.longitudes)
+
 
         if flip_lons:
             self.latitudes = self.latitudes[:,::-1]
@@ -446,7 +429,6 @@ class Hypso1(Hypso):
         self.latitudes_original = self.latitudes
         self.longitudes_original = self.longitudes
 
-        self.georeferencing_has_run = True
 
         return None
 
@@ -467,111 +449,6 @@ class Hypso1(Hypso):
 
 
         self.datacube_flipped = datacube_flipped
-
-        return None
-    
-    # TODO: move to geometry
-    def _compute_gsd(self) -> None:
-
-        frame_count = self.frame_count
-        image_height = self.image_height
-
-        latitudes = self.latitudes
-        longitudes = self.longitudes
-
-        try:
-            bbox = self.bbox
-        except:
-            self._compute_bbox()
-
-        aoi = prj.aoi.AreaOfInterest(west_lon_degree=bbox[0],
-                                     south_lat_degree=bbox[1],
-                                     east_lon_degree=bbox[2],
-                                     north_lat_degree=bbox[3], 
-                                    )
-
-        utm_crs_list = prj.database.query_utm_crs_info(datum_name="WGS 84", area_of_interest=aoi)
-
-
-        #bbox_geodetic = [np.min(latitudes), 
-        #                 np.max(latitudes), 
-        #                 np.min(longitudes), 
-        #                 np.max(longitudes)]
-
-        #utm_crs_list = prj.database.query_utm_crs_info(datum_name="WGS 84",
-        #                                                area_of_interest=prj.aoi.AreaOfInterest(
-        #                                                west_lon_degree=bbox_geodetic[2],
-        #                                                south_lat_degree=bbox_geodetic[0],
-        #                                                east_lon_degree=bbox_geodetic[3],
-        #                                                north_lat_degree=bbox_geodetic[1], )
-        #                                            )
-        
-        if self.VERBOSE:
-            print(f'[INFO] Using UTM map: ' + utm_crs_list[0].name, 'EPSG:', utm_crs_list[0].code)
-
-        # crs_25832 = prj.CRS.from_epsg(25832) # UTM32N
-        # crs_32717 = prj.CRS.from_epsg(32717) # UTM17S
-        crs_4326 = prj.CRS.from_epsg(4326)  # Unprojected [(lat,lon), probably]
-        source_crs = crs_4326
-        destination_epsg = int(utm_crs_list[0].code)
-        destination_crs = prj.CRS.from_epsg(destination_epsg)
-        latlon_to_proj = prj.Transformer.from_crs(source_crs, destination_crs)
-
-
-        pixel_coords_map = np.zeros([frame_count, image_height, 2])
-
-        for i in range(frame_count):
-            for j in range(image_height):
-                pixel_coords_map[i, j, :] = latlon_to_proj.transform(latitudes[i, j], 
-                                                                     longitudes[i, j])
-
-        # time line x and y differences
-        a = np.diff(pixel_coords_map[:, image_height // 2, 0])
-        b = np.diff(pixel_coords_map[:, image_height // 2, 1])
-        along_track_gsd = np.sqrt(a * a + b * b)
-        along_track_mean_gsd = np.mean(along_track_gsd)
-
-        # detector line x and y differences
-        a = np.diff(pixel_coords_map[frame_count // 2, :, 0])
-        b = np.diff(pixel_coords_map[frame_count // 2, :, 1])
-        across_track_gsd = np.sqrt(a * a + b * b)
-        across_track_mean_gsd = np.mean(across_track_gsd)
-
-
-        self.along_track_gsd = along_track_gsd
-        self.across_track_gsd = across_track_gsd
-
-        self.along_track_mean_gsd = along_track_mean_gsd
-        self.across_track_mean_gsd = across_track_mean_gsd
-
-        return None
-
-    def _compute_resolution(self) -> None:
-
-        distances = [self.along_track_mean_gsd, 
-                     self.across_track_mean_gsd]
-
-        filtered_distances = [d for d in distances if d is not None]
-
-        try:
-            resolution = max(filtered_distances)
-        except ValueError:
-            resolution = 0
-
-        self.resolution = resolution
-
-        return None
-
-    def _compute_bbox(self) -> None:
-
-        lon_min = self.longitudes.min()
-        lon_max = self.longitudes.max()
-        lat_min = self.latitudes.min()
-        lat_max = self.latitudes.max()
-
-        bbox = (lon_min,lat_min,lon_max,lat_max)
-        
-        self.bbox = bbox
 
         return None
 
