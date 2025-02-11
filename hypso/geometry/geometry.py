@@ -45,8 +45,8 @@ def interpolate_at_frame(adcs_pos_df: pd.DataFrame,
                          timestamps_srv: np.ndarray,
                          frame_count: int,
                          additional_time_offset: float=0.0, 
-                         fps: float=-1.0,
-                         exposure: float=-1.0,
+                         fps: float=15,
+                         exposure: float=25,
                          verbose=False) -> pd.DataFrame:
     """
     Function to interpolate at the frame based on the quaternion, position and timestamps
