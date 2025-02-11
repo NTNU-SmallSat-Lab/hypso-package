@@ -223,13 +223,17 @@ class Hypso1(Hypso):
     def _set_dimensions(self) -> None:
 
         self.bin_factor = self.capture_config["bin_factor"]
-        self.sample_div = self.capture_config['sample_div']
+
+        try:
+            self.sample_div = self.capture_config['sample_div']
+        except:
+            self.sample_div = 1
 
         self.row_count = self.capture_config["row_count"]
         self.frame_count = self.capture_config["frame_count"]
         self.column_count = self.capture_config["column_count"]
 
-        self.image_height = self.capture_config["row_count"] / self.capture_config['sample_div']
+        self.image_height = self.capture_config["row_count"] / self.sample_div
         self.image_width = int(self.capture_config["column_count"] / self.capture_config["bin_factor"])
         self.im_size = self.image_height * self.image_width
 
