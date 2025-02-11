@@ -191,7 +191,7 @@ class Hypso1(Hypso):
         self.frame_count = self.capture_config["frame_count"]
         self.column_count = self.capture_config["column_count"]
 
-        self.image_height = self.capture_config["row_count"] / self.sample_div
+        self.image_height = int(self.capture_config["row_count"] / self.sample_div)
         self.image_width = int(self.capture_config["column_count"] / self.capture_config["bin_factor"])
         self.im_size = self.image_height * self.image_width
 
