@@ -132,32 +132,20 @@ class Hypso1(Hypso):
         return None
 
         
-    # Setters
 
-    def _set_capture_type(self) -> None:
-        """
-        Format and set the capture region using information derived from the capture name.
 
-        :return: None.
-        """
+    def _set_metadata_attributes(self,
+                                 capture_config,
+                                 timing,
+                                 adcs,
+                                 navigation) -> None:
 
-        if self.capture_config["frame_count"] == self.standard_dimensions["nominal"]:
-            self.capture_type = "nominal"
 
-        elif self.image_height == self.standard_dimensions["wide"]:
-            self.capture_type = "wide"
-        else:
-            # EXPERIMENTAL_FEATURES
-            if self.VERBOSE:
-                print("[WARNING] Number of Rows (AKA frame_count) Is Not Standard.")
-            self.capture_type = "custom"
+        setattr(self, "capture_config", capture_config)
+        setattr(self, "timing", timing)
+        setattr(self, "adcs", adcs)
+        setattr(self, "navigation", navigation)
 
-        if self.VERBOSE:
-            print(f"[INFO] Capture capture type: {self.capture_type}")
-
-        return None
-
-    def _set_metadata_attributes(self) -> None:
 
         self.background_value = 8 * self.capture_config["bin_factor"]
         self.exposure = self.capture_config["exposure"] / 1000  # in seconds
@@ -215,6 +203,23 @@ class Hypso1(Hypso):
         self.unixtime = self.start_timestamp_capture
         self.iso_time = datetime.utcfromtimestamp(self.unixtime).isoformat()
 
+
+        if self.capture_config["frame_count"] == self.standard_dimensions["nominal"]:
+            self.capture_type = "nominal"
+
+        elif self.image_height == self.standard_dimensions["wide"]:
+            self.capture_type = "wide"
+        else:
+            # EXPERIMENTAL_FEATURES
+            if self.VERBOSE:
+                print("[WARNING] Number of Rows (AKA frame_count) Is Not Standard.")
+            self.capture_type = "custom"
+
+        if self.VERBOSE:
+            print(f"[INFO] Capture capture type: {self.capture_type}")
+
+
+
         return None
 
 
@@ -250,9 +255,9 @@ class Hypso1(Hypso):
         
         return fields
 
-    def _parse_filename_product_level(self, path: str) -> str:
 
-        return self._parse_filename(path=path)['product_level']
+
+
 
 
     # Loading functions
@@ -279,86 +284,56 @@ class Hypso1(Hypso):
         match fields['product_level']:
             case "l1a":
                 if self.VERBOSE: print('[INFO] Loading L1a capture ' + self.capture_name)
-                self._load_l1a(path=path)
+
+                capture_config, \
+                timing, \
+                target_coords, \
+                adcs, \
+                dimensions, \
+                navigation = load_l1a_nc_metadata(nc_file_path=path)
+
+                self._set_metadata_attributes(capture_config=capture_config,
+                                              timing=timing, 
+                                              adcs=adcs, 
+                                              navigation=navigation)
+
+                self.l1a_cube = load_l1a_nc_cube(nc_file_path=path)
+                
             case "l1b":
                 if self.VERBOSE: print('[INFO] Loading L1b capture ' + self.capture_name)
-                self._load_l1b(path=path)
+
+                capture_config, \
+                timing, \
+                target_coords, \
+                adcs, \
+                dimensions, \
+                navigation = load_l1b_nc_metadata(nc_file_path=path)
+
+                self._set_metadata_attributes(capture_config=capture_config,
+                                              timing=timing, 
+                                              adcs=adcs, 
+                                              navigation=navigation)
+
+                self.l1b_cube = load_l1b_nc_cube(nc_file_path=path)
+
             case "l2a":
                 if self.VERBOSE: print('[INFO] Loading L2a capture ' + self.capture_name)
-                self._load_l2a(path=path)
+
+                capture_config, \
+                timing, \
+                target_coords, \
+                adcs, \
+                dimensions, \
+                navigation = load_l2a_nc_metadata(nc_file_path=path)
+
+                self._set_metadata_attributes(capture_config=capture_config,
+                                              timing=timing, 
+                                              adcs=adcs, 
+                                              navigation=navigation)
+
+                self.l2a_cube = load_l2a_nc_cube(nc_file_path=path)
             case _:
                 print("[ERROR] Unsupported product level.")
-        return None
-
-
-    # L1a functions
-
-    def _load_l1a(self, path: Path) -> None:
-
-        capture_config, \
-        timing, \
-        target_coords, \
-        adcs, \
-        dimensions, \
-        navigation = load_l1a_nc_metadata(nc_file_path=path)
-        
-        setattr(self, "capture_config", capture_config)
-        setattr(self, "timing", timing)
-        setattr(self, "adcs", adcs)
-        setattr(self, "navigation", navigation)
-
-        self._set_metadata_attributes()
-        self._set_capture_type()
-
-        self.l1a_cube = load_l1a_nc_cube(nc_file_path=path)
-
-        return None
-
-
-    # L1b functions
-
-    def _load_l1b(self, path: Path) -> None:
-
-        capture_config, \
-        timing, \
-        target_coords, \
-        adcs, \
-        dimensions, \
-        navigation = load_l1b_nc_metadata(nc_file_path=path)
-        
-        setattr(self, "capture_config", capture_config)
-        setattr(self, "timing", timing)
-        setattr(self, "adcs", adcs)
-        setattr(self, "navigation", navigation)
-
-        self._set_metadata_attributes()
-        self._set_capture_type()
-
-        self.l1b_cube = load_l1b_nc_cube(nc_file_path=path)
-
-        return None
-
-    
-    # L2a functions
-
-    def _load_l2a(self, path: Path) -> None:
-
-        capture_config, \
-        timing, \
-        target_coords, \
-        adcs, \
-        dimensions, \
-        navigation = load_l2a_nc_metadata(nc_file_path=path)
-        
-        setattr(self, "capture_config", capture_config)
-        setattr(self, "timing", timing)
-        setattr(self, "adcs", adcs)
-        setattr(self, "navigation", navigation)
-
-        self._set_metadata_attributes()
-        self._set_capture_type()
-
-        self.l2a_cube = load_l2a_nc_cube(nc_file_path=path)
 
         return None
 
@@ -403,7 +378,21 @@ class Hypso1(Hypso):
         self.latitudes = gr.latitudes
         self.longitudes = gr.longitudes
         
-        self._compute_flip()
+        datacube_flipped = check_star_tracker_orientation(self.adcs)
+
+        if not datacube_flipped:
+
+            if self.l1a_cube is not None:
+                self.l1a_cube = self.l1a_cube[:, ::-1, :]
+
+            if self.l1b_cube is not None:  
+                self.l1b_cube = self.l1b_cube[:, ::-1, :]
+                
+            if self.l2a_cube is not None:  
+                self.l2a_cube = self.l2a_cube[:, ::-1, :]
+
+
+        self.datacube_flipped = datacube_flipped
 
         self.bbox = compute_bbox(latitudes=self.latitudes, 
                                  longitudes=self.longitudes)
@@ -432,25 +421,7 @@ class Hypso1(Hypso):
 
         return None
 
-    def _compute_flip(self) -> None:
 
-        datacube_flipped = check_star_tracker_orientation(self.adcs)
-
-        if not datacube_flipped:
-
-            if self.l1a_cube is not None:
-                self.l1a_cube = self.l1a_cube[:, ::-1, :]
-
-            if self.l1b_cube is not None:  
-                self.l1b_cube = self.l1b_cube[:, ::-1, :]
-                
-            if self.l2a_cube is not None:  
-                self.l2a_cube = self.l2a_cube[:, ::-1, :]
-
-
-        self.datacube_flipped = datacube_flipped
-
-        return None
 
 
     # Calibration functions
