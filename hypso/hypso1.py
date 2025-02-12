@@ -108,8 +108,8 @@ class Hypso1(Hypso):
         self.sensor = 'hypso1_hsi'
         self.VERBOSE = verbose
 
-        self._load_file(path=path)
-        self._load_points_file(path=points_path)
+        self.load_file(path=path)
+        self.load_points_file(path=points_path)
 
         chl_attributes = {'model': None}
         product_attributes = {}
@@ -141,6 +141,11 @@ class Hypso1(Hypso):
                                  adcs,
                                  navigation) -> None:
 
+
+        try:
+            capture_config['fps'] = capture_config['framerate']
+        except:
+            capture_config['framerate'] = capture_config['fps']
 
         setattr(self, "capture_config", capture_config)
         setattr(self, "timing", timing)
@@ -186,12 +191,12 @@ class Hypso1(Hypso):
 
         # Get END_TIMESTAMP_CAPTURE
         # can't compute end timestamp using frame count and frame rate
-        # assuming some default value if fps and exposure not available
+        # assuming some default value if framerate and exposure not available
         try:
-            self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config["frame_count"] / self.capture_config["fps"] + self.capture_config["exposure"] / 1000.0
+            self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config["frame_count"] / self.capture_config["framerate"] + self.capture_config["exposure"] / 1000.0
         except:
             if self.VERBOSE:
-                print("[WARNING] FPS or exposure values not found. Assuming 20.0 for each.")
+                print("[WARNING] Framerate or exposure values not found. Assuming 20.0 for each.")
             self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config["frame_count"] / 20.0 + 20.0 / 1000.0
 
         # using 'awk' for floating point arithmetic ('expr' only support integer arithmetic): {printf \"%.2f\n\", 100/3}"
@@ -263,7 +268,7 @@ class Hypso1(Hypso):
 
     # Loading functions
 
-    def _load_file(self, path: Path) -> None:
+    def load_file(self, path: Path) -> None:
 
         path = Path(path).absolute()
 
@@ -345,7 +350,7 @@ class Hypso1(Hypso):
     # Georeferencing functions
 
     # TODO refactor
-    def _load_points_file(self, 
+    def load_points_file(self, 
                           path: str, 
                           image_mode: str = None, 
                           origin_mode: str = 'qgis',
@@ -611,14 +616,16 @@ class Hypso1(Hypso):
         if self.VERBOSE:
             print("[INFO] Running geometry computation...")
 
-        framepose_data = interpolate_at_frame(adcs=self.adcs,
+
+        framepose_data = interpolate_at_frame_nc(adcs=self.adcs,
                                               timestamps_srv=self.timing['timestamps_srv'],
-                                              frame_count=self.capture_config['frame_count'],
-                                              fps=self.capture_config['fps'],
+                                              framerate=self.capture_config['framerate'],
                                               exposure=self.capture_config['exposure'],
                                               verbose=self.VERBOSE
                                               )
 
+
+        # TODO: split into tow functions: one to compute latitude and longitudes, one to compute solar angles
 
         wkt_linestring_footprint, \
            prj_file_contents, \
@@ -749,7 +756,6 @@ class Hypso1(Hypso):
             print("[ERROR] Please set path to ACOLITE source code before generating ACOLITE L2a datacube using \"set_acolite_path()\"")
             print("[INFO] The ACOLITE source code can be downloaded from https://github.com/acolite/acolite")
             return None
-
 
 
     # TODO
@@ -969,7 +975,6 @@ class Hypso1(Hypso):
         cloud_mask.attrs['quantile'] = quantile
 
         return cloud_mask 
-
 
     def _run_saturated_pixel_cloud_mask(self, threshold: float = 35000):
 
@@ -1318,11 +1323,6 @@ class Hypso1(Hypso):
 
         return scene
 
-
-
-
-
-
     def _generate_toa_reflectance_satpy_scene(self) -> Scene:
 
         scene = self._generate_satpy_scene()
@@ -1362,7 +1362,6 @@ class Hypso1(Hypso):
             scene[name].attrs['area'] = swath_def
 
         return scene
-
 
     def _generate_chlorophyll_satpy_scene(self) -> Scene:
 
@@ -1516,56 +1515,14 @@ class Hypso1(Hypso):
     # Other functions
 
 
-    def flip_l1a_cube(self) -> None:
-
-        self.l1a_cube = self.l1a_cube[:, ::-1, :]
-
-    def flip_l1b_cube(self) -> None:
-
-        self.l1b_cube = self.l1b_cube[:, ::-1, :]
-
-    def flip_l2a_cube(self) -> None:
-
-        self.l2a_cube = self.l2a_cube[:, ::-1, :]
-
-    def flip_toa_reflectance_cube(self) -> None:
-
-        self.toa_reflectance_cube = self.toa_reflectance_cube[:, ::-1, :]
 
 
 
 
-    # TODO: remove this function
-    def _get_flipped_cube(self, cube: np.ndarray) -> np.ndarray:
-
-        if self.datacube_flipped is None:
-            return cube
-        else:
-            if self.datacube_flipped:
-                return cube[:, ::-1, :]
-
-            else:
-                return cube
-
-        return cube
     
 
     # Public functions
 
-    def load_file(self, path: str = None) -> None:
-
-        if path:
-            self._load_file(path=path)
-
-        return None
-    
-
-    def load_points_file(self, path: str = None, image_mode=None, origin_mode=None, flip_lats=False, flip_lons=False) -> None:
-
-        if path:
-            self._load_points_file(path=path, image_mode=image_mode, origin_mode=origin_mode, flip_lats=flip_lats, flip_lons=flip_lons)
-
-        return None
 
 
     # Public L1a methods
