@@ -505,47 +505,6 @@ class Hypso1(Hypso):
             self.wavelengths = range(0,120)
 
 
-        # if npz_file_radiometric:
-        #     rad_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_radiometric}')
-        # else: 
-        #     rad_coeff_file = None
-
-        # self.rad_coeff_file = rad_coeff_file
-
-        # if npz_file_smile:
-        #     smile_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_smile}')
-        # else:
-        #     smile_coeff_file = npz_file_smile
-
-        # self.smile_coeff_file = smile_coeff_file
-
-
-        # if npz_file_destriping:
-        #     destriping_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_destriping}')
-        # else:
-        #     destriping_coeff_file = None
-
-        #self.destriping_coeff_file = destriping_coeff_file
-
-        # if npz_file_spectral:
-        #     spectral_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_spectral}')
-        # else:
-        #     spectral_coeff_file = None
-
-        # self.spectral_coeff_file = spectral_coeff_file
-
-
-        # self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file)
-        # self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file)
-        # #self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
-        # self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
-
-        # if self.spectral_coeffs is not None:
-        #     self.wavelengths = self.spectral_coeffs
-        # else:
-        #     self.wavelengths = range(0,120)
-
-
         return None
 
 
