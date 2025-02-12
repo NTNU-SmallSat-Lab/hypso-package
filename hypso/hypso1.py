@@ -614,8 +614,15 @@ class Hypso1(Hypso):
                                                     iso_time=self.iso_time,
                                                     solar_zenith_angles=self.solar_azimuth_angles,
                                                     )
+        
+        #self.l1c_cube = xr.DataArray(toa_reflectance, dims=("y", "x", "band"))
+        #self.l1c_cube.attrs['units'] = "sr^-1"
+        #self.l1c_cube.attrs['description'] = "Top of atmosphere (TOA) reflectance"
+        #toa_reflectance_cube = xr.DataArray(toa_reflectance, dims=("y", "x", "band"))
 
+        self.l1c_cube = toa_reflectance_cube
 
+        return None
 
 
 
@@ -637,19 +644,11 @@ class Hypso1(Hypso):
 
 
 
-
-
-
-
-
     def generate_l1b_cube(self, **kwargs) -> None:
 
         self._run_calibration(**kwargs)
 
         return None
-
-
-
 
     def write_l1b_nc_file(self, overwrite: bool = False) -> None:
 
@@ -666,9 +665,6 @@ class Hypso1(Hypso):
 
         return None
 
-
-    # Public L1c (top of atmosphere reflectance) methods
-
     def generate_l1c_cube(self) -> None:
 
         self._run_geometry()
@@ -682,7 +678,6 @@ class Hypso1(Hypso):
         return None
 
 
-    # Public L2a methods
 
     # TODO
     def generate_l2a_cube(self, product_name: str = "machi") -> None:
@@ -691,10 +686,6 @@ class Hypso1(Hypso):
         #self._run_atmospheric_correction(product_name=product_name)
 
         return None
-
-
-
-
 
     def write_l2a_nc_file(self, overwrite: bool = False) -> None:
 

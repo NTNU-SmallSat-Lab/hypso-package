@@ -67,10 +67,4 @@ def compute_toa_reflectance(srf,
 
         band_number = band_number + 1
 
-    #self.l1c_cube = xr.DataArray(toa_reflectance, dims=("y", "x", "band"))
-    #self.l1c_cube.attrs['units'] = "sr^-1"
-    #self.l1c_cube.attrs['description'] = "Top of atmosphere (TOA) reflectance"
-
-    toa_reflectance_cube = xr.DataArray(toa_reflectance, dims=("y", "x", "band"))
-
-    return toa_reflectance_cube
+    return toa_reflectance
