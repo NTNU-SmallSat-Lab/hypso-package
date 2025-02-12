@@ -9,6 +9,32 @@ from hypso.classification import ndwi_watermask, threshold_watermask
 '''
 # Land mask functions
 
+
+
+
+# Public land mask methods
+
+# TODO
+def load_land_mask(self, path: str) -> None:
+
+    return None
+
+def generate_land_mask(self, land_mask_name: LAND_MASK_PRODUCTS = DEFAULT_LAND_MASK_PRODUCT, **kwargs) -> None:
+
+    self._run_land_mask(land_mask_name=land_mask_name, **kwargs)
+
+    return None
+
+
+
+# TODO
+def write_land_mask(self, path: str) -> None:
+
+    return None
+
+
+
+
 def _run_land_mask(self, land_mask_name: str="global", **kwargs) -> None:
 
     land_mask_name = land_mask_name.lower()

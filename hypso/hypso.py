@@ -150,8 +150,8 @@ class Hypso:
         self.solar_azimuth_angles = None
         self.sat_zenith_angles = None
         self.sat_azimuth_angles = None
-        self.latitudes_original = None
-        self.longitudes_original = None
+        self.latitudes_direct = None
+        self.longitudes_direct = None
 
         # Other
         self.dim_names_3d = ["y", "x", "band"]

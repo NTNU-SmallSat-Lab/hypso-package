@@ -6,6 +6,29 @@ import xarray as xr
 '''
 # Cloud mask functions
     
+
+
+
+# Public cloud mask methods
+
+# TODO
+def load_cloud_mask(self, path: str) -> None:
+
+    return None
+
+def generate_cloud_mask(self, cloud_mask_name: CLOUD_MASK_PRODUCTS = DEFAULT_CLOUD_MASK_PRODUCT, **kwargs):
+
+    self._run_cloud_mask(cloud_mask_name=cloud_mask_name, **kwargs)
+
+    return None
+
+# TODO
+def write_cloud_mask(self, path: str) -> None:
+
+    return None
+
+
+
 def _run_cloud_mask(self, cloud_mask_name: str="quantile_threshold", **kwargs) -> None:
 
     cloud_mask_name = cloud_mask_name.lower()

@@ -1,6 +1,49 @@
 '''
 # Chlorophyll estimation functions
 
+
+
+
+
+
+
+
+
+
+
+
+
+# TODO
+def load_chlorophyll_estimates(self, path: str) -> None:
+
+    return None
+
+def generate_chlorophyll_estimates(self, 
+                                    product_name: str = DEFAULT_CHL_EST_PRODUCT,
+                                    model: Union[str, Path] = None,
+                                    factor: float = 0.1
+                                    ) -> None:
+
+    self._run_chlorophyll_estimation(product_name=product_name, model=model, factor=factor)
+
+def get_chlorophyll_estimates(self, product_name: str = DEFAULT_CHL_EST_PRODUCT,
+                                ) -> np.ndarray:
+
+    key = product_name.lower()
+
+    return self.chl[key]
+
+
+
+
+
+
+
+
+
+
+
+
 def _run_chlorophyll_estimation(self, 
                                 product_name: str, 
                                 model: Union[str, Path] = None,

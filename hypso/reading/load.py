@@ -8,6 +8,27 @@ from typing import Tuple
 
 EXPERIMENTAL_FEATURES = True
 
+
+def load_l1a_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict, np.ndarray]:
+
+    nc_capture_config, \
+    nc_timing, \
+    nc_target_coords, \
+    nc_adcs, \
+    nc_dimensions, \
+    nc_navigation = load_l1a_nc_metadata(nc_file_path=nc_file_path)
+
+    nc_cube = load_l1a_nc_cube(nc_file_path=nc_file_path)
+
+    return nc_capture_config, \
+            nc_timing, \
+            nc_target_coords, \
+            nc_adcs, \
+            nc_dimensions, \
+            nc_navigation, \
+            nc_cube
+
+
 def load_l1a_nc_cube(nc_file_path: Path) -> np.ndarray:
     """
     Load l1a.nc Hypso Capture file metadata
@@ -48,6 +69,30 @@ def load_l1a_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, di
 
 
 
+
+
+
+
+def load_l1b_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict, np.ndarray]:
+
+    nc_capture_config, \
+    nc_timing, \
+    nc_target_coords, \
+    nc_adcs, \
+    nc_dimensions, \
+    nc_navigation = load_l1b_nc_metadata(nc_file_path=nc_file_path)
+
+    nc_cube = load_l1b_nc_cube(nc_file_path=nc_file_path)
+
+    return nc_capture_config, \
+            nc_timing, \
+            nc_target_coords, \
+            nc_adcs, \
+            nc_dimensions, \
+            nc_navigation, \
+            nc_cube
+
+
 def load_l1b_nc_cube(nc_file_path: Path) -> np.ndarray:
     """
     Load l1a.nc Hypso Capture file metadata
@@ -86,6 +131,30 @@ def load_l1b_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, di
 
 
 
+
+
+
+
+
+
+def load_l2a_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict, np.ndarray]:
+
+    nc_capture_config, \
+    nc_timing, \
+    nc_target_coords, \
+    nc_adcs, \
+    nc_dimensions, \
+    nc_navigation = load_l2a_nc_metadata(nc_file_path=nc_file_path)
+
+    nc_cube = load_l2a_nc_cube(nc_file_path=nc_file_path)
+
+    return nc_capture_config, \
+            nc_timing, \
+            nc_target_coords, \
+            nc_adcs, \
+            nc_dimensions, \
+            nc_navigation, \
+            nc_cube
 
 
 def load_l2a_nc_cube(nc_file_path: Path) -> np.ndarray:

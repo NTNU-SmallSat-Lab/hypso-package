@@ -50,12 +50,9 @@ from hypso.masks import run_global_land_mask, \
 from hypso.masks import run_cloud_mask, \
                         run_quantile_threshold_cloud_mask
 
-from hypso.reading import load_l1a_nc_cube, \
-                          load_l1a_nc_metadata, \
-                          load_l1b_nc_cube, \
-                          load_l1b_nc_metadata, \
-                          load_l2a_nc_cube, \
-                          load_l2a_nc_metadata
+from hypso.reading import load_l1a_nc, \
+                          load_l1b_nc, \
+                          load_l2a_nc
 
 from hypso.writing import l1a_nc_writer, l1b_nc_writer, l2a_nc_writer
 
@@ -108,8 +105,8 @@ class Hypso1(Hypso):
         self.sensor = 'hypso1_hsi'
         self.VERBOSE = verbose
 
-        self.load_file(path=path)
-        self.load_points_file(path=points_path)
+        self._load_file(path=path)
+        self._load_points_file(path=points_path)
 
         chl_attributes = {'model': None}
         product_attributes = {}
@@ -268,7 +265,7 @@ class Hypso1(Hypso):
 
     # Loading functions
 
-    def load_file(self, path: Path) -> None:
+    def _load_file(self, path: Path) -> None:
 
         path = Path(path).absolute()
 
@@ -291,59 +288,47 @@ class Hypso1(Hypso):
             case "l1a":
                 if self.VERBOSE: print('[INFO] Loading L1a capture ' + self.capture_name)
 
-                capture_config, \
-                timing, \
-                target_coords, \
-                adcs, \
-                dimensions, \
-                navigation = load_l1a_nc_metadata(nc_file_path=path)
-
-                self._set_metadata_attributes(capture_config=capture_config,
-                                              timing=timing, 
-                                              adcs=adcs, 
-                                              navigation=navigation)
-
-                self.l1a_cube = load_l1a_nc_cube(nc_file_path=path)
+                load_func = load_l1a_nc
+                cube_name = "l1a_cube"
                 
             case "l1b":
                 if self.VERBOSE: print('[INFO] Loading L1b capture ' + self.capture_name)
 
-                capture_config, \
-                timing, \
-                target_coords, \
-                adcs, \
-                dimensions, \
-                navigation = load_l1b_nc_metadata(nc_file_path=path)
-
-                self._set_metadata_attributes(capture_config=capture_config,
-                                              timing=timing, 
-                                              adcs=adcs, 
-                                              navigation=navigation)
-
-                self.l1b_cube = load_l1b_nc_cube(nc_file_path=path)
+                load_func = load_l1b_nc
+                cube_name = "l1b_cube"
 
             case "l1c":
                 # TODO
                 print("[ERROR] L1c loading is not yet implemented.")
+                
+                #load_func = load_l1c_nc
+                #cube_name = "l1c_cube"
 
             case "l2a":
                 if self.VERBOSE: print('[INFO] Loading L2a capture ' + self.capture_name)
 
-                capture_config, \
-                timing, \
-                target_coords, \
-                adcs, \
-                dimensions, \
-                navigation = load_l2a_nc_metadata(nc_file_path=path)
+                load_func = load_l2a_nc
+                cube_name = "l2a_cube"
 
-                self._set_metadata_attributes(capture_config=capture_config,
-                                              timing=timing, 
-                                              adcs=adcs, 
-                                              navigation=navigation)
-
-                self.l2a_cube = load_l2a_nc_cube(nc_file_path=path)
             case _:
                 print("[ERROR] Unsupported product level.")
+                return None
+
+        capture_config, \
+        timing, \
+        target_coords, \
+        adcs, \
+        dimensions, \
+        navigation, \
+        cube = load_func(nc_file_path=path)
+
+        # Note: this MUST be run before writing datacubes in order to pass correct dimensions to DataArrayValidator
+        self._set_metadata_attributes(capture_config=capture_config,
+                                timing=timing, 
+                                adcs=adcs, 
+                                navigation=navigation)
+
+        setattr(self, cube_name, cube)
 
         return None
 
@@ -354,7 +339,7 @@ class Hypso1(Hypso):
     # Georeferencing functions
 
     # TODO refactor
-    def load_points_file(self, 
+    def _load_points_file(self, 
                           path: str, 
                           image_mode: str = None, 
                           origin_mode: str = 'qgis',
@@ -425,8 +410,8 @@ class Hypso1(Hypso):
             self.latitudes = self.latitudes[::-1,:]
             self.longitudes = self.longitudes[::-1,:]
 
-        self.latitudes_original = self.latitudes
-        self.longitudes_original = self.longitudes
+        self.latitudes_direct = self.latitudes
+        self.longitudes_direct = self.longitudes
 
 
         return None
@@ -654,143 +639,10 @@ class Hypso1(Hypso):
         self.sat_zenith_angles = sat_zenith.reshape(self.spatial_dimensions)
         self.sat_azimuth_angles = sat_azimuth.reshape(self.spatial_dimensions)
 
-        #self.lat_original = pixels_lat.reshape(self.spatial_dimensions)
-        #self.lon_original = pixels_lon.reshape(self.spatial_dimensions)
-
-        self.latitudes_original = pixels_lat.reshape(self.spatial_dimensions)
-        self.longitudes_original = pixels_lon.reshape(self.spatial_dimensions)
+        self.latitudes_direct = pixels_lat.reshape(self.spatial_dimensions)
+        self.longitudes_direct = pixels_lon.reshape(self.spatial_dimensions)
 
         return None
-
-
-
-
-    # Atmospheric correction functions
-
-    def _run_atmospheric_correction(self, product_name: str) -> None:
-
-        try:
-            match product_name.lower():
-                case "6sv1":
-                    self.l2a_cube = self._run_6sv1_atmospheric_correction()
-                case "acolite":
-                    self.l2a_cube = self._run_acolite_atmospheric_correction()
-                case "machi":
-                    self.l2a_cube = self._run_machi_atmospheric_correction() 
-                case _:
-                    print("[ERROR] No such atmospheric correction product supported!")
-                    return None
-        except:
-            print("[ERROR] Unable to generate L2a datacube.")
-
-        return None
-
-    def _run_6sv1_atmospheric_correction(self, **kwargs) -> xr.DataArray:
-
-        # Py6S Atmospheric Correction
-        # aot value: https://neo.gsfc.nasa.gov/view.php?datasetId=MYDAL2_D_AER_OD&date=2023-01-01
-        # alternative: https://giovanni.gsfc.nasa.gov/giovanni/
-        # atmos_dict = {
-        #     'aot550': 0.01,
-        #     # 'aeronet': r"C:\Users\alvar\Downloads\070101_151231_Autilla.dubovik"
-        # }
-        # AOT550 parameter gotten from: https://giovanni.gsfc.nasa.gov/giovanni/
-
-        if self.VERBOSE: 
-            print("[INFO] Running 6SV1 atmospheric correction")
-
-        # TODO: which values should we use?
-        if self.latitudes is None:
-            latitudes = self.latitudes_original # fall back on geometry computed values
-        else:
-            latitudes = self.latitudes
-
-        if self.longitudes is None:
-            longitudes = self.longitudes_original # fall back on geometry computed values
-        else:
-            longitudes = self.longitudes
-
-        py6s_dict = {
-            'aot550': 0.0580000256
-        }
-
-        time_capture = parser.parse(self.iso_time)
-
-        cube = self.l1b_cube.to_numpy()
-
-        cube = run_py6s(wavelengths=self.wavelengths, 
-                        hypercube_L1=cube, 
-                        lat_2d_array=latitudes,
-                        lon_2d_array=longitudes,
-                        solar_azimuth_angles=self.solar_azimuth_angles,
-                        solar_zenith_angles=self.solar_zenith_angles,
-                        sat_azimuth_angles=self.sat_azimuth_angles,
-                        sat_zenith_angles=self.sat_zenith_angles,
-                        iso_time=self.iso_time,
-                        py6s_dict=py6s_dict, 
-                        time_capture=time_capture,
-                        srf=self.srf)
-        
-        cube = self._format_l2a_dataarray(cube)
-        cube.attrs['correction'] = "6sv1"
-
-        return cube
-
-
-    def _run_acolite_atmospheric_correction(self) -> xr.DataArray:
-
-        if hasattr(self, 'acolite_path'):
-
-            nc_file_path = str(self.l1b_nc_file)
-            acolite_path = str(self.acolite_path)
-
-            cube = run_acolite(acolite_path=acolite_path, 
-                               output_path=self.capture_dir, 
-                               nc_file_path=nc_file_path)
-
-            cube = self._format_l2a_dataarray(cube)
-            cube.attrs['correction'] = "acolite"
-
-            return cube
-        else:
-            print("[ERROR] Please set path to ACOLITE source code before generating ACOLITE L2a datacube using \"set_acolite_path()\"")
-            print("[INFO] The ACOLITE source code can be downloaded from https://github.com/acolite/acolite")
-            return None
-
-
-    # TODO
-    def _run_machi_atmospheric_correction(self) -> xr.DataArray:
-
-        #print("[WARNING] Minimal Atmospheric Compensation for Hyperspectral Imagers (MACHI) atmospheric correction has not been enabled.")
-        #return None
-
-
-
-
-        if self.VERBOSE: 
-            print("[INFO] Running MACHI atmospheric correction")
-
-        # start working with ToA reflectance, so we don't have to worry about the solar spectrum
-        cube = self.l1c_cube.to_numpy()
-        
-        T, S, objs = hypso.atmospheric.atm_correction(cube.reshape(-1,120), 
-                                                      solar=np.ones(120), 
-                                                      verbose=True,
-                                                      tol=0.01, 
-                                                      est_min_R=0.05)
-
-        # normalize the whole cube
-        cube_norm = (cube - S) /T
-        cube_norm[self.cloud_mask] = np.nan
-
-        cube = self._format_l2a_dataarray(cube_norm)
-        cube.attrs['correction'] = "machi"
-
-        return cube
-    
-
-
-
 
 
 
@@ -1058,14 +910,10 @@ class Hypso1(Hypso):
 
         return None
 
-
     # TODO
     def write_l1c_nc_file(self, path: str) -> None:
         
         return None
-
-
-
 
 
 
@@ -1188,122 +1036,11 @@ class Hypso1(Hypso):
 
 
 
-
-
-
     def generate_geometry(self, overwrite: bool = False) -> None:
 
         self._run_geometry(overwrite=overwrite)
 
         return None
-
-
-
-
-
-
-
-    # Public land mask methods
-
-    # TODO
-    def load_land_mask(self, path: str) -> None:
-
-        return None
-
-    def generate_land_mask(self, land_mask_name: LAND_MASK_PRODUCTS = DEFAULT_LAND_MASK_PRODUCT, **kwargs) -> None:
-
-        self._run_land_mask(land_mask_name=land_mask_name, **kwargs)
-
-        return None
-
-    def get_land_mask(self) -> xr.DataArray:
-
-        return self.land_mask
-
-    # TODO
-    def write_land_mask(self, path: str) -> None:
-
-        return None
-
-
-    # Public cloud mask methods
-
-    # TODO
-    def load_cloud_mask(self, path: str) -> None:
-
-        return None
-
-    def generate_cloud_mask(self, cloud_mask_name: CLOUD_MASK_PRODUCTS = DEFAULT_CLOUD_MASK_PRODUCT, **kwargs):
-
-        self._run_cloud_mask(cloud_mask_name=cloud_mask_name, **kwargs)
-
-        return None
-
-    def get_cloud_mask(self) -> xr.DataArray:
-
-        return self.cloud_mask
-    
-    # TODO
-    def write_cloud_mask(self, path: str) -> None:
-
-        return None
-
-
-    # Public unified mask methods
-
-    def get_unified_mask(self) -> xr.DataArray:
-
-        return self.unified_mask
-
-
-    # Public chlorophyll methods
-
-    # TODO
-    def load_chlorophyll_estimates(self, path: str) -> None:
-
-        return None
-
-    def generate_chlorophyll_estimates(self, 
-                                       product_name: str = DEFAULT_CHL_EST_PRODUCT,
-                                       model: Union[str, Path] = None,
-                                       factor: float = 0.1
-                                       ) -> None:
-
-        self._run_chlorophyll_estimation(product_name=product_name, model=model, factor=factor)
-
-    def get_chlorophyll_estimates(self, product_name: str = DEFAULT_CHL_EST_PRODUCT,
-                                 ) -> np.ndarray:
-
-        key = product_name.lower()
-
-        return self.chl[key]
-
-
-    # TODO
-    def write_chlorophyll_estimates(self, path: str) -> None:
-
-        return None
-    
-
-
-    # Public custom products methods
-    
-    # TODO
-    def load_products(self, path: str) -> None:
-
-        return None
-
-    # TODO
-    def write_products(self, path: str) -> None:
-
-        return None
-
-
-
-
-
-
-
 
 
     
