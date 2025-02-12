@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Literal, Union
 import copy
 
-import hypso.atmospheric
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -28,7 +27,6 @@ from hypso.calibration import read_coeffs_from_file, \
 
 
 from hypso.geometry import interpolate_at_frame, \
-                           interpolate_at_frame_nc, \
                            geometry_computation, \
                            get_nearest_pixel, \
                            compute_gsd, \
@@ -382,10 +380,6 @@ class Hypso1(Hypso):
         if flip_lats:
             self.latitudes = self.latitudes[::-1,:]
             self.longitudes = self.longitudes[::-1,:]
-
-        self.latitudes_direct = self.latitudes
-        self.longitudes_direct = self.longitudes
-
 
         return None
         

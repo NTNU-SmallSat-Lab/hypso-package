@@ -14,35 +14,72 @@ from pyresample.geometry import SwathDefinition
 import xarray as xr
 
 
+
 def get_l1a_satpy_scene(satobj: Union[Hypso1, Hypso2]) -> Scene:
+
+    datacube = satobj.l1a_cube
+    wavelengths = range(0,120)
+
+    scene = get_datacube_satpy_scene(satobj=satobj, datacube=datacube, wavelengths=wavelengths)
+
+    return scene
+
+
+def get_l1b_satpy_scene(satobj: Union[Hypso1, Hypso2]) -> Scene:
+
+    datacube = satobj.l1b_cube
+    wavelengths = satobj.wavelengths
+
+    scene = get_datacube_satpy_scene(satobj=satobj, datacube=datacube, wavelengths=wavelengths)
+
+    return scene
+
+
+def get_l1c_satpy_scene(satobj: Union[Hypso1, Hypso2]) -> Scene:
+
+    datacube = satobj.l1c_cube
+    wavelengths = satobj.wavelengths
+
+    scene = get_datacube_satpy_scene(satobj=satobj, datacube=datacube, wavelengths=wavelengths)
+
+    return scene
+
+
+def get_l2a_satpy_scene(satobj: Union[Hypso1, Hypso2]) -> Scene:
+
+    datacube = satobj.l2a_cube
+    wavelengths = satobj.wavelengths
+
+    scene = get_datacube_satpy_scene(satobj=satobj, datacube=datacube, wavelengths=wavelengths)
+
+    return scene
+
+
+
+def get_datacube_satpy_scene(satobj: Union[Hypso1, Hypso2],
+                        datacube,
+                        wavelengths
+                        ) -> Scene:
 
     scene = _generate_satpy_scene(satobj=satobj)
     swath_def= _generate_swath_definition(satobj=satobj)
-
-    try:
-        cube = satobj.l1a_cube
-    except:
-        return None
 
     attrs = {
             'file_type': None,
             'resolution': satobj.resolution,
             'name': None,
-            'standard_name': cube.attrs['description'],
+            'standard_name': datacube.attrs['description'],
             'coordinates': ['latitude', 'longitude'],
-            'units': cube.attrs['units'],
+            'units': datacube.attrs['units'],
             'start_time': satobj.capture_datetime,
             'end_time': satobj.capture_datetime,
             'modifiers': (),
             'ancillary_variables': []
             }   
 
-    # TODO: use dimensions from l1a cube
-    wavelengths = range(0,120)
-
     for i, wl in enumerate(wavelengths):
 
-        data = cube[:,:,i]
+        data = datacube[:,:,i]
 
         data = data.reset_coords(drop=True)
             
@@ -57,6 +94,89 @@ def get_l1a_satpy_scene(satobj: Union[Hypso1, Hypso2]) -> Scene:
     return scene
 
 
+
+
+
+
+
+
+
+# def get_l1a_satpy_scene(satobj: Union[Hypso1, Hypso2]) -> Scene:
+
+#     scene = _generate_satpy_scene(satobj=satobj)
+#     swath_def= _generate_swath_definition(satobj=satobj)
+
+#     try:
+#         cube = satobj.l1a_cube
+#     except:
+#         return None
+
+#     attrs = {
+#             'file_type': None,
+#             'resolution': satobj.resolution,
+#             'name': None,
+#             'standard_name': cube.attrs['description'],
+#             'coordinates': ['latitude', 'longitude'],
+#             'units': cube.attrs['units'],
+#             'start_time': satobj.capture_datetime,
+#             'end_time': satobj.capture_datetime,
+#             'modifiers': (),
+#             'ancillary_variables': []
+#             }   
+
+#     # TODO: use dimensions from l1a cube
+#     wavelengths = range(0,120)
+
+#     for i, wl in enumerate(wavelengths):
+
+#         data = cube[:,:,i]
+
+#         data = data.reset_coords(drop=True)
+            
+#         name = 'band_' + str(i+1)
+#         scene[name] = data
+#         #scene[name] = xr.DataArray(data, dims=self.dim_names_2d)
+#         scene[name].attrs.update(attrs)
+#         scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="band")
+#         scene[name].attrs['band'] = i
+#         scene[name].attrs['area'] = swath_def
+
+#     return scene
+
+
+def generate_satpy_scene(satobj: Union[Hypso1, Hypso2], datasets: dict) -> Scene:
+
+    scene = satobj._generate_satpy_scene()
+    swath_def= satobj._generate_swath_definition()
+
+    attrs = {
+            'file_type': None,
+            'resolution': satobj.resolution,
+            'name': None,
+            'standard_name': None,
+            'coordinates': ['latitude', 'longitude'],
+            'units': None,
+            'start_time': satobj.capture_datetime,
+            'end_time': satobj.capture_datetime,
+            'modifiers': (),
+            'ancillary_variables': []
+            }
+
+    for key, dataset in dataset.items():
+
+            scene[key] = dataset
+            scene[key].attrs.update(attrs)
+            scene[key].attrs['name'] = key
+            scene[key].attrs['standard_name'] = key
+            scene[key].attrs['area'] = swath_def
+
+            try:
+                scene[key].attrs.update(dataset.attrs)
+            except AttributeError:
+                pass
+
+
+    return scene
 
 
 def _generate_satpy_scene(satobj: Union[Hypso1, Hypso2]) -> Scene:
@@ -98,6 +218,11 @@ def _generate_satpy_scene(satobj: Union[Hypso1, Hypso2]) -> Scene:
 
     return scene
 
+
+
+
+
+
 def _generate_latlons(satobj: Union[Hypso1, Hypso2]) -> tuple[xr.DataArray, xr.DataArray]:
 
     latitudes = xr.DataArray(satobj.latitudes, dims=satobj.dim_names_2d)
@@ -114,214 +239,3 @@ def _generate_swath_definition(satobj: Union[Hypso1, Hypso2]) -> SwathDefinition
 
 
 
-
-'''
-def get_l1a_satpy_scene(self) -> Scene:
-
-    return self._generate_l1a_satpy_scene()
-
-def get_l1b_satpy_scene(self) -> Scene:
-
-    return self._generate_l1b_satpy_scene()
-
-def get_l2a_satpy_scene(self) -> Scene:
-
-    return self._generate_l2a_satpy_scene()
-
-def get_toa_reflectance_satpy_scene(self) -> Scene:
-
-    return self._generate_toa_reflectance_satpy_scene()
-
-def get_chlorophyll_estimates_satpy_scene(self) -> Scene:
-
-    return self._generate_chlorophyll_satpy_scene()
-
-def get_products_satpy_scene(self) -> Scene:
-
-    return self._generate_products_satpy_scene()
-
-
-
-def _generate_l1b_satpy_scene(self) -> Scene:
-
-    scene = self._generate_satpy_scene()
-    swath_def= self._generate_swath_definition()
-
-    try:
-        cube = self.l1b_cube
-        wavelengths = self.wavelengths
-    except:
-        return None
-
-    attrs = {
-            'file_type': None,
-            'resolution': self.resolution,
-            'name': None,
-            'standard_name': cube.attrs['description'],
-            'coordinates': ['latitude', 'longitude'],
-            'units': cube.attrs['units'],
-            'start_time': self.capture_datetime,
-            'end_time': self.capture_datetime,
-            'modifiers': (),
-            'ancillary_variables': []
-            }   
-
-    for i, wl in enumerate(wavelengths):
-
-        data = cube[:,:,i]
-        
-        data = data.reset_coords(drop=True)
-
-        name = 'band_' + str(i+1)
-        scene[name] = data
-        #scene[name] = xr.DataArray(data, dims=self.dim_names_2d)
-        scene[name].attrs.update(attrs)
-        scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
-        scene[name].attrs['band'] = i
-        scene[name].attrs['area'] = swath_def
-
-    return scene
-
-def _generate_l2a_satpy_scene(self) -> Scene:
-
-    scene = self._generate_satpy_scene()
-    swath_def= self._generate_swath_definition()
-
-    try:
-        cube = self.l2a_cube
-        wavelengths = self.wavelengths
-    except:
-        return None
-
-    attrs = {
-            'file_type': None,
-            'resolution': self.resolution,
-            'name': None,
-            'standard_name': cube.attrs['description'],
-            'coordinates': ['latitude', 'longitude'],
-            'units': cube.attrs['units'],
-            'start_time': self.capture_datetime,
-            'end_time': self.capture_datetime,
-            'modifiers': (),
-            'ancillary_variables': []
-            }   
-
-    for i, wl in enumerate(wavelengths):
-
-        data = cube[:,:,i]
-
-        data = data.reset_coords(drop=True)
-
-        name = 'band_' + str(i+1)
-        scene[name] = data
-        #scene[name] = xr.DataArray(data, dims=self.dim_names_2d)
-        scene[name].attrs.update(attrs)
-        scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
-        scene[name].attrs['band'] = i
-        scene[name].attrs['area'] = swath_def
-
-    return scene
-
-def _generate_toa_reflectance_satpy_scene(self) -> Scene:
-
-    scene = self._generate_satpy_scene()
-    swath_def= self._generate_swath_definition()
-
-    try:
-        cube = self.toa_reflectance_cube
-        wavelengths = self.wavelengths
-    except:
-        return None
-
-    attrs = {
-            'file_type': None,
-            'resolution': self.resolution,
-            'name': None,
-            'standard_name': cube.attrs['description'],
-            'coordinates': ['latitude', 'longitude'],
-            'units': cube.attrs['units'],
-            'start_time': self.capture_datetime,
-            'end_time': self.capture_datetime,
-            'modifiers': (),
-            'ancillary_variables': []
-            }   
-
-    for i, wl in enumerate(wavelengths):
-
-        data = cube[:,:,i]
-
-        data = data.reset_coords(drop=True)
-
-        name = 'band_' + str(i+1)
-        scene[name] = data
-        #scene[name] = xr.DataArray(data, dims=self.dim_names_2d)
-        scene[name].attrs.update(attrs)
-        scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
-        scene[name].attrs['band'] = i
-        scene[name].attrs['area'] = swath_def
-
-    return scene
-
-def _generate_chlorophyll_satpy_scene(self) -> Scene:
-
-    scene = self._generate_satpy_scene()
-    swath_def= self._generate_swath_definition()
-
-    attrs = {
-            'file_type': None,
-            'resolution': self.resolution,
-            'name': None,
-            #'standard_name': cube.attrs['description'],
-            'coordinates': ['latitude', 'longitude'],
-            #'units': cube.attrs['units'],
-            'start_time': self.capture_datetime,
-            'end_time': self.capture_datetime,
-            'modifiers': (),
-            'ancillary_variables': []
-            }   
-
-    for key, chl in self.chl.items():
-
-        name = 'chl_' + key
-        scene[name] = chl
-        scene[name].attrs.update(attrs)
-        scene[name].attrs['standard_name'] = chl.attrs['description']
-        scene[name].attrs['units'] = chl.attrs['units']
-        scene[name].attrs['area'] = swath_def
-
-    return scene
-
-def _generate_products_satpy_scene(self) -> Scene:
-
-    scene = self._generate_satpy_scene()
-    swath_def= self._generate_swath_definition()
-
-    attrs = {
-            'file_type': None,
-            'resolution': self.resolution,
-            'name': None,
-            'standard_name': None,
-            'coordinates': ['latitude', 'longitude'],
-            'units': None,
-            'start_time': self.capture_datetime,
-            'end_time': self.capture_datetime,
-            'modifiers': (),
-            'ancillary_variables': []
-            }
-
-    for key, product in self.products.items():
-
-            scene[key] = product
-            scene[key].attrs.update(attrs)
-            scene[key].attrs['name'] = key
-            scene[key].attrs['standard_name'] = key
-            scene[key].attrs['area'] = swath_def
-
-            try:
-                scene[key].attrs.update(product.attrs)
-            except AttributeError:
-                pass
-
-
-    return scene
-'''
