@@ -641,18 +641,7 @@ class Hypso1(Hypso):
 
     def write_l2a_nc_file(self, overwrite: bool = False) -> None:
 
-        correction = self.l2a_cube.attrs['correction']
-
-        original_path = self.l2a_nc_file
-
-        file_name = original_path.name
-        modified_file_name = file_name.replace('-l2a', '-l2a-' + correction)
-        modified_path = original_path.with_name(modified_file_name)
-
-        dst_l2a_nc_file = modified_path
-        src_l1a_nc_file = self.l1a_nc_file
-
-        if Path(dst_l2a_nc_file).is_file() and not overwrite:
+        if Path(self.l1b_nc_file).is_file() and not overwrite:
 
             if self.VERBOSE:
                 print("[INFO] L1b NetCDF file has already been generated. Skipping.")
@@ -660,8 +649,8 @@ class Hypso1(Hypso):
             return None
 
         l2a_nc_writer(satobj=self, 
-                      dst_l2a_nc_file=dst_l2a_nc_file, 
-                      src_l1a_nc_file=src_l1a_nc_file)
+                      dst_l2a_nc_file=self.l2a_nc_file, 
+                      src_l1a_nc_file=self.l1a_nc_file)
 
         return None
 
