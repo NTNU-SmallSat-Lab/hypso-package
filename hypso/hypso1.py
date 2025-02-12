@@ -445,7 +445,12 @@ class Hypso1(Hypso):
             print('[INFO] Running calibration routines...')
 
         self._set_calibration_coeff_files()
-        self._set_calibration_coeffs()
+
+
+        self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file)
+        self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file)
+        #self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
+        self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
 
         if self.spectral_coeffs is not None:
             self.wavelengths = self.spectral_coeffs
@@ -486,20 +491,112 @@ class Hypso1(Hypso):
 
 
 
-    def _set_calibration_coeffs(self) -> None:
+
+    def _set_calibration_coeff_files(self) -> None:
         """
-        Set the calibration coefficients included in the package. This includes radiometric,
+        Set the absolute path for the calibration coefficients included in the package. This includes radiometric,
         smile and destriping correction.
 
         :return: None.
         """
+
+
+        if rad_coeff_file:
+            self.rad_coeff_file = rad_coeff_file
+            return None
+
+        if smile_coeff_file:
+            self.smile_coeff_file = smile_coeff_file
+            return None
+
+        if destriping_coeff_file:
+            self.destriping_coeff_file = destriping_coeff_file
+            return None
         
-        self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file)
-        self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file)
-        #self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
-        self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
-        
+        if spectral_coeff_file:
+            self.spectral_coeff_file = spectral_coeff_file
+            return None
+
+        match self.capture_type:
+
+            case "custom":
+                #csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1.csv"
+                npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1.npz"
+
+                #csv_file_smile = "spectral_calibration_matrix_HYPSO-1_full_v1.csv" 
+                npz_file_smile = "spectral_calibration_matrix_HYPSO-1_full_v1.npz"  
+
+                #csv_file_destriping = None
+                npz_file_destriping = None
+
+                #csv_file_spectral = "spectral_bands_HYPSO-1_v1.csv"
+                npz_file_spectral = "spectral_bands_HYPSO-1_v1.npz"
+
+            case "nominal":
+                #csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_nominal_v1.csv"
+                npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_nominal_v1.npz"
+
+                #csv_file_smile = "smile_correction_matrix_HYPSO-1_nominal_v1.csv"
+                npz_file_smile = "smile_correction_matrix_HYPSO-1_nominal_v1.npz"
+
+                #csv_file_destriping = "destriping_matrix_HYPSO-1_nominal_v1.csv"
+                npz_file_destriping = "destriping_matrix_HYPSO-1_nominal_v1.npz"
+
+                #csv_file_spectral = "spectral_bands_HYPSO-1_v1.csv"
+                npz_file_spectral = "spectral_bands_HYPSO-1_v1.npz"
+
+            case "wide":
+                #csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_wide_v1.csv"
+                npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_wide_v1.npz"
+
+                #csv_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.csv"
+                npz_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.npz"
+
+                #csv_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.csv"
+                npz_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.npz"
+
+                #csv_file_spectral = "spectral_bands_HYPSO-1_v1.csv"
+                npz_file_spectral = "spectral_bands_HYPSO-1_v1.npz"
+
+            case _:
+                npz_file_radiometric = None
+                npz_file_smile = None
+                npz_file_destriping = None
+
+        if npz_file_radiometric:
+            rad_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_radiometric}')
+        else: 
+            rad_coeff_file = None
+
+        self.rad_coeff_file = rad_coeff_file
+
+
+        if npz_file_smile:
+            smile_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_smile}')
+        else:
+            smile_coeff_file = npz_file_smile
+
+        self.smile_coeff_file = smile_coeff_file
+
+
+        if npz_file_destriping:
+            destriping_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_destriping}')
+        else:
+            destriping_coeff_file = None
+
+        self.destriping_coeff_file = destriping_coeff_file
+
+        if npz_file_spectral:
+            spectral_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_spectral}')
+        else:
+            spectral_coeff_file = None
+
+        self.spectral_coeff_file = spectral_coeff_file
+
         return None
+
+
+
 
 
     def _set_calibration_coeff_files(self) -> None:
