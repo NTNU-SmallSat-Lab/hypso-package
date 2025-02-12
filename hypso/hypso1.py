@@ -782,30 +782,6 @@ class Hypso1(Hypso):
 
         return None
 
-    def write_l1a_nc_file(self, overwrite: bool = False) -> None:
-
-        if Path(self.l1a_nc_file).is_file() and not overwrite:
-
-            original_path = self.l1a_nc_file
-
-            file_name = original_path.name
-            modified_file_name = file_name.replace('-l1a', '-l1a-modified')
-            modified_path = original_path.with_name(modified_file_name)
-
-            dst_l1a_nc_file = modified_path
-
-            if self.VERBOSE:
-                print("[INFO] L1a NetCDF file has already been generated. Writing L1a data to: " + str(dst_l1a_nc_file))
-
-        else:
-            dst_l1a_nc_file = self.l1a_nc_file
-
-
-        l1a_nc_writer(satobj=self, 
-                      dst_l1a_nc_file=dst_l1a_nc_file, 
-                      src_l1a_nc_file=self.l1a_nc_file)
-
-        return None
 
 
     # Public L1b methods
