@@ -16,9 +16,6 @@ import xarray as xr
 import hypso
 from hypso import Hypso
 
-
-from hypso.utils import find_file
-
 from hypso.atmospheric import run_py6s, run_acolite, run_machi
 from hypso.calibration import read_coeffs_from_file, \
                               run_radiometric_calibration, \
@@ -30,11 +27,9 @@ from hypso.calibration import read_coeffs_from_file, \
                               run_destriping_correction_with_computed_matrix, \
                               get_spectral_response_function
 
-from hypso.chlorophyll import run_tuned_chlorophyll_estimation, \
-                              run_band_ratio_chlorophyll_estimation, \
-                              validate_tuned_model
 
 from hypso.geometry import interpolate_at_frame, \
+                           interpolate_at_frame_nc, \
                            geometry_computation, \
                            get_nearest_pixel, \
                            compute_gsd, \
@@ -43,41 +38,26 @@ from hypso.geometry import interpolate_at_frame, \
 
 from hypso.georeferencing import georeferencing
 from hypso.georeferencing.utils import check_star_tracker_orientation
-from hypso.masks import run_global_land_mask, \
-                        run_ndwi_land_mask, \
-                        run_threshold_land_mask
-
-from hypso.masks import run_cloud_mask, \
-                        run_quantile_threshold_cloud_mask
 
 from hypso.reading import load_l1a_nc, \
                           load_l1b_nc, \
                           load_l2a_nc
 
-from hypso.writing import l1a_nc_writer, l1b_nc_writer, l2a_nc_writer
+from hypso.reflectance import compute_toa_reflectance
+
+from hypso.writing import l1b_nc_writer, \
+                          l2a_nc_writer
+
+from hypso.utils import find_file
 
 from hypso.DataArrayValidator import DataArrayValidator
 from hypso.DataArrayDict import DataArrayDict
-
-
 
 from pyresample.geometry import SwathDefinition
 from pyresample.bilinear.xarr import XArrayBilinearResampler 
 from pyresample.future.resamplers.nearest import KDTreeNearestXarrayResampler
 
 from trollsift import Parser
-
-SUPPORTED_PRODUCT_LEVELS = ["l1a", "l1b", "l2a"]
-
-ATM_CORR_PRODUCTS = ["6sv1", "acolite", "machi"]
-CHL_EST_PRODUCTS = Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]
-LAND_MASK_PRODUCTS = Literal["global", "ndwi", "threshold"]
-CLOUD_MASK_PRODUCTS = Literal["default"]
-
-DEFAULT_ATM_CORR_PRODUCT = "6sv1"
-DEFAULT_CHL_EST_PRODUCT = "band_ratio"
-DEFAULT_LAND_MASK_PRODUCT = "global"
-DEFAULT_CLOUD_MASK_PRODUCT = "default"
 
 UNIX_TIME_OFFSET = 20 # TODO: Verify offset validity. Sivert had 20 here
 
@@ -578,7 +558,7 @@ class Hypso1(Hypso):
 
 
     # TODO: Move to hypso parent class
-    def _run_geometry(self, overwrite: bool = False) -> None:
+    def _run_geometry(self, overwrite: bool = False) -> None: 
 
         if self.VERBOSE:
             print("[INFO] Running geometry computation...")
@@ -628,67 +608,16 @@ class Hypso1(Hypso):
 
 
 
-    # Top of atmosphere reflectance functions
-
-    # TODO: run product through validator, add proprty
-    # TODO: move code to atmospheric module
-    # TODO: add set functions
     def _run_toa_reflectance(self) -> None:
 
-        
-        # Get Local variables
-        srf = self.srf
-        toa_radiance = self.l1b_cube.to_numpy()
+        toa_reflectance_cube = compute_toa_reflectance(srf=self.srf,
+                                                    toa_radiance=self.l1b_cube,
+                                                    iso_time=self.iso_time,
+                                                    solar_zenith_angles=self.solar_azimuth_angles,
+                                                    )
 
-        scene_date = parser.isoparse(self.iso_time)
-        julian_day = scene_date.timetuple().tm_yday
-        solar_zenith = self.solar_zenith_angles
 
-        # Read Solar Data
-        solar_data_path = str(files('hypso.atmospheric').joinpath("Solar_irradiance_Thuillier_2002.csv"))
-        solar_df = pd.read_csv(solar_data_path)
 
-        # Create new solar X with a new delta
-        solar_array = np.array(solar_df)
-        current_num = solar_array[0, 0]
-        delta = 0.01
-        new_solar_x = [solar_array[0, 0]]
-        while current_num <= solar_array[-1, 0]:
-            current_num = current_num + delta
-            new_solar_x.append(current_num)
-
-        # Interpolate for Y with original solar data
-        new_solar_y = np.interp(new_solar_x, solar_array[:, 0], solar_array[:, 1])
-
-        # Replace solar Dataframe
-        solar_df = pd.DataFrame(np.column_stack((new_solar_x, new_solar_y)), columns=solar_df.columns)
-
-        # Estimation of TOA Reflectance
-        band_number = 0
-        toa_reflectance = np.empty_like(toa_radiance)
-        for single_wl, single_srf in srf:
-            # Resample HYPSO SRF to new solar wavelength
-            resamp_srf = np.interp(new_solar_x, single_wl, single_srf)
-            weights_srf = resamp_srf / np.sum(resamp_srf)
-            ESUN = np.sum(solar_df['mW/m2/nm'].values * weights_srf)  # units matche HYPSO from device.py
-
-            # Earth-Sun distance (from day of year) using julian date
-            # http://physics.stackexchange.com/questions/177949/earth-sun-distance-on-a-given-day-of-the-year
-            distance_sun = 1 - 0.01672 * np.cos(0.9856 * (
-                    julian_day - 4))
-
-            # Get toa_reflectance
-            solar_angle_correction = np.cos(np.radians(solar_zenith))
-            multiplier = (ESUN * solar_angle_correction) / (np.pi * distance_sun ** 2)
-            toa_reflectance[:, :, band_number] = toa_radiance[:, :, band_number] / multiplier
-
-            band_number = band_number + 1
-
-        self.l1c_cube = xr.DataArray(toa_reflectance, dims=("y", "x", "band"))
-        #self.l1c_cube.attrs['units'] = "sr^-1"
-        #self.l1c_cube.attrs['description'] = "Top of atmosphere (TOA) reflectance"
-
-        return None
 
 
 
