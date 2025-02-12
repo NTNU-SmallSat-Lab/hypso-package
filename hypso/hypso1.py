@@ -441,15 +441,7 @@ class Hypso1(Hypso):
         self._set_calibration_coeff_files()
 
 
-        self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file)
-        self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file)
-        #self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
-        self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
 
-        if self.spectral_coeffs is not None:
-            self.wavelengths = self.spectral_coeffs
-        else:
-            self.wavelengths = range(0,120)
 
         
         self.srf = get_spectral_response_function(wavelengths=self.wavelengths)
@@ -484,9 +476,7 @@ class Hypso1(Hypso):
         return None
 
 
-
-
-    def _set_calibration_coeff_files(self) -> None:
+    def _load_calibration_coeff_files(self) -> None:
         """
         Set the absolute path for the calibration coefficients included in the package. This includes radiometric,
         smile and destriping correction.
@@ -497,19 +487,16 @@ class Hypso1(Hypso):
 
         if rad_coeff_file:
             self.rad_coeff_file = rad_coeff_file
-            return None
 
         if smile_coeff_file:
             self.smile_coeff_file = smile_coeff_file
-            return None
 
         if destriping_coeff_file:
             self.destriping_coeff_file = destriping_coeff_file
-            return None
-        
+
         if spectral_coeff_file:
             self.spectral_coeff_file = spectral_coeff_file
-            return None
+
 
         match self.capture_type:
 
@@ -587,12 +574,22 @@ class Hypso1(Hypso):
 
         self.spectral_coeff_file = spectral_coeff_file
 
+
+        self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file)
+        self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file)
+        #self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
+        self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
+
+        if self.spectral_coeffs is not None:
+            self.wavelengths = self.spectral_coeffs
+        else:
+            self.wavelengths = range(0,120)
+
+
         return None
 
 
 
-
-    # Geometry computation functions
 
 
     # Move to hypso parent class
@@ -791,7 +788,6 @@ class Hypso1(Hypso):
         self._run_calibration(**kwargs)
 
         return None
-
 
     def get_l1b_spectrum(self, 
                         latitude=None, 
