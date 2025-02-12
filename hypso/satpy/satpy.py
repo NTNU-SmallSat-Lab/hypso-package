@@ -2,6 +2,35 @@
 
 
 '''
+
+
+def get_l1a_satpy_scene(self) -> Scene:
+
+    return self._generate_l1a_satpy_scene()
+
+def get_l1b_satpy_scene(self) -> Scene:
+
+    return self._generate_l1b_satpy_scene()
+
+def get_l2a_satpy_scene(self) -> Scene:
+
+    return self._generate_l2a_satpy_scene()
+
+def get_toa_reflectance_satpy_scene(self) -> Scene:
+
+    return self._generate_toa_reflectance_satpy_scene()
+
+def get_chlorophyll_estimates_satpy_scene(self) -> Scene:
+
+    return self._generate_chlorophyll_satpy_scene()
+
+def get_products_satpy_scene(self) -> Scene:
+
+    return self._generate_products_satpy_scene()
+
+
+
+
 def _generate_satpy_scene(self) -> Scene:
 
     scene = Scene()

@@ -855,10 +855,6 @@ class Hypso1(Hypso):
 
     # Public L1a methods
 
-    def get_l1a_cube(self) -> xr.DataArray:
-
-        return self.l1a_cube
-
     def get_l1a_spectrum(self, 
                         latitude=None, 
                         longitude=None,
@@ -959,9 +955,6 @@ class Hypso1(Hypso):
 
         return None
 
-    def get_l1b_cube(self) -> xr.DataArray:
-
-        return self.l1b_cube
 
     def get_l1b_spectrum(self, 
                         latitude=None, 
@@ -1044,6 +1037,30 @@ class Hypso1(Hypso):
                       src_l1a_nc_file=self.l1a_nc_file)
 
         return None
+
+
+
+
+    # Public L1c (top of atmosphere reflectance) methods
+
+    # TODO
+    def get_l1c_cube(self) -> None:
+
+        self._run_toa_reflectance()
+
+        return None
+
+
+    # TODO
+    def write_l1c_nc_file(self, path: str) -> None:
+        
+        return None
+
+
+
+
+
+
 
 
     # Public L2a methods
@@ -1275,62 +1292,12 @@ class Hypso1(Hypso):
 
 
 
-    # Public L1c (top of atmosphere reflectance) methods
-
-    # TODO
-    def load_toa_reflectance(self, path: str) -> None:
-        
-        return None
-
-    def generate_toa_reflectance(self) -> None:
-
-        self._run_toa_reflectance()
-
-        return None
-
-    def get_toa_reflectance(self) -> xr.DataArray:
-        """
-        Convert Top Of Atmosphere (TOA) Radiance to TOA Reflectance.
-
-        :return: Array with TOA Reflectance.
-        """
-
-        return self.toa_reflectance_cube
 
 
-    # TODO
-    def write_toa_reflectance(self, path: str) -> None:
-        
-        return None
 
 
-    def get_l1a_satpy_scene(self) -> Scene:
 
-        return self._generate_l1a_satpy_scene()
 
-    def get_l1b_satpy_scene(self) -> Scene:
-
-        return self._generate_l1b_satpy_scene()
-
-    def get_l2a_satpy_scene(self) -> Scene:
-
-        return self._generate_l2a_satpy_scene()
-    
-    def get_toa_reflectance_satpy_scene(self) -> Scene:
-
-        return self._generate_toa_reflectance_satpy_scene()
-
-    def get_chlorophyll_estimates_satpy_scene(self) -> Scene:
-
-        return self._generate_chlorophyll_satpy_scene()
-
-    def get_products_satpy_scene(self) -> Scene:
-
-        return self._generate_products_satpy_scene()
-
-    def get_bbox(self) -> tuple:
-        
-        return self.bbox
     
     def get_closest_wavelength_index(self, wavelength: Union[float, int]) -> int:
 

@@ -40,7 +40,7 @@ class Hypso:
         self._l1a_cube = None
         self._l1b_cube = None
         self._l2a_cube = None
-        self._toa_reflectance_cube = None
+        self._l1c_cube = None
 
         # Initialize top of atmpshere (TOA) reflectance
         #self.toa_reflectance = None
@@ -313,12 +313,12 @@ class Hypso:
 
 
     @property
-    def toa_reflectance_cube(self):
-        return self._toa_reflectance_cube   
+    def l1c_cube(self):
+        return self._l1c_cube   
 
-    @toa_reflectance_cube.setter
-    def toa_reflectance_cube(self, value):
-        self._toa_reflectance_cube = self._format_toa_reflectance_dataarray(value)
+    @l1c_cube.setter
+    def l1c_cube(self, value):
+        self._l1c_cube = self._format_toa_reflectance_dataarray(value)
 
 
 
