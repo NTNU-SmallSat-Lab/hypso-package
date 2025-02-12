@@ -1,10 +1,8 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import math as m
 import pandas as pd
 import datetime
-import os
-from pathlib import Path
+
 
 import astropy.coordinates
 import astropy.units
@@ -38,7 +36,7 @@ R_pl = 6356752.0
 hypso_height_sensor = 1216
 
 
-def format_adcs_pos_dataframe(adcs) -> None:
+def format_adcs_pos_dataframe(adcs) -> pd.DataFrame:
 
     
     position_headers = ["timestamp", "eci x [m]", "eci y [m]", "eci z [m]"]
@@ -55,8 +53,7 @@ def format_adcs_pos_dataframe(adcs) -> None:
 
     return adcs_pos_df
 
-# TODO move DataFrame formatting related code to geometry
-def format_adcs_quat_dataframe(adcs) -> None:
+def format_adcs_quat_dataframe(adcs) -> pd.DataFrame:
 
     
     quaternion_headers = ["timestamp", "quat_0", "quat_1", "quat_2", "quat_3", "Control error [deg]"]
@@ -82,7 +79,7 @@ def format_adcs_quat_dataframe(adcs) -> None:
 
 
 
-def interpolate_at_frame(adcs,
+def interpolate_at_frame(adcs: dict,
                          timestamps_srv: np.ndarray,
                          frame_count: int,
                          additional_time_offset: float=0.0, 

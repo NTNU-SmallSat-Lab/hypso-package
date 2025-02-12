@@ -611,6 +611,8 @@ class Hypso1(Hypso):
 
     # Geometry computation functions
 
+
+    # Move to hypso parent class
     def _run_geometry(self, overwrite: bool = False) -> None:
 
         if self.VERBOSE:
@@ -641,7 +643,7 @@ class Hypso1(Hypso):
                                              verbose=self.VERBOSE
                                              )
 
-        self.framepose_df = framepose_data
+        #self.framepose_df = framepose_data
 
         self.wkt_linestring_footprint = wkt_linestring_footprint
         self.prj_file_contents = prj_file_contents
