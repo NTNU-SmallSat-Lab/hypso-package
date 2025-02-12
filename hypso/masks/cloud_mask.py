@@ -3,6 +3,60 @@ import numpy as np
 import xarray as xr
 
 
+'''
+# Cloud mask functions
+    
+def _run_cloud_mask(self, cloud_mask_name: str="quantile_threshold", **kwargs) -> None:
+
+    cloud_mask_name = cloud_mask_name.lower()
+
+    match cloud_mask_name:
+        case "quantile_threshold":
+
+            if self.VERBOSE:
+                print("[INFO] Running quantile threshold cloud mask generation...")
+
+            self.cloud_mask = self._run_quantile_threshold_cloud_mask(**kwargs)
+
+
+        case "saturated_pixel":
+
+            if self.VERBOSE:
+                print("[INFO] Running saturated pixel cloud mask generation...")
+
+            self.cloud_mask = self._run_saturated_pixel_cloud_mask(**kwargs)
+
+
+        case _:
+            print("[WARNING] No such cloud mask supported!")
+            return None
+
+    return None
+
+def _run_quantile_threshold_cloud_mask(self, quantile: float = 0.075) -> None:
+
+    cloud_mask = run_quantile_threshold_cloud_mask(cube=self.l1b_cube,
+                                                    quantile=quantile)
+
+    cloud_mask = self._format_cloud_mask_dataarray(cloud_mask)
+    cloud_mask.attrs['method'] = "quantile threshold"
+    cloud_mask.attrs['quantile'] = quantile
+
+    return cloud_mask 
+
+def _run_saturated_pixel_cloud_mask(self, threshold: float = 35000):
+
+    sat = np.max(self.l1a_cube.to_numpy(), axis=-1) > threshold
+
+    cloud_mask = self._format_cloud_mask_dataarray(sat)
+    cloud_mask.attrs['method'] = "saturated pixel"
+    cloud_mask.attrs['threshold'] = threshold
+
+    return cloud_mask 
+'''
+
+
+
 def run_cloud_mask():
 
     return None
