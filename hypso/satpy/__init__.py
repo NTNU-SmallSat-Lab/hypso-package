@@ -1,2 +1,2 @@
-from .satpy import *
+from .satpy import get_l1a_satpy_scene
 

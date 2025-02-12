@@ -59,8 +59,7 @@ from hypso.writing import l1a_nc_writer, l1b_nc_writer, l2a_nc_writer
 from hypso.DataArrayValidator import DataArrayValidator
 from hypso.DataArrayDict import DataArrayDict
 
-from satpy import Scene
-from satpy.dataset.dataid import WavelengthRange
+
 
 from pyresample.geometry import SwathDefinition
 from pyresample.bilinear.xarr import XArrayBilinearResampler 
@@ -105,7 +104,7 @@ class Hypso1(Hypso):
         self.sensor = 'hypso1_hsi'
         self.VERBOSE = verbose
 
-        self._load_file(path=path)
+        self._load_capture_file(path=path)
         self._load_points_file(path=points_path)
 
         chl_attributes = {'model': None}
@@ -138,11 +137,12 @@ class Hypso1(Hypso):
                                  adcs,
                                  navigation) -> None:
 
-
+        # FPS has been renamed to framerate. Need to support both since old .nc files may still use FPS
         try:
             capture_config['fps'] = capture_config['framerate']
         except:
             capture_config['framerate'] = capture_config['fps']
+
 
         setattr(self, "capture_config", capture_config)
         setattr(self, "timing", timing)
@@ -263,9 +263,7 @@ class Hypso1(Hypso):
 
 
 
-    # Loading functions
-
-    def _load_file(self, path: Path) -> None:
+    def _load_capture_file(self, path: Path) -> None:
 
         path = Path(path).absolute()
 
@@ -334,11 +332,7 @@ class Hypso1(Hypso):
 
 
 
-
-
-    # Georeferencing functions
-
-    # TODO refactor
+    # TODO refactor into two functions
     def _load_points_file(self, 
                           path: str, 
                           image_mode: str = None, 
@@ -398,8 +392,8 @@ class Hypso1(Hypso):
                                                                   longitudes=self.longitudes,
                                                                   verbose=self.VERBOSE)
 
-        self.resolution = compute_resolution(latitudes=self.latitudes, 
-                                             longitudes=self.longitudes)
+        self.resolution = compute_resolution(along_track_gsd=self.along_track_gsd, 
+                                             across_track_gsd=self.across_track_gsd)
 
 
         if flip_lons:
@@ -415,11 +409,6 @@ class Hypso1(Hypso):
 
 
         return None
-
-
-
-
-    # Calibration functions
         
     def _run_calibration(self, 
                          overwrite: bool = False,
@@ -438,7 +427,7 @@ class Hypso1(Hypso):
         if self.VERBOSE:
             print('[INFO] Running calibration routines...')
 
-        self._set_calibration_coeff_files()
+        self._load_calibration_coeff_files()
 
 
 
@@ -474,7 +463,6 @@ class Hypso1(Hypso):
         self.l1b_cube = l1b_cube
 
         return None
-
 
     def _load_calibration_coeff_files(self) -> None:
         """
@@ -589,10 +577,7 @@ class Hypso1(Hypso):
         return None
 
 
-
-
-
-    # Move to hypso parent class
+    # TODO: Move to hypso parent class
     def _run_geometry(self, overwrite: bool = False) -> None:
 
         if self.VERBOSE:
@@ -705,6 +690,21 @@ class Hypso1(Hypso):
 
         return None
 
+
+
+    def generate_geometry(self, overwrite: bool = False) -> None:
+
+        self._run_geometry(overwrite=overwrite)
+
+        return None
+
+    def get_closest_wavelength_index(self, wavelength: Union[float, int]) -> int:
+
+        wavelengths = np.array(self.wavelengths)
+        differences = np.abs(wavelengths - wavelength)
+        closest_index = np.argmin(differences)
+
+        return closest_index
 
 
 
@@ -872,12 +872,11 @@ class Hypso1(Hypso):
         return None
 
 
-
-
     # Public L1c (top of atmosphere reflectance) methods
 
     def generate_l1c_cube(self) -> None:
 
+        self._run_geometry()
         self._run_toa_reflectance()
 
         return None
@@ -888,20 +887,15 @@ class Hypso1(Hypso):
         return None
 
 
-
-
-
     # Public L2a methods
 
+    # TODO
     def generate_l2a_cube(self, product_name: str = "machi") -> None:
 
-        self._run_atmospheric_correction(product_name=product_name)
+        self._run_geometry()
+        #self._run_atmospheric_correction(product_name=product_name)
 
         return None
-
-    def get_l2a_cube(self) -> xr.DataArray:
-
-        return self.l2a_cube
 
     def get_l2a_spectrum(self,
                         latitude=None, 
@@ -999,29 +993,8 @@ class Hypso1(Hypso):
 
         return None
 
-    def set_acolite_path(self, path: str) -> None:
-
-        self.acolite_path = Path(path).absolute()
-
-        return None
 
 
 
-
-    def generate_geometry(self, overwrite: bool = False) -> None:
-
-        self._run_geometry(overwrite=overwrite)
-
-        return None
-
-
-    
-    def get_closest_wavelength_index(self, wavelength: Union[float, int]) -> int:
-
-        wavelengths = np.array(self.wavelengths)
-        differences = np.abs(wavelengths - wavelength)
-        closest_index = np.argmin(differences)
-
-        return closest_index
 
 

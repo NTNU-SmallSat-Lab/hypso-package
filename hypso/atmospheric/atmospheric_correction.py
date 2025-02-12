@@ -2,6 +2,17 @@
 
 # Atmospheric correction functions
 
+
+
+def set_acolite_path(self, path: str) -> None:
+
+    self.acolite_path = Path(path).absolute()
+
+    return None
+
+
+
+
 def _run_atmospheric_correction(self, product_name: str) -> None:
 
     try:
