@@ -322,6 +322,10 @@ class Hypso1(Hypso):
 
                 self.l1b_cube = load_l1b_nc_cube(nc_file_path=path)
 
+            case "l1c":
+                # TODO
+                print("[ERROR] L1c loading is not yet implemented.")
+
             case "l2a":
                 if self.VERBOSE: print('[INFO] Loading L2a capture ' + self.capture_name)
 
@@ -767,7 +771,7 @@ class Hypso1(Hypso):
             print("[INFO] Running MACHI atmospheric correction")
 
         # start working with ToA reflectance, so we don't have to worry about the solar spectrum
-        cube = self.toa_reflectance_cube.to_numpy()
+        cube = self.l1c_cube.to_numpy()
         
         T, S, objs = hypso.atmospheric.atm_correction(cube.reshape(-1,120), 
                                                       solar=np.ones(120), 
@@ -841,9 +845,9 @@ class Hypso1(Hypso):
 
             band_number = band_number + 1
 
-        self.toa_reflectance_cube = xr.DataArray(toa_reflectance, dims=("y", "x", "band"))
-        #self.toa_reflectance_cube.attrs['units'] = "sr^-1"
-        #self.toa_reflectance_cube.attrs['description'] = "Top of atmosphere (TOA) reflectance"
+        self.l1c_cube = xr.DataArray(toa_reflectance, dims=("y", "x", "band"))
+        #self.l1c_cube.attrs['units'] = "sr^-1"
+        #self.l1c_cube.attrs['description'] = "Top of atmosphere (TOA) reflectance"
 
         return None
 
@@ -1043,8 +1047,7 @@ class Hypso1(Hypso):
 
     # Public L1c (top of atmosphere reflectance) methods
 
-    # TODO
-    def get_l1c_cube(self) -> None:
+    def generate_l1c_cube(self) -> None:
 
         self._run_toa_reflectance()
 

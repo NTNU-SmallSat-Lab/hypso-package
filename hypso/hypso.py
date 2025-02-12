@@ -34,13 +34,11 @@ class Hypso:
         self.l2a_nc_file = None
 
         # Initialize datacubes
-        #self.l1a_cube = None
-        #self.l1b_cube = None
-        #self.l2a_cube = None
         self._l1a_cube = None
         self._l1b_cube = None
-        self._l2a_cube = None
         self._l1c_cube = None
+        self._l2a_cube = None
+
 
         # Initialize top of atmpshere (TOA) reflectance
         #self.toa_reflectance = None
@@ -303,6 +301,16 @@ class Hypso:
     def l1b_cube(self, value):
         self._l1b_cube = self._format_l1b_dataarray(value)
 
+
+    @property
+    def l1c_cube(self):
+        return self._l1c_cube   
+
+    @l1c_cube.setter
+    def l1c_cube(self, value):
+        self._l1c_cube = self._format_toa_reflectance_dataarray(value)
+
+
     @property
     def l2a_cube(self):
         return self._l2a_cube   
@@ -312,13 +320,6 @@ class Hypso:
         self._l2a_cube = self._format_l2a_dataarray(value)
 
 
-    @property
-    def l1c_cube(self):
-        return self._l1c_cube   
-
-    @l1c_cube.setter
-    def l1c_cube(self, value):
-        self._l1c_cube = self._format_toa_reflectance_dataarray(value)
 
 
 
