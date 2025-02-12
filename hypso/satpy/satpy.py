@@ -94,56 +94,6 @@ def get_datacube_satpy_scene(satobj: Union[Hypso1, Hypso2],
     return scene
 
 
-
-
-
-
-
-
-
-# def get_l1a_satpy_scene(satobj: Union[Hypso1, Hypso2]) -> Scene:
-
-#     scene = _generate_satpy_scene(satobj=satobj)
-#     swath_def= _generate_swath_definition(satobj=satobj)
-
-#     try:
-#         cube = satobj.l1a_cube
-#     except:
-#         return None
-
-#     attrs = {
-#             'file_type': None,
-#             'resolution': satobj.resolution,
-#             'name': None,
-#             'standard_name': cube.attrs['description'],
-#             'coordinates': ['latitude', 'longitude'],
-#             'units': cube.attrs['units'],
-#             'start_time': satobj.capture_datetime,
-#             'end_time': satobj.capture_datetime,
-#             'modifiers': (),
-#             'ancillary_variables': []
-#             }   
-
-#     # TODO: use dimensions from l1a cube
-#     wavelengths = range(0,120)
-
-#     for i, wl in enumerate(wavelengths):
-
-#         data = cube[:,:,i]
-
-#         data = data.reset_coords(drop=True)
-            
-#         name = 'band_' + str(i+1)
-#         scene[name] = data
-#         #scene[name] = xr.DataArray(data, dims=self.dim_names_2d)
-#         scene[name].attrs.update(attrs)
-#         scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="band")
-#         scene[name].attrs['band'] = i
-#         scene[name].attrs['area'] = swath_def
-
-#     return scene
-
-
 def generate_satpy_scene(satobj: Union[Hypso1, Hypso2], datasets: dict) -> Scene:
 
     scene = satobj._generate_satpy_scene()
@@ -217,10 +167,6 @@ def _generate_satpy_scene(satobj: Union[Hypso1, Hypso2]) -> Scene:
     #scene['longitude'].attrs['area'] = swath_def
 
     return scene
-
-
-
-
 
 
 def _generate_latlons(satobj: Union[Hypso1, Hypso2]) -> tuple[xr.DataArray, xr.DataArray]:
