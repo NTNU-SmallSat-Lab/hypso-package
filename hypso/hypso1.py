@@ -607,7 +607,7 @@ class Hypso1(Hypso):
 
 
     # Move to hypso parent class
-    def generate_geometry(self, overwrite: bool = False) -> None:
+    def _run_geometry(self, overwrite: bool = False) -> None:
 
         if self.VERBOSE:
             print("[INFO] Running geometry computation...")
@@ -1160,28 +1160,21 @@ class Hypso1(Hypso):
 
         return None
 
-    # Public georeferencing functions
 
-    # TODO
-    def load_georeferencing(self, path: str) -> None:
 
-        return None
-    
-    # TODO
-    def generate_georeferencing(self) -> None:
 
-        return None
-    
-    # TODO
-    def get_ground_control_points(self) -> None:
+
+
+
+    def generate_geometry(self, overwrite: bool = False) -> None:
+
+        self._run_geometry(overwrite=overwrite)
 
         return None
 
-    # TODO
-    def write_georeferencing(self, path: str) -> None:
 
-        return None
-    
+
+
 
 
 
