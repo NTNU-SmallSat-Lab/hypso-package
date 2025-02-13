@@ -8,16 +8,22 @@ from .utils import load_capture_config_from_nc_file, \
                     load_target_coords_from_nc_file, \
                     load_adcs_from_nc_file, \
                     load_dimensions_from_nc_file, \
-                    load_navigation_from_nc_file
+                    load_navigation_from_nc_file, \
+                    load_database_from_nc_file, \
+                    load_corrections_from_nc_file, \
+                    load_ncattrs_from_nc_file
 
-def load_l1c_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict, np.ndarray]:
+def load_l1c_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict, dict, dict, dict, dict, np.ndarray]:
 
     nc_capture_config, \
     nc_timing, \
     nc_target_coords, \
     nc_adcs, \
     nc_dimensions, \
-    nc_navigation = load_l1c_nc_metadata(nc_file_path=nc_file_path)
+    nc_navigation, \
+    nc_database, \
+    nc_corrections, \
+    nc_attrs = load_l1c_nc_metadata(nc_file_path=nc_file_path)
 
     nc_cube = load_l1c_nc_cube(nc_file_path=nc_file_path)
 
@@ -27,6 +33,9 @@ def load_l1c_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict, np.nd
             nc_adcs, \
             nc_dimensions, \
             nc_navigation, \
+            nc_database, \
+            nc_corrections, \
+            nc_attrs, \
             nc_cube
 
 
@@ -45,7 +54,7 @@ def load_l1c_nc_cube(nc_file_path: Path) -> np.ndarray:
 
         return cube
 
-def load_l1c_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict]:
+def load_l1c_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict, dict, dict, dict, dict]:
     """
     Load l1a.nc Hypso Capture file metadata
 
@@ -60,10 +69,16 @@ def load_l1c_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, di
     nc_adcs = load_adcs_from_nc_file(nc_file_path)
     nc_dimensions = load_dimensions_from_nc_file(nc_file_path)
     nc_navigation = load_navigation_from_nc_file(nc_file_path)
+    nc_database = load_database_from_nc_file(nc_file_path)
+    nc_corrections = load_corrections_from_nc_file(nc_file_path)
+    nc_attrs = load_ncattrs_from_nc_file(nc_file_path)
 
     return nc_capture_config, \
             nc_timing, \
             nc_target_coords, \
             nc_adcs, \
             nc_dimensions,\
-            nc_navigation
+            nc_navigation, \
+            nc_database, \
+            nc_corrections, \
+            nc_attrs

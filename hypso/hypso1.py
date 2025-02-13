@@ -108,24 +108,15 @@ class Hypso1(Hypso):
         
 
 
-    def _set_metadata_attributes(self,
+    def _set_capture_config(self,
                                  capture_config,
-                                 timing,
-                                 adcs,
-                                 navigation) -> None:
+                                 ) -> None:
 
         # FPS has been renamed to framerate. Need to support both since old .nc files may still use FPS
         try:
             capture_config['fps'] = capture_config['framerate']
         except:
             capture_config['framerate'] = capture_config['fps']
-
-
-        setattr(self, "capture_config", capture_config)
-        setattr(self, "timing", timing)
-        setattr(self, "adcs", adcs)
-        setattr(self, "navigation", navigation)
-
 
         self.background_value = 8 * self.capture_config["bin_factor"]
         self.exposure = self.capture_config["exposure"] / 1000  # in seconds
@@ -198,8 +189,6 @@ class Hypso1(Hypso):
         if self.VERBOSE:
             print(f"[INFO] Capture capture type: {self.capture_type}")
 
-
-
         return None
 
 
@@ -234,10 +223,6 @@ class Hypso1(Hypso):
             fields = p.parse(str(path.name))
         
         return fields
-
-
-
-
 
 
     def _load_capture_file(self, path: Path) -> None:
@@ -295,13 +280,26 @@ class Hypso1(Hypso):
         adcs, \
         dimensions, \
         navigation, \
+        database, \
+        corrections, \
+        logfiles, \
+        temperature, \
+        ncattrs, \
         cube = load_func(nc_file_path=path)
 
+        setattr(self, "capture_config", capture_config)
+        setattr(self, "timing", timing)
+        setattr(self, "adcs", adcs)
+        setattr(self, "dimensions", dimensions)
+        setattr(self, "navigation", navigation)
+        setattr(self, "database", database)
+        setattr(self, "corrections", corrections)
+        setattr(self, "logfiles", logfiles)
+        setattr(self, "temperature", temperature)
+        setattr(self, "ncattrs", ncattrs)
+
         # Note: this MUST be run before writing datacubes in order to pass correct dimensions to DataArrayValidator
-        self._set_metadata_attributes(capture_config=capture_config,
-                                timing=timing, 
-                                adcs=adcs, 
-                                navigation=navigation)
+        self._set_capture_config(capture_config=capture_config)
 
         setattr(self, cube_name, cube)
 

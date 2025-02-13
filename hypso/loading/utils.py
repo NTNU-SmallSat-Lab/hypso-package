@@ -30,6 +30,16 @@ def load_adcs_from_nc_file(nc_file_path: Path) -> Tuple[dict, tuple]:
 
         adcs['adcssamples'] = len(f.dimensions['adcssamples'])
 
+        for attrname in group.ncattrs():
+            value = getattr(group, attrname)
+            try:
+                if is_integer_num(float(value)):
+                    adcs[attrname] = int(value)
+                else:
+                    adcs[attrname] = float(value)
+            except BaseException:
+                adcs[attrname] = value
+
     return adcs
 
  
@@ -39,8 +49,8 @@ def load_capture_config_from_nc_file(nc_file_path: Path) -> dict:
 
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
         group = f.groups["metadata"]["capture_config"]
-        for attrname in group.ncattrs():
 
+        for attrname in group.ncattrs():
             value = getattr(group, attrname)
             try:
                 if is_integer_num(float(value)):
@@ -141,3 +151,120 @@ def load_navigation_from_nc_file(nc_file_path: Path) -> dict:
     return navigation
 
 
+def load_database_from_nc_file(nc_file_path: Path) -> dict:
+
+    database = {}
+
+    with nc.Dataset(nc_file_path, format="NETCDF4") as f:
+        group = f.groups["metadata"]["database"]
+
+        for attrname in group.ncattrs():
+            value = getattr(group, attrname)
+            try:
+                if is_integer_num(float(value)):
+                    database[attrname] = int(value)
+                else:
+                    database[attrname] = float(value)
+            except BaseException:
+                database[attrname] = value
+
+    return database
+
+
+
+def load_corrections_from_nc_file(nc_file_path: Path) -> dict:
+
+    corrections = {}
+
+    with nc.Dataset(nc_file_path, format="NETCDF4") as f:
+        group = f.groups["metadata"]["corrections"]
+        
+        for key in group.variables.keys():
+            value = group.variables[key]
+            corrections[key] = value
+        
+
+        for attrname in group.ncattrs():
+            value = getattr(group, attrname)
+            try:
+                if is_integer_num(float(value)):
+                    corrections[attrname] = int(value)
+                else:
+                    corrections[attrname] = float(value)
+            except BaseException:
+                corrections[attrname] = value
+
+    return corrections
+
+
+def load_logfiles_from_nc_file(nc_file_path: Path) -> dict:
+
+    logfiles = {}
+
+    with nc.Dataset(nc_file_path, format="NETCDF4") as f:
+        group = f.groups["logfiles"]
+        
+        for key in group.variables.keys():
+            value = group.variables[key]
+            logfiles[key] = value
+
+        for attrname in group.ncattrs():
+            value = getattr(group, attrname)
+            try:
+                if is_integer_num(float(value)):
+                    logfiles[attrname] = int(value)
+                else:
+                    logfiles[attrname] = float(value)
+            except BaseException:
+                logfiles[attrname] = value
+
+    return logfiles
+
+
+
+def load_temperature_from_nc_file(nc_file_path: Path) -> dict:
+
+    temperature = {}
+
+    with nc.Dataset(nc_file_path, format="NETCDF4") as f:
+        group = f.groups["metadata"]["temperature"]
+        
+        for key in group.variables.keys():
+            value = group.variables[key]
+            temperature[key] = value
+
+        for attrname in group.ncattrs():
+            value = getattr(group, attrname)
+            try:
+                if is_integer_num(float(value)):
+                    temperature[attrname] = int(value)
+                else:
+                    temperature[attrname] = float(value)
+            except BaseException:
+                temperature[attrname] = value
+
+    return temperature
+
+
+
+
+
+def load_ncattrs_from_nc_file(nc_file_path: Path) -> dict:
+
+    attrs = {}
+
+    with nc.Dataset(nc_file_path, format="NETCDF4") as f:
+        group = f
+
+        for attrname in group.ncattrs():
+            value = getattr(group, attrname)
+            try:
+                if is_integer_num(float(value)):
+                    attrs[attrname] = int(value)
+                else:
+                    attrs[attrname] = float(value)
+            except BaseException:
+                attrs[attrname] = value
+
+
+    return attrs

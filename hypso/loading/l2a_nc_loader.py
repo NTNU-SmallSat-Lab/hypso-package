@@ -69,13 +69,3 @@ def load_l2a_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, di
             nc_adcs, \
             nc_dimensions,\
             nc_navigation
-
-
-
-
-    
-
-
-
-
-
