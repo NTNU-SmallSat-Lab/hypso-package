@@ -36,7 +36,7 @@ from hypso.geometry import interpolate_at_frame, \
 from hypso.georeferencing import georeferencing
 from hypso.georeferencing.utils import check_star_tracker_orientation
 
-from hypso.reading import load_l1a_nc, \
+from hypso.loading import load_l1a_nc, \
                           load_l1b_nc, \
                           load_l2a_nc
 
@@ -402,10 +402,6 @@ class Hypso1(Hypso):
 
         self._load_calibration_coeff_files()
 
-
-
-
-        
         self.srf = get_spectral_response_function(wavelengths=self.wavelengths)
 
         l1a_cube = self.l1a_cube.to_numpy()
@@ -570,9 +566,6 @@ class Hypso1(Hypso):
 
         return None
 
-
-
-
     def generate_geometry(self, overwrite: bool = False) -> None:
 
         self._run_geometry(overwrite=overwrite)
@@ -622,8 +615,6 @@ class Hypso1(Hypso):
     def write_l1c_nc_file(self, path: str) -> None:
         
         return None
-
-
 
     # TODO
     def generate_l2a_cube(self, product_name: str = "machi") -> None:
