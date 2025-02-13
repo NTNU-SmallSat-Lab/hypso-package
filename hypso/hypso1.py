@@ -611,47 +611,45 @@ class Hypso1(Hypso):
         if self.VERBOSE:
             print("[INFO] Running geometry computation...")
 
-        framepose_data = interpolate_at_frame(adcs=self.adcs,
-                                              timestamps_srv=self.timing['timestamps_srv'],
-                                              frame_count=self.capture_config['frame_count'],
-                                              fps=self.capture_config['fps'],
-                                              exposure=self.capture_config['exposure'],
-                                              verbose=self.VERBOSE
-                                              )
+        framepose_data = interpolate_at_frame_nc(adcs=self.adcs,
+                                                 timestamps_srv=self.timing['timestamps_srv'],
+                                                 frame_count=self.capture_config['frame_count'],
+                                                 fps=self.capture_config['fps'],
+                                                 exposure=self.capture_config['exposure'],
+                                                 verbose=self.VERBOSE
+                                                 )
+        self.framepose_np = framepose_data
 
 
-        wkt_linestring_footprint, \
-           prj_file_contents, \
-           local_angles, \
-           geometric_meta_info, \
-           pixels_lat, \
-           pixels_lon, \
-           sun_azimuth, \
-           sun_zenith, \
-           sat_azimuth, \
-           sat_zenith = geometry_computation(framepose_data=framepose_data,
-                                             image_height=self.image_height,
-                                             verbose=self.VERBOSE
-                                             )
-
-        self.framepose_df = framepose_data
-
-        self.wkt_linestring_footprint = wkt_linestring_footprint
-        self.prj_file_contents = prj_file_contents
-        self.local_angles = local_angles
-        self.geometric_meta_info = geometric_meta_info
-
-        self.solar_zenith_angles = sun_zenith.reshape(self.spatial_dimensions)
-        self.solar_azimuth_angles = sun_azimuth.reshape(self.spatial_dimensions)
-
-        self.sat_zenith_angles = sat_zenith.reshape(self.spatial_dimensions)
-        self.sat_azimuth_angles = sat_azimuth.reshape(self.spatial_dimensions)
-
-        #self.lat_original = pixels_lat.reshape(self.spatial_dimensions)
-        #self.lon_original = pixels_lon.reshape(self.spatial_dimensions)
+        pixels_lat, pixels_lon = direct_georeference(framepose_data=framepose_data,
+                                                     image_height=self.image_height,
+                                                     aoi_offset=self.y_start,
+                                                     verbose=self.VERBOSE
+                                                     )
+        if pixels_lat == -1 and pixels_lon == -1:            
+            if self.VERBOSE:
+                print('[INFO] according to ADCS telemtry, parts or all of the')
+                print('[INFO] image points off the earth\'s horizon. Cant georeference this image')
+            return None
 
         self.latitudes_original = pixels_lat.reshape(self.spatial_dimensions)
         self.longitudes_original = pixels_lon.reshape(self.spatial_dimensions)
+
+
+        sun_azimuth, sun_zenith, \
+        sat_azimuth, sat_zenith = compute_local_angles(framepose_data=framepose_data,
+                                                       lats=pixels_lat, lons=pixels_lon,
+                                                       indices=np.array([ 0, hypso_height/4 - 1, hypso_height/2 - 1, 3*hypso_height/4 - 1, hypso_height - 1]),
+                                                       verbose=self.VERBOSE)
+        self.solar_zenith_angles = sun_zenith.reshape(self.spatial_dimensions)
+        self.solar_azimuth_angles = sun_azimuth.reshape(self.spatial_dimensions)
+        self.sat_zenith_angles = sat_zenith.reshape(self.spatial_dimensions)
+        self.sat_azimuth_angles = sat_azimuth.reshape(self.spatial_dimensions)
+    
+        #self.wkt_linestring_footprint = wkt_linestring_footprint
+        #self.prj_file_contents = prj_file_contents
+        #self.local_angles = local_angles
+        #self.geometric_meta_info = geometric_meta_info
 
         return None
 
