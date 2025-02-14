@@ -619,7 +619,7 @@ class Hypso1(Hypso):
 
         return None
 
-    def write_l1b_nc_file(self, overwrite: bool = False) -> None:
+    def write_l1b_nc_file(self, overwrite: bool = False, **kwargs) -> None:
 
         if Path(self.l1b_nc_file).is_file() and not overwrite:
 
@@ -630,7 +630,7 @@ class Hypso1(Hypso):
 
         l1b_nc_writer(satobj=self, 
                       dst_l1b_nc_file=self.l1b_nc_file, 
-                      src_l1a_nc_file=self.l1a_nc_file)
+                      **kwargs)
 
         return None
 

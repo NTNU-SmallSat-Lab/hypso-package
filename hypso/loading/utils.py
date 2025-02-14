@@ -24,9 +24,7 @@ def load_adcs_from_nc_file(nc_file_path: Path) -> Tuple[dict, dict]:
         group = f.groups["metadata"]["adcs"]
         
         for key in group.variables.keys():
-            
             value = group.variables[key][:]
-
             adcs_vars[key] = value
 
         adcs_vars['adcssamples'] = len(f.dimensions['adcssamples'])
@@ -51,6 +49,10 @@ def load_capture_config_from_nc_file(nc_file_path: Path) -> Tuple[dict, dict]:
 
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
         group = f.groups["metadata"]["capture_config"]
+
+        for key in group.variables.keys():
+            value = group.variables[key][:]
+            capture_config_vars[key] = value
 
         for attrname in group.ncattrs():
             value = getattr(group, attrname)
@@ -140,8 +142,7 @@ def load_corrections_from_nc_file(nc_file_path: Path) -> Tuple[dict, dict]:
         group = f.groups["metadata"]["corrections"]
         
         for key in group.variables.keys():
-            value = group.variables[key]
-
+            value = group.variables[key][:]
             corrections_vars[key] = value
         
 
@@ -167,7 +168,7 @@ def load_logfiles_from_nc_file(nc_file_path: Path) -> Tuple[dict, dict]:
         group = f.groups["logfiles"]
         
         for key in group.variables.keys():
-            value = group.variables[key]
+            value = group.variables[key][:]
             logfiles_vars[key] = value
 
         for attrname in group.ncattrs():
@@ -193,7 +194,7 @@ def load_temperature_from_nc_file(nc_file_path: Path) -> Tuple[dict, dict]:
         group = f.groups["metadata"]["temperature"]
         
         for key in group.variables.keys():
-            value = group.variables[key]
+            value = group.variables[key][:]
             temperature_vars[key] = value
 
         for attrname in group.ncattrs():
@@ -240,7 +241,6 @@ def load_ncattrs_from_nc_file(nc_file_path: Path) -> dict:
 
 def load_navigation_from_nc_file(nc_file_path: Path) -> dict:
 
-
     navigation_attrs = {}
     navigation_vars = {}
 
@@ -248,7 +248,7 @@ def load_navigation_from_nc_file(nc_file_path: Path) -> dict:
         group = f.groups["navigation"]
         
         for key in group.variables.keys():
-            value = group.variables[key]
+            value = group.variables[key][:]
             navigation_vars[key] = value
 
         for attrname in group.ncattrs():

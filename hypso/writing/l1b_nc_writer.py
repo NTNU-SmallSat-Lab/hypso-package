@@ -4,8 +4,7 @@ from pathlib import Path
 import netCDF4 as nc
 import numpy as np
 
-
-def l1b_nc_writer(satobj: Hypso, dst_l1b_nc_file: str, src_l1a_nc_file: str) -> None:
+def l1b_nc_writer(satobj: Hypso, dst_l1b_nc_file: str, datacube: str = False) -> None:
     """
     Create a l1b.nc file using the radiometrically corrected data. Same structure from the original l1a.nc file
     is used. Required to run ACOLITE as the input is a radiometrically corrected .nc file.
@@ -63,8 +62,6 @@ def l1b_nc_writer(satobj: Hypso, dst_l1b_nc_file: str, src_l1a_nc_file: str) -> 
 
         netfile.createGroup('metadata')
 
-        #netfile.createGroup('navigation')
-
         # Adding metadata ---------------------------------------
         meta_capcon = netfile.createGroup('metadata/capture_config')
         for md in getattr(satobj, 'capture_config_attrs'):
@@ -109,24 +106,49 @@ def l1b_nc_writer(satobj: Hypso, dst_l1b_nc_file: str, src_l1a_nc_file: str) -> 
                                 md,
                                 getattr(satobj, 'database_attrs')[md])
 
+
+
+
         # Set pseudoglobal vars like compression level
         COMP_SCHEME = 'zlib'  # Default: zlib
         COMP_LEVEL = 4  # Default (when scheme != none): 4
         COMP_SHUFFLE = True  # Default (when scheme != none): True
 
+
         # Create and populate variables
-        Lt = netfile.createVariable(
-            'products/Lt', 'f8',
-            ('lines', 'samples', 'bands'),
-            compression=COMP_SCHEME,
-            complevel=COMP_LEVEL,
-            shuffle=COMP_SHUFFLE)
-        Lt.units = "W/m^2/micrometer/sr"
-        Lt.long_name = "Top of Atmosphere Measured Radiance"
-        Lt.wavelength_units = "nanometers"
-        Lt.fwhm = [5.5] * bands
-        Lt.wavelengths = np.around(satobj.spectral_coeffs, 1)
-        Lt[:] = satobj.l1b_cube.to_numpy()
+
+        if datacube:
+
+            Lt = netfile.createVariable(
+                'products/Lt', 'f8',
+                ('lines', 'samples', 'bands'),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE)
+            Lt.units = "W/m^2/micrometer/sr"
+            Lt.long_name = "Top of Atmosphere Measured Radiance"
+            Lt.wavelength_units = "nanometers"
+            Lt.fwhm = [5.5] * bands
+            Lt.wavelengths = np.around(satobj.spectral_coeffs, 1)
+            Lt[:] = satobj.l1b_cube.to_numpy()
+
+        else:
+
+            Lt_cube = satobj.l1b_cube.to_numpy()
+
+            for band in range(0, Lt_cube.shape[-1]):
+                Lt = netfile.createVariable(
+                    'products/Lt_band_' + str(band), 'f8',
+                    ('lines', 'samples'),
+                    compression=COMP_SCHEME,
+                    complevel=COMP_LEVEL,
+                    shuffle=COMP_SHUFFLE)
+                Lt.units = "W/m^2/micrometer/sr"
+                Lt.long_name = "Top of Atmosphere Measured Radiance Band " + str(band) 
+                Lt.wavelength_units = "nanometers"
+                Lt.fwhm = 5.5
+                Lt.wavelength = np.around(satobj.spectral_coeffs, 1)[band]
+                Lt[:] = Lt_cube[:,:,band]
 
 
         # ADCS Timestamps ----------------------------------------------------
@@ -323,16 +345,12 @@ def l1b_nc_writer(satobj: Hypso, dst_l1b_nc_file: str, src_l1a_nc_file: str) -> 
         )
         meta_adcs_control_error[:] = getattr(satobj, 'adcs_vars')["control_error"][:]
 
-    return None
-
-    '''
-
-
 
         # Capcon File -------------------------------------------------------------
         meta_capcon_file = netfile.createVariable(
             'metadata/capture_config/file', 'str')  # str seems necessary for storage of an arbitrarily large scalar
-        meta_capcon_file[()] = old_nc['metadata']["capture_config"]["file"][:]  # [()] assignment of scalar to array
+        meta_capcon_file[()] = getattr(satobj, 'capture_config_vars')["file"][:]  # [()] assignment of scalar to array
+
 
         # Metadata: Rad calibration coeff ----------------------------------------------------
         len_radrows = satobj.rad_coeffs.shape[0]
@@ -359,29 +377,34 @@ def l1b_nc_writer(satobj: Hypso, dst_l1b_nc_file: str, src_l1a_nc_file: str) -> 
             shuffle=COMP_SHUFFLE)
         meta_corrections_spec[:] = satobj.spectral_coeffs
 
+
         # Meta Temperature File ---------------------------------------------------------
         meta_temperature_file = netfile.createVariable(
             'metadata/temperature/file', 'str')
-        meta_temperature_file[()] = old_nc['metadata']["temperature"]["file"][:]
+        meta_temperature_file[()] = getattr(satobj, 'temperature_vars')["file"][:]
 
         # Bin Time ----------------------------------------------------------------------
         bin_time = netfile.createVariable(
             'metadata/timing/bin_time', 'uint16',
             ('lines',))
-        bin_time[:] = old_nc['metadata']["timing"]["bin_time"][:]
+        bin_time[:] = getattr(satobj, 'timing_vars')["bin_time"][:]
 
         # Timestamps -------------------------------------------------------------------
         timestamps = netfile.createVariable(
             'metadata/timing/timestamps', 'uint32',
             ('lines',))
-        timestamps[:] = old_nc['metadata']["timing"]["timestamps"][:]
+        timestamps[:] = getattr(satobj, 'timing_vars')["timestamps"][:]
 
         # Timestamps Service -----------------------------------------------------------
         timestamps_srv = netfile.createVariable(
             'metadata/timing/timestamps_srv', 'f8',
             ('lines',))
-        timestamps_srv[:] = old_nc['metadata']["timing"]["timestamps_srv"][:]
-        
+        timestamps_srv[:] = getattr(satobj, 'timing_vars')["timestamps_srv"][:]
+
+    return None
+
+    '''
+
         # Create Navigation Group --------------------------------------
         #navigation_group = netfile.createGroup('navigation')
 
@@ -494,10 +517,5 @@ def l1b_nc_writer(satobj: Hypso, dst_l1b_nc_file: str, src_l1a_nc_file: str) -> 
         except Exception as ex:
             print("[WARNING] Unable to write navigation angles to NetCDF file. L1b file may be incomplete. Please run geometry computations.")
             print("[WARNING] Encountered exception: " + str(ex))
-
-
-    old_nc.close()
-
-    return None
 
     '''
