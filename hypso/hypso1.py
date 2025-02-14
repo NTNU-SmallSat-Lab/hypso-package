@@ -43,7 +43,8 @@ from hypso.loading import load_l1a_nc, \
 
 from hypso.reflectance import compute_toa_reflectance
 
-from hypso.writing import l1b_nc_writer
+from hypso.writing import l1b_nc_writer, \
+                            l1c_nc_writer
 
 from hypso.utils import find_file
 
@@ -84,31 +85,26 @@ class Hypso1(Hypso):
         self._load_capture_file(path=path)
         self._load_points_file(path=points_path)
 
-        chl_attributes = {'model': None}
         product_attributes = {}
 
-        chl = DataArrayDict(dims_shape=self.spatial_dimensions, 
-                                 attributes=chl_attributes, 
-                                 dims_names=self.dim_names_2d,
-                                 num_dims=2
-                                 )
-        
         products = DataArrayDict(dims_shape=self.spatial_dimensions, 
                                       attributes=product_attributes, 
                                       dims_names=self.dim_names_2d,
                                       num_dims=2
                                       )
 
-        setattr(self, "chl", chl)
         setattr(self, "products", products)
-
 
         return None
 
         
 
-
+    # TODO: move into hypso class
     def _set_capture_config(self, capture_config_attrs: dict) -> None:
+
+
+        for attr in capture_config_attrs.keys():
+            setattr(self, attr, capture_config_attrs[attr])
 
         # FPS has been renamed to framerate. Need to support both since old .nc files may still use FPS
         try:
@@ -248,6 +244,8 @@ class Hypso1(Hypso):
 
         self.l1a_nc_file = Path(path.parent, capture_name + "-l1a.nc")
         self.l1b_nc_file = Path(path.parent, capture_name + "-l1b.nc")
+        self.l1c_nc_file = Path(path.parent, capture_name + "-l1c.nc")
+        self.l1d_nc_file = Path(path.parent, capture_name + "-l1d.nc")
         self.l2a_nc_file = Path(path.parent, capture_name + "-l2a.nc")
 
         self.capture_dir = Path(path.parent.absolute(), capture_name + "_tmp")
@@ -348,11 +346,7 @@ class Hypso1(Hypso):
 
         self.latitudes = gr.latitudes
         self.longitudes = gr.longitudes
-        
-
-        #print(self.adcs_vars)
-        #print(self.adcs_vars.keys())
-
+    
         datacube_flipped = check_star_tracker_orientation(self.adcs_vars)
 
         if not datacube_flipped:
@@ -393,10 +387,10 @@ class Hypso1(Hypso):
         return None
         
     def _run_calibration(self, 
-                         overwrite: bool = False,
-                         rad_cal = True,
-                         smile_corr = True,
-                         destriping_corr = True,
+                         radiometric: bool = True,
+                         smile: bool = True,
+                         destripe: bool = True,
+                         set_coeffs: bool = True,
                          **kwargs) -> None:
         """
         Get calibrated and corrected cube. Includes Radiometric, Smile and Destriping Correction.
@@ -409,40 +403,53 @@ class Hypso1(Hypso):
         if self.VERBOSE:
             print('[INFO] Running calibration routines...')
 
+        if set_coeffs:
+            self._set_calibration_coeff_files()
+
         self._load_calibration_coeff_files()
 
         self.srf = get_spectral_response_function(wavelengths=self.wavelengths)
 
-        l1a_cube = self.l1a_cube.to_numpy()
+        l1b_cube = self.l1a_cube.to_numpy()
 
-        if self.VERBOSE:
-            print("[INFO] Running radiometric calibration...")
+        if radiometric:
 
-        l1b_cube = run_radiometric_calibration(cube=l1a_cube, 
-                                           background_value=self.background_value,
-                                           exp=self.exposure,
-                                           image_height=self.image_height,
-                                           image_width=self.image_width,
-                                           frame_count=self.frame_count,
-                                           rad_coeffs=self.rad_coeffs)
+            if self.VERBOSE:
+                print("[INFO] Running radiometric calibration...")
 
-        if self.VERBOSE:
-            print("[INFO] Running smile correction...")
+            l1b_cube = run_radiometric_calibration(cube=l1b_cube, 
+                                            background_value=self.background_value,
+                                            exp=self.exposure,
+                                            image_height=self.image_height,
+                                            image_width=self.image_width,
+                                            frame_count=self.frame_count,
+                                            rad_coeffs=self.rad_coeffs)
 
-        l1b_cube = run_smile_correction(cube=l1b_cube, 
-                                        smile_coeffs=self.smile_coeffs)
 
-        if self.VERBOSE:
-            print("[INFO] Running destriping correction...")
+        if smile:
 
-        l1b_cube = run_destriping_correction(cube=l1b_cube, 
-                                             destriping_coeffs=self.destriping_coeffs)
+            if self.VERBOSE:
+                print("[INFO] Running smile correction...")
+
+            l1b_cube = run_smile_correction(cube=l1b_cube, 
+                                            smile_coeffs=self.smile_coeffs)
+
+        if destripe:
+            if self.VERBOSE:
+                print("[INFO] Running destriping correction...")
+
+            l1b_cube = run_destriping_correction(cube=l1b_cube, 
+                                                destriping_coeffs=self.destriping_coeffs)
 
         self.l1b_cube = l1b_cube
 
         return None
 
-    def _load_calibration_coeff_files(self) -> None:
+
+
+
+    # TODO: split into function to set calibration coeffs and function to load calibration coeffs
+    def _set_calibration_coeff_files(self) -> None:
         """
         Set the absolute path for the calibration coefficients included in the package. This includes radiometric,
         smile and destriping correction.
@@ -476,51 +483,61 @@ class Hypso1(Hypso):
                 npz_file_destriping = None
                 npz_file_spectral = None
 
+        self.rad_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_radiometric}')
+        self.smile_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_smile}')
+        self.destriping_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_destriping}')
+        self.spectral_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_spectral}')
+
+
+
+    def _load_calibration_coeff_files(self) -> None:
+        """
+        Load the calibration coefficients included in the package. This includes radiometric,
+        smile and destriping correction.
+
+        :return: None.
+        """
+
 
         try:
-            self.rad_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_radiometric}')
             self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file)
         except:
             self.rad_coeff_file = None
 
         try:
-            self.smile_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_smile}')
             self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file)
         except:
             self.smile_coeff_file = None
 
         try:
-            self.destriping_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_destriping}')
             self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
         except:
             self.destriping_coeff_file = None
 
         try:
-            self.spectral_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_spectral}')
             self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
             self.wavelengths = self.spectral_coeffs
         except:
             self.spectral_coeff_file = None
             self.wavelengths = range(0,120)
 
-
         return None
 
 
     # TODO: Move to hypso parent class
-    def _run_geometry(self, overwrite: bool = False) -> None: 
+    def _run_geometry(self) -> None: 
 
         if self.VERBOSE:
             print("[INFO] Running geometry computation ...")
 
         framepose_data = interpolate_at_frame_nc(adcs=self.adcs_vars,
-                                              timestamps_srv=self.timing_vars['timestamps_srv'],
+                                              lines_timestamps=self.timing_vars['timestamps_srv'],
                                               framerate=self.capture_config_attrs['framerate'],
                                               exposure=self.capture_config_attrs['exposure'],
                                               verbose=self.VERBOSE
                                               )
-
-        self.framepose_np = framepose_data
+        
+        #self.framepose_np = framepose_data
 
         pixels_lat, pixels_lon = direct_georeference(framepose_data=framepose_data,
                                                      image_height=self.image_height,
@@ -533,8 +550,8 @@ class Hypso1(Hypso):
                 print('[INFO] off the earth\'s horizon. Cant georeference this image.')
             return None
 
-        self.latitudes_original = pixels_lat.reshape(self.spatial_dimensions)
-        self.longitudes_original = pixels_lon.reshape(self.spatial_dimensions)
+        self.latitudes_direct = pixels_lat.reshape(self.spatial_dimensions)
+        self.longitudes_direct = pixels_lon.reshape(self.spatial_dimensions)
 
         sun_azimuth, sun_zenith, \
         sat_azimuth, sat_zenith = compute_local_angles(framepose_data=framepose_data,
@@ -546,62 +563,30 @@ class Hypso1(Hypso):
         self.sat_zenith_angles = sat_zenith.reshape(self.spatial_dimensions)
         self.sat_azimuth_angles = sat_azimuth.reshape(self.spatial_dimensions)
     
-        #self.wkt_linestring_footprint = wkt_linestring_footprint
-        #self.prj_file_contents = prj_file_contents
-        #self.local_angles = local_angles
-        #self.geometric_meta_info = geometric_meta_info
-
         if self.VERBOSE:
             print("[INFO] Geometry computations done")
 
         return None
 
 
-    # Atmospheric correction functions
 
-    def _run_atmospheric_correction(self, product_name: str) -> None:
-
-        try:
-            match product_name.lower():
-                case "6sv1":
-                    self.l2a_cube = self._run_6sv1_atmospheric_correction()
-                case "acolite":
-                    self.l2a_cube = self._run_acolite_atmospheric_correction()
-                case "machi":
-                    self.l2a_cube = self._run_machi_atmospheric_correction() 
-                case _:
-                    print("[ERROR] No such atmospheric correction product supported!")
-                    return None
-        except:
-            print("[ERROR] Unable to generate L2a datacube.")
-
-        return None
 
 
 
     def _run_toa_reflectance(self) -> None:
 
-        toa_reflectance_cube = compute_toa_reflectance(srf=self.srf,
-                                                    toa_radiance=self.l1b_cube,
-                                                    iso_time=self.iso_time,
-                                                    solar_zenith_angles=self.solar_azimuth_angles,
-                                                    )
+        self.l1c_cube = compute_toa_reflectance(srf=self.srf,
+                                                toa_radiance=self.l1b_cube,
+                                                iso_time=self.iso_time,
+                                                solar_zenith_angles=self.solar_azimuth_angles,
+                                                )
         
-        #self.l1c_cube = xr.DataArray(toa_reflectance, dims=("y", "x", "band"))
-        #self.l1c_cube.attrs['units'] = "sr^-1"
-        #self.l1c_cube.attrs['description'] = "Top of atmosphere (TOA) reflectance"
-        #toa_reflectance_cube = xr.DataArray(toa_reflectance, dims=("y", "x", "band"))
-
-        self.l1c_cube = toa_reflectance_cube
-
         return None
 
-    def generate_geometry(self, overwrite: bool = False) -> None:
 
-        self._run_geometry(overwrite=overwrite)
 
-        return None
 
+    # TODO: move to spectral analysis library
     def get_closest_wavelength_index(self, wavelength: Union[float, int]) -> int:
 
         wavelengths = np.array(self.wavelengths)
@@ -629,12 +614,47 @@ class Hypso1(Hypso):
             return None
 
         l1b_nc_writer(satobj=self, 
-                      dst_l1b_nc_file=self.l1b_nc_file, 
+                      dst_nc=self.l1b_nc_file, 
                       **kwargs)
 
         return None
 
-    def generate_l1c_cube(self) -> None:
+
+
+
+
+
+
+
+    def generate_l1c_cube(self, **kwargs) -> None:
+
+        self._run_calibration(**kwargs)
+        self._run_geometry()
+        
+        return None
+
+    def write_l1c_nc_file(self, overwrite: bool = False, **kwargs) -> None:
+
+        if Path(self.l1c_nc_file).is_file() and not overwrite:
+
+            if self.VERBOSE:
+                print("[INFO] L1c NetCDF file has already been generated. Skipping.")
+
+            return None
+
+        l1c_nc_writer(satobj=self, 
+                      dst_nc=self.l1c_nc_file, 
+                      **kwargs)
+
+        return None
+
+
+
+
+
+
+
+    def generate_l1d_cube(self) -> None:
 
         self._run_geometry()
         self._run_toa_reflectance()
@@ -642,32 +662,11 @@ class Hypso1(Hypso):
         return None
 
     # TODO
-    def write_l1c_nc_file(self, path: str) -> None:
+    def write_l1d_nc_file(self, overwrite: bool = False, **kwargs) -> None:
         
-        return None
-
-    # TODO
-    def generate_l2a_cube(self, product_name: str = "machi") -> None:
-
-        self._run_geometry()
-        #self._run_atmospheric_correction(product_name=product_name)
 
         return None
 
-    def write_l2a_nc_file(self, overwrite: bool = False) -> None:
-
-        if Path(self.l1b_nc_file).is_file() and not overwrite:
-
-            if self.VERBOSE:
-                print("[INFO] L1b NetCDF file has already been generated. Skipping.")
-
-            return None
-
-        l2a_nc_writer(satobj=self, 
-                      dst_l2a_nc_file=self.l2a_nc_file, 
-                      src_l1a_nc_file=self.l1a_nc_file)
-
-        return None
 
 
 

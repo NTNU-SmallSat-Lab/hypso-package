@@ -31,6 +31,8 @@ class Hypso:
         self.parent_dir = None
         self.l1a_nc_file = None
         self.l1b_nc_file = None
+        self.l1c_nc_file = None
+        self.l1d_nc_file = None
         self.l2a_nc_file = None
 
         # Initialize datacubes
@@ -44,78 +46,76 @@ class Hypso:
         #self.toa_reflectance = None
 
         # Initialize metadata dictionaries
-        self.capture_config = {}
-        self.timing = {}
-        self.adcs = {}
+        #self.capture_config = {}
+        #self.timing = {}
+        #self.adcs = {}
 
         # Initialize timing info
-        self.capture_datetime = None
-        self.start_timestamp_capture = None
-        self.end_timestamp_capture = None
-        self.start_timestamp_adcs = None
-        self.end_timestamp_adcs = None
-        self.unixtime = None
-        self.iso_time = None
+        #self.capture_datetime = None
+        #self.start_timestamp_capture = None
+        #self.end_timestamp_capture = None
+        #self.start_timestamp_adcs = None
+        #self.end_timestamp_adcs = None
+        #self.unixtime = None
+        #self.iso_time = None
 
 
         # Initialize dimensions
-        self.capture_type = None
+        #self.capture_type = None
         self.spatial_dimensions = (956, 684)  # 1092 x variable
         self.standard_dimensions = {
             "nominal": 956,  # Along frame_count
             "wide": 1092  # Along image_height (row_count)
         }
 
-        self.x_start = None
-        self.x_stop = None
-        self.y_start = None
-        self.y_stop = None
-        self.bin_factor = 8
-        self.sample_div = 1
-        self.row_count = None
-        self.frame_count = None
-        self.column_count = None
-        self.image_height = None
-        self.image_width = None
-        self.im_size = None
-        self.bands = None
-        self.lines = None
-        self.samples = None
+        #self.x_start = None
+        #self.x_stop = None
+        #self.y_start = None
+        #self.y_stop = None
+        #self.bin_factor = 8
+        #self.sample_div = 1
+        #self.row_count = None
+        #self.frame_count = None
+        #self.column_count = None
+        #self.image_height = None
+        #self.image_width = None
+        #self.im_size = None
+        #self.bands = None
+        #self.lines = None
+        #self.samples = None
 
         # Misc metadata
-        self.background_value = None
-        self.exposure = None
+        #self.background_value = None
+        #self.exposure = None
 
         # Initialize georeferencing info
-        self.projection_metadata = None
-        self.latitudes = None
-        self.longitudes = None
-        self.datacube_flipped = False
-        self.along_track_gsd = None
-        self.across_track_gsd = None
-        self.along_track_mean_gsd = None
-        self.across_track_mean_gsd = None
-        self.resolution = None
-        self.bbox = None
+        # self.projection_metadata = None
+        # self.datacube_flipped = False
+        # self.along_track_gsd = None
+        # self.across_track_gsd = None
+        # self.along_track_mean_gsd = None
+        # self.across_track_mean_gsd = None
+        # self.resolution = None
+        # self.bbox = None
 
-       # Initialize calibration file paths:
-        self.rad_coeff_file = None
-        self.smile_coeff_file = None
-        self.destriping_coeff_file = None
-        self.spectral_coeff_file = None
+        # Initialize calibration file paths:
+        # self.rad_coeff_file = None
+        # self.smile_coeff_file = None
+        # self.destriping_coeff_file = None
+        # self.spectral_coeff_file = None
 
         # Initialize calibration coefficients
-        self.rad_coeffs = None
-        self.smile_coeffs = None
-        self.destriping_coeffs = None
-        self.spectral_coeffs = None
+        # self.rad_coeffs = None
+        # self.smile_coeffs = None
+        # self.destriping_coeffs = None
+        # self.spectral_coeffs = None
 
         # Initialize wavelengths
-        self.wavelengths = None
-        self.wavelengths_units = r'$nm$'
+        #self.wavelengths = None
+        #self.wavelengths_units = r'$nm$'
 
         # Initialize spectral response function
-        self.srf = None
+        #self.srf = None
 
         # Initilize land mask dict
         #self.land_mask = None
@@ -127,7 +127,7 @@ class Hypso:
 
         # Intialize unified mask
         #self.unified_mask = None
-        self._unified_mask = None
+        #self._unified_mask = None
 
         # Initialize chlorophyll estimates dict
         #self.chl = {}
@@ -136,20 +136,24 @@ class Hypso:
         #self.products = {}
 
         # Initialize ADCS data
-        self.adcs = None
-        self.adcs_pos_df = None
-        self.adcs_quat_df = None
+        #self.adcs = None
+        #self.adcs_pos_df = None
+        #self.adcs_quat_df = None
 
         # Initialize geometry data
-        self.framepose_df = None
-        self.wkt_linestring_footprint = None
-        self.prj_file_contents = None
-        self.local_angles = None
-        self.geometric_meta_info = None
-        self.solar_zenith_angles = None
-        self.solar_azimuth_angles = None
-        self.sat_zenith_angles = None
-        self.sat_azimuth_angles = None
+        # self.framepose_np = None
+        # self.wkt_linestring_footprint = None
+        # self.prj_file_contents = None
+        # self.local_angles = None
+        # self.geometric_meta_info = None
+        # self.solar_zenith_angles = None
+        # self.solar_azimuth_angles = None
+        # self.sat_zenith_angles = None
+        # self.sat_azimuth_angles = None
+
+        # TODO: xarray
+        self.latitudes = None
+        self.longitudes = None
         self.latitudes_direct = None
         self.longitudes_direct = None
 
@@ -173,8 +177,8 @@ class Hypso:
     def _format_l1a_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
 
         attributes = {'level': "L1a",
-                      'units': "a.u.",
-                      'description': "Raw sensor value"
+                      'units': "counts",
+                      'description': "Digital number"
                      }
 
         v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=self.dim_names_3d)
@@ -184,13 +188,11 @@ class Hypso:
 
         return data
     
-
-
     def _format_l1b_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
 
-        attributes = {'level': "L1b",
+        attributes = {'level': "L1b/L1c",
                       'units': r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$',
-                      'description': "Radiance (L)"
+                      'description': "Radiance (Lt)"
                      }
 
         v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=self.dim_names_3d)
@@ -200,8 +202,34 @@ class Hypso:
 
         return data
 
+    def _format_l1c_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
 
+        attributes = {'level': "L1b/L1c",
+                      'units': r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$',
+                      'description': "Radiance (Lt)"
+                     }
 
+        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=self.dim_names_3d)
+
+        data = v.validate(data=data)
+        data = self._update_dataarray_attrs(data, attributes)
+
+        return data
+
+    def _format_l1d_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
+
+        attributes = {'level': "L1d",
+                      'units': r"sr^{-1}",
+                      'description': "TOA Reflectance (Rhot)",
+                      'correction': None
+                     }
+
+        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=self.dim_names_3d)
+
+        data = v.validate(data=data)
+        data = self._update_dataarray_attrs(data, attributes)
+
+        return data
 
     def _format_l2a_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
 
@@ -219,20 +247,7 @@ class Hypso:
         return data
 
 
-    def _format_toa_reflectance_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
 
-        attributes = {'level': "toa_refl",
-                      'units': r"sr^{-1}",
-                      'description': "TOA Reflectance (R)",
-                      'correction': None
-                     }
-
-        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=self.dim_names_3d)
-
-        data = v.validate(data=data)
-        data = self._update_dataarray_attrs(data, attributes)
-
-        return data
 
 
     def _format_land_mask_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
@@ -266,7 +281,7 @@ class Hypso:
 
 
 
-
+    '''
     def _format_unified_mask_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
 
         attributes = {
@@ -281,7 +296,7 @@ class Hypso:
         data = self._update_dataarray_attrs(data, attributes)
 
         return data
-
+    '''
 
 
     @property
@@ -304,11 +319,20 @@ class Hypso:
 
     @property
     def l1c_cube(self):
-        return self._l1c_cube   
+        return self._l1b_cube   
 
     @l1c_cube.setter
     def l1c_cube(self, value):
-        self._l1c_cube = self._format_toa_reflectance_dataarray(value)
+        self._l1c_cube = self._format_l1b_dataarray(value)
+
+
+    @property
+    def l1d_cube(self):
+        return self._l1d_cube   
+
+    @l1d_cube.setter
+    def l1d_cube(self, value):
+        self._l1d_cube = self._format_l1d_dataarray(value)
 
 
     @property
@@ -342,7 +366,7 @@ class Hypso:
         self._cloud_mask = self._format_cloud_mask_dataarray(value)
         
 
-
+    '''
     @property
     def unified_mask(self):
 
@@ -372,4 +396,4 @@ class Hypso:
     @unified_mask.setter
     def unified_mask(self, value):
         self._unified_mask = self._format_unified_mask_dataarray(value)
-
+    '''

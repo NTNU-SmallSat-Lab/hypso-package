@@ -41,7 +41,7 @@ def interpolate_at_frame_nc(adcs,
                             additional_time_offset: float=0.0, 
                             framerate: float=15,
                             exposure: float=25,
-                            verbose=False) -> pd.DataFrame:
+                            verbose=False) -> np.ndarray:
 
     pos_x = adcs["position_x"]
     pos_y = adcs["position_y"]
@@ -118,7 +118,7 @@ def interpolate_at_frame(adcs_timestamps: np.ndarray, position: np.ndarray,
     frame_ts_end = lines_timestamps[-1]
 
     if verbose:
-        print(f'[INFO]  ADCS time range: {adcs_ts_start:17.6f} to {adcs_ts_end:17.6f}')
+        print(f'[INFO] ADCS time range: {adcs_ts_start:17.6f} to {adcs_ts_end:17.6f}')
         print(f'[INFO] Frame time range: {frame_ts_start:17.6f} to {frame_ts_end:17.6f}')
 
     # The ADCS time range needs to completely include the frames/lines time range
