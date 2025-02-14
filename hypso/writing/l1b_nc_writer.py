@@ -119,6 +119,7 @@ def l1b_nc_writer(satobj: Hypso, dst_l1b_nc_file: str, datacube: str = False) ->
 
         if datacube:
 
+            # Store as datacube
             Lt = netfile.createVariable(
                 'products/Lt', 'f8',
                 ('lines', 'samples', 'bands'),
@@ -126,7 +127,7 @@ def l1b_nc_writer(satobj: Hypso, dst_l1b_nc_file: str, datacube: str = False) ->
                 complevel=COMP_LEVEL,
                 shuffle=COMP_SHUFFLE)
             Lt.units = "W/m^2/micrometer/sr"
-            Lt.long_name = "Top of Atmosphere Measured Radiance"
+            Lt.long_name = "Top-of-Atmosphere Measured Radiance"
             Lt.wavelength_units = "nanometers"
             Lt.fwhm = [5.5] * bands
             Lt.wavelengths = np.around(satobj.spectral_coeffs, 1)
@@ -134,20 +135,33 @@ def l1b_nc_writer(satobj: Hypso, dst_l1b_nc_file: str, datacube: str = False) ->
 
         else:
 
+            # Store as bands
             Lt_cube = satobj.l1b_cube.to_numpy()
-
             for band in range(0, Lt_cube.shape[-1]):
+
+                wave = np.around(satobj.spectral_coeffs, 1)[band]
+                wave_name = str(int(wave))
+                name = 'Lt_' + wave_name
+
                 Lt = netfile.createVariable(
-                    'products/Lt_band_' + str(band), 'f8',
+                    'products/' + name, 'f8',
                     ('lines', 'samples'),
                     compression=COMP_SCHEME,
                     complevel=COMP_LEVEL,
                     shuffle=COMP_SHUFFLE)
+                
                 Lt.units = "W/m^2/micrometer/sr"
-                Lt.long_name = "Top of Atmosphere Measured Radiance Band " + str(band) 
+                Lt.long_name = "Top-of-Atmosphere Measured Radiance Band " + str(band) 
                 Lt.wavelength_units = "nanometers"
                 Lt.fwhm = 5.5
-                Lt.wavelength = np.around(satobj.spectral_coeffs, 1)[band]
+                Lt.wavelength = wave
+
+                #Lt.f0 = None
+                #Lt.width = 5.5
+                Lt.wave = wave
+                Lt.parameter = name
+                Lt.wave_name = wave_name
+
                 Lt[:] = Lt_cube[:,:,band]
 
 
