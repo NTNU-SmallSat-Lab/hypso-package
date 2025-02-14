@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 from dateutil import parser
 from importlib.resources import files
 from pathlib import Path
@@ -26,8 +26,9 @@ from hypso.calibration import read_coeffs_from_file, \
                               get_spectral_response_function
 
 
-from hypso.geometry import interpolate_at_frame, \
-                           geometry_computation, \
+from hypso.geometry import interpolate_at_frame_nc, \
+                           direct_georeference, \
+                           compute_local_angles, \
                            get_nearest_pixel, \
                            compute_gsd, \
                            compute_bbox, \
@@ -148,6 +149,16 @@ class Hypso1(Hypso):
         if self.VERBOSE:
             print(f"[INFO] Capture spatial dimensions: {self.spatial_dimensions}")
 
+        try:
+            self.start_timestamp_capture = int(self.timing['capture_start_unix']) + UNIX_TIME_OFFSET
+        except:
+            try:
+                datestring = self.ncattrs['date_aquired']
+            except:
+                datestring = self.ncattrs['timestamp_acquired']
+
+            dt = datetime.datetime.strptime(datestring, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=datetime.timezone.utc)
+            self.start_timestamp_capture = dt.timestamp()
 
         self.start_timestamp_capture = int(self.timing_attrs['capture_start_unix']) + UNIX_TIME_OFFSET
 
@@ -169,7 +180,7 @@ class Hypso1(Hypso):
         self.end_timestamp_adcs = self.end_timestamp_capture + time_margin_end
 
         self.unixtime = self.start_timestamp_capture
-        self.iso_time = datetime.utcfromtimestamp(self.unixtime).isoformat()
+        self.iso_time = datetime.datetime.utcfromtimestamp(self.unixtime).isoformat()
 
 
         if self.capture_config_attrs["frame_count"] == self.standard_dimensions["nominal"]:
@@ -232,14 +243,15 @@ class Hypso1(Hypso):
             setattr(self, key, value)
 
         capture_name = self._compose_capture_name(fields=fields)
-        setattr(self, "capture_name", capture_name)
 
-        setattr(self, "l1a_nc_file", Path(path.parent, capture_name + "-l1a.nc"))
-        setattr(self, "l1b_nc_file", Path(path.parent, capture_name + "-l1b.nc"))
-        setattr(self, "l2a_nc_file", Path(path.parent, capture_name + "-l2a.nc"))
+        self.capture_name = capture_name
 
-        setattr(self, "capture_dir", Path(path.parent.absolute(), capture_name + "_tmp"))
-        setattr(self, "parent_dir", Path(path.parent.absolute()))
+        self.l1a_nc_file = Path(path.parent, capture_name + "-l1a.nc")
+        self.l1b_nc_file = Path(path.parent, capture_name + "-l1b.nc")
+        self.l2a_nc_file = Path(path.parent, capture_name + "-l2a.nc")
+
+        self.capture_dir = Path(path.parent.absolute(), capture_name + "_tmp")
+        self.parent_dir = Path(path.parent.absolute())
 
         match fields['product_level']:
             case "l1a":
@@ -499,8 +511,7 @@ class Hypso1(Hypso):
     def _run_geometry(self, overwrite: bool = False) -> None: 
 
         if self.VERBOSE:
-            print("[INFO] Running geometry computation...")
-
+            print("[INFO] Running geometry computation ...")
 
         framepose_data = interpolate_at_frame_nc(adcs=self.adcs_vars,
                                               timestamps_srv=self.timing_vars['timestamps_srv'],
@@ -509,38 +520,60 @@ class Hypso1(Hypso):
                                               verbose=self.VERBOSE
                                               )
 
+        self.framepose_np = framepose_data
 
-        # TODO: split into tow functions: one to compute latitude and longitudes, one to compute solar angles
+        pixels_lat, pixels_lon = direct_georeference(framepose_data=framepose_data,
+                                                     image_height=self.image_height,
+                                                     aoi_offset=self.y_start,
+                                                     verbose=self.VERBOSE
+                                                     )
+        if type(pixels_lat) == int and type(pixels_lon) == int:
+            if self.VERBOSE:
+                print('[INFO] according to ADCS telemetry, parts or all of the image is pointing')
+                print('[INFO] off the earth\'s horizon. Cant georeference this image.')
+            return None
 
-        wkt_linestring_footprint, \
-           prj_file_contents, \
-           local_angles, \
-           geometric_meta_info, \
-           pixels_lat, \
-           pixels_lon, \
-           sun_azimuth, \
-           sun_zenith, \
-           sat_azimuth, \
-           sat_zenith = geometry_computation(framepose_data=framepose_data,
-                                             image_height=self.image_height,
-                                             verbose=self.VERBOSE
-                                             )
+        self.latitudes_original = pixels_lat.reshape(self.spatial_dimensions)
+        self.longitudes_original = pixels_lon.reshape(self.spatial_dimensions)
 
-        #self.framepose_df = framepose_data
-
-        self.wkt_linestring_footprint = wkt_linestring_footprint
-        self.prj_file_contents = prj_file_contents
-        self.local_angles = local_angles
-        self.geometric_meta_info = geometric_meta_info
-
+        sun_azimuth, sun_zenith, \
+        sat_azimuth, sat_zenith = compute_local_angles(framepose_data=framepose_data,
+                                                       lats=pixels_lat, lons=pixels_lon,
+                                                       indices=np.array([ 0, self.samples//4 - 1, self.samples//2 - 1, 3*self.samples//4 - 1, self.samples - 1], dtype='uint16'),
+                                                       verbose=self.VERBOSE)
         self.solar_zenith_angles = sun_zenith.reshape(self.spatial_dimensions)
         self.solar_azimuth_angles = sun_azimuth.reshape(self.spatial_dimensions)
-
         self.sat_zenith_angles = sat_zenith.reshape(self.spatial_dimensions)
         self.sat_azimuth_angles = sat_azimuth.reshape(self.spatial_dimensions)
+    
+        #self.wkt_linestring_footprint = wkt_linestring_footprint
+        #self.prj_file_contents = prj_file_contents
+        #self.local_angles = local_angles
+        #self.geometric_meta_info = geometric_meta_info
 
-        self.latitudes_direct = pixels_lat.reshape(self.spatial_dimensions)
-        self.longitudes_direct = pixels_lon.reshape(self.spatial_dimensions)
+        if self.VERBOSE:
+            print("[INFO] Geometry computations done")
+
+        return None
+
+
+    # Atmospheric correction functions
+
+    def _run_atmospheric_correction(self, product_name: str) -> None:
+
+        try:
+            match product_name.lower():
+                case "6sv1":
+                    self.l2a_cube = self._run_6sv1_atmospheric_correction()
+                case "acolite":
+                    self.l2a_cube = self._run_acolite_atmospheric_correction()
+                case "machi":
+                    self.l2a_cube = self._run_machi_atmospheric_correction() 
+                case _:
+                    print("[ERROR] No such atmospheric correction product supported!")
+                    return None
+        except:
+            print("[ERROR] Unable to generate L2a datacube.")
 
         return None
 
