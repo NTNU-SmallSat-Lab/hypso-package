@@ -22,10 +22,6 @@ def run_radiometric_calibration(cube: np.ndarray,
     :return: Corrected 3-channel cube
     """
 
-    print(type(frame_count))
-    print(type(image_height))
-    print(type(image_width))
-
     # Radiometric calibration
     cube_rad_calibrated = np.zeros([frame_count, image_height, image_width])
 

@@ -1,10 +1,8 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import math as m
 import pandas as pd
 import datetime
-import os
-from pathlib import Path
+
 
 import astropy.coordinates
 import astropy.units
@@ -38,7 +36,6 @@ R_pl = 6356752.0
 hypso_height_sensor = 1216
 
 
-
 def interpolate_at_frame_nc(adcs,
                             lines_timestamps: np.ndarray,
                             additional_time_offset: float=0.0, 
@@ -50,7 +47,6 @@ def interpolate_at_frame_nc(adcs,
     pos_y = adcs["position_y"]
     pos_z = adcs["position_z"]
     pos = np.column_stack((timestamps, pos_x, pos_y, pos_z))
-
 
     quat_s = adcs["quaternion_s"]
     quat_x = adcs["quaternion_x"]

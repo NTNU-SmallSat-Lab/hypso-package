@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Literal, Union
 import copy
 
-import hypso.atmospheric
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -16,10 +15,6 @@ import xarray as xr
 import hypso
 from hypso import Hypso
 
-
-from hypso.utils import find_file
-
-from hypso.atmospheric import run_py6s, run_acolite, run_machi
 from hypso.calibration import read_coeffs_from_file, \
                               run_radiometric_calibration, \
                               run_destriping_correction, \
@@ -30,9 +25,6 @@ from hypso.calibration import read_coeffs_from_file, \
                               run_destriping_correction_with_computed_matrix, \
                               get_spectral_response_function
 
-from hypso.chlorophyll import run_tuned_chlorophyll_estimation, \
-                              run_band_ratio_chlorophyll_estimation, \
-                              validate_tuned_model
 
 from hypso.geometry import interpolate_at_frame, \
                            geometry_computation, \
@@ -43,45 +35,26 @@ from hypso.geometry import interpolate_at_frame, \
 
 from hypso.georeferencing import georeferencing
 from hypso.georeferencing.utils import check_star_tracker_orientation
-from hypso.masks import run_global_land_mask, \
-                        run_ndwi_land_mask, \
-                        run_threshold_land_mask
 
-from hypso.masks import run_cloud_mask, \
-                        run_quantile_threshold_cloud_mask
+from hypso.loading import load_l1a_nc, \
+                          load_l1b_nc, \
+                          load_l2a_nc
 
-from hypso.reading import load_l1a_nc_cube, \
-                          load_l1a_nc_metadata, \
-                          load_l1b_nc_cube, \
-                          load_l1b_nc_metadata, \
-                          load_l2a_nc_cube, \
-                          load_l2a_nc_metadata
+from hypso.reflectance import compute_toa_reflectance
 
-from hypso.writing import l1a_nc_writer, l1b_nc_writer, l2a_nc_writer
+from hypso.writing import l1b_nc_writer, \
+                          l2a_nc_writer
+
+from hypso.utils import find_file
 
 from hypso.DataArrayValidator import DataArrayValidator
 from hypso.DataArrayDict import DataArrayDict
-
-from satpy import Scene
-from satpy.dataset.dataid import WavelengthRange
 
 from pyresample.geometry import SwathDefinition
 from pyresample.bilinear.xarr import XArrayBilinearResampler 
 from pyresample.future.resamplers.nearest import KDTreeNearestXarrayResampler
 
 from trollsift import Parser
-
-SUPPORTED_PRODUCT_LEVELS = ["l1a", "l1b", "l2a"]
-
-ATM_CORR_PRODUCTS = ["6sv1", "acolite", "machi"]
-CHL_EST_PRODUCTS = Literal["band_ratio", "6sv1_aqua", "acolite_aqua"]
-LAND_MASK_PRODUCTS = Literal["global", "ndwi", "threshold"]
-CLOUD_MASK_PRODUCTS = Literal["default"]
-
-DEFAULT_ATM_CORR_PRODUCT = "6sv1"
-DEFAULT_CHL_EST_PRODUCT = "band_ratio"
-DEFAULT_LAND_MASK_PRODUCT = "global"
-DEFAULT_CLOUD_MASK_PRODUCT = "default"
 
 UNIX_TIME_OFFSET = 20 # TODO: Verify offset validity. Sivert had 20 here
 
@@ -108,7 +81,7 @@ class Hypso1(Hypso):
         self.sensor = 'hypso1_hsi'
         self.VERBOSE = verbose
 
-        self._load_file(path=path)
+        self._load_capture_file(path=path)
         self._load_points_file(path=points_path)
 
         chl_attributes = {'model': None}
@@ -135,18 +108,15 @@ class Hypso1(Hypso):
         
 
 
-    def _set_metadata_attributes(self,
+    def _set_capture_config(self,
                                  capture_config,
-                                 timing,
-                                 adcs,
-                                 navigation) -> None:
+                                 ) -> None:
 
-
-        setattr(self, "capture_config", capture_config)
-        setattr(self, "timing", timing)
-        setattr(self, "adcs", adcs)
-        setattr(self, "navigation", navigation)
-
+        # FPS has been renamed to framerate. Need to support both since old .nc files may still use FPS
+        try:
+            capture_config['fps'] = capture_config['framerate']
+        except:
+            capture_config['framerate'] = capture_config['fps']
 
         self.background_value = 8 * self.capture_config["bin_factor"]
         self.exposure = self.capture_config["exposure"] / 1000  # in seconds
@@ -186,12 +156,12 @@ class Hypso1(Hypso):
 
         # Get END_TIMESTAMP_CAPTURE
         # can't compute end timestamp using frame count and frame rate
-        # assuming some default value if fps and exposure not available
+        # assuming some default value if framerate and exposure not available
         try:
-            self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config["frame_count"] / self.capture_config["fps"] + self.capture_config["exposure"] / 1000.0
+            self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config["frame_count"] / self.capture_config["framerate"] + self.capture_config["exposure"] / 1000.0
         except:
             if self.VERBOSE:
-                print("[WARNING] FPS or exposure values not found. Assuming 20.0 for each.")
+                print("[WARNING] Framerate or exposure values not found. Assuming 20.0 for each.")
             self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config["frame_count"] / 20.0 + 20.0 / 1000.0
 
         # using 'awk' for floating point arithmetic ('expr' only support integer arithmetic): {printf \"%.2f\n\", 100/3}"
@@ -218,8 +188,6 @@ class Hypso1(Hypso):
 
         if self.VERBOSE:
             print(f"[INFO] Capture capture type: {self.capture_type}")
-
-
 
         return None
 
@@ -257,13 +225,7 @@ class Hypso1(Hypso):
         return fields
 
 
-
-
-
-
-    # Loading functions
-
-    def _load_file(self, path: Path) -> None:
+    def _load_capture_file(self, path: Path) -> None:
 
         path = Path(path).absolute()
 
@@ -286,65 +248,66 @@ class Hypso1(Hypso):
             case "l1a":
                 if self.VERBOSE: print('[INFO] Loading L1a capture ' + self.capture_name)
 
-                capture_config, \
-                timing, \
-                target_coords, \
-                adcs, \
-                dimensions, \
-                navigation = load_l1a_nc_metadata(nc_file_path=path)
-
-                self._set_metadata_attributes(capture_config=capture_config,
-                                              timing=timing, 
-                                              adcs=adcs, 
-                                              navigation=navigation)
-
-                self.l1a_cube = load_l1a_nc_cube(nc_file_path=path)
+                load_func = load_l1a_nc
+                cube_name = "l1a_cube"
                 
             case "l1b":
                 if self.VERBOSE: print('[INFO] Loading L1b capture ' + self.capture_name)
 
-                capture_config, \
-                timing, \
-                target_coords, \
-                adcs, \
-                dimensions, \
-                navigation = load_l1b_nc_metadata(nc_file_path=path)
+                load_func = load_l1b_nc
+                cube_name = "l1b_cube"
 
-                self._set_metadata_attributes(capture_config=capture_config,
-                                              timing=timing, 
-                                              adcs=adcs, 
-                                              navigation=navigation)
-
-                self.l1b_cube = load_l1b_nc_cube(nc_file_path=path)
+            case "l1c":
+                # TODO
+                print("[ERROR] L1c loading is not yet implemented.")
+                
+                #load_func = load_l1c_nc
+                #cube_name = "l1c_cube"
 
             case "l2a":
                 if self.VERBOSE: print('[INFO] Loading L2a capture ' + self.capture_name)
 
-                capture_config, \
-                timing, \
-                target_coords, \
-                adcs, \
-                dimensions, \
-                navigation = load_l2a_nc_metadata(nc_file_path=path)
+                load_func = load_l2a_nc
+                cube_name = "l2a_cube"
 
-                self._set_metadata_attributes(capture_config=capture_config,
-                                              timing=timing, 
-                                              adcs=adcs, 
-                                              navigation=navigation)
-
-                self.l2a_cube = load_l2a_nc_cube(nc_file_path=path)
             case _:
                 print("[ERROR] Unsupported product level.")
+                return None
+
+        capture_config, \
+        timing, \
+        target_coords, \
+        adcs, \
+        dimensions, \
+        navigation, \
+        database, \
+        corrections, \
+        logfiles, \
+        temperature, \
+        ncattrs, \
+        cube = load_func(nc_file_path=path)
+
+        setattr(self, "capture_config", capture_config)
+        setattr(self, "timing", timing)
+        setattr(self, "adcs", adcs)
+        setattr(self, "dimensions", dimensions)
+        setattr(self, "navigation", navigation)
+        setattr(self, "database", database)
+        setattr(self, "corrections", corrections)
+        setattr(self, "logfiles", logfiles)
+        setattr(self, "temperature", temperature)
+        setattr(self, "ncattrs", ncattrs)
+
+        # Note: this MUST be run before writing datacubes in order to pass correct dimensions to DataArrayValidator
+        self._set_capture_config(capture_config=capture_config)
+
+        setattr(self, cube_name, cube)
 
         return None
 
 
 
-
-
-    # Georeferencing functions
-
-    # TODO refactor
+    # TODO refactor into two functions
     def _load_points_file(self, 
                           path: str, 
                           image_mode: str = None, 
@@ -404,8 +367,8 @@ class Hypso1(Hypso):
                                                                   longitudes=self.longitudes,
                                                                   verbose=self.VERBOSE)
 
-        self.resolution = compute_resolution(latitudes=self.latitudes, 
-                                             longitudes=self.longitudes)
+        self.resolution = compute_resolution(along_track_gsd=self.along_track_gsd, 
+                                             across_track_gsd=self.across_track_gsd)
 
 
         if flip_lons:
@@ -416,16 +379,7 @@ class Hypso1(Hypso):
             self.latitudes = self.latitudes[::-1,:]
             self.longitudes = self.longitudes[::-1,:]
 
-        self.latitudes_original = self.latitudes
-        self.longitudes_original = self.longitudes
-
-
         return None
-
-
-
-
-    # Calibration functions
         
     def _run_calibration(self, 
                          overwrite: bool = False,
@@ -444,20 +398,8 @@ class Hypso1(Hypso):
         if self.VERBOSE:
             print('[INFO] Running calibration routines...')
 
-        self._set_calibration_coeff_files()
+        self._load_calibration_coeff_files()
 
-
-        self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file)
-        self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file)
-        #self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
-        self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
-
-        if self.spectral_coeffs is not None:
-            self.wavelengths = self.spectral_coeffs
-        else:
-            self.wavelengths = range(0,120)
-
-        
         self.srf = get_spectral_response_function(wavelengths=self.wavelengths)
 
         l1a_cube = self.l1a_cube.to_numpy()
@@ -489,10 +431,7 @@ class Hypso1(Hypso):
 
         return None
 
-
-
-
-    def _set_calibration_coeff_files(self) -> None:
+    def _load_calibration_coeff_files(self) -> None:
         """
         Set the absolute path for the calibration coefficients included in the package. This includes radiometric,
         smile and destriping correction.
@@ -500,113 +439,65 @@ class Hypso1(Hypso):
         :return: None.
         """
 
-
-        if rad_coeff_file:
-            self.rad_coeff_file = rad_coeff_file
-            return None
-
-        if smile_coeff_file:
-            self.smile_coeff_file = smile_coeff_file
-            return None
-
-        if destriping_coeff_file:
-            self.destriping_coeff_file = destriping_coeff_file
-            return None
-        
-        if spectral_coeff_file:
-            self.spectral_coeff_file = spectral_coeff_file
-            return None
-
         match self.capture_type:
 
             case "custom":
-                #csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1.csv"
                 npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1.npz"
-
-                #csv_file_smile = "spectral_calibration_matrix_HYPSO-1_full_v1.csv" 
                 npz_file_smile = "spectral_calibration_matrix_HYPSO-1_full_v1.npz"  
-
-                #csv_file_destriping = None
                 npz_file_destriping = None
-
-                #csv_file_spectral = "spectral_bands_HYPSO-1_v1.csv"
                 npz_file_spectral = "spectral_bands_HYPSO-1_v1.npz"
 
             case "nominal":
-                #csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_nominal_v1.csv"
                 npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_nominal_v1.npz"
-
-                #csv_file_smile = "smile_correction_matrix_HYPSO-1_nominal_v1.csv"
                 npz_file_smile = "smile_correction_matrix_HYPSO-1_nominal_v1.npz"
-
-                #csv_file_destriping = "destriping_matrix_HYPSO-1_nominal_v1.csv"
                 npz_file_destriping = "destriping_matrix_HYPSO-1_nominal_v1.npz"
-
-                #csv_file_spectral = "spectral_bands_HYPSO-1_v1.csv"
                 npz_file_spectral = "spectral_bands_HYPSO-1_v1.npz"
 
             case "wide":
-                #csv_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_wide_v1.csv"
                 npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_wide_v1.npz"
-
-                #csv_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.csv"
                 npz_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.npz"
-
-                #csv_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.csv"
                 npz_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.npz"
-
-                #csv_file_spectral = "spectral_bands_HYPSO-1_v1.csv"
                 npz_file_spectral = "spectral_bands_HYPSO-1_v1.npz"
 
             case _:
                 npz_file_radiometric = None
                 npz_file_smile = None
                 npz_file_destriping = None
-
-        if npz_file_radiometric:
-            rad_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_radiometric}')
-        else: 
-            rad_coeff_file = None
-
-        self.rad_coeff_file = rad_coeff_file
+                npz_file_spectral = None
 
 
-        if npz_file_smile:
-            smile_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_smile}')
-        else:
-            smile_coeff_file = npz_file_smile
+        try:
+            self.rad_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_radiometric}')
+            self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file)
+        except:
+            self.rad_coeff_file = None
 
-        self.smile_coeff_file = smile_coeff_file
+        try:
+            self.smile_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_smile}')
+            self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file)
+        except:
+            self.smile_coeff_file = None
 
+        try:
+            self.destriping_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_destriping}')
+            self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
+        except:
+            self.destriping_coeff_file = None
 
-        if npz_file_destriping:
-            destriping_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_destriping}')
-        else:
-            destriping_coeff_file = None
+        try:
+            self.spectral_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_spectral}')
+            self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
+            self.wavelengths = self.spectral_coeffs
+        except:
+            self.spectral_coeff_file = None
+            self.wavelengths = range(0,120)
 
-        self.destriping_coeff_file = destriping_coeff_file
-
-        if npz_file_spectral:
-            spectral_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_spectral}')
-        else:
-            spectral_coeff_file = None
-
-        self.spectral_coeff_file = spectral_coeff_file
 
         return None
 
 
-
-
-
-
-
-
-
-
-    # Geometry computation functions
-
-    def _run_geometry(self, overwrite: bool = False) -> None:
+    # TODO: Move to hypso parent class
+    def _run_geometry(self, overwrite: bool = False) -> None: 
 
         if self.VERBOSE:
             print("[INFO] Running geometry computation...")
@@ -614,7 +505,7 @@ class Hypso1(Hypso):
         framepose_data = interpolate_at_frame_nc(adcs=self.adcs,
                                                  timestamps_srv=self.timing['timestamps_srv'],
                                                  frame_count=self.capture_config['frame_count'],
-                                                 fps=self.capture_config['fps'],
+                                                 framerate=self.capture_config['framerate'],
                                                  exposure=self.capture_config['exposure'],
                                                  verbose=self.VERBOSE
                                                  )
@@ -628,13 +519,12 @@ class Hypso1(Hypso):
                                                      )
         if pixels_lat == -1 and pixels_lon == -1:            
             if self.VERBOSE:
-                print('[INFO] according to ADCS telemtry, parts or all of the')
-                print('[INFO] image points off the earth\'s horizon. Cant georeference this image')
+                print('[INFO] according to ADCS telemetry, parts or all of the image is pointing')
+                print('[INFO] off the earth\'s horizon. Cant georeference this image.')
             return None
 
         self.latitudes_original = pixels_lat.reshape(self.spatial_dimensions)
         self.longitudes_original = pixels_lon.reshape(self.spatial_dimensions)
-
 
         sun_azimuth, sun_zenith, \
         sat_azimuth, sat_zenith = compute_local_angles(framepose_data=framepose_data,
@@ -652,8 +542,6 @@ class Hypso1(Hypso):
         #self.geometric_meta_info = geometric_meta_info
 
         return None
-
-
 
 
     # Atmospheric correction functions
@@ -676,1070 +564,45 @@ class Hypso1(Hypso):
 
         return None
 
-    def _run_6sv1_atmospheric_correction(self, **kwargs) -> xr.DataArray:
-
-        # Py6S Atmospheric Correction
-        # aot value: https://neo.gsfc.nasa.gov/view.php?datasetId=MYDAL2_D_AER_OD&date=2023-01-01
-        # alternative: https://giovanni.gsfc.nasa.gov/giovanni/
-        # atmos_dict = {
-        #     'aot550': 0.01,
-        #     # 'aeronet': r"C:\Users\alvar\Downloads\070101_151231_Autilla.dubovik"
-        # }
-        # AOT550 parameter gotten from: https://giovanni.gsfc.nasa.gov/giovanni/
-
-        if self.VERBOSE: 
-            print("[INFO] Running 6SV1 atmospheric correction")
-
-        # TODO: which values should we use?
-        if self.latitudes is None:
-            latitudes = self.latitudes_original # fall back on geometry computed values
-        else:
-            latitudes = self.latitudes
-
-        if self.longitudes is None:
-            longitudes = self.longitudes_original # fall back on geometry computed values
-        else:
-            longitudes = self.longitudes
-
-        py6s_dict = {
-            'aot550': 0.0580000256
-        }
-
-        time_capture = parser.parse(self.iso_time)
-
-        cube = self.l1b_cube.to_numpy()
-
-        cube = run_py6s(wavelengths=self.wavelengths, 
-                        hypercube_L1=cube, 
-                        lat_2d_array=latitudes,
-                        lon_2d_array=longitudes,
-                        solar_azimuth_angles=self.solar_azimuth_angles,
-                        solar_zenith_angles=self.solar_zenith_angles,
-                        sat_azimuth_angles=self.sat_azimuth_angles,
-                        sat_zenith_angles=self.sat_zenith_angles,
-                        iso_time=self.iso_time,
-                        py6s_dict=py6s_dict, 
-                        time_capture=time_capture,
-                        srf=self.srf)
-        
-        cube = self._format_l2a_dataarray(cube)
-        cube.attrs['correction'] = "6sv1"
-
-        return cube
 
 
-    def _run_acolite_atmospheric_correction(self) -> xr.DataArray:
-
-        if hasattr(self, 'acolite_path'):
-
-            nc_file_path = str(self.l1b_nc_file)
-            acolite_path = str(self.acolite_path)
-
-            cube = run_acolite(acolite_path=acolite_path, 
-                               output_path=self.capture_dir, 
-                               nc_file_path=nc_file_path)
-
-            cube = self._format_l2a_dataarray(cube)
-            cube.attrs['correction'] = "acolite"
-
-            return cube
-        else:
-            print("[ERROR] Please set path to ACOLITE source code before generating ACOLITE L2a datacube using \"set_acolite_path()\"")
-            print("[INFO] The ACOLITE source code can be downloaded from https://github.com/acolite/acolite")
-            return None
-
-
-
-    # TODO
-    def _run_machi_atmospheric_correction(self) -> xr.DataArray:
-
-        #print("[WARNING] Minimal Atmospheric Compensation for Hyperspectral Imagers (MACHI) atmospheric correction has not been enabled.")
-        #return None
-
-
-
-
-        if self.VERBOSE: 
-            print("[INFO] Running MACHI atmospheric correction")
-
-        # start working with ToA reflectance, so we don't have to worry about the solar spectrum
-        cube = self.toa_reflectance_cube.to_numpy()
-        
-        T, S, objs = hypso.atmospheric.atm_correction(cube.reshape(-1,120), 
-                                                      solar=np.ones(120), 
-                                                      verbose=True,
-                                                      tol=0.01, 
-                                                      est_min_R=0.05)
-
-        # normalize the whole cube
-        cube_norm = (cube - S) /T
-        cube_norm[self.cloud_mask] = np.nan
-
-        cube = self._format_l2a_dataarray(cube_norm)
-        cube.attrs['correction'] = "machi"
-
-        return cube
-    
-
-    # Top of atmosphere reflectance functions
-
-    # TODO: run product through validator, add proprty
-    # TODO: move code to atmospheric module
-    # TODO: add set functions
     def _run_toa_reflectance(self) -> None:
 
-        
-        # Get Local variables
-        srf = self.srf
-        toa_radiance = self.l1b_cube.to_numpy()
-
-        scene_date = parser.isoparse(self.iso_time)
-        julian_day = scene_date.timetuple().tm_yday
-        solar_zenith = self.solar_zenith_angles
-
-        # Read Solar Data
-        solar_data_path = str(files('hypso.atmospheric').joinpath("Solar_irradiance_Thuillier_2002.csv"))
-        solar_df = pd.read_csv(solar_data_path)
-
-        # Create new solar X with a new delta
-        solar_array = np.array(solar_df)
-        current_num = solar_array[0, 0]
-        delta = 0.01
-        new_solar_x = [solar_array[0, 0]]
-        while current_num <= solar_array[-1, 0]:
-            current_num = current_num + delta
-            new_solar_x.append(current_num)
-
-        # Interpolate for Y with original solar data
-        new_solar_y = np.interp(new_solar_x, solar_array[:, 0], solar_array[:, 1])
-
-        # Replace solar Dataframe
-        solar_df = pd.DataFrame(np.column_stack((new_solar_x, new_solar_y)), columns=solar_df.columns)
-
-        # Estimation of TOA Reflectance
-        band_number = 0
-        toa_reflectance = np.empty_like(toa_radiance)
-        for single_wl, single_srf in srf:
-            # Resample HYPSO SRF to new solar wavelength
-            resamp_srf = np.interp(new_solar_x, single_wl, single_srf)
-            weights_srf = resamp_srf / np.sum(resamp_srf)
-            ESUN = np.sum(solar_df['mW/m2/nm'].values * weights_srf)  # units matche HYPSO from device.py
-
-            # Earth-Sun distance (from day of year) using julian date
-            # http://physics.stackexchange.com/questions/177949/earth-sun-distance-on-a-given-day-of-the-year
-            distance_sun = 1 - 0.01672 * np.cos(0.9856 * (
-                    julian_day - 4))
-
-            # Get toa_reflectance
-            solar_angle_correction = np.cos(np.radians(solar_zenith))
-            multiplier = (ESUN * solar_angle_correction) / (np.pi * distance_sun ** 2)
-            toa_reflectance[:, :, band_number] = toa_radiance[:, :, band_number] / multiplier
-
-            band_number = band_number + 1
-
-        self.toa_reflectance_cube = xr.DataArray(toa_reflectance, dims=("y", "x", "band"))
-        #self.toa_reflectance_cube.attrs['units'] = "sr^-1"
-        #self.toa_reflectance_cube.attrs['description'] = "Top of atmosphere (TOA) reflectance"
-
-        return None
-
-
-
-    # Land mask functions
-
-    def _run_land_mask(self, land_mask_name: str="global", **kwargs) -> None:
-
-        land_mask_name = land_mask_name.lower()
-
-        match land_mask_name:
-            case "global":
-                self.land_mask = self._run_global_land_mask(**kwargs)
-            case "ndwi":
-                self.land_mask = self._run_ndwi_land_mask(**kwargs)
-            case "threshold":
-                self.land_mask = self._run_threshold_land_mask(**kwargs)
-
-            case _:
-
-                print("[WARNING] No such land mask supported!")
-                return None
-
-        return None
-
-    def _run_global_land_mask(self) -> np.ndarray:
-
-        if self.VERBOSE:
-            print("[INFO] Running global land mask generation...")
-
-        land_mask = run_global_land_mask(spatial_dimensions=self.spatial_dimensions,
-                                        latitudes=self.latitudes,
-                                        longitudes=self.longitudes
-                                        )
-        
-        land_mask = self._format_land_mask_dataarray(land_mask)
-        land_mask.attrs['method'] = "global"
-
-        return land_mask
-
-    def _run_ndwi_land_mask(self) -> np.ndarray:
-
-        if self.VERBOSE:
-            print("[INFO] Running NDWI land mask generation...")
-
-        cube = self.l1b_cube.to_numpy()
-
-        land_mask = run_ndwi_land_mask(cube=cube, 
-                                       wavelengths=self.wavelengths,
-                                       verbose=self.VERBOSE)
-
-        land_mask = self._format_land_mask_dataarray(land_mask)
-        land_mask.attrs['method'] = "ndwi"
-
-        return land_mask
-    
-    def _run_threshold_land_mask(self) -> xr.DataArray:
-
-        if self.VERBOSE:
-            print("[INFO] Running threshold land mask generation...")
-
-        cube = self.l1b_cube.to_numpy()
-
-        land_mask = run_threshold_land_mask(cube=cube,
-                                            wavelengths=self.wavelengths,
-                                            verbose=self.VERBOSE)
-        
-        land_mask = self._format_land_mask_dataarray(land_mask)
-        land_mask.attrs['method'] = "threshold"
-
-        return land_mask
-     
-    def _format_land_mask(self, land_mask: Union[np.ndarray, xr.DataArray]) -> None:
-
-        land_mask_attributes = {
-                                'description': "Land mask"
-                               }
-        
-        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=self.dim_names_2d, num_dims=2)
-
-        data = v.validate(data=land_mask)
-        data = data.assign_attrs(land_mask_attributes)
-
-        return data
-
-
-
-    # Cloud mask functions
-        
-    def _run_cloud_mask(self, cloud_mask_name: str="quantile_threshold", **kwargs) -> None:
-
-        cloud_mask_name = cloud_mask_name.lower()
-
-        match cloud_mask_name:
-            case "quantile_threshold":
-
-                if self.VERBOSE:
-                    print("[INFO] Running quantile threshold cloud mask generation...")
-
-                self.cloud_mask = self._run_quantile_threshold_cloud_mask(**kwargs)
-
-
-            case "saturated_pixel":
-
-                if self.VERBOSE:
-                    print("[INFO] Running saturated pixel cloud mask generation...")
-
-                self.cloud_mask = self._run_saturated_pixel_cloud_mask(**kwargs)
-
-
-            case _:
-                print("[WARNING] No such cloud mask supported!")
-                return None
-
-        return None
-
-    def _run_quantile_threshold_cloud_mask(self, quantile: float = 0.075) -> None:
-
-        cloud_mask = run_quantile_threshold_cloud_mask(cube=self.l1b_cube,
-                                                        quantile=quantile)
-
-        cloud_mask = self._format_cloud_mask_dataarray(cloud_mask)
-        cloud_mask.attrs['method'] = "quantile threshold"
-        cloud_mask.attrs['quantile'] = quantile
-
-        return cloud_mask 
-
-
-    def _run_saturated_pixel_cloud_mask(self, threshold: float = 35000):
-
-        sat = np.max(self.l1a_cube.to_numpy(), axis=-1) > threshold
-
-        cloud_mask = self._format_cloud_mask_dataarray(sat)
-        cloud_mask.attrs['method'] = "saturated pixel"
-        cloud_mask.attrs['threshold'] = threshold
-
-        return cloud_mask 
-
-
-    # Chlorophyll estimation functions
-
-    def _run_chlorophyll_estimation(self, 
-                                    product_name: str, 
-                                    model: Union[str, Path] = None,
-                                    factor: float = None,
-                                    #overwrite: bool = False,
-                                    **kwargs) -> None:
-
-        match product_name.lower():
-
-            case "band_ratio":
-
-                if self.VERBOSE:
-                    print("[INFO] Running band ratio chlorophyll estimation...")
-
-                self.chl[product_name] = self._run_band_ratio_chlorophyll_estimation(factor=factor, **kwargs)
-                
-            case "6sv1_aqua":
-
-                if self.VERBOSE:
-                    print("[INFO] Running 6SV1 AQUA Tuned chlorophyll estimation...")
-
-                self.chl[product_name] = self._run_6sv1_aqua_tuned_chlorophyll_estimation(model=model, **kwargs)
-
-            case "acolite_aqua":
-
-                if self.VERBOSE:
-                    print("[INFO] Running ACOLITE AQUA Tuned chlorophyll estimation...")
-
-                self.chl[product_name] = self._run_acolite_aqua_tuned_chlorophyll_estimation(model=model, **kwargs)
-
-            case _:
-                print("[ERROR] No such chlorophyll estimation product supported!")
-                return None
-
-        return None
-
-    # TODO: use Rrs, not L1b radiance
-    def _run_band_ratio_chlorophyll_estimation(self, factor: float = None) -> xr.DataArray:
-
-        cube = self.l2a_cube.to_numpy()
-
-        try:
-            mask = self.unified_mask.to_numpy()
-        except:
-            mask = None
-
-        chl = run_band_ratio_chlorophyll_estimation(cube = cube,
-                                                    mask = mask, 
-                                                    wavelengths = self.wavelengths,
-                                                    spatial_dimensions = self.spatial_dimensions,
-                                                    factor = factor
+        toa_reflectance_cube = compute_toa_reflectance(srf=self.srf,
+                                                    toa_radiance=self.l1b_cube,
+                                                    iso_time=self.iso_time,
+                                                    solar_zenith_angles=self.solar_azimuth_angles,
                                                     )
-
-        chl_attributes = {
-                        'method': "549 nm over 663 nm band ratio",
-                        'factor': factor,
-                        'units': "a.u."
-                        }
-
-        chl = self._format_chl(chl)
-        chl = chl.assign_attrs(chl_attributes)
-
-        return chl
-
-    def _run_6sv1_aqua_tuned_chlorophyll_estimation(self, model: Path = None) -> xr.DataArray:
-
-        if self.l2a_cube is None or self.l2a_cube.attrs['correction'] != '6sv1':
-            self._run_atmospheric_correction(product_name='6sv1')
-
-        model = Path(model)
-
-        if not validate_tuned_model(model = model):
-            print("[ERROR] Invalid model.")
-            return None
         
-        if self.spatial_dimensions is None:
-            print("[ERROR] No spatial dimensions provided.")
-            return None
-        
-        cube = self.l2a_cube.to_numpy()
-
-        try:
-            mask = self.unified_mask.to_numpy()
-        except:
-            mask = None
-
-        chl = run_tuned_chlorophyll_estimation(l2a_cube = cube,
-                                               model = model,
-                                               mask = mask,
-                                               spatial_dimensions = self.spatial_dimensions
-                                               )
-        
-        chl_attributes = {
-                        'method': "6SV1 AQUA Tuned",
-                        'model': model,
-                        'units': r'$mg \cdot m^{-3}$'
-                        }
-
-        chl = self._format_chl(chl)
-        chl = chl.assign_attrs(chl_attributes)
-
-        return chl
-
-    def _run_acolite_aqua_tuned_chlorophyll_estimation(self, model: Path = None) -> xr.DataArray:
-
-        #if self.l2a_cube is None or self.l2a_cube.attrs['correction'] != 'acolite':
-        #    self._run_atmospheric_correction(product_name='acolite')
-
-        model = Path(model)
-
-        if not validate_tuned_model(model = model):
-            print("[ERROR] Invalid model.")
-            return None
-        
-        if self.spatial_dimensions is None:
-            print("[ERROR] No spatial dimensions provided.")
-            return None
-
-        cube = self.l2a_cube.to_numpy()
-
-        try:
-            mask = self.unified_mask.to_numpy()
-        except:
-            mask = None
-        
-        chl = run_tuned_chlorophyll_estimation(l2a_cube = cube,
-                                               model = model,
-                                               mask = mask,
-                                               spatial_dimensions = self.spatial_dimensions
-                                               )
-
-        chl_attributes = {
-                        'method': "ACOLITE AQUA Tuned",
-                        'model': model,
-                        'units': r'$mg \cdot m^{-3}$'
-                        }
-
-        chl = self._format_chl(chl)
-        chl = chl.assign_attrs(chl_attributes)
-
-        return chl
-
-    def _format_chl(self, chl: Union[np.ndarray, xr.DataArray]) -> None:
-
-        cloud_mask_attributes = {
-                                'description': "Chlorophyll estimates"
-                                }
-        
-        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=self.dim_names_2d, num_dims=2)
-
-        data = v.validate(data=chl)
-        data = data.assign_attrs(cloud_mask_attributes)
-
-        return data
-
-
-
-    # SatPy functions
-
-    def _generate_satpy_scene(self) -> Scene:
-
-        scene = Scene()
-
-        latitudes, longitudes = self._generate_latlons()
-
-        swath_def = SwathDefinition(lons=longitudes, lats=latitudes)
-
-        latitude_attrs = {
-                         'file_type': None,
-                         'resolution': self.resolution,
-                         'standard_name': 'latitude',
-                         'units': 'degrees_north',
-                         'start_time': self.capture_datetime,
-                         'end_time': self.capture_datetime,
-                         'modifiers': (),
-                         'ancillary_variables': []
-                         }
-
-        longitude_attrs = {
-                          'file_type': None,
-                          'resolution': self.resolution,
-                          'standard_name': 'longitude',
-                          'units': 'degrees_east',
-                          'start_time': self.capture_datetime,
-                          'end_time': self.capture_datetime,
-                          'modifiers': (),
-                          'ancillary_variables': []
-                          }
-
-        #scene['latitude'] = latitudes
-        #scene['latitude'].attrs.update(latitude_attrs)
-        #scene['latitude'].attrs['area'] = swath_def
-
-        #scene['longitude'] = longitudes
-        #scene['longitude'].attrs.update(longitude_attrs)
-        #scene['longitude'].attrs['area'] = swath_def
-
-        return scene
-
-    def _generate_latlons(self) -> tuple[xr.DataArray, xr.DataArray]:
-
-        latitudes = xr.DataArray(self.latitudes, dims=self.dim_names_2d)
-        longitudes = xr.DataArray(self.longitudes, dims=self.dim_names_2d)
-
-        return latitudes, longitudes
-
-    def _generate_swath_definition(self) -> SwathDefinition:
-
-        latitudes, longitudes = self._generate_latlons()
-        swath_def = SwathDefinition(lons=longitudes, lats=latitudes)
-
-        return swath_def
-
-    def _generate_l1a_satpy_scene(self) -> Scene:
-
-        scene = self._generate_satpy_scene()
-        swath_def= self._generate_swath_definition()
-
-        try:
-            cube = self.l1a_cube
-        except:
-            return None
-
-        attrs = {
-                'file_type': None,
-                'resolution': self.resolution,
-                'name': None,
-                'standard_name': cube.attrs['description'],
-                'coordinates': ['latitude', 'longitude'],
-                'units': cube.attrs['units'],
-                'start_time': self.capture_datetime,
-                'end_time': self.capture_datetime,
-                'modifiers': (),
-                'ancillary_variables': []
-                }   
-
-        wavelengths = range(0,120)
-
-        for i, wl in enumerate(wavelengths):
-
-            data = cube[:,:,i]
-
-            data = data.reset_coords(drop=True)
-                
-            name = 'band_' + str(i+1)
-            scene[name] = data
-            #scene[name] = xr.DataArray(data, dims=self.dim_names_2d)
-            scene[name].attrs.update(attrs)
-            scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="band")
-            scene[name].attrs['band'] = i
-            scene[name].attrs['area'] = swath_def
-
-        return scene
-    
-    def _generate_l1b_satpy_scene(self) -> Scene:
-
-        scene = self._generate_satpy_scene()
-        swath_def= self._generate_swath_definition()
-
-        try:
-            cube = self.l1b_cube
-            wavelengths = self.wavelengths
-        except:
-            return None
-
-        attrs = {
-                'file_type': None,
-                'resolution': self.resolution,
-                'name': None,
-                'standard_name': cube.attrs['description'],
-                'coordinates': ['latitude', 'longitude'],
-                'units': cube.attrs['units'],
-                'start_time': self.capture_datetime,
-                'end_time': self.capture_datetime,
-                'modifiers': (),
-                'ancillary_variables': []
-                }   
-
-        for i, wl in enumerate(wavelengths):
-
-            data = cube[:,:,i]
-            
-            data = data.reset_coords(drop=True)
-
-            name = 'band_' + str(i+1)
-            scene[name] = data
-            #scene[name] = xr.DataArray(data, dims=self.dim_names_2d)
-            scene[name].attrs.update(attrs)
-            scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
-            scene[name].attrs['band'] = i
-            scene[name].attrs['area'] = swath_def
-
-        return scene
-
-    def _generate_l2a_satpy_scene(self) -> Scene:
-
-        scene = self._generate_satpy_scene()
-        swath_def= self._generate_swath_definition()
-
-        try:
-            cube = self.l2a_cube
-            wavelengths = self.wavelengths
-        except:
-            return None
-
-        attrs = {
-                'file_type': None,
-                'resolution': self.resolution,
-                'name': None,
-                'standard_name': cube.attrs['description'],
-                'coordinates': ['latitude', 'longitude'],
-                'units': cube.attrs['units'],
-                'start_time': self.capture_datetime,
-                'end_time': self.capture_datetime,
-                'modifiers': (),
-                'ancillary_variables': []
-                }   
-
-        for i, wl in enumerate(wavelengths):
-
-            data = cube[:,:,i]
-
-            data = data.reset_coords(drop=True)
-
-            name = 'band_' + str(i+1)
-            scene[name] = data
-            #scene[name] = xr.DataArray(data, dims=self.dim_names_2d)
-            scene[name].attrs.update(attrs)
-            scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
-            scene[name].attrs['band'] = i
-            scene[name].attrs['area'] = swath_def
-
-        return scene
-
-
-
-
-
-
-    def _generate_toa_reflectance_satpy_scene(self) -> Scene:
-
-        scene = self._generate_satpy_scene()
-        swath_def= self._generate_swath_definition()
-
-        try:
-            cube = self.toa_reflectance_cube
-            wavelengths = self.wavelengths
-        except:
-            return None
-
-        attrs = {
-                'file_type': None,
-                'resolution': self.resolution,
-                'name': None,
-                'standard_name': cube.attrs['description'],
-                'coordinates': ['latitude', 'longitude'],
-                'units': cube.attrs['units'],
-                'start_time': self.capture_datetime,
-                'end_time': self.capture_datetime,
-                'modifiers': (),
-                'ancillary_variables': []
-                }   
-
-        for i, wl in enumerate(wavelengths):
-
-            data = cube[:,:,i]
-
-            data = data.reset_coords(drop=True)
-
-            name = 'band_' + str(i+1)
-            scene[name] = data
-            #scene[name] = xr.DataArray(data, dims=self.dim_names_2d)
-            scene[name].attrs.update(attrs)
-            scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="nm")
-            scene[name].attrs['band'] = i
-            scene[name].attrs['area'] = swath_def
-
-        return scene
-
-
-    def _generate_chlorophyll_satpy_scene(self) -> Scene:
-
-        scene = self._generate_satpy_scene()
-        swath_def= self._generate_swath_definition()
-
-        attrs = {
-                'file_type': None,
-                'resolution': self.resolution,
-                'name': None,
-                #'standard_name': cube.attrs['description'],
-                'coordinates': ['latitude', 'longitude'],
-                #'units': cube.attrs['units'],
-                'start_time': self.capture_datetime,
-                'end_time': self.capture_datetime,
-                'modifiers': (),
-                'ancillary_variables': []
-                }   
-
-        for key, chl in self.chl.items():
-
-            name = 'chl_' + key
-            scene[name] = chl
-            scene[name].attrs.update(attrs)
-            scene[name].attrs['standard_name'] = chl.attrs['description']
-            scene[name].attrs['units'] = chl.attrs['units']
-            scene[name].attrs['area'] = swath_def
-
-        return scene
-
-    def _generate_products_satpy_scene(self) -> Scene:
-
-        scene = self._generate_satpy_scene()
-        swath_def= self._generate_swath_definition()
-
-        attrs = {
-                'file_type': None,
-                'resolution': self.resolution,
-                'name': None,
-                'standard_name': None,
-                'coordinates': ['latitude', 'longitude'],
-                'units': None,
-                'start_time': self.capture_datetime,
-                'end_time': self.capture_datetime,
-                'modifiers': (),
-                'ancillary_variables': []
-                }
-
-        for key, product in self.products.items():
-
-                scene[key] = product
-                scene[key].attrs.update(attrs)
-                scene[key].attrs['name'] = key
-                scene[key].attrs['standard_name'] = key
-                scene[key].attrs['area'] = swath_def
-
-                try:
-                    scene[key].attrs.update(product.attrs)
-                except AttributeError:
-                    pass
-
-
-        return scene
-
-
-    # TODO: make more effient by replacing the for loop and using deepcopy or list to assemble datacube
-    def _resample_dataarray(self, area_def, data: xr.DataArray) -> xr.DataArray:
-
-        swath_def = self._generate_swath_definition()
-
-        brs = XArrayBilinearResampler(source_geo_def=swath_def, target_geo_def=area_def, radius_of_influence=50000)
-        #brs = KDTreeNearestXarrayResampler(source_geo_def=swath_def, target_geo_def=area_def)
-
-
-        # Calculate bilinear neighbour info and generate pre-computed resampling LUTs
-        brs.get_bil_info()
-
-        if data.ndim == 2:
-            resampled_data = brs.resample(data=data[:,:], fill_value=np.nan)
-
-        elif data.ndim == 3:
-
-            num_bands = data.shape[2]
-
-            resampled_data = np.zeros((area_def.shape[0], area_def.shape[1], num_bands))
-            resampled_data = xr.DataArray(resampled_data, dims=self.dim_names_3d)
-            resampled_data.attrs.update(data.attrs)
-
-            for band in range(0,num_bands):
-                
-                # Resample using pre-computed resampling LUTs
-                resampled_data[:,:,band] = brs.get_sample_from_bil_info(data=data[:,:,band], 
-                                                                        fill_value=np.nan, 
-                                                                        output_shape=area_def.shape)
-
-                #resampled_data[:,:,band] = brs.resample(data=data[:,:,band], fill_value=np.nan)
-
-        else:
-            return None
-        
-        return resampled_data
-
-    def resample_l1a_cube(self, area_def) -> xr.DataArray:
-
-        return self._resample_dataarray(area_def=area_def, data=self.l1a_cube)
-
-    def resample_l1b_cube(self, area_def) -> xr.DataArray:
-
-        return self._resample_dataarray(area_def=area_def, data=self.l1b_cube)
-    
-    def resample_l2a_cube(self, area_def) -> xr.DataArray:
-
-        return self._resample_dataarray(area_def=area_def, data=self.l2a_cube)
-    
-    def resample_toa_reflectance_cube(self, area_def) -> xr.DataArray:
-
-        return self._resample_dataarray(area_def=area_def, data=self.toa_reflectance_cube)
-    
-    def resample_chlorophyll_estimates(self, area_def) -> xr.DataArray:
-
-        resampled_chl = DataArrayDict(dims_shape=area_def.shape, 
-                                        attributes=self.chl.attributes, 
-                                        dims_names=self.dim_names_2d,
-                                        num_dims=2
-                                        )
-
-        for key, chl in self.chl.items():
-
-            resampled_chl[key] = self._resample_dataarray(area_def=area_def, data=chl)
-
-        return resampled_chl
-    
-    def resample_products(self, area_def) -> xr.DataArray:
-
-        resampled_products = DataArrayDict(dims_shape=area_def.shape, 
-                                        attributes=self.products.attributes, 
-                                        dims_names=self.dim_names_2d,
-                                        num_dims=2
-                                        )
-
-        for key, product in self.products.items():
-
-            resampled_products[key] = self._resample_dataarray(area_def=area_def, data=product)
-
-        return resampled_products
-
-
-
-
-
-    # Other functions
-
-
-    def flip_l1a_cube(self) -> None:
-
-        self.l1a_cube = self.l1a_cube[:, ::-1, :]
-
-    def flip_l1b_cube(self) -> None:
-
-        self.l1b_cube = self.l1b_cube[:, ::-1, :]
-
-    def flip_l2a_cube(self) -> None:
-
-        self.l2a_cube = self.l2a_cube[:, ::-1, :]
-
-    def flip_toa_reflectance_cube(self) -> None:
-
-        self.toa_reflectance_cube = self.toa_reflectance_cube[:, ::-1, :]
-
-
-
-
-    # TODO: remove this function
-    def _get_flipped_cube(self, cube: np.ndarray) -> np.ndarray:
-
-        if self.datacube_flipped is None:
-            return cube
-        else:
-            if self.datacube_flipped:
-                return cube[:, ::-1, :]
-
-            else:
-                return cube
-
-        return cube
-    
-
-    # Public functions
-
-    def load_file(self, path: str = None) -> None:
-
-        if path:
-            self._load_file(path=path)
-
-        return None
-    
-
-    def load_points_file(self, path: str = None, image_mode=None, origin_mode=None, flip_lats=False, flip_lons=False) -> None:
-
-        if path:
-            self._load_points_file(path=path, image_mode=image_mode, origin_mode=origin_mode, flip_lats=flip_lats, flip_lons=flip_lons)
+        #self.l1c_cube = xr.DataArray(toa_reflectance, dims=("y", "x", "band"))
+        #self.l1c_cube.attrs['units'] = "sr^-1"
+        #self.l1c_cube.attrs['description'] = "Top of atmosphere (TOA) reflectance"
+        #toa_reflectance_cube = xr.DataArray(toa_reflectance, dims=("y", "x", "band"))
+
+        self.l1c_cube = toa_reflectance_cube
 
         return None
 
+    def generate_geometry(self, overwrite: bool = False) -> None:
 
-    # Public L1a methods
-
-    def get_l1a_cube(self) -> xr.DataArray:
-
-        return self.l1a_cube
-
-    def get_l1a_spectrum(self, 
-                        latitude=None, 
-                        longitude=None,
-                        x: int = None,
-                        y: int = None
-                        ) -> xr.DataArray:
-
-        if self.l1a_cube is None:
-            return None
-        
-        if latitude is not None and longitude is not None:
-            idx = get_nearest_pixel(target_latitude=latitude, 
-                                    target_longitude=longitude,
-                                    latitudes=self.latitudes,
-                                    longitudes=self.longitudes)
-
-        elif x is not None and y is not None:
-            idx = (x,y)
-
-        else:
-            return None
-
-        spectrum = self.l1a_cube[idx[0], idx[1], :]
-
-        return spectrum
-
-    def plot_l1a_spectrum(self, 
-                         latitude=None, 
-                         longitude=None,
-                         x: int = None,
-                         y: int = None,
-                         save: bool = False
-                         ) -> None:
-        
-        if latitude is not None and longitude is not None:
-            idx = get_nearest_pixel(target_latitude=latitude, 
-                                    target_longitude=longitude,
-                                    latitudes=self.latitudes,
-                                    longitudes=self.longitudes)
-
-        elif x is not None and y is not None:
-            idx = (x,y)
-
-        else:
-            return None
-
-        spectrum = self.l1a_cube[idx[0], idx[1], :]
-        bands = range(0, len(spectrum))
-        units = spectrum.attrs["units"]
-
-        output_file = Path(self.parent_dir, self.capture_name + '_l1a_plot.png')
-
-        plt.figure(figsize=(10, 5))
-        plt.plot(bands, spectrum)
-        plt.ylabel(units)
-        plt.xlabel("Band number")
-        plt.title(f"L1a (lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
-        plt.grid(True)
-
-        if save:
-            plt.imsave(output_file)
-        else:
-            plt.show()
+        self._run_geometry(overwrite=overwrite)
 
         return None
 
-    def write_l1a_nc_file(self, overwrite: bool = False) -> None:
+    def get_closest_wavelength_index(self, wavelength: Union[float, int]) -> int:
 
-        if Path(self.l1a_nc_file).is_file() and not overwrite:
+        wavelengths = np.array(self.wavelengths)
+        differences = np.abs(wavelengths - wavelength)
+        closest_index = np.argmin(differences)
 
-            original_path = self.l1a_nc_file
-
-            file_name = original_path.name
-            modified_file_name = file_name.replace('-l1a', '-l1a-modified')
-            modified_path = original_path.with_name(modified_file_name)
-
-            dst_l1a_nc_file = modified_path
-
-            if self.VERBOSE:
-                print("[INFO] L1a NetCDF file has already been generated. Writing L1a data to: " + str(dst_l1a_nc_file))
-
-        else:
-            dst_l1a_nc_file = self.l1a_nc_file
+        return closest_index
 
 
-        l1a_nc_writer(satobj=self, 
-                      dst_l1a_nc_file=dst_l1a_nc_file, 
-                      src_l1a_nc_file=self.l1a_nc_file)
 
-        return None
-
-
-    # Public L1b methods
 
     def generate_l1b_cube(self, **kwargs) -> None:
 
         self._run_calibration(**kwargs)
-
-        return None
-
-    def get_l1b_cube(self) -> xr.DataArray:
-
-        return self.l1b_cube
-
-    def get_l1b_spectrum(self, 
-                        latitude=None, 
-                        longitude=None,
-                        x: int = None,
-                        y: int = None
-                        ) -> tuple[np.ndarray, str]:
-
-        if self.l1b_cube is None:
-            return None
-        
-        if latitude is not None and longitude is not None:
-            idx = get_nearest_pixel(target_latitude=latitude, 
-                                    target_longitude=longitude,
-                                    latitudes=self.latitudes,
-                                    longitudes=self.longitudes)
-
-        elif x is not None and y is not None:
-            idx = (x,y)
-            
-        else:
-            return None
-
-        spectrum = self.l1b_cube[idx[0], idx[1], :]
-
-        return spectrum
-
-    def plot_l1b_spectrum(self, 
-                        latitude=None, 
-                        longitude=None,
-                        x: int = None,
-                        y: int = None,
-                        save: bool = False
-                        ) -> None:
-        
-        if latitude is not None and longitude is not None:
-            idx = get_nearest_pixel(target_latitude=latitude, 
-                                    target_longitude=longitude,
-                                    latitudes=self.latitudes,
-                                    longitudes=self.longitudes)
-
-        elif x is not None and y is not None:
-            idx = (x,y)
-
-        else:
-            return None
-
-        spectrum = self.l1b_cube[idx[0], idx[1], :]
-        bands = self.wavelengths
-        units = spectrum.attrs["units"]
-
-        output_file = Path(self.parent_dir, self.capture_name + '_l1a_plot.png')
-
-        plt.figure(figsize=(10, 5))
-        plt.plot(bands, spectrum)
-        plt.ylabel(units)
-        plt.xlabel("Wavelength (nm)")
-        plt.title(f"L1b (lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
-        plt.grid(True)
-
-        if save:
-            # TODO: TypeError: imsave() missing 1 required positional argument: 'arr'
-            plt.imsave(output_file)
-        else:
-            plt.show()
 
         return None
 
@@ -1758,103 +621,29 @@ class Hypso1(Hypso):
 
         return None
 
+    def generate_l1c_cube(self) -> None:
 
-    # Public L2a methods
-
-    def generate_l2a_cube(self, product_name: str = "machi") -> None:
-
-        self._run_atmospheric_correction(product_name=product_name)
+        self._run_geometry()
+        self._run_toa_reflectance()
 
         return None
 
-    def get_l2a_cube(self) -> xr.DataArray:
-
-        return self.l2a_cube
-
-    def get_l2a_spectrum(self,
-                        latitude=None, 
-                        longitude=None,
-                        x: int = None,
-                        y: int = None
-                        ) -> xr.DataArray:
-
-
-        if latitude is not None and longitude is not None:
-            idx = get_nearest_pixel(target_latitude=latitude, 
-                                    target_longitude=longitude,
-                                    latitudes=self.latitudes,
-                                    longitudes=self.longitudes)
-
-        elif x is not None and y is not None:
-            idx = (x,y)
-            
-        else:
-            return None
-
-        try:
-            spectrum = self.l2a_cube[idx[0], idx[1], :]
-        except KeyError:
-            return None
-
-        return spectrum
-
-    def plot_l2a_spectrum(self,
-                         latitude=None, 
-                         longitude=None,
-                         x: int = None,
-                         y: int = None,
-                         save: bool = False
-                         ) -> np.ndarray:
+    # TODO
+    def write_l1c_nc_file(self, path: str) -> None:
         
-        if latitude is not None and longitude is not None:
-            idx = get_nearest_pixel(target_latitude=latitude, 
-                                    target_longitude=longitude,
-                                    latitudes=self.latitudes,
-                                    longitudes=self.longitudes)
+        return None
 
-        elif x is not None and y is not None:
-            idx = (x,y)
+    # TODO
+    def generate_l2a_cube(self, product_name: str = "machi") -> None:
 
-        else:
-            return None
+        self._run_geometry()
+        #self._run_atmospheric_correction(product_name=product_name)
 
-        try:
-            spectrum = self.l2a_cube[idx[0], idx[1], :]
-        except KeyError:
-            return None
-
-        bands = self.wavelengths
-        units = spectrum.attrs["units"]
-
-        output_file = Path(self.parent_dir, self.capture_name + '_l2a_plot.png')
-
-        plt.figure(figsize=(10, 5))
-        plt.plot(bands, spectrum)
-        plt.ylabel(units)
-        plt.ylim([0, 1])
-        plt.xlabel("Wavelength (nm)")
-        plt.title(f"L2a (lat, lon) --> (X, Y) : ({latitude}, {longitude}) --> ({idx[0]}, {idx[1]})")
-        plt.grid(True)
-
-        if save:
-            plt.imsave(output_file)
-        else:
-            plt.show()
+        return None
 
     def write_l2a_nc_file(self, overwrite: bool = False) -> None:
 
-        correction = self.l2a_cube.attrs['correction']
-
-        original_path = self.l2a_nc_file
-
-        file_name = original_path.name
-        modified_file_name = file_name.replace('-l2a', '-l2a-' + correction)
-        modified_path = original_path.with_name(modified_file_name)
-
-        dst_l2a_nc_file = modified_path
-        src_l1a_nc_file = self.l1a_nc_file
-
-        if Path(dst_l2a_nc_file).is_file() and not overwrite:
+        if Path(self.l1b_nc_file).is_file() and not overwrite:
 
             if self.VERBOSE:
                 print("[INFO] L1b NetCDF file has already been generated. Skipping.")
@@ -1862,219 +651,13 @@ class Hypso1(Hypso):
             return None
 
         l2a_nc_writer(satobj=self, 
-                      dst_l2a_nc_file=dst_l2a_nc_file, 
-                      src_l1a_nc_file=src_l1a_nc_file)
-
-        return None
-
-    def set_acolite_path(self, path: str) -> None:
-
-        self.acolite_path = Path(path).absolute()
-
-        return None
-
-    # Public georeferencing functions
-
-    # TODO
-    def load_georeferencing(self, path: str) -> None:
-
-        return None
-    
-    # TODO
-    def generate_georeferencing(self) -> None:
-
-        return None
-    
-    # TODO
-    def get_ground_control_points(self) -> None:
-
-        return None
-
-    # TODO
-    def write_georeferencing(self, path: str) -> None:
-
-        return None
-    
-
-    # Public geometry functions
-
-    # TODO
-    def load_geometry(self, path: str) -> None:
-
-        return None
-
-    def generate_geometry(self) -> None:
-
-        self._run_geometry()
-
-        return None
-
-    # TODO
-    def write_geometry(self, path: str) -> None:
-
-        return None
-
-
-    # Public land mask methods
-
-    # TODO
-    def load_land_mask(self, path: str) -> None:
-
-        return None
-
-    def generate_land_mask(self, land_mask_name: LAND_MASK_PRODUCTS = DEFAULT_LAND_MASK_PRODUCT, **kwargs) -> None:
-
-        self._run_land_mask(land_mask_name=land_mask_name, **kwargs)
-
-        return None
-
-    def get_land_mask(self) -> xr.DataArray:
-
-        return self.land_mask
-
-    # TODO
-    def write_land_mask(self, path: str) -> None:
-
-        return None
-
-
-    # Public cloud mask methods
-
-    # TODO
-    def load_cloud_mask(self, path: str) -> None:
-
-        return None
-
-    def generate_cloud_mask(self, cloud_mask_name: CLOUD_MASK_PRODUCTS = DEFAULT_CLOUD_MASK_PRODUCT, **kwargs):
-
-        self._run_cloud_mask(cloud_mask_name=cloud_mask_name, **kwargs)
-
-        return None
-
-    def get_cloud_mask(self) -> xr.DataArray:
-
-        return self.cloud_mask
-    
-    # TODO
-    def write_cloud_mask(self, path: str) -> None:
-
-        return None
-
-
-    # Public unified mask methods
-
-    def get_unified_mask(self) -> xr.DataArray:
-
-        return self.unified_mask
-
-
-    # Public chlorophyll methods
-
-    # TODO
-    def load_chlorophyll_estimates(self, path: str) -> None:
-
-        return None
-
-    def generate_chlorophyll_estimates(self, 
-                                       product_name: str = DEFAULT_CHL_EST_PRODUCT,
-                                       model: Union[str, Path] = None,
-                                       factor: float = 0.1
-                                       ) -> None:
-
-        self._run_chlorophyll_estimation(product_name=product_name, model=model, factor=factor)
-
-    def get_chlorophyll_estimates(self, product_name: str = DEFAULT_CHL_EST_PRODUCT,
-                                 ) -> np.ndarray:
-
-        key = product_name.lower()
-
-        return self.chl[key]
-
-
-    # TODO
-    def write_chlorophyll_estimates(self, path: str) -> None:
-
-        return None
-    
-
-
-    # Public custom products methods
-    
-    # TODO
-    def load_products(self, path: str) -> None:
-
-        return None
-
-    # TODO
-    def write_products(self, path: str) -> None:
+                      dst_l2a_nc_file=self.l2a_nc_file, 
+                      src_l1a_nc_file=self.l1a_nc_file)
 
         return None
 
 
 
-    # Public top of atmosphere (TOA) reflectance methods
 
-    # TODO
-    def load_toa_reflectance(self, path: str) -> None:
-        
-        return None
-
-    def generate_toa_reflectance(self) -> None:
-
-        self._run_toa_reflectance()
-
-        return None
-
-    def get_toa_reflectance(self) -> xr.DataArray:
-        """
-        Convert Top Of Atmosphere (TOA) Radiance to TOA Reflectance.
-
-        :return: Array with TOA Reflectance.
-        """
-
-        return self.toa_reflectance_cube
-
-
-    # TODO
-    def write_toa_reflectance(self, path: str) -> None:
-        
-        return None
-
-
-    def get_l1a_satpy_scene(self) -> Scene:
-
-        return self._generate_l1a_satpy_scene()
-
-    def get_l1b_satpy_scene(self) -> Scene:
-
-        return self._generate_l1b_satpy_scene()
-
-    def get_l2a_satpy_scene(self) -> Scene:
-
-        return self._generate_l2a_satpy_scene()
-    
-    def get_toa_reflectance_satpy_scene(self) -> Scene:
-
-        return self._generate_toa_reflectance_satpy_scene()
-
-    def get_chlorophyll_estimates_satpy_scene(self) -> Scene:
-
-        return self._generate_chlorophyll_satpy_scene()
-
-    def get_products_satpy_scene(self) -> Scene:
-
-        return self._generate_products_satpy_scene()
-
-    def get_bbox(self) -> tuple:
-        
-        return self.bbox
-    
-    def get_closest_wavelength_index(self, wavelength: Union[float, int]) -> int:
-
-        wavelengths = np.array(self.wavelengths)
-        differences = np.abs(wavelengths - wavelength)
-        closest_index = np.argmin(differences)
-
-        return closest_index
 
 
