@@ -15,7 +15,7 @@ from .utils import load_capture_config_from_nc_file, \
                     load_temperature_from_nc_file, \
                     load_ncattrs_from_nc_file
 
-def load_l1a_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict, dict, dict, dict, dict, dict, dict, np.ndarray]:
+def load_l1a_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict, dict, dict, dict, dict, dict, np.ndarray]:
 
     nc_capture_config, \
     nc_timing, \
@@ -25,7 +25,6 @@ def load_l1a_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict, dict,
     nc_navigation, \
     nc_database, \
     nc_corrections, \
-    nc_logfiles, \
     nc_temperature, \
     nc_attrs = load_l1a_nc_metadata(nc_file_path=nc_file_path)
 
@@ -39,7 +38,6 @@ def load_l1a_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict, dict,
             nc_navigation, \
             nc_database, \
             nc_corrections, \
-            nc_logfiles, \
             nc_temperature, \
             nc_attrs, \
             nc_cube
@@ -77,7 +75,7 @@ def load_l1a_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, di
     nc_navigation = load_navigation_from_nc_file(nc_file_path)
     nc_database = load_database_from_nc_file(nc_file_path)
     nc_corrections = load_corrections_from_nc_file(nc_file_path)
-    nc_logfiles = load_logfiles_from_nc_file(nc_file_path)
+    #nc_logfiles = load_logfiles_from_nc_file(nc_file_path)
     nc_temperature = load_temperature_from_nc_file(nc_file_path)
     nc_attrs = load_ncattrs_from_nc_file(nc_file_path)
 
@@ -89,6 +87,5 @@ def load_l1a_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, di
             nc_navigation, \
             nc_database, \
             nc_corrections, \
-            nc_logfiles, \
             nc_temperature, \
             nc_attrs

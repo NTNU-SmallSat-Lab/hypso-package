@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 from dateutil import parser
 from importlib.resources import files
 from pathlib import Path
@@ -26,8 +26,9 @@ from hypso.calibration import read_coeffs_from_file, \
                               get_spectral_response_function
 
 
-from hypso.geometry import interpolate_at_frame, \
-                           geometry_computation, \
+from hypso.geometry import interpolate_at_frame_nc, \
+                           direct_georeference, \
+                           compute_local_angles, \
                            get_nearest_pixel, \
                            compute_gsd, \
                            compute_bbox, \
@@ -142,17 +143,26 @@ class Hypso1(Hypso):
         self.image_width = int(self.capture_config["column_count"] / self.capture_config["bin_factor"])
         self.im_size = self.image_height * self.image_width
 
-        self.bands = self.image_width
-        self.lines = self.capture_config["frame_count"]  # AKA Frames AKA Rows
-        self.samples = self.image_height  # AKA Cols
+        self.bands = int(self.image_width)
+        self.lines = int(self.capture_config["frame_count"])  # AKA Frames AKA Rows
+        self.samples = int(self.image_height)  # AKA Cols
 
         self.spatial_dimensions = (self.capture_config["frame_count"], self.image_height)
 
         if self.VERBOSE:
             print(f"[INFO] Capture spatial dimensions: {self.spatial_dimensions}")
 
+        try:
+            self.start_timestamp_capture = int(self.timing['capture_start_unix']) + UNIX_TIME_OFFSET
+        except:
+            try:
+                datestring = self.ncattrs['date_aquired']
+            except:
+                datestring = self.ncattrs['timestamp_acquired']
 
-        self.start_timestamp_capture = int(self.timing['capture_start_unix']) + UNIX_TIME_OFFSET
+            dt = datetime.datetime.strptime(datestring, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=datetime.timezone.utc)
+            self.start_timestamp_capture = dt.timestamp()
+
 
         # Get END_TIMESTAMP_CAPTURE
         # can't compute end timestamp using frame count and frame rate
@@ -172,7 +182,7 @@ class Hypso1(Hypso):
         self.end_timestamp_adcs = self.end_timestamp_capture + time_margin_end
 
         self.unixtime = self.start_timestamp_capture
-        self.iso_time = datetime.utcfromtimestamp(self.unixtime).isoformat()
+        self.iso_time = datetime.datetime.utcfromtimestamp(self.unixtime).isoformat()
 
 
         if self.capture_config["frame_count"] == self.standard_dimensions["nominal"]:
@@ -235,14 +245,15 @@ class Hypso1(Hypso):
             setattr(self, key, value)
 
         capture_name = self._compose_capture_name(fields=fields)
-        setattr(self, "capture_name", capture_name)
 
-        setattr(self, "l1a_nc_file", Path(path.parent, capture_name + "-l1a.nc"))
-        setattr(self, "l1b_nc_file", Path(path.parent, capture_name + "-l1b.nc"))
-        setattr(self, "l2a_nc_file", Path(path.parent, capture_name + "-l2a.nc"))
+        self.capture_name = capture_name
 
-        setattr(self, "capture_dir", Path(path.parent.absolute(), capture_name + "_tmp"))
-        setattr(self, "parent_dir", Path(path.parent.absolute()))
+        self.l1a_nc_file = Path(path.parent, capture_name + "-l1a.nc")
+        self.l1b_nc_file = Path(path.parent, capture_name + "-l1b.nc")
+        self.l2a_nc_file = Path(path.parent, capture_name + "-l2a.nc")
+
+        self.capture_dir = Path(path.parent.absolute(), capture_name + "_tmp")
+        self.parent_dir = Path(path.parent.absolute())
 
         match fields['product_level']:
             case "l1a":
@@ -282,21 +293,19 @@ class Hypso1(Hypso):
         navigation, \
         database, \
         corrections, \
-        logfiles, \
         temperature, \
         ncattrs, \
         cube = load_func(nc_file_path=path)
 
-        setattr(self, "capture_config", capture_config)
-        setattr(self, "timing", timing)
-        setattr(self, "adcs", adcs)
-        setattr(self, "dimensions", dimensions)
-        setattr(self, "navigation", navigation)
-        setattr(self, "database", database)
-        setattr(self, "corrections", corrections)
-        setattr(self, "logfiles", logfiles)
-        setattr(self, "temperature", temperature)
-        setattr(self, "ncattrs", ncattrs)
+        self.capture_config = capture_config
+        self.timing = timing
+        self.adcs = adcs
+        self.dimensions = dimensions
+        self.navigation = navigation
+        self.database = database
+        self.corrections = corrections
+        self.temperature = temperature
+        self.ncattrs = ncattrs
 
         # Note: this MUST be run before writing datacubes in order to pass correct dimensions to DataArrayValidator
         self._set_capture_config(capture_config=capture_config)
@@ -500,11 +509,10 @@ class Hypso1(Hypso):
     def _run_geometry(self, overwrite: bool = False) -> None: 
 
         if self.VERBOSE:
-            print("[INFO] Running geometry computation...")
+            print("[INFO] Running geometry computation ...")
 
         framepose_data = interpolate_at_frame_nc(adcs=self.adcs,
-                                                 timestamps_srv=self.timing['timestamps_srv'],
-                                                 frame_count=self.capture_config['frame_count'],
+                                                 lines_timestamps=self.timing['timestamps_srv'],
                                                  framerate=self.capture_config['framerate'],
                                                  exposure=self.capture_config['exposure'],
                                                  verbose=self.VERBOSE
@@ -517,7 +525,7 @@ class Hypso1(Hypso):
                                                      aoi_offset=self.y_start,
                                                      verbose=self.VERBOSE
                                                      )
-        if pixels_lat == -1 and pixels_lon == -1:            
+        if type(pixels_lat) == int and type(pixels_lon) == int:
             if self.VERBOSE:
                 print('[INFO] according to ADCS telemetry, parts or all of the image is pointing')
                 print('[INFO] off the earth\'s horizon. Cant georeference this image.')
@@ -529,7 +537,7 @@ class Hypso1(Hypso):
         sun_azimuth, sun_zenith, \
         sat_azimuth, sat_zenith = compute_local_angles(framepose_data=framepose_data,
                                                        lats=pixels_lat, lons=pixels_lon,
-                                                       indices=np.array([ 0, hypso_height/4 - 1, hypso_height/2 - 1, 3*hypso_height/4 - 1, hypso_height - 1]),
+                                                       indices=np.array([ 0, self.samples//4 - 1, self.samples//2 - 1, 3*self.samples//4 - 1, self.samples - 1], dtype='uint16'),
                                                        verbose=self.VERBOSE)
         self.solar_zenith_angles = sun_zenith.reshape(self.spatial_dimensions)
         self.solar_azimuth_angles = sun_azimuth.reshape(self.spatial_dimensions)
@@ -540,6 +548,9 @@ class Hypso1(Hypso):
         #self.prj_file_contents = prj_file_contents
         #self.local_angles = local_angles
         #self.geometric_meta_info = geometric_meta_info
+
+        if self.VERBOSE:
+            print("[INFO] Geometry computations done")
 
         return None
 

@@ -46,7 +46,7 @@ def interpolate_at_frame_nc(adcs,
     pos_x = adcs["position_x"]
     pos_y = adcs["position_y"]
     pos_z = adcs["position_z"]
-    pos = np.column_stack((timestamps, pos_x, pos_y, pos_z))
+    pos = np.column_stack((pos_x, pos_y, pos_z))
 
     quat_s = adcs["quaternion_s"]
     quat_x = adcs["quaternion_x"]
@@ -56,6 +56,11 @@ def interpolate_at_frame_nc(adcs,
 
     adcs_timestamps = adcs["timestamps"]
 
+    # converting type "numpy.ma.MaskedArray" to "numpy.ndarray"
+    pos = np.array(pos)
+    quat = np.array(quat)
+    adcs_timestamps = np.array(adcs_timestamps)
+    lines_timestamps = np.array(lines_timestamps)
 
     return interpolate_at_frame(adcs_timestamps, pos, quat, lines_timestamps,
                                 additional_time_offset, framerate, exposure, verbose)
@@ -83,20 +88,17 @@ def interpolate_at_frame(adcs_timestamps: np.ndarray, position: np.ndarray,
     :return pd.DataFrame:
     """
 
-    if adcs_timestamps.size[0] != position.size[0]:
+    if adcs_timestamps.shape[0] != position.shape[0]:
         print('ERROR: ADCS timestamps size does not match ADCS positions size')
         return -1
-    if adcs_timestamps.size[0] != quaternion.size[0]:
+    if adcs_timestamps.shape[0] != quaternion.shape[0]:
         print('ERROR: ADCS timestamps size does not match ADCS quaternions size')
         return -1
 
-    frame_count = lines_timestamps.size[0]
+    frame_count = lines_timestamps.shape[0]
 
     if verbose:
-        print('ECI position samples:', position.shape[0])
-
-    if verbose:
-        print('Quaternion samples:', quaternion.shape[0])
+        print('[INFO] ADCS samples:', adcs_timestamps.shape[0])
 
     # Workaround for making proper timestamps based on framerate and exposure time
     if framerate > 0.0:
@@ -116,8 +118,8 @@ def interpolate_at_frame(adcs_timestamps: np.ndarray, position: np.ndarray,
     frame_ts_end = lines_timestamps[-1]
 
     if verbose:
-        print(f'ADCS time range: {adcs_ts_start:17.6f} to {adcs_ts_end:17.6f}')
-        print(f'Frame time range: {frame_ts_start:17.6f} to {frame_ts_end:17.6f}')
+        print(f'[INFO]  ADCS time range: {adcs_ts_start:17.6f} to {adcs_ts_end:17.6f}')
+        print(f'[INFO] Frame time range: {frame_ts_start:17.6f} to {frame_ts_end:17.6f}')
 
     # The ADCS time range needs to completely include the frames/lines time range
     if frame_ts_start < adcs_ts_start:
@@ -131,8 +133,8 @@ def interpolate_at_frame(adcs_timestamps: np.ndarray, position: np.ndarray,
         # Printing how many samples there are in the 
         a = adcs_timestamps[:] > lines_timestamps[0]
         b = adcs_timestamps[:] < lines_timestamps[-1]
-        print(f'{np.sum(a & b)} sample(s) inside frame time range')
-        print(f'Interpolating {frame_count:d} frames')
+        print(f'[INFO] {np.sum(a & b)} sample(s) inside frame time range')
+        print(f'[INFO] Interpolating {frame_count:d} frames')
 
     interpolation_method = 'linear'  # 'cubic' causes errors sometimes: "ValueError: Expect x to not have duplicates"
 
@@ -182,7 +184,7 @@ def pixel_index_to_angle(index, aoi_offset, fov_full, pixels_full) -> float:
 
 
 def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_offset: int=266,
-                        verbose = False) -> np.ndarray, np.ndarray:
+                        verbose = False) -> Tuple[np.ndarray, np.ndarray]:
     """
     Compute pixel coordinates (lat lon) using the framepose data
 
@@ -218,8 +220,7 @@ def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_o
     body_z_itrs = np.zeros([frame_count, 3])
 
     if verbose:
-        print(f'Spatial dimensions: {frame_count} frames/lines, {image_height} pixels/samples')
-        print('Computing pixel latitude and longitude coordinates...')  # computing pixel lat,lon's
+        print('[INFO] Computing pixel latitude and longitude coordinates ...')  # computing pixel lat,lon's
 
     # computing lat,lons using astropy
     pointing_off_earth_indicator = 0
@@ -341,7 +342,7 @@ def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_o
     lon_center = latlon_mid[frame_count // 2, 1] * m.pi / 180.0
 
     if verbose:
-        print('Interpolating pixel coordinate gaps...')
+        print('[INFO] Interpolating pixel coordinate gaps...')
 
     pixels_lat = np.zeros([frame_count, image_height])
     pixels_lon = np.zeros([frame_count, image_height])
@@ -357,6 +358,9 @@ def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_o
         pixels_lat[i, :] = si.griddata(subsample_pixels_indices, lats, all_pixels_indices, method=interpolation_method)
         pixels_lon[i, :] = si.griddata(subsample_pixels_indices, lons, all_pixels_indices, method=interpolation_method)
 
+    if verbose:
+        print('[INFO] Direct georeferencing done')
+
     return pixels_lat, pixels_lon
 
 
@@ -366,30 +370,29 @@ def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_o
 def compute_local_angles(framepose_data: np.ndarray,
                          lats: np.ndarray, lons: np.ndarray,
                          indices: np.ndarray,
-                         verbose=False) -> np.ndarray, np.ndarray, np.ndarray, np.ndarray:
+                         verbose=False) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Compute the Local Angles of the Capture (Second Variation)
 
-    :param times:
-    :param pos_teme:
+    :param framepose_data:
     :param lats:
     :param lons:
-    :param indices:
+    :param indices: neds to be an integer type
 
     :return: Returns array of local angles, and a list of numpy arrays of the satellite and sun zenith and azimuth pos
     """
     if verbose:
-        print('Computing local angles (sun and satellite azimuth and zenith angles)...')
+        print('[INFO] Computing local angles (sun and satellite azimuth and zenith angles) ...')
 
-    times = framepose_data.values[:,0]
-    pos_teme = framepose_data.values[:,2:5]
+    times = framepose_data[:,0]
+    pos_teme = framepose_data[:,2:5]
 
     if times.shape[0] != lats.shape[0]:
-        print(f'Size of time array not the same as size of latlons!: {times.shape[0]} != {lats.shape[0]}')
+        print(f'[ERROR] Size of time array not the same as size of latlons!: {times.shape[0]} != {lats.shape[0]}')
         return None
 
     if lats.shape != lons.shape:
-        print(f'Size of latitudes and longitudes array do not match!: {lats.shape} != {lons.shape}')
+        print(f'[ERROR] Size of latitudes and longitudes array do not match!: {lats.shape} != {lons.shape}')
         return None
 
     frame_count = times.shape[0]
@@ -403,7 +406,7 @@ def compute_local_angles(framepose_data: np.ndarray,
     poses_astropy_teme = astropy.coordinates.TEME(astropy.coordinates.CartesianRepresentation(pos_teme.transpose(1, 0) * astropy.units.m), obstime=times_astropy)
 
     if verbose:
-        print('  using astropy for a subsampling of pixels ...')
+        print('[INFO] Using astropy on a subsampling of pixels ... (TODO skyfield may be faster)')
 
     for i in range(frame_count):
         sun_pos = astropy.coordinates.get_sun(times_astropy[i])
@@ -419,26 +422,30 @@ def compute_local_angles(framepose_data: np.ndarray,
             sun_zen_samples[i, j] = 90.0 - sun_altaz.alt.value
             sat_azi_samples[i, j] = sat_altaz.az.value
             sat_zen_samples[i, j] = 90.0 - sat_altaz.alt.value
-    
-    hypso_height = lats.shape[1]
 
-    sun_azi_full = np.zeros([frame_count, hypso_height])
-    sun_zen_full = np.zeros([frame_count, hypso_height])
-    sat_azi_full = np.zeros([frame_count, hypso_height])
-    sat_zen_full = np.zeros([frame_count, hypso_height])
+    image_height = lats.shape[1]
+    all_pixels_indices = np.linspace(1,image_height,image_height)
+
+    sun_azi_full = np.zeros([frame_count, image_height])
+    sun_zen_full = np.zeros([frame_count, image_height])
+    sat_azi_full = np.zeros([frame_count, image_height])
+    sat_zen_full = np.zeros([frame_count, image_height])
 
     if verbose:
-        print('  interpolating the rest of the pixels ...')
+        print('[INFO] Interpolating the rest of the pixels ...')
 
     interpolation_method = 'cubic'
 
     # Why do the indices for interpolation be 1 more than for computing the angles again?
     subsample_pixels_indices = indices + 1
     for i in range(frame_count):
-        sun_azi_full[i,:] = si.griddata(subsample_pixels_indices, sun_azi_samples, all_pixels_indices, method=interpolation_method)
-        sun_zen_full[i,:] = si.griddata(subsample_pixels_indices, sun_zen_samples, all_pixels_indices, method=interpolation_method)
-        sat_azi_full[i,:] = si.griddata(subsample_pixels_indices, sat_azi_samples, all_pixels_indices, method=interpolation_method)
-        sat_zen_full[i,:] = si.griddata(subsample_pixels_indices, sat_zen_samples, all_pixels_indices, method=interpolation_method)
+        sun_azi_full[i,:] = si.griddata(subsample_pixels_indices, sun_azi_samples[i,:], all_pixels_indices, method=interpolation_method)
+        sun_zen_full[i,:] = si.griddata(subsample_pixels_indices, sun_zen_samples[i,:], all_pixels_indices, method=interpolation_method)
+        sat_azi_full[i,:] = si.griddata(subsample_pixels_indices, sat_azi_samples[i,:], all_pixels_indices, method=interpolation_method)
+        sat_zen_full[i,:] = si.griddata(subsample_pixels_indices, sat_zen_samples[i,:], all_pixels_indices, method=interpolation_method)
+
+    if verbose:
+        print('[INFO] Computing local angles done')
 
     return sun_azi_full, sun_zen_full, sat_azi_full, sat_zen_full
 
