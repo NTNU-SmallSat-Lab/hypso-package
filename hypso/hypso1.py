@@ -42,8 +42,7 @@ from hypso.loading import load_l1a_nc, \
 
 from hypso.reflectance import compute_toa_reflectance
 
-from hypso.writing import l1b_nc_writer, \
-                          l2a_nc_writer
+from hypso.writing import l1b_nc_writer
 
 from hypso.utils import find_file
 
@@ -108,61 +107,59 @@ class Hypso1(Hypso):
         
 
 
-    def _set_capture_config(self,
-                                 capture_config,
-                                 ) -> None:
+    def _set_capture_config(self, capture_config_attrs: dict) -> None:
 
         # FPS has been renamed to framerate. Need to support both since old .nc files may still use FPS
         try:
-            capture_config['fps'] = capture_config['framerate']
+            capture_config_attrs['fps'] = capture_config_attrs['framerate']
         except:
-            capture_config['framerate'] = capture_config['fps']
+            capture_config_attrs['framerate'] = capture_config_attrs['fps']
 
-        self.background_value = 8 * self.capture_config["bin_factor"]
-        self.exposure = self.capture_config["exposure"] / 1000  # in seconds
+        self.background_value = 8 * self.capture_config_attrs["bin_factor"]
+        self.exposure = self.capture_config_attrs["exposure"] / 1000  # in seconds
 
-        self.x_start = self.capture_config["aoi_x"]
-        self.x_stop = self.capture_config["aoi_x"] + self.capture_config["column_count"]
-        self.y_start = self.capture_config["aoi_y"]
-        self.y_stop = self.capture_config["aoi_y"] + self.capture_config["row_count"]
+        self.x_start = self.capture_config_attrs["aoi_x"]
+        self.x_stop = self.capture_config_attrs["aoi_x"] + self.capture_config_attrs["column_count"]
+        self.y_start = self.capture_config_attrs["aoi_y"]
+        self.y_stop = self.capture_config_attrs["aoi_y"] + self.capture_config_attrs["row_count"]
 
-        self.bin_factor = self.capture_config["bin_factor"]
+        self.bin_factor = self.capture_config_attrs["bin_factor"]
 
         # Try/except here since not all captures have sample_div
         try:
-            self.sample_div = self.capture_config['sample_div']
+            self.sample_div = self.capture_config_attrs['sample_div']
         except:
             self.sample_div = 1
 
-        self.row_count = self.capture_config["row_count"]
-        self.frame_count = self.capture_config["frame_count"]
-        self.column_count = self.capture_config["column_count"]
+        self.row_count = self.capture_config_attrs["row_count"]
+        self.frame_count = self.capture_config_attrs["frame_count"]
+        self.column_count = self.capture_config_attrs["column_count"]
 
-        self.image_height = int(self.capture_config["row_count"] / self.sample_div)
-        self.image_width = int(self.capture_config["column_count"] / self.capture_config["bin_factor"])
+        self.image_height = int(self.capture_config_attrs["row_count"] / self.sample_div)
+        self.image_width = int(self.capture_config_attrs["column_count"] / self.capture_config_attrs["bin_factor"])
         self.im_size = self.image_height * self.image_width
 
         self.bands = self.image_width
-        self.lines = self.capture_config["frame_count"]  # AKA Frames AKA Rows
+        self.lines = self.capture_config_attrs["frame_count"]  # AKA Frames AKA Rows
         self.samples = self.image_height  # AKA Cols
 
-        self.spatial_dimensions = (self.capture_config["frame_count"], self.image_height)
+        self.spatial_dimensions = (self.capture_config_attrs["frame_count"], self.image_height)
 
         if self.VERBOSE:
             print(f"[INFO] Capture spatial dimensions: {self.spatial_dimensions}")
 
 
-        self.start_timestamp_capture = int(self.timing['capture_start_unix']) + UNIX_TIME_OFFSET
+        self.start_timestamp_capture = int(self.timing_attrs['capture_start_unix']) + UNIX_TIME_OFFSET
 
         # Get END_TIMESTAMP_CAPTURE
         # can't compute end timestamp using frame count and frame rate
         # assuming some default value if framerate and exposure not available
         try:
-            self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config["frame_count"] / self.capture_config["framerate"] + self.capture_config["exposure"] / 1000.0
+            self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config_attrs["frame_count"] / self.capture_config_attrs["framerate"] + self.capture_config_attrs["exposure"] / 1000.0
         except:
             if self.VERBOSE:
                 print("[WARNING] Framerate or exposure values not found. Assuming 20.0 for each.")
-            self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config["frame_count"] / 20.0 + 20.0 / 1000.0
+            self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config_attrs["frame_count"] / 20.0 + 20.0 / 1000.0
 
         # using 'awk' for floating point arithmetic ('expr' only support integer arithmetic): {printf \"%.2f\n\", 100/3}"
         time_margin_start = 641.0  # 70.0
@@ -175,7 +172,7 @@ class Hypso1(Hypso):
         self.iso_time = datetime.utcfromtimestamp(self.unixtime).isoformat()
 
 
-        if self.capture_config["frame_count"] == self.standard_dimensions["nominal"]:
+        if self.capture_config_attrs["frame_count"] == self.standard_dimensions["nominal"]:
             self.capture_type = "nominal"
 
         elif self.image_height == self.standard_dimensions["wide"]:
@@ -274,32 +271,30 @@ class Hypso1(Hypso):
                 print("[ERROR] Unsupported product level.")
                 return None
 
-        capture_config, \
-        timing, \
-        target_coords, \
-        adcs, \
-        dimensions, \
-        navigation, \
-        database, \
-        corrections, \
-        logfiles, \
-        temperature, \
-        ncattrs, \
-        cube = load_func(nc_file_path=path)
+        metadata_vars, metadata_attrs, global_metadata, cube = load_func(nc_file_path=path)
 
-        setattr(self, "capture_config", capture_config)
-        setattr(self, "timing", timing)
-        setattr(self, "adcs", adcs)
-        setattr(self, "dimensions", dimensions)
-        setattr(self, "navigation", navigation)
-        setattr(self, "database", database)
-        setattr(self, "corrections", corrections)
-        setattr(self, "logfiles", logfiles)
-        setattr(self, "temperature", temperature)
-        setattr(self, "ncattrs", ncattrs)
+        setattr(self, "adcs_vars", metadata_vars["adcs"])
+        setattr(self, "capture_config_vars", metadata_vars["capture_config"])
+        setattr(self, "corrections_vars", metadata_vars["corrections"])
+        setattr(self, "database_vars", metadata_vars["database"])
+        setattr(self, "logfiles_vars", metadata_vars["logfiles"])
+        setattr(self, "temperature_vars", metadata_vars["temperature"])
+        setattr(self, "timing_vars", metadata_vars["timing"])
+
+        setattr(self, "adcs_attrs", metadata_attrs["adcs"])
+        setattr(self, "capture_config_attrs", metadata_attrs["capture_config"])
+        setattr(self, "corrections_attrs", metadata_attrs["corrections"])
+        setattr(self, "database_attrs", metadata_attrs["database"])
+        setattr(self, "logfiles_attrs", metadata_attrs["logfiles"])
+        setattr(self, "temperature_attrs", metadata_attrs["temperature"])
+        setattr(self, "timing_attrs", metadata_attrs["timing"])
+ 
+
+        setattr(self, "dimensions", global_metadata["dimensions"])
+        setattr(self, "ncattrs", global_metadata["ncattrs"])
 
         # Note: this MUST be run before writing datacubes in order to pass correct dimensions to DataArrayValidator
-        self._set_capture_config(capture_config=capture_config)
+        self._set_capture_config(capture_config_attrs=self.capture_config_attrs)
 
         setattr(self, cube_name, cube)
 
@@ -342,7 +337,11 @@ class Hypso1(Hypso):
         self.latitudes = gr.latitudes
         self.longitudes = gr.longitudes
         
-        datacube_flipped = check_star_tracker_orientation(self.adcs)
+
+        #print(self.adcs_vars)
+        #print(self.adcs_vars.keys())
+
+        datacube_flipped = check_star_tracker_orientation(self.adcs_vars)
 
         if not datacube_flipped:
 
@@ -503,10 +502,10 @@ class Hypso1(Hypso):
             print("[INFO] Running geometry computation...")
 
 
-        framepose_data = interpolate_at_frame_nc(adcs=self.adcs,
-                                              timestamps_srv=self.timing['timestamps_srv'],
-                                              framerate=self.capture_config['framerate'],
-                                              exposure=self.capture_config['exposure'],
+        framepose_data = interpolate_at_frame_nc(adcs=self.adcs_vars,
+                                              timestamps_srv=self.timing_vars['timestamps_srv'],
+                                              framerate=self.capture_config_attrs['framerate'],
+                                              exposure=self.capture_config_attrs['exposure'],
                                               verbose=self.VERBOSE
                                               )
 

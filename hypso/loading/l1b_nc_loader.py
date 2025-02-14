@@ -5,10 +5,8 @@ from typing import Tuple
 
 from .utils import load_capture_config_from_nc_file, \
                     load_timing_from_nc_file, \
-                    load_target_coords_from_nc_file, \
                     load_adcs_from_nc_file, \
-                    load_dimensions_from_nc_file, \
-                    load_navigation_from_nc_file
+                    load_dimensions_from_nc_file
 
 def load_l1b_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict, np.ndarray]:
 
