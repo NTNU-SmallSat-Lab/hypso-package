@@ -95,7 +95,6 @@ class Hypso1(Hypso):
 
         return None
 
-        
 
     # TODO: move into hypso class
     def _set_capture_config(self, capture_config_attrs: dict) -> None:
@@ -194,8 +193,6 @@ class Hypso1(Hypso):
         return None
 
 
-    # Filename parsing and composing
-
     def _compose_capture_name(self, fields: dict) -> str:
 
 
@@ -207,6 +204,7 @@ class Hypso1(Hypso):
         capture_name = p.compose(fields)
 
         return capture_name
+
 
     def _parse_filename(self, path: str) -> dict:
 
@@ -370,6 +368,7 @@ class Hypso1(Hypso):
 
         return calibrated_cube
 
+
     # TODO: split into function to set calibration coeffs and function to load calibration coeffs
     def _set_calibration_coeff_files(self) -> None:
         """
@@ -445,59 +444,14 @@ class Hypso1(Hypso):
         return None
 
 
+    def _run_toa_reflectance(self) -> np.ndarray:
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def _run_framepose(self) -> None:
-
-        framepose_data = interpolate_at_frame_nc(adcs=self.adcs_vars,
-                                              lines_timestamps=self.timing_vars['timestamps_srv'],
-                                              framerate=self.capture_config_attrs['framerate'],
-                                              exposure=self.capture_config_attrs['exposure'],
-                                              verbose=self.VERBOSE
-                                              )
+        return compute_toa_reflectance(srf=self.srf,
+                                        toa_radiance=self.l1b_cube,
+                                        iso_time=self.iso_time,
+                                        solar_zenith_angles=self.solar_azimuth_angles,
+                                        )
         
-
-        setattr(self, "framepose", framepose_data)
-
-        return None
 
 
 
@@ -512,7 +466,7 @@ class Hypso1(Hypso):
         try:
             getattr(self, 'framepose')
         except:
-            self._run_framepose()
+            self._run_frame_interpolation()
 
         pixels_lat, pixels_lon = direct_georeference(framepose_data=self.framepose,
                                                      image_height=self.image_height,
@@ -529,10 +483,29 @@ class Hypso1(Hypso):
         self.latitudes = pixels_lat.reshape(self.spatial_dimensions)
         self.longitudes = pixels_lon.reshape(self.spatial_dimensions)
 
-        self._run_geometry()
+        bbox, \
+        resolution, \
+        along_track_gsd, \
+        across_track_gsd = self._run_track_geometry(latitudes=self.latitudes,
+                                                    longitudes=self.longitudes)
+
+        setattr(self, 'bbox', bbox)
+        setattr(self, 'along_track_gsd', along_track_gsd)
+        setattr(self, 'across_track_gsd', across_track_gsd)
+        setattr(self, 'resolution', resolution)
+
+        solar_zenith_angles, \
+        solar_azimuth_angles, \
+        sat_zenith_angles, \
+        sat_azimuth_angles = self._run_angles_geometry(latitudes=self.latitudes,
+                                                        longitudes=self.longitudes)
+
+        setattr(self, 'solar_zenith_angles', solar_zenith_angles)
+        setattr(self, 'solar_azimuth_angles', solar_azimuth_angles)
+        setattr(self, 'sat_zenith_angles', sat_zenith_angles)
+        setattr(self, 'sat_azimuth_angles', sat_azimuth_angles)
 
         return None
-
 
 
     def run_indirect_georeferencing(self, 
@@ -561,28 +534,54 @@ class Hypso1(Hypso):
         self.latitudes_indirect = gr.latitudes[:,::-1]
         self.longitudes_indirect = gr.longitudes[:,::-1]
     
-        self._run_geometry(indirect=True)
+        bbox, \
+        resolution, \
+        along_track_gsd, \
+        across_track_gsd = self._run_track_geometry(latitudes=self.latitudes_indirect,
+                                                    longitudes=self.longitudes_indirect)
+
+        setattr(self, 'bbox_indirect', bbox)
+        setattr(self, 'along_track_gsd_indirect', along_track_gsd)
+        setattr(self, 'across_track_gsd_indirect', across_track_gsd)
+        setattr(self, 'resolution_indirect', resolution)
+
+        solar_zenith_angles, \
+        solar_azimuth_angles, \
+        sat_zenith_angles, \
+        sat_azimuth_angles = self._run_angles_geometry(latitudes=self.latitudes_indirect,
+                                                        longitudes=self.longitudes_indirect)
+
+        setattr(self, 'solar_zenith_angles_indirect', solar_zenith_angles)
+        setattr(self, 'solar_azimuth_angles_indirect', solar_azimuth_angles)
+        setattr(self, 'sat_zenith_angles_indirect', sat_zenith_angles)
+        setattr(self, 'sat_azimuth_angles_indirect', sat_azimuth_angles)
+
+        return None
+    
+
+    def _run_frame_interpolation(self) -> None:
+
+        framepose_data = interpolate_at_frame_nc(adcs=self.adcs_vars,
+                                              lines_timestamps=self.timing_vars['timestamps_srv'],
+                                              framerate=self.capture_config_attrs['framerate'],
+                                              exposure=self.capture_config_attrs['exposure'],
+                                              verbose=self.VERBOSE
+                                              )
+        
+
+        setattr(self, "framepose", framepose_data)
 
         return None
 
 
+    def _run_track_geometry(self, latitudes: np.ndarray, longitudes: np.ndarray) -> None: 
 
-    def _run_geometry(self, indirect=False) -> None: 
+        print("[INFO] Running track geometry computations...")
 
-        print("[INFO] Running geometry computations...")
-
-        if indirect:
-            modifier = "_indirect"
-        else:
-            modifier = ""
-            
         try:
             getattr(self, 'framepose')
         except:
-            self._run_framepose()
-
-        latitudes = getattr(self, 'latitudes' + modifier)
-        longitudes = getattr(self, 'longitudes' + modifier)
+            self._run_frame_interpolation()
 
         bbox = compute_bbox(latitudes=latitudes, longitudes=longitudes)
 
@@ -594,6 +593,22 @@ class Hypso1(Hypso):
 
         resolution = compute_resolution(along_track_gsd=along_track_gsd, 
                                              across_track_gsd=across_track_gsd)
+
+
+        if self.VERBOSE:
+            print("[INFO] Track geometry computations done.")
+
+        return bbox, resolution, along_track_gsd, across_track_gsd
+
+
+    def _run_angles_geometry(self,  latitudes: np.ndarray, longitudes: np.ndarray) -> None: 
+
+        print("[INFO] Running angles geometry computations...")
+
+        try:
+            getattr(self, 'framepose')
+        except:
+            self._run_frame_interpolation()
 
         indices = np.array([ 0, self.samples//4 - 1, self.samples//2 - 1, 3*self.samples//4 - 1, self.samples - 1], dtype='uint16')
 
@@ -609,40 +624,10 @@ class Hypso1(Hypso):
         sat_zenith_angles = sat_zenith.reshape(self.spatial_dimensions)
         sat_azimuth_angles = sat_azimuth.reshape(self.spatial_dimensions)
 
-        setattr(self, 'bbox' + modifier, bbox)
-        setattr(self, 'along_track_gsd' + modifier, along_track_gsd)
-        setattr(self, 'across_track_gsd' + modifier, across_track_gsd)
-        setattr(self, 'resolution' + modifier, resolution)
-
-        setattr(self, 'solar_zenith_angles' + modifier, solar_zenith_angles)
-        setattr(self, 'solar_azimuth_angles' + modifier, solar_azimuth_angles)
-        setattr(self, 'sat_zenith_angles' + modifier, sat_zenith_angles)
-        setattr(self, 'sat_azimuth_angles' + modifier, sat_azimuth_angles)
-
         if self.VERBOSE:
-            print("[INFO] Geometry computations done")
+            print("[INFO] Angles geometry computations done.")
 
-        return None
-
-
-
-
-
-
-
-
-
-
-
-
-    def _run_toa_reflectance(self) -> np.ndarray:
-
-        return compute_toa_reflectance(srf=self.srf,
-                                        toa_radiance=self.l1b_cube,
-                                        iso_time=self.iso_time,
-                                        solar_zenith_angles=self.solar_azimuth_angles,
-                                        )
-        
+        return solar_zenith_angles, solar_azimuth_angles, sat_zenith_angles, sat_azimuth_angles
 
 
     def generate_l1b_cube(self, **kwargs) -> None:
@@ -665,12 +650,6 @@ class Hypso1(Hypso):
                       **kwargs)
 
         return None
-
-
-
-
-    
-
 
 
     def generate_l1c_cube(self) -> None:
@@ -696,11 +675,6 @@ class Hypso1(Hypso):
         return None
 
 
-
-
-
-
-
     def generate_l1d_cube(self) -> None:
 
         self.generate_l1c_cube()
@@ -708,7 +682,7 @@ class Hypso1(Hypso):
 
         return None
 
-    # TODO
+
     def write_l1d_nc_file(self, overwrite: bool = False, **kwargs) -> None:
         
         if Path(self.l1d_nc_file).is_file() and not overwrite:
