@@ -14,6 +14,19 @@ def navigation_group_writer(satobj: Hypso, netfile: nc.Dataset, product_level: s
     # Create Navigation Group --------------------------------------
     navigation_group = netfile.createGroup('navigation')
 
+
+
+    # Unix time -----------------------
+    time = netfile.createVariable('navigation/unixtime', 'u8', ('lines',))
+    time[:] = np.array(satobj.timing_vars['timestamps_srv'])
+    #df = satobj.framepose_df
+    #time[:] = df["timestamp"].values
+
+
+
+
+    # Direct Georeferencing Latitudes and Longitudes
+
     try:
         # Latitude ---------------------------------
         latitude = netfile.createVariable(
@@ -48,20 +61,52 @@ def navigation_group_writer(satobj: Hypso, netfile: nc.Dataset, product_level: s
         print("[ERROR] Encountered exception: " + str(ex))
 
 
+
+
+
+
+    # Indirect Georeferencing Latitudes and Longitudes
+
     try:
-        sat_zenith_angle = satobj.sat_zenith_angles
-        sat_azimuth_angle = satobj.sat_azimuth_angles
+        # Latitude (Indirect) ---------------------------------
+        latitude_indirect = netfile.createVariable(
+            'navigation/latitude_indirect', 'f4', ('lines', 'samples'),
+            # compression=COMP_SCHEME,
+            # complevel=COMP_LEVEL,
+            # shuffle=COMP_SHUFFLE,
+        )
+        latitude_indirect[:] = satobj.latitudes_indirect
+        latitude_indirect.long_name = "Latitude (Indirect)"
+        latitude_indirect.units = "degrees"
+        # latitude_indirect.valid_range = [-180, 180]
+        latitude_indirect.valid_min = -180
+        latitude_indirect.valid_max = 180
 
-        solar_zenith_angle = satobj.solar_zenith_angles
-        solar_azimuth_angle = satobj.solar_azimuth_angles
+        # Longitude (Indirect) ----------------------------------
+        longitude_indirect = netfile.createVariable(
+            'navigation/longitude_indirect', 'f4', ('lines', 'samples'),
+            # compression=COMP_SCHEME,
+            # complevel=COMP_LEVEL,
+            # shuffle=COMP_SHUFFLE,
+        )
+        longitude_indirect[:] = satobj.longitudes_indirect
+        longitude_indirect.long_name = "Longitude (Indirect)"
+        longitude_indirect.units = "degrees"
+        # longitude_indirect.valid_range = [-180, 180]
+        longitude_indirect.valid_min = -180
+        longitude_indirect.valid_max = 180
 
-        # Unix time -----------------------
-        time = netfile.createVariable('navigation/unixtime', 'u8', ('lines',))
-        time[:] = np.array(satobj.timing_vars['timestamps_srv'])
-        #df = satobj.framepose_df
-        #time[:] = df["timestamp"].values
+    except Exception as ex:
+        pass
 
-        
+
+
+
+
+    # Direct Georeferenicng Solar and Satellite Angles
+
+    try:
+
         # Sensor Zenith --------------------------
         sensor_z = netfile.createVariable(
             'navigation/sensor_zenith', 'f4', ('lines', 'samples'),
@@ -69,7 +114,7 @@ def navigation_group_writer(satobj: Hypso, netfile: nc.Dataset, product_level: s
             # complevel=COMP_LEVEL,
             # shuffle=COMP_SHUFFLE,
         )
-        sensor_z[:] = sat_zenith_angle.reshape(satobj.spatial_dimensions)
+        sensor_z[:] = satobj.sat_zenith_angles
         sensor_z.long_name = "Sensor Zenith Angle"
         sensor_z.units = "degrees"
         # sensor_z.valid_range = [-180, 180]
@@ -83,7 +128,7 @@ def navigation_group_writer(satobj: Hypso, netfile: nc.Dataset, product_level: s
             # complevel=COMP_LEVEL,
             # shuffle=COMP_SHUFFLE,
         )
-        sensor_a[:] = sat_azimuth_angle.reshape(satobj.spatial_dimensions)
+        sensor_a[:] = satobj.sat_azimuth_angles
         sensor_a.long_name = "Sensor Azimuth Angle"
         sensor_a.units = "degrees"
         # sensor_a.valid_range = [-180, 180]
@@ -97,7 +142,7 @@ def navigation_group_writer(satobj: Hypso, netfile: nc.Dataset, product_level: s
             # complevel=COMP_LEVEL,
             # shuffle=COMP_SHUFFLE,
         )
-        solar_z[:] = solar_zenith_angle.reshape(satobj.spatial_dimensions)
+        solar_z[:] = satobj.solar_zenith_angles
         solar_z.long_name = "Solar Zenith Angle"
         solar_z.units = "degrees"
         # solar_z.valid_range = [-180, 180]
@@ -111,7 +156,7 @@ def navigation_group_writer(satobj: Hypso, netfile: nc.Dataset, product_level: s
         # complevel=COMP_LEVEL,
         # shuffle=COMP_SHUFFLE,
         )
-        solar_a[:] = solar_azimuth_angle.reshape(satobj.spatial_dimensions)
+        solar_a[:] = satobj.solar_azimuth_angles
         solar_a.long_name = "Solar Azimuth Angle"
         solar_a.units = "degrees"
         # solar_a.valid_range = [-180, 180]
@@ -121,5 +166,78 @@ def navigation_group_writer(satobj: Hypso, netfile: nc.Dataset, product_level: s
     except Exception as ex:
         print("[ERROR] Unable to write navigation angles to NetCDF file. The {0} file may be incomplete. Please run geometry computations.".format(product_level))
         print("[ERROR] Encountered exception: " + str(ex))
+
+
+
+
+
+
+
+    # Indirect Georeferenicng Solar and Satellite Angles
+
+    try:
+
+        # Sensor Zenith (Indirect)--------------------------
+        sensor_z_indirect = netfile.createVariable(
+            'navigation/sensor_zenith_indirect', 'f4', ('lines', 'samples'),
+            # compression=COMP_SCHEME,
+            # complevel=COMP_LEVEL,
+            # shuffle=COMP_SHUFFLE,
+        )
+        sensor_z_indirect[:] = satobj.sat_zenith_angles_indirect
+        sensor_z_indirect.long_name = "Sensor Zenith Angle (Indirect)"
+        sensor_z_indirect.units = "degrees"
+        # sensor_z_indirect.valid_range = [-180, 180]
+        sensor_z_indirect.valid_min = -180
+        sensor_z_indirect.valid_max = 180
+
+        # Sensor Azimuth (Indirect) ---------------------------
+        sensor_a_indirect = netfile.createVariable(
+            'navigation/sensor_azimuth_indirect', 'f4', ('lines', 'samples'),
+            # compression=COMP_SCHEME,
+            # complevel=COMP_LEVEL,
+            # shuffle=COMP_SHUFFLE,
+        )
+        sensor_a_indirect[:] = satobj.sat_azimuth_angles_indirect
+        sensor_a_indirect.long_name = "Sensor Azimuth Angle (Indirect)"
+        sensor_a_indirect.units = "degrees"
+        # sensor_a_indirect.valid_range = [-180, 180]
+        sensor_a_indirect.valid_min = -180
+        sensor_a_indirect.valid_max = 180
+
+        # Solar Zenith (Indirect) ----------------------------------------
+        solar_z_indirect = netfile.createVariable(
+            'navigation/solar_zenith_indirect', 'f4', ('lines', 'samples'),
+            # compression=COMP_SCHEME,
+            # complevel=COMP_LEVEL,
+            # shuffle=COMP_SHUFFLE,
+        )
+        solar_z_indirect[:] = satobj.solar_zenith_angles_indirect
+        solar_z_indirect.long_name = "Solar Zenith Angle (Indirect)"
+        solar_z_indirect.units = "degrees"
+        # solar_z_indirect.valid_range = [-180, 180]
+        solar_z_indirect.valid_min = -180
+        solar_z_indirect.valid_max = 180
+
+        # Solar Azimuth (Indirect) ---------------------------------------
+        solar_a_indirect = netfile.createVariable(
+        'navigation/solar_azimuth_indirect', 'f4', ('lines', 'samples'),
+        # compression=COMP_SCHEME,
+        # complevel=COMP_LEVEL,
+        # shuffle=COMP_SHUFFLE,
+        )
+        solar_a_indirect[:] = satobj.solar_azimuth_angles_indirect
+        solar_a_indirect.long_name = "Solar Azimuth Angle (Indirect)"
+        solar_a_indirect.units = "degrees"
+        # solar_a_indirect.valid_range = [-180, 180]
+        solar_a_indirect.valid_min = -180
+        solar_a_indirect.valid_max = 180
+
+    except Exception as ex:
+        pass
+
+
+
+
 
     return None

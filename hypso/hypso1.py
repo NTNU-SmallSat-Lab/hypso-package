@@ -555,8 +555,11 @@ class Hypso1(Hypso):
                                             image_mode=image_mode,
                                             origin_mode=origin_mode)
         
-        self.latitudes_indirect = gr.latitudes
-        self.longitudes_indirect = gr.longitudes
+
+        # TODO: flip lat/lon matrices?
+        #datacube_flipped = check_star_tracker_orientation(self.adcs_vars)
+        self.latitudes_indirect = gr.latitudes[:,::-1]
+        self.longitudes_indirect = gr.longitudes[:,::-1]
     
         self._run_geometry(indirect=True)
 

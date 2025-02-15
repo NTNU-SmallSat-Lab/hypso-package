@@ -11,62 +11,145 @@ from satpy.dataset.dataid import WavelengthRange
 
 from pyresample.geometry import SwathDefinition
 
+import numpy as np
 import xarray as xr
 
 
 
-def get_l1a_satpy_scene(satobj: Union[Hypso1, Hypso2]) -> Scene:
+def get_l1a_satpy_scene(satobj: Union[Hypso1, Hypso2],
+                        indirect: bool = False
+                        ) -> Scene:
 
     datacube = satobj.l1a_cube
-    wavelengths = range(0,120)
-
-    scene = get_datacube_satpy_scene(satobj=satobj, datacube=datacube, wavelengths=wavelengths)
-
-    return scene
-
-
-def get_l1b_satpy_scene(satobj: Union[Hypso1, Hypso2]) -> Scene:
-
-    datacube = satobj.l1b_cube
     wavelengths = satobj.wavelengths
 
-    scene = get_datacube_satpy_scene(satobj=satobj, datacube=datacube, wavelengths=wavelengths)
+    if indirect:
+        latitudes = satobj.latitudes_indirect
+        longitudes = satobj.longitudes_indirect
+        resolution = satobj.resolution_indirect
+    else:
+        latitudes = satobj.latitudes
+        longitudes = satobj.longitudes
+        resolution = satobj.resolution  
 
+    scene = get_datacube_satpy_scene(satobj=satobj,
+                        datacube=datacube,
+                        wavelengths=wavelengths,
+                        latitudes=latitudes,
+                        longitudes=longitudes,
+                        resolution=resolution)
+    
     return scene
 
 
-def get_l1c_satpy_scene(satobj: Union[Hypso1, Hypso2]) -> Scene:
 
-    datacube = satobj.l1c_cube
+
+
+def get_l1b_satpy_scene(satobj: Union[Hypso1, Hypso2],
+                        indirect: bool = False
+                        ) -> Scene:
+
+    datacube = satobj.l1a_cube
     wavelengths = satobj.wavelengths
 
-    scene = get_datacube_satpy_scene(satobj=satobj, datacube=datacube, wavelengths=wavelengths)
+    if indirect:
+        latitudes = satobj.latitudes_indirect
+        longitudes = satobj.longitudes_indirect
+        resolution = satobj.resolution_indirect
+    else:
+        latitudes = satobj.latitudes
+        longitudes = satobj.longitudes
+        resolution = satobj.resolution  
 
+    scene = get_datacube_satpy_scene(satobj=satobj,
+                        datacube=datacube,
+                        wavelengths=wavelengths,
+                        latitudes=latitudes,
+                        longitudes=longitudes,
+                        resolution=resolution)
+    
     return scene
 
 
-def get_l2a_satpy_scene(satobj: Union[Hypso1, Hypso2]) -> Scene:
 
-    datacube = satobj.l2a_cube
+
+def get_l1c_satpy_scene(satobj: Union[Hypso1, Hypso2],
+                        indirect: bool = False
+                        ) -> Scene:
+
+    datacube = satobj.l1a_cube
     wavelengths = satobj.wavelengths
 
-    scene = get_datacube_satpy_scene(satobj=satobj, datacube=datacube, wavelengths=wavelengths)
+    if indirect:
+        latitudes = satobj.latitudes_indirect
+        longitudes = satobj.longitudes_indirect
+        resolution = satobj.resolution_indirect
+    else:
+        latitudes = satobj.latitudes
+        longitudes = satobj.longitudes
+        resolution = satobj.resolution  
 
+    scene = get_datacube_satpy_scene(satobj=satobj,
+                        datacube=datacube,
+                        wavelengths=wavelengths,
+                        latitudes=latitudes,
+                        longitudes=longitudes,
+                        resolution=resolution)
+    
     return scene
+
+
+
+
+def get_l1d_satpy_scene(satobj: Union[Hypso1, Hypso2],
+                        indirect: bool = False
+                        ) -> Scene:
+
+    datacube = satobj.l1a_cube
+    wavelengths = satobj.wavelengths
+
+    if indirect:
+        latitudes = satobj.latitudes_indirect
+        longitudes = satobj.longitudes_indirect
+        resolution = satobj.resolution_indirect
+    else:
+        latitudes = satobj.latitudes
+        longitudes = satobj.longitudes
+        resolution = satobj.resolution  
+
+    scene = get_datacube_satpy_scene(satobj=satobj,
+                        datacube=datacube,
+                        wavelengths=wavelengths,
+                        latitudes=latitudes,
+                        longitudes=longitudes,
+                        resolution=resolution)
+    
+    return scene
+
+
+
 
 
 
 def get_datacube_satpy_scene(satobj: Union[Hypso1, Hypso2],
-                        datacube,
-                        wavelengths
+                        datacube: xr.DataArray,
+                        wavelengths: np.ndarray,
+                        latitudes: np.ndarray,
+                        longitudes: np.ndarray,
+                        resolution
                         ) -> Scene:
 
-    scene = _generate_satpy_scene(satobj=satobj)
-    swath_def= _generate_swath_definition(satobj=satobj)
+    latitudes_xr = xr.DataArray(latitudes, dims=satobj.dim_names_2d)
+    longitudes_xr = xr.DataArray(longitudes, dims=satobj.dim_names_2d)
+
+    scene = Scene()
+
+    swath_def = SwathDefinition(lons=longitudes_xr, lats=latitudes_xr)
+
 
     attrs = {
             'file_type': None,
-            'resolution': satobj.resolution,
+            'resolution': resolution,
             'name': None,
             'standard_name': datacube.attrs['description'],
             'coordinates': ['latitude', 'longitude'],
@@ -92,96 +175,5 @@ def get_datacube_satpy_scene(satobj: Union[Hypso1, Hypso2],
         scene[name].attrs['area'] = swath_def
 
     return scene
-
-
-def generate_satpy_scene(satobj: Union[Hypso1, Hypso2], datasets: dict) -> Scene:
-
-    scene = satobj._generate_satpy_scene()
-    swath_def= satobj._generate_swath_definition()
-
-    attrs = {
-            'file_type': None,
-            'resolution': satobj.resolution,
-            'name': None,
-            'standard_name': None,
-            'coordinates': ['latitude', 'longitude'],
-            'units': None,
-            'start_time': satobj.capture_datetime,
-            'end_time': satobj.capture_datetime,
-            'modifiers': (),
-            'ancillary_variables': []
-            }
-
-    for key, dataset in dataset.items():
-
-            scene[key] = dataset
-            scene[key].attrs.update(attrs)
-            scene[key].attrs['name'] = key
-            scene[key].attrs['standard_name'] = key
-            scene[key].attrs['area'] = swath_def
-
-            try:
-                scene[key].attrs.update(dataset.attrs)
-            except AttributeError:
-                pass
-
-
-    return scene
-
-
-def _generate_satpy_scene(satobj: Union[Hypso1, Hypso2]) -> Scene:
-
-    scene = Scene()
-
-    latitudes, longitudes = _generate_latlons(satobj=satobj)
-
-    swath_def = SwathDefinition(lons=longitudes, lats=latitudes)
-
-    latitude_attrs = {
-                        'file_type': None,
-                        'resolution': satobj.resolution,
-                        'standard_name': 'latitude',
-                        'units': 'degrees_north',
-                        'start_time': satobj.capture_datetime,
-                        'end_time': satobj.capture_datetime,
-                        'modifiers': (),
-                        'ancillary_variables': []
-                        }
-
-    longitude_attrs = {
-                        'file_type': None,
-                        'resolution': satobj.resolution,
-                        'standard_name': 'longitude',
-                        'units': 'degrees_east',
-                        'start_time': satobj.capture_datetime,
-                        'end_time': satobj.capture_datetime,
-                        'modifiers': (),
-                        'ancillary_variables': []
-                        }
-
-    #scene['latitude'] = latitudes
-    #scene['latitude'].attrs.update(latitude_attrs)
-    #scene['latitude'].attrs['area'] = swath_def
-    #scene['longitude'] = longitudes
-    #scene['longitude'].attrs.update(longitude_attrs)
-    #scene['longitude'].attrs['area'] = swath_def
-
-    return scene
-
-
-def _generate_latlons(satobj: Union[Hypso1, Hypso2]) -> tuple[xr.DataArray, xr.DataArray]:
-
-    latitudes = xr.DataArray(satobj.latitudes, dims=satobj.dim_names_2d)
-    longitudes = xr.DataArray(satobj.longitudes, dims=satobj.dim_names_2d)
-
-    return latitudes, longitudes
-
-def _generate_swath_definition(satobj: Union[Hypso1, Hypso2]) -> SwathDefinition:
-
-    latitudes, longitudes = _generate_latlons(satobj=satobj)
-    swath_def = SwathDefinition(lons=longitudes, lats=latitudes)
-
-    return swath_def
-
 
 
