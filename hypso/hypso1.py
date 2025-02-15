@@ -44,16 +44,15 @@ from hypso.loading import load_l1a_nc, \
 from hypso.reflectance import compute_toa_reflectance
 
 from hypso.writing import l1b_nc_writer, \
-                            l1c_nc_writer
+                          l1c_nc_writer, \
+                          l1d_nc_writer
 
 from hypso.utils import find_file
 
 from hypso.DataArrayValidator import DataArrayValidator
 from hypso.DataArrayDict import DataArrayDict
 
-from pyresample.geometry import SwathDefinition
-from pyresample.bilinear.xarr import XArrayBilinearResampler 
-from pyresample.future.resamplers.nearest import KDTreeNearestXarrayResampler
+
 
 from trollsift import Parser
 
@@ -64,7 +63,7 @@ UNIX_TIME_OFFSET = 20 # TODO: Verify offset validity. Sivert had 20 here
 
 class Hypso1(Hypso):
 
-    def __init__(self, path: Union[str, Path], points_path: Union[str, Path, None] = None, verbose=False) -> None:
+    def __init__(self, path: Union[str, Path], verbose=False) -> None:
         
         """
         Initialization of HYPSO-1 Class.
@@ -83,7 +82,6 @@ class Hypso1(Hypso):
         self.VERBOSE = verbose
 
         self._load_capture_file(path=path)
-        self._load_points_file(path=points_path)
 
         product_attributes = {}
 
@@ -312,86 +310,14 @@ class Hypso1(Hypso):
 
 
 
-    # TODO refactor into two functions
-    def _load_points_file(self, 
-                          path: str, 
-                          image_mode: str = None, 
-                          origin_mode: str = 'qgis',
-                          flip_lats: bool = False,
-                          flip_lons: bool = False) -> None:
 
 
-        if path:
-            path = Path(path).absolute()
-        else:
-            if self.VERBOSE:
-                print('[INFO] No georeferencing .points file provided. Skipping georeferencing.')
-            return None
-
-
-        if not origin_mode:
-            origin_mode = 'qgis'
-
-        # Compute latitude and longitudes arrays if a points file is available
-
-        if self.VERBOSE:
-            print('[INFO] Running georeferencing...')
-
-        gr = georeferencing.Georeferencer(filename=path,
-                                            cube_height=self.spatial_dimensions[0],
-                                            cube_width=self.spatial_dimensions[1],
-                                            image_mode=image_mode,
-                                            origin_mode=origin_mode)
-        
-
-        self.latitudes = gr.latitudes
-        self.longitudes = gr.longitudes
-    
-        datacube_flipped = check_star_tracker_orientation(self.adcs_vars)
-
-        if not datacube_flipped:
-
-            if self.l1a_cube is not None:
-                self.l1a_cube = self.l1a_cube[:, ::-1, :]
-
-            if self.l1b_cube is not None:  
-                self.l1b_cube = self.l1b_cube[:, ::-1, :]
-                
-            if self.l2a_cube is not None:  
-                self.l2a_cube = self.l2a_cube[:, ::-1, :]
-
-
-        self.datacube_flipped = datacube_flipped
-
-        self.bbox = compute_bbox(latitudes=self.latitudes, 
-                                 longitudes=self.longitudes)
-
-        self.along_track_gsd, self.across_track_gsd = compute_gsd(frame_count=self.frame_count, 
-                                                                  image_height=self.image_height, 
-                                                                  latitudes=self.latitudes, 
-                                                                  longitudes=self.longitudes,
-                                                                  verbose=self.VERBOSE)
-
-        self.resolution = compute_resolution(along_track_gsd=self.along_track_gsd, 
-                                             across_track_gsd=self.across_track_gsd)
-
-
-        if flip_lons:
-            self.latitudes = self.latitudes[:,::-1]
-            self.longitudes = self.longitudes[:,::-1]
-
-        if flip_lats:
-            self.latitudes = self.latitudes[::-1,:]
-            self.longitudes = self.longitudes[::-1,:]
-
-        return None
-        
     def _run_calibration(self, 
                          radiometric: bool = True,
                          smile: bool = True,
                          destripe: bool = True,
                          set_coeffs: bool = True,
-                         **kwargs) -> None:
+                         **kwargs) -> np.ndarray:
         """
         Get calibrated and corrected cube. Includes Radiometric, Smile and Destriping Correction.
             Assumes all coefficients has been adjusted to the frame size (cropped and
@@ -410,14 +336,14 @@ class Hypso1(Hypso):
 
         self.srf = get_spectral_response_function(wavelengths=self.wavelengths)
 
-        l1b_cube = self.l1a_cube.to_numpy()
+        calibrated_cube = self.l1a_cube.to_numpy()
 
         if radiometric:
 
             if self.VERBOSE:
                 print("[INFO] Running radiometric calibration...")
 
-            l1b_cube = run_radiometric_calibration(cube=l1b_cube, 
+            calibrated_cube = run_radiometric_calibration(cube=calibrated_cube, 
                                             background_value=self.background_value,
                                             exp=self.exposure,
                                             image_height=self.image_height,
@@ -431,22 +357,18 @@ class Hypso1(Hypso):
             if self.VERBOSE:
                 print("[INFO] Running smile correction...")
 
-            l1b_cube = run_smile_correction(cube=l1b_cube, 
+            calibrated_cube = run_smile_correction(cube=calibrated_cube, 
                                             smile_coeffs=self.smile_coeffs)
 
         if destripe:
             if self.VERBOSE:
                 print("[INFO] Running destriping correction...")
 
-            l1b_cube = run_destriping_correction(cube=l1b_cube, 
+            calibrated_cube = run_destriping_correction(cube=calibrated_cube, 
                                                 destriping_coeffs=self.destriping_coeffs)
 
-        self.l1b_cube = l1b_cube
 
-        return None
-
-
-
+        return calibrated_cube
 
     # TODO: split into function to set calibration coeffs and function to load calibration coeffs
     def _set_calibration_coeff_files(self) -> None:
@@ -489,7 +411,6 @@ class Hypso1(Hypso):
         self.spectral_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_spectral}')
 
 
-
     def _load_calibration_coeff_files(self) -> None:
         """
         Load the calibration coefficients included in the package. This includes radiometric,
@@ -524,11 +445,47 @@ class Hypso1(Hypso):
         return None
 
 
-    # TODO: Move to hypso parent class
-    def _run_geometry(self) -> None: 
 
-        if self.VERBOSE:
-            print("[INFO] Running geometry computation ...")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def _run_framepose(self) -> None:
 
         framepose_data = interpolate_at_frame_nc(adcs=self.adcs_vars,
                                               lines_timestamps=self.timing_vars['timestamps_srv'],
@@ -537,32 +494,128 @@ class Hypso1(Hypso):
                                               verbose=self.VERBOSE
                                               )
         
-        #self.framepose_np = framepose_data
 
-        pixels_lat, pixels_lon = direct_georeference(framepose_data=framepose_data,
+        setattr(self, "framepose", framepose_data)
+
+        return None
+
+
+
+
+
+
+    def run_direct_georeferencing(self) -> None: 
+
+        if self.VERBOSE:
+            print("[INFO] Running direct georeferencing...")
+
+        try:
+            getattr(self, 'framepose')
+        except:
+            self._run_framepose()
+
+        pixels_lat, pixels_lon = direct_georeference(framepose_data=self.framepose,
                                                      image_height=self.image_height,
                                                      aoi_offset=self.y_start,
                                                      verbose=self.VERBOSE
                                                      )
+        
         if type(pixels_lat) == int and type(pixels_lon) == int:
             if self.VERBOSE:
                 print('[INFO] according to ADCS telemetry, parts or all of the image is pointing')
                 print('[INFO] off the earth\'s horizon. Cant georeference this image.')
             return None
 
-        self.latitudes_direct = pixels_lat.reshape(self.spatial_dimensions)
-        self.longitudes_direct = pixels_lon.reshape(self.spatial_dimensions)
+        self.latitudes = pixels_lat.reshape(self.spatial_dimensions)
+        self.longitudes = pixels_lon.reshape(self.spatial_dimensions)
+
+        self._run_geometry()
+
+        return None
+
+
+
+    def run_indirect_georeferencing(self, 
+                          points_file_path: Union[str, Path], 
+                          image_mode: str = None, 
+                          origin_mode: str = 'qgis'
+                          ) -> None:
+
+        if self.VERBOSE:
+            print('[INFO] Running indirect georeferencing...')
+        
+        points_file_path = Path(points_file_path).absolute()
+
+        if not origin_mode:
+            origin_mode = 'qgis'
+
+        gr = georeferencing.Georeferencer(filename=points_file_path,
+                                            cube_height=self.spatial_dimensions[0],
+                                            cube_width=self.spatial_dimensions[1],
+                                            image_mode=image_mode,
+                                            origin_mode=origin_mode)
+        
+        self.latitudes_indirect = gr.latitudes
+        self.longitudes_indirect = gr.longitudes
+    
+        self._run_geometry(indirect=True)
+
+        return None
+
+
+
+    def _run_geometry(self, indirect=False) -> None: 
+
+        print("[INFO] Running geometry computations...")
+
+        if indirect:
+            modifier = "_indirect"
+        else:
+            modifier = ""
+            
+        try:
+            getattr(self, 'framepose')
+        except:
+            self._run_framepose()
+
+        latitudes = getattr(self, 'latitudes' + modifier)
+        longitudes = getattr(self, 'longitudes' + modifier)
+
+        bbox = compute_bbox(latitudes=latitudes, longitudes=longitudes)
+
+        along_track_gsd, across_track_gsd = compute_gsd(frame_count=self.frame_count, 
+                                                                  image_height=self.image_height, 
+                                                                  latitudes=latitudes, 
+                                                                  longitudes=longitudes,
+                                                                  verbose=self.VERBOSE)
+
+        resolution = compute_resolution(along_track_gsd=along_track_gsd, 
+                                             across_track_gsd=across_track_gsd)
+
+        indices = np.array([ 0, self.samples//4 - 1, self.samples//2 - 1, 3*self.samples//4 - 1, self.samples - 1], dtype='uint16')
 
         sun_azimuth, sun_zenith, \
-        sat_azimuth, sat_zenith = compute_local_angles(framepose_data=framepose_data,
-                                                       lats=pixels_lat, lons=pixels_lon,
-                                                       indices=np.array([ 0, self.samples//4 - 1, self.samples//2 - 1, 3*self.samples//4 - 1, self.samples - 1], dtype='uint16'),
+        sat_azimuth, sat_zenith = compute_local_angles(framepose_data=self.framepose,
+                                                       lats=latitudes, 
+                                                       lons=longitudes,
+                                                       indices=indices,
                                                        verbose=self.VERBOSE)
-        self.solar_zenith_angles = sun_zenith.reshape(self.spatial_dimensions)
-        self.solar_azimuth_angles = sun_azimuth.reshape(self.spatial_dimensions)
-        self.sat_zenith_angles = sat_zenith.reshape(self.spatial_dimensions)
-        self.sat_azimuth_angles = sat_azimuth.reshape(self.spatial_dimensions)
-    
+        
+        solar_zenith_angles = sun_zenith.reshape(self.spatial_dimensions)
+        solar_azimuth_angles = sun_azimuth.reshape(self.spatial_dimensions)
+        sat_zenith_angles = sat_zenith.reshape(self.spatial_dimensions)
+        sat_azimuth_angles = sat_azimuth.reshape(self.spatial_dimensions)
+
+        setattr(self, 'bbox' + modifier, bbox)
+        setattr(self, 'along_track_gsd' + modifier, along_track_gsd)
+        setattr(self, 'across_track_gsd' + modifier, across_track_gsd)
+        setattr(self, 'resolution' + modifier, resolution)
+
+        setattr(self, 'solar_zenith_angles' + modifier, solar_zenith_angles)
+        setattr(self, 'solar_azimuth_angles' + modifier, solar_azimuth_angles)
+        setattr(self, 'sat_zenith_angles' + modifier, sat_zenith_angles)
+        setattr(self, 'sat_azimuth_angles' + modifier, sat_azimuth_angles)
+
         if self.VERBOSE:
             print("[INFO] Geometry computations done")
 
@@ -573,34 +626,25 @@ class Hypso1(Hypso):
 
 
 
-    def _run_toa_reflectance(self) -> None:
 
-        self.l1c_cube = compute_toa_reflectance(srf=self.srf,
-                                                toa_radiance=self.l1b_cube,
-                                                iso_time=self.iso_time,
-                                                solar_zenith_angles=self.solar_azimuth_angles,
-                                                )
+
+
+
+
+
+    def _run_toa_reflectance(self) -> np.ndarray:
+
+        return compute_toa_reflectance(srf=self.srf,
+                                        toa_radiance=self.l1b_cube,
+                                        iso_time=self.iso_time,
+                                        solar_zenith_angles=self.solar_azimuth_angles,
+                                        )
         
-        return None
-
-
-
-
-    # TODO: move to spectral analysis library
-    def get_closest_wavelength_index(self, wavelength: Union[float, int]) -> int:
-
-        wavelengths = np.array(self.wavelengths)
-        differences = np.abs(wavelengths - wavelength)
-        closest_index = np.argmin(differences)
-
-        return closest_index
-
-
 
 
     def generate_l1b_cube(self, **kwargs) -> None:
 
-        self._run_calibration(**kwargs)
+        self.l1b_cube = self._run_calibration(**kwargs)
 
         return None
 
@@ -622,14 +666,14 @@ class Hypso1(Hypso):
 
 
 
+    
 
 
 
+    def generate_l1c_cube(self) -> None:
 
-    def generate_l1c_cube(self, **kwargs) -> None:
-
-        self._run_calibration(**kwargs)
-        self._run_geometry()
+        self.generate_l1b_cube()
+        self.run_direct_georeferencing()
         
         return None
 
@@ -656,14 +700,24 @@ class Hypso1(Hypso):
 
     def generate_l1d_cube(self) -> None:
 
-        self._run_geometry()
-        self._run_toa_reflectance()
+        self.generate_l1c_cube()
+        self.l1d_cube = self._run_toa_reflectance()
 
         return None
 
     # TODO
     def write_l1d_nc_file(self, overwrite: bool = False, **kwargs) -> None:
         
+        if Path(self.l1d_nc_file).is_file() and not overwrite:
+
+            if self.VERBOSE:
+                print("[INFO] L1c NetCDF file has already been generated. Skipping.")
+
+            return None
+
+        l1d_nc_writer(satobj=self, 
+                      dst_nc=self.l1d_nc_file, 
+                      **kwargs)
 
         return None
 

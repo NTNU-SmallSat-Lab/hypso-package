@@ -6,8 +6,7 @@ import numpy as np
 
 def l1b_nc_writer(satobj: Hypso, dst_nc: str, datacube: str = False) -> None:
     """
-    Create a l1b.nc file using the radiometrically corrected data. Same structure from the original l1a.nc file
-    is used. Required to run ACOLITE as the input is a radiometrically corrected .nc file.
+    Create a l1b.nc file using the radiometrically corrected data.
 
     :return: Nothing.
     """
@@ -127,7 +126,7 @@ def l1b_nc_writer(satobj: Hypso, dst_nc: str, datacube: str = False) -> None:
                 complevel=COMP_LEVEL,
                 shuffle=COMP_SHUFFLE)
             Lt.units = "W/m^2/micrometer/sr"
-            Lt.long_name = "Top-of-Atmosphere Measured Radiance"
+            Lt.long_name = "Top-of-Atmosphere Radiance"
             Lt.wavelength_units = "nanometers"
             Lt.fwhm = [5.5] * bands
             Lt.wavelengths = np.around(satobj.spectral_coeffs, 1)
@@ -151,7 +150,7 @@ def l1b_nc_writer(satobj: Hypso, dst_nc: str, datacube: str = False) -> None:
                     shuffle=COMP_SHUFFLE)
                 
                 Lt.units = "W/m^2/micrometer/sr"
-                Lt.long_name = "Top-of-Atmosphere Measured Radiance Band " + str(band) 
+                Lt.long_name = "Top-of-Atmosphere Radiance Band " + str(band) + " (" + wave_name + " nm)"
                 Lt.wavelength_units = "nanometers"
                 Lt.fwhm = 5.5
                 Lt.wavelength = wave
@@ -161,6 +160,7 @@ def l1b_nc_writer(satobj: Hypso, dst_nc: str, datacube: str = False) -> None:
                 Lt.wave = wave
                 Lt.parameter = name
                 Lt.wave_name = wave_name
+                Lt.band = band
 
                 Lt[:] = Lt_cube[:,:,band]
 

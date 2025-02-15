@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Union
 import xarray as xr
+import copy
 from .DataArrayValidator import DataArrayValidator
 import numpy as np
 
@@ -178,7 +179,7 @@ class Hypso:
 
         attributes = {'level': "L1a",
                       'units': "counts",
-                      'description': "Digital number"
+                      'description': "Digital Number (DN)"
                      }
 
         v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=self.dim_names_3d)
@@ -190,9 +191,9 @@ class Hypso:
     
     def _format_l1b_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
 
-        attributes = {'level': "L1b/L1c",
+        attributes = {'level': "L1b",
                       'units': r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$',
-                      'description': "Radiance (Lt)"
+                      'description': "Top-of-Atmosphere Radiance (Lt)"
                      }
 
         v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=self.dim_names_3d)
@@ -204,9 +205,9 @@ class Hypso:
 
     def _format_l1c_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
 
-        attributes = {'level': "L1b/L1c",
+        attributes = {'level': "L1c",
                       'units': r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$',
-                      'description': "Radiance (Lt)"
+                      'description': "Top-of-Atmosphere Radiance (Lt)"
                      }
 
         v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=self.dim_names_3d)
@@ -220,7 +221,7 @@ class Hypso:
 
         attributes = {'level': "L1d",
                       'units': r"sr^{-1}",
-                      'description': "TOA Reflectance (Rhot)",
+                      'description': "Top-of-Atmosphere Reflectance (Rhot)",
                       'correction': None
                      }
 
@@ -235,7 +236,7 @@ class Hypso:
 
         attributes = {'level': "L2a",
                       'units': r"sr^{-1}",
-                      'description': "Reflectance (Rrs)",
+                      'description': "Remote Sensing Reflectance (Rrs)",
                       'correction': None
                      }
 
@@ -281,22 +282,6 @@ class Hypso:
 
 
 
-    '''
-    def _format_unified_mask_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
-
-        attributes = {
-                      'description': "Unified mask",
-                      'land_mask_method': None,
-                      'cloud_mask_method': None
-                     }
-
-        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=self.dim_names_2d, num_dims=2)
-
-        data = v.validate(data=data)
-        data = self._update_dataarray_attrs(data, attributes)
-
-        return data
-    '''
 
 
     @property
@@ -319,11 +304,14 @@ class Hypso:
 
     @property
     def l1c_cube(self):
-        return self._l1b_cube   
+        # Return l1b cube since it is the same as the l1c cube
+        cube = copy.deepcopy(self._l1b_cube)
+        cube.attrs['level'] = 'L1c'
+        return cube 
 
     @l1c_cube.setter
     def l1c_cube(self, value):
-        self._l1c_cube = self._format_l1b_dataarray(value)
+        self._l1c_cube = self._format_l1c_dataarray(value)
 
 
     @property

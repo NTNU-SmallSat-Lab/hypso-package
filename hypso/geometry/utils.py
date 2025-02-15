@@ -322,3 +322,28 @@ def ellipsoid_line_intersection(point, direction) -> Tuple[float, float]:
         # print(point, direction, t, surfacePoint)
 
     return surfacePoint, t
+
+#def check_flipped():
+    #datacube_flipped = check_star_tracker_orientation(self.adcs_vars)
+    #
+    #if not datacube_flipped:
+    #
+    #    if self.l1a_cube is not None:
+    #        self.l1a_cube = self.l1a_cube[:, ::-1, :]
+    #
+    #    if self.l1b_cube is not None:  
+    #        self.l1b_cube = self.l1b_cube[:, ::-1, :]
+    #        
+    #    if self.l2a_cube is not None:  
+    #        self.l2a_cube = self.l2a_cube[:, ::-1, :]
+
+
+    #self.datacube_flipped = datacube_flipped
+
+    #if flip_lons:
+    #    self.latitudes = self.latitudes[:,::-1]
+    #    self.longitudes = self.longitudes[:,::-1]
+
+    #if flip_lats:
+    #    self.latitudes = self.latitudes[::-1,:]
+    #    self.longitudes = self.longitudes[::-1,:]
