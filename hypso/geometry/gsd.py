@@ -2,7 +2,7 @@
 import numpy as np
 import pyproj as prj
 
-
+from .bbox import compute_bbox
 
 def compute_gsd(frame_count, 
                 image_height, 
@@ -87,31 +87,6 @@ def compute_gsd(frame_count,
 
 
 
-def compute_bbox(latitudes, 
-                 longitudes) -> None:
-
-    lon_min = longitudes.min()
-    lon_max = longitudes.max()
-    lat_min = latitudes.min()
-    lat_max = latitudes.max()
-
-    bbox = (lon_min,lat_min,lon_max,lat_max)
-    
-    return bbox
 
 
-
-def compute_resolution(along_track_gsd, across_track_gsd) -> None:
-
-    distances = [np.mean(along_track_gsd), 
-                 np.mean(across_track_gsd)]
-
-    filtered_distances = [d for d in distances if d is not None]
-
-    try:
-        resolution = max(filtered_distances)
-    except ValueError:
-        resolution = 0
-
-    return resolution
 

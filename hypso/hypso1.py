@@ -139,6 +139,8 @@ class Hypso1(Hypso):
 
         self.spatial_dimensions = (self.capture_config_attrs["frame_count"], self.image_height)
 
+        self.wavelengths = range(0, self.image_width)
+
         if self.VERBOSE:
             print(f"[INFO] Capture spatial dimensions: {self.spatial_dimensions}")
 
@@ -295,7 +297,6 @@ class Hypso1(Hypso):
         setattr(self, "temperature_attrs", metadata_attrs["temperature"])
         setattr(self, "timing_attrs", metadata_attrs["timing"])
  
-
         setattr(self, "dimensions", global_metadata["dimensions"])
         setattr(self, "ncattrs", global_metadata["ncattrs"])
 

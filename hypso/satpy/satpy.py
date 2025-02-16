@@ -14,16 +14,25 @@ from pyresample.geometry import SwathDefinition
 import numpy as np
 import xarray as xr
 
+from datetime import datetime
+
 
 
 def get_l1a_satpy_scene(satobj: Union[Hypso1, Hypso2],
-                        indirect: bool = False
+                        use_indirect_georef: bool = False
                         ) -> Scene:
 
     datacube = satobj.l1a_cube
-    wavelengths = satobj.wavelengths
+    wavelengths = range(0,120)
 
-    if indirect:
+    standard_name = datacube.attrs['description']
+    units = datacube.attrs['units']
+
+    dims = satobj.dim_names_2d
+    start_time = satobj.capture_datetime
+    end_time = satobj.capture_datetime
+
+    if use_indirect_georef:
         latitudes = satobj.latitudes_indirect
         longitudes = satobj.longitudes_indirect
         resolution = satobj.resolution_indirect
@@ -32,27 +41,37 @@ def get_l1a_satpy_scene(satobj: Union[Hypso1, Hypso2],
         longitudes = satobj.longitudes
         resolution = satobj.resolution  
 
-    scene = get_datacube_satpy_scene(satobj=satobj,
-                        datacube=datacube,
+    scene = get_datacube_satpy_scene(datacube=datacube,
                         wavelengths=wavelengths,
                         latitudes=latitudes,
                         longitudes=longitudes,
-                        resolution=resolution)
+                        resolution=resolution,
+                        standard_name=standard_name,
+                        units=units,
+                        dims=dims,
+                        start_time=start_time,
+                        end_time=end_time)
     
     return scene
-
 
 
 
 
 def get_l1b_satpy_scene(satobj: Union[Hypso1, Hypso2],
-                        indirect: bool = False
+                        use_indirect_georef: bool = False
                         ) -> Scene:
 
-    datacube = satobj.l1a_cube
+    datacube = satobj.l1b_cube
     wavelengths = satobj.wavelengths
 
-    if indirect:
+    standard_name = datacube.attrs['description']
+    units = datacube.attrs['units']
+
+    dims = satobj.dim_names_2d
+    start_time = satobj.capture_datetime
+    end_time = satobj.capture_datetime
+
+    if use_indirect_georef:
         latitudes = satobj.latitudes_indirect
         longitudes = satobj.longitudes_indirect
         resolution = satobj.resolution_indirect
@@ -61,26 +80,36 @@ def get_l1b_satpy_scene(satobj: Union[Hypso1, Hypso2],
         longitudes = satobj.longitudes
         resolution = satobj.resolution  
 
-    scene = get_datacube_satpy_scene(satobj=satobj,
-                        datacube=datacube,
+    scene = get_datacube_satpy_scene(datacube=datacube,
                         wavelengths=wavelengths,
                         latitudes=latitudes,
                         longitudes=longitudes,
-                        resolution=resolution)
+                        resolution=resolution,
+                        standard_name=standard_name,
+                        units=units,
+                        dims=dims,
+                        start_time=start_time,
+                        end_time=end_time)
     
     return scene
-
 
 
 
 def get_l1c_satpy_scene(satobj: Union[Hypso1, Hypso2],
-                        indirect: bool = False
+                        use_indirect_georef: bool = False
                         ) -> Scene:
 
-    datacube = satobj.l1a_cube
+    datacube = satobj.l1c_cube
     wavelengths = satobj.wavelengths
 
-    if indirect:
+    standard_name = datacube.attrs['description']
+    units = datacube.attrs['units']
+
+    dims = satobj.dim_names_2d
+    start_time = satobj.capture_datetime
+    end_time = satobj.capture_datetime
+
+    if use_indirect_georef:
         latitudes = satobj.latitudes_indirect
         longitudes = satobj.longitudes_indirect
         resolution = satobj.resolution_indirect
@@ -89,26 +118,35 @@ def get_l1c_satpy_scene(satobj: Union[Hypso1, Hypso2],
         longitudes = satobj.longitudes
         resolution = satobj.resolution  
 
-    scene = get_datacube_satpy_scene(satobj=satobj,
-                        datacube=datacube,
+    scene = get_datacube_satpy_scene(datacube=datacube,
                         wavelengths=wavelengths,
                         latitudes=latitudes,
                         longitudes=longitudes,
-                        resolution=resolution)
+                        resolution=resolution,
+                        standard_name=standard_name,
+                        units=units,
+                        dims=dims,
+                        start_time=start_time,
+                        end_time=end_time)
     
     return scene
-
-
 
 
 def get_l1d_satpy_scene(satobj: Union[Hypso1, Hypso2],
-                        indirect: bool = False
+                        use_indirect_georef: bool = False
                         ) -> Scene:
 
-    datacube = satobj.l1a_cube
+    datacube = satobj.l1d_cube
     wavelengths = satobj.wavelengths
 
-    if indirect:
+    standard_name = datacube.attrs['description']
+    units = datacube.attrs['units']
+
+    dims = satobj.dim_names_2d
+    start_time = satobj.capture_datetime
+    end_time = satobj.capture_datetime
+
+    if use_indirect_georef:
         latitudes = satobj.latitudes_indirect
         longitudes = satobj.longitudes_indirect
         resolution = satobj.resolution_indirect
@@ -117,30 +155,34 @@ def get_l1d_satpy_scene(satobj: Union[Hypso1, Hypso2],
         longitudes = satobj.longitudes
         resolution = satobj.resolution  
 
-    scene = get_datacube_satpy_scene(satobj=satobj,
-                        datacube=datacube,
+    scene = get_datacube_satpy_scene(datacube=datacube,
                         wavelengths=wavelengths,
                         latitudes=latitudes,
                         longitudes=longitudes,
-                        resolution=resolution)
+                        resolution=resolution,
+                        standard_name=standard_name,
+                        units=units,
+                        dims=dims,
+                        start_time=start_time,
+                        end_time=end_time)
     
     return scene
 
 
-
-
-
-
-def get_datacube_satpy_scene(satobj: Union[Hypso1, Hypso2],
-                        datacube: xr.DataArray,
+def get_datacube_satpy_scene(datacube: xr.DataArray,
                         wavelengths: np.ndarray,
                         latitudes: np.ndarray,
                         longitudes: np.ndarray,
-                        resolution
+                        resolution: float,
+                        standard_name: str = "datacube",
+                        units: str = "units",
+                        dims: list = ['y', 'x'],
+                        start_time: datetime = datetime.now(),
+                        end_time: datetime = datetime.now(),
                         ) -> Scene:
 
-    latitudes_xr = xr.DataArray(latitudes, dims=satobj.dim_names_2d)
-    longitudes_xr = xr.DataArray(longitudes, dims=satobj.dim_names_2d)
+    latitudes_xr = xr.DataArray(latitudes, dims=dims)
+    longitudes_xr = xr.DataArray(longitudes, dims=dims)
 
     scene = Scene()
 
@@ -151,11 +193,11 @@ def get_datacube_satpy_scene(satobj: Union[Hypso1, Hypso2],
             'file_type': None,
             'resolution': resolution,
             'name': None,
-            'standard_name': datacube.attrs['description'],
+            'standard_name': standard_name,
             'coordinates': ['latitude', 'longitude'],
-            'units': datacube.attrs['units'],
-            'start_time': satobj.capture_datetime,
-            'end_time': satobj.capture_datetime,
+            'units': units,
+            'start_time': start_time,
+            'end_time': end_time,
             'modifiers': (),
             'ancillary_variables': []
             }   
@@ -168,7 +210,7 @@ def get_datacube_satpy_scene(satobj: Union[Hypso1, Hypso2],
             
         name = 'band_' + str(i+1)
         scene[name] = data
-        #scene[name] = xr.DataArray(data, dims=self.dim_names_2d)
+        #scene[name] = xr.DataArray(data, dims=dims)
         scene[name].attrs.update(attrs)
         scene[name].attrs['wavelength'] = WavelengthRange(min=wl, central=wl, max=wl, unit="band")
         scene[name].attrs['band'] = i
