@@ -1,13 +1,12 @@
 from .utils import set_or_create_attr
-from hypso import Hypso
 from pathlib import Path
 import netCDF4 as nc
 import numpy as np
 from .navigation_group_writer import navigation_group_writer
 
-def l1c_nc_writer(satobj: Hypso, dst_nc: str, datacube: str = False) -> None:
+def l1d_nc_writer(satobj, dst_nc: str, datacube: str = False) -> None:
     """
-    Create a l1c.nc file using the radiometrically corrected data and navigation data.
+    Create a l1d.nc file using the top-of-atmosphere data.
 
     :return: Nothing.
     """
@@ -116,54 +115,53 @@ def l1c_nc_writer(satobj: Hypso, dst_nc: str, datacube: str = False) -> None:
 
 
         # Create and populate variables
-
         if datacube:
 
             # Store as datacube
-            Lt = netfile.createVariable(
-                'products/Lt', 'f8',
+            rhot = netfile.createVariable(
+                'products/rhot', 'f8',
                 ('lines', 'samples', 'bands'),
                 compression=COMP_SCHEME,
                 complevel=COMP_LEVEL,
                 shuffle=COMP_SHUFFLE)
-            Lt.units = "W/m^2/micrometer/sr"
-            Lt.long_name = "Top-of-Atmosphere Radiance"
-            Lt.wavelength_units = "nanometers"
-            Lt.fwhm = [5.5] * bands
-            Lt.wavelengths = np.around(satobj.spectral_coeffs, 1)
-            Lt[:] = satobj.l1b_cube.to_numpy()
+            rhot.units = ""
+            rhot.long_name = "Top-of-Atmosphere Reflectance"
+            rhot.wavelength_units = "nanometers"
+            rhot.fwhm = [5.5] * bands
+            rhot.wavelengths = np.around(satobj.spectral_coeffs, 1)
+            rhot[:] = satobj.l1d_cube.to_numpy()
 
         else:
 
             # Store as bands
-            Lt_cube = satobj.l1b_cube.to_numpy()
-            for band in range(0, Lt_cube.shape[-1]):
+            rhot_cube = satobj.l1b_cube.to_numpy()
+            for band in range(0, rhot_cube.shape[-1]):
 
                 wave = np.around(satobj.spectral_coeffs, 1)[band]
                 wave_name = str(int(wave))
-                name = 'Lt_' + wave_name
+                name = 'rhot_' + wave_name
 
-                Lt = netfile.createVariable(
+                rhot = netfile.createVariable(
                     'products/' + name, 'f8',
                     ('lines', 'samples'),
                     compression=COMP_SCHEME,
                     complevel=COMP_LEVEL,
                     shuffle=COMP_SHUFFLE)
                 
-                Lt.units = "W/m^2/micrometer/sr"
-                Lt.long_name = "Top-of-Atmosphere Radiance Band " + str(band) + " (" + wave_name + " nm)"
-                Lt.wavelength_units = "nanometers"
-                Lt.fwhm = 5.5
-                Lt.wavelength = wave
+                rhot.units = ""
+                rhot.long_name = "Top-of-Atmosphere Reflectance Band " + str(band) + " (" + wave_name + " nm)"
+                rhot.wavelength_units = "nanometers"
+                rhot.fwhm = 5.5
+                rhot.wavelength = wave
 
-                #Lt.f0 = None
-                #Lt.width = 5.5
-                Lt.wave = wave
-                Lt.parameter = name
-                Lt.wave_name = wave_name
-                Lt.band = band
+                #rhot.f0 = None
+                #rhot.width = 5.5
+                rhot.wave = wave
+                rhot.parameter = name
+                rhot.wave_name = wave_name
+                rhot.band = band
 
-                Lt[:] = Lt_cube[:,:,band]
+                rhot[:] = rhot_cube[:,:,band]
 
 
         # ADCS Timestamps ----------------------------------------------------
@@ -415,7 +413,7 @@ def l1c_nc_writer(satobj: Hypso, dst_nc: str, datacube: str = False) -> None:
             'metadata/timing/timestamps_srv', 'f8',
             ('lines',))
         timestamps_srv[:] = getattr(satobj, 'timing_vars')["timestamps_srv"][:]
-
-        navigation_group_writer(satobj=satobj, netfile=netfile, product_level="L1c")
     
+        navigation_group_writer(satobj=satobj, netfile=netfile, product_level="L1c")
+
     return None

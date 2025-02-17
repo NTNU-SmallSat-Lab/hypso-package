@@ -7,7 +7,6 @@ from ..hypso import Hypso
 from ..hypso1 import Hypso1
 from ..hypso2 import Hypso2
 
-
 import numpy as np
 import xarray as xr
 

@@ -1,10 +1,9 @@
 from .utils import set_or_create_attr
-from hypso import Hypso
 from pathlib import Path
 import netCDF4 as nc
 import numpy as np
 
-def navigation_group_writer(satobj: Hypso, netfile: nc.Dataset, product_level: str) -> None:
+def navigation_group_writer(satobj, netfile: nc.Dataset, product_level: str) -> None:
     """
     Write navigation group to NetCDF file. 
 

@@ -1,12 +1,12 @@
 from .utils import set_or_create_attr
-from hypso import Hypso
 from pathlib import Path
 import netCDF4 as nc
 import numpy as np
+from .navigation_group_writer import navigation_group_writer
 
-def l1b_nc_writer(satobj: Hypso, dst_nc: str, datacube: str = False) -> None:
+def l1c_nc_writer(satobj, dst_nc: str, datacube: str = False) -> None:
     """
-    Create a l1b.nc file using the radiometrically corrected data.
+    Create a l1c.nc file using the radiometrically corrected data and navigation data.
 
     :return: Nothing.
     """
@@ -415,5 +415,6 @@ def l1b_nc_writer(satobj: Hypso, dst_nc: str, datacube: str = False) -> None:
             ('lines',))
         timestamps_srv[:] = getattr(satobj, 'timing_vars')["timestamps_srv"][:]
 
+        navigation_group_writer(satobj=satobj, netfile=netfile, product_level="L1c")
+    
     return None
-

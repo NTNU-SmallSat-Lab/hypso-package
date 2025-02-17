@@ -1,6 +1,3 @@
-
-from ..geometry.nearest import get_nearest_pixel
-
 from typing import Union
 import numpy as np
 
