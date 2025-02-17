@@ -405,10 +405,10 @@ class Hypso1(Hypso):
                 npz_file_destriping = None
                 npz_file_spectral = None
 
-        self.rad_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_radiometric}')
-        self.smile_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_smile}')
-        self.destriping_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_destriping}')
-        self.spectral_coeff_file = files('hypso.calibration').joinpath(f'data/{npz_file_spectral}')
+        self.rad_coeff_file = files('hypso.calibration').joinpath(f'hypso1_data/{npz_file_radiometric}')
+        self.smile_coeff_file = files('hypso.calibration').joinpath(f'hypso1_data/{npz_file_smile}')
+        self.destriping_coeff_file = files('hypso.calibration').joinpath(f'hypso1_data/{npz_file_destriping}')
+        self.spectral_coeff_file = files('hypso.calibration').joinpath(f'hypso1_data/{npz_file_spectral}')
 
 
     def _load_calibration_coeff_files(self) -> None:
