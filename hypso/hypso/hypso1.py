@@ -3,6 +3,8 @@ from importlib.resources import files
 from pathlib import Path
 from typing import Union
 
+from hypso1_calibration import get_hypso1_calibration_files
+
 from hypso import Hypso
 from hypso.DataArrayDict import DataArrayDict
 
@@ -50,6 +52,7 @@ class Hypso1(Hypso):
         :return: None.
         """
 
+        '''
         match self.capture_type:
 
             case "custom":
@@ -80,6 +83,22 @@ class Hypso1(Hypso):
         self.smile_coeff_file = files('hypso.calibration').joinpath(f'hypso1_data/{npz_file_smile}')
         self.destriping_coeff_file = files('hypso.calibration').joinpath(f'hypso1_data/{npz_file_destriping}')
         self.spectral_coeff_file = files('hypso.calibration').joinpath(f'hypso1_data/{npz_file_spectral}')
+        '''
+
+        capture_type = self.capture_type
+
+        calibration_files = get_hypso1_calibration_files(capture_type)
+
+        self.rad_coeff_file = calibration_files['radiometric']
+        self.smile_coeff_file = calibration_files['smile']
+        self.destriping_coeff_file = calibration_files['destriping']
+        self.spectral_coeff_file = calibration_files['spectral']
+
+        return None
+
+
+
+
 
 
 

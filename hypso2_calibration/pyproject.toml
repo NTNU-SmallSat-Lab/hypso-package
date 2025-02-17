@@ -17,7 +17,7 @@ build-backend="setuptools.build_meta"
 
 [project]
 name="hypso2_calibration"
-version = "0.0.1a3"
+version = "0.0.1"
 authors = [
   { name="Cameron Penne", email="cameron.l.penne@ntnu.no" },
 ]

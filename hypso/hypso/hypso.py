@@ -531,6 +531,7 @@ class Hypso:
                          radiometric: bool = True,
                          smile: bool = True,
                          destripe: bool = True,
+                         spectral: bool = True,
                          set_coeffs: bool = True,
                          **kwargs) -> np.ndarray:
         """
@@ -544,44 +545,54 @@ class Hypso:
         if self.VERBOSE:
             print('[INFO] Running calibration routines...')
 
+        # TODO: move this function call
         if set_coeffs:
             self._set_calibration_coeff_files()
 
         self._load_calibration_coeff_files()
 
-        self.srf = get_spectral_response_function(wavelengths=self.wavelengths)
-
         calibrated_cube = self.l1a_cube.to_numpy()
 
-        if radiometric:
+        if self.rad_coeffs is not None:
+            if radiometric:
 
-            if self.VERBOSE:
-                print("[INFO] Running radiometric calibration...")
+                if self.VERBOSE:
+                    print("[INFO] Running radiometric calibration...")
 
-            calibrated_cube = run_radiometric_calibration(cube=calibrated_cube, 
-                                            background_value=self.background_value,
-                                            exp=self.exposure,
-                                            image_height=self.image_height,
-                                            image_width=self.image_width,
-                                            frame_count=self.frame_count,
-                                            rad_coeffs=self.rad_coeffs)
+                calibrated_cube = run_radiometric_calibration(cube=calibrated_cube, 
+                                                background_value=self.background_value,
+                                                exp=self.exposure,
+                                                image_height=self.image_height,
+                                                image_width=self.image_width,
+                                                frame_count=self.frame_count,
+                                                rad_coeffs=self.rad_coeffs)
 
+        if self.smile_coeffs is not None:
+            if smile:
 
-        if smile:
+                if self.VERBOSE:
+                    print("[INFO] Running smile correction...")
 
-            if self.VERBOSE:
-                print("[INFO] Running smile correction...")
+                calibrated_cube = run_smile_correction(cube=calibrated_cube, 
+                                                smile_coeffs=self.smile_coeffs)
 
-            calibrated_cube = run_smile_correction(cube=calibrated_cube, 
-                                            smile_coeffs=self.smile_coeffs)
+        if self.destriping_coeffs is not None:
+            if destripe:
 
-        if destripe:
-            if self.VERBOSE:
-                print("[INFO] Running destriping correction...")
+                if self.VERBOSE:
+                    print("[INFO] Running destriping correction...")
 
-            calibrated_cube = run_destriping_correction(cube=calibrated_cube, 
-                                                destriping_coeffs=self.destriping_coeffs)
+                calibrated_cube = run_destriping_correction(cube=calibrated_cube, 
+                                                    destriping_coeffs=self.destriping_coeffs)
 
+        if self.spectral_coeffs is not None:
+            if spectral:
+                if self.VERBOSE:
+                    print("[INFO] Running spectral correction...")
+
+                self.wavelengths = self.spectral_coeffs
+
+        self.srf = get_spectral_response_function(wavelengths=self.wavelengths)
 
         return calibrated_cube
 
@@ -597,24 +608,22 @@ class Hypso:
         try:
             self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file)
         except:
-            self.rad_coeff_file = None
+            self.rad_coeffs = None
 
         try:
             self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file)
         except:
-            self.smile_coeff_file = None
+            self.smile_coeffs = None
 
         try:
             self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file)
         except:
-            self.destriping_coeff_file = None
+            self.destriping_coeffs = None
 
         try:
             self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file)
-            self.wavelengths = self.spectral_coeffs
         except:
-            self.spectral_coeff_file = None
-            self.wavelengths = range(0,120)
+            self.spectral_coeffs = None
 
         return None
     
