@@ -1,85 +1,38 @@
 # HYPSO Python Package
 "hypso" is a simple, fast, processing and visualization tool for the hyperspectral
-images taken by the HYPSO mission from the Norwegian University of Science and
-Technology (NTNU) for Python >3.10
+images taken by the HYPSO-1 and HYPSO-2 satellites developed by the Norwegian University of Science and
+Technology (NTNU).
 
-- Documentation: https://ntnu-smallsat-lab.github.io/hypso-package/ (NB: out of date)
-  
-- Development: https://github.com/NTNU-SmallSat-Lab/hypso-package
-  
-- PyPI URL: https://pypi.org/project/hypso/
-  
-- Anaconda URL: https://anaconda.org/conda-forge/hypso
-
-- Anaconda Github Feedstock: https://github.com/conda-forge/hypso-feedstock
+## Links
+- Documentation: [https://ntnu-smallsat-lab.github.io/hypso-package/](https://ntnu-smallsat-lab.github.io/hypso-package/) (NB: out of date)
+- Source Code: [https://github.com/NTNU-SmallSat-Lab/hypso-package](https://github.com/NTNU-SmallSat-Lab/hypso-package)
+- Issues: [https://github.com/NTNU-SmallSat-Lab/hypso-package/issues](https://github.com/NTNU-SmallSat-Lab/hypso-package/issues)
+- PyPI URL: [https://pypi.org/project/hypso/](https://pypi.org/project/hypso/)
 
 ## Installation
-
-### Pip 
+The HYPSO package can be installed using the Python package manager `pip`:
 ```
 pip install hypso
 ```
-
-### Anaconda
-It is recommended to use mamba as it is less prone to errors in dependency management than the default conda terminal (see https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html)
-
-if conda installed:
+If you encounter an error about gdal, try the following commands:
 ```
-conda install -c conda-forge conda-libmamba-solver 
-conda config --set solver libmamba
-conda create -n hypsoenv python=3.9
-conda activate hypsoenv
-conda install -c conda-forge hypso
+sudo apt-get install gdal-bin libgdal-dev
+pip install gdal==3.8.4
+pip install hypso
 ```
 
-if mamba installed:
-```
-mamba create -n hypsoenv python=3.9
-mamba activate hypsoenv
-mamba install -c conda-forge hypso
-```
+## Calibration Libraries
+Radiometric calibration files for HYPSO-1 and HYPSO-2 are distributed in two separate Python packages which can also be installed using `pip`:
+- hypso1_calibration: [https://pypi.org/project/hypso1-calibration/](https://pypi.org/project/hypso1-calibration/)
+- hypso2_calibration: [https://pypi.org/project/hypso2-calibration/](https://pypi.org/project/hypso2-calibration/)
 
-To update to the most recent version it is suggested to run the following code (change "mamba" for "conda" if needed):
+It is highly recommended to install these packages alongside the HYPSO package using the following commands:
 ```
-mamba search -c conda-forge hypso
-mamba update hypso
+pip install hypso1-calibration
+pip install hypso2-calibration
 ```
 
-## Authors
-- Maintainers: Cameron Penne (@CameronLP)
-- Correction Coefficients: Marie Henriksen, Joe Garett
-- Georeferencing: Sivert Bakken, Dennis Langer
-- Package: Alvaro F. Romero
-
-# GDAL Issues
-Problems with installing the hypso pack?! Don't fear, try this
-Install Linux subsystems for window, follow these guides:
-	https://learn.microsoft.com/en-us/windows/wsl/install
-	https://learn.microsoft.com/en-us/windows/wsl/setup/environment
-	https://learn.microsoft.com/en-us/windows/wsl/tutorials/wsl-vscode
-Still get gdal error? Run:
-	apt list --installed | grep "gdal"
-should be:
-	gdal-bin/jammy,now 3.8.4+dfsg-1~jammy0 amd64 [installed]
-	gdal-data/jammy,now 3.8.4+dfsg-1~jammy0 all [installed,automatic]
-	gdal-plugins/jammy,now 3.8.4+dfsg-1~jammy0 amd64 [installed,automatic]
-	libgdal-dev/jammy,now 3.8.4+dfsg-1~jammy0 amd64 [installed]
-	libgdal34/jammy,now 3.8.4+dfsg-1~jammy0 amd64 [installed,automatic]
-	python3-gdal/jammy,now 3.8.4+dfsg-1~jammy0 amd64 [installed,automatic]
-If they are missing run:
-	sudo apt-get install gdal-bin libgdal-dev
-then try:
-	pip install gdal==3.8.4
-if error: command '/usr/bin/x86_64-linux-gnu-g++' failed with exit code 1?
-	sudo apt-get install python3-dev
-	sudo apt-get install build-essential
-then:
-	pip install gdal==3.8.4
-	pip install hypso
-
-# Development of the HYPSO Package
-
-## Development of the pip package
+## Development 
 - [Packaging projects](https://packaging.python.org/en/latest/tutorials/packaging-projects/)
 - Create an account at [PyPI.org](https:/pypi.org) and request access to the hypso project (contact Cameron or Aria, updated 2025-02-17)
 - Add your [PyPI.org](https:/pypi.org) login credentials and token to `~/.pypirc`
@@ -91,85 +44,20 @@ then:
 - Build the package with `python3 -m build`
 - Upload the newly built package to PyPI: `python3 -m twine upload --repository pypi dist/*`
 - View the project at [pypi.org/project/hypso/](https://pypi.org/project/hypso/)
+- Important Considerations:
+    1. Importing files needs to be done using package file imports like the following line of code.
 
-## Development of the conda-forge package (DEPRECATED)
+    ```
+    full_rad_coeff_file = files('hypso.calibration').joinpath(
+                    f'data/{"radiometric_calibration_matrix_HYPSO-1_full_v1.csv"}')
+    ```
+        
+    2. Any non-python file that wants to be included to be uploaded needs to be added in the `MANIFEST.in` file
+    3. Packages names and version in both the `pyproject.toml` and `meta.yaml` are case and space sensitive, be carefull with the spacing. Avoid using specific versions (==) and try to use higher than (>=) as it makes it easier for future compatibility.
 
-There are two main repos:
-- Package: https://github.com/NTNU-SmallSat-Lab/hypso-package
-- Conda-Forge Feedstock: https://github.com/conda-forge/hypso-feedstock
+## Authors
+- Maintainers: Cameron Penne (@CameronLP)
+- Calibration: Marie Henriksen, Joe Garett, Aria Alinejad
+- Georeferencing: Sivert Bakken, Dennis Langer
+- Package: Alvaro Romero
 
-You need to:
-- Create a Fork of the hypso-package to implement new functionality
-- Create Fork of hypso-feedstock to trigger a conda-forge upversion
-
-```diff
-- IMPORTANT: Only modify your forks and create a PR to merge. Never modify directly.
-
-```
-
-### To Update conda-forge Package
-
-
-#### 1. Modify your fork of the hypso package with new improvements
-Do not forget to update the `pyproject.toml` file in the root. The `fallback_version` should match with the next step bundle name.
-![image](https://github.com/NTNU-SmallSat-Lab/hypso-package/assets/87340855/bab5072e-cecb-4973-888a-26238c95a3ec)
-
-If you added new packages include them in the same file (see image below). Versions of the files may be required.
-
-![Screenshot 2024-03-17 at 03 40 33](https://github.com/NTNU-SmallSat-Lab/hypso-package/assets/87340855/f61eda77-2830-4956-a7a8-711b5085007b)
-
-
-#### 2. Bundle a Sub-Sequent Release
-You need to create a new release. The recommended format is 3 digits with a lowecase "v" as a prefix. Example: v1.9.9 This number should be the same fone as in Step 1. Create a "tag" when creating a release version or Step 3 wont work.
-
-![image](https://github.com/NTNU-SmallSat-Lab/hypso-package/assets/87340855/6b920b92-6301-447a-860a-9c11720c2923)
-
-
-![Screenshot 2024-03-17 at 03 36 36](https://github.com/NTNU-SmallSat-Lab/hypso-package/assets/87340855/3e43d2ef-b464-497c-bad7-a1708e6554a3)
-
-#### 3. Generate SHA 256 for the newly released file
-
-Use the following code and change the version relesed (for linux and mac). Modify the version of the like to match step 1 and 2.
-
-    curl -sL https://github.com/NTNU-SmallSat-Lab/hypso-package/archive/v1.9.9.tar.gz | openssl sha256
-    
-Copy the SHA256 string that you get after running that code above for the next step.
-
-#### 4. Modify your fork of hypso-feedstock
-
-On your fork, modify the file `recipe/meta.yaml`, specifically *lines 2 and 11* in the following image:
-
-![image](https://github.com/NTNU-SmallSat-Lab/hypso-package/assets/87340855/4dea09f0-009e-4789-98da-6c7a706721c4)
-
-The version should match all previous steps and the sha256 value should be the one generated in Step 3.
-
-If new packages are added they should be included in the *"run"* section with the same name and version as written in the `pyproject.toml` file (see Step 1).
-
-![image](https://github.com/NTNU-SmallSat-Lab/hypso-package/assets/87340855/e144b135-b42d-4418-b1b1-3e7944675953)
-
-
-#### 5. Create a Pull Request (PR) for your hypso-feedstock fork
-Complete the checklist in the PR template
-
-![image](https://github.com/NTNU-SmallSat-Lab/hypso-package/assets/87340855/78fdb5e2-b057-42a3-9fb0-9d331b8d93a1)
-
-Bots will check the PR and the file will be compiled on Azure to make sure everything works. If an error occurs you will see it. Once all the tests are passed, the PR can be merged.
-
-![Screenshot 2024-03-17 at 03 53 37](https://github.com/NTNU-SmallSat-Lab/hypso-package/assets/87340855/e3c96101-e73a-4e98-a66c-f101f82b7b9e)
-
-After the PR is merged, the new version will be available for install in conda-forge.
-
-![image](https://github.com/NTNU-SmallSat-Lab/hypso-package/assets/87340855/3b1ce72b-bcc0-4b74-8257-165216ab291f)
-
-
-## Important Considerations
-
-1. Importing files needs to be done using package file imports like the following line of code.
-
-```
-full_rad_coeff_file = files('hypso.calibration').joinpath(
-                f'data/{"radiometric_calibration_matrix_HYPSO-1_full_v1.csv"}')
-```
-    
-2. Any non-python file that wants to be included to be uploaded needs to be added in the `MANIFEST.in` file
-3. Packages names and version in both the `pyproject.toml` and `meta.yaml` are case and space sensitive, be carefull with the spacing. Avoid using specific versions (==) and try to use higher than (>=) as it makes it easier for future compatibility.
