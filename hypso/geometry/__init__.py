@@ -3,4 +3,3 @@ from .nearest import get_nearest_pixel
 from .gsd import compute_gsd
 from .bbox import compute_bbox
 from .resolution import compute_resolution
-from .geometry_definition import generate_area_def, generate_swath_def
