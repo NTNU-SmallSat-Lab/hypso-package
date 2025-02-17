@@ -51,7 +51,31 @@ mamba update hypso
 - Georeferencing: Sivert Bakken, Dennis Langer
 - Package: Alvaro F. Romero
 
-
+# GDAL Issues
+Problems with installing the hypso pack?! Don't fear, try this
+Install Linux subsystems for window, follow these guides:
+	https://learn.microsoft.com/en-us/windows/wsl/install
+	https://learn.microsoft.com/en-us/windows/wsl/setup/environment
+	https://learn.microsoft.com/en-us/windows/wsl/tutorials/wsl-vscode
+Still get gdal error? Run:
+	apt list --installed | grep "gdal"
+should be:
+	gdal-bin/jammy,now 3.8.4+dfsg-1~jammy0 amd64 [installed]
+	gdal-data/jammy,now 3.8.4+dfsg-1~jammy0 all [installed,automatic]
+	gdal-plugins/jammy,now 3.8.4+dfsg-1~jammy0 amd64 [installed,automatic]
+	libgdal-dev/jammy,now 3.8.4+dfsg-1~jammy0 amd64 [installed]
+	libgdal34/jammy,now 3.8.4+dfsg-1~jammy0 amd64 [installed,automatic]
+	python3-gdal/jammy,now 3.8.4+dfsg-1~jammy0 amd64 [installed,automatic]
+If they are missing run:
+	sudo apt-get install gdal-bin libgdal-dev
+then try:
+	pip install gdal==3.8.4
+if error: command '/usr/bin/x86_64-linux-gnu-g++' failed with exit code 1?
+	sudo apt-get install python3-dev
+	sudo apt-get install build-essential
+then:
+	pip install gdal==3.8.4
+	pip install hypso
 
 # Development of the HYPSO Package
 

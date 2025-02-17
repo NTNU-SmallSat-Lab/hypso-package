@@ -1,3 +1,5 @@
+hypso1-calibration
+hypso2-calibration
 numpy>=1.24
 gdal>=3.4.1
 cartopy>=0.21.1
