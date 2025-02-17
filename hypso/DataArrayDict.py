@@ -4,7 +4,7 @@ import xarray as xr
 from .DataArrayValidator import DataArrayValidator
 
 class DataArrayDict(dict, DataArrayValidator):
-    def __init__(self, attributes=None, dims_shape=None, dims_names: tuple[str, str, str] =('y', 'x', 'bands'), num_dims: int=3):
+    def __init__(self, attributes=None, dims_shape=None, dim_names: tuple[str, str, str] =('y', 'x', 'bands'), num_dims: int=3):
         """
         Initialize the DataArrayDict with optional attributes and dimension shape.
 
@@ -13,7 +13,7 @@ class DataArrayDict(dict, DataArrayValidator):
         """
         self.attributes = attributes or {}
         self.dims_shape = dims_shape
-        self.dims_names = dims_names
+        self.dim_names = dim_names
         self.num_dims = num_dims
 
         super().__init__()
@@ -23,7 +23,7 @@ class DataArrayDict(dict, DataArrayValidator):
         # Ensure key is lowercased
         key = key.lower()
 
-        v = DataArrayValidator(dims_shape=self.dims_shape, dims_names=self.dims_names, num_dims=self.num_dims)
+        v = DataArrayValidator(dims_shape=self.dims_shape, dim_names=self.dim_names, num_dims=self.num_dims)
 
         value = v.validate(data=value)
 

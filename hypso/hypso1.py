@@ -87,7 +87,7 @@ class Hypso1(Hypso):
 
         products = DataArrayDict(dims_shape=self.spatial_dimensions, 
                                       attributes=product_attributes, 
-                                      dims_names=self.dim_names_2d,
+                                      dim_names=self.dim_names_2d,
                                       num_dims=2
                                       )
 

@@ -182,7 +182,7 @@ class Hypso:
                       'description': "Digital Number (DN)"
                      }
 
-        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=self.dim_names_3d)
+        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dim_names=self.dim_names_3d)
 
         data = v.validate(data=data)
         data = self._update_dataarray_attrs(data, attributes)
@@ -196,7 +196,7 @@ class Hypso:
                       'description': "Top-of-Atmosphere Radiance (Lt)"
                      }
 
-        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=self.dim_names_3d)
+        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dim_names=self.dim_names_3d)
 
         data = v.validate(data=data)
         data = self._update_dataarray_attrs(data, attributes)
@@ -210,7 +210,7 @@ class Hypso:
                       'description': "Top-of-Atmosphere Radiance (Lt)"
                      }
 
-        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=self.dim_names_3d)
+        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dim_names=self.dim_names_3d)
 
         data = v.validate(data=data)
         data = self._update_dataarray_attrs(data, attributes)
@@ -225,7 +225,7 @@ class Hypso:
                       'correction': None
                      }
 
-        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=self.dim_names_3d)
+        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dim_names=self.dim_names_3d)
 
         data = v.validate(data=data)
         data = self._update_dataarray_attrs(data, attributes)
@@ -240,7 +240,7 @@ class Hypso:
                       'correction': None
                      }
 
-        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=self.dim_names_3d)
+        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dim_names=self.dim_names_3d)
 
         data = v.validate(data=data)
         data = self._update_dataarray_attrs(data, attributes)
@@ -258,7 +258,7 @@ class Hypso:
                       'method': None
                      }
 
-        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=self.dim_names_2d, num_dims=2)
+        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dim_names=self.dim_names_2d, num_dims=2)
 
         data = v.validate(data=data)
         data = self._update_dataarray_attrs(data, attributes)
@@ -273,7 +273,7 @@ class Hypso:
                       'method': None
                      }
 
-        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dims_names=self.dim_names_2d, num_dims=2)
+        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dim_names=self.dim_names_2d, num_dims=2)
 
         data = v.validate(data=data)
         data = self._update_dataarray_attrs(data, attributes)

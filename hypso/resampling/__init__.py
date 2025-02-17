@@ -1,2 +1,2 @@
-from .resample import *
+from .resamplers import *
 
