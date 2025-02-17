@@ -1,0 +1,60 @@
+# -- build
+
+#https://packaging.python.org/en/latest/specifications/core-metadata/
+
+#[tool.setuptools_scm]
+#write_to = "hypso/_version.py"
+#fallback_version = "0.0.0"
+
+[build-system]
+requires=[
+#  "python >=3.10",
+  "pip>=23.2.1",
+  "setuptools>=69.2.0",
+  ]
+  
+build-backend="setuptools.build_meta"
+
+[project]
+name="hypso1_calibration"
+version = "0.0.1"
+authors = [
+  { name="Cameron Penne", email="cameron.l.penne@ntnu.no" },
+]
+maintainers = [
+  { name="Cameron Penne", email="cameron.l.penne@ntnu.no" },
+]
+description = "HYPSO-1 Calibration Files for HYPSO Toolbox"
+readme = "README.md"
+license = { text = "MIT" }
+classifiers = [
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+requires-python = ">=3.10"
+dependencies=[
+  "numpy>=1.24"
+]
+
+# dynamic properties set by tools
+#dynamic = [
+#  "version",
+#]
+
+[project.urls]
+"Homepage" = "https://github.com/NTNU-SmallSat-Lab/hypso-package"
+"Bug Tracker" = "https://github.com/NTNU-SmallSat-Lab/hypso-package/issues"
+
+[tool.setuptools]
+license-files = [ "LICENSE" ]
+include-package-data=true
+
+[tool.setuptools.packages.find]
+include = [
+  "hypso*",
+]

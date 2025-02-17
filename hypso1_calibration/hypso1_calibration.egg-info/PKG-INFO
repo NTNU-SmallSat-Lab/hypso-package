@@ -1,0 +1,18 @@
+Metadata-Version: 2.2
+Name: hypso1_calibration
+Version: 0.0.1
+Summary: HYPSO-1 Calibration Files for HYPSO Toolbox
+Author-email: Cameron Penne <cameron.l.penne@ntnu.no>
+Maintainer-email: Cameron Penne <cameron.l.penne@ntnu.no>
+License: MIT
+Project-URL: Homepage, https://github.com/NTNU-SmallSat-Lab/hypso-package
+Project-URL: Bug Tracker, https://github.com/NTNU-SmallSat-Lab/hypso-package/issues
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: numpy>=1.24
