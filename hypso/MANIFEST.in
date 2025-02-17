@@ -1,0 +1,17 @@
+global-include *.npz
+global-include *.ini
+global-include *.dat
+global-include *.txt
+global-include *.xls
+global-include *.xlsx
+include hypso/_version.py
+
+recursive-include hypso/atmospheric/ *
+recursive-include hypso/calibration/data/ *
+recursive-include hypso/chlorophyll_estimation/data/ *
+recursive-include hypso/classification/WaterDetect/ *
+recursive-include hypso/utils/data/ *
+
+recursive-exclude ./coefficients *
+recursive-exclude ./demo *
+recursive-exclude ./testing *

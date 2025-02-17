@@ -1,0 +1,9 @@
+global-include *.npz
+global-include *.ini
+global-include *.dat
+global-include *.txt
+global-include *.xls
+global-include *.xlsx
+include hypso/_version.py
+
+

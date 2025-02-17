@@ -1,0 +1,97 @@
+Metadata-Version: 2.2
+Name: hypso
+Version: 2.0.8
+Summary: HYPSO Toolbox For Satellite Image Processing
+Author-email: Cameron Penne <cameron.l.penne@ntnu.no>
+Maintainer-email: Cameron Penne <cameron.l.penne@ntnu.no>
+License: MIT
+Project-URL: Homepage, https://github.com/NTNU-SmallSat-Lab/hypso-package
+Project-URL: Bug Tracker, https://github.com/NTNU-SmallSat-Lab/hypso-package/issues
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: numpy>=1.24
+Requires-Dist: gdal>=3.4.1
+Requires-Dist: cartopy>=0.21.1
+Requires-Dist: pandas
+Requires-Dist: matplotlib>=3.8.3
+Requires-Dist: rasterio>=1.3.4
+Requires-Dist: pyproj>=3.4.1
+Requires-Dist: netcdf4>=1.6.3
+Requires-Dist: scikit-image>=0.21.0
+Requires-Dist: py6s>=1.9.2
+Requires-Dist: scipy>=1.11.2
+Requires-Dist: pillow
+Requires-Dist: shapely>=2.0.1
+Requires-Dist: tqdm>=4.66.1
+Requires-Dist: astropy>=5.3.4
+Requires-Dist: progressbar>=2.5
+Requires-Dist: requests
+Requires-Dist: python-dateutil
+Requires-Dist: scikit-learn>=1.4
+Requires-Dist: xgboost
+Requires-Dist: joblib
+Requires-Dist: pyresample>=1.28.2
+Requires-Dist: satpy>=0.45.0
+Requires-Dist: xarray>=2023.12.0
+Requires-Dist: global-land-mask>=1.0.0
+
+# HYPSO
+"hypso" is a simple, fast, processing and visualization tool for the hyperspectral
+images taken by the HYPSO mission from the Norwegian University of Science and
+Technology (NTNU) for Python >3.10
+
+- Documentation: https://ntnu-smallsat-lab.github.io/hypso-package/ (NB: out of date)
+  
+- Development: https://github.com/NTNU-SmallSat-Lab/hypso-package
+  
+- PyPI URL: https://pypi.org/project/hypso/
+  
+- Anaconda URL: https://anaconda.org/conda-forge/hypso
+
+- Anaconda Github Feedstock: https://github.com/conda-forge/hypso-feedstock
+
+## Installation
+
+### Pip 
+```
+pip install hypso
+```
+
+### Anaconda
+It is recommended to use mamba as it is less prone to errors in dependency management than the default conda terminal (see https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html)
+
+if conda installed:
+```
+conda install -c conda-forge conda-libmamba-solver 
+conda config --set solver libmamba
+conda create -n hypsoenv python=3.9
+conda activate hypsoenv
+conda install -c conda-forge hypso
+```
+
+if mamba installed:
+```
+mamba create -n hypsoenv python=3.9
+mamba activate hypsoenv
+mamba install -c conda-forge hypso
+```
+
+To update to the most recent version it is suggested to run the following code (change "mamba" for "conda" if needed):
+```
+mamba search -c conda-forge hypso
+mamba update hypso
+```
+
+## Authors
+
+- Package: @DevAlvaroF, @CameronLP
+- Correction Coefficients: Marie Henriksen, Joe Garett
+- Georeferencing: Sivert Bakken, Dennis Langer
+
