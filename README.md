@@ -3,6 +3,12 @@
 images taken by the HYPSO-1 and HYPSO-2 satellites developed by the Norwegian University of Science and
 Technology (NTNU).
 
+The HYPSO package can process the following data products for HYPSO-1 and HYPSO-2 hyperspectral captures:
+- L1a (raw data)
+- L1b (top-of-atmosphere radiance)
+- L1c (top-of-atmosphere radiance with georeferencing)
+- L1d (top-of-atmosphere reflectance with georeferencing)
+
 ## Links
 - Documentation: [https://ntnu-smallsat-lab.github.io/hypso-package/](https://ntnu-smallsat-lab.github.io/hypso-package/) (NB: out of date)
 - Source Code: [https://github.com/NTNU-SmallSat-Lab/hypso-package](https://github.com/NTNU-SmallSat-Lab/hypso-package)
