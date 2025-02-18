@@ -18,7 +18,7 @@ build-backend="setuptools.build_meta"
 
 [project]
 name="hypso"
-version = "2.1.0b1"
+version = "2.1.0b4"
 authors = [
   { name="Cameron Penne", email="cameron.l.penne@ntnu.no" },
 ]

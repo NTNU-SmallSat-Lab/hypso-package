@@ -71,15 +71,13 @@ hypso/georeferencing/georeferencing.py
 hypso/georeferencing/utils.py
 hypso/load/__init__.py
 hypso/load/l1a_nc_loader.py
-hypso/load/l1b_nc_loader.py
-hypso/load/l1c_nc_loader.py
-hypso/load/l2a_nc_loader.py
 hypso/load/utils.py
 hypso/mask/__init__.py
 hypso/mask/cloud_mask.py
 hypso/mask/land_mask.py
 hypso/plot/__init__.py
 hypso/plot/map.py
+hypso/reflectance/Solar_irradiance_Thuillier_2002.csv
 hypso/reflectance/Solar_irradiance_Thuillier_2002.xls
 hypso/reflectance/__init__.py
 hypso/reflectance/toa_reflectance.py

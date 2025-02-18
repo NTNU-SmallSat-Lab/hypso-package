@@ -1,4 +1,5 @@
 global-include *.npz
+global-include *.csv
 global-include *.ini
 global-include *.dat
 global-include *.txt
