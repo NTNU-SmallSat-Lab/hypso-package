@@ -40,7 +40,9 @@ def resample_l1a_cube(satobj: Union[Hypso1, Hypso2],
                                                         longitudes = longitudes,
                                                         radius_of_influence=resolution)
     
-    return resampled_data
+    resampled_longitudes, resampled_latitudes = area_def.get_lonlats()
+
+    return resampled_data, resampled_latitudes, resampled_longitudes
 
 
 def resample_l1b_cube(satobj: Union[Hypso1, Hypso2], 
@@ -66,7 +68,9 @@ def resample_l1b_cube(satobj: Union[Hypso1, Hypso2],
                                                         longitudes = longitudes,
                                                         radius_of_influence=resolution)
     
-    return resampled_data
+    resampled_longitudes, resampled_latitudes = area_def.get_lonlats()
+
+    return resampled_data, resampled_latitudes, resampled_longitudes
 
 
 def resample_l1c_cube(satobj: Union[Hypso1, Hypso2], 
@@ -92,7 +96,9 @@ def resample_l1c_cube(satobj: Union[Hypso1, Hypso2],
                                                         longitudes = longitudes,
                                                         radius_of_influence=resolution)
     
-    return resampled_data
+    resampled_longitudes, resampled_latitudes = area_def.get_lonlats()
+
+    return resampled_data, resampled_latitudes, resampled_longitudes
 
 
 def resample_l1d_cube(satobj: Union[Hypso1, Hypso2], 
@@ -118,7 +124,9 @@ def resample_l1d_cube(satobj: Union[Hypso1, Hypso2],
                                                         longitudes = longitudes,
                                                         radius_of_influence=resolution)
     
-    return resampled_data
+    resampled_longitudes, resampled_latitudes = area_def.get_lonlats()
+
+    return resampled_data, resampled_latitudes, resampled_longitudes
 
 
 # TODO

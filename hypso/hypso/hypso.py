@@ -28,10 +28,9 @@ from hypso.load import load_l1a_nc
 
 from hypso.reflectance import compute_toa_reflectance
 
-from hypso.write import l1b_nc_writer, \
-                          l1c_nc_writer, \
-                          l1d_nc_writer
-
+#from hypso.write import l1b_nc_writer, \
+#                          l1c_nc_writer, \
+#                          l1d_nc_writer
 
 from hypso.utils import find_file
 
@@ -414,8 +413,6 @@ class Hypso:
         return None
 
 
-
-    # TODO: move into hypso class
     # TODO: setattr, hasattr, getattr for setting class variables
     def _set_capture_config(self, capture_config_attrs: dict) -> None:
 
@@ -820,6 +817,7 @@ class Hypso:
 
         return None
 
+    '''
     def write_l1b_nc_file(self, overwrite: bool = False, **kwargs) -> None:
 
         if Path(self.l1b_nc_file).is_file() and not overwrite:
@@ -834,7 +832,7 @@ class Hypso:
                       **kwargs)
 
         return None
-
+    '''
 
     def generate_l1c_cube(self) -> None:
 
@@ -843,6 +841,7 @@ class Hypso:
         
         return None
 
+    '''
     def write_l1c_nc_file(self, overwrite: bool = False, **kwargs) -> None:
 
         if Path(self.l1c_nc_file).is_file() and not overwrite:
@@ -857,7 +856,7 @@ class Hypso:
                       **kwargs)
 
         return None
-
+    '''
 
     def generate_l1d_cube(self) -> None:
 
@@ -866,7 +865,7 @@ class Hypso:
 
         return None
 
-
+    '''
     def write_l1d_nc_file(self, overwrite: bool = False, **kwargs) -> None:
         
         if Path(self.l1d_nc_file).is_file() and not overwrite:
@@ -881,3 +880,4 @@ class Hypso:
                       **kwargs)
 
         return None
+    '''

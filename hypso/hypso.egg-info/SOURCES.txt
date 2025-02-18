@@ -82,7 +82,7 @@ hypso/reflectance/Solar_irradiance_Thuillier_2002.xls
 hypso/reflectance/__init__.py
 hypso/reflectance/toa_reflectance.py
 hypso/resample/__init__.py
-hypso/resample/resample_datacube.py
+hypso/resample/datacube_resamplers.py
 hypso/resample/resamplers.py
 hypso/satpy/__init__.py
 hypso/satpy/satpy.py

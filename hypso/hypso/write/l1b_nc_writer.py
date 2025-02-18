@@ -3,6 +3,23 @@ from pathlib import Path
 import netCDF4 as nc
 import numpy as np
 
+
+def write_l1b_nc_file(satobj, overwrite: bool = False, **kwargs) -> None:
+
+    if Path(satobj.l1b_nc_file).is_file() and not overwrite:
+
+        if satobj.VERBOSE:
+            print("[INFO] L1b NetCDF file has already been generated. Skipping.")
+
+        return None
+
+    l1b_nc_writer(satobj=satobj, 
+                    dst_nc=satobj.l1b_nc_file, 
+                    **kwargs)
+
+    return None
+
+
 def l1b_nc_writer(satobj, dst_nc: str, datacube: str = False) -> None:
     """
     Create a l1b.nc file using the radiometrically corrected data.

@@ -4,6 +4,23 @@ import netCDF4 as nc
 import numpy as np
 from .navigation_group_writer import navigation_group_writer
 
+
+def write_l1c_nc_file(satobj, overwrite: bool = False, **kwargs) -> None:
+
+    if Path(satobj.l1c_nc_file).is_file() and not overwrite:
+
+        if satobj.VERBOSE:
+            print("[INFO] L1c NetCDF file has already been generated. Skipping.")
+
+        return None
+
+    l1c_nc_writer(satobj=satobj, 
+                    dst_nc=satobj.l1c_nc_file, 
+                    **kwargs)
+
+    return None
+
+
 def l1c_nc_writer(satobj, dst_nc: str, datacube: str = False) -> None:
     """
     Create a l1c.nc file using the radiometrically corrected data and navigation data.
