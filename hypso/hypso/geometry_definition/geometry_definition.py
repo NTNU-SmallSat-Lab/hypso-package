@@ -1,4 +1,5 @@
-
+import xarray as xr
+import numpy as np
 from pyproj import Proj
 from pyresample import geometry
 from pyresample.geometry import AreaDefinition
@@ -44,7 +45,41 @@ def generate_area_def(area_id: str,
     return area_def
 
 
-# TODO
-def generate_swath_def() -> SwathDefinition:
+def generate_swath_def(latitudes: np.ndarray, 
+                       longitudes: np.ndarray, 
+                       ) -> SwathDefinition:
 
-    return None
+    swath_def = SwathDefinition(lons=longitudes, lats=latitudes)
+
+    return swath_def
+
+
+
+def generate_hypso_swath_def(satobj,
+                            use_indirect_georef: bool = False
+                            ) -> SwathDefinition:
+
+    dims = satobj.dim_names_2d
+
+    if use_indirect_georef:
+        latitudes = satobj.latitudes_indirect
+        longitudes = satobj.longitudes_indirect
+        resolution = satobj.resolution_indirect
+    else:
+        latitudes = satobj.latitudes
+        longitudes = satobj.longitudes
+        resolution = satobj.resolution
+
+    attrs = {'resolution': resolution,
+             'sensor': satobj.sensor,
+             'name': 'swath'
+             }
+
+    latitudes_xr = xr.DataArray(latitudes, dims=dims, attrs=attrs)
+    longitudes_xr = xr.DataArray(longitudes, dims=dims, attrs=attrs)
+
+    swath_def = SwathDefinition(lons=longitudes_xr, lats=latitudes_xr)
+
+
+    return swath_def
+
