@@ -67,13 +67,13 @@ class Hypso:
         self.l1b_nc_file = None
         self.l1c_nc_file = None
         self.l1d_nc_file = None
-        self.l2a_nc_file = None
+        #self.l2a_nc_file = None
 
         # Initialize datacubes
         self._l1a_cube = None
         self._l1b_cube = None
         self._l1c_cube = None
-        self._l2a_cube = None
+        self._l1d_cube = None
 
         # Initialize dimensions
         #self.capture_type = None
@@ -176,6 +176,7 @@ class Hypso:
 
         return data
 
+    '''
     def _format_l2a_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
 
         attributes = {'level': "L2a",
@@ -190,7 +191,7 @@ class Hypso:
         data = self._update_dataarray_attrs(data, attributes)
 
         return data
-
+    '''
 
 
 
@@ -266,7 +267,7 @@ class Hypso:
     def l1d_cube(self, value):
         self._l1d_cube = self._format_l1d_dataarray(value)
 
-
+    '''
     @property
     def l2a_cube(self):
         return self._l2a_cube   
@@ -274,7 +275,7 @@ class Hypso:
     @l2a_cube.setter
     def l2a_cube(self, value):
         self._l2a_cube = self._format_l2a_dataarray(value)
-
+    '''
 
 
 
@@ -435,7 +436,7 @@ class Hypso:
         self.l1b_nc_file = Path(path.parent, capture_name + "-l1b.nc")
         self.l1c_nc_file = Path(path.parent, capture_name + "-l1c.nc")
         self.l1d_nc_file = Path(path.parent, capture_name + "-l1d.nc")
-        self.l2a_nc_file = Path(path.parent, capture_name + "-l2a.nc")
+        #self.l2a_nc_file = Path(path.parent, capture_name + "-l2a.nc")
 
         self.capture_dir = Path(path.parent.absolute(), capture_name + "_tmp")
         self.parent_dir = Path(path.parent.absolute())
