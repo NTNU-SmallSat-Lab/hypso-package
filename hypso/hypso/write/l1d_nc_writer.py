@@ -3,7 +3,7 @@ from pathlib import Path
 import netCDF4 as nc
 import numpy as np
 from .navigation_group_writer import navigation_group_writer
-
+from .calibration_filenames_writer import calibration_filenames_writer
 
 def write_l1d_nc_file(satobj, overwrite: bool = False, **kwargs) -> None:
     
@@ -21,7 +21,7 @@ def write_l1d_nc_file(satobj, overwrite: bool = False, **kwargs) -> None:
     return None
 
 
-def l1d_nc_writer(satobj, dst_nc: str, datacube: str = False) -> None:
+def l1d_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
     """
     Create a l1d.nc file using the top-of-atmosphere data.
 
@@ -43,28 +43,10 @@ def l1d_nc_writer(satobj, dst_nc: str, datacube: str = False) -> None:
                                 md,
                                 satobj.ncattrs[md])
 
-        # Manual Replacement
-        set_or_create_attr(netfile,
-                            attr_name="radiometric_file",
-                            attr_value=str(Path(satobj.rad_coeff_file).name))
-
-        set_or_create_attr(netfile,
-                            attr_name="smile_file",
-                            attr_value=str(Path(satobj.smile_coeff_file).name))
-
-        # Destriping Path is the only one which can be None
-        if satobj.destriping_coeff_file is None:
-            set_or_create_attr(netfile,
-                                attr_name="destriping",
-                                attr_value="No-File")
-        else:
-            set_or_create_attr(netfile,
-                                attr_name="destriping",
-                                attr_value=str(Path(satobj.destriping_coeff_file).name))
-
-        set_or_create_attr(netfile, attr_name="spectral_file", attr_value=str(Path(satobj.spectral_coeff_file).name))
-
         set_or_create_attr(netfile, attr_name="processing_level", attr_value="L1D")
+
+        # Add calibration file names
+        calibration_filenames_writer(satobj=satobj, netfile=netfile)
 
         # Create dimensions
         netfile.createDimension('lines', lines)
@@ -136,7 +118,7 @@ def l1d_nc_writer(satobj, dst_nc: str, datacube: str = False) -> None:
 
             # Store as datacube
             rhot = netfile.createVariable(
-                'products/rhot', 'f8',
+                'products/rhot', 'f4',
                 ('lines', 'samples', 'bands'),
                 compression=COMP_SCHEME,
                 complevel=COMP_LEVEL,
@@ -145,7 +127,7 @@ def l1d_nc_writer(satobj, dst_nc: str, datacube: str = False) -> None:
             rhot.long_name = "Top-of-Atmosphere Reflectance"
             rhot.wavelength_units = "nanometers"
             rhot.fwhm = [5.5] * bands
-            rhot.wavelengths = np.around(satobj.spectral_coeffs, 1)
+            rhot.wavelengths = np.around(satobj.wavelengths, 1)
             rhot[:] = satobj.l1d_cube.to_numpy()
 
         else:
@@ -154,12 +136,12 @@ def l1d_nc_writer(satobj, dst_nc: str, datacube: str = False) -> None:
             rhot_cube = satobj.l1b_cube.to_numpy()
             for band in range(0, rhot_cube.shape[-1]):
 
-                wave = np.around(satobj.spectral_coeffs, 1)[band]
+                wave = np.around(satobj.wavelengths, 1)[band]
                 wave_name = str(int(wave))
                 name = 'rhot_' + wave_name
 
                 rhot = netfile.createVariable(
-                    'products/' + name, 'f8',
+                    'products/' + name, 'f4',
                     ('lines', 'samples'),
                     compression=COMP_SCHEME,
                     complevel=COMP_LEVEL,
