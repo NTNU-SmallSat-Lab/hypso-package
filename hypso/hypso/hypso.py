@@ -292,6 +292,69 @@ class Hypso:
         self._cloud_mask = self._format_cloud_mask_dataarray(value)
         
 
+    @property
+    def masked_l1a_cube(self) -> xr.DataArray:
+
+        unified_mask = self._unified_cloud_masked()
+
+        if unified_mask is not None:
+
+            return self._l1a_cube.where(unified_mask, other=0)
+
+        else:
+            return self._l1a_cube   
+        
+
+    @property
+    def masked_l1b_cube(self) -> xr.DataArray:
+
+        unified_mask = self._unified_cloud_masked()
+
+        if unified_mask is not None:
+
+            return self._l1b_cube.where(unified_mask, other=0)
+
+        else:
+            return self._l1b_cube   
+
+
+    @property
+    def masked_l1c_cube(self) -> xr.DataArray:
+
+        unified_mask = self._unified_cloud_masked()
+
+        if unified_mask is not None:
+
+            return self._l1c_cube.where(unified_mask, other=0)
+
+        else:
+            return self._l1c_cube   
+
+
+    @property
+    def masked_l1d_cube(self) -> xr.DataArray:
+
+        unified_mask = self._unified_cloud_masked()
+
+        if unified_mask is not None:
+
+            return self._l1d_cube.where(unified_mask, other=0)
+
+        else:
+            return self._l1d_cube           
+
+
+    def _unified_cloud_masked(self) -> xr.DataArray:
+        if self._land_mask is not None and self._cloud_mask is not None:
+            unified_mask = self._land_mask | self._cloud_mask
+        elif self._land_mask is not None:
+            unified_mask = self._land_mask
+        elif self._cloud_mask is not None:
+            unified_mask = self._cloud_mask
+        else:
+            return None
+        
+        return unified_mask
 
 
     def _compose_capture_name(self, fields: dict) -> str:
