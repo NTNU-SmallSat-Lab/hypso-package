@@ -460,14 +460,12 @@ class Hypso:
             case "l1c":
                 if self.VERBOSE: print('[INFO] Loading L1c capture ' + self.capture_name)
 
-                print('[ERROR] L1c reader is not yet implemented.')
                 load_func = load_l1c_nc
                 cube_name = "l1c_cube"
 
             case "l1d":
                 if self.VERBOSE: print('[INFO] Loading L1d capture ' + self.capture_name)
 
-                print('[ERROR] L1d reader is not yet implemented.')
                 load_func = load_l1d_nc
                 cube_name = "l1d_cube"
 
