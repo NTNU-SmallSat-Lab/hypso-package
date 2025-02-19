@@ -24,7 +24,10 @@ from hypso.geometry import interpolate_at_frame_nc, \
 
 from hypso.georeferencing import georeferencing
 
-from hypso.load import load_l1a_nc
+from hypso.load import load_l1a_nc, \
+                        load_l1b_nc, \
+                        load_l1c_nc, \
+                        load_l1d_nc
 
 from hypso.reflectance import compute_toa_reflectance
 
@@ -451,30 +454,28 @@ class Hypso:
             case "l1b":
                 if self.VERBOSE: print('[INFO] Loading L1b capture ' + self.capture_name)
 
-
-                print('[ERROR] L1b reader is not yet implemented.')
-                #load_func = load_l1b_nc
-                #cube_name = "l1b_cube"
+                load_func = load_l1b_nc
+                cube_name = "l1b_cube"
 
             case "l1c":
                 if self.VERBOSE: print('[INFO] Loading L1c capture ' + self.capture_name)
 
                 print('[ERROR] L1c reader is not yet implemented.')
-                #load_func = load_l1c_nc
-                #cube_name = "l1c_cube"
+                load_func = load_l1c_nc
+                cube_name = "l1c_cube"
 
             case "l1d":
                 if self.VERBOSE: print('[INFO] Loading L1d capture ' + self.capture_name)
 
                 print('[ERROR] L1d reader is not yet implemented.')
-                #load_func = load_l1d_nc
-                #cube_name = "l1d_cube"
+                load_func = load_l1d_nc
+                cube_name = "l1d_cube"
 
             case _:
                 print("[ERROR] Unsupported product level.")
                 return None
 
-        metadata_vars, metadata_attrs, global_metadata, cube = load_func(nc_file_path=path)
+        metadata_vars, metadata_attrs, global_metadata, cube, cube_attrs = load_func(nc_file_path=path)
 
         setattr(self, "adcs_vars", metadata_vars["adcs"])
         setattr(self, "capture_config_vars", metadata_vars["capture_config"])
@@ -495,30 +496,38 @@ class Hypso:
         setattr(self, "dimensions", global_metadata["dimensions"])
         setattr(self, "ncattrs", global_metadata["ncattrs"])
 
+        setattr(self, "cube_attrs", cube_attrs)
+
         # Note: this MUST be run before writing datacubes in order to pass correct dimensions to DataArrayValidator
-        self._set_capture_config(capture_config_attrs=self.capture_config_attrs)
+        self._set_hypso_attributes()
         self._check_capture_type()
 
         setattr(self, cube_name, cube)
+        
 
         return None
 
 
     # TODO: setattr, hasattr, getattr for setting class variables
-    def _set_capture_config(self, capture_config_attrs: dict) -> None:
+    def _set_hypso_attributes(self) -> None:
 
+        # Capture config related attributes
 
-        for attr in capture_config_attrs.keys():
-            setattr(self, attr, capture_config_attrs[attr])
+        for attr in self.capture_config_attrs.keys():
+            setattr(self, attr, self.capture_config_attrs[attr])
 
         # FPS has been renamed to framerate. Need to support both since old .nc files may still use FPS
         try:
-            capture_config_attrs['fps'] = capture_config_attrs['framerate']
+            self.capture_config_attrs['fps'] = self.capture_config_attrs['framerate']
         except:
-            capture_config_attrs['framerate'] = capture_config_attrs['fps']
+            self.capture_config_attrs['framerate'] = self.capture_config_attrs['fps']
 
         self.background_value = 8 * self.capture_config_attrs["bin_factor"]
         self.exposure = self.capture_config_attrs["exposure"] / 1000  # in seconds
+
+
+
+        # Capture dimensions attributes
 
         self.x_start = self.capture_config_attrs["aoi_x"]
         self.x_stop = self.capture_config_attrs["aoi_x"] + self.capture_config_attrs["column_count"]
@@ -547,10 +556,21 @@ class Hypso:
 
         self.spatial_dimensions = (self.capture_config_attrs["frame_count"], self.image_height)
 
-        self.wavelengths = range(0, self.image_width)
-
         if self.VERBOSE:
             print(f"[INFO] Capture spatial dimensions: {self.spatial_dimensions}")
+
+
+        # Calibration related atrributes
+        self.rad_coeffs = self.corrections_vars['rad_matrix']
+        self.spectral_coeffs = self.corrections_vars['spec_coeffs']
+
+        try:
+            self.wavelengths = self.cube_attrs['wavelengths']
+        except: 
+            self.wavelengths = range(0, self.image_width)
+
+
+        # Capture timing attributes
 
         try:
             self.start_timestamp_capture = int(self.timing['capture_start_unix']) + self.UNIX_TIME_OFFSET
@@ -719,15 +739,19 @@ class Hypso:
 
     def _run_toa_reflectance(self) -> np.ndarray:
 
+        if not hasattr(self, "srf"):
+            self.srf = get_spectral_response_function(wavelengths=self.wavelengths)
+
+        if self.l1b_cube is not None:
+            toa_radiance = self.l1b_cube
+        else:
+            toa_radiance = self.l1c_cube
+
         return compute_toa_reflectance(srf=self.srf,
-                                        toa_radiance=self.l1b_cube,
+                                        toa_radiance=toa_radiance,
                                         iso_time=self.iso_time,
                                         solar_zenith_angles=self.solar_azimuth_angles,
                                         )
-        
-
-
-
 
 
     def run_direct_georeferencing(self) -> None: 
@@ -904,6 +928,9 @@ class Hypso:
 
     def generate_l1b_cube(self, **kwargs) -> None:
 
+        if self.l1a_cube is None:
+            return None
+
         self.l1b_cube = self._run_calibration(**kwargs)
 
         return None
@@ -911,8 +938,10 @@ class Hypso:
 
 
     def generate_l1c_cube(self) -> None:
-
-        self.generate_l1b_cube()
+        
+        if self.l1b_cube is None:
+            self.generate_l1b_cube()
+        
         self.run_direct_georeferencing()
         
         return None
@@ -921,7 +950,9 @@ class Hypso:
 
     def generate_l1d_cube(self) -> None:
 
-        self.generate_l1c_cube()
+        if self.latitudes is None or self.longitudes is None:
+            self.generate_l1c_cube()
+
         self.l1d_cube = self._run_toa_reflectance()
 
         return None
