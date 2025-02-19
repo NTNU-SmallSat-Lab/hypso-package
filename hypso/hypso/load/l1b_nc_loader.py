@@ -13,20 +13,22 @@ from .utils import load_capture_config_from_nc_file, \
                     load_temperature_from_nc_file, \
                     load_ncattrs_from_nc_file
 
-def load_l1a_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, np.ndarray, dict]:
+def load_l1b_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, np.ndarray, dict]:
 
-    nc_metadata_vars, nc_metadata_attrs, nc_global_metadata = load_l1a_nc_metadata(nc_file_path=nc_file_path)
+    nc_metadata_vars, nc_metadata_attrs, nc_global_metadata = load_l1b_nc_metadata(nc_file_path=nc_file_path)
 
-    nc_cube = load_l1a_nc_cube(nc_file_path=nc_file_path)
+    nc_cube = load_l1b_nc_cube(nc_file_path=nc_file_path)
 
-    return nc_metadata_vars, nc_metadata_attrs, nc_global_metadata, nc_cube, {}
+    nc_cube_attrs = load_l1b_nc_cube_attrs(nc_file_path=nc_file_path)
+
+    return nc_metadata_vars, nc_metadata_attrs, nc_global_metadata, nc_cube, nc_cube_attrs
 
 
-def load_l1a_nc_cube(nc_file_path: Path) -> np.ndarray:
+def load_l1b_nc_cube(nc_file_path: Path) -> np.ndarray:
     """
-    Get Raw Cube from Hypso l1a.nc File
+    Get Raw Cube from Hypso l1b.nc File
 
-    :param nc_file_path: Absolute path to l1a.nc file
+    :param nc_file_path: Absolute path to l1b.nc file
 
     :return: Numpy array with raw data cube extracted from nc file
     """
@@ -36,12 +38,32 @@ def load_l1a_nc_cube(nc_file_path: Path) -> np.ndarray:
         cube = np.array(group.variables["Lt"][:], dtype='double')
 
         return cube
-
-def load_l1a_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict]:
+    
+    
+def load_l1b_nc_cube_attrs(nc_file_path: Path) -> np.ndarray:
     """
-    Load l1a.nc Hypso Capture file metadata
+    Get Raw Cube from Hypso l1b.nc File
 
-    :param nc_file_path: Absolute path to the l1a.nc file
+    :param nc_file_path: Absolute path to l1b.nc file
+
+    :return: Numpy array with raw data cube extracted from nc file
+    """
+    with nc.Dataset(nc_file_path, format="NETCDF4") as f:
+        group = f.groups["products"]["Lt"]
+
+        nc_cube_attrs = {}
+        for attrname in group.ncattrs():
+            value = getattr(group, attrname)
+            nc_cube_attrs[attrname] = value
+
+        return nc_cube_attrs
+
+
+def load_l1b_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict]:
+    """
+    Load l1b.nc Hypso Capture file metadata
+
+    :param nc_file_path: Absolute path to the l1b.nc file
 
     :return: "metadata_vars" dictionary with metadata variables, "metadata_attrs" dictionary with metadata attributes, "metadata_global" dictionary with global metadata attributes and dimensions, 
     """
