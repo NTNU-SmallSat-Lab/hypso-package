@@ -64,7 +64,7 @@ def l1d_nc_writer(satobj, dst_nc: str, datacube: str = False) -> None:
 
         set_or_create_attr(netfile, attr_name="spectral_file", attr_value=str(Path(satobj.spectral_coeff_file).name))
 
-        set_or_create_attr(netfile, attr_name="processing_level", attr_value="L1B")
+        set_or_create_attr(netfile, attr_name="processing_level", attr_value="L1D")
 
         # Create dimensions
         netfile.createDimension('lines', lines)
