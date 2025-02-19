@@ -37,6 +37,8 @@ from hypso.utils import find_file
 from hypso.DataArrayValidator import DataArrayValidator
 from hypso.DataArrayDict import DataArrayDict
 
+
+
 class Hypso:
 
     def __init__(self, path: Union[str, Path] = None):
@@ -97,13 +99,8 @@ class Hypso:
         self.dim_names_2d = ["y", "x"]
 
         # Products dictionary
-        #products = DataArrayDict(dims_shape=self.spatial_dimensions, 
-        #                              attributes={}, 
-        #                              dim_names=self.dim_names_2d,
-        #                              num_dims=2
-        #                              )
+        self._products = DataArrayDict()
 
-        #setattr(self, "products", products)
 
         # Constants
         self.UNIX_TIME_OFFSET = 20 # TODO: Verify offset validity. Sivert had 20 here
@@ -372,26 +369,18 @@ class Hypso:
         return unified_mask
 
 
+    @property
+    def products(self):
 
+        self._products.dim_shape = self.spatial_dimensions
+        self._products.dim_names = self.dim_names_2d
+        self._products.num_dims = 2
 
+        return self._products   
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    @products.setter
+    def products(self, value):
+        raise AttributeError("[ERROR] Use \"products[key] = value\" to set items.")
 
 
 
