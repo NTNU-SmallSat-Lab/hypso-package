@@ -30,16 +30,6 @@ class Hypso1(Hypso):
 
         self._load_capture_file(path=path)
 
-        product_attributes = {}
-
-        products = DataArrayDict(dims_shape=self.spatial_dimensions, 
-                                      attributes=product_attributes, 
-                                      dim_names=self.dim_names_2d,
-                                      num_dims=2
-                                      )
-
-        setattr(self, "products", products)
-
         return None
 
 

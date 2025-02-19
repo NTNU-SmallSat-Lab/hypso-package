@@ -96,6 +96,15 @@ class Hypso:
         self.dim_names_3d = ["y", "x", "band"]
         self.dim_names_2d = ["y", "x"]
 
+        # Products dictionary
+        #products = DataArrayDict(dims_shape=self.spatial_dimensions, 
+        #                              attributes={}, 
+        #                              dim_names=self.dim_names_2d,
+        #                              num_dims=2
+        #                              )
+
+        #setattr(self, "products", products)
+
         # Constants
         self.UNIX_TIME_OFFSET = 20 # TODO: Verify offset validity. Sivert had 20 here
 
@@ -361,6 +370,29 @@ class Hypso:
             return None
         
         return unified_mask
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     def _compose_capture_name(self, fields: dict) -> str:
@@ -886,22 +918,7 @@ class Hypso:
 
         return None
 
-    '''
-    def write_l1b_nc_file(self, overwrite: bool = False, **kwargs) -> None:
 
-        if Path(self.l1b_nc_file).is_file() and not overwrite:
-
-            if self.VERBOSE:
-                print("[INFO] L1b NetCDF file has already been generated. Skipping.")
-
-            return None
-
-        l1b_nc_writer(satobj=self, 
-                      dst_nc=self.l1b_nc_file, 
-                      **kwargs)
-
-        return None
-    '''
 
     def generate_l1c_cube(self) -> None:
 
@@ -910,22 +927,7 @@ class Hypso:
         
         return None
 
-    '''
-    def write_l1c_nc_file(self, overwrite: bool = False, **kwargs) -> None:
 
-        if Path(self.l1c_nc_file).is_file() and not overwrite:
-
-            if self.VERBOSE:
-                print("[INFO] L1c NetCDF file has already been generated. Skipping.")
-
-            return None
-
-        l1c_nc_writer(satobj=self, 
-                      dst_nc=self.l1c_nc_file, 
-                      **kwargs)
-
-        return None
-    '''
 
     def generate_l1d_cube(self) -> None:
 
@@ -934,19 +936,3 @@ class Hypso:
 
         return None
 
-    '''
-    def write_l1d_nc_file(self, overwrite: bool = False, **kwargs) -> None:
-        
-        if Path(self.l1d_nc_file).is_file() and not overwrite:
-
-            if self.VERBOSE:
-                print("[INFO] L1c NetCDF file has already been generated. Skipping.")
-
-            return None
-
-        l1d_nc_writer(satobj=self, 
-                      dst_nc=self.l1d_nc_file, 
-                      **kwargs)
-
-        return None
-    '''
