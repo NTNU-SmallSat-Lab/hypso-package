@@ -279,7 +279,10 @@ class Hypso:
 
     @land_mask.setter
     def land_mask(self, value):
-        self._land_mask = self._format_land_mask_dataarray(value)
+        if value is not None:
+            self._land_mask = self._format_land_mask_dataarray(value)
+        else:
+            self._land_mask = None
         
 
 
@@ -289,7 +292,10 @@ class Hypso:
 
     @cloud_mask.setter
     def cloud_mask(self, value):
-        self._cloud_mask = self._format_cloud_mask_dataarray(value)
+        if value is not None:
+            self._cloud_mask = self._format_cloud_mask_dataarray(value)
+        else:
+            self._cloud_mask = None
         
 
     @property
