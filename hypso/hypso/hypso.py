@@ -461,7 +461,7 @@ class Hypso:
                 if self.VERBOSE: print('[INFO] Loading L1c capture ' + self.capture_name)
 
                 load_func = load_l1c_nc
-                cube_name = "l1c_cube"
+                cube_name = "l1b_cube" # L1c cube is the same as the L1b cube
 
             case "l1d":
                 if self.VERBOSE: print('[INFO] Loading L1d capture ' + self.capture_name)
