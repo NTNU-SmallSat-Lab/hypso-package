@@ -67,4 +67,6 @@ def compute_toa_reflectance(srf,
 
         band_number = band_number + 1
 
+    toa_reflectance = -toa_reflectance
+
     return toa_reflectance
