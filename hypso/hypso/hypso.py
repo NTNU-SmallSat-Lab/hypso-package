@@ -104,15 +104,14 @@ class Hypso:
         # Products dictionary
         self._products = DataArrayDict()
 
-
         # Constants
         self.UNIX_TIME_OFFSET = 20 # TODO: Verify offset validity. Sivert had 20 here
+        self.AVERAGE_FWHM = 8.2 #3.33
 
         # DEBUG
         self.DEBUG = False
         self.VERBOSE = False
     
-
 
     def _update_dataarray_attrs(self, data: xr.DataArray, attrs: dict) -> xr.DataArray:
 
@@ -179,25 +178,6 @@ class Hypso:
 
         return data
 
-    '''
-    def _format_l2a_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
-
-        attributes = {'level': "L2a",
-                      'units': r"sr^{-1}",
-                      'description': "Remote Sensing Reflectance (Rrs)",
-                      'correction': None
-                     }
-
-        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dim_names=self.dim_names_3d)
-
-        data = v.validate(data=data)
-        data = self._update_dataarray_attrs(data, attributes)
-
-        return data
-    '''
-
-
-
 
     def _format_land_mask_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
 
@@ -229,12 +209,10 @@ class Hypso:
         return data
 
 
-
-
-
     @property
     def l1a_cube(self):
         return self._l1a_cube   
+
 
     @l1a_cube.setter
     def l1a_cube(self, value):
@@ -244,6 +222,7 @@ class Hypso:
     @property
     def l1b_cube(self):
         return self._l1b_cube   
+
 
     @l1b_cube.setter
     def l1b_cube(self, value):
@@ -256,6 +235,7 @@ class Hypso:
         cube = copy.deepcopy(self._l1b_cube)
         cube.attrs['level'] = 'L1c'
         return cube 
+
 
     @l1c_cube.setter
     def l1c_cube(self, value):
@@ -270,18 +250,6 @@ class Hypso:
     def l1d_cube(self, value):
         self._l1d_cube = self._format_l1d_dataarray(value)
 
-    '''
-    @property
-    def l2a_cube(self):
-        return self._l2a_cube   
-
-    @l2a_cube.setter
-    def l2a_cube(self, value):
-        self._l2a_cube = self._format_l2a_dataarray(value)
-    '''
-
-
-
 
     @property
     def land_mask(self):
@@ -293,7 +261,6 @@ class Hypso:
             self._land_mask = self._format_land_mask_dataarray(value)
         else:
             self._land_mask = None
-        
 
 
     @property
@@ -306,7 +273,7 @@ class Hypso:
             self._cloud_mask = self._format_cloud_mask_dataarray(value)
         else:
             self._cloud_mask = None
-        
+
 
     @property
     def masked_l1a_cube(self) -> xr.DataArray:
@@ -420,8 +387,6 @@ class Hypso:
         return fields
 
 
-
-
     def _load_capture_file(self, path: Path) -> None:
 
         path = Path(path).absolute()
@@ -439,7 +404,6 @@ class Hypso:
         self.l1b_nc_file = Path(path.parent, capture_name + "-l1b.nc")
         self.l1c_nc_file = Path(path.parent, capture_name + "-l1c.nc")
         self.l1d_nc_file = Path(path.parent, capture_name + "-l1d.nc")
-        #self.l2a_nc_file = Path(path.parent, capture_name + "-l2a.nc")
 
         self.capture_dir = Path(path.parent.absolute(), capture_name + "_tmp")
         self.parent_dir = Path(path.parent.absolute())
@@ -473,142 +437,159 @@ class Hypso:
                 print("[ERROR] Unsupported product level.")
                 return None
 
-        metadata_vars, metadata_attrs, global_metadata, cube, cube_attrs = load_func(nc_file_path=path)
+        # TODO: find a better method to pass all of this information
+        nc_metadata_vars, \
+        nc_metadata_attrs, \
+        nc_navigation_vars, \
+        nc_navigation_attrs, \
+        nc_global_metadata, \
+        nc_cube_attrs, \
+        nc_cube = load_func(nc_file_path=path)
 
-        setattr(self, "adcs_vars", metadata_vars["adcs"])
-        setattr(self, "capture_config_vars", metadata_vars["capture_config"])
-        setattr(self, "corrections_vars", metadata_vars["corrections"])
-        setattr(self, "database_vars", metadata_vars["database"])
-        setattr(self, "logfiles_vars", metadata_vars["logfiles"])
-        setattr(self, "temperature_vars", metadata_vars["temperature"])
-        setattr(self, "timing_vars", metadata_vars["timing"])
+        setattr(self, "nc_adcs_vars", nc_metadata_vars["adcs"])
+        setattr(self, "nc_capture_config_vars", nc_metadata_vars["capture_config"])
+        setattr(self, "nc_corrections_vars", nc_metadata_vars["corrections"])
+        setattr(self, "nc_database_vars", nc_metadata_vars["database"])
+        setattr(self, "nc_logfiles_vars", nc_metadata_vars["logfiles"])
+        setattr(self, "nc_temperature_vars", nc_metadata_vars["temperature"])
+        setattr(self, "nc_timing_vars", nc_metadata_vars["timing"])
 
-        setattr(self, "adcs_attrs", metadata_attrs["adcs"])
-        setattr(self, "capture_config_attrs", metadata_attrs["capture_config"])
-        setattr(self, "corrections_attrs", metadata_attrs["corrections"])
-        setattr(self, "database_attrs", metadata_attrs["database"])
-        setattr(self, "logfiles_attrs", metadata_attrs["logfiles"])
-        setattr(self, "temperature_attrs", metadata_attrs["temperature"])
-        setattr(self, "timing_attrs", metadata_attrs["timing"])
+        setattr(self, "nc_adcs_attrs", nc_metadata_attrs["adcs"])
+        setattr(self, "nc_capture_config_attrs", nc_metadata_attrs["capture_config"])
+        setattr(self, "nc_corrections_attrs", nc_metadata_attrs["corrections"])
+        setattr(self, "nc_database_attrs", nc_metadata_attrs["database"])
+        setattr(self, "nc_logfiles_attrs", nc_metadata_attrs["logfiles"])
+        setattr(self, "nc_temperature_attrs", nc_metadata_attrs["temperature"])
+        setattr(self, "nc_timing_attrs", nc_metadata_attrs["timing"])
  
-        setattr(self, "dimensions", global_metadata["dimensions"])
-        setattr(self, "ncattrs", global_metadata["ncattrs"])
+        setattr(self, "nc_navigation_vars", nc_navigation_vars)
+        setattr(self, "nc_navigation_attrs", nc_navigation_attrs)
 
-        setattr(self, "cube_attrs", cube_attrs)
+        setattr(self, "nc_dimensions", nc_global_metadata["dimensions"])
+        setattr(self, "nc_attrs", nc_global_metadata["ncattrs"])
 
+        setattr(self, "nc_cube_attrs", nc_cube_attrs)
+
+        # TODO: pass the dicts returned by load_func to _set_hypso_attributes()
         # Note: this MUST be run before writing datacubes in order to pass correct dimensions to DataArrayValidator
         self._set_hypso_attributes()
         self._check_capture_type()
 
-        setattr(self, cube_name, cube)
+        setattr(self, cube_name, nc_cube)
         
 
         return None
 
 
-    # TODO: setattr, hasattr, getattr for setting class variables
+    # TODO: Clean up this function. Use setattr, hasattr, getattr for setting class variables?
     def _set_hypso_attributes(self) -> None:
 
         # Capture config related attributes
-
-        for attr in self.capture_config_attrs.keys():
-            setattr(self, attr, self.capture_config_attrs[attr])
-
+        for attr in self.nc_capture_config_attrs.keys():
+            setattr(self, attr, self.nc_capture_config_attrs[attr])
         # FPS has been renamed to framerate. Need to support both since old .nc files may still use FPS
         try:
-            self.capture_config_attrs['fps'] = self.capture_config_attrs['framerate']
+            self.nc_capture_config_attrs['fps'] = self.nc_capture_config_attrs['framerate']
         except:
-            self.capture_config_attrs['framerate'] = self.capture_config_attrs['fps']
-
-        self.background_value = 8 * self.capture_config_attrs["bin_factor"]
-        self.exposure = self.capture_config_attrs["exposure"] / 1000  # in seconds
-
+            self.nc_capture_config_attrs['framerate'] = self.nc_capture_config_attrs['fps']
+            
+        self.background_value = 8 * self.nc_capture_config_attrs["bin_factor"]
+        self.exposure = self.nc_capture_config_attrs["exposure"] / 1000  # in seconds
 
 
         # Capture dimensions attributes
-
-        self.x_start = self.capture_config_attrs["aoi_x"]
-        self.x_stop = self.capture_config_attrs["aoi_x"] + self.capture_config_attrs["column_count"]
-        self.y_start = self.capture_config_attrs["aoi_y"]
-        self.y_stop = self.capture_config_attrs["aoi_y"] + self.capture_config_attrs["row_count"]
-
-        self.bin_factor = self.capture_config_attrs["bin_factor"]
-
+        self.x_start = self.nc_capture_config_attrs["aoi_x"]
+        self.x_stop = self.nc_capture_config_attrs["aoi_x"] + self.nc_capture_config_attrs["column_count"]
+        self.y_start = self.nc_capture_config_attrs["aoi_y"]
+        self.y_stop = self.nc_capture_config_attrs["aoi_y"] + self.nc_capture_config_attrs["row_count"]
+        self.bin_factor = self.nc_capture_config_attrs["bin_factor"]
         # Try/except here since not all captures have sample_div
         try:
-            self.sample_div = self.capture_config_attrs['sample_div']
+            self.sample_div = self.nc_capture_config_attrs['sample_div']
         except:
             self.sample_div = 1
-
-        self.row_count = self.capture_config_attrs["row_count"]
-        self.frame_count = self.capture_config_attrs["frame_count"]
-        self.column_count = self.capture_config_attrs["column_count"]
-
-        self.image_height = int(self.capture_config_attrs["row_count"] / self.sample_div)
-        self.image_width = int(self.capture_config_attrs["column_count"] / self.capture_config_attrs["bin_factor"])
+        self.row_count = self.nc_capture_config_attrs["row_count"]
+        self.frame_count = self.nc_capture_config_attrs["frame_count"]
+        self.column_count = self.nc_capture_config_attrs["column_count"]
+        self.image_height = int(self.nc_capture_config_attrs["row_count"] / self.sample_div)
+        self.image_width = int(self.nc_capture_config_attrs["column_count"] / self.nc_capture_config_attrs["bin_factor"])
         self.im_size = self.image_height * self.image_width
-
         self.bands = self.image_width
-        self.lines = self.capture_config_attrs["frame_count"]  # AKA Frames AKA Rows
+        self.lines = self.nc_capture_config_attrs["frame_count"]  # AKA Frames AKA Rows
         self.samples = self.image_height  # AKA Cols
-
-        self.spatial_dimensions = (self.capture_config_attrs["frame_count"], self.image_height)
-
+        self.spatial_dimensions = (self.nc_capture_config_attrs["frame_count"], self.image_height)
         if self.VERBOSE:
             print(f"[INFO] Capture spatial dimensions: {self.spatial_dimensions}")
 
 
         # Calibration related atrributes
-        self.rad_coeffs = self.corrections_vars['rad_matrix']
-        self.spectral_coeffs = self.corrections_vars['spec_coeffs']
+        self.rad_coeffs = self.nc_corrections_vars['rad_matrix']
+        self.spectral_coeffs = self.nc_corrections_vars['spec_coeffs']
 
-        try:
-            self.wavelengths = self.cube_attrs['wavelengths']
-        except: 
-            self.wavelengths = range(0, self.image_width)
+        if not hasattr(self, 'wavelengths'):
+            if ('wavelengths' in self.nc_cube_attrs.keys()):
+                self.wavelengths = self.nc_cube_attrs['wavelengths']
+            else:
+                self.wavelengths = np.array(range(0, self.image_width))
+
+        if not hasattr(self, 'fwhm'):
+            if 'fwhm' in self.nc_cube_attrs.keys():
+                self.wavelengths = self.nc_cube_attrs['fwhm']
+            else:
+                self.fwhm = [self.AVERAGE_FWHM] * self.bands
+
+
+
+        # Navigation atrributes
+        for key, value in self.nc_navigation_vars.items():
+            if key == 'unixtime':
+                continue
+            elif key == 'latitude':
+                setattr(self, 'latitudes', value)
+            elif key == 'longitude':
+                setattr(self, 'longitudes', value)
+            elif key == 'latitude_indirect':
+                setattr(self, 'latitudes_indirect', value)
+            elif key == 'longitude_indirect':
+                setattr(self, 'longitudes_indirect', value)
+            else:
+                setattr(self, key, value)
 
 
         # Capture timing attributes
-
         try:
             self.start_timestamp_capture = int(self.timing['capture_start_unix']) + self.UNIX_TIME_OFFSET
         except:
             try:
-                datestring = self.ncattrs['date_aquired']
+                datestring = self.nc_attrs['date_aquired']
             except:
-                datestring = self.ncattrs['timestamp_acquired']
+                datestring = self.nc_attrs['timestamp_acquired']
 
             dt = datetime.strptime(datestring, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=timezone.utc)
             self.start_timestamp_capture = dt.timestamp()
-
-        self.start_timestamp_capture = int(self.timing_attrs['capture_start_unix']) + self.UNIX_TIME_OFFSET
-
+        self.start_timestamp_capture = int(self.nc_timing_attrs['capture_start_unix']) + self.UNIX_TIME_OFFSET
         # Get END_TIMESTAMP_CAPTURE
         # can't compute end timestamp using frame count and frame rate
         # assuming some default value if framerate and exposure not available
         try:
-            self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config_attrs["frame_count"] / self.capture_config_attrs["framerate"] + self.capture_config_attrs["exposure"] / 1000.0
+            self.end_timestamp_capture = self.start_timestamp_capture + self.nc_capture_config_attrs["frame_count"] / self.nc_capture_config_attrs["framerate"] + self.nc_capture_config_attrs["exposure"] / 1000.0
         except:
             if self.VERBOSE:
                 print("[WARNING] Framerate or exposure values not found. Assuming 20.0 for each.")
-            self.end_timestamp_capture = self.start_timestamp_capture + self.capture_config_attrs["frame_count"] / 20.0 + 20.0 / 1000.0
+            self.end_timestamp_capture = self.start_timestamp_capture + self.nc_capture_config_attrs["frame_count"] / 20.0 + 20.0 / 1000.0
 
         # using 'awk' for floating point arithmetic ('expr' only support integer arithmetic): {printf \"%.2f\n\", 100/3}"
         time_margin_start = 641.0  # 70.0
         time_margin_end = 180.0  # 70.0
-
         self.start_timestamp_adcs = self.start_timestamp_capture - time_margin_start
         self.end_timestamp_adcs = self.end_timestamp_capture + time_margin_end
-
         self.unixtime = self.start_timestamp_capture
         self.iso_time = datetime.utcfromtimestamp(self.unixtime).isoformat()
 
         return None
 
 
-
     def _check_capture_type(self):
-
 
         #self.spatial_dimensions = (956, 684)  # 1092 x variable
         #self.standard_dimensions = {
@@ -616,9 +597,8 @@ class Hypso:
         #    "wide": 1092  # Along image_height (row_count)
         #}
 
-
-        if self.capture_config_attrs["frame_count"] == 956:
-        #if self.capture_config_attrs["frame_count"] == self.standard_dimensions["nominal"]:
+        if self.nc_capture_config_attrs["frame_count"] == 956:
+        #if self.nc_capture_config_attrs["frame_count"] == self.standard_dimensions["nominal"]:
             self.capture_type = "nominal"
 
         elif self.image_height == 1092:
@@ -699,7 +679,7 @@ class Hypso:
 
                 self.wavelengths = self.spectral_coeffs
 
-        self.srf = get_spectral_response_function(wavelengths=self.wavelengths)
+        #self.srf = get_spectral_response_function(wavelengths=self.wavelengths, fwhm=self.fwhm)
 
         return calibrated_cube
 
@@ -738,7 +718,8 @@ class Hypso:
     def _run_toa_reflectance(self) -> np.ndarray:
 
         if not hasattr(self, "srf"):
-            self.srf = get_spectral_response_function(wavelengths=self.wavelengths)
+
+            self.srf = get_spectral_response_function(wavelengths=self.wavelengths, fwhm=self.fwhm)
 
         if self.l1b_cube is not None:
             toa_radiance = self.l1b_cube
@@ -824,7 +805,7 @@ class Hypso:
         
 
         # TODO: flip lat/lon matrices?
-        #datacube_flipped = check_star_tracker_orientation(self.adcs_vars)
+        #datacube_flipped = check_star_tracker_orientation(self.nc_adcs_vars)
         self.latitudes_indirect = gr.latitudes[:,::-1]
         self.longitudes_indirect = gr.longitudes[:,::-1]
     
@@ -855,10 +836,10 @@ class Hypso:
 
     def _run_frame_interpolation(self) -> None:
 
-        framepose_data = interpolate_at_frame_nc(adcs=self.adcs_vars,
-                                              lines_timestamps=self.timing_vars['timestamps_srv'],
-                                              framerate=self.capture_config_attrs['framerate'],
-                                              exposure=self.capture_config_attrs['exposure'],
+        framepose_data = interpolate_at_frame_nc(adcs=self.nc_adcs_vars,
+                                              lines_timestamps=self.nc_timing_vars['timestamps_srv'],
+                                              framerate=self.nc_capture_config_attrs['framerate'],
+                                              exposure=self.nc_capture_config_attrs['exposure'],
                                               verbose=self.VERBOSE
                                               )
         
@@ -955,3 +936,41 @@ class Hypso:
 
         return None
 
+
+    '''
+    def _get_fwhm(self, wavelengths) -> None:
+        
+        self.fwhm = [8.2] * self.bands
+
+        fwhm = copy.deepcopy(self.wavelengths)
+
+        start_wl = self.wavelengths[0]
+        end_wl = self.wavelengths[-1]
+
+        for i in range(0,len(fwhm)):
+
+            if start_wl <= fwhm[i] < 430:
+                fwhm[i] = 9.6
+            elif 430 <= fwhm[i] < 480:
+                fwhm[i] = 9.6
+            elif 480 <= fwhm[i] < 530:
+                fwhm[i] = 6.6
+            elif 530 <= fwhm[i] < 580:
+                fwhm[i] = 8.2
+            elif 580 <= fwhm[i] < 630:
+                fwhm[i] = 5.8
+            elif 630 <= fwhm[i] < 680:
+                fwhm[i] = 5.8
+            elif 680 <= fwhm[i] < 730:
+                fwhm[i] = 4.1
+            elif 730 <= fwhm[i] < 780:
+                fwhm[i] = 4.0
+            elif 780 <= fwhm[i] < end_wl:
+                fwhm[i] = 4.0
+            else:
+                fwhm[i] = 8.2
+
+        self.fwhm = fwhm
+
+        return None
+    '''
