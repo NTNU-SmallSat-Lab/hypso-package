@@ -20,7 +20,7 @@ def calibration_filenames_writer(satobj, netfile: nc.Dataset) -> None:
         pass
 
     try:
-        radiometric_file = satobj.ncattrs['radiometric_file']
+        radiometric_file = satobj.nc_attrs['radiometric_file']
     except KeyError:
         pass
 
@@ -36,7 +36,7 @@ def calibration_filenames_writer(satobj, netfile: nc.Dataset) -> None:
         pass
 
     try:
-        smile_file = satobj.ncattrs['smile_file']
+        smile_file = satobj.nc_attrs['smile_file']
     except KeyError:
         pass
 
@@ -52,7 +52,7 @@ def calibration_filenames_writer(satobj, netfile: nc.Dataset) -> None:
         pass
 
     try:
-        destriping_file = satobj.ncattrs['destriping_file']
+        destriping_file = satobj.nc_attrs['destriping_file']
     except KeyError:
         pass
 
@@ -61,9 +61,6 @@ def calibration_filenames_writer(satobj, netfile: nc.Dataset) -> None:
                         attr_value=str(destriping_file))
     
 
-
-
-
     # Spectral calibration file
     try:
         spectral_file = str(Path(satobj.spectral_coeff_file).name)
@@ -71,15 +68,13 @@ def calibration_filenames_writer(satobj, netfile: nc.Dataset) -> None:
         pass
 
     try:
-        spectral_file = satobj.ncattrs['spectral_file']
+        spectral_file = satobj.nc_attrs['spectral_file']
     except KeyError:
         pass
 
     set_or_create_attr(netfile, 
                        attr_name="spectral_file", 
                        attr_value=str(spectral_file))
-
-
 
 
     return None
