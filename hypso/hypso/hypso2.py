@@ -1,12 +1,11 @@
 
-from importlib.resources import files
 from pathlib import Path
 from typing import Union
-
-from hypso2_calibration import get_hypso2_calibration_files
+import numpy as np
 
 from hypso import Hypso
-from hypso.DataArrayDict import DataArrayDict
+from hypso2_calibration import get_hypso2_calibration_files
+
 
 class Hypso2(Hypso):
 
@@ -27,6 +26,15 @@ class Hypso2(Hypso):
         self.platform = 'hypso2'
         self.sensor = 'hypso2_hsi'
         self.VERBOSE = verbose
+
+        self.fwhm = np.array([9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 
+                              9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 6.6, 6.6, 6.6, 6.6, 6.6, 
+                              6.6, 6.6, 6.6, 6.6, 6.6, 6.6, 6.6, 6.6, 6.6, 8.2, 8.2, 8.2, 8.2, 8.2, 8.2, 8.2, 
+                              8.2, 8.2, 8.2, 8.2, 8.2, 8.2, 8.2, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 
+                              5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 
+                              5.8, 5.8, 5.8, 5.8, 4.1, 4.1, 4.1, 4.1, 4.1, 4.1, 4.1, 4.1, 4.1, 4.1, 4.1, 4.1, 
+                              4.1, 4.1, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 
+                              4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0])
 
         self._load_capture_file(path=path)
 

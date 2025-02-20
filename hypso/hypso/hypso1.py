@@ -1,12 +1,11 @@
 
-from importlib.resources import files
 from pathlib import Path
 from typing import Union
-
-from hypso1_calibration import get_hypso1_calibration_files
+import numpy as np
 
 from hypso import Hypso
-from hypso.DataArrayDict import DataArrayDict
+from hypso1_calibration import get_hypso1_calibration_files
+
 
 class Hypso1(Hypso):
 
@@ -28,6 +27,15 @@ class Hypso1(Hypso):
         self.sensor = 'hypso1_hsi'
         self.VERBOSE = verbose
 
+        self.fwhm = np.array([9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 
+                              9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 6.6, 6.6, 6.6, 6.6, 6.6, 
+                              6.6, 6.6, 6.6, 6.6, 6.6, 6.6, 6.6, 6.6, 6.6, 8.2, 8.2, 8.2, 8.2, 8.2, 8.2, 8.2, 
+                              8.2, 8.2, 8.2, 8.2, 8.2, 8.2, 8.2, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 
+                              5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 5.8, 
+                              5.8, 5.8, 5.8, 5.8, 4.1, 4.1, 4.1, 4.1, 4.1, 4.1, 4.1, 4.1, 4.1, 4.1, 4.1, 4.1, 
+                              4.1, 4.1, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 
+                              4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0])
+
         self._load_capture_file(path=path)
 
         return None
@@ -42,39 +50,6 @@ class Hypso1(Hypso):
         :return: None.
         """
 
-        '''
-        match self.capture_type:
-
-            case "custom":
-                npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1.npz"
-                npz_file_smile = "spectral_calibration_matrix_HYPSO-1_full_v1.npz"  
-                npz_file_destriping = None
-                npz_file_spectral = "spectral_bands_HYPSO-1_v1.npz"
-
-            case "nominal":
-                npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_nominal_v1.npz"
-                npz_file_smile = "smile_correction_matrix_HYPSO-1_nominal_v1.npz"
-                npz_file_destriping = "destriping_matrix_HYPSO-1_nominal_v1.npz"
-                npz_file_spectral = "spectral_bands_HYPSO-1_v1.npz"
-
-            case "wide":
-                npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_wide_v1.npz"
-                npz_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.npz"
-                npz_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.npz"
-                npz_file_spectral = "spectral_bands_HYPSO-1_v1.npz"
-
-            case _:
-                npz_file_radiometric = None
-                npz_file_smile = None
-                npz_file_destriping = None
-                npz_file_spectral = None
-
-        self.rad_coeff_file = files('hypso.calibration').joinpath(f'hypso1_data/{npz_file_radiometric}')
-        self.smile_coeff_file = files('hypso.calibration').joinpath(f'hypso1_data/{npz_file_smile}')
-        self.destriping_coeff_file = files('hypso.calibration').joinpath(f'hypso1_data/{npz_file_destriping}')
-        self.spectral_coeff_file = files('hypso.calibration').joinpath(f'hypso1_data/{npz_file_spectral}')
-        '''
-
         capture_type = self.capture_type
 
         calibration_files = get_hypso1_calibration_files(capture_type)
@@ -85,9 +60,6 @@ class Hypso1(Hypso):
         self.spectral_coeff_file = calibration_files['spectral']
 
         return None
-
-
-
 
 
 
