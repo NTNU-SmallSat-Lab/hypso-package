@@ -13,13 +13,26 @@ from .utils import load_capture_config_from_nc_file, \
                     load_temperature_from_nc_file, \
                     load_ncattrs_from_nc_file
 
-def load_l1a_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, np.ndarray, dict]:
+def load_l1a_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict, dict, np.ndarray]:
 
-    nc_metadata_vars, nc_metadata_attrs, nc_global_metadata = load_l1a_nc_metadata(nc_file_path=nc_file_path)
+    nc_metadata_vars, nc_metadata_attrs = load_l1a_nc_metadata(nc_file_path=nc_file_path)
+
+    nc_naivigation_vars = {}
+    nc_navigation_attrs = {}
 
     nc_cube = load_l1a_nc_cube(nc_file_path=nc_file_path)
 
-    return nc_metadata_vars, nc_metadata_attrs, nc_global_metadata, nc_cube, {}
+    nc_cube_attrs = {}
+
+    nc_global_metadata = load_l1a_global_nc_metadata(nc_file_path=nc_file_path)
+
+    return nc_metadata_vars, \
+            nc_metadata_attrs, \
+            nc_naivigation_vars, \
+            nc_navigation_attrs, \
+            nc_global_metadata, \
+            nc_cube_attrs, \
+            nc_cube
 
 
 def load_l1a_nc_cube(nc_file_path: Path) -> np.ndarray:
@@ -37,7 +50,18 @@ def load_l1a_nc_cube(nc_file_path: Path) -> np.ndarray:
 
         return cube
 
-def load_l1a_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict]:
+
+def load_l1a_global_nc_metadata(nc_file_path: Path):
+
+    global_metadata = {}
+
+    global_metadata['dimensions'] = load_dimensions_from_nc_file(nc_file_path)
+    global_metadata['ncattrs'] = load_ncattrs_from_nc_file(nc_file_path)
+
+    return global_metadata
+
+
+def load_l1a_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict]:
     """
     Load l1a.nc Hypso Capture file metadata
 
@@ -66,9 +90,4 @@ def load_l1a_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict, dict]:
     metadata_attrs['logfiles'] = load_logfiles_from_nc_file(nc_file_path)[1]
     metadata_attrs['temperature'] = load_temperature_from_nc_file(nc_file_path)[1]
 
-    global_metadata = {}
-
-    global_metadata['dimensions'] = load_dimensions_from_nc_file(nc_file_path)
-    global_metadata['ncattrs'] = load_ncattrs_from_nc_file(nc_file_path)
-
-    return metadata_vars, metadata_attrs, global_metadata
+    return metadata_vars, metadata_attrs

@@ -211,11 +211,6 @@ def load_temperature_from_nc_file(nc_file_path: Path) -> Tuple[dict, dict]:
 
 
 
-    capture_config = {}
-
-
-
-
 def load_ncattrs_from_nc_file(nc_file_path: Path) -> dict:
 
     attrs = {}
@@ -286,31 +281,3 @@ def load_navigation_from_nc_file(nc_file_path: Path) -> dict:
     '''
 
 
-
-# TODO: remove? unused
-'''
-def load_target_coords_from_nc_file(nc_file_path: Path) -> dict:
-
-    target_coords = {}
-
-    with nc.Dataset(nc_file_path, format="NETCDF4") as f:
-        group = f
-        try:
-            # returns string 'False' if doesnt exist
-            target_coords_attr = getattr(group, "target_coords")
-            if target_coords_attr == 'False':
-                target_lat = None
-                target_lon = None
-            else:
-                target_coords_attr = target_coords_attr.split(" ")
-                target_lat = target_coords_attr[0]
-                target_lon = target_coords_attr[1]
-        except AttributeError:
-            target_lat = None
-            target_lon = None
-
-        target_coords["latc"] = target_lat
-        target_coords["lonc"] = target_lon
-
-    return target_coords
-'''
