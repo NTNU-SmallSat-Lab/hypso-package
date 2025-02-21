@@ -28,9 +28,6 @@ def l1d_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
     :return: Nothing.
     """
 
-    # Open L1a file
-    #old_nc = nc.Dataset(src_l1a_nc_file, 'r', format='NETCDF4')
-
     # Create a new NetCDF file
     with (nc.Dataset(dst_nc, 'w', format='NETCDF4') as netfile):
         bands = satobj.image_width
@@ -413,6 +410,6 @@ def l1d_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
             ('lines',))
         timestamps_srv[:] = getattr(satobj, 'nc_timing_vars')["timestamps_srv"][:]
     
-        navigation_group_writer(satobj=satobj, netfile=netfile, product_level="L1c")
+        navigation_group_writer(satobj=satobj, netfile=netfile)
 
     return None

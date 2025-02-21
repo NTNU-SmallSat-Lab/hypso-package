@@ -3,7 +3,7 @@ from pathlib import Path
 import netCDF4 as nc
 import numpy as np
 
-def navigation_group_writer(satobj, netfile: nc.Dataset, product_level: str) -> None:
+def navigation_group_writer(satobj, netfile: nc.Dataset) -> None:
     """
     Write navigation group to NetCDF file. 
 
@@ -23,7 +23,8 @@ def navigation_group_writer(satobj, netfile: nc.Dataset, product_level: str) -> 
 
 
     # Direct Georeferencing Latitudes and Longitudes
-    if hasattr(satobj, "latitudes") and hasattr(satobj, "longitudes"):
+    if (hasattr(satobj, 'latitudes') and satobj.latitudes is not None) and \
+        (hasattr(satobj, 'longitudes') and satobj.longitudes is not None):
         try:
 
             # Latitude ---------------------------------
@@ -55,12 +56,13 @@ def navigation_group_writer(satobj, netfile: nc.Dataset, product_level: str) -> 
             longitude.valid_max = 180
 
         except Exception as ex:
-            print("[ERROR] Unable to write direct latitude and longitude information to NetCDF file. The {0} file may be incomplete. Please run direct or indirect georeferencing.".format(product_level))
+            print("[ERROR] Unable to write direct latitude and longitude information to NetCDF file. The file may be incomplete. Please run direct or indirect georeferencing.")
             print("[ERROR] Encountered exception: " + str(ex))
 
 
     # Indirect Georeferencing Latitudes and Longitudes
-    if hasattr(satobj, "latitudes_indirect") and hasattr(satobj, "longitudes_indirect"):
+    if (hasattr(satobj, 'latitudes_indirect') and satobj.latitudes_indirect is not None) and \
+        (hasattr(satobj, 'longitudes_indirect') and satobj.longitudes_indirect is not None):
         try:
 
             # Latitude (Indirect) ---------------------------------
@@ -92,12 +94,13 @@ def navigation_group_writer(satobj, netfile: nc.Dataset, product_level: str) -> 
             longitude_indirect.valid_max = 180
 
         except Exception as ex:
-            print("[ERROR] Unable to write indirect latitude and longitude information to NetCDF file. The {0} file may be incomplete. Please run direct or indirect georeferencing.".format(product_level))
+            print("[ERROR] Unable to write indirect latitude and longitude information to NetCDF file. The file may be incomplete. Please run direct or indirect georeferencing.")
             print("[ERROR] Encountered exception: " + str(ex))
 
 
     # Direct Georeferenicng Solar and Satellite Angles
-    if hasattr(satobj, "latitudes") and hasattr(satobj, "longitudes"):
+    if (hasattr(satobj, 'latitudes') and satobj.latitudes is not None) and \
+        (hasattr(satobj, 'longitudes') and satobj.longitudes is not None):
         try:
             # Sensor Zenith --------------------------
             sensor_z = netfile.createVariable(
@@ -156,12 +159,13 @@ def navigation_group_writer(satobj, netfile: nc.Dataset, product_level: str) -> 
             solar_a.valid_max = 180
 
         except Exception as ex:
-            print("[ERROR] Unable to write navigation angles to NetCDF file. The {0} file may be incomplete. Please run geometry computations.".format(product_level))
+            print("[ERROR] Unable to write navigation angles to NetCDF file. The file may be incomplete. Please run geometry computations.")
             print("[ERROR] Encountered exception: " + str(ex))
 
 
     # Indirect Georeferenicng Solar and Satellite Angles
-    if hasattr(satobj, "latitudes_indirect") and hasattr(satobj, "longitudes_indirect"):
+    if (hasattr(satobj, 'latitudes_indirect') and satobj.latitudes_indirect is not None) and \
+        (hasattr(satobj, 'longitudes_indirect') and satobj.longitudes_indirect is not None):
         try:
 
             # Sensor Zenith (Indirect)--------------------------
