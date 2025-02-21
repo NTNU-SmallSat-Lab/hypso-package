@@ -31,10 +31,6 @@ from hypso.load import load_l1a_nc, \
 
 from hypso.reflectance import compute_toa_reflectance
 
-#from hypso.write import l1b_nc_writer, \
-#                          l1c_nc_writer, \
-#                          l1d_nc_writer
-
 from hypso.utils import find_file
 
 from hypso.DataArrayValidator import DataArrayValidator
