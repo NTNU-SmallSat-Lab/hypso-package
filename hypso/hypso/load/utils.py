@@ -165,21 +165,25 @@ def load_logfiles_from_nc_file(nc_file_path: Path) -> Tuple[dict, dict]:
     logfiles_vars = {}
 
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
-        group = f.groups["logfiles"]
-        
-        for key in group.variables.keys():
-            value = group.variables[key][:]
-            logfiles_vars[key] = value
 
-        for attrname in group.ncattrs():
-            value = getattr(group, attrname)
-            try:
-                if is_integer_num(float(value)):
-                    logfiles_attrs[attrname] = int(value)
-                else:
-                    logfiles_attrs[attrname] = float(value)
-            except BaseException:
-                logfiles_attrs[attrname] = value
+        try:
+            group = f.groups["logfiles"]
+
+            for key in group.variables.keys():
+                value = group.variables[key][:]
+                logfiles_vars[key] = value
+
+            for attrname in group.ncattrs():
+                value = getattr(group, attrname)
+                try:
+                    if is_integer_num(float(value)):
+                        logfiles_attrs[attrname] = int(value)
+                    else:
+                        logfiles_attrs[attrname] = float(value)
+                except BaseException:
+                    logfiles_attrs[attrname] = value
+        except KeyError:
+            pass
 
     return (logfiles_vars, logfiles_attrs)
 

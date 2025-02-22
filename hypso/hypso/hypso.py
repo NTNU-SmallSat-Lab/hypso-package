@@ -564,7 +564,9 @@ class Hypso:
 
             dt = datetime.strptime(datestring, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=timezone.utc)
             self.start_timestamp_capture = dt.timestamp()
-        self.start_timestamp_capture = int(self.nc_timing_attrs['capture_start_unix']) + self.UNIX_TIME_OFFSET
+
+        #self.start_timestamp_capture = int(self.nc_timing_attrs['capture_start_unix']) + self.UNIX_TIME_OFFSET
+
         # Get END_TIMESTAMP_CAPTURE
         # can't compute end timestamp using frame count and frame rate
         # assuming some default value if framerate and exposure not available
