@@ -22,7 +22,8 @@ from hypso.geometry import interpolate_at_frame_nc, \
                            compute_bbox, \
                            compute_resolution
 
-from hypso.georeferencing import georeferencing
+from hypso.georeferencing import Georeferencer, \
+                                check_star_tracker_orientation
 
 from hypso.load import load_l1a_nc, \
                         load_l1b_nc, \
@@ -793,7 +794,7 @@ class Hypso:
         if not origin_mode:
             origin_mode = 'qgis'
 
-        gr = georeferencing.Georeferencer(filename=points_file_path,
+        gr = Georeferencer(filename=points_file_path,
                                             cube_height=self.spatial_dimensions[0],
                                             cube_width=self.spatial_dimensions[1],
                                             image_mode=image_mode,
@@ -801,9 +802,18 @@ class Hypso:
         
 
         # TODO: flip lat/lon matrices?
+
+        print("Does check_star_tracker_orientation() indicate image flip?")
+        print(check_star_tracker_orientation(self.nc_adcs_vars))
+
         #datacube_flipped = check_star_tracker_orientation(self.nc_adcs_vars)
-        self.latitudes_indirect = gr.latitudes[:,::-1]
-        self.longitudes_indirect = gr.longitudes[:,::-1]
+        #self.latitudes_indirect = gr.latitudes[:,::-1]
+        #self.longitudes_indirect = gr.longitudes[:,::-1]
+
+        self.latitudes_indirect = gr.latitudes[:,:]
+        self.longitudes_indirect = gr.longitudes[:,:]
+    
+
     
         bbox, \
         resolution, \
@@ -925,7 +935,7 @@ class Hypso:
 
     def generate_l1d_cube(self) -> None:
 
-        if self.latitudes is None or self.longitudes is None:
+        if self.solar_azimuth_angles is None:
             self.generate_l1c_cube()
 
         self.l1d_cube = self._run_toa_reflectance()
