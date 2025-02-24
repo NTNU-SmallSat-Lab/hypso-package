@@ -13,11 +13,10 @@ def navigation_group_writer(satobj, netfile: nc.Dataset) -> None:
     # Create Navigation Group --------------------------------------
     navigation_group = netfile.createGroup('navigation')
 
-
-
     # Unix time -----------------------
-    time = netfile.createVariable('navigation/unixtime', 'u8', ('lines',))
-    time[:] = np.array(satobj.nc_timing_vars['timestamps_srv'])
+    #time = netfile.createVariable('navigation/unixtime', 'u8', ('lines',))
+    #time[:] = np.array(satobj.nc_timing_vars['timestamps'])
+    #time[:] = np.array(satobj.nc_timing_vars['timestamps_srv']) # Previous
     #df = satobj.framepose_df
     #time[:] = df["timestamp"].values
 

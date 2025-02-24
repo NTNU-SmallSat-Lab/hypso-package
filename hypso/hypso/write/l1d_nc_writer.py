@@ -51,7 +51,7 @@ def l1d_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
         netfile.createDimension('bands', bands)
 
         # Create groups
-        netfile.createGroup('logfiles')
+        #netfile.createGroup('logfiles')
 
         netfile.createGroup('products')
 
@@ -71,12 +71,12 @@ def l1d_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
                                 md,
                                 getattr(satobj, 'nc_timing_attrs')[md])
 
-        # Adding Temperature -------------------------------------------
-        meta_temperature = netfile.createGroup('metadata/temperature')
-        for md in getattr(satobj, 'nc_temperature_attrs'):
-            set_or_create_attr(meta_temperature,
-                                md,
-                                getattr(satobj, 'nc_temperature_attrs')[md])
+        # # Adding Temperature -------------------------------------------
+        # meta_temperature = netfile.createGroup('metadata/temperature')
+        # for md in getattr(satobj, 'nc_temperature_attrs'):
+        #     set_or_create_attr(meta_temperature,
+        #                         md,
+        #                         getattr(satobj, 'nc_temperature_attrs')[md])
 
 
         # Adding ADCS -------------------------------------------
@@ -94,12 +94,12 @@ def l1d_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
                                 getattr(satobj, 'nc_corrections_attrs')[md])
 
 
-        # Adding Database -------------------------------------------
-        meta_database = netfile.createGroup('metadata/database')
-        for md in getattr(satobj, 'nc_database_attrs'):
-            set_or_create_attr(meta_database,
-                                md,
-                                getattr(satobj, 'nc_database_attrs')[md])
+        # # Adding Database -------------------------------------------
+        # meta_database = netfile.createGroup('metadata/database')
+        # for md in getattr(satobj, 'nc_database_attrs'):
+        #     set_or_create_attr(meta_database,
+        #                         md,
+        #                         getattr(satobj, 'nc_database_attrs')[md])
 
 
 
@@ -304,61 +304,61 @@ def l1d_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
         )
         meta_adcs_angular_velocity_z[:] = getattr(satobj, 'nc_adcs_vars')["angular_velocity_z"][:]
 
-        # ADCS ST Quaternion S -----------------------------------------------------
-        meta_adcs_st_quaternion_s = netfile.createVariable(
-            'metadata/adcs/st_quaternion_s', 'f8',
-            ('adcssamples',),
-            compression=COMP_SCHEME,
-            complevel=COMP_LEVEL,
-            shuffle=COMP_SHUFFLE
-        )
-        meta_adcs_st_quaternion_s[:] = getattr(satobj, 'nc_adcs_vars')["st_quaternion_s"][:]
+        # # ADCS ST Quaternion S -----------------------------------------------------
+        # meta_adcs_st_quaternion_s = netfile.createVariable(
+        #     'metadata/adcs/st_quaternion_s', 'f8',
+        #     ('adcssamples',),
+        #     compression=COMP_SCHEME,
+        #     complevel=COMP_LEVEL,
+        #     shuffle=COMP_SHUFFLE
+        # )
+        # meta_adcs_st_quaternion_s[:] = getattr(satobj, 'nc_adcs_vars')["st_quaternion_s"][:]
 
-        # ADCS ST Quaternion X -----------------------------------------------------
-        meta_adcs_st_quaternion_x = netfile.createVariable(
-            'metadata/adcs/st_quaternion_x', 'f8',
-            ('adcssamples',),
-            compression=COMP_SCHEME,
-            complevel=COMP_LEVEL,
-            shuffle=COMP_SHUFFLE
-        )
-        meta_adcs_st_quaternion_x[:] = getattr(satobj, 'nc_adcs_vars')["st_quaternion_x"][:]
+        # # ADCS ST Quaternion X -----------------------------------------------------
+        # meta_adcs_st_quaternion_x = netfile.createVariable(
+        #     'metadata/adcs/st_quaternion_x', 'f8',
+        #     ('adcssamples',),
+        #     compression=COMP_SCHEME,
+        #     complevel=COMP_LEVEL,
+        #     shuffle=COMP_SHUFFLE
+        # )
+        # meta_adcs_st_quaternion_x[:] = getattr(satobj, 'nc_adcs_vars')["st_quaternion_x"][:]
 
-        # ADCS ST Quaternion Y -----------------------------------------------------
-        meta_adcs_st_quaternion_y = netfile.createVariable(
-            'metadata/adcs/st_quaternion_y', 'f8',
-            ('adcssamples',),
-            compression=COMP_SCHEME,
-            complevel=COMP_LEVEL,
-            shuffle=COMP_SHUFFLE
-        )
-        meta_adcs_st_quaternion_y[:] = getattr(satobj, 'nc_adcs_vars')["st_quaternion_y"][:]
+        # # ADCS ST Quaternion Y -----------------------------------------------------
+        # meta_adcs_st_quaternion_y = netfile.createVariable(
+        #     'metadata/adcs/st_quaternion_y', 'f8',
+        #     ('adcssamples',),
+        #     compression=COMP_SCHEME,
+        #     complevel=COMP_LEVEL,
+        #     shuffle=COMP_SHUFFLE
+        # )
+        # meta_adcs_st_quaternion_y[:] = getattr(satobj, 'nc_adcs_vars')["st_quaternion_y"][:]
 
-        # ADCS ST Quaternion Z -----------------------------------------------------
-        meta_adcs_st_quaternion_z = netfile.createVariable(
-            'metadata/adcs/st_quaternion_z', 'f8',
-            ('adcssamples',),
-            compression=COMP_SCHEME,
-            complevel=COMP_LEVEL,
-            shuffle=COMP_SHUFFLE
-        )
-        meta_adcs_st_quaternion_z[:] = getattr(satobj, 'nc_adcs_vars')["st_quaternion_z"][:]
+        # # ADCS ST Quaternion Z -----------------------------------------------------
+        # meta_adcs_st_quaternion_z = netfile.createVariable(
+        #     'metadata/adcs/st_quaternion_z', 'f8',
+        #     ('adcssamples',),
+        #     compression=COMP_SCHEME,
+        #     complevel=COMP_LEVEL,
+        #     shuffle=COMP_SHUFFLE
+        # )
+        # meta_adcs_st_quaternion_z[:] = getattr(satobj, 'nc_adcs_vars')["st_quaternion_z"][:]
 
-        # ADCS Control Error -----------------------------------------------------
-        meta_adcs_control_error = netfile.createVariable(
-            'metadata/adcs/control_error', 'f8',
-            ('adcssamples',),
-            compression=COMP_SCHEME,
-            complevel=COMP_LEVEL,
-            shuffle=COMP_SHUFFLE
-        )
-        meta_adcs_control_error[:] = getattr(satobj, 'nc_adcs_vars')["control_error"][:]
+        # # ADCS Control Error -----------------------------------------------------
+        # meta_adcs_control_error = netfile.createVariable(
+        #     'metadata/adcs/control_error', 'f8',
+        #     ('adcssamples',),
+        #     compression=COMP_SCHEME,
+        #     complevel=COMP_LEVEL,
+        #     shuffle=COMP_SHUFFLE
+        # )
+        # meta_adcs_control_error[:] = getattr(satobj, 'nc_adcs_vars')["control_error"][:]
 
 
-        # Capcon File -------------------------------------------------------------
-        meta_capcon_file = netfile.createVariable(
-            'metadata/capture_config/file', 'str')  # str seems necessary for storage of an arbitrarily large scalar
-        meta_capcon_file[()] = getattr(satobj, 'nc_capture_config_vars')["file"][:]  # [()] assignment of scalar to array
+        # # Capcon File -------------------------------------------------------------
+        # meta_capcon_file = netfile.createVariable(
+        #     'metadata/capture_config/file', 'str')  # str seems necessary for storage of an arbitrarily large scalar
+        # meta_capcon_file[()] = getattr(satobj, 'nc_capture_config_vars')["file"][:]  # [()] assignment of scalar to array
 
 
         # Metadata: Rad calibration coeff ----------------------------------------------------
@@ -375,40 +375,57 @@ def l1d_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
             shuffle=COMP_SHUFFLE)
         meta_corrections_rad[:] = satobj.rad_coeffs
 
-        # Metadata: Spectral coeff ----------------------------------------------------
-        len_spectral = satobj.wavelengths.shape[0]
-        netfile.createDimension('specrows', len_spectral)
-        meta_corrections_spec = netfile.createVariable(
-            'metadata/corrections/spec_coeffs', 'f4',
-            ('specrows',),
-            compression=COMP_SCHEME,
-            complevel=COMP_LEVEL,
-            shuffle=COMP_SHUFFLE)
-        meta_corrections_spec[:] = satobj.spectral_coeffs
+        # Metadata: Wavelengths or Spectral coeffs ----------------------------------------------------
+        try:
+            wavelengths = satobj.spectral_coeffs
+            len_spectral = satobj.wavelengths.shape[0]
+            netfile.createDimension('bands', len_spectral)
+            meta_corrections_wl = netfile.createVariable(
+                'metadata/corrections/wavelengths', 'f4',
+                ('bands',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE)
+            meta_corrections_wl[:] = wavelengths
+        except:
+            pass
+        try:
+            spectral_coeffs = satobj.spectral_coeffs
+            len_spectral = satobj.wavelengths.shape[0]
+            netfile.createDimension('specrows', len_spectral)
+            meta_corrections_spec = netfile.createVariable(
+                'metadata/corrections/spec_coeffs', 'f4',
+                ('specrows',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE)
+            meta_corrections_spec[:] = spectral_coeffs
+        except:
+            pass
 
 
-        # Meta Temperature File ---------------------------------------------------------
-        meta_temperature_file = netfile.createVariable(
-            'metadata/temperature/file', 'str')
-        meta_temperature_file[()] = getattr(satobj, 'nc_temperature_vars')["file"][:]
+        # # Meta Temperature File ---------------------------------------------------------
+        # meta_temperature_file = netfile.createVariable(
+        #     'metadata/temperature/file', 'str')
+        # meta_temperature_file[()] = getattr(satobj, 'nc_temperature_vars')["file"][:]
 
-        # Bin Time ----------------------------------------------------------------------
-        bin_time = netfile.createVariable(
-            'metadata/timing/bin_time', 'uint16',
-            ('lines',))
-        bin_time[:] = getattr(satobj, 'nc_timing_vars')["bin_time"][:]
+        # # Bin Time ----------------------------------------------------------------------
+        # bin_time = netfile.createVariable(
+        #     'metadata/timing/bin_time', 'uint16',
+        #     ('lines',))
+        # bin_time[:] = getattr(satobj, 'nc_timing_vars')["bin_time"][:]
 
         # Timestamps -------------------------------------------------------------------
         timestamps = netfile.createVariable(
-            'metadata/timing/timestamps', 'uint32',
+            'metadata/timing/timestamps', 'f8',
             ('lines',))
         timestamps[:] = getattr(satobj, 'nc_timing_vars')["timestamps"][:]
 
-        # Timestamps Service -----------------------------------------------------------
-        timestamps_srv = netfile.createVariable(
-            'metadata/timing/timestamps_srv', 'f8',
-            ('lines',))
-        timestamps_srv[:] = getattr(satobj, 'nc_timing_vars')["timestamps_srv"][:]
+        # # Timestamps Service -----------------------------------------------------------
+        # timestamps_srv = netfile.createVariable(
+        #     'metadata/timing/timestamps_srv', 'f8',
+        #     ('lines',))
+        # timestamps_srv[:] = getattr(satobj, 'nc_timing_vars')["timestamps_srv"][:]
     
         navigation_group_writer(satobj=satobj, netfile=netfile)
 

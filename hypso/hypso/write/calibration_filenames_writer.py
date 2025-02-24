@@ -16,7 +16,7 @@ def calibration_filenames_writer(satobj, netfile: nc.Dataset) -> None:
     # Radiometric calibration file
     try:
         radiometric_file = str(Path(satobj.rad_coeff_file).name)
-    except AttributeError:
+    except (AttributeError, TypeError):
         pass
 
     try:
@@ -32,7 +32,7 @@ def calibration_filenames_writer(satobj, netfile: nc.Dataset) -> None:
     # Smile correction file
     try:
         smile_file = str(Path(satobj.smile_coeff_file).name)
-    except AttributeError:
+    except (AttributeError, TypeError):
         pass
 
     try:
@@ -48,7 +48,7 @@ def calibration_filenames_writer(satobj, netfile: nc.Dataset) -> None:
     # Destriping correction file
     try:
         destriping_file = str(Path(satobj.destriping_coeff_file).name)
-    except AttributeError:
+    except (AttributeError, TypeError):
         pass
 
     try:
@@ -64,7 +64,7 @@ def calibration_filenames_writer(satobj, netfile: nc.Dataset) -> None:
     # Spectral calibration file
     try:
         spectral_file = str(Path(satobj.spectral_coeff_file).name)
-    except AttributeError:
+    except (AttributeError, TypeError):
         pass
 
     try:

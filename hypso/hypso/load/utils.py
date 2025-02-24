@@ -117,17 +117,23 @@ def load_database_from_nc_file(nc_file_path: Path) -> Tuple[dict, dict]:
     database_vars = {}
 
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
-        group = f.groups["metadata"]["database"]
 
-        for attrname in group.ncattrs():
-            value = getattr(group, attrname)
-            try:
-                if is_integer_num(float(value)):
-                    database_attrs[attrname] = int(value)
-                else:
-                    database_attrs[attrname] = float(value)
-            except BaseException:
-                database_attrs[attrname] = value
+        try:
+            group = f.groups["metadata"]["database"]
+
+            for attrname in group.ncattrs():
+                value = getattr(group, attrname)
+                try:
+                    if is_integer_num(float(value)):
+                        database_attrs[attrname] = int(value)
+                    else:
+                        database_attrs[attrname] = float(value)
+                except BaseException:
+                    database_attrs[attrname] = value
+
+        except Exception as ex:
+            #print(ex)
+            pass
 
     return (database_vars, database_attrs)
 
@@ -182,7 +188,8 @@ def load_logfiles_from_nc_file(nc_file_path: Path) -> Tuple[dict, dict]:
                         logfiles_attrs[attrname] = float(value)
                 except BaseException:
                     logfiles_attrs[attrname] = value
-        except KeyError:
+        except Exception as ex:
+            #print(ex)
             pass
 
     return (logfiles_vars, logfiles_attrs)
@@ -195,21 +202,27 @@ def load_temperature_from_nc_file(nc_file_path: Path) -> Tuple[dict, dict]:
     temperature_vars = {}
 
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
-        group = f.groups["metadata"]["temperature"]
-        
-        for key in group.variables.keys():
-            value = group.variables[key][:]
-            temperature_vars[key] = value
 
-        for attrname in group.ncattrs():
-            value = getattr(group, attrname)
-            try:
-                if is_integer_num(float(value)):
-                    temperature_attrs[attrname] = int(value)
-                else:
-                    temperature_attrs[attrname] = float(value)
-            except BaseException:
-                temperature_attrs[attrname] = value
+        try:
+            group = f.groups["metadata"]["temperature"]
+            
+            for key in group.variables.keys():
+                value = group.variables[key][:]
+                temperature_vars[key] = value
+
+            for attrname in group.ncattrs():
+                value = getattr(group, attrname)
+                try:
+                    if is_integer_num(float(value)):
+                        temperature_attrs[attrname] = int(value)
+                    else:
+                        temperature_attrs[attrname] = float(value)
+                except BaseException:
+                    temperature_attrs[attrname] = value
+        
+        except Exception as ex:
+            #print(ex)
+            pass
 
     return (temperature_vars, temperature_attrs)
 

@@ -46,7 +46,11 @@ def load_l1a_nc_cube(nc_file_path: Path) -> np.ndarray:
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
         group = f.groups["products"]
         # 16-bit according to Original data Capture
-        cube = np.array(group.variables["Lt"][:], dtype='double')
+
+        try:
+            cube = np.array(group.variables["dn"][:], dtype='double')
+        except KeyError:
+            cube = np.array(group.variables["Lt"][:], dtype='double')
 
         return cube
 

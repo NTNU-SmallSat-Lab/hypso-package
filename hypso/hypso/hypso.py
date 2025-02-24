@@ -521,7 +521,11 @@ class Hypso:
 
         # Calibration related atrributes
         self.rad_coeffs = self.nc_corrections_vars['rad_matrix']
-        self.spectral_coeffs = self.nc_corrections_vars['spec_coeffs']
+
+        try:
+            self.spectral_coeffs = self.nc_corrections_vars['spec_coeffs']
+        except KeyError:
+            self.spectral_coeffs = self.nc_corrections_vars['wavelengths']
 
         if not hasattr(self, 'wavelengths'):
             if ('wavelengths' in self.nc_cube_attrs.keys()):
@@ -562,7 +566,12 @@ class Hypso:
             except:
                 datestring = self.nc_attrs['timestamp_acquired']
 
-            dt = datetime.strptime(datestring, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=timezone.utc)
+
+            try:
+                dt = datetime.strptime(datestring, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=timezone.utc)
+            except ValueError:
+                dt = datetime.strptime(datestring, '%Y-%m-%dT%H:%M:%S.%f%zZ').replace(tzinfo=timezone.utc)
+
             self.start_timestamp_capture = dt.timestamp()
 
         #self.start_timestamp_capture = int(self.nc_timing_attrs['capture_start_unix']) + self.UNIX_TIME_OFFSET
@@ -844,15 +853,20 @@ class Hypso:
 
     def _run_frame_interpolation(self) -> None:
 
+        try:
+            timing = self.nc_timing_vars['timestamps_srv']
+        except:
+            timing = self.nc_timing_vars['timestamps']
+        
         framepose_data = interpolate_at_frame_nc(adcs=self.nc_adcs_vars,
-                                              lines_timestamps=self.nc_timing_vars['timestamps_srv'],
+                                              lines_timestamps=timing,
                                               framerate=self.nc_capture_config_attrs['framerate'],
                                               exposure=self.nc_capture_config_attrs['exposure'],
                                               verbose=self.VERBOSE
                                               )
         
-
         setattr(self, "framepose", framepose_data)
+
 
         return None
 
