@@ -794,7 +794,7 @@ class Hypso:
     def run_indirect_georeferencing(self, 
                           points_file_path: Union[str, Path], 
                           image_mode: str = None, 
-                          origin_mode: str = 'qgis'
+                          origin_mode: str = 'cube'
                           ) -> None:
 
         if self.VERBOSE:
@@ -803,7 +803,7 @@ class Hypso:
         points_file_path = Path(points_file_path).absolute()
 
         if not origin_mode:
-            origin_mode = 'qgis'
+            origin_mode = 'cube'
 
         gr = Georeferencer(filename=points_file_path,
                                             cube_height=self.spatial_dimensions[0],
@@ -814,15 +814,15 @@ class Hypso:
 
         # TODO: flip lat/lon matrices?
 
-        print("Does check_star_tracker_orientation() indicate image flip?")
-        print(check_star_tracker_orientation(self.nc_adcs_vars))
+        if self.VERBOSE:
+            print("[INFO] Does check_star_tracker_orientation() indicate image flip?")
+            print(check_star_tracker_orientation(self.nc_adcs_vars))
 
         #datacube_flipped = check_star_tracker_orientation(self.nc_adcs_vars)
-        #self.latitudes_indirect = gr.latitudes[:,::-1]
-        #self.longitudes_indirect = gr.longitudes[:,::-1]
-
-        self.latitudes_indirect = gr.latitudes[:,:]
-        self.longitudes_indirect = gr.longitudes[:,:]
+        self.latitudes_indirect = gr.latitudes[:,::-1]
+        self.longitudes_indirect = gr.longitudes[:,::-1]
+        #self.latitudes_indirect = gr.latitudes[:,:]
+        #self.longitudes_indirect = gr.longitudes[:,:]
     
 
     

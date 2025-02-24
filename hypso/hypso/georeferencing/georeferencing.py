@@ -72,9 +72,9 @@ class GCPList(list):
                 detected_image_mode = image_mode
             
         if detected_image_mode:    
-            print('No image mode provided. Detected image mode: ' + detected_image_mode)
+            print('[INFO] No image mode provided. Detected image mode: ' + detected_image_mode)
         else:
-            print('No image mode provided. Assuming image mode is: ' + detected_image_mode)
+            print('[INFO] No image mode provided. Assuming image mode is: ' + detected_image_mode)
 
         return detected_image_mode
 
@@ -84,7 +84,7 @@ class GCPList(list):
             image_mode = self._detect_image_mode()
 
         if image_mode not in self.SUPPORTED_IMAGE_MODES:
-            print('Invalid image mode ' + image_mode + ' provided. Defaulting to \'standard\' image mode.')
+            print('[WARNING] Invalid image mode ' + image_mode + ' provided. Defaulting to \'standard\' image mode.')
             image_mode = 'standard'
 
         return image_mode
@@ -97,7 +97,7 @@ class GCPList(list):
             return origin_mode
 
         if origin_mode not in self.SUPPORTED_ORIGIN_MODES:
-            print('Invalid origin mode ' + origin_mode + ' provided.')
+            print('[WARNING] Invalid origin mode ' + origin_mode + ' provided.')
             origin_mode = None
 
         return origin_mode
@@ -117,7 +117,7 @@ class GCPList(list):
     def save(self, filename=None):
 
         if filename is None:
-            print('Writing .points file to: ' + self.filename)
+            print('[INFO] Writing .points file to: ' + self.filename)
             pcsv = PointsCSV(self.filename)
         else:
             pcsv = PointsCSV(filename)
@@ -140,7 +140,7 @@ class GCPList(list):
                 self.filename = str(self.path) + '/' + str(self.basename) + '-scale3.' + str(self.extension)
 
             case _:
-                print('Invalid image_mode')
+                print('[ERROR] Invalid image_mode')
 
 
     def convert_crs(self, dst_crs=None):
@@ -172,7 +172,7 @@ class GCPList(list):
                         self._update_filename()
 
                     case _:
-                        print('Invalid dst_image_mode')
+                        print('[ERROR] Invalid dst_image_mode')
 
             case 'bin3':
                 
@@ -190,7 +190,7 @@ class GCPList(list):
                         self._update_filename()
 
                     case _:
-                        print('Invalid dst_image_mode')
+                        print('[ERROR] Invalid dst_image_mode')
 
             case 'scale3':
 
@@ -208,10 +208,10 @@ class GCPList(list):
                         self._update_filename()
 
                     case _:
-                        print('Invalid dst_image_mode')
+                        print('[ERROR] Invalid dst_image_mode')
 
             case _:
-                print('Invalid image_mode')
+                print('[ERROR] Invalid image_mode')
 
     # standard image mode conversion functons
 
@@ -299,7 +299,7 @@ class GCPList(list):
 
         if self.cube_height is None or self.cube_width is None:
 
-            print('No available cube height or width information. Unable to change origin mode.')
+            print('[ERROR] No available cube height or width information. Unable to change origin mode.')
 
             return
 
@@ -317,7 +317,7 @@ class GCPList(list):
 
             case _:
 
-                print('No origin mode set. Please first provide an origin mode before running this function.')
+                print('[ERROR] No origin mode set. Please first provide an origin mode before running this function.')
 
 
 
@@ -348,7 +348,7 @@ class GCPList(list):
             # Update GCP
             self[idx] = GCP(**gcp, crs=gcp.crs)
 
-        self.origin_mode = 'cube'
+        self.origin_mode = 'qgis'
 
     def _get_image_mode_height(self):
 
@@ -364,7 +364,7 @@ class GCPList(list):
                 return self.cube_height
 
             case _:
-                print('Invalid image_mode')
+                print('[ERROR] Invalid image_mode')
                 return self.cube_height
 
     def _get_image_mode_width(self):
@@ -380,7 +380,7 @@ class GCPList(list):
                 return self.cube_width * 3
 
             case _:
-                print('Invalid image_mode')
+                print('[ERROR] Invalid image_mode')
                 return self.cube_width
 
 class GCP(dict):
