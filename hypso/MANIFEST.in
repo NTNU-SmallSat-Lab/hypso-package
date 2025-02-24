@@ -7,6 +7,8 @@ global-include *.xls
 global-include *.xlsx
 include hypso/_version.py
 
+include ./README.md
+
 recursive-include hypso/atmospheric/ *
 recursive-include hypso/calibration/data/ *
 recursive-include hypso/chlorophyll_estimation/data/ *
