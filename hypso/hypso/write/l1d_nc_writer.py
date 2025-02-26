@@ -130,7 +130,7 @@ def l1d_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
         else:
 
             # Store as bands
-            rhot_cube = satobj.l1b_cube.to_numpy()
+            rhot_cube = satobj.l1d_cube.to_numpy()
             for band in range(0, rhot_cube.shape[-1]):
 
                 wave = np.around(satobj.wavelengths, 1)[band]
