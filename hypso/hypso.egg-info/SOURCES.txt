@@ -1,5 +1,7 @@
 MANIFEST.in
+README.md
 pyproject.toml
+../README.md
 hypso/DataArrayDict.py
 hypso/DataArrayValidator.py
 hypso/__init__.py

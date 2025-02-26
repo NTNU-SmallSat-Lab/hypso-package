@@ -731,8 +731,11 @@ class Hypso:
 
         if self.l1b_cube is not None:
             toa_radiance = self.l1b_cube
-        else:
+        elif self.l1b_cube is not None:
             toa_radiance = self.l1c_cube
+        else:
+            self.generate_l1b_cube()
+            toa_radiance = self.l1b_cube
 
         return compute_toa_reflectance(srf=self.srf,
                                         toa_radiance=toa_radiance,
@@ -951,10 +954,12 @@ class Hypso:
 
     def generate_l1d_cube(self) -> None:
 
-        if self.solar_azimuth_angles is None:
-            self.generate_l1c_cube()
+        try:
+            self.l1d_cube = self._run_toa_reflectance()
 
-        self.l1d_cube = self._run_toa_reflectance()
+        except:
+            self.generate_l1c_cube()
+            self.l1d_cube = self._run_toa_reflectance()
 
         return None
 
