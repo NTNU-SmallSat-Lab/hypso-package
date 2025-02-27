@@ -24,18 +24,18 @@ def decode_jon_cnn_water_mask(file_path: Path, spatial_dimensions: tuple[int, in
 
     data = decode_jon_cnn_labels(file_path=file_path, spatial_dimensions=spatial_dimensions)
 
-    return ~(data == labels['water'])
+    return (data == labels['water'])
 
 
 def decode_jon_cnn_land_mask(file_path: Path, spatial_dimensions: tuple[int, int]) -> np.ndarray:
 
     data = decode_jon_cnn_labels(file_path=file_path, spatial_dimensions=spatial_dimensions)
 
-    return ~(data == labels['land'])
+    return (data == labels['land'])
 
 
 def decode_jon_cnn_cloud_mask(file_path: Path, spatial_dimensions: tuple[int, int]) -> np.ndarray:
 
     data = decode_jon_cnn_labels(file_path=file_path, spatial_dimensions=spatial_dimensions)
 
-    return ~(data == labels['cloud'])
+    return (data == labels['cloud'])
