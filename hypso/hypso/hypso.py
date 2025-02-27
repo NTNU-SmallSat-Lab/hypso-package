@@ -275,7 +275,7 @@ class Hypso:
     @property
     def masked_l1a_cube(self) -> xr.DataArray:
 
-        unified_mask = self._unified_cloud_masked()
+        unified_mask = self._unified_mask()
 
         if unified_mask is not None:
 
@@ -288,7 +288,7 @@ class Hypso:
     @property
     def masked_l1b_cube(self) -> xr.DataArray:
 
-        unified_mask = self._unified_cloud_masked()
+        unified_mask = self._unified_mask()
 
         if unified_mask is not None:
 
@@ -301,7 +301,7 @@ class Hypso:
     @property
     def masked_l1c_cube(self) -> xr.DataArray:
 
-        unified_mask = self._unified_cloud_masked()
+        unified_mask = self._unified_mask()
 
         if unified_mask is not None:
 
@@ -314,7 +314,7 @@ class Hypso:
     @property
     def masked_l1d_cube(self) -> xr.DataArray:
 
-        unified_mask = self._unified_cloud_masked()
+        unified_mask = self._unified_mask()
 
         if unified_mask is not None:
 
@@ -324,7 +324,7 @@ class Hypso:
             return self._l1d_cube           
 
 
-    def _unified_cloud_masked(self) -> xr.DataArray:
+    def _unified_mask(self) -> xr.DataArray:
         if self._land_mask is not None and self._cloud_mask is not None:
             unified_mask = self._land_mask | self._cloud_mask
         elif self._land_mask is not None:
