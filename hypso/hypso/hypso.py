@@ -797,7 +797,8 @@ class Hypso:
     def run_indirect_georeferencing(self, 
                           points_file_path: Union[str, Path], 
                           image_mode: str = None, 
-                          origin_mode: str = 'cube'
+                          origin_mode: str = 'cube',
+                          flip=False
                           ) -> None:
 
         if self.VERBOSE:
@@ -813,19 +814,21 @@ class Hypso:
                                             cube_width=self.spatial_dimensions[1],
                                             image_mode=image_mode,
                                             origin_mode=origin_mode)
-        
-
-        # TODO: flip lat/lon matrices?
 
         if self.VERBOSE:
             print("[INFO] Does check_star_tracker_orientation() indicate image flip?")
             print(check_star_tracker_orientation(self.nc_adcs_vars))
 
         #datacube_flipped = check_star_tracker_orientation(self.nc_adcs_vars)
-        self.latitudes_indirect = gr.latitudes[:,::-1]
-        self.longitudes_indirect = gr.longitudes[:,::-1]
-        #self.latitudes_indirect = gr.latitudes[:,:]
-        #self.longitudes_indirect = gr.longitudes[:,:]
+
+
+        # TODO: flip lat/lon matrices?
+        if flip:
+            self.latitudes_indirect = gr.latitudes[:,::-1]
+            self.longitudes_indirect = gr.longitudes[:,::-1]
+        else:
+            self.latitudes_indirect = gr.latitudes[:,:]
+            self.longitudes_indirect = gr.longitudes[:,:]
     
 
     
