@@ -279,7 +279,7 @@ class Hypso:
 
         if unified_mask is not None:
 
-            return self._l1a_cube.where(unified_mask, other=0)
+            return self._l1a_cube.where(~unified_mask, other=np.nan)
 
         else:
             return self._l1a_cube   
@@ -292,7 +292,7 @@ class Hypso:
 
         if unified_mask is not None:
 
-            return self._l1b_cube.where(unified_mask, other=0)
+            return self._l1b_cube.where(~unified_mask, other=np.nan)
 
         else:
             return self._l1b_cube   
@@ -305,7 +305,7 @@ class Hypso:
 
         if unified_mask is not None:
 
-            return self._l1c_cube.where(unified_mask, other=0)
+            return self._l1c_cube.where(~unified_mask, other=np.nan)
 
         else:
             return self._l1c_cube   
@@ -318,7 +318,7 @@ class Hypso:
 
         if unified_mask is not None:
 
-            return self._l1d_cube.where(unified_mask, other=0)
+            return self._l1d_cube.where(~unified_mask, other=np.nan)
 
         else:
             return self._l1d_cube           

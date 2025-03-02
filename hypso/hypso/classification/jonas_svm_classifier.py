@@ -70,14 +70,14 @@ def decode_jonas_svm_water_mask(file_path: Path, spatial_dimensions: tuple[int, 
 
     data = decode_jonas_svm_labels(file_path=file_path, spatial_dimensions=spatial_dimensions)
 
-    return ~((data == labels['water']) | (data == labels['strange_water']))
+    return ((data == labels['water']) | (data == labels['strange_water']))
 
 
 def decode_jonas_svm_land_mask(file_path: Path, spatial_dimensions: tuple[int, int]) -> np.ndarray:
 
     data = decode_jonas_svm_labels(file_path=file_path, spatial_dimensions=spatial_dimensions)
 
-    return ~(data == labels['light_forest'] | \
+    return (data == labels['light_forest'] | \
                     labels['dark_forest'] | \
                     labels['urban'] | \
                     labels['rock'] | \
@@ -90,5 +90,5 @@ def decode_jonas_svm_cloud_mask(file_path: Path, spatial_dimensions: tuple[int, 
 
     data = decode_jonas_svm_labels(file_path=file_path, spatial_dimensions=spatial_dimensions)
 
-    return ~((data == labels['thick_clouds']) | (data == labels['thin_clouds']))
+    return ((data == labels['thick_clouds']) | (data == labels['thin_clouds']))
 
