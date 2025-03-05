@@ -724,15 +724,15 @@ class HypsoBase:
         return None
     
 
+    # def _run_toa_reflectance(self) -> np.ndarray:
     def _run_toa_reflectance(self) -> np.ndarray:
 
         if not hasattr(self, "srf"):
-
             self.srf = get_spectral_response_function(wavelengths=self.wavelengths, fwhm=self.fwhm)
 
         if self.l1b_cube is not None:
             toa_radiance = self.l1b_cube
-        elif self.l1b_cube is not None:
+        elif self.l1c_cube is not None:
             toa_radiance = self.l1c_cube
         else:
             self.generate_l1b_cube()
