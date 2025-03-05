@@ -740,7 +740,7 @@ class Hypso:
         return compute_toa_reflectance(srf=self.srf,
                                         toa_radiance=toa_radiance,
                                         iso_time=self.iso_time,
-                                        solar_zenith_angles=self.solar_azimuth_angles,
+                                        solar_zenith_angles=self.solar_zenith_angles,
                                         )
 
 
