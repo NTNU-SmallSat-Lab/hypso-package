@@ -73,7 +73,6 @@ def interpolate_at_frame(adcs_timestamps: np.ndarray, position: np.ndarray,
                          framerate: float=15,
                          exposure: float=25,
                          verbose=False) -> np.ndarray:
-
     """
     Function to interpolate at the frame based on the quaternion, position and timestamps
 
@@ -325,7 +324,7 @@ def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_o
 
     if pointing_off_earth_indicator != frame_count:
         print('[ERROR] At least one pixel was pointing beyond the earth\'s horizon!')
-        return -1, -1
+        return -1, -1, -1
 
     # COMPUTING SATELLITE TRACK TODO
     '''
@@ -337,9 +336,6 @@ def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_o
     # and "pos_astropy_itrs.earth_location.geodetic.lon.value"
     # in the above for loop to get satellite ground track
     '''
-
-    lat_center = latlon_mid[frame_count // 2, 0] * m.pi / 180.0
-    lon_center = latlon_mid[frame_count // 2, 1] * m.pi / 180.0
 
     if verbose:
         print('[INFO] Interpolating pixel coordinate gaps...')
@@ -361,7 +357,7 @@ def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_o
     if verbose:
         print('[INFO] Direct georeferencing done')
 
-    return pixels_lat, pixels_lon
+    return pixels_lat, pixels_lon, [campos_itrs, body_x_itrs, body_z_itrs]
 
 
 # https://pyorbital.readthedocs.io/en/latest/#computing-astronomical-parameters
@@ -455,12 +451,12 @@ def compute_local_angles(framepose_data: np.ndarray,
 
 def compute_elevation_angle(image_pos, sat_pos) -> float:
     """
-    Computes the elevation angle
+    Computes the elevation angle given a location and a satellite position in ITRS (type of ECEF)
 
     :param image_pos:
     :param sat_pos:
 
-    :return: Float number of the elevation angle
+    :return: Elevation angle in radians
     """
     viewpoint_mid_latlon_geocentric = np.array(
         [m.atan2(R_eq * image_pos[2], R_pl * m.sqrt(image_pos[0] ** 2 + image_pos[1] ** 2)),
