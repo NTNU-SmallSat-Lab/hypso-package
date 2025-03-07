@@ -783,13 +783,15 @@ class Hypso:
         solar_zenith_angles, \
         solar_azimuth_angles, \
         sat_zenith_angles, \
-        sat_azimuth_angles = self._run_angles_geometry(latitudes=self.latitudes,
+        sat_azimuth_angles, \
+        relative_azimuth_angles = self._run_angles_geometry(latitudes=self.latitudes,
                                                         longitudes=self.longitudes)
 
         setattr(self, 'solar_zenith_angles', solar_zenith_angles)
         setattr(self, 'solar_azimuth_angles', solar_azimuth_angles)
         setattr(self, 'sat_zenith_angles', sat_zenith_angles)
         setattr(self, 'sat_azimuth_angles', sat_azimuth_angles)
+        setattr(self, 'relative_azimuth_angles', relative_azimuth_angles)
 
         return None
 
@@ -846,13 +848,15 @@ class Hypso:
         solar_zenith_angles, \
         solar_azimuth_angles, \
         sat_zenith_angles, \
-        sat_azimuth_angles = self._run_angles_geometry(latitudes=self.latitudes_indirect,
+        sat_azimuth_angles, \
+        relative_azimuth_angles = self._run_angles_geometry(latitudes=self.latitudes_indirect,
                                                         longitudes=self.longitudes_indirect)
 
         setattr(self, 'solar_zenith_angles_indirect', solar_zenith_angles)
         setattr(self, 'solar_azimuth_angles_indirect', solar_azimuth_angles)
         setattr(self, 'sat_zenith_angles_indirect', sat_zenith_angles)
         setattr(self, 'sat_azimuth_angles_indirect', sat_azimuth_angles)
+        setattr(self, 'relative_azimuth_angles_indirect', relative_azimuth_angles)
 
         return None
     
@@ -927,10 +931,16 @@ class Hypso:
         sat_zenith_angles = sat_zenith.reshape(self.spatial_dimensions)
         sat_azimuth_angles = sat_azimuth.reshape(self.spatial_dimensions)
 
+        relative_azimuth_angles = abs(sat_azimuth_angles - solar_azimuth_angles)
+
+        relative_azimuth_angles = np.where(relative_azimuth_angles > 180, 
+                                           360 - relative_azimuth_angles, 
+                                           relative_azimuth_angles)
+
         if self.VERBOSE:
             print("[INFO] Angles geometry computations done.")
 
-        return solar_zenith_angles, solar_azimuth_angles, sat_zenith_angles, sat_azimuth_angles
+        return solar_zenith_angles, solar_azimuth_angles, sat_zenith_angles, sat_azimuth_angles, relative_azimuth_angles
 
 
     def generate_l1b_cube(self, **kwargs) -> None:
