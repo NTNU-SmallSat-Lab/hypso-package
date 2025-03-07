@@ -157,6 +157,20 @@ def navigation_group_writer(satobj, netfile: nc.Dataset) -> None:
             solar_a.valid_min = -180
             solar_a.valid_max = 180
 
+            # Relative Azimuth ---------------------------------------
+            relative_a = netfile.createVariable(
+            'navigation/relative_azimuth', 'f4', ('lines', 'samples'),
+            # compression=COMP_SCHEME,
+            # complevel=COMP_LEVEL,
+            # shuffle=COMP_SHUFFLE,
+            )
+            relative_a[:] = satobj.relative_azimuth_angles
+            relative_a.long_name = "Relative Azimuth Angle"
+            relative_a.units = "degrees"
+            # relative_a.valid_range = [-180, 180]
+            relative_a.valid_min = -180
+            relative_a.valid_max = 180
+
         except Exception as ex:
             print("[ERROR] Unable to write navigation angles to NetCDF file. The file may be incomplete. Please run geometry computations.")
             print("[ERROR] Encountered exception: " + str(ex))
@@ -222,6 +236,21 @@ def navigation_group_writer(satobj, netfile: nc.Dataset) -> None:
             # solar_a_indirect.valid_range = [-180, 180]
             solar_a_indirect.valid_min = -180
             solar_a_indirect.valid_max = 180
+
+            # Relative Azimuth (Indirect) ---------------------------------------
+            relative_a_indirect = netfile.createVariable(
+            'navigation/relative_azimuth_indirect', 'f4', ('lines', 'samples'),
+            # compression=COMP_SCHEME,
+            # complevel=COMP_LEVEL,
+            # shuffle=COMP_SHUFFLE,
+            )
+            relative_a_indirect[:] = satobj.relative_azimuth_angles_indirect
+            relative_a_indirect.long_name = "Relative Azimuth Angle (Indirect)"
+            relative_a_indirect.units = "degrees"
+            # relative_a_indirect.valid_range = [-180, 180]
+            relative_a_indirect.valid_min = -180
+            relative_a_indirect.valid_max = 180
+
 
         except Exception as ex:
             pass

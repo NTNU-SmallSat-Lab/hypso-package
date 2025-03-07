@@ -5,6 +5,8 @@ import numpy as np
 from .navigation_group_writer import navigation_group_writer
 from .calibration_filenames_writer import calibration_filenames_writer
 
+from matplotlib import pyplot as plt
+
 def write_products_nc_file(satobj, file_name: Path, overwrite: bool = False, **kwargs) -> None:
     
     path = Path(file_name)
