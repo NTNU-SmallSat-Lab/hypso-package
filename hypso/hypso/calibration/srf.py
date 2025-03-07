@@ -62,9 +62,9 @@ def get_spectral_response_function(wavelengths, fwhm: np.array) -> None:
 
 
 
-'''
 
-def get_spectral_response_function(wavelengths, fwhm: float = 3.3) -> None:
+
+'''def get_spectral_response_function(wavelengths, fwhm: float = 3.3) -> None:
     """
     Get Spectral Response Functions (SRF) from HYPSO for each of the 120 bands. Theoretical FWHM of 3.33nm is
     used to estimate Sigma for an assumed gaussian distribution of each SRF per band.
@@ -77,6 +77,7 @@ def get_spectral_response_function(wavelengths, fwhm: float = 3.3) -> None:
 
     srf = []
     for band in wavelengths:
+    # for i, band in enumerate(wavelengths):
         center_lambda_nm = band
         start_lambda_nm = np.round(center_lambda_nm - (3 * sigma_nm), 4)
         soft_end_lambda_nm = np.round(center_lambda_nm + (3 * sigma_nm), 4)
@@ -116,6 +117,5 @@ def get_spectral_response_function(wavelengths, fwhm: float = 3.3) -> None:
 
         srf.append([srf_wl_single, srf_single])
 
-    return srf
+    return srf'''
 
-'''
