@@ -724,15 +724,15 @@ class HypsoBase:
         return None
     
 
+    # def _run_toa_reflectance(self) -> np.ndarray:
     def _run_toa_reflectance(self) -> np.ndarray:
 
         if not hasattr(self, "srf"):
-
             self.srf = get_spectral_response_function(wavelengths=self.wavelengths, fwhm=self.fwhm)
 
         if self.l1b_cube is not None:
             toa_radiance = self.l1b_cube
-        elif self.l1b_cube is not None:
+        elif self.l1c_cube is not None:
             toa_radiance = self.l1c_cube
         else:
             self.generate_l1b_cube()
@@ -801,8 +801,11 @@ class HypsoBase:
                           points_file_path: Union[str, Path], 
                           image_mode: str = None, 
                           origin_mode: str = 'cube',
-                          flip=False
+                          flip: bool = None,
                           ) -> None:
+        
+        if flip is None:
+            raise ValueError("The 'flip' variable must be provided. Can be found in processing-temp/geometric-meta-info.txt as 'Filp RGB:' ")
 
         if self.VERBOSE:
             print('[INFO] Running indirect georeferencing...')
@@ -826,7 +829,7 @@ class HypsoBase:
 
 
         # TODO: flip lat/lon matrices?
-        if flip:
+        if not flip:
             self.latitudes_indirect = gr.latitudes[:,::-1]
             self.longitudes_indirect = gr.longitudes[:,::-1]
         else:

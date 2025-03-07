@@ -42,10 +42,10 @@ def get_destriping_correction_matrix(cube, water_mask, plot=False, plot_min_val=
     num_frames, image_height, image_width = cube.shape
     # Determine correction
     wm = morph.dilation(water_mask, morph.square(7))
-    diff = cube[:,1:,100] - cube[:,:-1,100] 
+    # diff = cube[:,1:,100] - cube[:,:-1,100] 
     wm_t = wm[:,:-1]
     wm_t[wm[:,1:]] = 1 
-    diff[wm_t]=0
+    # diff[wm_t]=0
     diff = np.zeros((num_frames,image_height-1,image_width))
     diff[:] = cube[:,1:,:] - cube[:,:-1,:]
     diff[wm_t]=0
