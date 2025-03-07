@@ -37,9 +37,10 @@ from hypso.utils import find_file
 from hypso.DataArrayValidator import DataArrayValidator
 from hypso.DataArrayDict import DataArrayDict
 
+import netCDF4 as nc
 
 
-class Hypso:
+class HypsoBase:
 
     def __init__(self, path: Union[str, Path] = None):
 

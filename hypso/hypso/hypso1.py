@@ -3,11 +3,11 @@ from pathlib import Path
 from typing import Union
 import numpy as np
 
-from hypso import Hypso
+from .HypsoBase import HypsoBase
 from hypso1_calibration import get_hypso1_calibration_files
 
 
-class Hypso1(Hypso):
+class Hypso1(HypsoBase):
 
     def __init__(self, path: Union[str, Path], verbose=False) -> None:
         
