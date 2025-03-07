@@ -1,8 +1,3 @@
-# Development use only:
-import sys
-sys.path.insert(0, '/home/ariaa/smallSatLab/hypso-package-new/hypso1_calibration/')
-
-
 from pathlib import Path
 from typing import Union
 import numpy as np
