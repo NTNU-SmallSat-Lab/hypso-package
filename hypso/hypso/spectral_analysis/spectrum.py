@@ -1,7 +1,7 @@
 
 from ..geometry.nearest import get_nearest_pixel
 
-from ..hypso import Hypso
+from ..HypsoBase import HypsoBase
 from ..hypso1 import Hypso1
 from ..hypso2 import Hypso2
 

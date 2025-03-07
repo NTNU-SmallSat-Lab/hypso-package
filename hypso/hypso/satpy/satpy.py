@@ -2,7 +2,6 @@
 
 from typing import Union
 
-from ..hypso import Hypso
 from ..hypso1 import Hypso1
 from ..hypso2 import Hypso2
 
