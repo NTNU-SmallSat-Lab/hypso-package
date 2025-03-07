@@ -801,8 +801,11 @@ class HypsoBase:
                           points_file_path: Union[str, Path], 
                           image_mode: str = None, 
                           origin_mode: str = 'cube',
-                          flip=False
+                          flip: bool = None,
                           ) -> None:
+        
+        if flip is None:
+            raise ValueError("The 'flip' variable must be provided. Can be found in processing-temp/geometric-meta-info.txt as 'Filp RGB:' ")
 
         if self.VERBOSE:
             print('[INFO] Running indirect georeferencing...')
@@ -826,7 +829,7 @@ class HypsoBase:
 
 
         # TODO: flip lat/lon matrices?
-        if flip:
+        if not flip:
             self.latitudes_indirect = gr.latitudes[:,::-1]
             self.longitudes_indirect = gr.longitudes[:,::-1]
         else:
