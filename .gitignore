@@ -20,7 +20,5 @@ __pycache__/
 /hypso2_calibration/hypso2_calibration.egg-info/*
 /hypso2_calibration/hypso2_calibration/_version.py
 
-/demo/l1b_lacrau_h2.npz
-/demo/l1d_lacrau_h2.npz
-/demo/test_coefficients.ipynb
-/demo/test_reflectance.ipynb
+/notebooks/*
+/utils/*
