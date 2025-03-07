@@ -70,7 +70,7 @@ def read_coeffs_from_file(coeff_path: str) -> np.ndarray:
 
     except BaseException:
         coefficients = None
-        raise ValueError("[ERROR] Could not read coefficients file.")
+        raise ValueError("[ERROR] Could not read coefficients file.")
 
     return coefficients
 

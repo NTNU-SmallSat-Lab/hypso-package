@@ -754,11 +754,11 @@ class Hypso:
         except:
             self._run_frame_interpolation()
 
-        pixels_lat, pixels_lon = direct_georeference(framepose_data=self.framepose,
-                                                     image_height=self.image_height,
-                                                     aoi_offset=self.y_start,
-                                                     verbose=self.VERBOSE
-                                                     )
+        pixels_lat, pixels_lon, _ = direct_georeference(framepose_data=self.framepose,
+                                                        image_height=self.image_height,
+                                                        aoi_offset=self.y_start,
+                                                        verbose=self.VERBOSE
+                                                        )
         
         if type(pixels_lat) == int and type(pixels_lon) == int:
             if self.VERBOSE:
