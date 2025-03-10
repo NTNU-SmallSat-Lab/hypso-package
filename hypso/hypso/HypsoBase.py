@@ -725,7 +725,7 @@ class HypsoBase:
     
 
     # def _run_toa_reflectance(self) -> np.ndarray:
-    def _run_toa_reflectance(self) -> np.ndarray:
+    def _run_toa_reflectance(self, use_indirect_georef=False) -> np.ndarray:
 
         if not hasattr(self, "srf"):
             self.srf = get_spectral_response_function(wavelengths=self.wavelengths, fwhm=self.fwhm)
@@ -738,10 +738,26 @@ class HypsoBase:
             self.generate_l1b_cube()
             toa_radiance = self.l1b_cube
 
+        
+        if use_indirect_georef and hasattr(self, 'solar_zenith_angles_indirect'):
+
+            if self.VERBOSE:
+                print('[WARNING] Computing TOA reflectance using INDIRECT georeferencing geometry.')
+
+            solar_zenith_angles=self.solar_zenith_angles_indirect
+
+        else:
+
+            if self.VERBOSE:
+                print('[WARNING] Computing TOA reflectance using DIRECT georeferencing geometry.')
+
+            solar_zenith_angles=self.solar_zenith_angles
+
+
         return compute_toa_reflectance(srf=self.srf,
                                         toa_radiance=toa_radiance,
                                         iso_time=self.iso_time,
-                                        solar_zenith_angles=self.solar_zenith_angles,
+                                        solar_zenith_angles=solar_zenith_angles,
                                         )
 
 
@@ -969,14 +985,14 @@ class HypsoBase:
 
 
 
-    def generate_l1d_cube(self) -> None:
+    def generate_l1d_cube(self, use_indirect_georef=False) -> None:
 
         try:
-            self.l1d_cube = self._run_toa_reflectance()
+            self.l1d_cube = self._run_toa_reflectance(use_indirect_georef=use_indirect_georef)
 
         except:
             self.generate_l1c_cube()
-            self.l1d_cube = self._run_toa_reflectance()
+            self.l1d_cube = self._run_toa_reflectance(use_indirect_georef=use_indirect_georef)
 
         return None
 
