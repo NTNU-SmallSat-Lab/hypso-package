@@ -814,43 +814,53 @@ class HypsoBase:
 
 
     def run_indirect_georeferencing(self, 
-                          points_file_path: Union[str, Path], 
+                          points_file_path: Union[str, Path] = None, 
+                          latitudes: np.ndarray = None,
+                          longitudes: np.ndarray = None,
                           image_mode: str = None, 
                           origin_mode: str = 'cube',
                           flip: bool = None,
                           ) -> None:
         
-        if flip is None:
-            raise ValueError("The 'flip' variable must be provided. Can be found in processing-temp/geometric-meta-info.txt as 'Filp RGB:' ")
 
         if self.VERBOSE:
             print('[INFO] Running indirect georeferencing...')
         
-        points_file_path = Path(points_file_path).absolute()
 
-        if not origin_mode:
-            origin_mode = 'cube'
+        if latitudes is not None and longitudes is not None:
+            self.latitudes_indirect = latitudes
+            self.longitudes_indirect = longitudes    
 
-        gr = Georeferencer(filename=points_file_path,
-                                            cube_height=self.spatial_dimensions[0],
-                                            cube_width=self.spatial_dimensions[1],
-                                            image_mode=image_mode,
-                                            origin_mode=origin_mode)
-
-        if self.VERBOSE:
-            print("[INFO] Does check_star_tracker_orientation() indicate image flip?")
-            print(check_star_tracker_orientation(self.nc_adcs_vars))
-
-        #datacube_flipped = check_star_tracker_orientation(self.nc_adcs_vars)
-
-
-        # TODO: flip lat/lon matrices?
-        if not flip:
-            self.latitudes_indirect = gr.latitudes[:,::-1]
-            self.longitudes_indirect = gr.longitudes[:,::-1]
         else:
-            self.latitudes_indirect = gr.latitudes[:,:]
-            self.longitudes_indirect = gr.longitudes[:,:]
+
+            if flip is None:
+                raise ValueError("[ERROR] The 'flip' variable must be provided. Can be found in processing-temp/geometric-meta-info.txt as 'Filp RGB:' ")
+
+            points_file_path = Path(points_file_path).absolute()
+
+            if not origin_mode:
+                origin_mode = 'cube'
+
+            gr = Georeferencer(filename=points_file_path,
+                                                cube_height=self.spatial_dimensions[0],
+                                                cube_width=self.spatial_dimensions[1],
+                                                image_mode=image_mode,
+                                                origin_mode=origin_mode)
+
+            if self.VERBOSE:
+                print("[INFO] Does check_star_tracker_orientation() indicate image flip?")
+                print(check_star_tracker_orientation(self.nc_adcs_vars))
+
+            #datacube_flipped = check_star_tracker_orientation(self.nc_adcs_vars)
+
+
+            # TODO: flip lat/lon matrices?
+            if not flip:
+                self.latitudes_indirect = gr.latitudes[:,::-1]
+                self.longitudes_indirect = gr.longitudes[:,::-1]
+            else:
+                self.latitudes_indirect = gr.latitudes[:,:]
+                self.longitudes_indirect = gr.longitudes[:,:]
     
 
     
