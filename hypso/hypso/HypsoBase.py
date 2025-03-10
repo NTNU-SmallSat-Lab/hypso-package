@@ -881,6 +881,54 @@ class HypsoBase:
         return None
     
 
+
+
+
+
+    def _run_custom_georeferencing(self, 
+                          latitudes: np.ndarray,
+                          longitudes: np.ndarray
+                          ) -> None:
+        
+        if self.VERBOSE:
+            print('[INFO] Running custom georeferencing...')
+        
+
+        self.latitudes = latitudes
+        self.longitudes = longitudes
+    
+
+        bbox, \
+        resolution, \
+        along_track_gsd, \
+        across_track_gsd = self._run_track_geometry(latitudes=self.latitudes,
+                                                    longitudes=self.longitudes)
+
+        setattr(self, 'bbox', bbox)
+        setattr(self, 'along_track_gsd', along_track_gsd)
+        setattr(self, 'across_track_gsd', across_track_gsd)
+        setattr(self, 'resolution', resolution)
+
+        solar_zenith_angles, \
+        solar_azimuth_angles, \
+        sat_zenith_angles, \
+        sat_azimuth_angles, \
+        relative_azimuth_angles = self._run_angles_geometry(latitudes=self.latitudes,
+                                                        longitudes=self.longitudes)
+
+        setattr(self, 'solar_zenith_angles', solar_zenith_angles)
+        setattr(self, 'solar_azimuth_angles', solar_azimuth_angles)
+        setattr(self, 'sat_zenith_angles', sat_zenith_angles)
+        setattr(self, 'sat_azimuth_angles', sat_azimuth_angles)
+        setattr(self, 'relative_azimuth_angles', relative_azimuth_angles)
+
+        return None
+
+
+
+
+
+
     def _run_frame_interpolation(self) -> None:
 
         try:
