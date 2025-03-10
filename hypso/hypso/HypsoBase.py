@@ -851,6 +851,12 @@ class HypsoBase:
         else:
             self.latitudes_indirect = gr.latitudes[:,:]
             self.longitudes_indirect = gr.longitudes[:,:]
+        
+        # Check if direct and indirect georeferencing have the same lat/lon orientations
+        if (self.latitudes_indirect[-1,-1] - self.latitudes_indirect[0,-1]) * (self.latitudes[-1,-1] - self.latitudes[0,-1]) < 0:
+            ValueError("Latitude of indirect georeferencing is flipped with respect to direct georeferencing. Check if flip paramater is set correctly")
+        if (self.longitudes_indirect[-1,-1] - self.longitudes_indirect[0,-1]) * (self.longitudes[-1,-1] - self.longitudes[0,-1]) < 0:
+            ValueError("Latitude of indirect georeferencing is flipped with respect to direct georeferencing. Check if flip paramater is set correctly")
     
 
     
