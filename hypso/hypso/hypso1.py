@@ -2,10 +2,12 @@ from pathlib import Path
 from typing import Union
 import numpy as np
 
+# Development use only:
+import sys
+sys.path.insert(0, '/home/ariaa/smallSatLab/hypso-package-new/hypso1_calibration/')
+
 from .HypsoBase import HypsoBase
 from hypso1_calibration import get_hypso1_calibration_files
-
-
 class Hypso1(HypsoBase):
 
     def __init__(self, path: Union[str, Path], verbose=False) -> None:

@@ -609,7 +609,8 @@ class HypsoBase:
         if self.nc_capture_config_attrs["frame_count"] == 956:
         #if self.nc_capture_config_attrs["frame_count"] == self.standard_dimensions["nominal"]:
             self.capture_type = "nominal"
-
+        elif self.nc_capture_config_attrs["frame_count"] == 106:
+            self.capture_type = "moon"
         elif self.image_height == 1092:
         #elif self.image_height == self.standard_dimensions["wide"]:
             self.capture_type = "wide"

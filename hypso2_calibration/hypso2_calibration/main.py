@@ -22,7 +22,7 @@ def get_hypso2_calibration_files(capture_type) -> None:
 
         case "nominal":
             # TODO nominal matrix should probably also be constructed for hypso-2
-            npz_file_radiometric = None
+            npz_file_radiometric = "h2_radiometric_calibration_matrix_nominal.npz"
             npz_file_smile = None
             npz_file_destriping = None
             npz_file_spectral = "spectral_bands_HYPSO-2.npz"
@@ -33,6 +33,12 @@ def get_hypso2_calibration_files(capture_type) -> None:
             npz_file_smile = None
             npz_file_destriping = None
             npz_file_spectral = "spectral_bands_HYPSO-2.npz"
+        
+        case "moon":
+            npz_file_radiometric = "h2_radiometric_calibration_matrix_moon.npz"
+            npz_file_smile = None
+            npz_file_destriping = None
+            npz_file_spectral = "h2_spectral_calibration_wavelengths_center_row.npz"
 
         case _:
             npz_file_radiometric = None

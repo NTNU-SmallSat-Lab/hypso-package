@@ -27,6 +27,12 @@ def get_hypso1_calibration_files(capture_type) -> None:
             npz_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.npz"
             npz_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.npz"
             npz_file_spectral = "spectral_bands_HYPSO-1_v1.npz"
+        
+        case "moon":
+            npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_moon.npz"
+            npz_file_smile = None
+            npz_file_destriping = None
+            npz_file_spectral = "spectral_calibration_wavelengths_center_row_HYPSO-1.npz"
 
         case _:
             npz_file_radiometric = None
