@@ -35,10 +35,10 @@ def check_star_tracker_orientation(adcs: dict):
         st_vel_angles[i] = compute_st_vel_angles(quat[i,:], vel[i,:])
 
     if st_vel_angles.mean() < 90.0:
-        # was pointing away from velocity direction --> don't flip 
+        # was pointing in velocity direction --> don't flip 
         flip = False
     else: 
-        # was pointing in velocity direction --> do flip
+        # was pointing away from velocity direction --> do flip
         flip = True
 
     return flip
