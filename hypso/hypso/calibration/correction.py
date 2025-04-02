@@ -75,7 +75,6 @@ def read_coeffs_from_file(coeff_path: str, coeff_type: str, x_start: int,  x_sto
                     coefficients = coefficients[key]
                 case _:
                     raise ValueError('Coefficient type ' + coeff_type + ' does not exist.')
-            print(coefficients.shape)
 
         elif coeff_path.suffix == ".csv": # TODO do we ever use this? should I account for it? 
             coefficients = np.genfromtxt(coeff_path, delimiter=',', dtype="float64")

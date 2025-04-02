@@ -707,17 +707,17 @@ class HypsoBase:
             self.rad_coeffs = None
 
         try:
-            self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file, 'spectral', self.x_start, self.x_stop, self.y_start, self.y_stop, self.bin_factor)
+            self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file, 'smile', self.x_start, self.x_stop, self.y_start, self.y_stop, self.bin_factor)
         except:
             self.smile_coeffs = None
 
         try:
-            self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file, 'smile', self.x_start, self.x_stop, self.y_start, self.y_stop, self.bin_factor)
+            self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file, 'destriping', self.x_start, self.x_stop, self.y_start, self.y_stop, self.bin_factor)
         except:
             self.destriping_coeffs = None
 
         try:
-            self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file, 'destriping', self.x_start, self.x_stop, self.y_start, self.y_stop, self.bin_factor)
+            self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file, 'spectral', self.x_start, self.x_stop, self.y_start, self.y_stop, self.bin_factor)
         except:
             self.spectral_coeffs = None
 
