@@ -67,8 +67,22 @@ def read_coeffs_from_file(coeff_path: str, coeff_type: str, x_start: int,  x_sto
 
                 case 'radiometric':
                     coefficients = coefficients[key][y_start:y_stop, x_start: x_stop].reshape(y_stop-y_start, -1, bin_factor).mean(axis=2).reshape(y_stop-y_start, -1) # reshape full coeff matrix based on values in config
+                    coefficients2 = np.load('/home/ariaa/smallSatLab/hypso-package-new/hypso2_calibration/hypso2_calibration/data/h2_radiometric_calibration_matrix_wide.npz')
+                    key = list(coefficients2.keys())[0]
+                    coefficients2 =  coefficients2[key]
+                    if not np.array_equal(coefficients, coefficients2):
+                        raise ValueError("[ERROR] Coefficients do not match.")
+                    else: 
+                        print('Sweeeeeet')
                 case 'spectral': 
                     coefficients = coefficients[key][x_start:x_stop].reshape(-1, bin_factor).mean(axis=1).reshape(-1)
+                    coefficients2 = np.load('/home/ariaa/smallSatLab/hypso-package-new/hypso2_calibration/hypso2_calibration/data/spectral_bands_HYPSO-2.npz')
+                    key = list(coefficients2.keys())[0]
+                    coefficients2 =  coefficients2[key]
+                    if not np.array_equal(coefficients, coefficients2):
+                        raise ValueError("[ERROR] Coefficients do not match.")
+                    else: 
+                        print('Sweeeeeet')
                 case 'smile': 
                     coefficients = coefficients[key]
                 case 'destriping':
