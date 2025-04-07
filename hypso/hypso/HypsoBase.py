@@ -814,50 +814,53 @@ class HypsoBase:
 
 
     def run_indirect_georeferencing(self, 
-                          points_file_path: Union[str, Path], 
+                          points_file_path: Union[str, Path] = None, 
+                          latitudes: np.ndarray = None,
+                          longitudes: np.ndarray = None,
                           image_mode: str = None, 
                           origin_mode: str = 'cube',
-                          flip: bool = None,
+                          flip: bool = False,
                           ) -> None:
         
-        if flip is None:
-            raise ValueError("The 'flip' variable must be provided. Can be found in processing-temp/geometric-meta-info.txt as 'Filp RGB:' ")
 
         if self.VERBOSE:
             print('[INFO] Running indirect georeferencing...')
         
-        points_file_path = Path(points_file_path).absolute()
 
-        if not origin_mode:
-            origin_mode = 'cube'
+        if latitudes is not None and longitudes is not None:
+            self.latitudes_indirect = latitudes
+            self.longitudes_indirect = longitudes    
 
-        gr = Georeferencer(filename=points_file_path,
-                                            cube_height=self.spatial_dimensions[0],
-                                            cube_width=self.spatial_dimensions[1],
-                                            image_mode=image_mode,
-                                            origin_mode=origin_mode)
-
-        if self.VERBOSE:
-            print("[INFO] Does check_star_tracker_orientation() indicate image flip?")
-            print(check_star_tracker_orientation(self.nc_adcs_vars))
-
-        #datacube_flipped = check_star_tracker_orientation(self.nc_adcs_vars)
-
-
-        # TODO: flip lat/lon matrices?
-        if not flip:
-            self.latitudes_indirect = gr.latitudes[:,::-1]
-            self.longitudes_indirect = gr.longitudes[:,::-1]
         else:
-            self.latitudes_indirect = gr.latitudes[:,:]
-            self.longitudes_indirect = gr.longitudes[:,:]
-        
+            points_file_path = Path(points_file_path).absolute()
+
+            if not origin_mode:
+                origin_mode = 'cube'
+
+            gr = Georeferencer(filename=points_file_path,
+                                                cube_height=self.spatial_dimensions[0],
+                                                cube_width=self.spatial_dimensions[1],
+                                                image_mode=image_mode,
+                                                origin_mode=origin_mode)
+
+            if self.VERBOSE:
+                print("[INFO] Does check_star_tracker_orientation() indicate image flip?")
+                print(check_star_tracker_orientation(self.nc_adcs_vars))
+
+            #datacube_flipped = check_star_tracker_orientation(self.nc_adcs_vars)
+
+            if flip:
+                self.latitudes_indirect = gr.latitudes[:,::-1]
+                self.longitudes_indirect = gr.longitudes[:,::-1]
+            else:
+                self.latitudes_indirect = gr.latitudes[:,:]
+                self.longitudes_indirect = gr.longitudes[:,:]
+    
         # Check if direct and indirect georeferencing have the same lat/lon orientations
         if (self.latitudes_indirect[-1,-1] - self.latitudes_indirect[0,-1]) * (self.latitudes[-1,-1] - self.latitudes[0,-1]) < 0:
-            ValueError("Latitude of indirect georeferencing is flipped with respect to direct georeferencing. Check if flip paramater is set correctly")
-        if (self.longitudes_indirect[-1,-1] - self.longitudes_indirect[0,-1]) * (self.longitudes[-1,-1] - self.longitudes[0,-1]) < 0:
-            ValueError("Latitude of indirect georeferencing is flipped with respect to direct georeferencing. Check if flip paramater is set correctly")
-    
+            raise ValueError("Latitude of indirect georeferencing is flipped with respect to direct georeferencing. Check if flip paramater is set correctly")
+        elif (self.longitudes_indirect[-1,-1] - self.longitudes_indirect[0,-1]) * (self.longitudes[-1,-1] - self.longitudes[0,-1]) < 0:
+            raise ValueError("Latitude of indirect georeferencing is flipped with respect to direct georeferencing. Check if flip paramater is set correctly")
 
     
         bbox, \
