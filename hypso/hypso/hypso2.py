@@ -2,6 +2,10 @@ from pathlib import Path
 from typing import Union
 import numpy as np
 
+# Development use only:
+# import sys
+# sys.path.insert(0, '/home/ariaa/smallSatLab/hypso-package-new/hypso2_calibration/')
+
 from .HypsoBase import HypsoBase
 from hypso2_calibration import get_hypso2_calibration_files
 
@@ -46,9 +50,7 @@ class Hypso2(HypsoBase):
 
     def _set_calibration_coeff_files(self) -> None:
 
-        capture_type = self.capture_type
-
-        calibration_files = get_hypso2_calibration_files(capture_type)
+        calibration_files = get_hypso2_calibration_files()
 
         self.rad_coeff_file = calibration_files['radiometric']
         self.smile_coeff_file = calibration_files['smile']

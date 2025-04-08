@@ -1,6 +1,7 @@
 from importlib.resources import files
+import numpy as np
 
-def get_hypso2_calibration_files(capture_type) -> None:
+def get_hypso2_calibration_files() -> None:
     """
     Get the absolute path for the calibration coefficients included in the package. This includes radiometric,
     smile and destriping correction.
@@ -8,37 +9,16 @@ def get_hypso2_calibration_files(capture_type) -> None:
     :return: None.
     """
 
-    match capture_type:
 
-        # TODO should one of the other two spectral calibration files be used?
-        # npz_file_spectral = "h2_spectral_calibration_matrix.npz"
-        # npz_file_spectral = "h2_spectral_calibration_wavelengths_center_row.npz"
-        
-        case "custom":
-            npz_file_radiometric = "h2_radiometric_calibration_matrix_full.npz"
-            npz_file_smile = None  
-            npz_file_destriping = None
-            npz_file_spectral = "spectral_bands_HYPSO-2.npz"
 
-        case "nominal":
-            # TODO nominal matrix should probably also be constructed for hypso-2
-            npz_file_radiometric = None
-            npz_file_smile = None
-            npz_file_destriping = None
-            npz_file_spectral = "spectral_bands_HYPSO-2.npz"
+    # TODO should one of the other two spectral calibration files be used?
+    # npz_file_spectral = "h2_spectral_calibration_matrix.npz"
+    # npz_file_spectral = "h2_spectral_calibration_wavelengths_center_row.npz"
 
-        case "wide":
-            # TODO the correctness of the wide radiometric matrix should be confirmed
-            npz_file_radiometric = "h2_radiometric_calibration_matrix_wide.npz"
-            npz_file_smile = None
-            npz_file_destriping = None
-            npz_file_spectral = "spectral_bands_HYPSO-2.npz"
-
-        case _:
-            npz_file_radiometric = None
-            npz_file_smile = None
-            npz_file_destriping = None
-            npz_file_spectral = None
+    npz_file_radiometric = "h2_radiometric_calibration_matrix_full.npz"
+    npz_file_smile = None  
+    npz_file_destriping = None
+    npz_file_spectral = "h2_spectral_calibration_wavelengths_center_row.npz"
 
     if npz_file_radiometric:
         rad_coeff_file = files('hypso2_calibration').joinpath(f'data/{npz_file_radiometric}')
