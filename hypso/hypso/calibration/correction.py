@@ -46,7 +46,7 @@ def crop_and_bin_matrix(matrix, x_start, x_stop, y_start, y_stop, bin_x=1, bin_y
 
     return new_matrix
 
-def read_coeffs_from_file(coeff_path: str) -> np.ndarray:
+def read_coeffs_from_file(coeff_path: str, coeff_type: str, x_start: int,  x_stop: int, y_start: int, y_stop: int, bin_factor: int) -> np.ndarray:
     """
     Read correction coefficients from file
 
@@ -61,9 +61,22 @@ def read_coeffs_from_file(coeff_path: str) -> np.ndarray:
         if coeff_path.suffix == ".npz":
             coefficients = np.load(coeff_path)
             key = list(coefficients.keys())[0]
-            coefficients = coefficients[key]
+            match coeff_type: 
+                 # TODO smile and destriping is not defined for HYPSO-2 yet, which is why we can keep the simple definitions
+                 # later this needs to be updated
 
-        elif coeff_path.suffix == ".csv":
+                case 'radiometric':
+                    coefficients = coefficients[key][y_start:y_stop, x_start: x_stop].reshape(y_stop-y_start, -1, bin_factor).mean(axis=2).reshape(y_stop-y_start, -1) # reshape full coeff matrix based on values in config
+                case 'spectral': 
+                    coefficients = coefficients[key][x_start:x_stop].reshape(-1, bin_factor).mean(axis=1).reshape(-1)
+                case 'smile': 
+                    coefficients = coefficients[key]
+                case 'destriping':
+                    coefficients = coefficients[key]
+                case _:
+                    raise ValueError('Coefficient type ' + coeff_type + ' does not exist.')
+
+        elif coeff_path.suffix == ".csv": # TODO do we ever use this? should I account for it? 
             coefficients = np.genfromtxt(coeff_path, delimiter=',', dtype="float64")
         else:
             coefficients = None
