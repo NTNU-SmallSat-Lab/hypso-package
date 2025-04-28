@@ -53,7 +53,7 @@ class Hypso1(HypsoBase):
 
         capture_type = self.capture_type
 
-        calibration_files = get_hypso1_calibration_files(capture_type)
+        calibration_files = get_hypso1_calibration_files(capture_type, new_coeff=True)
 
         self.rad_coeff_file = calibration_files['radiometric']
         self.smile_coeff_file = calibration_files['smile']
