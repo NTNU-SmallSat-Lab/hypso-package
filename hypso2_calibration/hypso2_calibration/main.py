@@ -1,8 +1,7 @@
 from importlib.resources import files
 import numpy as np
 
-# def get_hypso2_calibration_files(new_coeff=True) -> None:
-def get_hypso2_calibration_files() -> None:
+def get_hypso2_calibration_files(new_coeff=True) -> None:
     """
     Get the absolute path for the calibration coefficients included in the package. This includes radiometric,
     smile and destriping correction.
@@ -16,17 +15,17 @@ def get_hypso2_calibration_files() -> None:
     # npz_file_spectral = "h2_spectral_calibration_matrix.npz"
     # npz_file_spectral = "h2_spectral_calibration_wavelengths_center_row.npz"
 
-    # if new_coeff:
-    # npz_file_radiometric = "h2_radiometric_calibration_matrix_adjusted_weighted_final.npz"
-    npz_file_radiometric = "h2_rad_coeff_adjusted_full.npz"
-    npz_file_smile = None
-    npz_file_destriping = None
-    npz_file_spectral = "h2_spectral_coeff_adjusted_full.npz"
-    # else:
-    #     npz_file_radiometric = "h2_radiometric_calibration_matrix_full.npz"
-    #     npz_file_smile = None  
-    #     npz_file_destriping = None
-    #     npz_file_spectral = "h2_spectral_calibration_wavelengths_center_row.npz"
+    if new_coeff:
+        # npz_file_radiometric = "h2_radiometric_calibration_matrix_adjusted_weighted_final.npz"
+        npz_file_radiometric = "h2_rad_coeff_adjusted_full.npz"
+        npz_file_smile = None
+        npz_file_destriping = None
+        npz_file_spectral = "h2_spectral_coeff_adjusted_full.npz"
+    else:
+        npz_file_radiometric = "h2_radiometric_calibration_matrix_full.npz"
+        npz_file_smile = None  
+        npz_file_destriping = None
+        npz_file_spectral = "h2_spectral_calibration_wavelengths_center_row.npz"
 
     if npz_file_radiometric:
         rad_coeff_file = files('hypso2_calibration').joinpath(f'data/{npz_file_radiometric}')
