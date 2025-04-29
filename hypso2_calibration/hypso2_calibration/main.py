@@ -14,6 +14,7 @@ def get_hypso2_calibration_files(new_coeff=True) -> None:
     # TODO should one of the other two spectral calibration files be used?
     # npz_file_spectral = "h2_spectral_calibration_matrix.npz"
     # npz_file_spectral = "h2_spectral_calibration_wavelengths_center_row.npz"
+    
 
     if new_coeff:
         # npz_file_radiometric = "h2_radiometric_calibration_matrix_adjusted_weighted_final.npz"

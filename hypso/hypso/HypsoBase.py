@@ -409,7 +409,6 @@ class HypsoBase:
         match fields['product_level']:
             case "l1a":
                 if self.VERBOSE: print('[INFO] Loading L1a capture ' + self.capture_name)
-
                 load_func = load_l1a_nc
                 cube_name = "l1a_cube"
                 

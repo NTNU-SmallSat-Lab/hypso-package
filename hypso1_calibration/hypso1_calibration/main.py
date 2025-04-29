@@ -10,30 +10,38 @@ def get_hypso1_calibration_files(capture_type, new_coeff=True) -> None:
     if new_coeff:
         # npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1_adjusted_weighted_final.npz"
         npz_file_radiometric = "h1_rad_coeff_adjusted_full.npz"
-        npz_file_smile = None
-        npz_file_destriping = None
         npz_file_spectral = "h1_spectral_coeff_adjusted_full.npz"
-    else: 
         match capture_type:
 
             case "custom":
-                npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1.npz"
                 npz_file_smile = "spectral_calibration_matrix_HYPSO-1_full_v1.npz"  
                 npz_file_destriping = None
-                npz_file_spectral = "spectral_calibration_wavelengths_center_row_HYPSO-1.npz"
-
             case "nominal":
-                npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1.npz"
                 npz_file_smile = "smile_correction_matrix_HYPSO-1_nominal_v1.npz"
                 npz_file_destriping = "destriping_matrix_HYPSO-1_nominal_v1.npz"
-                npz_file_spectral = "spectral_calibration_wavelengths_center_row_HYPSO-1.npz"
-
             case "wide":
-                npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1.npz"
                 npz_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.npz"
                 npz_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.npz"
-                npz_file_spectral = "spectral_calibration_wavelengths_center_row_HYPSO-1.npz"
+            case _:
+                npz_file_radiometric = None
+                npz_file_smile = None
+                npz_file_destriping = None
+                npz_file_spectral = None
+    else: 
+        npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1.npz"
+        npz_file_spectral = "spectral_calibration_wavelengths_center_row_HYPSO-1.npz"
+        match capture_type:
 
+            case "custom":
+                npz_file_smile = "spectral_calibration_matrix_HYPSO-1_full_v1.npz"  
+                npz_file_destriping = None
+
+            case "nominal":
+                npz_file_smile = "smile_correction_matrix_HYPSO-1_nominal_v1.npz"
+                npz_file_destriping = "destriping_matrix_HYPSO-1_nominal_v1.npz"
+            case "wide":
+                npz_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.npz"
+                npz_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.npz"
             case _:
                 npz_file_radiometric = None
                 npz_file_smile = None
