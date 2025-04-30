@@ -8,8 +8,10 @@ def get_hypso1_calibration_files(capture_type, new_coeff=True) -> None:
     :return: None.
     """
     if new_coeff:
-        # npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1_adjusted_weighted_final.npz"
-        npz_file_radiometric = "h1_rad_coeff_adjusted_full.npz"
+        # without adjusting gain based on PACE
+        npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1_adjusted_weighted_final.npz"
+        # with adjusting gain based on PACE
+        # npz_file_radiometric = "h1_rad_coeff_adjusted_full.npz"
         npz_file_spectral = "h1_spectral_coeff_adjusted_full.npz"
         match capture_type:
 

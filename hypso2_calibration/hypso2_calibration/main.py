@@ -17,8 +17,10 @@ def get_hypso2_calibration_files(new_coeff=True) -> None:
     
 
     if new_coeff:
-        # npz_file_radiometric = "h2_radiometric_calibration_matrix_adjusted_weighted_final.npz"
-        npz_file_radiometric = "h2_rad_coeff_adjusted_full.npz"
+        # without adjusting gain based on PACE
+        npz_file_radiometric = "h2_radiometric_calibration_matrix_adjusted_weighted_final.npz"
+        # with adjusting gain based on PACE
+        # npz_file_radiometric = "h2_rad_coeff_adjusted_full.npz"
         npz_file_smile = None
         npz_file_destriping = None
         npz_file_spectral = "h2_spectral_coeff_adjusted_full.npz"
