@@ -1,7 +1,7 @@
 from importlib.resources import files
 import numpy as np
 
-def get_hypso2_calibration_files(new_coeff=True) -> None:
+def get_hypso2_calibration_files(new_coeff=False) -> None:
     """
     Get the absolute path for the calibration coefficients included in the package. This includes radiometric,
     smile and destriping correction.
@@ -17,6 +17,7 @@ def get_hypso2_calibration_files(new_coeff=True) -> None:
     
 
     if new_coeff:
+        print("[INFO] - Using new calibration coefficients for HYPSO-2.")
         # without adjusting gain based on PACE
         npz_file_radiometric = "h2_radiometric_calibration_matrix_adjusted_weighted_final.npz"
         # with adjusting gain based on PACE
@@ -25,6 +26,7 @@ def get_hypso2_calibration_files(new_coeff=True) -> None:
         npz_file_destriping = None
         npz_file_spectral = "h2_spectral_coeff_adjusted_full.npz"
     else:
+        print("[INFO] - Using original calibration coefficients for HYPSO-2.")
         npz_file_radiometric = "h2_radiometric_calibration_matrix_full.npz"
         npz_file_smile = "smile_correction_matrix_HYPSO-2_full.npz"  
         npz_file_destriping = None
