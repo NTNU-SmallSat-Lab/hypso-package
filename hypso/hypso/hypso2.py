@@ -1,11 +1,12 @@
 from pathlib import Path
 from typing import Union
 import numpy as np
+import copy
 
 # Development use only:
 import sys
-# sys.path.insert(0, '/home/ariaa/smallSatLab/hypso-package-new/hypso2_calibration/')
-sys.path.append('../../hypso-package-new/hypso2_calibration/')
+sys.path.insert(0, '/home/ariaa/smallSatLab/hypso-package-new/hypso2_calibration/')
+# sys.path.append('../../hypso-package-new/hypso2_calibration/')
 
 from .HypsoBase import HypsoBase
 from hypso2_calibration import get_hypso2_calibration_files
@@ -29,17 +30,9 @@ class Hypso2(HypsoBase):
         self.sensor = 'hypso2_hsi'
         self.VERBOSE = verbose
 
-        self.fwhm = np.array([5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46,
-                              5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46,
-                              5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 3.34,
-                              3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34,
-                              3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34,
-                              3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34,
-                              3.34, 3.34, 3.34, 3.34, 3.29, 3.29, 3.29, 3.29, 3.29, 3.29, 3.29,
-                              3.29, 3.29, 3.29, 3.29, 3.29, 3.29, 3.29, 3.29, 3.29, 3.29, 3.29,
-                              3.29, 3.29, 3.29, 3.29, 3.29, 3.32, 3.32, 3.32, 3.32, 3.32, 3.32,
-                              3.42, 3.42, 3.42, 3.42, 3.42, 3.42, 3.42, 3.54, 3.54, 3.54, 3.54,
-                              3.58, 3.58, 3.58, 3.59, 3.59, 3.59, 3.59, 3.59, 3.59, 3.59])
+        self.srf_wl =   [435.84 ,546.07 ,696.54 ,706.72 ,738.4 ,751.46 ,763.51 ,772.38 ,811.53 ,826.45 ,842.46 ,871.68 ,912 ]
+        self.srf_fwhm = [5.46   ,3.34   ,3.29   ,3.32   ,3.42  ,3.54   ,3.58   ,3.59   ,4.16   ,4.06   ,4.66   ,4.47   ,5.06]
+
 
         self._load_capture_file(path=path)
 

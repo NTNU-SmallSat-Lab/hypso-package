@@ -18,13 +18,18 @@ def get_hypso2_calibration_files(new_coeff=False) -> None:
 
     if new_coeff:
         print("[INFO] - Using new calibration coefficients for HYPSO-2.")
-        # without adjusting gain based on PACE
-        npz_file_radiometric = "h2_radiometric_calibration_matrix_adjusted_weighted_final.npz"
-        # with adjusting gain based on PACE
+        # Moon calibrated, without adjusting gain based on PACE 
+        # npz_file_radiometric = "h2_radiometric_calibration_matrix_adjusted_weighted_final.npz"
+        # Moon calibrated, with adjusting gain based on PACE
         # npz_file_radiometric = "h2_rad_coeff_adjusted_full.npz"
+        # Radiometric coefficients only moved
+        npz_file_radiometric = "h2_radiometric_calibration_matrix_full_moved.npz"
         npz_file_smile = "smile_correction_matrix_HYPSO-2_full.npz"
         npz_file_destriping = None
-        npz_file_spectral = "h2_spectral_coeff_adjusted_full.npz"
+        # Adjusted based on moon dip I think
+        # npz_file_spectral = "h2_spectral_coeff_adjusted_full.npz"
+        # Adjusted using polynomial fit, using whole spectrum, static offset
+        npz_file_spectral = "spectral_array_calibrated_poly_full.npz"
     else:
         print("[INFO] - Using original calibration coefficients for HYPSO-2.")
         npz_file_radiometric = "h2_radiometric_calibration_matrix_full.npz"
