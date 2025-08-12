@@ -535,7 +535,7 @@ class HypsoBase:
 
         if not hasattr(self, 'fwhm'):
             if 'fwhm' in self.nc_cube_attrs.keys():
-                self.wavelengths = self.nc_cube_attrs['fwhm']
+                self.fwhm = self.nc_cube_attrs['fwhm']
             else:
                 self.fwhm = [self.AVERAGE_FWHM] * self.bands
 
