@@ -167,7 +167,6 @@ def compute_toa_reflectance_thuillier_2002(srf,
         resamp_srf = np.interp(new_solar_x, single_wl, single_srf)
         weights_srf = resamp_srf / np.sum(resamp_srf)
         ESUN = np.sum(solar_df['mW/m2/nm'].values * weights_srf)  # units matche HYPSO from device.py
-        #print(ESUN)
         ESUN_hypso.append(ESUN)
         # Earth-Sun distance (from day of year) using julian date
         # http://physics.stackexchange.com/questions/177949/earth-sun-distance-on-a-given-day-of-the-year
