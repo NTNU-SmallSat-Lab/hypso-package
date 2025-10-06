@@ -41,14 +41,14 @@ def get_spectral_response_function(wavelengths, fwhm: np.array) -> None:
         # Make symmetric
         if (len(wavelengths) - i) <= len(lower_wl):
             # Close to highest wavelength, skip symmetry 
-            print(i)
-            print("within upper limit")
+            #print(i)
+            #print("within upper limit")
             len_diff = len(lower_wl) - len(upper_wl)
             pass
         elif i < len(upper_wl):
             # Close to lowest wavelength, skip symmetry 
-            print(i)
-            print("within lower limit")
+            #print(i)
+            #print("within lower limit")
             len_diff = len(upper_wl) - len(lower_wl)
             pass
         else:
@@ -81,30 +81,15 @@ def get_spectral_response_function(wavelengths, fwhm: np.array) -> None:
         M = len(srf_single)
         half_N = N // 2
 
-
-        #start_main = max(i - half_N, 0)
-        #end_main = min(i + half_N + 1, M)
-
-        #start_kernel = start_main - (i - half_N)
-        #end_kernel = start_kernel + (end_main - start_main)
-
-        #start_kernel = max(half_N - i, 0)
-        #end_kernel = min(M - i, N)
-
         if i < half_N:
             start_idx = half_N - i
         else:
             start_idx = 0
 
-
         if (M - i) <= half_N:
             end_idx = half_N + (M - i)
         else:
             end_idx = N
-
-        print(start_idx)
-        print(end_idx)
-        print(good_idx)
 
         gaussian_srf_subset = gaussian_srf[start_idx:end_idx]
 
