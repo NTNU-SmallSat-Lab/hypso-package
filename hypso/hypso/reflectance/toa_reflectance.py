@@ -108,8 +108,8 @@ def compute_toa_reflectance(srf,
 
     #toa_reflectance = -toa_reflectance
 
-    with open('esun_hypso.pkl', 'wb') as file:
-        pickle.dump(np.array(ESUN_hypso), file)
+    #with open('esun_hypso.pkl', 'wb') as file:
+    #    pickle.dump(np.array(ESUN_hypso), file)
 
     return toa_reflectance
 
@@ -183,8 +183,8 @@ def compute_toa_reflectance_thuillier_2002(srf,
 
     #toa_reflectance = -toa_reflectance
 
-    import pickle
-    with open('esun_hypso_thuillier.pkl', 'wb') as file:
-        pickle.dump(np.array(ESUN_hypso), file)
+    #import pickle
+    #with open('esun_hypso_thuillier.pkl', 'wb') as file:
+    #    pickle.dump(np.array(ESUN_hypso), file)
 
     return toa_reflectance
