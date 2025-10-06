@@ -42,7 +42,7 @@ class Hypso2(HypsoBase):
 
     def _set_calibration_coeff_files(self) -> None:
 
-        calibration_files = get_hypso2_calibration_files(new_coeff=False)
+        calibration_files = get_hypso2_calibration_files(new_coeff=True)
 
         self.rad_coeff_file = calibration_files['radiometric']
         self.smile_coeff_file = calibration_files['smile']
