@@ -755,6 +755,7 @@ class HypsoBase:
 
 
         return compute_toa_reflectance(srf=self.srf,
+                                       wavelengths=self.wavelengths,
                                         toa_radiance=toa_radiance,
                                         iso_time=self.iso_time,
                                         solar_zenith_angles=solar_zenith_angles,
