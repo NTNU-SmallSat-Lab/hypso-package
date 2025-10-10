@@ -661,7 +661,9 @@ class HypsoBase:
                                                 image_height=self.image_height,
                                                 image_width=self.image_width,
                                                 frame_count=self.frame_count,
-                                                rad_coeffs=self.rad_coeffs)
+                                                bin_factor=self.bin_factor,
+                                                rad_coeffs=self.rad_coeffs
+                                                )
 
         if self.smile_coeffs is not None:
             if smile:
