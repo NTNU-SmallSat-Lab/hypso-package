@@ -47,6 +47,7 @@ def get_spectral_response_function(wavelengths, fwhm: np.array) -> None:
         else:
             # Close to neither the highest nor lowest wavelength, enforce symmetry
             # correcting for one beign one element longer than the other.
+            # correcting for one beign one element longer than the other.
             while len(lower_wl) > len(upper_wl):
                 lower_wl.pop(0)
             while len(upper_wl) > len(lower_wl):
@@ -60,6 +61,9 @@ def get_spectral_response_function(wavelengths, fwhm: np.array) -> None:
         if len(srf_wl) == 1:
             gx = [0]
         else:
+            # len_diff is added to make up for the missing elements because of clipping
+            # at the ends mentioned above. this replaces the clipped elements and makes sure
+            # gaussian has correct width
             # len_diff is added to make up for the missing elements because of clipping
             # at the ends mentioned above. this replaces the clipped elements and makes sure
             # gaussian has correct width
