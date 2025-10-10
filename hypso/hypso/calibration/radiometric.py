@@ -7,6 +7,7 @@ def run_radiometric_calibration(cube: np.ndarray,
                                 image_height: int,
                                 image_width: int,
                                 frame_count: int,
+                                bin_factor: int,
                                 rad_coeffs: np.ndarray) -> np.ndarray:
     """
     Radiometrically Calibrate the Raw Cube (digital counts) to Radiance
@@ -37,8 +38,8 @@ def run_radiometric_calibration(cube: np.ndarray,
         cube_rad_calibrated[i, :, :] = frame_rad_calibrated
 
 
-    # TODO: The factor by 10 is to fix a bug in which the coeff have a factor of 10
-    cube_rad_calibrated = cube_rad_calibrated / 10
+    # Onboard pixels are only summed, not divied, thus this division is needed 
+    cube_rad_calibrated = cube_rad_calibrated / bin_factor
 
 
     return cube_rad_calibrated
