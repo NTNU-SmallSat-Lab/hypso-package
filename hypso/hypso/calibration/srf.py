@@ -29,7 +29,7 @@ def get_spectral_response_function(wavelengths, fwhm: np.array) -> None:
         # if the center_w is closer to one end than 3Sigma then one of the arrays will be shorter 
         # than the other. This needs to be corrected for so that the center is still kept
         # when making the gaussian, therefore len_diff is found.
-        for j, ele in enumerate(wavelengths):
+        for ele in wavelengths:
             if start_lambda_nm < ele < center_lambda_nm:
                 lower_wl.append(ele)
             elif center_lambda_nm < ele < soft_end_lambda_nm:
@@ -39,14 +39,10 @@ def get_spectral_response_function(wavelengths, fwhm: np.array) -> None:
         if (len(wavelengths) - i) <= len(lower_wl):
             # Close to highest wavelength, find how many wavelengths missed because 
             # 3 Sigma is out of wavelength bounds, skip symmetry 
-            #print(i)
-            #print("within upper limit")
             len_diff = len(lower_wl) - len(upper_wl)
         elif i < len(upper_wl):
             # Close to lowest wavelength, find how many wavelengths missed because 
             # 3 Sigma is out of wavelength bounds, skip symmetry 
-            #print(i)
-            #print("within lower limit")
             len_diff = len(upper_wl) - len(lower_wl)
         else:
             # Close to neither the highest nor lowest wavelength, enforce symmetry
@@ -58,9 +54,6 @@ def get_spectral_response_function(wavelengths, fwhm: np.array) -> None:
             len_diff = 0
 
         srf_wl = lower_wl + srf_wl + upper_wl
-        # here a mask is made that tells us which wavelength go into the srf funciton
-        # of the wavelength in focus
-        good_idx = [(True if ele in srf_wl else False) for ele in wavelengths]
 
         # Delta based on Hypso Sampling (Wavelengths)
         gx = None
@@ -73,33 +66,6 @@ def get_spectral_response_function(wavelengths, fwhm: np.array) -> None:
             gx = np.linspace(-3 * sigma_nm[i], 3 * sigma_nm[i], len(srf_wl) + len_diff)
         gaussian_srf = np.exp(
             -(gx / sigma_nm[i]) ** 2 / 2)  # Not divided by the sum, because we want peak to 1.0
-
-        # Get final wavelength and SRF
-        srf_wl_single = wavelengths
-        srf_single = np.zeros_like(srf_wl_single)
-        
-
-        # here the code checks if the gaussian function wants values that are lower or higher than the
-        # highest and lowest wavelength of hypso. If it does the function is clipped to only 
-        # be defined where hypso has vales 
-        N = len(gaussian_srf)
-        M = len(srf_single)
-        half_N = N // 2
-
-        if i < half_N:
-            start_idx = half_N - i
-        else:
-            start_idx = 0
-
-        if (M - i) <= half_N:
-            end_idx = half_N + (M - i)
-        else:
-            end_idx = N
-
-        gaussian_srf_subset = gaussian_srf[start_idx:end_idx]
-
-        # just put the gaussian on to the right wavelength placement on the wavelength axis.
-        srf_single[good_idx] = gaussian_srf_subset
 
         srf.append(gaussian_srf)
 
