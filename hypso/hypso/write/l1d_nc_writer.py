@@ -10,7 +10,7 @@ def write_l1d_nc_file(satobj, overwrite: bool = False, **kwargs) -> None:
     if Path(satobj.l1d_nc_file).is_file() and not overwrite:
 
         if satobj.VERBOSE:
-            print("[INFO] L1c NetCDF file has already been generated. Skipping.")
+            print("[INFO] L1d NetCDF file has already been generated. Skipping.")
 
         return None
 
