@@ -3,8 +3,8 @@ from typing import Union
 import numpy as np
 
 # Development use only:
-# import sys
-# sys.path.insert(0, '/home/ariaa/smallSatLab/hypso-package-new/hypso2_calibration/')
+import sys
+sys.path.insert(0, '/home/ariaa/smallSatLab/hypso-package-new/hypso2_calibration/')
 
 from .HypsoBase import HypsoBase
 from hypso2_calibration import get_hypso2_calibration_files

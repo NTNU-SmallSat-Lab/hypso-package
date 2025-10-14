@@ -22,7 +22,7 @@ h1_core_path = os.path.join(dir_path, 'h1/lacrau_2024-12-26T10-24-27Z/lacrau_202
 # HYPSO-2 Capture
 h2_core_path = os.path.join(dir_path, 'h2/lacrau_2024-12-26T11-15-54Z/lacrau_2024-12-26T11-15-54Z')
 
-level = 'l1d' # what processing level to start from
+level = 'l1a' # what processing level to start from
 
 # %% Load HYPSO-1 Capture
 # Load HYPSO-1 Capture
@@ -43,6 +43,26 @@ if level in ['l1a', 'l1b', 'l1c']:
     write_l1d_nc_file(satobj=satobj_h1, overwrite=True)
 satobj_h1_original = Hypso1(path=h1_core_path + '-l1d_original.nc', verbose=True)
 satobj_h1 = Hypso1(path=h1_core_path + '-l1d.nc', verbose=True)
+
+# %% Load HYPSO-2 Capture
+# Load HYPSO-1 Capture
+if level == 'l1a':
+    # Generate L1b TOA radiance product
+    satobj_h2 = Hypso2(path=h2_core_path + '-l1a.nc', verbose=True)
+    satobj_h2.generate_l1b_cube()
+    write_l1b_nc_file(satobj=satobj_h2, overwrite=True)
+if level in ['l1a','l1b']:    
+    # Generate L1c geolocated TOA radiance product
+    satobj_h2 = Hypso2(path=h2_core_path + '-l1b.nc', verbose=True)
+    satobj_h2.generate_l1c_cube()
+    write_l1c_nc_file(satobj=satobj_h2, overwrite=True)
+if level in ['l1a', 'l1b', 'l1c']:
+    # Generate L1d TOA reflectance product
+    satobj_h2 = Hypso2(path=h2_core_path + '-l1c.nc', verbose=True)
+    satobj_h2.generate_l1d_cube()
+    write_l1d_nc_file(satobj=satobj_h2, overwrite=True)
+satobj_h2_original = Hypso2(path=h2_core_path + '-l1d_original.nc', verbose=True)
+satobj_h2 = Hypso2(path=h2_core_path + '-l1d.nc', verbose=True)
 
 
 # %% Access datacubes
