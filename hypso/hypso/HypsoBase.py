@@ -1048,6 +1048,7 @@ class HypsoBase:
     def generate_l1d_cube(self, use_indirect_georef=False) -> None:
 
         try:
+            self._get_fwhm()
             self.l1d_cube = self._run_toa_reflectance(use_indirect_georef=use_indirect_georef)
 
         except:
@@ -1057,40 +1058,13 @@ class HypsoBase:
         return None
 
 
-    '''
-    def _get_fwhm(self, wavelengths) -> None:
-        
-        self.fwhm = [8.2] * self.bands
+    def _get_fwhm(self) -> None:
+            
+            fwhm_per_band = []
+            for band in self.wavelengths: 
+                idx = np.argmin(np.abs(band - self.srf_wl))
+                fwhm_per_band.append(self.srf_fwhm[idx])
 
-        fwhm = copy.deepcopy(self.wavelengths)
+            self.fwhm = fwhm_per_band
 
-        start_wl = self.wavelengths[0]
-        end_wl = self.wavelengths[-1]
-
-        for i in range(0,len(fwhm)):
-
-            if start_wl <= fwhm[i] < 430:
-                fwhm[i] = 9.6
-            elif 430 <= fwhm[i] < 480:
-                fwhm[i] = 9.6
-            elif 480 <= fwhm[i] < 530:
-                fwhm[i] = 6.6
-            elif 530 <= fwhm[i] < 580:
-                fwhm[i] = 8.2
-            elif 580 <= fwhm[i] < 630:
-                fwhm[i] = 5.8
-            elif 630 <= fwhm[i] < 680:
-                fwhm[i] = 5.8
-            elif 680 <= fwhm[i] < 730:
-                fwhm[i] = 4.1
-            elif 730 <= fwhm[i] < 780:
-                fwhm[i] = 4.0
-            elif 780 <= fwhm[i] < end_wl:
-                fwhm[i] = 4.0
-            else:
-                fwhm[i] = 8.2
-
-        self.fwhm = fwhm
-
-        return None
-    '''
+            return None
