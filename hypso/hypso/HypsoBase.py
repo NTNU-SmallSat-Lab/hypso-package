@@ -860,10 +860,11 @@ class HypsoBase:
                 self.longitudes_indirect = gr.longitudes[:,:]
     
         # Check if direct and indirect georeferencing have the same lat/lon orientations
-        if (self.latitudes_indirect[-1,-1] - self.latitudes_indirect[-1,0]) * (self.latitudes[-1,-1] - self.latitudes[-1,0]) < 0:
+        if (self.latitudes_indirect[-1,-1] - self.latitudes_indirect[-1,0]) * (latitudes[-1,-1] - latitudes[-1,0]) < 0:
             raise ValueError("Latitude of indirect georeferencing is flipped with respect to direct georeferencing. Check if flip paramater is set correctly")
-        elif (self.longitudes_indirect[-1,-1] - self.longitudes_indirect[-1,0]) * (self.longitudes[-1,-1] - self.longitudes[-1,0]) < 0:
+        elif (self.longitudes_indirect[-1,-1] - self.longitudes_indirect[-1,0]) * (longitudes[-1,-1] - longitudes[-1,0]) < 0:
             raise ValueError("Longitude of indirect georeferencing is flipped with respect to direct georeferencing. Check if flip paramater is set correctly")
+
 
     
         bbox, \
