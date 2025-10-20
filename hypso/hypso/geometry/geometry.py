@@ -96,8 +96,9 @@ def interpolate_at_frame(adcs_timestamps: np.ndarray, position: np.ndarray,
 
     frame_count = lines_timestamps.shape[0]
 
-    if verbose:
-        print('[INFO] ADCS samples:', adcs_timestamps.shape[0])
+    # was used for debugging
+    # if verbose:
+    #     print('[INFO] ADCS samples:', adcs_timestamps.shape[0])
 
     # Workaround for making proper timestamps based on framerate and exposure time
     if framerate > 0.0:
@@ -116,9 +117,10 @@ def interpolate_at_frame(adcs_timestamps: np.ndarray, position: np.ndarray,
     frame_ts_start = lines_timestamps[0]
     frame_ts_end = lines_timestamps[-1]
 
-    if verbose:
-        print(f'[INFO] ADCS time range: {adcs_ts_start:17.6f} to {adcs_ts_end:17.6f}')
-        print(f'[INFO] Frame time range: {frame_ts_start:17.6f} to {frame_ts_end:17.6f}')
+    # was used for debugging
+    # if verbose:
+    #     print(f'[INFO] ADCS time range: {adcs_ts_start:17.6f} to {adcs_ts_end:17.6f}')
+    #     print(f'[INFO] Frame time range: {frame_ts_start:17.6f} to {frame_ts_end:17.6f}')
 
     # The ADCS time range needs to completely include the frames/lines time range
     if frame_ts_start < adcs_ts_start:

@@ -105,6 +105,7 @@ class HypsoBase:
         # Constants
         self.UNIX_TIME_OFFSET = 20 # TODO: Verify offset validity. Sivert had 20 here
         self.AVERAGE_FWHM = 8.2 #3.33
+        self.UNBINNED_BAND_COUNT = 1936
 
         # DEBUG
         self.DEBUG = False
@@ -459,7 +460,7 @@ class HypsoBase:
         setattr(self, "nc_logfiles_attrs", nc_metadata_attrs["logfiles"])
         setattr(self, "nc_temperature_attrs", nc_metadata_attrs["temperature"])
         setattr(self, "nc_timing_attrs", nc_metadata_attrs["timing"])
- 
+     
         setattr(self, "nc_navigation_vars", nc_navigation_vars)
         setattr(self, "nc_navigation_attrs", nc_navigation_attrs)
 
@@ -523,10 +524,12 @@ class HypsoBase:
         # Calibration related atrributes
         self.rad_coeffs = self.nc_corrections_vars['rad_matrix']
 
+
         try:
             self.spectral_coeffs = self.nc_corrections_vars['spec_coeffs']
         except KeyError:
             self.spectral_coeffs = self.nc_corrections_vars['wavelengths']
+
 
         if not hasattr(self, 'wavelengths'):
             if ('wavelengths' in self.nc_cube_attrs.keys()):
@@ -538,9 +541,8 @@ class HypsoBase:
             if 'fwhm' in self.nc_cube_attrs.keys():
                 self.fwhm = self.nc_cube_attrs['fwhm']
             else:
-                self.fwhm = [self.AVERAGE_FWHM] * self.bands
-
-
+                self.fwhm = [self.AVERAGE_FWHM] * self.UNBINNED_BAND_COUNT
+        
 
         # Navigation atrributes
         for key, value in self.nc_navigation_vars.items():
@@ -690,8 +692,6 @@ class HypsoBase:
 
                 self.wavelengths = self.spectral_coeffs
 
-        #self.srf = get_spectral_response_function(wavelengths=self.wavelengths, fwhm=self.fwhm)
-
         return calibrated_cube
 
 
@@ -723,14 +723,18 @@ class HypsoBase:
         except:
             self.spectral_coeffs = None
 
+        # try: 
+        #     self.spectral_coeffs_unbinned = read_coeffs_from_file(self.spectral_coeff_file, 'spectral', self.x_start, self.x_stop, self.y_start, self.y_stop, bin_factor=1)
+        # except:
+        #     self.spectral_coeffs_unbinned = None
+
         return None
     
 
-    # def _run_toa_reflectance(self) -> np.ndarray:
     def _run_toa_reflectance(self, use_indirect_georef=False) -> np.ndarray:
 
         if not hasattr(self, "srf"):
-            self.srf = get_spectral_response_function(wavelengths=self.wavelengths, fwhm=self.fwhm)
+            self.srf = get_spectral_response_function(wavelengths_unbinned=self.wavelengths_unbinned, fwhm_unbinned=self.fwhm, bin_factor=self.bin_factor, x_start=self.x_start, x_stop=self.x_stop)
 
         if self.l1b_cube is not None:
             toa_radiance = self.l1b_cube
@@ -1049,10 +1053,12 @@ class HypsoBase:
 
         try:
             self._get_fwhm()
+            self._get_wavelengths_unbinned()
             self.l1d_cube = self._run_toa_reflectance(use_indirect_georef=use_indirect_georef)
 
         except:
             self.generate_l1c_cube()
+            self._get_wavelengths_unbinned()
             self.l1d_cube = self._run_toa_reflectance(use_indirect_georef=use_indirect_georef)
 
         return None
@@ -1060,11 +1066,23 @@ class HypsoBase:
 
     def _get_fwhm(self) -> None:
             
-            fwhm_per_band = []
-            for band in self.wavelengths: 
-                idx = np.argmin(np.abs(band - self.srf_wl))
-                fwhm_per_band.append(self.srf_fwhm[idx])
+        # get fwhm for unbinned wavelengths
+        fwhm_per_band = []
+        
+        for band in self.spectral_coeffs_unbinned: 
+            idx = np.argmin(np.abs(band - self.srf_wl))
+            fwhm_per_band.append(self.srf_fwhm[idx])
 
-            self.fwhm = fwhm_per_band
+        # note that this is the FWHM for the binned wavelengths
+        self.fwhm = fwhm_per_band
 
-            return None
+        return None
+    
+    def _get_wavelengths_unbinned(self) -> None:
+        
+        # get wavelengths for unbinned wavelengths
+        self._set_calibration_coeff_files()
+        self._load_calibration_coeff_files()
+        self.wavelengths_unbinned = read_coeffs_from_file(self.spectral_coeff_file, 'spectral', self.x_start, self.x_stop, self.y_start, self.y_stop, bin_factor=1)
+
+        return None

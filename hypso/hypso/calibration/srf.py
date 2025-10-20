@@ -1,23 +1,26 @@
 import numpy as np
 
 # for development use only:
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
 
 # Updated function to process fwhm vector of length number of bands
-def get_spectral_response_function(wavelengths_unbinned, bin_factor, fwhm_unbinned: np.array) -> None:
+def get_spectral_response_function(wavelengths_unbinned, fwhm_unbinned: np.array, bin_factor, x_start, x_stop) -> None:
     """
-    Get Spectral Response Functions (SRF) from HYPSO for each of the 120 bands. Estimated FWHM is
+    Get Spectral Response Functions (SRF) from HYPSO for each of the bands before binning. Estimated FWHM is
     used to estimate Sigma for an assumed gaussian distribution of each SRF per band.
 
     :return: None.
     """
+    wavelengths_unbinned_cropped = wavelengths_unbinned[x_start:x_stop]
 
     fwhm_nm = fwhm_unbinned
     sigma_nm = fwhm_nm / (2 * np.sqrt(2 * np.log(2)))
 
     srf = []
-    for i, band in enumerate(wavelengths_unbinned):
+    for i, band in enumerate(wavelengths_unbinned_cropped):
 
         center_lambda_nm = band
         start_lambda_nm = np.round(center_lambda_nm - (3 * sigma_nm[i]), 4)
@@ -32,14 +35,14 @@ def get_spectral_response_function(wavelengths_unbinned, bin_factor, fwhm_unbinn
         # if the center_w is closer to one end than 3Sigma then one of the arrays will be shorter 
         # than the other. This needs to be corrected for so that the center is still kept
         # when making the gaussian, therefore len_diff is found.
-        for ele in wavelengths_unbinned:
+        for ele in wavelengths_unbinned_cropped:
             if start_lambda_nm < ele < center_lambda_nm:
                 lower_wl.append(ele)
             elif center_lambda_nm < ele < soft_end_lambda_nm:
                 upper_wl.append(ele)
 
         # Make symmetric
-        if (len(wavelengths_unbinned) - i) <= len(lower_wl):
+        if (len(wavelengths_unbinned_cropped) - i) <= len(lower_wl):
             # Close to highest wavelength, find how many wavelengths missed because 
             # 3 Sigma is out of wavelength bounds, skip symmetry 
             len_diff = len(lower_wl) - len(upper_wl)
@@ -76,11 +79,14 @@ def get_spectral_response_function(wavelengths_unbinned, bin_factor, fwhm_unbinn
 
         srf.append(gaussian_srf)
     
+    #TODO this is not correct way of binning, if binning is to be done correctly the fwhm
+    # values need to be put on the wavelength axis first, then the these values can be binned 
     # bin the srf functions
     if bin_factor > 1:
         plt.figure()
         plt.plot(srf[0])
         plt.show()
+        # bin and crop the srf array to match the binned wavelengths
         srf = [np.mean(np.array(srf_i).reshape(-1, bin_factor), axis=1) for srf_i in srf]
         plt.figure()
         plt.plot(srf[0])
