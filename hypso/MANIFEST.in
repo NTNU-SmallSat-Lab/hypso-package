@@ -13,8 +13,9 @@ recursive-include hypso/atmospheric/ *
 recursive-include hypso/calibration/data/ *
 recursive-include hypso/chlorophyll_estimation/data/ *
 recursive-include hypso/classification/WaterDetect/ *
-recursive-include hypso/utils/data/ *
+recursive-include hypso/utils/data/ * 
 
 recursive-exclude ./coefficients *
 recursive-exclude ./demo *
 recursive-exclude ./testing *
+

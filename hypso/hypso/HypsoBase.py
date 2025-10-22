@@ -11,8 +11,7 @@ from trollsift import Parser
 from hypso.calibration import read_coeffs_from_file, \
                               run_radiometric_calibration, \
                               run_destriping_correction, \
-                              run_smile_correction, \
-                              get_spectral_response_function
+                              run_smile_correction
 
 
 from hypso.geometry import interpolate_at_frame_nc, \
@@ -661,7 +660,9 @@ class HypsoBase:
                                                 image_height=self.image_height,
                                                 image_width=self.image_width,
                                                 frame_count=self.frame_count,
-                                                rad_coeffs=self.rad_coeffs)
+                                                bin_factor=self.bin_factor,
+                                                rad_coeffs=self.rad_coeffs
+                                                )
 
         if self.smile_coeffs is not None:
             if smile:
@@ -687,8 +688,6 @@ class HypsoBase:
                     print("[INFO] Running spectral correction...")
 
                 self.wavelengths = self.spectral_coeffs
-
-        #self.srf = get_spectral_response_function(wavelengths=self.wavelengths, fwhm=self.fwhm)
 
         return calibrated_cube
 
@@ -724,11 +723,7 @@ class HypsoBase:
         return None
     
 
-    # def _run_toa_reflectance(self) -> np.ndarray:
     def _run_toa_reflectance(self, use_indirect_georef=False) -> np.ndarray:
-
-        if not hasattr(self, "srf"):
-            self.srf = get_spectral_response_function(wavelengths=self.wavelengths, fwhm=self.fwhm)
 
         if self.l1b_cube is not None:
             toa_radiance = self.l1b_cube
@@ -754,12 +749,14 @@ class HypsoBase:
             solar_zenith_angles=self.solar_zenith_angles
 
 
-        return compute_toa_reflectance(srf=self.srf,
-                                        toa_radiance=toa_radiance,
-                                        iso_time=self.iso_time,
-                                        solar_zenith_angles=solar_zenith_angles,
-                                        )
+        toa_reflectance, srf, esun = compute_toa_reflectance(sensor_wavelengths=self.wavelengths,
+                                                             sensor_fwhm=self.fwhm,
+                                                             toa_radiance=toa_radiance,
+                                                             iso_time=self.iso_time,
+                                                             solar_zenith_angles=solar_zenith_angles
+                                                            )
 
+        return toa_reflectance, srf, esun
 
     def run_direct_georeferencing(self) -> None: 
 
@@ -855,11 +852,13 @@ class HypsoBase:
             else:
                 self.latitudes_indirect = gr.latitudes[:,:]
                 self.longitudes_indirect = gr.longitudes[:,:]
-                
-        if (self.latitudes_indirect[-1,-1] - self.latitudes_indirect[-1,0]) * (self.latitudes[-1,-1] - self.latitudes[-1,0]) < 0:
+    
+        # Check if direct and indirect georeferencing have the same lat/lon orientations
+        if (self.latitudes_indirect[-1,-1] - self.latitudes_indirect[-1,0]) * (latitudes[-1,-1] - latitudes[-1,0]) < 0:
             raise ValueError("Latitude of indirect georeferencing is flipped with respect to direct georeferencing. Check if flip paramater is set correctly")
-        elif (self.longitudes_indirect[-1,-1] - self.longitudes_indirect[-1,0]) * (self.longitudes[-1,-1] - self.longitudes[-1,0]) < 0:
+        elif (self.longitudes_indirect[-1,-1] - self.longitudes_indirect[-1,0]) * (longitudes[-1,-1] - longitudes[-1,0]) < 0:
             raise ValueError("Longitude of indirect georeferencing is flipped with respect to direct georeferencing. Check if flip paramater is set correctly")
+
 
     
         bbox, \
@@ -1044,17 +1043,16 @@ class HypsoBase:
     def generate_l1d_cube(self, use_indirect_georef=False) -> None:
 
         try:
-            self._get_fwhm()
-            self.l1d_cube = self._run_toa_reflectance(use_indirect_georef=use_indirect_georef)
+            self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_indirect_georef=use_indirect_georef)
 
         except:
             self.generate_l1c_cube()
-            self.l1d_cube = self._run_toa_reflectance(use_indirect_georef=use_indirect_georef)
+            self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_indirect_georef=use_indirect_georef)
 
         return None
 
 
-    
+    '''
     def _get_fwhm(self) -> None:
         
         fwhm_per_band = []
@@ -1065,4 +1063,4 @@ class HypsoBase:
         self.fwhm = fwhm_per_band
 
         return None
-    
+    '''

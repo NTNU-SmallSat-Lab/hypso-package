@@ -42,7 +42,7 @@ pip install hypso2-calibration
 - [Packaging projects](https://packaging.python.org/en/latest/tutorials/packaging-projects/)
 - Create an account at [PyPI.org](https:/pypi.org) and request access to the hypso project (contact Cameron or Aria, updated 2025-02-17)
 - Add your [PyPI.org](https:/pypi.org) login credentials and token to `~/.pypirc`
-- Install the `setuptools` build system and `twine` using pip 
+- Install the `setuptools` build system, `build` package and `twine` using pip 
 - Update the version number in `pyproject.toml`
     - Use the version number format "vX.Y.Z" for normal releases 
     - Use the version number format "vX.Y.Z.a1" for alpha releases 
