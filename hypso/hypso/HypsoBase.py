@@ -103,8 +103,8 @@ class HypsoBase:
 
         # Constants
         self.UNIX_TIME_OFFSET = 20 # TODO: Verify offset validity. Sivert had 20 here
-        self.AVERAGE_FWHM = 8.2 #3.33
-
+        self.AVERAGE_FWHM = 3.33 #8.2 
+        
         # DEBUG
         self.DEBUG = False
         self.VERBOSE = False
