@@ -52,7 +52,7 @@ def compute_toa_reflectance(sensor_wavelengths,
 
 
 
-    if True:
+    if False:
         import csv
         import matplotlib.pyplot as plt
 

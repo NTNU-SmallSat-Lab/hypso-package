@@ -67,13 +67,13 @@ class HypsoBase:
         self.l1b_nc_file = None
         self.l1c_nc_file = None
         self.l1d_nc_file = None
-        #self.l2a_nc_file = None
 
         # Initialize datacubes
         self._l1a_cube = None
         self._l1b_cube = None
         self._l1c_cube = None
         self._l1d_cube = None
+
 
         # Initialize dimensions
         #self.capture_type = None
@@ -108,6 +108,33 @@ class HypsoBase:
         # DEBUG
         self.DEBUG = False
         self.VERBOSE = False
+
+
+        # Level-2 datacubes
+
+        l2_attributes = {'level': "L2",
+                    'units': r"sr^{-1}",
+                    'description': "Bottom of Atmosphere Reflectance (Rrs)"
+                    }
+
+        self._l2_cubes = DataArrayDict(attributes=l2_attributes, num_dims=3, key_attribute='correction')
+
+
+    @property
+    def l2_cube(self):
+
+        self._l2_cubes.dim_shape = self.spatial_dimensions
+        self._l2_cubes.dim_names = self.dim_names_3d
+        self._l2_cubes.num_dims = 3
+
+        return self._l2_cubes   
+
+    @l2_cube.setter
+    def l2_cubes(self, value):
+        raise AttributeError("[ERROR] Use \"l2_cubes[key] = value\" to set items.")
+
+
+
     
 
     def _update_dataarray_attrs(self, data: xr.DataArray, attrs: dict) -> xr.DataArray:
@@ -349,6 +376,27 @@ class HypsoBase:
     @products.setter
     def products(self, value):
         raise AttributeError("[ERROR] Use \"products[key] = value\" to set items.")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
