@@ -4,26 +4,49 @@ import netCDF4 as nc
 import numpy as np
 from .navigation_group_writer import navigation_group_writer
 from .calibration_filenames_writer import calibration_filenames_writer
+from pathlib import Path
 
-def write_l2_nc_file(satobj, ac: str = None, overwrite: bool = False, **kwargs) -> None:
+def write_l2_nc_file(satobj, correction: str = None, overwrite: bool = False, **kwargs) -> None:
     
-    if Path(satobj.l2_nc_file).is_file() and not overwrite:
+    l2_nc_file_list = []
 
-        if satobj.VERBOSE:
-            print("[INFO] L1d NetCDF file has already been generated. Skipping.")
+    parent_dir = satobj.parent_dir
+    capture_name = satobj.capture_name
 
-        return None
+    if correction is not None:
+        l2_nc_file_list.append(correction)
 
-    l2_nc_writer(satobj=satobj, 
-                    dst_nc=satobj.l1d_nc_file, 
-                    **kwargs)
+    else:
+        for correction in satobj.l2_cubes.keys():
+            l2_nc_file_list.append(correction)
+
+
+    for correction in l2_nc_file_list:
+
+        l2_nc_file = Path(parent_dir, str(capture_name) + "-l2-" + str(correction) + ".nc")
+
+        print(l2_nc_file)
+
+        if Path(l2_nc_file).is_file() and not overwrite:
+
+            if satobj.VERBOSE:
+                print("[INFO] L2 NetCDF file has already been generated. Skipping.")
+
+            return None
+
+        l2_nc_writer(satobj=satobj,
+                    correction = correction, 
+                    dst_nc=l2_nc_file, 
+                    **kwargs
+                    )
+
 
     return None
 
 
-def l2_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
+def l2_nc_writer(satobj, correction: str, dst_nc: str, datacube: str = True) -> None:
     """
-    Create a l2.nc file using the top-of-atmosphere data.
+    Create a l2.nc file using the bottom-of-atmosphere data.
 
     :return: Nothing.
     """
@@ -114,50 +137,53 @@ def l2_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
         if datacube:
 
             # Store as datacube
-            rhot = netfile.createVariable(
-                'products/rhot', 'f4',
+            rrs = netfile.createVariable(
+                'products/rrs', 'f4',
                 ('lines', 'samples', 'bands'),
                 compression=COMP_SCHEME,
                 complevel=COMP_LEVEL,
                 shuffle=COMP_SHUFFLE)
-            rhot.units = ""
-            rhot.long_name = "Top-of-Atmosphere Reflectance"
-            rhot.wavelength_units = "nanometers"
-            rhot.fwhm = satobj.fwhm
-            rhot.wavelengths = np.around(satobj.wavelengths, 1)
-            rhot[:] = satobj.l1d_cube.to_numpy()
+            rrs.units = ""
+            rrs.long_name = "Bottom-of-Atmosphere Reflectance"
+            rrs.wavelength_units = "nanometers"
+            rrs.fwhm = satobj.fwhm
+            rrs.wavelengths = np.around(satobj.wavelengths, 1)
+            rrs[:] = satobj.l2_cubes[correction].to_numpy()
 
         else:
 
             # Store as bands
-            rhot_cube = satobj.l1d_cube.to_numpy()
-            for band in range(0, rhot_cube.shape[-1]):
+            rrs_cube = satobj.l2_cubes[correction].to_numpy()
+            for band in range(0, rrs_cube.shape[-1]):
 
                 wave = np.around(satobj.wavelengths, 1)[band]
                 wave_name = str(int(wave))
-                name = 'rhot_' + wave_name
+                name = 'rrs_' + wave_name
 
-                rhot = netfile.createVariable(
+                rrs = netfile.createVariable(
                     'products/' + name, 'f4',
                     ('lines', 'samples'),
                     compression=COMP_SCHEME,
                     complevel=COMP_LEVEL,
                     shuffle=COMP_SHUFFLE)
                 
-                rhot.units = ""
-                rhot.long_name = "Top-of-Atmosphere Reflectance Band " + str(band) + " (" + wave_name + " nm)"
-                rhot.wavelength_units = "nanometers"
-                rhot.fwhm = satobj.fwhm[band]
-                rhot.wavelength = wave
+                rrs.units = ""
+                rrs.long_name = "Bottom-of-Atmosphere Reflectance Band " + str(band) + " (" + wave_name + " nm)"
+                rrs.wavelength_units = "nanometers"
+                rrs.fwhm = satobj.fwhm[band]
+                rrs.wavelength = wave
 
-                #rhot.f0 = None
-                #rhot.width = satobj.fwhm[band]
-                rhot.wave = wave
-                rhot.parameter = name
-                rhot.wave_name = wave_name
-                rhot.band = band
+                rrs.radiation_wavelength = float(satobj.wavelengths[band]),
+                rrs.radiation_wavelength_unit = "nm"
 
-                rhot[:] = rhot_cube[:,:,band]
+                #rrs.f0 = None
+                #rrs.width = satobj.fwhm[band]
+                rrs.wave = wave
+                rrs.parameter = name
+                rrs.wave_name = wave_name
+                rrs.band = band
+
+                rrs[:] = rrs_cube[:,:,band]
 
 
         # ADCS Timestamps ----------------------------------------------------

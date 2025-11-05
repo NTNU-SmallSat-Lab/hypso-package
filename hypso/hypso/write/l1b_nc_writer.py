@@ -50,6 +50,7 @@ def l1b_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
         netfile.createDimension('samples', samples)
         netfile.createDimension('bands', bands)
 
+
         # Create groups
         #netfile.createGroup('logfiles')
 
@@ -126,6 +127,7 @@ def l1b_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
             Lt.wavelength_units = "nanometers"
             Lt.fwhm = satobj.fwhm
             Lt.wavelengths = np.around(satobj.wavelengths, 1)
+            print(satobj.l1b_cube.to_numpy().shape)
             Lt[:] = satobj.l1b_cube.to_numpy()
 
         else:
@@ -150,6 +152,9 @@ def l1b_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
                 Lt.wavelength_units = "nanometers"
                 Lt.fwhm = satobj.fwhm[band]
                 Lt.wavelength = wave
+
+                Lt.radiation_wavelength = float(satobj.wavelengths[band]),
+                Lt.radiation_wavelength_unit = "nm"
 
                 #Lt.f0 = None
                 #Lt.width = satobj.fwhm[band]
