@@ -25,6 +25,11 @@ def compute_toa_reflectance(sensor_wavelengths,
                                          sensor_wavelengths=sensor_wavelengths,
                                          sensor_fwhm=sensor_fwhm)
     
+    old_srf_list = compute_old_srf(sensor_wavelengths=sensor_wavelengths,
+                                   sensor_fwhm=sensor_fwhm)
+    
+
+
     esun_list = compute_esun(srf_list=srf_list, 
                              srf_ssi_list=srf_ssi_list)
 
@@ -102,10 +107,15 @@ def compute_srf(ssi,
     
     sensor_band_indices = [np.abs(solar_wavelengths - w).argmin() for w in sensor_wavelengths]
 
+    
+
     srf_list = []
     srf_ssi_list = []
-    
+    sensor_gaussian_srf_list = []
+
     for i, sensor_band_index in enumerate(sensor_band_indices):
+
+        srf_to_sample = np.full_like(ssi, 0)
 
         center_lambda_nm = solar_wavelengths[sensor_band_index]
 
@@ -167,14 +177,225 @@ def compute_srf(ssi,
 
         srf_list.append(gaussian_srf)
 
+        srf_to_sample[start_srf_index:end_srf_index+1] = gaussian_srf
+
+        sensor_gaussian_srf = srf_to_sample[sensor_band_indices]
+
+
+        # Use sensor_band_indices to sample srf_to_sample
+
 
         ssi_start_index = sensor_band_index - len(lower_wl)
         ssi_end_index = sensor_band_index + len(upper_wl)
 
         srf_ssi_list.append(ssi[ssi_start_index:ssi_end_index+1])
 
+        sensor_gaussian_srf_list.append(sensor_gaussian_srf)
+
+        if False:
+            import matplotlib.pyplot as plt
+
+            plt.plot(srf_x, gaussian_srf)
+            plt.axvline(sensor_wavelengths[i])
+            idx_wl_last = i-1
+            idx_wl_next = i+1
+            if idx_wl_last > 0:
+                plt.axvline(x=sensor_wavelengths[idx_wl_last])
+            if idx_wl_next < len(sensor_wavelengths):
+                plt.axvline(x=sensor_wavelengths[idx_wl_next])
+            plt.savefig('gaussian_srf_' + str(center_lambda_nm) + '.png')
+            plt.close()
+
+            plt.plot(solar_wavelengths, srf_to_sample)
+            plt.savefig('full_gaussian_srf_' + str(center_lambda_nm) + '.png')
+            plt.close()
+
+            plt.plot(sensor_wavelengths, sensor_gaussian_srf)
+            plt.savefig('sensor_gaussian_srf_' + str(center_lambda_nm) + '.png')
+            plt.close()
+
+    if True:
+        import csv
+        with open('HYPSO-2-SRF-v2.csv', 'w', newline='') as csvfile:
+            csv_writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writerow(["Band", "FWHM", "SRF"])
+            for i in range(0,120):
+                csv_writer.writerow([sensor_wavelengths[i], fwhm_nm[i], sensor_gaussian_srf_list[i]])
+
 
     return srf_list, srf_ssi_list
+
+
+
+
+
+
+def compute_old_srf(sensor_wavelengths, sensor_fwhm: np.array) -> None:
+    """
+    Get Spectral Response Functions (SRF) from HYPSO for each of the 120 bands. Theoretical FWHM of 3.33nm is
+    used to estimate Sigma for an assumed gaussian distribution of each SRF per band.
+
+    :return: None.
+    """
+
+    fwhm_nm = sensor_fwhm
+    sigma_nm = fwhm_nm / (2 * np.sqrt(2 * np.log(2)))
+
+    srf_list = []
+    for i, band in enumerate(sensor_wavelengths):
+
+        center_lambda_nm = band
+        start_lambda_nm = np.round(center_lambda_nm - (3 * sigma_nm[i]), 4)
+        soft_end_lambda_nm = np.round(center_lambda_nm + (3 * sigma_nm[i]), 4)
+
+        srf_wl = [center_lambda_nm]
+        lower_wl = []
+        upper_wl = []
+
+
+
+        # get the elements in the wavelength array that are 3Sigma above and below center_w
+        # if the center_w is closer to one end than 3Sigma then one of the arrays will be shorter 
+        # than the other. This needs to be corrected for so that the center is still kept
+        # when making the gaussian, therefore len_diff is found.
+        for ele in sensor_wavelengths:
+            if start_lambda_nm < ele < center_lambda_nm:
+                lower_wl.append(ele)
+            elif center_lambda_nm < ele < soft_end_lambda_nm:
+                upper_wl.append(ele)
+
+        # Make symmetric
+
+        while len(lower_wl) > len(upper_wl):
+            lower_wl.pop(0)
+        while len(upper_wl) > len(lower_wl):
+            upper_wl.pop(-1)
+
+        '''
+        if (len(sensor_wavelengths) - i) <= len(lower_wl):
+            # Close to highest wavelength, find how many wavelengths missed because 
+            # 3 Sigma is out of wavelength bounds, skip symmetry 
+            len_diff = len(lower_wl) - len(upper_wl)
+        elif i < len(upper_wl):
+            # Close to lowest wavelength, find how many wavelengths missed because 
+            # 3 Sigma is out of wavelength bounds, skip symmetry 
+            len_diff = len(upper_wl) - len(lower_wl)
+        else:
+            # Close to neither the highest nor lowest wavelength, enforce symmetry
+            # correcting for one beign one element longer than the other.
+            # correcting for one beign one element longer than the other.
+            while len(lower_wl) > len(upper_wl):
+                lower_wl.pop(0)
+            while len(upper_wl) > len(lower_wl):
+                upper_wl.pop(-1)
+            len_diff = 0
+        
+            
+        srf_wl = lower_wl + srf_wl + upper_wl
+
+        good_idx = [(True if ele in srf_wl else False) for ele in sensor_wavelengths]
+
+        # Delta based on Hypso Sampling (Wavelengths)
+        gx = None
+        if len(srf_wl) == 1:
+            gx = [0]
+        else:
+            # len_diff is added to make up for the missing elements because of clipping
+            # at the ends mentioned above. this replaces the clipped elements and makes sure
+            # gaussian has correct width
+            # len_diff is added to make up for the missing elements because of clipping
+            # at the ends mentioned above. this replaces the clipped elements and makes sure
+            # gaussian has correct width
+            gx = np.linspace(-3 * sigma_nm[i], 3 * sigma_nm[i], len(srf_wl) + len_diff)
+
+        gaussian_srf = np.exp(-(gx / sigma_nm[i]) ** 2 / 2)  # Not divided by the sum, because we want peak to 1.0
+        '''
+
+
+
+        srf_wl = lower_wl + srf_wl + upper_wl
+
+        good_idx = [(True if ele in srf_wl else False) for ele in sensor_wavelengths]
+
+        # Delta based on Hypso Sampling (Wavelengths)
+        gx = None
+        if len(srf_wl) == 1:
+            gx = [0]
+        else:
+            gx = np.linspace(-3 * sigma_nm[i], 3 * sigma_nm[i], len(srf_wl))
+        gaussian_srf = np.exp(-(gx / sigma_nm[i]) ** 2 / 2)  # Not divided by the sum, because we want peak to 1.0
+
+        # Get final wavelength and SRF
+        srf_wl_single = sensor_wavelengths
+        srf_single = np.zeros_like(srf_wl_single)
+        srf_single[good_idx] = gaussian_srf
+
+
+
+        # Get final wavelength and SRF
+        srf_wl_single = sensor_wavelengths
+        srf_single = np.zeros_like(srf_wl_single)
+        
+        
+        N = len(gaussian_srf)
+        M = len(srf_single)
+        half_N = N // 2
+
+
+        #start_main = max(i - half_N, 0)
+        #end_main = min(i + half_N + 1, M)
+
+        #start_kernel = start_main - (i - half_N)
+        #end_kernel = start_kernel + (end_main - start_main)
+
+        #start_kernel = max(half_N - i, 0)
+        #end_kernel = min(M - i, N)
+
+        if i < half_N:
+            start_idx = half_N - i
+        else:
+            start_idx = 0
+
+
+        if (M - i) <= half_N:
+            end_idx = half_N + (M - i)
+        else:
+            end_idx = N
+
+
+        gaussian_srf_subset = gaussian_srf[start_idx:end_idx]
+
+        srf_single[good_idx] = gaussian_srf_subset
+
+        srf_list.append([srf_wl_single, srf_single])
+
+
+
+
+
+
+        import matplotlib.pyplot as plt
+        plt.plot(srf_wl_single, srf_single)
+        plt.xlim((sensor_wavelengths[i]-7, sensor_wavelengths[i]+7))
+        plt.axvline(sensor_wavelengths[i])
+        idx_wl_last = i-1
+        idx_wl_next = i+1
+        if idx_wl_last > 0:
+            plt.axvline(x=sensor_wavelengths[idx_wl_last])
+        if idx_wl_next < len(sensor_wavelengths):
+            plt.axvline(x=sensor_wavelengths[idx_wl_next])
+        plt.savefig('old_gaussian_srf_' + str(center_lambda_nm) + '.png')
+
+        plt.close()
+
+
+
+    return srf_list
+
+
+
+
+
 
 
 
