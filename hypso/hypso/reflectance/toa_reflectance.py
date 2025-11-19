@@ -7,7 +7,7 @@ import xarray as xr
 from scipy.interpolate import CubicSpline
 
 
-
+DEBUG = False
 
 
 def compute_toa_reflectance(sensor_wavelengths,
@@ -52,7 +52,7 @@ def compute_toa_reflectance(sensor_wavelengths,
 
 
 
-    if True:
+    if DEBUG:
         import csv
         import matplotlib.pyplot as plt
 
@@ -66,8 +66,6 @@ def compute_toa_reflectance(sensor_wavelengths,
 
 
         plt.title('HYPSO ESUN w/ TSIS-1 (2022) SSI')
-        #plt.plot(ssi_wl, ssi, label='TSIS-1 SSI')
-        #plt.plot(esun_wl, esun, label='HYPSO ESUN')
         plt.plot(solar_wavelengths, ssi, label='TSIS-1 SSI')
         plt.plot(sensor_wavelengths, np.array(esun_array), label='HYPSO ESUN')
 

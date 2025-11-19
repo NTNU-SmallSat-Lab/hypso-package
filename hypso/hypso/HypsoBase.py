@@ -854,9 +854,9 @@ class HypsoBase:
                 self.longitudes_indirect = gr.longitudes[:,:]
     
         # Check if direct and indirect georeferencing have the same lat/lon orientations
-        if (self.latitudes_indirect[-1,-1] - self.latitudes_indirect[-1,0]) * (latitudes[-1,-1] - latitudes[-1,0]) < 0:
+        if (self.latitudes_indirect[-1,-1] - self.latitudes_indirect[-1,0]) * (self.latitudes[-1,-1] - self.latitudes[-1,0]) < 0:
             raise ValueError("Latitude of indirect georeferencing is flipped with respect to direct georeferencing. Check if flip paramater is set correctly")
-        elif (self.longitudes_indirect[-1,-1] - self.longitudes_indirect[-1,0]) * (longitudes[-1,-1] - longitudes[-1,0]) < 0:
+        elif (self.longitudes_indirect[-1,-1] - self.longitudes_indirect[-1,0]) * (self.longitudes[-1,-1] - self.longitudes[-1,0]) < 0:
             raise ValueError("Longitude of indirect georeferencing is flipped with respect to direct georeferencing. Check if flip paramater is set correctly")
 
 
@@ -1043,6 +1043,7 @@ class HypsoBase:
     def generate_l1d_cube(self, use_indirect_georef=False) -> None:
 
         try:
+            self._get_fwhm()
             self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_indirect_georef=use_indirect_georef)
 
         except:
@@ -1052,7 +1053,6 @@ class HypsoBase:
         return None
 
 
-    '''
     def _get_fwhm(self) -> None:
         
         fwhm_per_band = []
@@ -1063,4 +1063,4 @@ class HypsoBase:
         self.fwhm = fwhm_per_band
 
         return None
-    '''
+
