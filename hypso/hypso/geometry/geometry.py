@@ -303,14 +303,14 @@ def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_o
         pos_itrs_viewpoint_mid_bot, t4 = ellipsoid_line_intersection(campos_itrs[i, :], view_dir_mid_bot)
         pos_itrs_viewpoint_bot, t5     = ellipsoid_line_intersection(campos_itrs[i, :], view_dir_bot)
 
-        pathlength_top[i]     = ((t1 * view_dir_top)**2).sum()
-        pathlength_mid_top[i] = ((t2 * view_dir_mid_top)**2).sum()
-        pathlength_mid[i]     = ((t3 * view_dir_mid)**2).sum()
-        pathlength_mid_bot[i] = ((t4 * view_dir_mid_bot)**2).sum()
-        pathlength_bot[i]     = ((t5 * view_dir_bot)**2).sum()
+        pathlength_top[i]     = m.sqrt(((t1 * view_dir_top)**2).sum())
+        pathlength_mid_top[i] = m.sqrt(((t2 * view_dir_mid_top)**2).sum())
+        pathlength_mid[i]     = m.sqrt(((t3 * view_dir_mid)**2).sum())
+        pathlength_mid_bot[i] = m.sqrt(((t4 * view_dir_mid_bot)**2).sum())
+        pathlength_bot[i]     = m.sqrt(((t5 * view_dir_bot)**2).sum())
 
-        # Convert the intersection position an astropy type and tell astropy that it is a position
-        # given in ITRS frame at the given frame/line timestamp
+        # Convert the intersection position to an astropy type and tell astropy that it is a
+        # position given in ITRS frame at the given frame/line timestamp
         pos_itrs_viewpoint_top_astropy_certesian = astropy.coordinates.CartesianRepresentation(pos_itrs_viewpoint_top * astropy.units.m)
         pos_itrs_viewpoint_mid_top_astropy_certesian = astropy.coordinates.CartesianRepresentation(pos_itrs_viewpoint_mid_top * astropy.units.m)
         pos_itrs_viewpoint_mid_astropy_certesian = astropy.coordinates.CartesianRepresentation(pos_itrs_viewpoint_mid * astropy.units.m)
