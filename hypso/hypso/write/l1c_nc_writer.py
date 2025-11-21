@@ -151,6 +151,9 @@ def l1c_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
                 Lt.fwhm = satobj.fwhm[band]
                 Lt.wavelength = wave
 
+                Lt.radiation_wavelength = float(satobj.wavelengths[band]),
+                Lt.radiation_wavelength_unit = "nm"
+
                 #Lt.f0 = None
                 #Lt.width = satobj.fwhm[band]
                 Lt.wave = wave

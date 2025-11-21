@@ -20,5 +20,8 @@ __pycache__/
 /hypso2_calibration/hypso2_calibration.egg-info/*
 /hypso2_calibration/hypso2_calibration/_version.py
 
+
+/demo/demo_processing.py # used for testing
+/demo/demo_processing.ipynb # don't track changes
 /utils/*
 /notebooks/*

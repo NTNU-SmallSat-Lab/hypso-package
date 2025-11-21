@@ -11,8 +11,7 @@ from trollsift import Parser
 from hypso.calibration import read_coeffs_from_file, \
                               run_radiometric_calibration, \
                               run_destriping_correction, \
-                              run_smile_correction, \
-                              get_spectral_response_function
+                              run_smile_correction
 
 
 from hypso.geometry import interpolate_at_frame_nc, \
@@ -68,13 +67,13 @@ class HypsoBase:
         self.l1b_nc_file = None
         self.l1c_nc_file = None
         self.l1d_nc_file = None
-        #self.l2a_nc_file = None
 
         # Initialize datacubes
         self._l1a_cube = None
         self._l1b_cube = None
         self._l1c_cube = None
         self._l1d_cube = None
+
 
         # Initialize dimensions
         #self.capture_type = None
@@ -104,11 +103,38 @@ class HypsoBase:
 
         # Constants
         self.UNIX_TIME_OFFSET = 20 # TODO: Verify offset validity. Sivert had 20 here
-        self.AVERAGE_FWHM = 8.2 #3.33
-
+        self.AVERAGE_FWHM = 3.33 #8.2 
+        
         # DEBUG
         self.DEBUG = False
         self.VERBOSE = False
+
+
+        # Level-2 datacubes
+
+        l2_attributes = {'level': "L2",
+                    'units': r"sr^{-1}",
+                    'description': "Bottom of Atmosphere Reflectance (Rrs)"
+                    }
+
+        self._l2_cubes = DataArrayDict(attributes=l2_attributes, num_dims=3, key_attribute='correction')
+
+
+    @property
+    def l2_cube(self):
+
+        self._l2_cubes.dim_shape = self.spatial_dimensions
+        self._l2_cubes.dim_names = self.dim_names_3d
+        self._l2_cubes.num_dims = 3
+
+        return self._l2_cubes   
+
+    @l2_cube.setter
+    def l2_cubes(self, value):
+        raise AttributeError("[ERROR] Use \"l2_cubes[key] = value\" to set items.")
+
+
+
     
 
     def _update_dataarray_attrs(self, data: xr.DataArray, attrs: dict) -> xr.DataArray:
@@ -353,6 +379,27 @@ class HypsoBase:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     def _compose_capture_name(self, fields: dict) -> str:
 
 
@@ -536,7 +583,7 @@ class HypsoBase:
 
         if not hasattr(self, 'fwhm'):
             if 'fwhm' in self.nc_cube_attrs.keys():
-                self.wavelengths = self.nc_cube_attrs['fwhm']
+                self.fwhm = self.nc_cube_attrs['fwhm']
             else:
                 self.fwhm = [self.AVERAGE_FWHM] * self.bands
 
@@ -661,7 +708,9 @@ class HypsoBase:
                                                 image_height=self.image_height,
                                                 image_width=self.image_width,
                                                 frame_count=self.frame_count,
-                                                rad_coeffs=self.rad_coeffs)
+                                                bin_factor=self.bin_factor,
+                                                rad_coeffs=self.rad_coeffs
+                                                )
 
         if self.smile_coeffs is not None:
             if smile:
@@ -687,8 +736,6 @@ class HypsoBase:
                     print("[INFO] Running spectral correction...")
 
                 self.wavelengths = self.spectral_coeffs
-
-        #self.srf = get_spectral_response_function(wavelengths=self.wavelengths, fwhm=self.fwhm)
 
         return calibrated_cube
 
@@ -724,11 +771,7 @@ class HypsoBase:
         return None
     
 
-    # def _run_toa_reflectance(self) -> np.ndarray:
     def _run_toa_reflectance(self, use_indirect_georef=False) -> np.ndarray:
-
-        if not hasattr(self, "srf"):
-            self.srf = get_spectral_response_function(wavelengths=self.wavelengths, fwhm=self.fwhm)
 
         if self.l1b_cube is not None:
             toa_radiance = self.l1b_cube
@@ -754,12 +797,14 @@ class HypsoBase:
             solar_zenith_angles=self.solar_zenith_angles
 
 
-        return compute_toa_reflectance(srf=self.srf,
-                                        toa_radiance=toa_radiance,
-                                        iso_time=self.iso_time,
-                                        solar_zenith_angles=solar_zenith_angles,
-                                        )
+        toa_reflectance, srf, esun = compute_toa_reflectance(sensor_wavelengths=self.wavelengths,
+                                                             sensor_fwhm=self.fwhm,
+                                                             toa_radiance=toa_radiance,
+                                                             iso_time=self.iso_time,
+                                                             solar_zenith_angles=solar_zenith_angles
+                                                            )
 
+        return toa_reflectance, srf, esun
 
     def run_direct_georeferencing(self) -> None: 
 
@@ -857,10 +902,11 @@ class HypsoBase:
                 self.longitudes_indirect = gr.longitudes[:,:]
     
         # Check if direct and indirect georeferencing have the same lat/lon orientations
-        if (self.latitudes_indirect[-1,-1] - self.latitudes_indirect[0,-1]) * (self.latitudes[-1,-1] - self.latitudes[0,-1]) < 0:
+        if (self.latitudes_indirect[-1,-1] - self.latitudes_indirect[-1,0]) * (latitudes[-1,-1] - latitudes[-1,0]) < 0:
             raise ValueError("Latitude of indirect georeferencing is flipped with respect to direct georeferencing. Check if flip paramater is set correctly")
-        elif (self.longitudes_indirect[-1,-1] - self.longitudes_indirect[0,-1]) * (self.longitudes[-1,-1] - self.longitudes[0,-1]) < 0:
-            raise ValueError("Latitude of indirect georeferencing is flipped with respect to direct georeferencing. Check if flip paramater is set correctly")
+        elif (self.longitudes_indirect[-1,-1] - self.longitudes_indirect[-1,0]) * (longitudes[-1,-1] - longitudes[-1,0]) < 0:
+            raise ValueError("Longitude of indirect georeferencing is flipped with respect to direct georeferencing. Check if flip paramater is set correctly")
+
 
     
         bbox, \
@@ -1045,11 +1091,11 @@ class HypsoBase:
     def generate_l1d_cube(self, use_indirect_georef=False) -> None:
 
         try:
-            self.l1d_cube = self._run_toa_reflectance(use_indirect_georef=use_indirect_georef)
+            self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_indirect_georef=use_indirect_georef)
 
         except:
             self.generate_l1c_cube()
-            self.l1d_cube = self._run_toa_reflectance(use_indirect_georef=use_indirect_georef)
+            self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_indirect_georef=use_indirect_georef)
 
         return None
 
