@@ -27,7 +27,8 @@ from hypso.georeferencing import Georeferencer, \
 from hypso.load import load_l1a_nc, \
                         load_l1b_nc, \
                         load_l1c_nc, \
-                        load_l1d_nc
+                        load_l1d_nc, \
+                        load_ocsmart_h5
 
 from hypso.reflectance import compute_toa_reflectance
 
@@ -487,6 +488,8 @@ class HypsoBase:
         nc_metadata_attrs, \
         nc_navigation_vars, \
         nc_navigation_attrs, \
+        nc_gcp_vars, \
+        nc_gcp_attrs, \
         nc_global_metadata, \
         nc_cube_attrs, \
         nc_cube = load_func(nc_file_path=path)
@@ -509,6 +512,9 @@ class HypsoBase:
  
         setattr(self, "nc_navigation_vars", nc_navigation_vars)
         setattr(self, "nc_navigation_attrs", nc_navigation_attrs)
+
+        setattr(self, "nc_gcp_vars", nc_gcp_vars)
+        setattr(self, "nc_gcp_attrs", nc_gcp_attrs)
 
         setattr(self, "nc_dimensions", nc_global_metadata["dimensions"])
         setattr(self, "nc_attrs", nc_global_metadata["ncattrs"])
@@ -601,8 +607,36 @@ class HypsoBase:
                 setattr(self, 'latitudes_indirect', value)
             elif key == 'longitude_indirect':
                 setattr(self, 'longitudes_indirect', value)
+
+
+            elif key == 'sensor_zenith':
+                setattr(self, 'sat_zenith_angles', value)
+            elif key == 'sensor_azimuth':
+                setattr(self, 'sat_azimuth_angles', value)
+            elif key == 'sensor_zenith_indirect':
+                setattr(self, 'sat_zenith_angles_indirect', value)
+            elif key == 'sensor_azimuth_indirect':
+                setattr(self, 'sat_azimuth_angles_indirect', value)
+
+
+            elif key == 'solar_zenith':
+                setattr(self, 'solar_zenith_angles', value)
+            elif key == 'solar_azimuth':
+                setattr(self, 'solar_azimuth_angles', value)
+            elif key == 'solar_zenith_indirect':
+                setattr(self, 'solar_zenith_angles_indirect', value)
+            elif key == 'solar_azimuth_indirect':
+                setattr(self, 'solar_azimuth_angles_indirect', value)
+
+
+            elif key == 'relative_azimuth':
+                setattr(self, 'relative_azimuth_angles', value)
+            elif key == 'relative_azimuth_indirect':
+                setattr(self, 'relative_azimuth_angles_indirect', value)
+
             else:
                 setattr(self, key, value)
+
 
 
         # Capture timing attributes
@@ -1098,6 +1132,59 @@ class HypsoBase:
             self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_indirect_georef=use_indirect_georef)
 
         return None
+
+
+
+
+
+    def open_ocsmart_ac_output(self, h5_file_path: Path):
+        """
+        Open and read OC-SMART atmospheric correction HDF5 output files. The remote sensing reflectance (Rrs) dataset is written to the satobj's 'l2_cube' dictionary.
+
+        :param h5_file_path: Path to the OC-SMART HDF5 file
+
+        :return: "datasets" Dictionary containing 2D and 3D datasets read from the HDF5 and stored as xarray DataArrays.
+        """
+
+
+        h5_file_path = Path(h5_file_path).absolute()
+
+        datasets = load_ocsmart_h5(h5_file_path = h5_file_path)
+
+        try:
+            key = "Rrs"
+            l2_cube_wavelengths = datasets[key].band.to_numpy()
+
+            # Map inferred OC-SMART wavelengths to HYPSO wavelengths
+            A = np.array(l2_cube_wavelengths, dtype=float)
+            B = np.array(self.wavelengths, dtype=float)
+
+            index_map = {}
+            indices_unique = []
+
+            for a in A:
+                ix = np.argmin(np.abs(B - a))
+                if ix not in index_map: # ensure uniqueness
+                    index_map[ix] = a
+                    indices_unique.append(ix)
+                else:
+                    print("[WARNING] Duplicate prevented:", a, "mapped to", ix)
+
+            ocsmart_dataset_indices = np.array(indices_unique, dtype=int)
+
+            # Create empty cube with standard HYPSO cube dims
+            shape = (self.spatial_dimensions[0], self.spatial_dimensions[1], self.bands)
+            cube = np.full(shape=shape, fill_value=np.nan)
+            cube[:,:,ocsmart_dataset_indices] = datasets[key]
+
+            self.l2_cube["ocsmart"] = cube
+        except Exception as ex:
+            print("[ERROR] Unable to load OC-SMART L2 Rrs dataset.")
+
+        return datasets
+
+
+
 
 
     '''

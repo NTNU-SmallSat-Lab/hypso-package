@@ -165,6 +165,35 @@ def load_corrections_from_nc_file(nc_file_path: Path) -> Tuple[dict, dict]:
     return (corrections_vars, corrections_attrs)
 
 
+def load_gcp_from_nc_file(nc_file_path: Path) -> Tuple[dict, dict]:
+
+    gcp_attrs = {}
+    gcp_vars = {}
+
+    try:
+        with nc.Dataset(nc_file_path, format="NETCDF4") as f:
+            group = f.groups["metadata"]["gcp"]
+            
+            for key in group.variables.keys():
+                value = group.variables[key][:]
+                gcp_vars[key] = value
+            
+
+            for attrname in group.ncattrs():
+                value = getattr(group, attrname)
+                try:
+                    if is_integer_num(float(value)):
+                        gcp_attrs[attrname] = int(value)
+                    else:
+                        gcp_attrs[attrname] = float(value)
+                except BaseException:
+                    gcp_attrs[attrname] = value
+    except:
+        pass
+
+    return (gcp_vars, gcp_attrs)
+
+
 def load_logfiles_from_nc_file(nc_file_path: Path) -> Tuple[dict, dict]:
 
     logfiles_attrs = {}

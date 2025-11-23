@@ -214,7 +214,7 @@ def compute_srf(ssi,
             plt.savefig('sensor_gaussian_srf_' + str(center_lambda_nm) + '.png')
             plt.close()
 
-    if True:
+    if False:
         import csv
         with open('HYPSO-2-SRF-v2.csv', 'w', newline='') as csvfile:
             csv_writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_MINIMAL)
@@ -372,21 +372,21 @@ def compute_old_srf(sensor_wavelengths, sensor_fwhm: np.array) -> None:
 
 
 
+        if False:
 
+            import matplotlib.pyplot as plt
+            plt.plot(srf_wl_single, srf_single)
+            plt.xlim((sensor_wavelengths[i]-7, sensor_wavelengths[i]+7))
+            plt.axvline(sensor_wavelengths[i])
+            idx_wl_last = i-1
+            idx_wl_next = i+1
+            if idx_wl_last > 0:
+                plt.axvline(x=sensor_wavelengths[idx_wl_last])
+            if idx_wl_next < len(sensor_wavelengths):
+                plt.axvline(x=sensor_wavelengths[idx_wl_next])
+            plt.savefig('old_gaussian_srf_' + str(center_lambda_nm) + '.png')
 
-        import matplotlib.pyplot as plt
-        plt.plot(srf_wl_single, srf_single)
-        plt.xlim((sensor_wavelengths[i]-7, sensor_wavelengths[i]+7))
-        plt.axvline(sensor_wavelengths[i])
-        idx_wl_last = i-1
-        idx_wl_next = i+1
-        if idx_wl_last > 0:
-            plt.axvline(x=sensor_wavelengths[idx_wl_last])
-        if idx_wl_next < len(sensor_wavelengths):
-            plt.axvline(x=sensor_wavelengths[idx_wl_next])
-        plt.savefig('old_gaussian_srf_' + str(center_lambda_nm) + '.png')
-
-        plt.close()
+            plt.close()
 
 
 

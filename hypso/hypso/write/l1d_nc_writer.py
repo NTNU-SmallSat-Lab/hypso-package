@@ -4,6 +4,7 @@ import netCDF4 as nc
 import numpy as np
 from .navigation_group_writer import navigation_group_writer
 from .calibration_filenames_writer import calibration_filenames_writer
+from .metadata_gcp_group_writer import metadata_gcp_group_writer
 
 def write_l1d_nc_file(satobj, overwrite: bool = False, **kwargs) -> None:
     
@@ -430,6 +431,8 @@ def l1d_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
         #     ('lines',))
         # timestamps_srv[:] = getattr(satobj, 'nc_timing_vars')["timestamps_srv"][:]
     
-        navigation_group_writer(satobj=satobj, netfile=netfile)
+        navigation_group_writer(satobj=satobj, netfile=netfile, COMP_SCHEME=COMP_SCHEME, COMP_LEVEL=COMP_LEVEL, COMP_SHUFFLE=COMP_SHUFFLE)
+
+        metadata_gcp_group_writer(satobj, netfile, COMP_SCHEME=COMP_SCHEME, COMP_LEVEL=COMP_LEVEL, COMP_SHUFFLE=COMP_SHUFFLE)
 
     return None

@@ -12,13 +12,14 @@ from .utils import load_capture_config_from_nc_file, \
                     load_logfiles_from_nc_file, \
                     load_temperature_from_nc_file, \
                     load_ncattrs_from_nc_file, \
-                    load_navigation_from_nc_file
+                    load_navigation_from_nc_file, \
+                    load_gcp_from_nc_file
 
 def load_l1c_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict, dict, np.ndarray]:
 
     nc_metadata_vars, nc_metadata_attrs = load_l1c_nc_metadata(nc_file_path=nc_file_path)
 
-    nc_naivigation_vars, nc_navigation_attrs = load_l1c_nc_navigation(nc_file_path=nc_file_path)
+    nc_navigation_vars, nc_navigation_attrs = load_l1c_nc_navigation(nc_file_path=nc_file_path)
 
     nc_cube = load_l1c_nc_cube(nc_file_path=nc_file_path)
 
@@ -26,10 +27,14 @@ def load_l1c_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict, dict,
 
     nc_global_metadata = load_l1c_global_nc_metadata(nc_file_path=nc_file_path)
 
+    nc_gcp_vars, nc_gcp_attrs = load_l1c_nc_gcp(nc_file_path=nc_file_path)
+
     return nc_metadata_vars, \
             nc_metadata_attrs, \
-            nc_naivigation_vars, \
+            nc_navigation_vars, \
             nc_navigation_attrs, \
+            nc_gcp_vars, \
+            nc_gcp_attrs, \
             nc_global_metadata, \
             nc_cube_attrs, \
             nc_cube
@@ -117,3 +122,20 @@ def load_l1c_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict]:
     metadata_attrs['temperature'] = load_temperature_from_nc_file(nc_file_path)[1]
 
     return metadata_vars, metadata_attrs
+
+
+def load_l1c_nc_gcp(nc_file_path: Path) -> Tuple[dict, dict]:
+    """
+    Load l1c.nc Hypso Capture file GCPs
+
+    :param nc_file_path: Absolute path to the l1c.nc file
+
+    :return: "gcp_vars" dictionary with gcp variables, "gcp_attrs" dictionary with gcp attributes 
+    """
+
+    gcp_vars = {}
+    gcp_attrs = {}
+
+    gcp_vars, gcp_attrs = load_gcp_from_nc_file(nc_file_path)
+
+    return gcp_vars, gcp_attrs
