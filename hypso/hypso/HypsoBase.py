@@ -1264,10 +1264,15 @@ class HypsoBase:
     
 
 
-    def ac_acolite_run_correction(self, settings_file: Path = None):
+    def ac_acolite_run_correction(self, settings_file: Path = None, input_product_level: str = 'l1c'):
         
+
+        
+
         acolite_path = Path(self.acolite_dir).absolute()
         
+        print("[INFO] Running ACOLITE atmospheric correction installed in " + str(acolite_path))
+
         sys.path.append(str(acolite_path))
         print(sys.path)
 
@@ -1275,8 +1280,6 @@ class HypsoBase:
         from acolite.acolite.settings import load
         from acolite.acolite import acolite_run
         
-
-
         # optional file with processing settings
         # if set to None defaults will be used
 
@@ -1285,7 +1288,16 @@ class HypsoBase:
         settings = load(settings_file)
 
         # set settings provided above
-        settings['inputfile'] = str(self.l1c_nc_file)
+
+        if input_product_level.upper() == 'L1D':
+            print("[INFO] Using L1d NetCDF as ACOLITE input.")
+            settings['inputfile'] = str(self.l1d_nc_file) # L1d reflectance
+        else:
+            print("[INFO] Using L1c NetCDF as ACOLITE input.")
+            settings['inputfile'] = str(self.l1c_nc_file) # default L1c (radiance)
+
+
+        print("[INFO] Writing ACOLITE output to " + str(self.capture_dir))
         settings['output'] = str(self.capture_dir)
 
         settings['polygon'] = None
@@ -1316,7 +1328,14 @@ class HypsoBase:
 
         print(acolite_l2_file)
 
-        print("ACOLITE Done!")
+        print("[INFO] ACOLITE atmospheric correction complete.")
+
+        return None
+    
+
+    def ac_ocsmart_open_output(self):
+        
+        return None
 
 
     '''
