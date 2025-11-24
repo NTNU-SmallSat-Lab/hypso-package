@@ -106,6 +106,9 @@ class HypsoBase:
         self.UNIX_TIME_OFFSET = 20 # TODO: Verify offset validity. Sivert had 20 here
         self.AVERAGE_FWHM = 3.33 #8.2 
         
+        # Atmospheric Correction
+        self.ocsmart_dir = None
+
         # DEBUG
         self.DEBUG = False
         self.VERBOSE = False
@@ -450,6 +453,10 @@ class HypsoBase:
         self.l1b_nc_file = Path(path.parent, capture_name + "-l1b.nc")
         self.l1c_nc_file = Path(path.parent, capture_name + "-l1c.nc")
         self.l1d_nc_file = Path(path.parent, capture_name + "-l1d.nc")
+
+        self.l1d_ocsmart_input_nc_file = Path(path.parent, str(self.sensor).upper() + "_" + str(capture_name) + "-l1d.nc")
+        self.l2a_ocsmart_output_h5_file = Path(path.parent, str(self.sensor).upper() + "_" + str(capture_name) + "-l1d_L2_OCSMART.h5") #HYPSO2_HSI_aeronetvenice_2025-06-22T10-46-15Z-l1d_L2_OCSMART
+        
 
         self.capture_dir = Path(path.parent.absolute(), capture_name + "_tmp")
         self.parent_dir = Path(path.parent.absolute())
@@ -1137,19 +1144,67 @@ class HypsoBase:
 
 
 
-    def open_ocsmart_ac_output(self, h5_file_path: Path):
+    def ocsmart_ac_stage_input(self):
+
+        """
+        Stages OC-SMART input file to the L1B directory located in the OC-SMART installation directory. The L1d file is copied and renamed to the L1B directory.
+
+        :return: None
+        """
+
+
+        if self.ocsmart_dir is not None:
+            try:
+                
+                dst_dir = Path(self.ocsmart_dir, "L1B/")
+
+                dst_dir.mkdir(parents=True, exist_ok=True)
+
+                src_file = self.l1d_nc_file
+                dst_file = Path(dst_dir, self.l1d_ocsmart_input_nc_file.name)
+
+                import shutil
+                shutil.copy2(src_file, dst_file)
+
+                print("[INFO] Successfully staged OC-SMART input file to " + str(dst_file))
+
+            except Exception as ex:
+                print("[ERROR] Unable to stage OC-SMART input. An error occured.")
+                print(ex)
+
+        else:
+            print("[ERROR] OC-SMART directory is not configured. The 'ocsmart_dir' attribute is empty.")
+
+
+
+
+
+
+
+    def ocsmart_ac_open_output(self, h5_file_path: Path = None):
         """
         Open and read OC-SMART atmospheric correction HDF5 output files. The remote sensing reflectance (Rrs) dataset is written to the satobj's 'l2_cube' dictionary.
 
-        :param h5_file_path: Path to the OC-SMART HDF5 file
+        :param h5_file_path: Path to the OC-SMART HDF5 file (optional)
 
         :return: "datasets" Dictionary containing 2D and 3D datasets read from the HDF5 and stored as xarray DataArrays.
         """
 
 
-        h5_file_path = Path(h5_file_path).absolute()
+        if h5_file_path is not None:
+            h5_file_path = Path(h5_file_path).absolute()
+        else:
+            ocsmart_output_dir = Path(self.ocsmart_dir, "L2/")
+            h5_file_path = Path(ocsmart_output_dir, self.l2a_ocsmart_output_h5_file.name)
 
-        datasets = load_ocsmart_h5(h5_file_path = h5_file_path)
+
+        if h5_file_path.is_file():
+            print("[INFO] Opening OC-SMART output file " + str(h5_file_path))
+            datasets = load_ocsmart_h5(h5_file_path = h5_file_path)
+
+        else:
+            print("[ERROR] OC-SMART output file " + str(h5_file_path) + " does not exist.")
+            return None
 
         try:
             key = "Rrs"
