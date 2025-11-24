@@ -1264,12 +1264,9 @@ class HypsoBase:
     
 
 
-    def ac_acolite(self):
+    def ac_acolite_run_correction(self, settings_file: Path = None):
         
-
-        acolite_path = self.acolite_dir
-        acolite_path = Path(acolite_path)
-        acolite_path = Path(acolite_path).absolute()
+        acolite_path = Path(self.acolite_dir).absolute()
         
         sys.path.append(str(acolite_path))
         print(sys.path)
@@ -1280,7 +1277,46 @@ class HypsoBase:
         
 
 
+        # optional file with processing settings
+        # if set to None defaults will be used
 
+        # import settings
+        #settings = ac.acolite.settings.load(settings_file)
+        settings = load(settings_file)
+
+        # set settings provided above
+        settings['inputfile'] = str(self.l1c_nc_file)
+        settings['output'] = str(self.capture_dir)
+
+        settings['polygon'] = None
+        #settings['l2w_parameters'] = None
+        settings['rgb_rhot'] = True
+        settings['rgb_rhos'] = True
+        settings['map_l2w'] = False
+
+        settings['l2w_parameters'] = ['Rrs_*', \
+                                    'spm_nechad2010', \
+                                    'spm_nechad2016', \
+                                    'chl_re_mishra',\
+                                    'chl_oc2', \
+                                    'chl_oc3', \
+                                    'chl_re_moses3b', \
+                                    'chl_re_moses3b740', \
+                                    'fai', \
+                                    'fai_rhot', \
+                                    'fait', \
+                                    'ndci']
+
+        settings['l2w_mask']=False
+
+        processed = acolite_run(settings=settings)
+
+        acolite_l2_file = processed[0]['l2r'][0]
+
+
+        print(acolite_l2_file)
+
+        print("ACOLITE Done!")
 
 
     '''
