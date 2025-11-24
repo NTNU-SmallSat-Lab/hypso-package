@@ -1157,11 +1157,12 @@ class HypsoBase:
             try:
                 
                 dst_dir = Path(self.ocsmart_dir, "L1B/")
-
                 dst_dir.mkdir(parents=True, exist_ok=True)
 
                 src_file = self.l1d_nc_file
                 dst_file = Path(dst_dir, self.l1d_ocsmart_input_nc_file.name)
+
+                self.l1d_ocsmart_input_nc_file = dst_file
 
                 import shutil
                 shutil.copy2(src_file, dst_file)
@@ -1175,9 +1176,28 @@ class HypsoBase:
         else:
             print("[ERROR] OC-SMART directory is not configured. The 'ocsmart_dir' attribute is empty.")
 
+        return None
 
 
+    def ocsmart_ac_run_correction(self):
+        """
+        Execute 'OCSMART.py' as a subprocess.
 
+        :return: None
+        """
+
+        print("[INFO] Running OC-SMART atmospheric correction as a subprocess.")
+
+        import subprocess
+        ocsmart_run_script = Path(self.ocsmart_dir, "OCSMART.py")
+        subprocess.run(["python3", ocsmart_run_script], cwd=self.ocsmart_dir, check=True)
+
+        print("[INFO] Removing OC-SMART input file.")
+        self.l1d_ocsmart_input_nc_file.unlink(missing_ok=True)
+
+        print("[INFO] OC-SMART atmospheric correction complete.")
+
+        return None
 
 
 
