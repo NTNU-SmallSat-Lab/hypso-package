@@ -1192,7 +1192,7 @@ class HypsoBase:
         ocsmart_run_script = Path(self.ocsmart_dir, "OCSMART.py")
         subprocess.run(["python3", ocsmart_run_script], cwd=self.ocsmart_dir, check=True)
 
-        print("[INFO] Removing OC-SMART input file.")
+        print("[INFO] Removing staged OC-SMART input file " + str(self.l1d_ocsmart_input_nc_file))
         self.l1d_ocsmart_input_nc_file.unlink(missing_ok=True)
 
         print("[INFO] OC-SMART atmospheric correction complete.")
