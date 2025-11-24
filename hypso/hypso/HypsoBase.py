@@ -6,6 +6,7 @@ import copy
 import numpy as np
 from datetime import datetime, timezone
 from trollsift import Parser
+import sys
 
 
 from hypso.calibration import read_coeffs_from_file, \
@@ -108,6 +109,7 @@ class HypsoBase:
         
         # Atmospheric Correction
         self.ocsmart_dir = None
+        self.acolite_dir = None
 
         # DEBUG
         self.DEBUG = False
@@ -1144,7 +1146,7 @@ class HypsoBase:
 
 
 
-    def ocsmart_ac_stage_input(self):
+    def ac_ocsmart_stage_input(self):
 
         """
         Stages OC-SMART input file to the L1B directory located in the OC-SMART installation directory. The L1d file is copied and renamed to the L1B directory.
@@ -1179,7 +1181,7 @@ class HypsoBase:
         return None
 
 
-    def ocsmart_ac_run_correction(self):
+    def ac_ocsmart_run_correction(self):
         """
         Execute 'OCSMART.py' as a subprocess.
 
@@ -1201,7 +1203,7 @@ class HypsoBase:
 
 
 
-    def ocsmart_ac_open_output(self, h5_file_path: Path = None):
+    def ac_ocsmart_open_output(self, h5_file_path: Path = None):
         """
         Open and read OC-SMART atmospheric correction HDF5 output files. The remote sensing reflectance (Rrs) dataset is written to the satobj's 'l2_cube' dictionary.
 
@@ -1257,6 +1259,25 @@ class HypsoBase:
             print("[ERROR] Unable to load OC-SMART L2 Rrs dataset.")
 
         return datasets
+
+
+    
+
+
+    def ac_acolite(self):
+        
+
+        acolite_path = self.acolite_dir
+        acolite_path = Path(acolite_path)
+        acolite_path = Path(acolite_path).absolute()
+        
+        sys.path.append(str(acolite_path))
+        print(sys.path)
+
+        import acolite as ac
+        from acolite.acolite.settings import load
+        from acolite.acolite import acolite_run
+        
 
 
 
