@@ -1336,7 +1336,8 @@ class HypsoBase:
         settings['rgb_rhot'] = True
         settings['rgb_rhos'] = True
         settings['map_l2w'] = False #produces blank .pngs
-        settings['l2w_mask'] = True
+        settings['l2w_mask'] = False
+        settings['l2w_mask_threshold'] = 0.2
 
         settings['l2w_parameters'] = ['Rrs_*', \
                                     'spm_nechad2010', \
