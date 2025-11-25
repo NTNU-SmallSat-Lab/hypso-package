@@ -134,12 +134,20 @@ def l2_nc_writer(satobj, correction: str, dst_nc: str, datacube: str = True) -> 
         COMP_SHUFFLE = True  # Default (when scheme != none): True
 
 
+        try:
+            l2_variable_name = satobj.l2_cubes[correction].attrs['l2_variable_name']
+        except Exception as ex:
+            print["[WARNING] No 'l2_variable_name' attrribute found. Defaulting to 'rrs'"]
+            print(ex)
+            l2_variable_name = "rrs"
+
+
         # Create and populate variables
         if datacube:
 
             # Store as datacube
             rrs = netfile.createVariable(
-                'products/rrs', 'f4',
+                'products/' + l2_variable_name.lower(), 'f4',
                 ('lines', 'samples', 'bands'),
                 compression=COMP_SCHEME,
                 complevel=COMP_LEVEL,
@@ -159,7 +167,7 @@ def l2_nc_writer(satobj, correction: str, dst_nc: str, datacube: str = True) -> 
 
                 wave = np.around(satobj.wavelengths, 1)[band]
                 wave_name = str(int(wave))
-                name = 'rrs_' + wave_name
+                name = l2_variable_name.lower() + '_' + wave_name
 
                 rrs = netfile.createVariable(
                     'products/' + name, 'f4',

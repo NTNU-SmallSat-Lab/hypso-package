@@ -122,7 +122,8 @@ class HypsoBase:
 
         l2_attributes = {'level': "L2",
                     'units': r"sr^{-1}",
-                    'description': "Bottom of Atmosphere Reflectance (Rrs)"
+                    'description': "Bottom of Atmosphere Reflectance (Rrs)",
+                    'l2_variable_name': "rrs"
                     }
 
         self._l2_cubes = DataArrayDict(attributes=l2_attributes, num_dims=3, key_attribute='correction')
@@ -1275,6 +1276,8 @@ class HypsoBase:
             cube[:,:,wl_band_map] = datasets[key]
 
             self.l2_cube["ocsmart"] = cube
+            self.l2_cube["ocsmart"].attrs['l2_variable_name'] = key
+
         except Exception as ex:
             print("[ERROR] Unable to load OC-SMART L2 Rrs dataset.")
 
@@ -1401,6 +1404,7 @@ class HypsoBase:
                 cube[:,:,wl_band_map] = l2r_datasets[key]
 
                 self.l2_cube["acolite_l2r"] = cube
+                self.l2_cube["acolite_l2r"].attrs['l2_variable_name'] = key
 
             except Exception as ex:
                 print("[ERROR] Unable to load ACOLITE L2R dataset.")
@@ -1428,6 +1432,7 @@ class HypsoBase:
                 cube[:,:,wl_band_map] = l2w_datasets[key]
 
                 self.l2_cube["acolite_l2w"] = cube
+                self.l2_cube["acolite_l2w"].attrs['l2_variable_name'] = key
 
             except Exception as ex:
                 print("[ERROR] Unable to load ACOLITE L2W dataset.")
