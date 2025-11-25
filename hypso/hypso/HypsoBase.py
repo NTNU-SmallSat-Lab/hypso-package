@@ -29,7 +29,9 @@ from hypso.load import load_l1a_nc, \
                         load_l1b_nc, \
                         load_l1c_nc, \
                         load_l1d_nc, \
-                        load_ocsmart_h5
+                        load_ocsmart_h5, \
+                        load_acolite_l2r_nc, \
+                        load_acolite_l2w_nc
 
 from hypso.reflectance import compute_toa_reflectance
 
@@ -542,8 +544,8 @@ class HypsoBase:
 
 
         dt = datetime.fromtimestamp(self.unixtime, tz=timezone.utc)
-        self.acolite_l2r_output_file =  Path(self.capture_dir, f"{self.platform.upper()}_{dt.strftime('%Y_%m_%d_%H_%M_%S')}_L1R.nc")
-        self.acolite_l2w_output_file =  Path(self.capture_dir, f"{self.platform.upper()}_{dt.strftime('%Y_%m_%d_%H_%M_%S')}_L1W.nc")
+        self.acolite_l2r_output_nc_file =  Path(self.capture_dir, f"{self.platform.upper()}_{dt.strftime('%Y_%m_%d_%H_%M_%S')}_L2R.nc")
+        self.acolite_l2w_output_nc_file =  Path(self.capture_dir, f"{self.platform.upper()}_{dt.strftime('%Y_%m_%d_%H_%M_%S')}_L2W.nc")
 
 
         return None
@@ -1240,9 +1242,14 @@ class HypsoBase:
 
         try:
             key = "Rrs"
-            l2_cube_wavelengths = datasets[key].band.to_numpy()
+            inferred_wavelengths = datasets[key].band.to_numpy()
 
             # Map inferred OC-SMART wavelengths to HYPSO wavelengths
+            wl_band_map = self._get_inferred_wavelength_band_map(inferred_wavelengths=inferred_wavelengths)
+
+            '''
+            l2_cube_wavelengths = inferred_wavelengths
+
             A = np.array(l2_cube_wavelengths, dtype=float)
             B = np.array(self.wavelengths, dtype=float)
 
@@ -1259,10 +1266,13 @@ class HypsoBase:
 
             ocsmart_dataset_indices = np.array(indices_unique, dtype=int)
 
+            wl_band_map = ocsmart_dataset_indices
+            '''
+            
             # Create empty cube with standard HYPSO cube dims
             shape = (self.spatial_dimensions[0], self.spatial_dimensions[1], self.bands)
             cube = np.full(shape=shape, fill_value=np.nan)
-            cube[:,:,ocsmart_dataset_indices] = datasets[key]
+            cube[:,:,wl_band_map] = datasets[key]
 
             self.l2_cube["ocsmart"] = cube
         except Exception as ex:
@@ -1284,7 +1294,7 @@ class HypsoBase:
         print("[INFO] Running ACOLITE atmospheric correction installed in " + str(acolite_path))
 
         sys.path.append(str(acolite_path))
-        print(sys.path)
+        #print(sys.path)
 
         import acolite as ac
         from acolite.acolite.settings import load
@@ -1333,19 +1343,120 @@ class HypsoBase:
 
         processed = acolite_run(settings=settings)
 
-        acolite_l2_file = processed[0]['l2r'][0]
-
-
-        print(acolite_l2_file)
+        #acolite_l2_file = processed[0]['l2r'][0]
 
         print("[INFO] ACOLITE atmospheric correction complete.")
 
         return None
     
 
-    def ac_ocsmart_open_output(self):
+
+
+    def ac_acolite_open_output(self, acolite_l2r_output_nc_file: Path = None, acolite_l2w_output_nc_file: Path = None):
         
-        return None
+        """
+        Open and read ACOLITE atmospheric correction L2R and L2W NetCDF output files. The remote sensing reflectance (Rrs) dataset is written to the satobj's 'l2_cube' dictionary.
+
+        :param h5_file_path: Path to the ACOLITE NetCDF file (optional)
+
+        :return: "datasets" Dictionary containing 2D and 3D datasets read from the NetCDFs and stored as xarray DataArrays.
+        """
+
+
+        if acolite_l2r_output_nc_file is not None:
+            acolite_l2r_output_nc_file = Path(acolite_l2r_output_nc_file).absolute()
+        else:
+            acolite_l2r_output_nc_file = Path(self.acolite_l2r_output_nc_file).absolute()
+
+        if acolite_l2w_output_nc_file is not None:
+            acolite_l2w_output_nc_file = Path(acolite_l2w_output_nc_file).absolute()
+        else:
+            acolite_l2w_output_nc_file = Path(self.acolite_l2w_output_nc_file).absolute()
+
+
+
+
+        if acolite_l2r_output_nc_file.is_file():
+            print("[INFO] Opening ACOLITE L2R NetCDF output file " + str(acolite_l2r_output_nc_file))
+            l2r_datasets = load_acolite_l2r_nc(acolite_l2r_output_nc_file)
+
+            try:
+                key = "rhos"
+                inferred_wavelengths = l2r_datasets[key].band.to_numpy()
+
+                # Map inferred ACOLITE wavelengths to HYPSO wavelengths
+                wl_band_map = self._get_inferred_wavelength_band_map(inferred_wavelengths=inferred_wavelengths)
+
+                # Create empty cube with standard HYPSO cube dims
+                shape = (self.spatial_dimensions[0], self.spatial_dimensions[1], self.bands)
+                cube = np.full(shape=shape, fill_value=np.nan)
+                cube[:,:,wl_band_map] = l2r_datasets[key]
+
+                self.l2_cube["acolite_l2r"] = cube
+
+            except Exception as ex:
+                print("[ERROR] Unable to load ACOLITE L2R dataset.")
+                l2r_datasets = None
+
+        else:
+            print("[ERROR] ACOLITE L2R NetCDF output file " + str(acolite_l2r_output_nc_file) + " does not exist.")
+            l2r_datasets = None
+
+
+        if acolite_l2w_output_nc_file.is_file():
+            print("[INFO] Opening ACOLITE L2W NetCDF output file " + str(acolite_l2w_output_nc_file))
+            l2w_datasets = load_acolite_l2w_nc(acolite_l2w_output_nc_file)
+
+            try:
+                key = "Rrs"
+                inferred_wavelengths = l2w_datasets[key].band.to_numpy()
+
+                # Map inferred ACOLITE wavelengths to HYPSO wavelengths
+                wl_band_map = self._get_inferred_wavelength_band_map(inferred_wavelengths=inferred_wavelengths)
+
+                # Create empty cube with standard HYPSO cube dims
+                shape = (self.spatial_dimensions[0], self.spatial_dimensions[1], self.bands)
+                cube = np.full(shape=shape, fill_value=np.nan)
+                cube[:,:,wl_band_map] = l2w_datasets[key]
+
+                self.l2_cube["acolite_l2w"] = cube
+
+            except Exception as ex:
+                print("[ERROR] Unable to load ACOLITE L2W dataset.")
+                l2w_datasets = None
+
+        else:
+            print("[ERROR] ACOLITE L2W NetCDF output file " + str(acolite_l2w_output_nc_file) + " does not exist.")
+            l2w_datasets = None
+
+
+        return l2r_datasets, l2w_datasets
+
+
+    def _get_inferred_wavelength_band_map(self, inferred_wavelengths):
+
+        # Map inferred ACOLITE wavelengths to HYPSO wavelengths
+        A = np.array(inferred_wavelengths, dtype=float)
+        B = np.array(self.wavelengths, dtype=float)
+
+        index_map = {}
+        indices_unique = []
+
+        for a in A:
+            ix = np.argmin(np.abs(B - a))
+            if ix not in index_map: # ensure uniqueness
+                index_map[ix] = a
+                indices_unique.append(ix)
+            else:
+                print("[WARNING] Duplicate prevented:", a, "mapped to", ix)
+
+        wl_band_map = np.array(indices_unique, dtype=int)
+
+
+        return wl_band_map
+
+
+
 
 
     '''

@@ -1,14 +1,12 @@
 import numpy as np
-import netCDF4 as nc
 from pathlib import Path
-from typing import Tuple
 import h5py
 import xarray as xr
 import re
 
 
 
-def load_ocsmart_h5(h5_file_path: Path) -> Tuple[np.ndarray, dict]:
+def load_ocsmart_h5(h5_file_path: Path) -> dict:
 
     #Wavelengths: 12, -2
 
@@ -40,11 +38,14 @@ def load_ocsmart_h5(h5_file_path: Path) -> Tuple[np.ndarray, dict]:
 
     with h5py.File(h5_file_path, "r") as f:
         
-        for name, obj in f.items():
-            if isinstance(obj, h5py.Group):
-                print(name, "→ subgroup")
-            elif isinstance(obj, h5py.Dataset):
-                print(name, "→ variable (dataset)")
+        print("[INFO] Opening OC-SMART HDF5 file " + str(h5_file_path))
+
+        if False:
+            for name, obj in f.items():
+                if isinstance(obj, h5py.Group):
+                    print(name, "→ subgroup")
+                elif isinstance(obj, h5py.Dataset):
+                    print(name, "→ variable (dataset)")
 
 
         for ocsmart_dataset in ocsmart_datasets:
@@ -54,9 +55,12 @@ def load_ocsmart_h5(h5_file_path: Path) -> Tuple[np.ndarray, dict]:
             try:
                 data = f[ocsmart_dataset][:]
 
-                data = xr.DataArray(data, dims=dim_names_2d)
+                attrs = {a: getattr(f[ocsmart_dataset], a) for a in f[ocsmart_dataset].ncattrs()}
+
+                data = xr.DataArray(data, dims=dim_names_2d, attrs=attrs)
 
                 datasets[ocsmart_dataset] = data
+
 
             except:
                 print("[WARNING] Unable to load " + str(ocsmart_dataset))
