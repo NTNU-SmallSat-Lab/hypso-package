@@ -1284,7 +1284,11 @@ class HypsoBase:
     
 
 
-    def ac_acolite_run_correction(self, settings_file: Path = None, input_product_level: str = 'l1c'):
+    def ac_acolite_run_correction(self, settings_file: Path = None, 
+                                  input_product_level: str = 'l1c',
+                                  EARTHDATA_u: str = None,
+                                  EARTHDATA_p: str = None
+                                  ):
         
 
         
@@ -1307,6 +1311,11 @@ class HypsoBase:
         #settings = ac.acolite.settings.load(settings_file)
         settings = load(settings_file)
 
+        if EARTHDATA_u is not None and EARTHDATA_p is not None:
+            settings['EARTHDATA_u'] = EARTHDATA_u
+            settings['EARTHDATA_p'] = EARTHDATA_p
+            settings['ancillary_data'] = True
+
         # set settings provided above
 
         if input_product_level.upper() == 'L1D':
@@ -1321,10 +1330,10 @@ class HypsoBase:
         settings['output'] = str(self.capture_dir)
 
         settings['polygon'] = None
-        #settings['l2w_parameters'] = None
         settings['rgb_rhot'] = True
         settings['rgb_rhos'] = True
-        settings['map_l2w'] = False
+        settings['map_l2w'] = True
+        settings['l2w_mask'] = True
 
         settings['l2w_parameters'] = ['Rrs_*', \
                                     'spm_nechad2010', \
@@ -1339,7 +1348,6 @@ class HypsoBase:
                                     'fait', \
                                     'ndci']
 
-        settings['l2w_mask']=False
 
         processed = acolite_run(settings=settings)
 
