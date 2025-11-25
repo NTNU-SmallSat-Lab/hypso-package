@@ -442,6 +442,8 @@ class HypsoBase:
 
         path = Path(path).absolute()
 
+
+
         fields = self._parse_filename(path=path)
 
         for key, value in fields.items():
@@ -451,17 +453,13 @@ class HypsoBase:
 
         self.capture_name = capture_name
 
+        self.capture_dir = Path(path.parent.absolute(), capture_name + "_tmp")
+        self.parent_dir = Path(path.parent.absolute())
+
         self.l1a_nc_file = Path(path.parent, capture_name + "-l1a.nc")
         self.l1b_nc_file = Path(path.parent, capture_name + "-l1b.nc")
         self.l1c_nc_file = Path(path.parent, capture_name + "-l1c.nc")
         self.l1d_nc_file = Path(path.parent, capture_name + "-l1d.nc")
-
-        self.l1d_ocsmart_input_nc_file = Path(path.parent, str(self.sensor).upper() + "_" + str(capture_name) + "-l1d.nc")
-        self.l2a_ocsmart_output_h5_file = Path(path.parent, str(self.sensor).upper() + "_" + str(capture_name) + "-l1d_L2_OCSMART.h5") #HYPSO2_HSI_aeronetvenice_2025-06-22T10-46-15Z-l1d_L2_OCSMART
-        
-
-        self.capture_dir = Path(path.parent.absolute(), capture_name + "_tmp")
-        self.parent_dir = Path(path.parent.absolute())
 
         match fields['product_level']:
             case "l1a":
@@ -537,6 +535,16 @@ class HypsoBase:
 
         setattr(self, cube_name, nc_cube)
         
+
+
+        self.ocsmart_l1d_input_nc_file = Path(path.parent, str(self.sensor).upper() + "_" + str(capture_name) + "-l1d.nc")
+        self.ocsmart_l2a_output_h5_file = Path(path.parent, str(self.sensor).upper() + "_" + str(capture_name) + "-l1d_L2_OCSMART.h5") #HYPSO2_HSI_aeronetvenice_2025-06-22T10-46-15Z-l1d_L2_OCSMART
+
+
+        dt = datetime.fromtimestamp(self.unixtime, tz=timezone.utc)
+        self.acolite_l2r_output_file =  Path(self.capture_dir, f"{self.platform.upper()}_{dt.strftime('%Y_%m_%d_%H_%M_%S')}_L1R.nc")
+        self.acolite_l2w_output_file =  Path(self.capture_dir, f"{self.platform.upper()}_{dt.strftime('%Y_%m_%d_%H_%M_%S')}_L1W.nc")
+
 
         return None
 
@@ -683,7 +691,9 @@ class HypsoBase:
         self.start_timestamp_adcs = self.start_timestamp_capture - time_margin_start
         self.end_timestamp_adcs = self.end_timestamp_capture + time_margin_end
         self.unixtime = self.start_timestamp_capture
-        self.iso_time = datetime.utcfromtimestamp(self.unixtime).isoformat()
+
+        #self.iso_time = datetime.utcfromtimestamp(self.unixtime).isoformat()
+        self.iso_time = datetime.fromtimestamp(self.unixtime, tz=timezone.utc).isoformat()
 
         return None
 
@@ -1162,9 +1172,9 @@ class HypsoBase:
                 dst_dir.mkdir(parents=True, exist_ok=True)
 
                 src_file = self.l1d_nc_file
-                dst_file = Path(dst_dir, self.l1d_ocsmart_input_nc_file.name)
+                dst_file = Path(dst_dir, self.ocsmart_l1d_input_nc_file.name)
 
-                self.l1d_ocsmart_input_nc_file = dst_file
+                self.ocsmart_l1d_input_nc_file = dst_file
 
                 import shutil
                 shutil.copy2(src_file, dst_file)
@@ -1194,8 +1204,8 @@ class HypsoBase:
         ocsmart_run_script = Path(self.ocsmart_dir, "OCSMART.py")
         subprocess.run(["python3", ocsmart_run_script], cwd=self.ocsmart_dir, check=True)
 
-        print("[INFO] Removing staged OC-SMART input file " + str(self.l1d_ocsmart_input_nc_file))
-        self.l1d_ocsmart_input_nc_file.unlink(missing_ok=True)
+        print("[INFO] Removing staged OC-SMART input file " + str(self.ocsmart_l1d_input_nc_file))
+        self.ocsmart_l1d_input_nc_file.unlink(missing_ok=True)
 
         print("[INFO] OC-SMART atmospheric correction complete.")
 
@@ -1217,7 +1227,7 @@ class HypsoBase:
             h5_file_path = Path(h5_file_path).absolute()
         else:
             ocsmart_output_dir = Path(self.ocsmart_dir, "L2/")
-            h5_file_path = Path(ocsmart_output_dir, self.l2a_ocsmart_output_h5_file.name)
+            h5_file_path = Path(ocsmart_output_dir, self.ocsmart_l2a_output_h5_file.name)
 
 
         if h5_file_path.is_file():
