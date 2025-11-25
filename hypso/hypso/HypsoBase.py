@@ -1335,7 +1335,7 @@ class HypsoBase:
         settings['polygon'] = None
         settings['rgb_rhot'] = True
         settings['rgb_rhos'] = True
-        settings['map_l2w'] = True
+        settings['map_l2w'] = False #produces blank .pngs
         settings['l2w_mask'] = True
 
         settings['l2w_parameters'] = ['Rrs_*', \
