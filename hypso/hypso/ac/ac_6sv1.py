@@ -107,8 +107,12 @@ def download_viirs_aot(footprint_polygon, temporal_range, local_path='data_aeros
     print(f"\nTotal granules found: {len(all_results)}")
     
     # Download the files
-    files = earthaccess.download(all_results, local_path=local_path)
-    print(f"Downloaded {len(files)} files to {local_path}")
+    try:
+        files = earthaccess.download(all_results, local_path=local_path)
+        print(f"Downloaded {len(files)} files to {local_path}")
+    except ValueError as ex:
+        print("[WARNING] No VIIRS files downloaded.")
+        files = None
     
     return files
 
@@ -814,16 +818,18 @@ def run_6sv1_atmospheric_correction(satobj, dem_path: Path = None, VERBOSE: bool
         longitudes = satobj.longitudes_indirect
     except Exception as ex:
         print(ex)
-        print("[WARNING] Defaulting to direct georeferencing.")
+        print("[WARNING] 6SV1 defaulting to direct georeferencing.")
         latitudes = satobj.latitudes
         longitudes = satobj.longitudes
 
 
     footprint, bbox, temporal = _extract_footprint_and_date(satobj=satobj)
 
-    print("Footprint polygon:", footprint)
-    print("Bounding rectangle:", bbox)
-    print("Temporal range:", temporal)
+    #print("Footprint polygon:", footprint)
+    #print("Bounding rectangle:", bbox)
+
+    if VERBOSE:
+        print("Temporal range:", temporal)
 
     path = Path(satobj.capture_dir)
     path.joinpath("data_aerosol")
@@ -837,14 +843,16 @@ def run_6sv1_atmospheric_correction(satobj, dem_path: Path = None, VERBOSE: bool
     try:
         files_f = [f for f in files if 'NOAA' in str(f)]
         all_aot_NOAA, all_lat_NOAA, all_lon_NOAA, aot_inside_NOAA = get_aot_in_swath(files_f, footprint, latitudes, longitudes, name='NOAA')
-        print(np.mean(aot_inside_NOAA))
+        if VERBOSE:
+            print(np.mean(aot_inside_NOAA))
     except Exception:
         pass
 
     try:
         files_f = [f for f in files if 'SNPP' in str(f)]
         all_aot_SNPP, all_lat_SNPP, all_lon_SNPP, aot_inside_SNPP = get_aot_in_swath(files_f, footprint, latitudes, longitudes, name='SNPP')
-        print(np.mean(aot_inside_SNPP))
+        if VERBOSE:
+            print(np.mean(aot_inside_SNPP))
     except Exception:
         pass
 
@@ -861,9 +869,9 @@ def run_6sv1_atmospheric_correction(satobj, dem_path: Path = None, VERBOSE: bool
         print("[WARNING] No AOT at 550nm value found.")
         aot550 = None
 
-    
-    print("AOT550 Value:")
-    print(aot550)
+    if VERBOSE:
+        print("AOT550 Value:")
+        print(aot550)
 
 
 
@@ -908,7 +916,7 @@ def run_6sv1_atmospheric_correction(satobj, dem_path: Path = None, VERBOSE: bool
     height, width, bands = cube.shape
 
     #for BandId in tqdm(range(120))
-    for band in range(0,bands):
+    for band in tqdm(range(0,bands)):
         for i in range(0,height):
             for j in range(0,width):
 
