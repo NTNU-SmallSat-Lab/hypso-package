@@ -86,6 +86,8 @@ def download_viirs_aot(footprint_polygon, temporal_range, local_path='data_aeros
     """
     # Log in (only once per session)
     earthaccess.login()
+
+    print(earthaccess.status())
     
     # Satellites to query
     short_names = ['AERDB_L2_VIIRS_SNPP', 'AERDB_L2_VIIRS_NOAA20']
