@@ -5,6 +5,7 @@ import netCDF4 as nc
 from pathlib import Path
 from hypso.utils import is_integer_num
 from typing import Tuple
+import numpy as np
 
 
 def load_adcs_from_nc_file(nc_file_path: Path) -> Tuple[dict, dict]:
@@ -289,7 +290,7 @@ def load_navigation_from_nc_file(nc_file_path: Path) -> dict:
         group = f.groups["navigation"]
         
         for key in group.variables.keys():
-            value = group.variables[key][:]
+            value = np.array(group.variables[key][:])
             navigation_vars[key] = value
 
         for attrname in group.ncattrs():

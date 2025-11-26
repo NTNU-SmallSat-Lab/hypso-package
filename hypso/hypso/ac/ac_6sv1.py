@@ -22,8 +22,74 @@ from tqdm import tqdm
 
 from datetime import datetime, timedelta, timezone
 
-from .dem import MeanDEM
+#from .dem import MeanDEM
 
+from osgeo import gdal
+
+def MeanDEM(pointUL, pointDR, dem_path: Path = None) -> float:
+    """
+    Calculate the average elevation of the area where the image is located.
+
+    :param pointUL: Upper left corner of the lat/lon array
+    :param pointDR: Lower right corner of the lat/lon array
+
+    :return: Mean elevation of the area where the image was captured
+    """
+
+
+    if dem_path is None:
+
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        dem_path = os.path.join(script_dir, "GMTED2km.tif")
+
+    else:
+        dem_path = Path(dem_path).absolute()
+
+    try:
+        DEMIDataSet = gdal.Open(str(dem_path))
+    except Exception as e:
+        raise e
+
+    DEMBand = DEMIDataSet.GetRasterBand(1)
+    geotransform = DEMIDataSet.GetGeoTransform()
+
+    # DEM Resolution
+    pixelWidth = geotransform[1]
+    pixelHight = geotransform[5]
+
+    # DEM start point: top left corner, X: longitude, Y: latitude
+    originX = geotransform[0]
+    originY = geotransform[3]
+
+    # Location of the upper left corner of the study area in the DEM matrix
+    yoffset1 = int((originY - pointUL['lat']) / pixelWidth)
+    xoffset1 = int((pointUL['lon'] - originX) / (-pixelHight))
+
+    # Location of the lower right corner of the study area in the DEM matrix
+    yoffset2 = int((originY - pointDR['lat']) / pixelWidth)
+    xoffset2 = int((pointDR['lon'] - originX) / (-pixelHight))
+
+    # Number of ranks of the matrix in the study area
+    xx = xoffset2 - xoffset1
+    yy = yoffset2 - yoffset1
+
+
+    # Handle single point look up
+    if xx == 0:
+        xx = xx + 1
+    
+    if yy == 0:
+        yy = yy + 1
+
+    #DEMBand.ReadAsArray(x, y, 1, 1)[0, 0]
+
+    # Read data from the study area and calculate elevations
+    DEMRasterData = DEMBand.ReadAsArray(xoffset1, yoffset1, xx, yy)
+    #DEMRasterData = DEMBand.ReadAsArray(xoffset1, yoffset1, 1, 1)
+
+    MeanAltitude = np.mean(DEMRasterData)
+
+    return MeanAltitude
 
 
 def _extract_footprint_and_date(satobj):
@@ -163,7 +229,7 @@ def get_aot_in_swath(files_f, footprint_precise, latitudes, longitudes, aot_var=
 
 
     savefig_path = Path(local_path)
-    savefig_path.joinpath(str(name) + ".png")
+    savefig_path = savefig_path.joinpath(str(name) + ".png")
 
     #'''
     # Scatter plot
@@ -599,13 +665,13 @@ def run_py6s(wavelengths: np.ndarray,
 
 
 
-    rho_R_values = np.empty_like(depth)
-    rho_A_R_values = np.empty_like(depth)
-    Tg_H20_values = np.empty_like(depth)
-    Tg_O3_values = np.empty_like(depth)
-    #Tg_OG_values = np.empty_like(depth)
-    Ts_Tv_values = np.empty_like(depth)
-    S_atm_values = np.empty_like(depth)
+    rho_R_values = np.empty((depth))
+    rho_A_R_values = np.empty((depth))
+    Tg_H20_values = np.empty((depth))
+    Tg_O3_values = np.empty((depth))
+    #Tg_OG_values =np.empty((depth))
+    Ts_Tv_values = np.empty((depth))
+    S_atm_values = np.empty((depth))
 
 
 
@@ -759,50 +825,50 @@ def run_py6s(wavelengths: np.ndarray,
         S_atm_values[BandId] = S_atm
 
 
-                
-        # Linear 1D Interp to Fill Values skipped due to AOT Variances
-        spectra = rho_R_values[:]
-        wl = init_parameters['wavelengths']
-        nans = np.isnan(spectra)
-        spectra[nans] = np.interp(wl[nans], wl[~nans], spectra[~nans])
-        interp_spectra = spectra
-        rho_R_values[:] = interp_spectra
+    '''
+    # Linear 1D Interp to Fill Values skipped due to AOT Variances
+    spectra = rho_R_values[:]
+    wl = init_parameters['wavelengths']
+    nans = np.isnan(spectra)
+    spectra[nans] = np.interp(wl[nans], wl[~nans], spectra[~nans])
+    interp_spectra = spectra
+    rho_R_values[:] = interp_spectra
 
-        spectra = rho_A_R_values[:]
-        wl = init_parameters['wavelengths']
-        nans = np.isnan(spectra)
-        spectra[nans] = np.interp(wl[nans], wl[~nans], spectra[~nans])
-        interp_spectra = spectra
-        rho_A_R_values[:] = interp_spectra
+    spectra = rho_A_R_values[:]
+    wl = init_parameters['wavelengths']
+    nans = np.isnan(spectra)
+    spectra[nans] = np.interp(wl[nans], wl[~nans], spectra[~nans])
+    interp_spectra = spectra
+    rho_A_R_values[:] = interp_spectra
 
-        spectra = Tg_H20_values[:]
-        wl = init_parameters['wavelengths']
-        nans = np.isnan(spectra)
-        spectra[nans] = np.interp(wl[nans], wl[~nans], spectra[~nans])
-        interp_spectra = spectra
-        Tg_H20_values[:] = interp_spectra
+    spectra = Tg_H20_values[:]
+    wl = init_parameters['wavelengths']
+    nans = np.isnan(spectra)
+    spectra[nans] = np.interp(wl[nans], wl[~nans], spectra[~nans])
+    interp_spectra = spectra
+    Tg_H20_values[:] = interp_spectra
 
-        spectra = Tg_O3_values[:]
-        wl = init_parameters['wavelengths']
-        nans = np.isnan(spectra)
-        spectra[nans] = np.interp(wl[nans], wl[~nans], spectra[~nans])
-        interp_spectra = spectra
-        Tg_O3_values[:] = interp_spectra
+    spectra = Tg_O3_values[:]
+    wl = init_parameters['wavelengths']
+    nans = np.isnan(spectra)
+    spectra[nans] = np.interp(wl[nans], wl[~nans], spectra[~nans])
+    interp_spectra = spectra
+    Tg_O3_values[:] = interp_spectra
 
-        spectra = Ts_Tv_values[:]
-        wl = init_parameters['wavelengths']
-        nans = np.isnan(spectra)
-        spectra[nans] = np.interp(wl[nans], wl[~nans], spectra[~nans])
-        interp_spectra = spectra
-        Ts_Tv_values[:] = interp_spectra
+    spectra = Ts_Tv_values[:]
+    wl = init_parameters['wavelengths']
+    nans = np.isnan(spectra)
+    spectra[nans] = np.interp(wl[nans], wl[~nans], spectra[~nans])
+    interp_spectra = spectra
+    Ts_Tv_values[:] = interp_spectra
 
-        spectra = S_atm_values[:]
-        wl = init_parameters['wavelengths']
-        nans = np.isnan(spectra)
-        spectra[nans] = np.interp(wl[nans], wl[~nans], spectra[~nans])
-        interp_spectra = spectra
-        S_atm_values[:] = interp_spectra
-
+    spectra = S_atm_values[:]
+    wl = init_parameters['wavelengths']
+    nans = np.isnan(spectra)
+    spectra[nans] = np.interp(wl[nans], wl[~nans], spectra[~nans])
+    interp_spectra = spectra
+    S_atm_values[:] = interp_spectra
+    '''
 
     return rho_R_values, rho_A_R_values, Tg_H20_values, Tg_O3_values, Ts_Tv_values, S_atm_values
 
@@ -836,7 +902,7 @@ def run_6sv1_atmospheric_correction(satobj, dem_path: Path = None, VERBOSE: bool
         print("Temporal range:", temporal)
 
     path = Path(satobj.capture_dir)
-    path.joinpath("data_aerosol")
+    path = path.joinpath("data_aerosol")
     path.mkdir(parents=True, exist_ok=True)
 
     files = download_viirs_aot(footprint_polygon=footprint, temporal_range=temporal, local_path=path)
@@ -846,19 +912,19 @@ def run_6sv1_atmospheric_correction(satobj, dem_path: Path = None, VERBOSE: bool
 
     try:
         files_f = [f for f in files if 'NOAA' in str(f)]
-        all_aot_NOAA, all_lat_NOAA, all_lon_NOAA, aot_inside_NOAA = get_aot_in_swath(files_f, footprint, latitudes, longitudes, name='NOAA')
+        all_aot_NOAA, all_lat_NOAA, all_lon_NOAA, aot_inside_NOAA = get_aot_in_swath(files_f, footprint, latitudes, longitudes, name='NOAA', local_path=path)
         if VERBOSE:
             print(np.mean(aot_inside_NOAA))
-    except Exception:
-        pass
+    except Exception as ex:
+        print(ex)
 
     try:
         files_f = [f for f in files if 'SNPP' in str(f)]
-        all_aot_SNPP, all_lat_SNPP, all_lon_SNPP, aot_inside_SNPP = get_aot_in_swath(files_f, footprint, latitudes, longitudes, name='SNPP')
+        all_aot_SNPP, all_lat_SNPP, all_lon_SNPP, aot_inside_SNPP = get_aot_in_swath(files_f, footprint, latitudes, longitudes, name='SNPP', local_path=path)
         if VERBOSE:
             print(np.mean(aot_inside_SNPP))
-    except Exception:
-        pass
+    except Exception as ex:
+        print(ex)
 
     if aot_inside_NOAA is None and aot_inside_SNPP is not None:
         aot550 = np.mean(aot_inside_SNPP)
@@ -867,7 +933,7 @@ def run_6sv1_atmospheric_correction(satobj, dem_path: Path = None, VERBOSE: bool
         aot550 = np.mean(aot_inside_NOAA)
     
     elif aot_inside_SNPP is not None and aot_inside_NOAA is not None:
-        aot550 = np.mean(np.concatenate(aot_inside_NOAA, aot_inside_SNPP))
+        aot550 = np.mean(np.concatenate([aot_inside_NOAA, aot_inside_SNPP]))
     else:
 
         print("[WARNING] No AOT at 550nm value found.")
