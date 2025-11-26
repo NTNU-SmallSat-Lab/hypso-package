@@ -63,7 +63,7 @@ def _extract_footprint_and_date(satobj):
     ]
 
     # Extract date from file name using regex
-    file_date = satobj.iso_time
+    file_date = satobj.unixtime
     temporal_range = (file_date - timedelta(hours=12), file_date + timedelta(hours=12))
 
 
