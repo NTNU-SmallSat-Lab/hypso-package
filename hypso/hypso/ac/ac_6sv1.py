@@ -18,7 +18,9 @@ import earthaccess
 import dateutil
 
 import Py6S
-import tqdm
+from tqdm import tqdm
+
+from datetime import datetime, timedelta
 
 from .dem import MeanDEM
 
@@ -62,7 +64,7 @@ def _extract_footprint_and_date(satobj):
 
     # Extract date from file name using regex
     file_date = satobj.iso_time
-    temporal_range = (file_date, file_date)
+    temporal_range = (file_date - timedelta(hours=12), file_date + timedelta(hours=12))
 
 
     return footprint_precise, simple_polygon_ccw, temporal_range
