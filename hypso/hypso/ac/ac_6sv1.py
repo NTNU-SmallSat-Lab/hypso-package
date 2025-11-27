@@ -825,7 +825,7 @@ def run_py6s(wavelengths: np.ndarray,
         S_atm_values[BandId] = S_atm
 
 
-    '''
+    
     # Linear 1D Interp to Fill Values skipped due to AOT Variances
     spectra = rho_R_values[:]
     wl = init_parameters['wavelengths']
@@ -868,7 +868,7 @@ def run_py6s(wavelengths: np.ndarray,
     spectra[nans] = np.interp(wl[nans], wl[~nans], spectra[~nans])
     interp_spectra = spectra
     S_atm_values[:] = interp_spectra
-    '''
+    
 
     return rho_R_values, rho_A_R_values, Tg_H20_values, Tg_O3_values, Ts_Tv_values, S_atm_values
 
@@ -987,37 +987,35 @@ def run_6sv1_atmospheric_correction(satobj, dem_path: Path = None, VERBOSE: bool
 
     #for BandId in tqdm(range(120))
     for band in tqdm(range(0,bands)):
-        for i in range(0,height):
-            for j in range(0,width):
 
-                #rho_toa = l1d_cube[i,j,band]
+        #rho_toa = l1d_cube[i,j,band]
 
-                #rho_R = rho_R_values[i,j,band]
-                #rho_A_R = rho_A_R_values[i,j,band]
-                #Tg_H20 = Tg_H20_values[i,j,band]
-                #Tg_O3 = Tg_O3_values[i,j,band]
-                #Ts_Tv = Ts_Tv_values[i,j,band]
-                #S_atm = S_atm_values[i,j,band]
+        #rho_R = rho_R_values[i,j,band]
+        #rho_A_R = rho_A_R_values[i,j,band]
+        #Tg_H20 = Tg_H20_values[i,j,band]
+        #Tg_O3 = Tg_O3_values[i,j,band]
+        #Ts_Tv = Ts_Tv_values[i,j,band]
+        #S_atm = S_atm_values[i,j,band]
 
-                rho_toa = l1d_cube[band]
+        rho_toa = l1d_cube[:,:,band]
 
-                rho_R = rho_R_values[band]
-                rho_A_R = rho_A_R_values[band]
-                Tg_H20 = Tg_H20_values[band]
-                Tg_O3 = Tg_O3_values[band]
-                Ts_Tv = Ts_Tv_values[band]
-                S_atm = S_atm_values[band]
+        rho_R = rho_R_values[band]
+        rho_A_R = rho_A_R_values[band]
+        Tg_H20 = Tg_H20_values[band]
+        Tg_O3 = Tg_O3_values[band]
+        Ts_Tv = Ts_Tv_values[band]
+        S_atm = S_atm_values[band]
 
-                rho_atm = rho_R + (rho_A_R - rho_R)*Tg_H20
+        rho_atm = rho_R + (rho_A_R - rho_R)*Tg_H20
 
-                Y = rho_toa - rho_atm * Tg_O3
+        Y = rho_toa - rho_atm * Tg_O3
 
-                numerator = Y
-                denominator = (S_atm * Y) + (Ts_Tv * Tg_O3 * Tg_H20)
+        numerator = Y
+        denominator = (S_atm * Y) + (Ts_Tv * Tg_O3 * Tg_H20)
 
-                rho_s = numerator / denominator
+        rho_s = numerator / denominator
 
-                cube[i,j,band] = rho_s
+        cube[:,:,band] = rho_s
 
 
 

@@ -623,6 +623,7 @@ class HypsoBase:
                 setattr(self, 'latitudes', value)
             elif key == 'longitude':
                 setattr(self, 'longitudes', value)
+
             elif key == 'latitude_indirect':
                 setattr(self, 'latitudes_indirect', value)
             elif key == 'longitude_indirect':
@@ -633,29 +634,46 @@ class HypsoBase:
                 setattr(self, 'sat_zenith_angles', value)
             elif key == 'sensor_azimuth':
                 setattr(self, 'sat_azimuth_angles', value)
+
             elif key == 'sensor_zenith_indirect':
                 setattr(self, 'sat_zenith_angles_indirect', value)
+                if getattr(self, 'sat_zenith_angles', None) is None:
+                    setattr(self, 'sat_zenith_angles', value)
+
             elif key == 'sensor_azimuth_indirect':
                 setattr(self, 'sat_azimuth_angles_indirect', value)
-
+                if getattr(self, 'sat_azimuth_angles', None) is None:
+                    setattr(self, 'sat_azimuth_angles', value)
 
             elif key == 'solar_zenith':
                 setattr(self, 'solar_zenith_angles', value)
             elif key == 'solar_azimuth':
                 setattr(self, 'solar_azimuth_angles', value)
+
             elif key == 'solar_zenith_indirect':
                 setattr(self, 'solar_zenith_angles_indirect', value)
+                if getattr(self, 'solar_zenith_angles', None) is None:
+                    setattr(self, 'solar_zenith_angles', value)
+
             elif key == 'solar_azimuth_indirect':
                 setattr(self, 'solar_azimuth_angles_indirect', value)
-
+                if getattr(self, 'solar_azimuth_angles', None) is None:
+                    setattr(self, 'solar_azimuth_angles', value)
 
             elif key == 'relative_azimuth':
                 setattr(self, 'relative_azimuth_angles', value)
+
             elif key == 'relative_azimuth_indirect':
                 setattr(self, 'relative_azimuth_angles_indirect', value)
-
+                if getattr(self, 'relative_azimuth_angles', None) is None:
+                    setattr(self, 'relative_azimuth_angles', value)
+                
             else:
                 setattr(self, key, value)
+
+
+
+
 
 
 
