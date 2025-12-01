@@ -10,7 +10,6 @@ from pathlib import Path
 # then try the command 'pip install --no-cache --force-reinstall gdal[numpy]=="$(gdal-config --version).*"' to reinstall it.
 
 
-
 def MeanDEM(pointUL, pointDR, dem_path: Path = None) -> float:
     """
     Calculate the average elevation of the area where the image is located.
@@ -20,6 +19,7 @@ def MeanDEM(pointUL, pointDR, dem_path: Path = None) -> float:
 
     :return: Mean elevation of the area where the image was captured
     """
+
 
     if dem_path is None:
 
