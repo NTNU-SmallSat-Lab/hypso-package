@@ -50,12 +50,12 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
                 lons = lons.reshape(satobj.spatial_dimensions)
 
 
-                # Directly provide the indirect lat/lons loaded from the file. This function will run the track geometry computations.
-                satobj.run_indirect_georeferencing(latitudes=lats, longitudes=lons)
+                # Directly provide the indirect lat/lons loaded from the files. This function will run the track geometry computations.
+                satobj.run_georeferencing(latitudes=lats, longitudes=lons)
 
                 satobj.generate_l1b_cube()
                 satobj.generate_l1c_cube()
-                satobj.generate_l1d_cube(use_indirect_georef=True)
+                satobj.generate_l1d_cube()
 
             except Exception as ex:
                 print(ex)
@@ -64,7 +64,7 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
                 satobj.run_direct_georeferencing()
                 satobj.generate_l1b_cube()
                 satobj.generate_l1c_cube()
-                satobj.generate_l1d_cube(use_indirect_georef=False)
+                satobj.generate_l1d_cube(use_direct_georef=True)
 
         else:
             satobj.run_direct_georeferencing()

@@ -971,12 +971,19 @@ class HypsoBase:
         return None
 
 
-    def run_georeferencing(self) -> None:
+    def run_georeferencing(self,
+                            latitudes: np.ndarray = None,
+                            longitudes: np.ndarray = None
+                            ) -> None:
         
 
         if self.VERBOSE:
             print('[INFO] Running georeferencing...')
     
+        if latitudes is not None and longitudes is not None:
+            self.latitudes = latitudes
+            self.longitudes = longitudes   
+
         bbox, \
         resolution, \
         along_track_gsd, \

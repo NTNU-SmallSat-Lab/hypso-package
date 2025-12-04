@@ -2,7 +2,7 @@ from .utils import set_or_create_attr
 from pathlib import Path
 import netCDF4 as nc
 import numpy as np
-from .navigation_group_writer import navigation_group_writer
+from .geometry_group_writer import geometry_group_writer
 from .calibration_filenames_writer import calibration_filenames_writer
 
 from matplotlib import pyplot as plt
@@ -86,6 +86,6 @@ def products_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
 
             variable[:] = product.to_numpy()
 
-        navigation_group_writer(satobj=satobj, netfile=netfile)
+        geometry_group_writer(satobj=satobj, netfile=netfile)
 
     return None
