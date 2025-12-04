@@ -12,6 +12,6 @@ from .utils import load_capture_config_from_nc_file, \
                     load_logfiles_from_nc_file, \
                     load_temperature_from_nc_file, \
                     load_ncattrs_from_nc_file, \
-                    load_navigation_from_nc_file, \
+                    load_geometry_from_nc_file, \
                     load_gcp_from_nc_file
 

@@ -2,7 +2,7 @@ from .utils import set_or_create_attr
 from pathlib import Path
 import netCDF4 as nc
 import numpy as np
-from .navigation_group_writer import navigation_group_writer
+from .geometry_group_writer import geometry_group_writer
 from .calibration_filenames_writer import calibration_filenames_writer
 from .metadata_gcp_group_writer import metadata_gcp_group_writer
 from pathlib import Path
@@ -462,7 +462,7 @@ def l2_nc_writer(satobj, correction: str, dst_nc: str, datacube: str = True) -> 
         #     ('lines',))
         # timestamps_srv[:] = getattr(satobj, 'nc_timing_vars')["timestamps_srv"][:]
     
-        navigation_group_writer(satobj=satobj, netfile=netfile)
+        geometry_group_writer(satobj=satobj, netfile=netfile)
 
         metadata_gcp_group_writer(satobj, netfile, COMP_SCHEME=COMP_SCHEME, COMP_LEVEL=COMP_LEVEL, COMP_SHUFFLE=COMP_SHUFFLE)
 

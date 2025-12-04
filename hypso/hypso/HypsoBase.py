@@ -496,8 +496,8 @@ class HypsoBase:
         # TODO: find a better method to pass all of this information
         nc_metadata_vars, \
         nc_metadata_attrs, \
-        nc_navigation_vars, \
-        nc_navigation_attrs, \
+        nc_geometry_vars, \
+        nc_geometry_attrs, \
         nc_gcp_vars, \
         nc_gcp_attrs, \
         nc_global_metadata, \
@@ -520,8 +520,8 @@ class HypsoBase:
         setattr(self, "nc_temperature_attrs", nc_metadata_attrs["temperature"])
         setattr(self, "nc_timing_attrs", nc_metadata_attrs["timing"])
  
-        setattr(self, "nc_navigation_vars", nc_navigation_vars)
-        setattr(self, "nc_navigation_attrs", nc_navigation_attrs)
+        setattr(self, "nc_geometry_vars", nc_geometry_vars)
+        setattr(self, "nc_geometry_attrs", nc_geometry_attrs)
 
         setattr(self, "nc_gcp_vars", nc_gcp_vars)
         setattr(self, "nc_gcp_attrs", nc_gcp_attrs)
@@ -615,8 +615,8 @@ class HypsoBase:
 
 
 
-        # Navigation atrributes
-        for key, value in self.nc_navigation_vars.items():
+        # Geometry atrributes
+        for key, value in self.nc_geometry_vars.items():
             if key == 'unixtime':
                 continue
             elif key == 'latitude':
@@ -624,10 +624,10 @@ class HypsoBase:
             elif key == 'longitude':
                 setattr(self, 'longitudes', value)
 
-            elif key == 'latitude_indirect':
-                setattr(self, 'latitudes_indirect', value)
-            elif key == 'longitude_indirect':
-                setattr(self, 'longitudes_indirect', value)
+            elif key == 'latitude_direct':
+                setattr(self, 'latitudes_direct', value)
+            elif key == 'longitude_direct':
+                setattr(self, 'longitudes_direct', value)
 
 
             elif key == 'sensor_zenith':
@@ -635,13 +635,13 @@ class HypsoBase:
             elif key == 'sensor_azimuth':
                 setattr(self, 'sat_azimuth_angles', value)
 
-            elif key == 'sensor_zenith_indirect':
-                setattr(self, 'sat_zenith_angles_indirect', value)
+            elif key == 'sensor_zenith_direct':
+                setattr(self, 'sat_zenith_angles_direct', value)
                 if getattr(self, 'sat_zenith_angles', None) is None:
                     setattr(self, 'sat_zenith_angles', value)
 
-            elif key == 'sensor_azimuth_indirect':
-                setattr(self, 'sat_azimuth_angles_indirect', value)
+            elif key == 'sensor_azimuth_direct':
+                setattr(self, 'sat_azimuth_angles_direct', value)
                 if getattr(self, 'sat_azimuth_angles', None) is None:
                     setattr(self, 'sat_azimuth_angles', value)
 
@@ -650,21 +650,21 @@ class HypsoBase:
             elif key == 'solar_azimuth':
                 setattr(self, 'solar_azimuth_angles', value)
 
-            elif key == 'solar_zenith_indirect':
-                setattr(self, 'solar_zenith_angles_indirect', value)
+            elif key == 'solar_zenith_direct':
+                setattr(self, 'solar_zenith_angles_direct', value)
                 if getattr(self, 'solar_zenith_angles', None) is None:
                     setattr(self, 'solar_zenith_angles', value)
 
-            elif key == 'solar_azimuth_indirect':
-                setattr(self, 'solar_azimuth_angles_indirect', value)
+            elif key == 'solar_azimuth_direct':
+                setattr(self, 'solar_azimuth_angles_direct', value)
                 if getattr(self, 'solar_azimuth_angles', None) is None:
                     setattr(self, 'solar_azimuth_angles', value)
 
             elif key == 'relative_azimuth':
                 setattr(self, 'relative_azimuth_angles', value)
 
-            elif key == 'relative_azimuth_indirect':
-                setattr(self, 'relative_azimuth_angles_indirect', value)
+            elif key == 'relative_azimuth_direct':
+                setattr(self, 'relative_azimuth_angles_direct', value)
                 if getattr(self, 'relative_azimuth_angles', None) is None:
                     setattr(self, 'relative_azimuth_angles', value)
                 
@@ -845,7 +845,7 @@ class HypsoBase:
         return None
     
 
-    def _run_toa_reflectance(self, use_indirect_georef=False) -> np.ndarray:
+    def _run_toa_reflectance(self, use_direct_georef=False) -> np.ndarray:
 
         if self.l1b_cube is not None:
             toa_radiance = self.l1b_cube
@@ -855,22 +855,16 @@ class HypsoBase:
             self.generate_l1b_cube()
             toa_radiance = self.l1b_cube
 
+        solar_zenith_angles=self.solar_zenith_angles
         
-        if use_indirect_georef and hasattr(self, 'solar_zenith_angles_indirect'):
-
-            if self.VERBOSE:
-                print('[WARNING] Computing TOA reflectance using INDIRECT georeferencing geometry.')
-
-            solar_zenith_angles=self.solar_zenith_angles_indirect
-
-        else:
+        if use_direct_georef and hasattr(self, 'solar_zenith_angles_direct'):
 
             if self.VERBOSE:
                 print('[WARNING] Computing TOA reflectance using DIRECT georeferencing geometry.')
 
-            solar_zenith_angles=self.solar_zenith_angles
+            solar_zenith_angles=self.solar_zenith_angles_direct
 
-
+            
         toa_reflectance, srf, esun = compute_toa_reflectance(sensor_wavelengths=self.wavelengths,
                                                              sensor_fwhm=self.fwhm,
                                                              toa_radiance=toa_radiance,
@@ -880,10 +874,55 @@ class HypsoBase:
 
         return toa_reflectance, srf, esun
 
-    def run_direct_georeferencing(self) -> None: 
+    def run_direct_georeferencing(self, 
+                            points_file_path: Union[str, Path] = None, 
+                            latitudes: np.ndarray = None,
+                            longitudes: np.ndarray = None,
+                            image_mode: str = None, 
+                            origin_mode: str = 'cube',
+                            flip: bool = False,
+                            ) -> None: 
 
         if self.VERBOSE:
             print("[INFO] Running direct georeferencing...")
+
+        if latitudes is not None and longitudes is not None:
+            self.latitudes_direct = latitudes
+            self.longitudes_direct = longitudes    
+
+        else:
+            points_file_path = Path(points_file_path).absolute()
+
+            if not origin_mode:
+                origin_mode = 'cube'
+
+            gr = Georeferencer(filename=points_file_path,
+                                                cube_height=self.spatial_dimensions[0],
+                                                cube_width=self.spatial_dimensions[1],
+                                                image_mode=image_mode,
+                                                origin_mode=origin_mode)
+
+            if self.VERBOSE:
+                print("[INFO] Does check_star_tracker_orientation() indicate image flip?")
+                print(check_star_tracker_orientation(self.nc_adcs_vars))
+
+            #datacube_flipped = check_star_tracker_orientation(self.nc_adcs_vars)
+
+            if flip:
+                self.latitudes_direct = gr.latitudes[:,::-1]
+                self.longitudes_direct = gr.longitudes[:,::-1]
+            else:
+                self.latitudes_direct = gr.latitudes[:,:]
+                self.longitudes_direct = gr.longitudes[:,:]
+    
+        # Check if direct and indirect georeferencing have the same lat/lon orientations
+        if (self.latitudes_direct[-1,-1] - self.latitudes_direct[-1,0]) * (self.latitudes[-1,-1] - self.latitudes[-1,0]) < 0:
+            raise ValueError("Latitude of direct georeferencing is flipped with respect to indirect georeferencing. Check if flip paramater is set correctly")
+        elif (self.longitudes_direct[-1,-1] - self.longitudes_direct[-1,0]) * (self.longitudes[-1,-1] - self.longitudes[-1,0]) < 0:
+            raise ValueError("Longitude of direct georeferencing is flipped with respect to indirect georeferencing. Check if flip paramater is set correctly")
+
+
+
 
         try:
             getattr(self, 'framepose')
@@ -902,9 +941,42 @@ class HypsoBase:
                 print('[INFO] off the earth\'s horizon. Cant georeference this image.')
             return None
 
-        self.latitudes = pixels_lat.reshape(self.spatial_dimensions)
-        self.longitudes = pixels_lon.reshape(self.spatial_dimensions)
+        self.latitudes_direct = pixels_lat.reshape(self.spatial_dimensions)
+        self.longitudes_direct = pixels_lon.reshape(self.spatial_dimensions)
 
+        bbox, \
+        resolution, \
+        along_track_gsd, \
+        across_track_gsd = self._run_track_geometry(latitudes=self.latitudes_direct,
+                                                    longitudes=self.longitudes_direct)
+
+        setattr(self, 'bbox_direct', bbox)
+        setattr(self, 'along_track_gsd_direct', along_track_gsd)
+        setattr(self, 'across_track_gsd_direct', across_track_gsd)
+        setattr(self, 'resolution_direct', resolution)
+
+        solar_zenith_angles_direct, \
+        solar_azimuth_angles_direct, \
+        sat_zenith_angles_direct, \
+        sat_azimuth_angles_direct, \
+        relative_azimuth_angles_direct = self._run_angles_geometry(latitudes=self.latitudes_direct,
+                                                        longitudes=self.longitudes_direct)
+
+        setattr(self, 'solar_zenith_angles_direct', solar_zenith_angles_direct)
+        setattr(self, 'solar_azimuth_angles_direct', solar_azimuth_angles_direct)
+        setattr(self, 'sat_zenith_angles_direct', sat_zenith_angles_direct)
+        setattr(self, 'sat_azimuth_angles_direct', sat_azimuth_angles_direct)
+        setattr(self, 'relative_azimuth_angles_direct', relative_azimuth_angles_direct)
+
+        return None
+
+
+    def run_georeferencing(self) -> None:
+        
+
+        if self.VERBOSE:
+            print('[INFO] Running georeferencing...')
+    
         bbox, \
         resolution, \
         along_track_gsd, \
@@ -928,84 +1000,6 @@ class HypsoBase:
         setattr(self, 'sat_zenith_angles', sat_zenith_angles)
         setattr(self, 'sat_azimuth_angles', sat_azimuth_angles)
         setattr(self, 'relative_azimuth_angles', relative_azimuth_angles)
-
-        return None
-
-
-    def run_indirect_georeferencing(self, 
-                          points_file_path: Union[str, Path] = None, 
-                          latitudes: np.ndarray = None,
-                          longitudes: np.ndarray = None,
-                          image_mode: str = None, 
-                          origin_mode: str = 'cube',
-                          flip: bool = False,
-                          ) -> None:
-        
-
-        if self.VERBOSE:
-            print('[INFO] Running indirect georeferencing...')
-        
-
-        if latitudes is not None and longitudes is not None:
-            self.latitudes_indirect = latitudes
-            self.longitudes_indirect = longitudes    
-
-        else:
-            points_file_path = Path(points_file_path).absolute()
-
-            if not origin_mode:
-                origin_mode = 'cube'
-
-            gr = Georeferencer(filename=points_file_path,
-                                                cube_height=self.spatial_dimensions[0],
-                                                cube_width=self.spatial_dimensions[1],
-                                                image_mode=image_mode,
-                                                origin_mode=origin_mode)
-
-            if self.VERBOSE:
-                print("[INFO] Does check_star_tracker_orientation() indicate image flip?")
-                print(check_star_tracker_orientation(self.nc_adcs_vars))
-
-            #datacube_flipped = check_star_tracker_orientation(self.nc_adcs_vars)
-
-            if flip:
-                self.latitudes_indirect = gr.latitudes[:,::-1]
-                self.longitudes_indirect = gr.longitudes[:,::-1]
-            else:
-                self.latitudes_indirect = gr.latitudes[:,:]
-                self.longitudes_indirect = gr.longitudes[:,:]
-    
-        # Check if direct and indirect georeferencing have the same lat/lon orientations
-        if (self.latitudes_indirect[-1,-1] - self.latitudes_indirect[-1,0]) * (latitudes[-1,-1] - latitudes[-1,0]) < 0:
-            raise ValueError("Latitude of indirect georeferencing is flipped with respect to direct georeferencing. Check if flip paramater is set correctly")
-        elif (self.longitudes_indirect[-1,-1] - self.longitudes_indirect[-1,0]) * (longitudes[-1,-1] - longitudes[-1,0]) < 0:
-            raise ValueError("Longitude of indirect georeferencing is flipped with respect to direct georeferencing. Check if flip paramater is set correctly")
-
-
-    
-        bbox, \
-        resolution, \
-        along_track_gsd, \
-        across_track_gsd = self._run_track_geometry(latitudes=self.latitudes_indirect,
-                                                    longitudes=self.longitudes_indirect)
-
-        setattr(self, 'bbox_indirect', bbox)
-        setattr(self, 'along_track_gsd_indirect', along_track_gsd)
-        setattr(self, 'across_track_gsd_indirect', across_track_gsd)
-        setattr(self, 'resolution_indirect', resolution)
-
-        solar_zenith_angles, \
-        solar_azimuth_angles, \
-        sat_zenith_angles, \
-        sat_azimuth_angles, \
-        relative_azimuth_angles = self._run_angles_geometry(latitudes=self.latitudes_indirect,
-                                                        longitudes=self.longitudes_indirect)
-
-        setattr(self, 'solar_zenith_angles_indirect', solar_zenith_angles)
-        setattr(self, 'solar_azimuth_angles_indirect', solar_azimuth_angles)
-        setattr(self, 'sat_zenith_angles_indirect', sat_zenith_angles)
-        setattr(self, 'sat_azimuth_angles_indirect', sat_azimuth_angles)
-        setattr(self, 'relative_azimuth_angles_indirect', relative_azimuth_angles)
 
         return None
     
@@ -1156,20 +1150,20 @@ class HypsoBase:
         if self.l1b_cube is None:
             self.generate_l1b_cube()
         
-        self.run_direct_georeferencing()
+        self.run_georeferencing()
         
         return None
 
 
 
-    def generate_l1d_cube(self, use_indirect_georef=False) -> None:
+    def generate_l1d_cube(self, use_direct_georef=False) -> None:
 
         try:
-            self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_indirect_georef=use_indirect_georef)
+            self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_direct_georef=use_direct_georef)
 
         except:
             self.generate_l1c_cube()
-            self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_indirect_georef=use_indirect_georef)
+            self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_direct_georef=use_direct_georef)
 
         return None
 

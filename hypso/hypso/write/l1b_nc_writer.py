@@ -2,7 +2,7 @@ from .utils import set_or_create_attr
 from pathlib import Path
 import netCDF4 as nc
 import numpy as np
-from .navigation_group_writer import navigation_group_writer
+from .geometry_group_writer import geometry_group_writer
 from .calibration_filenames_writer import calibration_filenames_writer
 from .metadata_gcp_group_writer import metadata_gcp_group_writer
 

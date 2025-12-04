@@ -18,8 +18,8 @@ def load_l1a_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict, dict,
 
     nc_metadata_vars, nc_metadata_attrs = load_l1a_nc_metadata(nc_file_path=nc_file_path)
 
-    nc_navigation_vars = {}
-    nc_navigation_attrs = {}
+    nc_geometry_vars = {}
+    nc_geometry_attrs = {}
 
     nc_cube = load_l1a_nc_cube(nc_file_path=nc_file_path)
 
@@ -31,8 +31,8 @@ def load_l1a_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict, dict,
 
     return nc_metadata_vars, \
             nc_metadata_attrs, \
-            nc_navigation_vars, \
-            nc_navigation_attrs, \
+            nc_geometry_vars, \
+            nc_geometry_attrs, \
             nc_gcp_vars, \
             nc_gcp_attrs, \
             nc_global_metadata, \

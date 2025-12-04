@@ -5,12 +5,12 @@ import numpy as np
 
 def metadata_gcp_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', COMP_LEVEL = 4, COMP_SHUFFLE = True) -> None:
     """
-    Write navigation group to NetCDF file. 
+    Write GCP metadata group to NetCDF file. 
 
     :return: Nothing.
     """
 
-    # Create Navigation Group --------------------------------------
+    # Create GCP metadata Group --------------------------------------
     meta_gcp = netfile.createGroup('metadata/gcp')
 
     # Adding GCPs -------------------------------------------
