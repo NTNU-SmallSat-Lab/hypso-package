@@ -24,6 +24,7 @@ from datetime import datetime, timedelta, timezone
 
 from .ac_6sv1_aot550 import extract_footprint_and_date, download_viirs_aot, get_aot_in_swath
 from .ac_6sv1_parameters import get_6sv1_parameters
+from .ac_6sv1_lut import get_lut_filename
 
 from osgeo import gdal
 
@@ -209,6 +210,106 @@ def run_6sv1_simulation(parameters) -> SixSResult:
 
 
 
+
+
+
+
+
+
+def run_6sv1_simulation_no_aerosol_luts(parameters) -> SixSResult:
+
+    wavelengths = parameters["wavelengths"]
+    num_bands = len(parameters["wavelengths"])
+
+    outputs = SixSResult(num_bands=num_bands, wavelengths=wavelengths)
+
+    aero_profile = parameters["AeroProfile"]
+    atmos_profile = parameters["AtmosphericProfile"]
+
+    luts_dir = "/home/cameron/Nedlastinger/6S_HYPSO_LUTS"
+
+    lut, _ = get_lut_filename(luts_dir=luts_dir, aero_profile=aero_profile, atmos_profile=atmos_profile)
+
+    return
+
+    for BandId in tqdm(range(num_bands)):
+
+        # Part I
+        # Run 6S to calculate Rayleigh reflectance
+        # https://blog.rtwilson.com/calculating-rayleigh-reflectance-using-py6s/
+
+        # 6S Models
+        s = Py6S.SixS()
+
+        # Enable Sensor type customization
+        s.geometry = Py6S.Geometry.User()
+
+        # Add Geometry Parameters
+        s.geometry.solar_z = parameters["SolarZenithAngle"]
+        s.geometry.solar_a = parameters["SolarAzimuthAngle"]
+        s.geometry.view_z = parameters["SatZenithAngles"][BandId]
+        s.geometry.view_a = parameters["SatAzimuthAngles"][BandId]
+
+        # Date: Month, Day
+        s.geometry.month = parameters["ImgMonth"]
+        s.geometry.day = parameters["ImgDay"]
+
+        # Type of atmospheric pattern
+        s.atmos_profile = Py6S.AtmosProfile.PredefinedType(Py6S.AtmosProfile.NoGaseousAbsorption)
+
+        # Target Features
+        s.ground_reflectance = parameters["GroundReflectance"]
+
+        # Aerosol Profile
+        s.aero_profile = Py6S.AeroProfile.PredefinedType(Py6S.AeroProfile.NoAerosols)
+        
+        # Study area altitude, satellite sensor orbit altitude
+        s.altitudes = Py6S.Altitudes()
+        s.altitudes.set_target_custom_altitude(parameters["meanDEM"])
+        s.altitudes.set_sensor_satellite_level()
+
+        # Wavelength
+        current_band_wl = parameters["wavelengths"][BandId] / 1000 # convert to micrometers
+        s.wavelength = Py6S.Wavelength(current_band_wl)
+
+        s.run()
+
+        outputs['rho_R'][BandId] = s.outputs.atmospheric_intrinsic_reflectance # Intrinsic reflectance without aerosol
+        outputs['Tg_H20'][BandId] = s.outputs.trans['water'].total
+        outputs['Tg_O3'][BandId] = s.outputs.trans['ozone'].total
+        outputs['Tg_OG'][BandId] = 1.0
+        outputs['Ts_Tv'][BandId] = s.outputs.trans['total_scattering'].total
+        outputs['S_atm'][BandId] = s.outputs.spherical_albedo.total
+
+    outputs.interpolate()
+
+    return outputs
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def get_mean_aot550(satobj, VERBOSE: bool = True):
 
     try:
@@ -274,7 +375,7 @@ def get_mean_aot550(satobj, VERBOSE: bool = True):
 
 
 
-def run_6sv1_atmospheric_correction(satobj, dem_path: Path = None, VERBOSE: bool = True):
+def run_6sv1_atmospheric_correction(satobj, dem_path: Path = None, VERBOSE: bool = True, use_luts=False):
 
     if VERBOSE: 
         print("[INFO] Running 6SV1 atmospheric correction")
@@ -291,9 +392,12 @@ def run_6sv1_atmospheric_correction(satobj, dem_path: Path = None, VERBOSE: bool
 
     parameters['aot550'] = aot550
 
-
-    outputs_no_aerosol = run_6sv1_simulation_no_aerosol(parameters=parameters)
-    outputs = run_6sv1_simulation(parameters=parameters)
+    if use_luts:
+        outputs_no_aerosol = run_6sv1_simulation_no_aerosol_luts(parameters=parameters)
+        #outputs = run_6sv1_simulation_luts(parameters=parameters)
+    else:
+        outputs_no_aerosol = run_6sv1_simulation_no_aerosol(parameters=parameters)
+        outputs = run_6sv1_simulation(parameters=parameters)
 
     cube = np.full((satobj.l1d_cube.shape), fill_value=np.nan)
 
@@ -322,6 +426,64 @@ def run_6sv1_atmospheric_correction(satobj, dem_path: Path = None, VERBOSE: bool
         cube[:,:,band] = rho_s
 
     return cube
+
+
+
+
+
+
+def run_6sv1_atmospheric_correction_luts(satobj, dem_path: Path = None, VERBOSE: bool = True):
+
+    if VERBOSE: 
+        print("[INFO] Running 6SV1 atmospheric correction")
+        print("\n-------  Py6S Atmospheric Correction  ----------")
+
+    # Original units mW  (m^{-2} sr^{-1} nm^{-1})
+    # radiance_cube = radiance_cube / 1000 # mW to W -> W  (m^{-2} sr^{-1} nm^{-1})
+    # radiance_cube = radiance_cube / 0.001
+
+
+    aot550 = get_mean_aot550(satobj=satobj, VERBOSE=VERBOSE)
+
+    parameters = get_6sv1_parameters(satobj=satobj, dem_path=dem_path)
+
+    parameters['aot550'] = aot550
+
+
+    outputs_no_aerosol = run_6sv1_simulation_no_aerosol(parameters=parameters)
+    outputs = run_6sv1_simulation(parameters=parameters)
+
+
+    cube = np.full((satobj.l1d_cube.shape), fill_value=np.nan)
+
+    height, width, bands = cube.shape
+
+    for band in tqdm(range(0,bands)):
+
+        rho_toa = satobj.l1d_cube[:,:,band]
+
+        rho_R = outputs['rho_R'][band]
+        rho_A_R = outputs_no_aerosol['rho_R'][band]
+        Tg_H20 = outputs['Tg_H20'][band]
+        Tg_O3 = outputs['Tg_O3'][band]
+        Ts_Tv = outputs['Ts_Tv'][band]
+        S_atm = outputs['S_atm'][band]
+
+        rho_atm = rho_R + (rho_A_R - rho_R)*Tg_H20
+
+        Y = rho_toa - rho_atm * Tg_O3
+
+        numerator = Y
+        denominator = (S_atm * Y) + (Ts_Tv * Tg_O3 * Tg_H20)
+
+        rho_s = numerator / denominator
+
+        cube[:,:,band] = rho_s
+
+    return cube
+
+
+
 
 
 
