@@ -29,21 +29,23 @@ def metadata_gcp_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib',
 
         keys = list(satobj.nc_gcp_vars.keys())
 
-        length = len(satobj.nc_gcp_vars[keys[0]])
+        if len(keys) != 0:
 
-        netfile.createDimension('gcps', length)
+            length = len(satobj.nc_gcp_vars[keys[0]])
 
-        for key in keys:
+            netfile.createDimension('gcps', length)
 
-            var = satobj.nc_gcp_vars[key]
+            for key in keys:
 
-            meta_gcp_latitude = netfile.createVariable(
-                'metadata/gcp/' + str(key), 'f4',
-                ('gcps',),
-                compression=COMP_SCHEME,
-                complevel=COMP_LEVEL,
-                shuffle=COMP_SHUFFLE)
-            
-            meta_gcp_latitude[:] = var
+                var = satobj.nc_gcp_vars[key]
+
+                meta_gcp_latitude = netfile.createVariable(
+                    'metadata/gcp/' + str(key), 'f4',
+                    ('gcps',),
+                    compression=COMP_SCHEME,
+                    complevel=COMP_LEVEL,
+                    shuffle=COMP_SHUFFLE)
+                
+                meta_gcp_latitude[:] = var
 
     return None
