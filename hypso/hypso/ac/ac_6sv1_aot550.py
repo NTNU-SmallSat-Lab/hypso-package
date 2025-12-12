@@ -10,11 +10,11 @@ import xarray as xr
 def extract_footprint_and_date(satobj):
 
     try:
-        latitudes = satobj.latitudes_indirect
-        longitudes = satobj.longitudes_indirect
-    except:
         latitudes = satobj.latitudes
         longitudes = satobj.longitudes
+    except:
+        latitudes = satobj.latitudes_direct
+        longitudes = satobj.longitudes_direct
 
 
     # Extract edge pixels to make a precise footprint polygon

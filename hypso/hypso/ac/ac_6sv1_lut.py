@@ -36,11 +36,11 @@ NA = Py6S.AeroProfile.PredefinedType(Py6S.AeroProfile.NoAerosols)
 M = Py6S.AtmosProfile.PredefinedType(Py6S.AeroProfile.Maritime)
 C = Py6S.AtmosProfile.PredefinedType(Py6S.AeroProfile.Continental)
 
-#AERO_PROFILE_VALUES = [NA, C]
-
 AERO_PROFILE_VALUES = {"NA": NA,
                        "C": C
                        }
+
+
 
 NGA = Py6S.AtmosProfile.PredefinedType(Py6S.AtmosProfile.NoGaseousAbsorption)
 SAW = Py6S.AtmosProfile.PredefinedType(Py6S.AtmosProfile.SubarcticWinter)
@@ -66,8 +66,6 @@ def run_single_simulation(params):
     atmos_profile, aero_profile, sza, vza, raa, aot550, wavelength  = params
     
     try:
-
-
         s = Py6S.SixS()
 
         # Enable Sensor type customization
@@ -112,8 +110,39 @@ def run_single_simulation(params):
 
 
 
+
+def get_aero_profile_key(aero_profile):
+
+    try:
+        dict_swapped = {value: key for key, value in AERO_PROFILE_VALUES.items()}
+        key = dict_swapped[aero_profile]
+    except KeyError:
+        print("[WARNING] Key not found.")
+        key = None
+        
+    return key
+
+def get_atmos_profile_key(atmos_profile):
+
+    try:
+        dict_swapped = {value: key for key, value in ATMOS_PROFILE_VALUES.items()}
+        key = dict_swapped[atmos_profile]
+    except KeyError:
+        print("[WARNING] Key not found.")
+        key = None
+
+    return key 
+
+
 def get_lut_filename(luts_dir, aero_profile, atmos_profile) ->  Union[Path, Path]:
-            
+
+
+    if atmos_profile not in ATMOS_PROFILE_VALUES.keys():
+        atmos_profile = get_atmos_profile_key(atmos_profile)    
+
+    if aero_profile not in AERO_PROFILE_VALUES.keys():
+        aero_profile = get_aero_profile_key(aero_profile)
+
     base_filename = "py6s_lut_aero" + str(aero_profile) + "_atmos" + str(atmos_profile)
 
     csv_filename = base_filename  + ".csv"
@@ -122,7 +151,7 @@ def get_lut_filename(luts_dir, aero_profile, atmos_profile) ->  Union[Path, Path
     csv_filename = Path(luts_dir, csv_filename).absolute()
     pkl_filename = Path(luts_dir, pkl_filename).absolute()
 
-    return csv_filename, pkl_filename
+    return csv_filename, pkl_filename, base_filename
 
 
 def create_parallel_lut():
@@ -183,6 +212,14 @@ def create_parallel_lut():
 
 
 
+
+
+
+def atmos_profile_lookup(atmos_profile):
+
+    atmos_lut = {value: key for key, value in ATMOS_PROFILE_VALUES.items()}
+
+    return atmos_lut[atmos_profile]
 
 
 

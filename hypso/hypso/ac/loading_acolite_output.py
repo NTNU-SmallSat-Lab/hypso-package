@@ -33,6 +33,25 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
 
         # Run indirect georeferencing
         if lats_path is not None and lons_path is not None:
+
+            lats_file_path = Path(os.path.join(lats_path, "latitudes.dat"))
+            lons_file_path = Path(os.path.join(lons_path, "longitudes.dat"))
+
+            indirect_lats_file_path = Path(os.path.join(lats_path, "latitudes_indirectgeoref.dat"))
+            indirect_lons_file_path = Path(os.path.join(lons_path, "longitudes_indirectgeoref.dat"))
+
+            bool_indirect_lats = indirect_lats_file_path.is_file()
+            bool_indirect_lons = indirect_lons_file_path.is_file()
+
+            if bool_indirect_lats and bool_indirect_lons:
+                lats_path = indirect_lats_file_path
+                lons_path = indirect_lons_file_path
+
+            else:
+                lats_path = lats_file_path
+                lons_path = lons_file_path
+
+
             try:
 
                 with open(lats_path, mode='rb') as file:
@@ -135,15 +154,22 @@ if __name__ == "__main__":
     dir_path = sys.argv[1]
     '''
 
-    dir_path = "/home/cameron/Nedlastinger/aeronetvenice_2025-09-25T10-01-52Z"
+    #dir_path = "/home/cameron/Nedlastinger/aeronetvenice_2025-09-25T10-01-52Z"
+    dir_path = "/home/cameron/Nedlastinger/princewilliam_2025-12-11T21-13-38Z"
 
     base_path = dir_path.rstrip('/')
 
     folder_name = os.path.basename(base_path)
-    l1a_nc_path = os.path.join(base_path, f"{folder_name}-l1d.nc")
-    lats_path = os.path.join(base_path, "processing-temp", "latitudes_indirectgeoref.dat")
-    lons_path = os.path.join(base_path, "processing-temp", "longitudes_indirectgeoref.dat") 
+    l1a_nc_path = os.path.join(base_path, f"{folder_name}-l1a.nc")
+    
+    #lats_path = os.path.join(base_path, "processing-temp", "latitudes_indirectgeoref.dat")
+    #lons_path = os.path.join(base_path, "processing-temp", "longitudes_indirectgeoref.dat") 
+    #lats_path = os.path.join(base_path, "processing-temp", "latitudes.dat")
+    #lons_path = os.path.join(base_path, "processing-temp", "longitudes.dat") 
 
+
+    lats_path = os.path.join(base_path, "processing-temp/")
+    lons_path = os.path.join(base_path, "processing-temp/") 
 
 
     main(l1a_nc_path, lats_path, lons_path)
