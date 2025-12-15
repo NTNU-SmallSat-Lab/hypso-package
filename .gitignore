@@ -25,3 +25,4 @@ __pycache__/
 /demo/demo_processing.ipynb # don't track changes
 /utils/*
 /notebooks/*
+/venv/*
