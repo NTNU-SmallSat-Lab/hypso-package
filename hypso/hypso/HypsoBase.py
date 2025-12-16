@@ -642,7 +642,7 @@ class HypsoBase:
 
         # TODO: move this function call
         if set_coeffs:
-            self._set_calibration_coeff_files()
+            self._set_calibration_coeff_files(**kwargs)
 
         self._load_calibration_coeff_files()
 

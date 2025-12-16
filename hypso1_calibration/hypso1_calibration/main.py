@@ -17,7 +17,7 @@ def get_hypso1_calibration_files(capture_type, coeff_type=None) -> None:
         # Adjusted based on moon dip I think
         # npz_file_spectral = "h1_spectral_coeff_adjusted_full.npz"
 
-        print("[INFO] - Using new calibration coefficients for HYPSO-1.")
+        print("[INFO] - Using moved calibration coefficients for HYPSO-1.")
         # Radiometric coefficients only moved
         npz_file_radiometric = "h1_radiometric_calibration_matrix_full_moved.npz"
         # Adjusted using polynomial fit, using whole spectrum, static offset
