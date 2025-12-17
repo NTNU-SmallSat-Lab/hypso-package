@@ -155,7 +155,8 @@ if __name__ == "__main__":
     '''
 
     #dir_path = "/home/cameron/Nedlastinger/aeronetvenice_2025-09-25T10-01-52Z"
-    dir_path = "/home/cameron/Nedlastinger/princewilliam_2025-12-11T21-13-38Z"
+    #dir_path = "/home/cameron/Nedlastinger/princewilliam_2025-12-11T21-13-38Z"
+    dir_path = "/home/cameron/Nedlastinger/bankspeninsula_2025-11-27T22-30-10Z"
 
     base_path = dir_path.rstrip('/')
 

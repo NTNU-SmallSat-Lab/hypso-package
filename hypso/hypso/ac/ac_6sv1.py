@@ -253,8 +253,8 @@ def get_mean_aot550(satobj, VERBOSE: bool = True):
         aot550 = np.mean(np.concatenate([aot_inside_NOAA, aot_inside_SNPP]))
     else:
 
-        print("[WARNING] No AOT at 550nm value found.")
-        aot550 = None
+        print("[WARNING] No AOT at 550nm value found. Defaulting to AOT550 of 0.1.")
+        aot550 = 0.1
 
     if VERBOSE:
         print("Mean AOT at 550nm:")
@@ -331,16 +331,9 @@ def run_6sv1_atmospheric_correction(satobj, dem_path: Path = None, VERBOSE: bool
 
             wavelength_array = np.full((height, width), fill_value=wavelength)
 
-        
-            #row = 100
-            #col = 100
-            #sza = sza_array[row, col]
-            #vza = vza_array[row, col]
-            #raa = raa_array[row, col]
             #query_point = np.array([sza, vza, raa, aot550, wavelength])
             #query_point = query_point.reshape(1, -1)
             #response_point = interp_func(query_point)
-
 
             query_array = np.stack((sza_array, vza_array, raa_array, aot550_array, wavelength_array), axis=-1)
             query_array = query_array.reshape((height*width, -1))
@@ -382,25 +375,6 @@ def run_6sv1_atmospheric_correction(satobj, dem_path: Path = None, VERBOSE: bool
             rho_s = numerator / denominator
 
             cube[:,:,band] = rho_s   
-
-        '''
-        # Example query
-
-        sza = parameters["SolarZenithAngle"]
-        vza = parameters["SatZenithAngles"]
-        raa = parameters["RelativeAzimuthAngles"]
-
-        if 'aot550' in parameters.keys():
-            aot550 = parameters['aot550']
-        elif 'aeronet' in parameters.keys():
-            aot550 = Py6S.SixSHelpers.Aeronet.import_aeronet_data(s, parameters['aeronet'], parameters['time'])
-        else:
-            aot550 = 0.1  # Use Default Values
-
-        wavelength = wavelengths[40]
-        query_results = lut_query_system.query(sza, vza, raa, aot550, wavelength)
-        print(query_results
-        '''
 
 
     else:
