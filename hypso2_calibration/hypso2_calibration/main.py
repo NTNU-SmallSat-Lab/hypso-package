@@ -32,7 +32,7 @@ def get_hypso2_calibration_files(coeff_type=None) -> None:
         
     elif coeff_type == 'adjusted':
         print("[INFO] - Using adjusted calibration coefficients for HYPSO-2.")
-        npz_file_radiometric = "h2_radiometric_calibration_matrix_adjusted_v10.npz"
+        npz_file_radiometric = "h2_radiometric_calibration_matrix_adjusted_v11.npz"
         npz_file_spectral = "spectral_array_calibrated_poly_full.npz"
 
     elif coeff_type == 'original':

@@ -24,7 +24,7 @@ def get_hypso1_calibration_files(capture_type, coeff_type=None) -> None:
         npz_file_spectral = "spectral_array_calibrated_poly_full.npz"
     elif coeff_type == 'adjusted':
         print("[INFO] - Using adjusted calibration coefficients for HYPSO-1.")
-        npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1_adjusted_v10.npz"
+        npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1_adjusted_v11.npz"
         npz_file_spectral = "spectral_array_calibrated_poly_full.npz"
 
     elif coeff_type == 'original': 
