@@ -80,11 +80,12 @@ def run_smile_correction_one_row(row: np.ndarray,
     row_corrected = interpolate.splev(wavelength_ref, row_interpolated)
 
     # Set values for wavelengths below 400 nm to zero
+    # cap at 950 nm also added to avoid negative nunmbers for HYPSO-2 full matrix
     for i in range(len(wavelength_ref)):
         wavelength = wavelength_ref[i]
-        if wavelength < 400:
+        if wavelength < 400 or wavelength > 950: 
             row_corrected[i] = 0
-        else:
-            break
+        # else:
+        #     break
 
     return row_corrected

@@ -44,10 +44,9 @@ pip install hypso2-calibration
 - Add your [PyPI.org](https:/pypi.org) login credentials and token to `~/.pypirc`
 - Install the `setuptools` build system, `build` package and `twine` using pip 
 - Update the version number in `pyproject.toml`
-    - Calendar versioning system is used
-    - Use the version number format "YY.MM.X" for normal releases 
-    - Use the version number format "YY.MM.Xa1" for alpha releases 
-    - Use the version number format "YY.MM.Xb1" for beta releases 
+    - Use the version number format "vX.Y.Z" for normal releases 
+    - Use the version number format "vX.Y.Z.a1" for alpha releases 
+    - Use the version number format "vX.Y.Z.b1" for beta releases 
 - Build the package with `python3 -m build`
 - Upload the newly built package to PyPI: `python3 -m twine upload --repository pypi dist/*`
 - View the project at [pypi.org/project/hypso/](https://pypi.org/project/hypso/)

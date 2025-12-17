@@ -4,7 +4,6 @@ import netCDF4 as nc
 import numpy as np
 from .navigation_group_writer import navigation_group_writer
 from .calibration_filenames_writer import calibration_filenames_writer
-from .metadata_gcp_group_writer import metadata_gcp_group_writer
 
 def write_l1b_nc_file(satobj, overwrite: bool = False, **kwargs) -> None:
 
@@ -50,7 +49,6 @@ def l1b_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
         netfile.createDimension('lines', lines)
         netfile.createDimension('samples', samples)
         netfile.createDimension('bands', bands)
-
 
         # Create groups
         #netfile.createGroup('logfiles')
@@ -103,6 +101,9 @@ def l1b_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
         #                         md,
         #                         getattr(satobj, 'nc_database_attrs')[md])
 
+
+
+
         # Set pseudoglobal vars like compression level
         COMP_SCHEME = 'zlib'  # Default: zlib
         COMP_LEVEL = 4  # Default (when scheme != none): 4
@@ -125,7 +126,6 @@ def l1b_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
             Lt.wavelength_units = "nanometers"
             Lt.fwhm = satobj.fwhm
             Lt.wavelengths = np.around(satobj.wavelengths, 1)
-            print(satobj.l1b_cube.to_numpy().shape)
             Lt[:] = satobj.l1b_cube.to_numpy()
 
         else:
@@ -150,9 +150,6 @@ def l1b_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
                 Lt.wavelength_units = "nanometers"
                 Lt.fwhm = satobj.fwhm[band]
                 Lt.wavelength = wave
-
-                Lt.radiation_wavelength = float(satobj.wavelengths[band]),
-                Lt.radiation_wavelength_unit = "nm"
 
                 #Lt.f0 = None
                 #Lt.width = satobj.fwhm[band]
@@ -430,9 +427,6 @@ def l1b_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
         #     'metadata/timing/timestamps_srv', 'f8',
         #     ('lines',))
         # timestamps_srv[:] = getattr(satobj, 'nc_timing_vars')["timestamps_srv"][:]
-
-
-        metadata_gcp_group_writer(satobj, netfile, COMP_SCHEME=COMP_SCHEME, COMP_LEVEL=COMP_LEVEL, COMP_SHUFFLE=COMP_SHUFFLE)
 
     return None
 

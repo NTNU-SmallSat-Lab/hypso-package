@@ -70,7 +70,10 @@ def read_coeffs_from_file(coeff_path: str, coeff_type: str, x_start: int,  x_sto
                 case 'spectral': 
                     coefficients = coefficients[key][x_start:x_stop].reshape(-1, bin_factor).mean(axis=1).reshape(-1)
                 case 'smile': 
-                    coefficients = coefficients[key]
+                    if 'wide' in coeff_path or 'nominal' in coeff_path: # TODO check if this is correct, and possibly write in a better way (not sure if the HYPSO-1 full smile coeffs are correct, otherwise we could use them every time)
+                        coefficients = coefficients[key]
+                    else:
+                        coefficients = coefficients[key][y_start:y_stop, x_start: x_stop].reshape(y_stop-y_start, -1, bin_factor).mean(axis=2).reshape(y_stop-y_start, -1)
                 case 'destriping':
                     coefficients = coefficients[key]
                 case _:
