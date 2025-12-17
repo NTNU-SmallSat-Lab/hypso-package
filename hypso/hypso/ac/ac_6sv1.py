@@ -270,7 +270,7 @@ def get_mean_aot550(satobj, VERBOSE: bool = True):
 
 
 
-def run_6sv1_atmospheric_correction(satobj, dem_path: Path = None, VERBOSE: bool = True, use_luts=False):
+def run_6sv1_atmospheric_correction(satobj, dem_path: Path = None, VERBOSE: bool = True, use_luts=False, luts_dir=None):
 
     if VERBOSE: 
         print("[INFO] Running 6SV1 atmospheric correction")
@@ -291,8 +291,6 @@ def run_6sv1_atmospheric_correction(satobj, dem_path: Path = None, VERBOSE: bool
     print(parameters)
 
     if use_luts:
-
-        luts_dir = "/home/cameron/Nedlastinger/6S_HYPSO_LUTS"
 
         # No Aerosols
         aero_profile = Py6S.AeroProfile.PredefinedType(Py6S.AeroProfile.NoAerosols)

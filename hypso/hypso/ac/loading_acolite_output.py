@@ -137,22 +137,24 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
         from hypso.ac import run_6sv1_atmospheric_correction
         dem_path = Path("/home/cameron/Nedlastinger/GMTED2km.tif")
 
-        cube = run_6sv1_atmospheric_correction(satobj, dem_path, use_luts=True)
+        luts_dir = "/home/cameron/Nedlastinger/6S_HYPSO_LUTS"
+
+        cube = run_6sv1_atmospheric_correction(satobj, dem_path, use_luts=True, luts_dir=luts_dir)
 
         satobj.l2_cube['6sv1'] = cube
 
         write_l2_nc_file(satobj, correction='6sv1', datacube=False, overwrite=True)
 
-
+'''
 if __name__ == "__main__":
 
-    '''
+    
     if len(sys.argv) < 2 or len(sys.argv) > 2:
         print("Usage: python process_l1d_dir.py <nc_dir_path>")
         sys.exit(1)
 
     dir_path = sys.argv[1]
-    '''
+    
 
     #dir_path = "/home/cameron/Nedlastinger/aeronetvenice_2025-09-25T10-01-52Z"
     #dir_path = "/home/cameron/Nedlastinger/princewilliam_2025-12-11T21-13-38Z"
@@ -174,5 +176,29 @@ if __name__ == "__main__":
 
 
     main(l1a_nc_path, lats_path, lons_path)
+'''
 
+if __name__ == "__main__":
+    if len(sys.argv) < 2 or len(sys.argv) > 2:
+        print("Usage: python process_l1d_dir.py <nc_dir_path>")
+        sys.exit(1)
 
+    dir_path = sys.argv[1]
+
+    base_path = dir_path.rstrip('/')
+
+    folder_name = os.path.basename(base_path)
+    l1a_nc_path = os.path.join(base_path, f"{folder_name}-l1a.nc")
+    l1d_nc_path = os.path.join(base_path, f"{folder_name}-l1d.nc")
+
+    lats_path = os.path.join(base_path, "processing-temp/")
+    lons_path = os.path.join(base_path, "processing-temp/") 
+
+    #print(base_path)
+    #print(folder_name)
+    #print(lat_file)
+    #print(lon_file)
+    #lats_path = sys.argv[2] if len(sys.argv) == 4 else None
+    #lons_path = sys.argv[3] if len(sys.argv) == 4 else None
+
+    main(l1a_nc_path, lats_path, lons_path)
