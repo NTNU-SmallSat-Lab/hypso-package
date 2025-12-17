@@ -135,7 +135,7 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
 
     if TOGGLE_6SV1:
         from hypso.ac import run_6sv1_atmospheric_correction
-        dem_path = Path("/home/cameron/Nedlastinger/GMTED2km.tif")
+        dem_path = Path("/home/_shared/ARIEL/6S_HYPSO_LUTS/GMTED2km.tif")
 
         luts_dir = "/home/cameron/Nedlastinger/6S_HYPSO_LUTS"
 
