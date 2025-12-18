@@ -1,6 +1,6 @@
 from importlib.resources import files
 
-def get_hypso1_calibration_files(capture_type) -> None:
+def get_hypso1_calibration_files(capture_type="custom") -> None:
     """
     Get the absolute path for the calibration coefficients included in the package. This includes radiometric,
     smile and destriping correction.

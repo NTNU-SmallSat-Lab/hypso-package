@@ -46,7 +46,7 @@ def crop_and_bin_matrix(matrix, x_start, x_stop, y_start, y_stop, bin_x=1, bin_y
 
     return new_matrix
 
-def read_coeffs_from_file(coeff_path: str, coeff_type: str, x_start: int,  x_stop: int, y_start: int, y_stop: int, bin_factor: int) -> np.ndarray:
+def read_coeffs_from_file(coeff_path: str, coeff_type: str, x_start: int=None,  x_stop: int=None, y_start: int=None, y_stop: int=None, bin_factor: int=None) -> np.ndarray:
     """
     Read correction coefficients from file
 
@@ -81,7 +81,8 @@ def read_coeffs_from_file(coeff_path: str, coeff_type: str, x_start: int,  x_sto
         else:
             coefficients = None
 
-    except BaseException:
+    except BaseException as ex:
+        print(ex)
         coefficients = None
         raise ValueError("[ERROR] Could not read coefficients file.")
 

@@ -8,7 +8,7 @@ import numpy as np
 
 from .HypsoBase import HypsoBase
 from hypso1_calibration import get_hypso1_calibration_files
-
+from hypso.calibration import read_coeffs_from_file
 
 class Hypso1(HypsoBase):
 
@@ -65,7 +65,18 @@ class Hypso1(HypsoBase):
         return None
 
 
+def get_hypso1_wavelengths(aoi_x=428, column_count=1080, bin_factor=9):
 
+    calibration_files = get_hypso1_calibration_files()
+    
+    spectral_coeff_file = calibration_files["spectral"]
+    
+    x_start = aoi_x
+    x_stop = aoi_x + column_count
+
+    spectral_coeffs = read_coeffs_from_file(coeff_path=spectral_coeff_file, coeff_type='spectral', x_start=x_start, x_stop=x_stop, bin_factor=bin_factor)
+    
+    return spectral_coeffs
 
 
 
