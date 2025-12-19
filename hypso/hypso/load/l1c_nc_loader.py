@@ -2,6 +2,7 @@ import numpy as np
 import netCDF4 as nc
 from pathlib import Path
 from typing import Tuple
+from tqdm import tqdm
 
 from .utils import load_capture_config_from_nc_file, \
                     load_timing_from_nc_file, \
@@ -50,8 +51,28 @@ def load_l1c_nc_cube(nc_file_path: Path) -> np.ndarray:
     """
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
         group = f.groups["products"]
-        # 16-bit according to Original data Capture
-        cube = np.array(group.variables["Lt"][:], dtype='double')
+
+        try:
+            # 16-bit according to Original data Capture
+            cube = np.array(group.variables["Lt"][:], dtype='double')
+
+        except Exception as ex:
+            print("[INFO] Loading Lt cube from separate bands...")
+
+            height, width = np.array(group.variables[list(group.variables)[0]][:], dtype='double').shape
+            depth = len(list(group.variables))
+
+            cube = np.empty((height,width,depth))
+
+            for idx, rhot_band in enumerate(tqdm(list(group.variables))):
+
+                #print("[INFO] Loading band " + str(idx) + "...")
+
+                band = np.array(group.variables[rhot_band][:], dtype='double')
+
+                cube[:,:,idx] = band
+
+            print("[INFO] Loading bands complete.")
 
         return cube
 

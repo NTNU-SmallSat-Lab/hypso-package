@@ -2,6 +2,7 @@ import numpy as np
 import netCDF4 as nc
 from pathlib import Path
 from typing import Tuple
+from tqdm import tqdm
 
 from .utils import load_capture_config_from_nc_file, \
                     load_timing_from_nc_file, \
@@ -62,9 +63,9 @@ def load_l2a_nc_cube(nc_file_path: Path) -> np.ndarray:
 
             cube = np.empty((height,width,depth))
 
-            for idx, rrs_band in enumerate(list(group.variables)):
+            for idx, rrs_band in enumerate(tqdm(list(group.variables))):
 
-                print("[INFO] Loading band " + str(idx) + "...")
+                #print("[INFO] Loading band " + str(idx) + "...")
 
                 band = np.array(group.variables[rrs_band][:], dtype='double')
 
