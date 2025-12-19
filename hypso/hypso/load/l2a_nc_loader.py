@@ -97,7 +97,7 @@ def load_l2a_nc_cube_attrs(nc_file_path: Path) -> np.ndarray:
             nc_cube_attrs = {}
 
             nc_cube_attrs["units"] = ""
-            nc_cube_attrs["long_name"] = "Remote sensing reflectance"
+            nc_cube_attrs["long_name"] = "Bottom of Atmosphere Reflectance (Rrs)"
             nc_cube_attrs["wavelength_units"] = "nanometers"
 
             wavelength_list = []

@@ -29,6 +29,7 @@ from hypso.load import load_l1a_nc, \
                         load_l1b_nc, \
                         load_l1c_nc, \
                         load_l1d_nc, \
+                        load_l2a_nc, \
                         load_ocsmart_h5, \
                         load_acolite_l2r_nc, \
                         load_acolite_l2w_nc
@@ -126,21 +127,21 @@ class HypsoBase:
                     'l2_variable_name': "rrs"
                     }
 
-        self._l2_cubes = DataArrayDict(attributes=l2_attributes, num_dims=3, key_attribute='correction')
+        self._l2a_cubes = DataArrayDict(attributes=l2_attributes, num_dims=3, key_attribute='correction')
 
 
     @property
-    def l2_cube(self):
+    def l2a_cube(self):
 
-        self._l2_cubes.dim_shape = self.spatial_dimensions
-        self._l2_cubes.dim_names = self.dim_names_3d
-        self._l2_cubes.num_dims = 3
+        self._l2a_cubes.dim_shape = self.spatial_dimensions
+        self._l2a_cubes.dim_names = self.dim_names_3d
+        self._l2a_cubes.num_dims = 3
 
-        return self._l2_cubes   
+        return self._l2a_cubes   
 
-    @l2_cube.setter
-    def l2_cubes(self, value):
-        raise AttributeError("[ERROR] Use \"l2_cubes[key] = value\" to set items.")
+    @l2a_cube.setter
+    def l2a_cubes(self, value):
+        raise AttributeError("[ERROR] Use \"l2a_cubes[key] = value\" to set items.")
 
 
 
@@ -489,7 +490,20 @@ class HypsoBase:
                 load_func = load_l1d_nc
                 cube_name = "l1d_cube"
 
-            #case "l2"
+            case "l2a":
+                if self.VERBOSE: print('[INFO] Loading L2a capture ' + self.capture_name)
+
+                ac = getattr(self, 'atmospheric_correction', None)
+
+                if ac is not None:
+                    print("[INFO] L2a Detected atmospheric correction: " + str(ac))
+                else:
+                    print("[WARNING] No L2a atmospheric correction detected.")
+                    setattr(self, "atmospheric_correction", "default")
+
+                load_func = load_l2a_nc
+                cube_name = "l2a_cube"
+                
 
 
             case _:
@@ -540,7 +554,10 @@ class HypsoBase:
         self._set_hypso_attributes()
         self._check_capture_type()
 
-        setattr(self, cube_name, nc_cube)
+        if self.product_level.lower() == "l2a":
+            self.l2a_cubes[self.atmospheric_correction] = nc_cube
+        else:
+            setattr(self, cube_name, nc_cube)
         
 
 
@@ -1241,7 +1258,7 @@ class HypsoBase:
 
     def ac_ocsmart_open_output(self, h5_file_path: Path = None):
         """
-        Open and read OC-SMART atmospheric correction HDF5 output files. The remote sensing reflectance (Rrs) dataset is written to the satobj's 'l2_cube' dictionary.
+        Open and read OC-SMART atmospheric correction HDF5 output files. The remote sensing reflectance (Rrs) dataset is written to the satobj's 'l2a_cube' dictionary.
 
         :param h5_file_path: Path to the OC-SMART HDF5 file (optional)
 
@@ -1272,9 +1289,9 @@ class HypsoBase:
             wl_band_map = self._get_inferred_wavelength_band_map(inferred_wavelengths=inferred_wavelengths)
 
             '''
-            l2_cube_wavelengths = inferred_wavelengths
+            l2a_cube_wavelengths = inferred_wavelengths
 
-            A = np.array(l2_cube_wavelengths, dtype=float)
+            A = np.array(l2a_cube_wavelengths, dtype=float)
             B = np.array(self.wavelengths, dtype=float)
 
             index_map = {}
@@ -1298,8 +1315,8 @@ class HypsoBase:
             cube = np.full(shape=shape, fill_value=np.nan)
             cube[:,:,wl_band_map] = datasets[key]
 
-            self.l2_cube["ocsmart"] = cube
-            self.l2_cube["ocsmart"].attrs['l2_variable_name'] = key
+            self.l2a_cube["ocsmart"] = cube
+            self.l2a_cube["ocsmart"].attrs['l2_variable_name'] = key
 
         except Exception as ex:
             print("[ERROR] Unable to load OC-SMART L2 Rrs dataset.")
@@ -1390,7 +1407,7 @@ class HypsoBase:
     def ac_acolite_open_output(self, acolite_l2r_output_nc_file: Path = None, acolite_l2w_output_nc_file: Path = None):
         
         """
-        Open and read ACOLITE atmospheric correction L2R and L2W NetCDF output files. The remote sensing reflectance (Rrs) dataset is written to the satobj's 'l2_cube' dictionary.
+        Open and read ACOLITE atmospheric correction L2R and L2W NetCDF output files. The remote sensing reflectance (Rrs) dataset is written to the satobj's 'l2a_cube' dictionary.
 
         :param h5_file_path: Path to the ACOLITE NetCDF file (optional)
 
@@ -1427,8 +1444,8 @@ class HypsoBase:
                 cube = np.full(shape=shape, fill_value=np.nan)
                 cube[:,:,wl_band_map] = l2r_datasets[key]
 
-                self.l2_cube["acolite_l2r"] = cube
-                self.l2_cube["acolite_l2r"].attrs['l2_variable_name'] = key
+                self.l2a_cube["acolite_l2r"] = cube
+                self.l2a_cube["acolite_l2r"].attrs['l2_variable_name'] = key
 
             except Exception as ex:
                 print("[ERROR] Unable to load ACOLITE L2R dataset.")
@@ -1455,8 +1472,8 @@ class HypsoBase:
                 cube = np.full(shape=shape, fill_value=np.nan)
                 cube[:,:,wl_band_map] = l2w_datasets[key]
 
-                self.l2_cube["acolite_l2w"] = cube
-                self.l2_cube["acolite_l2w"].attrs['l2_variable_name'] = key
+                self.l2a_cube["acolite_l2w"] = cube
+                self.l2a_cube["acolite_l2w"].attrs['l2_variable_name'] = key
 
             except Exception as ex:
                 print("[ERROR] Unable to load ACOLITE L2W dataset.")
