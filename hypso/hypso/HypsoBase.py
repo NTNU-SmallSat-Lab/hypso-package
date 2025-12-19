@@ -489,8 +489,12 @@ class HypsoBase:
                 load_func = load_l1d_nc
                 cube_name = "l1d_cube"
 
+            #case "l2"
+
+
             case _:
                 print("[ERROR] Unsupported product level.")
+                print(fields['product_level'])
                 return None
 
         # TODO: find a better method to pass all of this information
