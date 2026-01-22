@@ -866,7 +866,7 @@ class HypsoBase:
         return None
     
 
-    def _run_toa_reflectance(self, use_direct_georef=False) -> np.ndarray:
+    def _run_toa_reflectance(self, use_direct_georef=False, use_thuillier=False, generate_figures=False) -> np.ndarray:
 
         if self.l1b_cube is not None:
             toa_radiance = self.l1b_cube
@@ -890,60 +890,18 @@ class HypsoBase:
                                                              sensor_fwhm=self.fwhm,
                                                              toa_radiance=toa_radiance,
                                                              iso_time=self.iso_time,
-                                                             solar_zenith_angles=solar_zenith_angles
+                                                             solar_zenith_angles=solar_zenith_angles,
+                                                             output_dir = self.capture_dir,
+                                                             generate_figures=generate_figures,
+                                                             use_thuillier = use_thuillier
                                                             )
 
         return toa_reflectance, srf, esun
 
-    def run_direct_georeferencing(self, 
-                            points_file_path: Union[str, Path] = None, 
-                            latitudes: np.ndarray = None,
-                            longitudes: np.ndarray = None,
-                            image_mode: str = None, 
-                            origin_mode: str = 'cube',
-                            flip: bool = False,
-                            ) -> None: 
+    def run_direct_georeferencing(self) -> None: 
 
         if self.VERBOSE:
             print("[INFO] Running direct georeferencing...")
-
-        if latitudes is not None and longitudes is not None:
-            self.latitudes_direct = latitudes
-            self.longitudes_direct = longitudes    
-
-        else:
-            points_file_path = Path(points_file_path).absolute()
-
-            if not origin_mode:
-                origin_mode = 'cube'
-
-            gr = Georeferencer(filename=points_file_path,
-                                                cube_height=self.spatial_dimensions[0],
-                                                cube_width=self.spatial_dimensions[1],
-                                                image_mode=image_mode,
-                                                origin_mode=origin_mode)
-
-            if self.VERBOSE:
-                print("[INFO] Does check_star_tracker_orientation() indicate image flip?")
-                print(check_star_tracker_orientation(self.nc_adcs_vars))
-
-            #datacube_flipped = check_star_tracker_orientation(self.nc_adcs_vars)
-
-            if flip:
-                self.latitudes_direct = gr.latitudes[:,::-1]
-                self.longitudes_direct = gr.longitudes[:,::-1]
-            else:
-                self.latitudes_direct = gr.latitudes[:,:]
-                self.longitudes_direct = gr.longitudes[:,:]
-    
-        # Check if direct and indirect georeferencing have the same lat/lon orientations
-        if (self.latitudes_direct[-1,-1] - self.latitudes_direct[-1,0]) * (self.latitudes[-1,-1] - self.latitudes[-1,0]) < 0:
-            raise ValueError("Latitude of direct georeferencing is flipped with respect to indirect georeferencing. Check if flip paramater is set correctly")
-        elif (self.longitudes_direct[-1,-1] - self.longitudes_direct[-1,0]) * (self.longitudes[-1,-1] - self.longitudes[-1,0]) < 0:
-            raise ValueError("Longitude of direct georeferencing is flipped with respect to indirect georeferencing. Check if flip paramater is set correctly")
-
-
-
 
         try:
             getattr(self, 'framepose')
@@ -1184,14 +1142,18 @@ class HypsoBase:
 
 
 
-    def generate_l1d_cube(self, use_direct_georef=False) -> None:
+    def generate_l1d_cube(self, use_direct_georef=False, use_thuillier=False, generate_figures=False) -> None:
 
-        try:
-            self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_direct_georef=use_direct_georef)
+        self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_direct_georef=use_direct_georef,
+                                                                       use_thuillier=use_thuillier,
+                                                                       generate_figures=generate_figures)
 
-        except:
-            self.generate_l1c_cube()
-            self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_direct_georef=use_direct_georef)
+        #try:
+        #    self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_direct_georef=use_direct_georef)
+        #
+        #except:
+        #    self.generate_l1c_cube()
+        #    self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_direct_georef=use_direct_georef)
 
         return None
 
