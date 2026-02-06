@@ -6,7 +6,7 @@ from pathlib import Path
 import Py6S
 import dateutil
 from .ac_6sv1_dem import MeanDEM
-
+from .ac_6sv1_utils import get_lat_lon, get_image_extent_lat_lon, get_image_center_lat_lon
 
 
 
@@ -47,64 +47,26 @@ def get_6sv1_wavelengths_parameters(satobj, parameters):
 def get_6sv1_sensor_angles_parameters(satobj, parameters):
 
 
-    sat_azimuth_angles = satobj.sat_azimuth_angles
-    sat_zenith_angles = satobj.sat_zenith_angles
+    sat_azimuth_angles = np.mean(satobj.sat_azimuth_angles)
+    sat_zenith_angles = np.mean(satobj.sat_zenith_angles)
 
-    # Satellite zenith angle, azimuth
-    ViewZeniths = dict()
-    ViewAzimuths = dict()
-    # Make an 120 array with the average zenith and azimuth angle for every band
-    # Ideally the average should be per band but we only have one 2D array so we use the same for every one
+    parameters["SatAzimuthAngles"] = sat_azimuth_angles
+    parameters["SatZenithAngles"] = sat_zenith_angles
+    
+    return parameters
 
-    for i in range(120):
-        ViewZeniths[i] = np.mean(sat_zenith_angles)
-        ViewAzimuths[i] = np.mean(sat_azimuth_angles)
 
-    parameters["SatZenithAngles"] = ViewZeniths
-    parameters["SatAzimuthAngles"] = ViewAzimuths
+def get_6sv1_relative_azimuth_angles_parameters(satobj, parameters):
+
+
+    relative_azimuth_angles = np.mean(satobj.relative_azimuth_angles)
+
+    parameters["RelativeAzimuthAngles"] = relative_azimuth_angles
 
     return parameters
 
 
 
-
-def get_lat_lon(satobj):
-
-    try:
-        latitudes = satobj.latitudes_indirect
-        longitudes = satobj.longitudes_indirect
-    except Exception as ex:
-        print(ex)
-        print("[WARNING] 6SV1 defaulting to direct georeferencing.")
-        latitudes = satobj.latitudes
-        longitudes = satobj.longitudes
-
-    return latitudes, longitudes
-    
-def get_image_extent_lat_lon(satobj):
-
-    lat, lon = get_lat_lon(satobj)
-
-    min_lat = np.nanmin(lat)
-    max_lat = np.nanmax(lat)
-
-    min_lon = np.nanmin(lon)
-    max_lon = np.nanmax(lon)
-
-    return min_lat, max_lat, min_lon, max_lon
-
-
-def get_image_center_lat_lon(satobj, VERBOSE: bool = True):
-
-    min_lat, max_lat, min_lon, max_lon = get_image_extent_lat_lon(satobj)
-
-    if VERBOSE:
-        print(f"[INFO] ROI:\nMax Lat: {max_lat}  Min Lat: {min_lat}\nMax Lon: {max_lon}  Min Lon: {min_lon}")
-
-    ImageCenterLon = np.mean([min_lon, max_lon])
-    ImageCenterLat = np.mean([min_lat, max_lat])
-
-    return ImageCenterLat, ImageCenterLon
 
 
 
@@ -338,6 +300,8 @@ def get_6sv1_parameters(satobj, dem_path: Path = None) -> dict:
     parameters = get_6sv1_wavelengths_parameters(satobj, parameters)
 
     parameters = get_6sv1_sensor_angles_parameters(satobj, parameters)
+
+    parameters = get_6sv1_relative_azimuth_angles_parameters(satobj, parameters)
 
     parameters = get_6sv1_atmospheric_profile_parameters(satobj, parameters)
 

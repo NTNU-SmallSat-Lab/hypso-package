@@ -2,42 +2,42 @@ from .utils import set_or_create_attr
 from pathlib import Path
 import netCDF4 as nc
 import numpy as np
-from .navigation_group_writer import navigation_group_writer
+from .geometry_group_writer import geometry_group_writer
 from .calibration_filenames_writer import calibration_filenames_writer
 from .metadata_gcp_group_writer import metadata_gcp_group_writer
 from pathlib import Path
 
-def write_l2_nc_file(satobj, correction: str = None, overwrite: bool = False, **kwargs) -> None:
+def write_l2a_nc_file(satobj, correction: str = None, overwrite: bool = False, **kwargs) -> None:
     
-    l2_nc_file_list = []
+    l2a_nc_file_list = []
 
     parent_dir = satobj.parent_dir
     capture_name = satobj.capture_name
 
     if correction is not None:
-        l2_nc_file_list.append(correction)
+        l2a_nc_file_list.append(correction)
 
     else:
-        for correction in satobj.l2_cubes.keys():
-            l2_nc_file_list.append(correction)
+        for correction in satobj.l2a_cubes.keys():
+            l2a_nc_file_list.append(correction)
 
 
-    for correction in l2_nc_file_list:
+    for correction in l2a_nc_file_list:
 
-        l2_nc_file = Path(parent_dir, str(capture_name) + "-l2-" + str(correction) + ".nc")
+        l2a_nc_file = Path(parent_dir, str(capture_name) + "-l2a-" + str(correction) + ".nc")
 
-        print(l2_nc_file)
+        print(l2a_nc_file)
 
-        if Path(l2_nc_file).is_file() and not overwrite:
+        if Path(l2a_nc_file).is_file() and not overwrite:
 
             if satobj.VERBOSE:
                 print("[INFO] L2 NetCDF file has already been generated. Skipping.")
 
             return None
 
-        l2_nc_writer(satobj=satobj,
+        l2a_nc_writer(satobj=satobj,
                     correction = correction, 
-                    dst_nc=l2_nc_file, 
+                    dst_nc=l2a_nc_file, 
                     **kwargs
                     )
 
@@ -45,9 +45,9 @@ def write_l2_nc_file(satobj, correction: str = None, overwrite: bool = False, **
     return None
 
 
-def l2_nc_writer(satobj, correction: str, dst_nc: str, datacube: str = True) -> None:
+def l2a_nc_writer(satobj, correction: str, dst_nc: str, datacube: str = True) -> None:
     """
-    Create a l2.nc file using the bottom-of-atmosphere data.
+    Create a l2a.nc file using the bottom-of-atmosphere data.
 
     :return: Nothing.
     """
@@ -135,11 +135,11 @@ def l2_nc_writer(satobj, correction: str, dst_nc: str, datacube: str = True) -> 
 
 
         try:
-            l2_variable_name = satobj.l2_cubes[correction].attrs['l2_variable_name']
+            l2a_variable_name = satobj.l2a_cubes[correction].attrs['l2a_variable_name']
         except Exception as ex:
-            print["[WARNING] No 'l2_variable_name' attrribute found. Defaulting to 'rrs'"]
+            print["[WARNING] No 'l2a_variable_name' attrribute found. Defaulting to 'rrs'"]
             print(ex)
-            l2_variable_name = "rrs"
+            l2a_variable_name = "rrs"
 
 
         # Create and populate variables
@@ -147,7 +147,7 @@ def l2_nc_writer(satobj, correction: str, dst_nc: str, datacube: str = True) -> 
 
             # Store as datacube
             rrs = netfile.createVariable(
-                'products/' + l2_variable_name.lower(), 'f4',
+                'products/' + l2a_variable_name.lower(), 'f4',
                 ('lines', 'samples', 'bands'),
                 compression=COMP_SCHEME,
                 complevel=COMP_LEVEL,
@@ -157,17 +157,17 @@ def l2_nc_writer(satobj, correction: str, dst_nc: str, datacube: str = True) -> 
             rrs.wavelength_units = "nanometers"
             rrs.fwhm = satobj.fwhm
             rrs.wavelengths = np.around(satobj.wavelengths, 1)
-            rrs[:] = satobj.l2_cubes[correction].to_numpy()
+            rrs[:] = satobj.l2a_cubes[correction].to_numpy()
 
         else:
 
             # Store as bands
-            rrs_cube = satobj.l2_cubes[correction].to_numpy()
+            rrs_cube = satobj.l2a_cubes[correction].to_numpy()
             for band in range(0, rrs_cube.shape[-1]):
 
                 wave = np.around(satobj.wavelengths, 1)[band]
                 wave_name = str(int(wave))
-                name = l2_variable_name.lower() + '_' + wave_name
+                name = l2a_variable_name.lower() + '_' + wave_name
 
                 rrs = netfile.createVariable(
                     'products/' + name, 'f4',
@@ -462,7 +462,7 @@ def l2_nc_writer(satobj, correction: str, dst_nc: str, datacube: str = True) -> 
         #     ('lines',))
         # timestamps_srv[:] = getattr(satobj, 'nc_timing_vars')["timestamps_srv"][:]
     
-        navigation_group_writer(satobj=satobj, netfile=netfile)
+        geometry_group_writer(satobj=satobj, netfile=netfile)
 
         metadata_gcp_group_writer(satobj, netfile, COMP_SCHEME=COMP_SCHEME, COMP_LEVEL=COMP_LEVEL, COMP_SHUFFLE=COMP_SHUFFLE)
 

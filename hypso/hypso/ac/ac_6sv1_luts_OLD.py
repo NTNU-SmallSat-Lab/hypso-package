@@ -5,7 +5,7 @@ from importlib.resources import files
 from pathlib import Path
 import Py6S
 import dateutil
-from typing import Union
+
 import itertools
 from Py6S import SixS, Geometry, AtmosProfile, AeroProfile, GroundReflectance, Wavelength
 
@@ -18,29 +18,14 @@ from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 import warnings
 
 
-SZA_VALUES = np.linspace(0,80,5)
-VZA_VALUES = np.linspace(0,80,5)
-RAA_VALUES = np.linspace(0,180,10)
-
-AOT550_VALUES = np.linspace(0,0.5,11)
-
-#WAVELENGTH_VALUES = np.linspace(380,800,120) 
-WAVELENGTH_VALUES = np.arange(380, 800 ,3.33)
-
-MEAN_DEM_VALUES = [0, 1, 2]
+SZA_VALUES = np.linspace(0,75,6)
+VZA_VALUES = np.linspace(0,75,6)
+RAA_VALUES = np.linspace(0,180,9)
 
 
-
-
-NA = Py6S.AeroProfile.PredefinedType(Py6S.AeroProfile.NoAerosols)
-M = Py6S.AtmosProfile.PredefinedType(Py6S.AeroProfile.Maritime)
-C = Py6S.AtmosProfile.PredefinedType(Py6S.AeroProfile.Continental)
-
-AERO_PROFILE_VALUES = {"NA": NA,
-                       "C": C
-                       }
-
-
+#SZA_VALUES = np.linspace(0,75,2)
+#VZA_VALUES = np.linspace(0,75,2)
+#RAA_VALUES = np.linspace(0,180,2)
 
 NGA = Py6S.AtmosProfile.PredefinedType(Py6S.AtmosProfile.NoGaseousAbsorption)
 SAW = Py6S.AtmosProfile.PredefinedType(Py6S.AtmosProfile.SubarcticWinter)
@@ -49,23 +34,35 @@ MLS = Py6S.AtmosProfile.PredefinedType(Py6S.AtmosProfile.MidlatitudeSummer)
 MLW = Py6S.AtmosProfile.PredefinedType(Py6S.AtmosProfile.MidlatitudeWinter)
 T = Py6S.AtmosProfile.PredefinedType(Py6S.AtmosProfile.Tropical)
 
-ATMOS_PROFILE_VALUES = {"NGA": NGA, 
-                        "SAW": SAW, 
-                        "SAS": SAS, 
-                        "MLS": MLS, 
-                        "MLW": MLW, 
-                        "T": T
-                        }
+ATMOS_PROFILE_VALUES = [NGA, SAW, SAS, MLS, MLW, T]
+#ATMOS_PROFILE_VALUES = [NGA]
+
+AOT550_VALUES = np.linspace(0,0.5,5)
+#AOT550_VALUES = np.linspace(0,0.5,2)
+
+WAVELENGTH_VALUES = np.linspace(380,800,120) #[560, 660, 830]
+
+MEAN_DEM_VALUES = [0, 0.5, 1, 1.5, 2, 2.5]
+
+NA = Py6S.AeroProfile.PredefinedType(Py6S.AeroProfile.NoAerosols)
+M = Py6S.AtmosProfile.PredefinedType(Py6S.AeroProfile.Maritime)
+C = Py6S.AtmosProfile.PredefinedType(Py6S.AeroProfile.Continental)
+
+AERO_PROFILE_VALUES = [NA, C]
+
+
 
 
 
 
 def run_single_simulation(params):
     """Run a single 6S simulation with given parameters"""
-
-    atmos_profile, aero_profile, sza, vza, raa, aot550, wavelength  = params
+    sza, vza, raa, aot550, wavelength, atmos_profile, aero_profile = params
     
+
     try:
+
+
         s = Py6S.SixS()
 
         # Enable Sensor type customization
@@ -111,118 +108,66 @@ def run_single_simulation(params):
 
 
 
-def get_aero_profile_key(aero_profile):
-
-    try:
-        dict_swapped = {value: key for key, value in AERO_PROFILE_VALUES.items()}
-        key = dict_swapped[aero_profile]
-    except KeyError:
-        print("[WARNING] Key not found.")
-        key = None
-        
-    return key
-
-def get_atmos_profile_key(atmos_profile):
-
-    try:
-        dict_swapped = {value: key for key, value in ATMOS_PROFILE_VALUES.items()}
-        key = dict_swapped[atmos_profile]
-    except KeyError:
-        print("[WARNING] Key not found.")
-        key = None
-
-    return key 
 
 
-def get_lut_filename(luts_dir, aero_profile, atmos_profile) ->  Union[Path, Path]:
 
 
-    if atmos_profile not in ATMOS_PROFILE_VALUES.keys():
-        atmos_profile = get_atmos_profile_key(atmos_profile)    
 
-    if aero_profile not in AERO_PROFILE_VALUES.keys():
-        aero_profile = get_aero_profile_key(aero_profile)
 
-    base_filename = "py6s_lut_aero" + str(aero_profile) + "_atmos" + str(atmos_profile)
 
-    csv_filename = base_filename  + ".csv"
-    pkl_filename = base_filename  + ".pkl"
 
-    csv_filename = Path(luts_dir, csv_filename).absolute()
-    pkl_filename = Path(luts_dir, pkl_filename).absolute()
 
-    return csv_filename, pkl_filename, base_filename
+
+
+
+
+
 
 
 def create_parallel_lut():
     """Create LUT using parallel processing"""
     
     # Define all parameter combinations
+    all_params = []
     
+    param_grid = list(itertools.product(SZA_VALUES, VZA_VALUES, RAA_VALUES, AOT550_VALUES, WAVELENGTH_VALUES, ATMOS_PROFILE_VALUES, AERO_PROFILE_VALUES))
+
+    print(len(param_grid))
+
+
+    for sza, vza, raa, aot550, wavelength, atmos_profile, aero_profile in param_grid:
+        all_params.append((sza, vza, raa, aot550, wavelength, atmos_profile, aero_profile))
     
-
-    for ATMOS_PROFILE_KEY in ATMOS_PROFILE_VALUES.keys():
-
-        for AERO_PROFILE_KEY in AERO_PROFILE_VALUES.keys():
-
-            ATMOS_PROFILE_VALUE = ATMOS_PROFILE_VALUES[ATMOS_PROFILE_KEY]
-            AERO_PROFILE_VALUE = AERO_PROFILE_VALUES[AERO_PROFILE_KEY]
-
-            print('[INFO] Building Look-Up Table for: ')
-            print('\t'*7 + 'Aerosol Profile: ' + str(AERO_PROFILE_KEY))
-            print('\t'*7 + 'Atmospheric Profile: ' + str(ATMOS_PROFILE_KEY))
-            
-            all_params = []
-
-            param_grid = list(itertools.product(ATMOS_PROFILE_VALUE, AERO_PROFILE_VALUE, SZA_VALUES, VZA_VALUES, RAA_VALUES, AOT550_VALUES, WAVELENGTH_VALUES))
-
-            for sza, vza, raa, aot550, wavelength, atmos_profile, aero_profile in param_grid:
-                all_params.append((sza, vza, raa, aot550, wavelength, atmos_profile, aero_profile))
-            
-            print('\t'*7 + f"Total simulations: {len(all_params)}")
+    print(f"Total simulations: {len(all_params)}")
     
 
-            #result = run_single_simulation(all_params[2])
+    #result = run_single_simulation(all_params[2])
 
-            # Use multiprocessing
-            #with mp.Pool(processes=mp.cpu_count()-1) as pool:
-            #with mp.Pool(processes=2) as pool:
-            
-            pool = Pool(processes=32)
-
-            results = []
-            for result in tqdm.tqdm(pool.imap_unordered(run_single_simulation, all_params), total=len(all_params)): 
-                results.append(result)
+    # Use multiprocessing
+    #with mp.Pool(processes=mp.cpu_count()-1) as pool:
+    #with mp.Pool(processes=2) as pool:
+    
 
 
-            # Filter successful results
-            successful_results = [r for r in results if r['success']]
-            
-            df = pd.DataFrame(successful_results)
 
-            csv_filename, pkl_filename = get_lut_filename(AERO_PROFILE_KEY, ATMOS_PROFILE_KEY)
 
-            df.to_csv(csv_filename, index=False)
-            print(f"[INFO] Parallel LUT created with {len(df)} successful entries")
+    pool = Pool(processes=8)
 
-            df.to_pickle(pkl_filename)
+    results = []
+    for result in tqdm.tqdm(pool.imap_unordered(run_single_simulation, all_params), total=len(all_params)): 
+        results.append(result)
+
+
+    # Filter successful results
+    successful_results = [r for r in results if r['success']]
+    
+    df = pd.DataFrame(successful_results)
+    df.to_csv('py6s_parallel_lut.csv', index=False)
+    print(f"Parallel LUT created with {len(df)} successful entries")
+    return df
 
 # Uncomment to run parallel version (be careful with system resources)
 # parallel_lut = create_parallel_lut()
-
-
-
-
-
-
-def atmos_profile_lookup(atmos_profile):
-
-    atmos_lut = {value: key for key, value in ATMOS_PROFILE_VALUES.items()}
-
-    return atmos_lut[atmos_profile]
-
-
-
 
 
 def query_lut():

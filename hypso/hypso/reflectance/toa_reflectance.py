@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import xarray as xr
 from scipy.interpolate import CubicSpline
-
+import matplotlib.pyplot as plt
 
 
 
@@ -15,23 +15,47 @@ def compute_toa_reflectance(sensor_wavelengths,
                             toa_radiance: np.ndarray,
                             iso_time,
                             solar_zenith_angles,
+                            output_dir = None,
+                            generate_figures = False,
+                            use_thuillier = False
                             ) -> xr.DataArray:
 
 
+    BOOL_FIGURES = generate_figures
+    BOOL_THUILLIER = use_thuillier
+
     ssi, solar_wavelengths = load_ssi()
+
+
+    if BOOL_THUILLIER:
+        print("[WARNING] Using Thuillier SSI reference spectrum for ToA reflectance processing!")
+        solar_data_path = str(files('hypso.reflectance').joinpath("Solar_irradiance_Thuillier_2002.csv"))
+        solar_df = pd.read_csv(solar_data_path)
+        ssi = np.array(solar_df['mW/m2/nm'])
+        solar_wavelengths = np.array(solar_df['nm'])
+
+
+
 
     srf_list, srf_ssi_list = compute_srf(ssi=ssi,
                                          solar_wavelengths=solar_wavelengths,
                                          sensor_wavelengths=sensor_wavelengths,
-                                         sensor_fwhm=sensor_fwhm)
+                                         sensor_fwhm=sensor_fwhm,
+                                         generate_figures = BOOL_FIGURES,
+                                         output_dir = output_dir
+                                         )
     
-    old_srf_list = compute_old_srf(sensor_wavelengths=sensor_wavelengths,
-                                   sensor_fwhm=sensor_fwhm)
+    #old_srf_list = compute_old_srf(sensor_wavelengths=sensor_wavelengths,
+    #                               sensor_fwhm=sensor_fwhm,
+    #                               generate_figures = BOOL_FIGURES,
+    #                               output_dir = output_dir
+    #                               )
     
-
 
     esun_list = compute_esun(srf_list=srf_list, 
                              srf_ssi_list=srf_ssi_list)
+
+
 
     scene_date = parser.isoparse(iso_time)
     julian_day = scene_date.timetuple().tm_yday
@@ -57,31 +81,63 @@ def compute_toa_reflectance(sensor_wavelengths,
 
 
 
-    if False:
+    if BOOL_FIGURES and not BOOL_THUILLIER:
         import csv
         import matplotlib.pyplot as plt
 
         esun_array = np.array(esun_list)
 
-        with open('esun_data.csv', mode='w', newline='') as file:
+        with open('esun_data_tsis.csv', mode='w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(['Wavelength', 'ESUN'])  # Header
             for wl, computed_esun in zip(sensor_wavelengths, esun_array):
                 writer.writerow([wl, computed_esun])
 
 
-        plt.title('HYPSO ESUN w/ TSIS-1 (2022) SSI')
+        #plt.title('HYPSO ESUN w/ TSIS-1 (2022) SSI')
         #plt.plot(ssi_wl, ssi, label='TSIS-1 SSI')
         #plt.plot(esun_wl, esun, label='HYPSO ESUN')
-        plt.plot(solar_wavelengths, ssi, label='TSIS-1 SSI')
-        plt.plot(sensor_wavelengths, np.array(esun_array), label='HYPSO ESUN')
+        plt.plot(solar_wavelengths, ssi, label='TSIS-1 SSI', linewidth=0.15)
+        plt.plot(sensor_wavelengths, np.array(esun_array), label='HYPSO-2 $F_0$')
 
         plt.xlim(350, 850)
+        plt.ylim(0,2500)
         plt.legend(loc='upper right')
         plt.xlabel('Wavelength (nm)')
-        plt.ylabel('Solar Irradiance')
+        plt.ylabel('Solar Spectral Irradiance [W m$^{-2}$ nm$^{-1}$]')
         plt.tight_layout()
-        plt.savefig('spectrum_tsis.png')
+        plt.savefig('1_hypso_spectrum_tsis.png')
+
+        plt.close
+
+
+    if BOOL_FIGURES and BOOL_THUILLIER:
+
+        import csv
+        import matplotlib.pyplot as plt
+
+        esun_array = np.array(esun_list)
+
+        with open('esun_data_thuillier.csv', mode='w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['Wavelength', 'ESUN'])  # Header
+            for wl, computed_esun in zip(sensor_wavelengths, esun_array):
+                writer.writerow([wl, computed_esun])
+
+
+        #plt.title('HYPSO ESUN w/ TSIS-1 (2022) SSI')
+        #plt.plot(ssi_wl, ssi, label='TSIS-1 SSI')
+        #plt.plot(esun_wl, esun, label='HYPSO ESUN')
+        plt.plot(solar_wavelengths, ssi, label='Thuillier SSI', linewidth=0.6)
+        plt.plot(sensor_wavelengths, np.array(esun_array), label='HYPSO-2 $F_0$')
+
+        plt.xlim(350, 850)
+        plt.ylim(0,2500)
+        plt.legend(loc='upper right')
+        plt.xlabel('Wavelength (nm)')
+        plt.ylabel('Solar Spectral Irradiance [W m$^{-2}$ nm$^{-1}$]')
+        plt.tight_layout()
+        plt.savefig('1_hypso_spectrum_thuillier.png')
 
         plt.close
 
@@ -97,7 +153,10 @@ def compute_toa_reflectance(sensor_wavelengths,
 def compute_srf(ssi,
                 solar_wavelengths,
                 sensor_wavelengths,
-                sensor_fwhm):
+                sensor_fwhm,
+                generate_figures = False,
+                output_dir = None
+                ):
 
 
     # Create SRFs
@@ -108,10 +167,14 @@ def compute_srf(ssi,
     sensor_band_indices = [np.abs(solar_wavelengths - w).argmin() for w in sensor_wavelengths]
 
     
-
     srf_list = []
     srf_ssi_list = []
     sensor_gaussian_srf_list = []
+
+    if generate_figures:
+        fig, ax = plt.subplots(figsize=(6.4, 3.8))
+
+
 
     for i, sensor_band_index in enumerate(sensor_band_indices):
 
@@ -154,11 +217,19 @@ def compute_srf(ssi,
         lower_wl = list(lower_wl)
         upper_wl = list(upper_wl)
 
+        len_diff = 0
+        pop_start = 0
+        pop_end = 0
         while len(lower_wl) > len(upper_wl):
             lower_wl.pop(0)
+            len_diff = len_diff + 1
+            pop_start = pop_start + 1
         while len(upper_wl) > len(lower_wl):
             upper_wl.pop(-1)
-        len_diff = 0
+            len_diff = len_diff + 1
+            pop_end = pop_end + 1
+            
+        
             
         srf_wl = lower_wl + srf_wl + upper_wl
 
@@ -171,7 +242,11 @@ def compute_srf(ssi,
             # len_diff is added to make up for the missing elements because of clipping
             # at the ends mentioned above. this replaces the clipped elements and makes sure
             # gaussian has correct width
+
+            linspace_len = len(srf_to_sample[start_srf_index:end_srf_index+1])
+
             gx = np.linspace(-3 * sigma_nm[i], 3 * sigma_nm[i], len(srf_wl) + len_diff)
+            #gx = np.linspace(-3 * sigma_nm[i], 3 * sigma_nm[i], linspace_len)
 
         gaussian_srf = np.exp(-(gx / sigma_nm[i]) ** 2 / 2)  # Not divided by the sum, because we want peak to 1.0
 
@@ -185,34 +260,135 @@ def compute_srf(ssi,
         # Use sensor_band_indices to sample srf_to_sample
 
 
-        ssi_start_index = sensor_band_index - len(lower_wl)
-        ssi_end_index = sensor_band_index + len(upper_wl)
+        ssi_start_index = sensor_band_index - len(lower_wl) - pop_start
+        ssi_end_index = sensor_band_index + len(upper_wl) + pop_end
 
-        srf_ssi_list.append(ssi[ssi_start_index:ssi_end_index+1])
+        srf_ssi = ssi[ssi_start_index:ssi_end_index+1]
+
+        srf_ssi_list.append(srf_ssi)
 
         sensor_gaussian_srf_list.append(sensor_gaussian_srf)
 
-        if False:
-            import matplotlib.pyplot as plt
+        if generate_figures:
+            cmap = plt.cm.rainbow
+            if i % 5 == 0:
+                alpha=0.7
+            else:
+                alpha=0.05
 
-            plt.plot(srf_x, gaussian_srf)
-            plt.axvline(sensor_wavelengths[i])
-            idx_wl_last = i-1
-            idx_wl_next = i+1
-            if idx_wl_last > 0:
-                plt.axvline(x=sensor_wavelengths[idx_wl_last])
-            if idx_wl_next < len(sensor_wavelengths):
-                plt.axvline(x=sensor_wavelengths[idx_wl_next])
-            plt.savefig('gaussian_srf_' + str(center_lambda_nm) + '.png')
-            plt.close()
+            band_start = solar_wavelengths[sensor_band_indices[0]]
+            band_end = solar_wavelengths[sensor_band_indices[-1]]
 
-            plt.plot(solar_wavelengths, srf_to_sample)
-            plt.savefig('full_gaussian_srf_' + str(center_lambda_nm) + '.png')
-            plt.close()
+            band_center = center_lambda_nm
+            norm_position = (band_center - band_start) / (band_end - band_start)
+            norm_position = max(0, min(1, norm_position))
+            color = cmap(norm_position)
 
-            plt.plot(sensor_wavelengths, sensor_gaussian_srf)
-            plt.savefig('sensor_gaussian_srf_' + str(center_lambda_nm) + '.png')
-            plt.close()
+            srf_plotting_vec = np.where(srf_to_sample == 0, np.nan, srf_to_sample)
+
+            ax.plot(solar_wavelengths, srf_plotting_vec, color=color, alpha=alpha)
+
+            if False:
+                plt.plot(srf_x, gaussian_srf)
+                plt.axvline(sensor_wavelengths[i])
+                idx_wl_last = i-1
+                idx_wl_next = i+1
+                if idx_wl_last > 0:
+                    plt.axvline(x=sensor_wavelengths[idx_wl_last])
+                if idx_wl_next < len(sensor_wavelengths):
+                    plt.axvline(x=sensor_wavelengths[idx_wl_next])
+                
+                plt.savefig('gaussian_srf_' + str(center_lambda_nm) + '.png')
+                plt.close()
+
+                plt.plot(solar_wavelengths, srf_to_sample)
+                plt.savefig('full_gaussian_srf_' + str(center_lambda_nm) + '.png')
+                plt.close()
+
+                plt.plot(sensor_wavelengths, sensor_gaussian_srf)
+                plt.savefig('sensor_gaussian_srf_' + str(center_lambda_nm) + '.png')
+                plt.close()
+
+
+
+
+    if generate_figures:
+
+        #fwhm_on_wavelength_grid = np.full_like(solar_wavelengths, np.nan)
+        #fwhm_on_wavelength_grid[sensor_band_indices] = fwhm_nm
+        #ax2 = ax.twinx()
+        #fwhm_scatter = ax2.scatter(solar_wavelengths, fwhm_on_wavelength_grid, alpha=1.0, zorder=10, label='FWHM', marker='o', color='black')
+
+
+        # Create the array on wavelength grid
+        fwhm_on_wavelength_grid = np.full_like(solar_wavelengths, np.nan)
+        fwhm_on_wavelength_grid[sensor_band_indices] = fwhm_nm
+
+        ax2 = ax.twinx()
+
+        # Create masks for every 5th point and the rest
+        valid_mask = ~np.isnan(fwhm_on_wavelength_grid)  # Only where we have FWHM values
+        valid_indices = np.where(valid_mask)[0]
+
+        # Create masks for every 5th point and the remaining points
+        every_5th_mask = np.zeros_like(fwhm_on_wavelength_grid, dtype=bool)
+        rest_mask = np.zeros_like(fwhm_on_wavelength_grid, dtype=bool)
+
+        # Set every 5th valid point to True
+        if len(valid_indices) > 0:
+            every_5th_mask[valid_indices[::5]] = True  # Every 5th valid FWHM point
+            # The rest are valid points that are NOT every 5th
+            rest_mask[valid_indices] = True
+            rest_mask[valid_indices[::5]] = False  # Exclude every 5th from the rest
+
+        # Plot the REST of points (low alpha)
+        if np.any(rest_mask):
+            ax2.scatter(solar_wavelengths[rest_mask], 
+                        fwhm_on_wavelength_grid[rest_mask], 
+                        alpha=0.33,  # Low alpha
+                        zorder=5, 
+                        marker='o', 
+                        color='black', 
+                        s=20,  # Larger size for emphasis
+                        edgecolors='white',  # Optional: white border for contrast
+                        linewidths=0.5,
+                        label='FWHM (others)')
+
+        # Plot EVERY 5th points (full alpha)
+        if np.any(every_5th_mask):
+            fwhm_scatter = ax2.scatter(solar_wavelengths[every_5th_mask], 
+                                    fwhm_on_wavelength_grid[every_5th_mask], 
+                                    alpha=1.0,  # Full alpha
+                                    zorder=10, 
+                                    marker='o', 
+                                    color='black', 
+                                    s=40,  # Larger size for emphasis
+                                    edgecolors='white',  # Optional: white border for contrast
+                                    linewidths=0.5,
+                                    label='FWHM (every 5th)')
+
+
+
+
+
+
+        ax.set_xlim(350, 850)
+        ax.set_ylim(-0.05, 1.05)
+        ax.set_xlabel('Wavelength [nm]')
+        ax.set_ylabel('Spectral Response (Normalized) [a.u.]')
+
+
+        ax2.set_ylim(3.0, 6.0)
+        ax2.set_ylabel('FWHM [nm]')
+        ax2.yaxis.set_label_position("right")
+        ax2.yaxis.tick_right()
+
+
+
+        fig.tight_layout()
+        fig.savefig(f'hypso_srf_fwhm.png')
+        plt.close(fig)
+
 
     if False:
         import csv
@@ -230,7 +406,10 @@ def compute_srf(ssi,
 
 
 
-def compute_old_srf(sensor_wavelengths, sensor_fwhm: np.array) -> None:
+def compute_old_srf(sensor_wavelengths, 
+                    sensor_fwhm: np.array,
+                    generate_figures = False,
+                    output_dir = None) -> None:
     """
     Get Spectral Response Functions (SRF) from HYPSO for each of the 120 bands. Theoretical FWHM of 3.33nm is
     used to estimate Sigma for an assumed gaussian distribution of each SRF per band.
@@ -372,7 +551,7 @@ def compute_old_srf(sensor_wavelengths, sensor_fwhm: np.array) -> None:
 
 
 
-        if False:
+        if generate_figures:
 
             import matplotlib.pyplot as plt
             plt.plot(srf_wl_single, srf_single)
@@ -412,7 +591,7 @@ def compute_esun(srf_list, srf_ssi_list):
         gaussian_srf_sum = np.sum(gaussian_srf)
         srf_weights = gaussian_srf / gaussian_srf_sum
 
-        esun_value = np.sum(srf_ssi * srf_weights)  # units matche HYPSO from device.py
+        esun_value = np.sum(srf_ssi * srf_weights)  # units match HYPSO from device.py
 
         esun_list.append(esun_value)
 

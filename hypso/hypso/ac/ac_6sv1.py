@@ -24,17 +24,15 @@ from datetime import datetime, timedelta, timezone
 
 from .ac_6sv1_aot550 import extract_footprint_and_date, download_viirs_aot, get_aot_in_swath
 from .ac_6sv1_parameters import get_6sv1_parameters
+from .ac_6sv1_lut import get_lut_filename
+from .ac_6sv1_query_lut import LUTQuery, LUTQueryRegularGrid
 
 from osgeo import gdal
 
+from .ac_6sv1_utils import get_lat_lon
 
 
-
-
-
-
-
-
+# TODO: Add relative azimuth angles (raa) to 6S simulations
 
 class SixSParameters:
 
@@ -92,8 +90,8 @@ def run_6sv1_simulation_no_aerosol(parameters) -> SixSResult:
         # Add Geometry Parameters
         s.geometry.solar_z = parameters["SolarZenithAngle"]
         s.geometry.solar_a = parameters["SolarAzimuthAngle"]
-        s.geometry.view_z = parameters["SatZenithAngles"][BandId]
-        s.geometry.view_a = parameters["SatAzimuthAngles"][BandId]
+        s.geometry.view_z = parameters["SatZenithAngles"]
+        s.geometry.view_a = parameters["SatAzimuthAngles"]
 
         # Date: Month, Day
         s.geometry.month = parameters["ImgMonth"]
@@ -151,8 +149,8 @@ def run_6sv1_simulation(parameters) -> SixSResult:
         # Add Geometry Parameters
         s.geometry.solar_z = parameters["SolarZenithAngle"]
         s.geometry.solar_a = parameters["SolarAzimuthAngle"]
-        s.geometry.view_z = parameters["SatZenithAngles"][BandId]
-        s.geometry.view_a = parameters["SatAzimuthAngles"][BandId]
+        s.geometry.view_z = parameters["SatZenithAngles"]
+        s.geometry.view_a = parameters["SatAzimuthAngles"]
 
         # Date: Month, Day
         s.geometry.month = parameters["ImgMonth"]
@@ -209,16 +207,14 @@ def run_6sv1_simulation(parameters) -> SixSResult:
 
 
 
+
+
+
+
+
 def get_mean_aot550(satobj, VERBOSE: bool = True):
 
-    try:
-        latitudes = satobj.latitudes_indirect
-        longitudes = satobj.longitudes_indirect
-    except Exception as ex:
-        print(ex)
-        print("[WARNING] 6SV1 defaulting to direct georeferencing.")
-        latitudes = satobj.latitudes
-        longitudes = satobj.longitudes
+    latitudes, longitudes = get_lat_lon(satobj)
 
     aot550_path = Path(satobj.capture_dir)
     aot550_path = aot550_path.joinpath("data_aerosol")
@@ -257,8 +253,8 @@ def get_mean_aot550(satobj, VERBOSE: bool = True):
         aot550 = np.mean(np.concatenate([aot_inside_NOAA, aot_inside_SNPP]))
     else:
 
-        print("[WARNING] No AOT at 550nm value found.")
-        aot550 = None
+        print("[WARNING] No AOT at 550nm value found. Defaulting to AOT550 of 0.1.")
+        aot550 = 0.1
 
     if VERBOSE:
         print("Mean AOT at 550nm:")
@@ -274,7 +270,149 @@ def get_mean_aot550(satobj, VERBOSE: bool = True):
 
 
 
-def run_6sv1_atmospheric_correction(satobj, dem_path: Path = None, VERBOSE: bool = True):
+def run_6sv1_atmospheric_correction(satobj, dem_path: Path = None, VERBOSE: bool = True, use_luts=False, luts_dir=None):
+
+    if VERBOSE: 
+        print("[INFO] Running 6SV1 atmospheric correction")
+        print("\n-------  Py6S Atmospheric Correction  ----------")
+
+    # Original units mW  (m^{-2} sr^{-1} nm^{-1})
+    # radiance_cube = radiance_cube / 1000 # mW to W -> W  (m^{-2} sr^{-1} nm^{-1})
+    # radiance_cube = radiance_cube / 0.001
+
+
+    aot550 = get_mean_aot550(satobj=satobj, VERBOSE=VERBOSE)
+
+    parameters = get_6sv1_parameters(satobj=satobj, dem_path=dem_path)
+
+    parameters['aot550'] = aot550 # Update AOT at 550nm if value is provided
+
+
+    print(parameters)
+
+    if use_luts:
+
+        # No Aerosols
+        aero_profile = Py6S.AeroProfile.PredefinedType(Py6S.AeroProfile.NoAerosols)
+        atmos_profile = Py6S.AtmosProfile.PredefinedType(Py6S.AtmosProfile.NoGaseousAbsorption)
+        lut_file_no_aerosol, _, lut_base_filename = get_lut_filename(luts_dir=luts_dir, aero_profile=aero_profile, atmos_profile=atmos_profile)
+        lut_query_sys_no_aerosol = LUTQueryRegularGrid(lut_file=lut_file_no_aerosol)
+
+
+        # With Aerosols
+        aero_profile = parameters["AeroProfile"]
+        atmos_profile = parameters["AtmosphericProfile"]
+        lut_file, _, lut_base_filename = get_lut_filename(luts_dir=luts_dir, aero_profile=aero_profile, atmos_profile=atmos_profile)
+        lut_query_sys = LUTQueryRegularGrid(lut_file=lut_file)
+
+
+        cube = np.full((satobj.l1d_cube.shape), fill_value=np.nan)
+
+        height, width, bands = cube.shape
+
+
+        if 'aot550' in parameters.keys():
+            aot550 = parameters['aot550']
+        else:
+            aot550 = 0.1  # Use Default Values
+
+        sza_array = satobj.solar_zenith_angles
+        vza_array = satobj.sat_zenith_angles
+        raa_array = satobj.relative_azimuth_angles
+
+        aot550_array = np.full((height, width), fill_value=aot550)
+
+        
+        for band in tqdm(range(0,bands)):
+
+            wavelength = satobj.wavelengths[band]
+
+            wavelength_array = np.full((height, width), fill_value=wavelength)
+
+            #query_point = np.array([sza, vza, raa, aot550, wavelength])
+            #query_point = query_point.reshape(1, -1)
+            #response_point = interp_func(query_point)
+
+            query_array = np.stack((sza_array, vza_array, raa_array, aot550_array, wavelength_array), axis=-1)
+            query_array = query_array.reshape((height*width, -1))
+
+            interp_func = lut_query_sys_no_aerosol.interpolators['rho_R']
+            response_array = interp_func(query_array)
+            rho_A_R = response_array.reshape(height, width)
+
+            interp_func = lut_query_sys.interpolators['rho_R']
+            response_array = interp_func(query_array)
+            rho_R = response_array.reshape(height, width)
+
+            interp_func = lut_query_sys.interpolators['Tg_H20']
+            response_array = interp_func(query_array)
+            Tg_H20 = response_array.reshape(height, width)
+
+            interp_func = lut_query_sys.interpolators['Tg_O3']
+            response_array = interp_func(query_array)
+            Tg_O3 = response_array.reshape(height, width)
+
+            interp_func = lut_query_sys.interpolators['Ts_Tv']
+            response_array = interp_func(query_array)
+            Ts_Tv = response_array.reshape(height, width)
+
+            interp_func = lut_query_sys.interpolators['S_atm']
+            response_array = interp_func(query_array)
+            S_atm = response_array.reshape(height, width)
+
+
+            rho_toa = satobj.l1d_cube[:,:,band].to_numpy()
+
+            rho_atm = rho_R + (rho_A_R - rho_R)*Tg_H20
+
+            Y = rho_toa - rho_atm * Tg_O3
+
+            numerator = Y
+            denominator = (S_atm * Y) + (Ts_Tv * Tg_O3 * Tg_H20)
+
+            rho_s = numerator / denominator
+
+            cube[:,:,band] = rho_s   
+
+
+    else:
+        outputs_no_aerosol = run_6sv1_simulation_no_aerosol(parameters=parameters)
+        outputs = run_6sv1_simulation(parameters=parameters)
+
+        cube = np.full((satobj.l1d_cube.shape), fill_value=np.nan)
+
+        height, width, bands = cube.shape
+
+        for band in tqdm(range(0,bands)):
+
+            rho_toa = satobj.l1d_cube[:,:,band]
+
+            rho_R = outputs['rho_R'][band]
+            rho_A_R = outputs_no_aerosol['rho_R'][band]
+            Tg_H20 = outputs['Tg_H20'][band]
+            Tg_O3 = outputs['Tg_O3'][band]
+            Ts_Tv = outputs['Ts_Tv'][band]
+            S_atm = outputs['S_atm'][band]
+
+            rho_atm = rho_R + (rho_A_R - rho_R)*Tg_H20
+
+            Y = rho_toa - rho_atm * Tg_O3
+
+            numerator = Y
+            denominator = (S_atm * Y) + (Ts_Tv * Tg_O3 * Tg_H20)
+
+            rho_s = numerator / denominator
+
+            cube[:,:,band] = rho_s
+
+    return cube
+
+
+
+
+
+
+def run_6sv1_atmospheric_correction_luts(satobj, dem_path: Path = None, VERBOSE: bool = True):
 
     if VERBOSE: 
         print("[INFO] Running 6SV1 atmospheric correction")
@@ -291,9 +429,46 @@ def run_6sv1_atmospheric_correction(satobj, dem_path: Path = None, VERBOSE: bool
 
     parameters['aot550'] = aot550
 
+    wavelengths = parameters["wavelengths"]
+    num_bands = len(parameters["wavelengths"])
+
+    outputs = SixSResult(num_bands=num_bands, wavelengths=wavelengths)
+
+    aero_profile = parameters["AeroProfile"]
+    atmos_profile = parameters["AtmosphericProfile"]
+
+    luts_dir = "/home/cameron/Nedlastinger/6S_HYPSO_LUTS"
+
+    lut, _, _ = get_lut_filename(luts_dir=luts_dir, aero_profile=aero_profile, atmos_profile=atmos_profile)
+
+
+    # write fast function for query
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     outputs_no_aerosol = run_6sv1_simulation_no_aerosol(parameters=parameters)
     outputs = run_6sv1_simulation(parameters=parameters)
+
 
     cube = np.full((satobj.l1d_cube.shape), fill_value=np.nan)
 
@@ -322,6 +497,9 @@ def run_6sv1_atmospheric_correction(satobj, dem_path: Path = None, VERBOSE: bool
         cube[:,:,band] = rho_s
 
     return cube
+
+
+
 
 
 

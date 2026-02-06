@@ -18,7 +18,7 @@ from datetime import datetime
 
 
 def get_l1a_satpy_scene(satobj: Union[Hypso1, Hypso2],
-                        use_indirect_georef: bool = False
+                        use_direct_georef: bool = False
                         ) -> Scene:
 
     datacube = satobj.l1a_cube
@@ -31,10 +31,10 @@ def get_l1a_satpy_scene(satobj: Union[Hypso1, Hypso2],
     start_time = satobj.capture_datetime
     end_time = satobj.capture_datetime
 
-    if use_indirect_georef:
-        latitudes = satobj.latitudes_indirect
-        longitudes = satobj.longitudes_indirect
-        resolution = satobj.resolution_indirect
+    if use_direct_georef:
+        latitudes = satobj.latitudes_direct
+        longitudes = satobj.longitudes_direct
+        resolution = satobj.resolution_direct
     else:
         latitudes = satobj.latitudes
         longitudes = satobj.longitudes
@@ -57,7 +57,7 @@ def get_l1a_satpy_scene(satobj: Union[Hypso1, Hypso2],
 
 
 def get_l1b_satpy_scene(satobj: Union[Hypso1, Hypso2],
-                        use_indirect_georef: bool = False
+                        use_direct_georef: bool = False
                         ) -> Scene:
 
     datacube = satobj.l1b_cube
@@ -70,10 +70,10 @@ def get_l1b_satpy_scene(satobj: Union[Hypso1, Hypso2],
     start_time = satobj.capture_datetime
     end_time = satobj.capture_datetime
 
-    if use_indirect_georef:
-        latitudes = satobj.latitudes_indirect
-        longitudes = satobj.longitudes_indirect
-        resolution = satobj.resolution_indirect
+    if use_direct_georef:
+        latitudes = satobj.latitudes_direct
+        longitudes = satobj.longitudes_direct
+        resolution = satobj.resolution_direct
     else:
         latitudes = satobj.latitudes
         longitudes = satobj.longitudes
@@ -95,7 +95,7 @@ def get_l1b_satpy_scene(satobj: Union[Hypso1, Hypso2],
 
 
 def get_l1c_satpy_scene(satobj: Union[Hypso1, Hypso2],
-                        use_indirect_georef: bool = False
+                        use_direct_georef: bool = False
                         ) -> Scene:
 
     datacube = satobj.l1c_cube
@@ -108,10 +108,10 @@ def get_l1c_satpy_scene(satobj: Union[Hypso1, Hypso2],
     start_time = satobj.capture_datetime
     end_time = satobj.capture_datetime
 
-    if use_indirect_georef:
-        latitudes = satobj.latitudes_indirect
-        longitudes = satobj.longitudes_indirect
-        resolution = satobj.resolution_indirect
+    if use_direct_georef:
+        latitudes = satobj.latitudes_direct
+        longitudes = satobj.longitudes_direct
+        resolution = satobj.resolution_direct
     else:
         latitudes = satobj.latitudes
         longitudes = satobj.longitudes
@@ -132,7 +132,7 @@ def get_l1c_satpy_scene(satobj: Union[Hypso1, Hypso2],
 
 
 def get_l1d_satpy_scene(satobj: Union[Hypso1, Hypso2],
-                        use_indirect_georef: bool = False
+                        use_direct_georef: bool = False
                         ) -> Scene:
 
     datacube = satobj.l1d_cube
@@ -145,10 +145,10 @@ def get_l1d_satpy_scene(satobj: Union[Hypso1, Hypso2],
     start_time = satobj.capture_datetime
     end_time = satobj.capture_datetime
 
-    if use_indirect_georef:
-        latitudes = satobj.latitudes_indirect
-        longitudes = satobj.longitudes_indirect
-        resolution = satobj.resolution_indirect
+    if use_direct_georef:
+        latitudes = satobj.latitudes_direct
+        longitudes = satobj.longitudes_direct
+        resolution = satobj.resolution_direct
     else:
         latitudes = satobj.latitudes
         longitudes = satobj.longitudes

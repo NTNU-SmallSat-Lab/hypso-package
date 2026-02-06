@@ -29,6 +29,7 @@ from hypso.load import load_l1a_nc, \
                         load_l1b_nc, \
                         load_l1c_nc, \
                         load_l1d_nc, \
+                        load_l2a_nc, \
                         load_ocsmart_h5, \
                         load_acolite_l2r_nc, \
                         load_acolite_l2w_nc
@@ -126,21 +127,21 @@ class HypsoBase:
                     'l2_variable_name': "rrs"
                     }
 
-        self._l2_cubes = DataArrayDict(attributes=l2_attributes, num_dims=3, key_attribute='correction')
+        self._l2a_cubes = DataArrayDict(attributes=l2_attributes, num_dims=3, key_attribute='correction')
 
 
     @property
-    def l2_cube(self):
+    def l2a_cube(self):
 
-        self._l2_cubes.dim_shape = self.spatial_dimensions
-        self._l2_cubes.dim_names = self.dim_names_3d
-        self._l2_cubes.num_dims = 3
+        self._l2a_cubes.dim_shape = self.spatial_dimensions
+        self._l2a_cubes.dim_names = self.dim_names_3d
+        self._l2a_cubes.num_dims = 3
 
-        return self._l2_cubes   
+        return self._l2a_cubes   
 
-    @l2_cube.setter
-    def l2_cubes(self, value):
-        raise AttributeError("[ERROR] Use \"l2_cubes[key] = value\" to set items.")
+    @l2a_cube.setter
+    def l2a_cubes(self, value):
+        raise AttributeError("[ERROR] Use \"l2a_cubes[key] = value\" to set items.")
 
 
 
@@ -489,15 +490,32 @@ class HypsoBase:
                 load_func = load_l1d_nc
                 cube_name = "l1d_cube"
 
+            case "l2a":
+                if self.VERBOSE: print('[INFO] Loading L2a capture ' + self.capture_name)
+
+                ac = getattr(self, 'atmospheric_correction', None)
+
+                if ac is not None:
+                    print("[INFO] L2a Detected atmospheric correction: " + str(ac))
+                else:
+                    print("[WARNING] No L2a atmospheric correction detected.")
+                    setattr(self, "atmospheric_correction", "default")
+
+                load_func = load_l2a_nc
+                cube_name = "l2a_cube"
+                
+
+
             case _:
                 print("[ERROR] Unsupported product level.")
+                print(fields['product_level'])
                 return None
 
         # TODO: find a better method to pass all of this information
         nc_metadata_vars, \
         nc_metadata_attrs, \
-        nc_navigation_vars, \
-        nc_navigation_attrs, \
+        nc_geometry_vars, \
+        nc_geometry_attrs, \
         nc_gcp_vars, \
         nc_gcp_attrs, \
         nc_global_metadata, \
@@ -520,8 +538,8 @@ class HypsoBase:
         setattr(self, "nc_temperature_attrs", nc_metadata_attrs["temperature"])
         setattr(self, "nc_timing_attrs", nc_metadata_attrs["timing"])
  
-        setattr(self, "nc_navigation_vars", nc_navigation_vars)
-        setattr(self, "nc_navigation_attrs", nc_navigation_attrs)
+        setattr(self, "nc_geometry_vars", nc_geometry_vars)
+        setattr(self, "nc_geometry_attrs", nc_geometry_attrs)
 
         setattr(self, "nc_gcp_vars", nc_gcp_vars)
         setattr(self, "nc_gcp_attrs", nc_gcp_attrs)
@@ -536,7 +554,10 @@ class HypsoBase:
         self._set_hypso_attributes()
         self._check_capture_type()
 
-        setattr(self, cube_name, nc_cube)
+        if self.product_level.lower() == "l2a":
+            self.l2a_cubes[self.atmospheric_correction] = nc_cube
+        else:
+            setattr(self, cube_name, nc_cube)
         
 
 
@@ -615,8 +636,8 @@ class HypsoBase:
 
 
 
-        # Navigation atrributes
-        for key, value in self.nc_navigation_vars.items():
+        # Geometry atrributes
+        for key, value in self.nc_geometry_vars.items():
             if key == 'unixtime':
                 continue
             elif key == 'latitude':
@@ -624,10 +645,10 @@ class HypsoBase:
             elif key == 'longitude':
                 setattr(self, 'longitudes', value)
 
-            elif key == 'latitude_indirect':
-                setattr(self, 'latitudes_indirect', value)
-            elif key == 'longitude_indirect':
-                setattr(self, 'longitudes_indirect', value)
+            elif key == 'latitude_direct':
+                setattr(self, 'latitudes_direct', value)
+            elif key == 'longitude_direct':
+                setattr(self, 'longitudes_direct', value)
 
 
             elif key == 'sensor_zenith':
@@ -635,13 +656,13 @@ class HypsoBase:
             elif key == 'sensor_azimuth':
                 setattr(self, 'sat_azimuth_angles', value)
 
-            elif key == 'sensor_zenith_indirect':
-                setattr(self, 'sat_zenith_angles_indirect', value)
+            elif key == 'sensor_zenith_direct':
+                setattr(self, 'sat_zenith_angles_direct', value)
                 if getattr(self, 'sat_zenith_angles', None) is None:
                     setattr(self, 'sat_zenith_angles', value)
 
-            elif key == 'sensor_azimuth_indirect':
-                setattr(self, 'sat_azimuth_angles_indirect', value)
+            elif key == 'sensor_azimuth_direct':
+                setattr(self, 'sat_azimuth_angles_direct', value)
                 if getattr(self, 'sat_azimuth_angles', None) is None:
                     setattr(self, 'sat_azimuth_angles', value)
 
@@ -650,21 +671,21 @@ class HypsoBase:
             elif key == 'solar_azimuth':
                 setattr(self, 'solar_azimuth_angles', value)
 
-            elif key == 'solar_zenith_indirect':
-                setattr(self, 'solar_zenith_angles_indirect', value)
+            elif key == 'solar_zenith_direct':
+                setattr(self, 'solar_zenith_angles_direct', value)
                 if getattr(self, 'solar_zenith_angles', None) is None:
                     setattr(self, 'solar_zenith_angles', value)
 
-            elif key == 'solar_azimuth_indirect':
-                setattr(self, 'solar_azimuth_angles_indirect', value)
+            elif key == 'solar_azimuth_direct':
+                setattr(self, 'solar_azimuth_angles_direct', value)
                 if getattr(self, 'solar_azimuth_angles', None) is None:
                     setattr(self, 'solar_azimuth_angles', value)
 
             elif key == 'relative_azimuth':
                 setattr(self, 'relative_azimuth_angles', value)
 
-            elif key == 'relative_azimuth_indirect':
-                setattr(self, 'relative_azimuth_angles_indirect', value)
+            elif key == 'relative_azimuth_direct':
+                setattr(self, 'relative_azimuth_angles_direct', value)
                 if getattr(self, 'relative_azimuth_angles', None) is None:
                     setattr(self, 'relative_azimuth_angles', value)
                 
@@ -845,7 +866,7 @@ class HypsoBase:
         return None
     
 
-    def _run_toa_reflectance(self, use_indirect_georef=False) -> np.ndarray:
+    def _run_toa_reflectance(self, use_direct_georef=False, use_thuillier=False, generate_figures=False) -> np.ndarray:
 
         if self.l1b_cube is not None:
             toa_radiance = self.l1b_cube
@@ -855,27 +876,24 @@ class HypsoBase:
             self.generate_l1b_cube()
             toa_radiance = self.l1b_cube
 
+        solar_zenith_angles=self.solar_zenith_angles
         
-        if use_indirect_georef and hasattr(self, 'solar_zenith_angles_indirect'):
-
-            if self.VERBOSE:
-                print('[WARNING] Computing TOA reflectance using INDIRECT georeferencing geometry.')
-
-            solar_zenith_angles=self.solar_zenith_angles_indirect
-
-        else:
+        if use_direct_georef and hasattr(self, 'solar_zenith_angles_direct'):
 
             if self.VERBOSE:
                 print('[WARNING] Computing TOA reflectance using DIRECT georeferencing geometry.')
 
-            solar_zenith_angles=self.solar_zenith_angles
+            solar_zenith_angles=self.solar_zenith_angles_direct
 
-
+            
         toa_reflectance, srf, esun = compute_toa_reflectance(sensor_wavelengths=self.wavelengths,
                                                              sensor_fwhm=self.fwhm,
                                                              toa_radiance=toa_radiance,
                                                              iso_time=self.iso_time,
-                                                             solar_zenith_angles=solar_zenith_angles
+                                                             solar_zenith_angles=solar_zenith_angles,
+                                                             output_dir = self.capture_dir,
+                                                             generate_figures=generate_figures,
+                                                             use_thuillier = use_thuillier
                                                             )
 
         return toa_reflectance, srf, esun
@@ -902,8 +920,48 @@ class HypsoBase:
                 print('[INFO] off the earth\'s horizon. Cant georeference this image.')
             return None
 
-        self.latitudes = pixels_lat.reshape(self.spatial_dimensions)
-        self.longitudes = pixels_lon.reshape(self.spatial_dimensions)
+        self.latitudes_direct = pixels_lat.reshape(self.spatial_dimensions)
+        self.longitudes_direct = pixels_lon.reshape(self.spatial_dimensions)
+
+        bbox, \
+        resolution, \
+        along_track_gsd, \
+        across_track_gsd = self._run_track_geometry(latitudes=self.latitudes_direct,
+                                                    longitudes=self.longitudes_direct)
+
+        setattr(self, 'bbox_direct', bbox)
+        setattr(self, 'along_track_gsd_direct', along_track_gsd)
+        setattr(self, 'across_track_gsd_direct', across_track_gsd)
+        setattr(self, 'resolution_direct', resolution)
+
+        solar_zenith_angles_direct, \
+        solar_azimuth_angles_direct, \
+        sat_zenith_angles_direct, \
+        sat_azimuth_angles_direct, \
+        relative_azimuth_angles_direct = self._run_angles_geometry(latitudes=self.latitudes_direct,
+                                                        longitudes=self.longitudes_direct)
+
+        setattr(self, 'solar_zenith_angles_direct', solar_zenith_angles_direct)
+        setattr(self, 'solar_azimuth_angles_direct', solar_azimuth_angles_direct)
+        setattr(self, 'sat_zenith_angles_direct', sat_zenith_angles_direct)
+        setattr(self, 'sat_azimuth_angles_direct', sat_azimuth_angles_direct)
+        setattr(self, 'relative_azimuth_angles_direct', relative_azimuth_angles_direct)
+
+        return None
+
+
+    def run_georeferencing(self,
+                            latitudes: np.ndarray = None,
+                            longitudes: np.ndarray = None
+                            ) -> None:
+        
+
+        if self.VERBOSE:
+            print('[INFO] Running georeferencing...')
+    
+        if latitudes is not None and longitudes is not None:
+            self.latitudes = latitudes
+            self.longitudes = longitudes   
 
         bbox, \
         resolution, \
@@ -928,84 +986,6 @@ class HypsoBase:
         setattr(self, 'sat_zenith_angles', sat_zenith_angles)
         setattr(self, 'sat_azimuth_angles', sat_azimuth_angles)
         setattr(self, 'relative_azimuth_angles', relative_azimuth_angles)
-
-        return None
-
-
-    def run_indirect_georeferencing(self, 
-                          points_file_path: Union[str, Path] = None, 
-                          latitudes: np.ndarray = None,
-                          longitudes: np.ndarray = None,
-                          image_mode: str = None, 
-                          origin_mode: str = 'cube',
-                          flip: bool = False,
-                          ) -> None:
-        
-
-        if self.VERBOSE:
-            print('[INFO] Running indirect georeferencing...')
-        
-
-        if latitudes is not None and longitudes is not None:
-            self.latitudes_indirect = latitudes
-            self.longitudes_indirect = longitudes    
-
-        else:
-            points_file_path = Path(points_file_path).absolute()
-
-            if not origin_mode:
-                origin_mode = 'cube'
-
-            gr = Georeferencer(filename=points_file_path,
-                                                cube_height=self.spatial_dimensions[0],
-                                                cube_width=self.spatial_dimensions[1],
-                                                image_mode=image_mode,
-                                                origin_mode=origin_mode)
-
-            if self.VERBOSE:
-                print("[INFO] Does check_star_tracker_orientation() indicate image flip?")
-                print(check_star_tracker_orientation(self.nc_adcs_vars))
-
-            #datacube_flipped = check_star_tracker_orientation(self.nc_adcs_vars)
-
-            if flip:
-                self.latitudes_indirect = gr.latitudes[:,::-1]
-                self.longitudes_indirect = gr.longitudes[:,::-1]
-            else:
-                self.latitudes_indirect = gr.latitudes[:,:]
-                self.longitudes_indirect = gr.longitudes[:,:]
-    
-        # Check if direct and indirect georeferencing have the same lat/lon orientations
-        if (self.latitudes_indirect[-1,-1] - self.latitudes_indirect[-1,0]) * (latitudes[-1,-1] - latitudes[-1,0]) < 0:
-            raise ValueError("Latitude of indirect georeferencing is flipped with respect to direct georeferencing. Check if flip paramater is set correctly")
-        elif (self.longitudes_indirect[-1,-1] - self.longitudes_indirect[-1,0]) * (longitudes[-1,-1] - longitudes[-1,0]) < 0:
-            raise ValueError("Longitude of indirect georeferencing is flipped with respect to direct georeferencing. Check if flip paramater is set correctly")
-
-
-    
-        bbox, \
-        resolution, \
-        along_track_gsd, \
-        across_track_gsd = self._run_track_geometry(latitudes=self.latitudes_indirect,
-                                                    longitudes=self.longitudes_indirect)
-
-        setattr(self, 'bbox_indirect', bbox)
-        setattr(self, 'along_track_gsd_indirect', along_track_gsd)
-        setattr(self, 'across_track_gsd_indirect', across_track_gsd)
-        setattr(self, 'resolution_indirect', resolution)
-
-        solar_zenith_angles, \
-        solar_azimuth_angles, \
-        sat_zenith_angles, \
-        sat_azimuth_angles, \
-        relative_azimuth_angles = self._run_angles_geometry(latitudes=self.latitudes_indirect,
-                                                        longitudes=self.longitudes_indirect)
-
-        setattr(self, 'solar_zenith_angles_indirect', solar_zenith_angles)
-        setattr(self, 'solar_azimuth_angles_indirect', solar_azimuth_angles)
-        setattr(self, 'sat_zenith_angles_indirect', sat_zenith_angles)
-        setattr(self, 'sat_azimuth_angles_indirect', sat_azimuth_angles)
-        setattr(self, 'relative_azimuth_angles_indirect', relative_azimuth_angles)
 
         return None
     
@@ -1156,20 +1136,24 @@ class HypsoBase:
         if self.l1b_cube is None:
             self.generate_l1b_cube()
         
-        self.run_direct_georeferencing()
+        self.run_georeferencing()
         
         return None
 
 
 
-    def generate_l1d_cube(self, use_indirect_georef=False) -> None:
+    def generate_l1d_cube(self, use_direct_georef=False, use_thuillier=False, generate_figures=False) -> None:
 
-        try:
-            self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_indirect_georef=use_indirect_georef)
+        self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_direct_georef=use_direct_georef,
+                                                                       use_thuillier=use_thuillier,
+                                                                       generate_figures=generate_figures)
 
-        except:
-            self.generate_l1c_cube()
-            self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_indirect_georef=use_indirect_georef)
+        #try:
+        #    self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_direct_georef=use_direct_georef)
+        #
+        #except:
+        #    self.generate_l1c_cube()
+        #    self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_direct_georef=use_direct_georef)
 
         return None
 
@@ -1236,7 +1220,7 @@ class HypsoBase:
 
     def ac_ocsmart_open_output(self, h5_file_path: Path = None):
         """
-        Open and read OC-SMART atmospheric correction HDF5 output files. The remote sensing reflectance (Rrs) dataset is written to the satobj's 'l2_cube' dictionary.
+        Open and read OC-SMART atmospheric correction HDF5 output files. The remote sensing reflectance (Rrs) dataset is written to the satobj's 'l2a_cube' dictionary.
 
         :param h5_file_path: Path to the OC-SMART HDF5 file (optional)
 
@@ -1267,9 +1251,9 @@ class HypsoBase:
             wl_band_map = self._get_inferred_wavelength_band_map(inferred_wavelengths=inferred_wavelengths)
 
             '''
-            l2_cube_wavelengths = inferred_wavelengths
+            l2a_cube_wavelengths = inferred_wavelengths
 
-            A = np.array(l2_cube_wavelengths, dtype=float)
+            A = np.array(l2a_cube_wavelengths, dtype=float)
             B = np.array(self.wavelengths, dtype=float)
 
             index_map = {}
@@ -1293,8 +1277,8 @@ class HypsoBase:
             cube = np.full(shape=shape, fill_value=np.nan)
             cube[:,:,wl_band_map] = datasets[key]
 
-            self.l2_cube["ocsmart"] = cube
-            self.l2_cube["ocsmart"].attrs['l2_variable_name'] = key
+            self.l2a_cube["ocsmart"] = cube
+            self.l2a_cube["ocsmart"].attrs['l2_variable_name'] = key
 
         except Exception as ex:
             print("[ERROR] Unable to load OC-SMART L2 Rrs dataset.")
@@ -1385,7 +1369,7 @@ class HypsoBase:
     def ac_acolite_open_output(self, acolite_l2r_output_nc_file: Path = None, acolite_l2w_output_nc_file: Path = None):
         
         """
-        Open and read ACOLITE atmospheric correction L2R and L2W NetCDF output files. The remote sensing reflectance (Rrs) dataset is written to the satobj's 'l2_cube' dictionary.
+        Open and read ACOLITE atmospheric correction L2R and L2W NetCDF output files. The remote sensing reflectance (Rrs) dataset is written to the satobj's 'l2a_cube' dictionary.
 
         :param h5_file_path: Path to the ACOLITE NetCDF file (optional)
 
@@ -1422,8 +1406,8 @@ class HypsoBase:
                 cube = np.full(shape=shape, fill_value=np.nan)
                 cube[:,:,wl_band_map] = l2r_datasets[key]
 
-                self.l2_cube["acolite_l2r"] = cube
-                self.l2_cube["acolite_l2r"].attrs['l2_variable_name'] = key
+                self.l2a_cube["acolite_l2r"] = cube
+                self.l2a_cube["acolite_l2r"].attrs['l2_variable_name'] = key
 
             except Exception as ex:
                 print("[ERROR] Unable to load ACOLITE L2R dataset.")
@@ -1450,8 +1434,8 @@ class HypsoBase:
                 cube = np.full(shape=shape, fill_value=np.nan)
                 cube[:,:,wl_band_map] = l2w_datasets[key]
 
-                self.l2_cube["acolite_l2w"] = cube
-                self.l2_cube["acolite_l2w"].attrs['l2_variable_name'] = key
+                self.l2a_cube["acolite_l2w"] = cube
+                self.l2a_cube["acolite_l2w"].attrs['l2_variable_name'] = key
 
             except Exception as ex:
                 print("[ERROR] Unable to load ACOLITE L2W dataset.")

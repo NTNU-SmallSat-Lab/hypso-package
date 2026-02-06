@@ -3,32 +3,32 @@ from pathlib import Path
 import netCDF4 as nc
 import numpy as np
 
-def navigation_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', COMP_LEVEL = 4, COMP_SHUFFLE = True) -> None:
+def geometry_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', COMP_LEVEL = 4, COMP_SHUFFLE = True) -> None:
     """
-    Write navigation group to NetCDF file. 
+    Write geometry group to NetCDF file. 
 
     :return: Nothing.
     """
 
-    # Create Navigation Group --------------------------------------
-    navigation_group = netfile.createGroup('navigation')
+    # Create geometry Group --------------------------------------
+    geometry_group = netfile.createGroup('geometry')
 
     # Unix time -----------------------
-    #time = netfile.createVariable('navigation/unixtime', 'u8', ('lines',))
+    #time = netfile.createVariable('geometry/unixtime', 'u8', ('lines',))
     #time[:] = np.array(satobj.nc_timing_vars['timestamps'])
     #time[:] = np.array(satobj.nc_timing_vars['timestamps_srv']) # Previous
     #df = satobj.framepose_df
     #time[:] = df["timestamp"].values
 
 
-    # Direct Georeferencing Latitudes and Longitudes
+    # Georeferencing Latitudes and Longitudes
     if (hasattr(satobj, 'latitudes') and satobj.latitudes is not None) and \
         (hasattr(satobj, 'longitudes') and satobj.longitudes is not None):
         try:
 
             # Latitude ---------------------------------
             latitude = netfile.createVariable(
-                'navigation/latitude', 'f4', ('lines', 'samples'),
+                'geometry/latitude', 'f4', ('lines', 'samples'),
                 # compression=COMP_SCHEME,
                 # complevel=COMP_LEVEL,
                 # shuffle=COMP_SHUFFLE,
@@ -42,7 +42,7 @@ def navigation_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', C
 
             # Longitude ----------------------------------
             longitude = netfile.createVariable(
-                'navigation/longitude', 'f4', ('lines', 'samples'),
+                'geometry/longitude', 'f4', ('lines', 'samples'),
                 # compression=COMP_SCHEME,
                 # complevel=COMP_LEVEL,
                 # shuffle=COMP_SHUFFLE,
@@ -59,38 +59,38 @@ def navigation_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', C
             print("[ERROR] Encountered exception: " + str(ex))
 
 
-    # Indirect Georeferencing Latitudes and Longitudes
-    if (hasattr(satobj, 'latitudes_indirect') and satobj.latitudes_indirect is not None) and \
-        (hasattr(satobj, 'longitudes_indirect') and satobj.longitudes_indirect is not None):
+    # Direct Georeferencing Latitudes and Longitudes
+    if (hasattr(satobj, 'latitudes_direct') and satobj.latitudes_direct is not None) and \
+        (hasattr(satobj, 'longitudes_direct') and satobj.longitudes_direct is not None):
         try:
 
             # Latitude (Indirect) ---------------------------------
-            latitude_indirect = netfile.createVariable(
-                'navigation/latitude_indirect', 'f4', ('lines', 'samples'),
+            latitude_direct = netfile.createVariable(
+                'geometry/latitude_direct', 'f4', ('lines', 'samples'),
                 # compression=COMP_SCHEME,
                 # complevel=COMP_LEVEL,
                 # shuffle=COMP_SHUFFLE,
             )
-            latitude_indirect[:] = satobj.latitudes_indirect
-            latitude_indirect.long_name = "Latitude (Indirect)"
-            latitude_indirect.units = "degrees"
-            # latitude_indirect.valid_range = [-180, 180]
-            latitude_indirect.valid_min = -180
-            latitude_indirect.valid_max = 180
+            latitude_direct[:] = satobj.latitudes_direct
+            latitude_direct.long_name = "Latitude (Indirect)"
+            latitude_direct.units = "degrees"
+            # latitude_direct.valid_range = [-180, 180]
+            latitude_direct.valid_min = -180
+            latitude_direct.valid_max = 180
 
             # Longitude (Indirect) ----------------------------------
-            longitude_indirect = netfile.createVariable(
-                'navigation/longitude_indirect', 'f4', ('lines', 'samples'),
+            longitude_direct = netfile.createVariable(
+                'geometry/longitude_direct', 'f4', ('lines', 'samples'),
                 # compression=COMP_SCHEME,
                 # complevel=COMP_LEVEL,
                 # shuffle=COMP_SHUFFLE,
             )
-            longitude_indirect[:] = satobj.longitudes_indirect
-            longitude_indirect.long_name = "Longitude (Indirect)"
-            longitude_indirect.units = "degrees"
-            # longitude_indirect.valid_range = [-180, 180]
-            longitude_indirect.valid_min = -180
-            longitude_indirect.valid_max = 180
+            longitude_direct[:] = satobj.longitudes_direct
+            longitude_direct.long_name = "Longitude (Indirect)"
+            longitude_direct.units = "degrees"
+            # longitude_direct.valid_range = [-180, 180]
+            longitude_direct.valid_min = -180
+            longitude_direct.valid_max = 180
 
         except Exception as ex:
             print("[ERROR] Unable to write indirect latitude and longitude information to NetCDF file. The file may be incomplete. Please run direct or indirect georeferencing.")
@@ -104,7 +104,7 @@ def navigation_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', C
         try:
             # Sensor Zenith --------------------------
             sensor_z = netfile.createVariable(
-                'navigation/sensor_zenith', 'f4', ('lines', 'samples'),
+                'geometry/sensor_zenith', 'f4', ('lines', 'samples'),
                 # compression=COMP_SCHEME,
                 # complevel=COMP_LEVEL,
                 # shuffle=COMP_SHUFFLE,
@@ -121,7 +121,7 @@ def navigation_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', C
         try:
             # Sensor Azimuth ---------------------------
             sensor_a = netfile.createVariable(
-                'navigation/sensor_azimuth', 'f4', ('lines', 'samples'),
+                'geometry/sensor_azimuth', 'f4', ('lines', 'samples'),
                 # compression=COMP_SCHEME,
                 # complevel=COMP_LEVEL,
                 # shuffle=COMP_SHUFFLE,
@@ -138,7 +138,7 @@ def navigation_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', C
         try:
             # Solar Zenith ----------------------------------------
             solar_z = netfile.createVariable(
-                'navigation/solar_zenith', 'f4', ('lines', 'samples'),
+                'geometry/solar_zenith', 'f4', ('lines', 'samples'),
                 # compression=COMP_SCHEME,
                 # complevel=COMP_LEVEL,
                 # shuffle=COMP_SHUFFLE,
@@ -155,7 +155,7 @@ def navigation_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', C
         try:
             # Solar Azimuth ---------------------------------------
             solar_a = netfile.createVariable(
-            'navigation/solar_azimuth', 'f4', ('lines', 'samples'),
+            'geometry/solar_azimuth', 'f4', ('lines', 'samples'),
             # compression=COMP_SCHEME,
             # complevel=COMP_LEVEL,
             # shuffle=COMP_SHUFFLE,
@@ -172,7 +172,7 @@ def navigation_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', C
         try:
             # Relative Azimuth ---------------------------------------
             relative_a = netfile.createVariable(
-            'navigation/relative_azimuth', 'f4', ('lines', 'samples'),
+            'geometry/relative_azimuth', 'f4', ('lines', 'samples'),
             # compression=COMP_SCHEME,
             # complevel=COMP_LEVEL,
             # shuffle=COMP_SHUFFLE,
@@ -189,92 +189,92 @@ def navigation_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', C
 
 
     # Indirect Georeferenicng Solar and Satellite Angles
-    if (hasattr(satobj, 'latitudes_indirect') and satobj.latitudes_indirect is not None) and \
-        (hasattr(satobj, 'longitudes_indirect') and satobj.longitudes_indirect is not None):
+    if (hasattr(satobj, 'latitudes_direct') and satobj.latitudes_direct is not None) and \
+        (hasattr(satobj, 'longitudes_direct') and satobj.longitudes_direct is not None):
         
         try:
             # Sensor Zenith (Indirect)--------------------------
-            sensor_z_indirect = netfile.createVariable(
-                'navigation/sensor_zenith_indirect', 'f4', ('lines', 'samples'),
+            sensor_z_direct = netfile.createVariable(
+                'geometry/sensor_zenith_direct', 'f4', ('lines', 'samples'),
                 # compression=COMP_SCHEME,
                 # complevel=COMP_LEVEL,
                 # shuffle=COMP_SHUFFLE,
             )
-            sensor_z_indirect[:] = satobj.sat_zenith_angles_indirect
-            sensor_z_indirect.long_name = "Sensor Zenith Angle (Indirect)"
-            sensor_z_indirect.units = "degrees"
-            # sensor_z_indirect.valid_range = [-180, 180]
-            sensor_z_indirect.valid_min = -180
-            sensor_z_indirect.valid_max = 180
+            sensor_z_direct[:] = satobj.sat_zenith_angles_direct
+            sensor_z_direct.long_name = "Sensor Zenith Angle (Indirect)"
+            sensor_z_direct.units = "degrees"
+            # sensor_z_direct.valid_range = [-180, 180]
+            sensor_z_direct.valid_min = -180
+            sensor_z_direct.valid_max = 180
 
         except Exception as ex:
             pass
 
         try:
             # Sensor Azimuth (Indirect) ---------------------------
-            sensor_a_indirect = netfile.createVariable(
-                'navigation/sensor_azimuth_indirect', 'f4', ('lines', 'samples'),
+            sensor_a_direct = netfile.createVariable(
+                'geometry/sensor_azimuth_direct', 'f4', ('lines', 'samples'),
                 # compression=COMP_SCHEME,
                 # complevel=COMP_LEVEL,
                 # shuffle=COMP_SHUFFLE,
             )
-            sensor_a_indirect[:] = satobj.sat_azimuth_angles_indirect
-            sensor_a_indirect.long_name = "Sensor Azimuth Angle (Indirect)"
-            sensor_a_indirect.units = "degrees"
-            # sensor_a_indirect.valid_range = [-180, 180]
-            sensor_a_indirect.valid_min = -180
-            sensor_a_indirect.valid_max = 180
+            sensor_a_direct[:] = satobj.sat_azimuth_angles_direct
+            sensor_a_direct.long_name = "Sensor Azimuth Angle (Indirect)"
+            sensor_a_direct.units = "degrees"
+            # sensor_a_direct.valid_range = [-180, 180]
+            sensor_a_direct.valid_min = -180
+            sensor_a_direct.valid_max = 180
         except Exception as ex:
             pass
 
         try:
             # Solar Zenith (Indirect) ----------------------------------------
-            solar_z_indirect = netfile.createVariable(
-                'navigation/solar_zenith_indirect', 'f4', ('lines', 'samples'),
+            solar_z_direct = netfile.createVariable(
+                'geometry/solar_zenith_direct', 'f4', ('lines', 'samples'),
                 # compression=COMP_SCHEME,
                 # complevel=COMP_LEVEL,
                 # shuffle=COMP_SHUFFLE,
             )
-            solar_z_indirect[:] = satobj.solar_zenith_angles_indirect
-            solar_z_indirect.long_name = "Solar Zenith Angle (Indirect)"
-            solar_z_indirect.units = "degrees"
-            # solar_z_indirect.valid_range = [-180, 180]
-            solar_z_indirect.valid_min = -180
-            solar_z_indirect.valid_max = 180
+            solar_z_direct[:] = satobj.solar_zenith_angles_direct
+            solar_z_direct.long_name = "Solar Zenith Angle (Indirect)"
+            solar_z_direct.units = "degrees"
+            # solar_z_direct.valid_range = [-180, 180]
+            solar_z_direct.valid_min = -180
+            solar_z_direct.valid_max = 180
         except Exception as ex:
             pass
 
         try:
             # Solar Azimuth (Indirect) ---------------------------------------
-            solar_a_indirect = netfile.createVariable(
-            'navigation/solar_azimuth_indirect', 'f4', ('lines', 'samples'),
+            solar_a_direct = netfile.createVariable(
+            'geometry/solar_azimuth_direct', 'f4', ('lines', 'samples'),
             # compression=COMP_SCHEME,
             # complevel=COMP_LEVEL,
             # shuffle=COMP_SHUFFLE,
             )
-            solar_a_indirect[:] = satobj.solar_azimuth_angles_indirect
-            solar_a_indirect.long_name = "Solar Azimuth Angle (Indirect)"
-            solar_a_indirect.units = "degrees"
-            # solar_a_indirect.valid_range = [-180, 180]
-            solar_a_indirect.valid_min = -180
-            solar_a_indirect.valid_max = 180
+            solar_a_direct[:] = satobj.solar_azimuth_angles_direct
+            solar_a_direct.long_name = "Solar Azimuth Angle (Indirect)"
+            solar_a_direct.units = "degrees"
+            # solar_a_direct.valid_range = [-180, 180]
+            solar_a_direct.valid_min = -180
+            solar_a_direct.valid_max = 180
         except Exception as ex:
             pass
 
         try:
             # Relative Azimuth (Indirect) ---------------------------------------
-            relative_a_indirect = netfile.createVariable(
-            'navigation/relative_azimuth_indirect', 'f4', ('lines', 'samples'),
+            relative_a_direct = netfile.createVariable(
+            'geometry/relative_azimuth_direct', 'f4', ('lines', 'samples'),
             # compression=COMP_SCHEME,
             # complevel=COMP_LEVEL,
             # shuffle=COMP_SHUFFLE,
             )
-            relative_a_indirect[:] = satobj.relative_azimuth_angles_indirect
-            relative_a_indirect.long_name = "Relative Azimuth Angle (Indirect)"
-            relative_a_indirect.units = "degrees"
-            # relative_a_indirect.valid_range = [-180, 180]
-            relative_a_indirect.valid_min = -180
-            relative_a_indirect.valid_max = 180
+            relative_a_direct[:] = satobj.relative_azimuth_angles_direct
+            relative_a_direct.long_name = "Relative Azimuth Angle (Indirect)"
+            relative_a_direct.units = "degrees"
+            # relative_a_direct.valid_range = [-180, 180]
+            relative_a_direct.valid_min = -180
+            relative_a_direct.valid_max = 180
         except Exception as ex:
             pass
 

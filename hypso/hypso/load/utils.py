@@ -281,50 +281,54 @@ def load_ncattrs_from_nc_file(nc_file_path: Path) -> dict:
 
 
 
-def load_navigation_from_nc_file(nc_file_path: Path) -> dict:
+def load_geometry_from_nc_file(nc_file_path: Path) -> dict:
 
-    navigation_attrs = {}
-    navigation_vars = {}
+    geometry_attrs = {}
+    geometry_vars = {}
 
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
-        group = f.groups["navigation"]
+
+        if 'geometry' in f.groups.keys():
+            group = f.groups["geometry"]
+        else:
+           group = f.groups["navigation"] 
         
         for key in group.variables.keys():
             value = np.array(group.variables[key][:])
-            navigation_vars[key] = value
+            geometry_vars[key] = value
 
         for attrname in group.ncattrs():
             value = getattr(group, attrname)
             try:
                 if is_integer_num(float(value)):
-                    navigation_attrs[attrname] = int(value)
+                    geometry_attrs[attrname] = int(value)
                 else:
-                    navigation_attrs[attrname] = float(value)
+                    geometry_attrs[attrname] = float(value)
             except BaseException:
-                navigation_attrs[attrname] = value
+                geometry_attrs[attrname] = value
 
-    return (navigation_vars, navigation_attrs)
+    return (geometry_vars, geometry_attrs)
 
 
     '''
-    navigation = {}
+    geometry = {}
 
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
 
         try:
-            group = f.groups["navigation"]
+            group = f.groups["geometry"]
 
             for key in group.variables.keys():
 
                 try:
                     value = group.variables[key][:]
-                    navigation[key] = value
+                    geometry[key] = value
                 except:
                     pass
         except:
             pass
 
-    return navigation
+    return geometry
     '''
 
 

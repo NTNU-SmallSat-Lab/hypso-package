@@ -2,6 +2,7 @@ import numpy as np
 import netCDF4 as nc
 from pathlib import Path
 from typing import Tuple
+from tqdm import tqdm
 
 from .utils import load_capture_config_from_nc_file, \
                     load_timing_from_nc_file, \
@@ -12,14 +13,14 @@ from .utils import load_capture_config_from_nc_file, \
                     load_logfiles_from_nc_file, \
                     load_temperature_from_nc_file, \
                     load_ncattrs_from_nc_file, \
-                    load_navigation_from_nc_file, \
+                    load_geometry_from_nc_file, \
                     load_gcp_from_nc_file
 
 def load_l1d_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict, dict, np.ndarray]:
 
     nc_metadata_vars, nc_metadata_attrs = load_l1d_nc_metadata(nc_file_path=nc_file_path)
 
-    nc_navigation_vars, nc_navigation_attrs = load_l1d_nc_navigation(nc_file_path=nc_file_path)
+    nc_geometry_vars, nc_geometry_attrs = load_l1d_nc_geometry(nc_file_path=nc_file_path)
 
     nc_cube = load_l1d_nc_cube(nc_file_path=nc_file_path)
 
@@ -31,8 +32,8 @@ def load_l1d_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict, dict,
 
     return nc_metadata_vars, \
             nc_metadata_attrs, \
-            nc_navigation_vars, \
-            nc_navigation_attrs, \
+            nc_geometry_vars, \
+            nc_geometry_attrs, \
             nc_gcp_vars, \
             nc_gcp_attrs, \
             nc_global_metadata, \
@@ -62,9 +63,9 @@ def load_l1d_nc_cube(nc_file_path: Path) -> np.ndarray:
 
             cube = np.empty((height,width,depth))
 
-            for idx, rhot_band in enumerate(list(group.variables)):
+            for idx, rhot_band in enumerate(tqdm(list(group.variables))):
 
-                print("[INFO] Loading band " + str(idx) + "...")
+                #print("[INFO] Loading band " + str(idx) + "...")
 
                 band = np.array(group.variables[rhot_band][:], dtype='double')
 
@@ -135,11 +136,11 @@ def load_l1d_global_nc_metadata(nc_file_path: Path):
     return global_metadata
 
 
-def load_l1d_nc_navigation(nc_file_path: Path):
+def load_l1d_nc_geometry(nc_file_path: Path):
     
-    navigation_vars, navigation_attrs = load_navigation_from_nc_file(nc_file_path)
+    geometry_vars, geometry_attrs = load_geometry_from_nc_file(nc_file_path)
 
-    return navigation_vars, navigation_attrs
+    return geometry_vars, geometry_attrs
 
 
 def load_l1d_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict]:
