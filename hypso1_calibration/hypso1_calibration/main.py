@@ -1,6 +1,6 @@
 from importlib.resources import files
 
-def get_hypso1_calibration_files(capture_type="custom", coeff_type=None) -> None:
+def get_hypso1_calibration_files(capture_type="custom", coeff_type='moved') -> None:
     """
     Get the absolute path for the calibration coefficients included in the package. This includes radiometric,
     smile and destriping correction.
@@ -17,18 +17,18 @@ def get_hypso1_calibration_files(capture_type="custom", coeff_type=None) -> None
         # Adjusted based on moon dip I think
         # npz_file_spectral = "h1_spectral_coeff_adjusted_full.npz"
 
-        print("[INFO] - Using moved calibration coefficients for HYPSO-1.")
+        print("[INFO] Using 'moved' calibration coefficients for HYPSO-1. This is the default for radiometric and spectral coefficients. Other options 'original' or 'adjusted' can be passed using the 'coeff_type' keyword argument.")
         # Radiometric coefficients only moved
         npz_file_radiometric = "h1_radiometric_calibration_matrix_full_moved.npz"
         # Adjusted using polynomial fit, using whole spectrum, static offset
         npz_file_spectral = "spectral_array_calibrated_poly_full.npz"
     elif coeff_type == 'adjusted':
-        print("[INFO] - Using adjusted calibration coefficients for HYPSO-1.")
+        print("[INFO] Using 'adjusted' calibration coefficients for HYPSO-1.")
         npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1_adjusted_v11.npz"
         npz_file_spectral = "spectral_array_calibrated_poly_full.npz"
 
     elif coeff_type == 'original': 
-        print("[INFO] - Using original calibration coefficients for HYPSO-1.")
+        print("[INFO] Using 'original' calibration coefficients for HYPSO-1.")
         npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1.npz"
         npz_file_spectral = "spectral_calibration_wavelengths_center_row_HYPSO-1.npz"
     else: 

@@ -751,7 +751,8 @@ class HypsoBase:
         if self.nc_capture_config_attrs["frame_count"] == 956:
         #if self.nc_capture_config_attrs["frame_count"] == self.standard_dimensions["nominal"]:
             self.capture_type = "nominal"
-
+        elif self.nc_capture_config_attrs["frame_count"] == 106:
+                    self.capture_type = "moon"
         elif self.image_height == 1092:
         #elif self.image_height == self.standard_dimensions["wide"]:
             self.capture_type = "wide"
@@ -785,7 +786,7 @@ class HypsoBase:
 
         # TODO: move this function call
         if set_coeffs:
-            self._set_calibration_coeff_files()
+            self._set_calibration_coeff_files(**kwargs)
 
         self._load_calibration_coeff_files()
 
@@ -1144,16 +1145,11 @@ class HypsoBase:
 
     def generate_l1d_cube(self, use_direct_georef=False, use_thuillier=False, generate_figures=False) -> None:
 
+        self._get_fwhm()
         self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_direct_georef=use_direct_georef,
                                                                        use_thuillier=use_thuillier,
                                                                        generate_figures=generate_figures)
 
-        #try:
-        #    self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_direct_georef=use_direct_georef)
-        #
-        #except:
-        #    self.generate_l1c_cube()
-        #    self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_direct_georef=use_direct_georef)
 
         return None
 
@@ -1472,7 +1468,23 @@ class HypsoBase:
         return wl_band_map
 
 
+    def _get_fwhm(self) -> None:
+        
+        try:
+            fwhm_per_band = []
+            for band in self.wavelengths: 
+                idx = np.argmin(np.abs(band - self.srf_wl))
+                fwhm_per_band.append(self.srf_fwhm[idx])
 
+            fwhm = fwhm_per_band
+
+            self.fwhm = fwhm
+        
+        except Exception as ex:
+            print(ex)
+            self.fwhm = self.fwhm_fixed
+
+        return None
 
 
     '''

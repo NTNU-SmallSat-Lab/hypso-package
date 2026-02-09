@@ -39,6 +39,9 @@ class Hypso1(HypsoBase):
                               4.1, 4.1, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 
                               4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0])
 
+        self.srf_wl = np.array([455 ,505 ,555 ,605 ,655 ,705, 755 ])
+        self.srf_fwhm = np.array([9.6, 6.6, 8.2, 5.8, 5.8, 4.1, 4.0])
+
         self._load_capture_file(path=path)
 
         return None
@@ -54,9 +57,11 @@ class Hypso1(HypsoBase):
 
         capture_type = self.capture_type
 
-        coeff_type = kwargs.get('coeff_type', 'original')  # Default to 'original' if not provided
-        print(f"[INFO] - Setting calibration coefficient files with coeff_type: {coeff_type}")
-        calibration_files = get_hypso1_calibration_files(capture_type, coeff_type=coeff_type)  # 'moved', 'adjusted', or 'original.'
+        #coeff_type = kwargs.get('coeff_type', 'original')  # Default to 'original' if not provided
+        #print(f"[INFO] Setting calibration coefficient files with coeff_type: {coeff_type}")
+        #calibration_files = get_hypso1_calibration_files(capture_type, coeff_type=coeff_type)  # 'moved', 'adjusted', or 'original.'
+
+        calibration_files = get_hypso1_calibration_files(capture_type, **kwargs)
 
         self.rad_coeff_file = calibration_files['radiometric']
         self.smile_coeff_file = calibration_files['smile']
