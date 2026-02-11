@@ -18,7 +18,7 @@ build-backend="setuptools.build_meta"
 
 [project]
 name="hypso"
-version = "26.02.0b1"
+version = "26.02.0"
 authors = [
   { name="Cameron Penne", email="cameron.l.penne@ntnu.no" },
 ]
@@ -39,8 +39,8 @@ classifiers = [
 
 requires-python = ">=3.10"
 dependencies=[
-  "hypso1-calibration",
-  "hypso2-calibration",
+  "hypso1-calibration >= 26.2.0",
+  "hypso2-calibration >= 26.2.0",
   "numpy>=1.24",
   #"gdal >=3.4.1",
   "cartopy >=0.21.1",
