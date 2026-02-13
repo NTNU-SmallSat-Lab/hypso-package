@@ -1460,13 +1460,25 @@ class HypsoBase:
 
         
 
-    def ac_polymer_run_correction(self):
+    def ac_polymer_run_correction(self, polymer_path: str = None, eoread_path: str = None, eotools_path: str = None):
 
         #polymer_path = Path(self.polymer_dir).absolute()
 
-        sys.path.insert(0, '/home/cameron/Nedlastinger/eoread/')
-        sys.path.insert(0, '/home/cameron/Nedlastinger/eotools/')
-        sys.path.insert(0, '/home/cameron/Nedlastinger/polymer/')
+        if polymer_path is not None:
+            polymer_path = str(Path(self.polymer_path).absolute())
+            sys.path.insert(0, 'polymer_path')
+
+        if eoread_path is not None:
+            eoread_path = str(Path(self.eoread_path).absolute())
+            sys.path.insert(0, 'eoread_path')
+
+        if eotools_path is not None:
+            eotools_path = str(Path(self.eotools_path).absolute())
+            sys.path.insert(0, 'eotools_path')
+
+        #sys.path.insert(0, '/home/cameron/Nedlastinger/eoread/')
+        #sys.path.insert(0, '/home/cameron/Nedlastinger/eotools/')
+        #sys.path.insert(0, '/home/cameron/Nedlastinger/polymer/')
 
         from polymer.level1 import Level1
         from polymer.level2 import Level2
