@@ -31,6 +31,7 @@ def compute_gsd(frame_count,
 
     utm_crs_list = prj.database.query_utm_crs_info(datum_name="WGS 84", area_of_interest=aoi)
 
+    #print(utm_crs_list)
 
     #bbox_geodetic = [np.min(latitudes), 
     #                 np.max(latitudes), 

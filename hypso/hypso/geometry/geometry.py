@@ -122,10 +122,10 @@ def interpolate_at_frame(adcs_timestamps: np.ndarray, position: np.ndarray,
 
     # The ADCS time range needs to completely include the frames/lines time range
     if frame_ts_start < adcs_ts_start:
-        print('ERROR: Frame timestamps begin earlier than ADCS data!')
+        print('[ERROR] Frame timestamps begin earlier than ADCS data!')
         return -1
     if frame_ts_end > adcs_ts_end:
-        print('ERROR: Frame timestamps end later than ADCS data!')
+        print('[ERROR] Frame timestamps end later than ADCS data!')
         return -1
 
     if verbose:

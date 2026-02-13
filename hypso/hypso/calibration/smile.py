@@ -82,7 +82,7 @@ def run_smile_correction_one_row(row: np.ndarray,
     # Set values for wavelengths below 400 nm to zero
     for i in range(len(wavelength_ref)):
         wavelength = wavelength_ref[i]
-        if wavelength < 400:
+        if wavelength < 400 or wavelength > 950: 
             row_corrected[i] = 0
         else:
             break

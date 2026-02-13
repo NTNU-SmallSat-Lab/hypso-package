@@ -24,8 +24,8 @@ __credits__ = "Norwegian University of Science and Technology"
 
 from .Hypso import Hypso
 #from .HypsoBase import HypsoBase
-from .hypso1 import Hypso1
-from .hypso2 import Hypso2
+from .hypso1 import Hypso1, get_hypso1_wavelengths
+from .hypso2 import Hypso2, get_hypso2_wavelengths
 #from .DataArrayDict import DataArrayDict
 #from .DataArrayValidator import DataArrayValidator
 

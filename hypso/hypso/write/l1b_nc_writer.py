@@ -2,8 +2,9 @@ from .utils import set_or_create_attr
 from pathlib import Path
 import netCDF4 as nc
 import numpy as np
-from .navigation_group_writer import navigation_group_writer
+from .geometry_group_writer import geometry_group_writer
 from .calibration_filenames_writer import calibration_filenames_writer
+from .metadata_gcp_group_writer import metadata_gcp_group_writer
 
 def write_l1b_nc_file(satobj, overwrite: bool = False, **kwargs) -> None:
 
@@ -101,9 +102,6 @@ def l1b_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
         #     set_or_create_attr(meta_database,
         #                         md,
         #                         getattr(satobj, 'nc_database_attrs')[md])
-
-
-
 
         # Set pseudoglobal vars like compression level
         COMP_SCHEME = 'zlib'  # Default: zlib
@@ -432,6 +430,9 @@ def l1b_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
         #     'metadata/timing/timestamps_srv', 'f8',
         #     ('lines',))
         # timestamps_srv[:] = getattr(satobj, 'nc_timing_vars')["timestamps_srv"][:]
+
+
+        metadata_gcp_group_writer(satobj, netfile, COMP_SCHEME=COMP_SCHEME, COMP_LEVEL=COMP_LEVEL, COMP_SHUFFLE=COMP_SHUFFLE)
 
     return None
 

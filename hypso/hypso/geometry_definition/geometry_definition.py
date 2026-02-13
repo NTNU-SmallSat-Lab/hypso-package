@@ -56,15 +56,15 @@ def generate_swath_def(latitudes: np.ndarray,
 
 
 def generate_hypso_swath_def(satobj,
-                            use_indirect_georef: bool = False
+                            use_direct_georef: bool = False
                             ) -> SwathDefinition:
 
     dims = satobj.dim_names_2d
 
-    if use_indirect_georef:
-        latitudes = satobj.latitudes_indirect
-        longitudes = satobj.longitudes_indirect
-        resolution = satobj.resolution_indirect
+    if use_direct_georef:
+        latitudes = satobj.latitudes_direct
+        longitudes = satobj.longitudes_direct
+        resolution = satobj.resolution_direct
     else:
         latitudes = satobj.latitudes
         longitudes = satobj.longitudes

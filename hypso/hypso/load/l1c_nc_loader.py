@@ -2,6 +2,7 @@ import numpy as np
 import netCDF4 as nc
 from pathlib import Path
 from typing import Tuple
+from tqdm import tqdm
 
 from .utils import load_capture_config_from_nc_file, \
                     load_timing_from_nc_file, \
@@ -12,13 +13,14 @@ from .utils import load_capture_config_from_nc_file, \
                     load_logfiles_from_nc_file, \
                     load_temperature_from_nc_file, \
                     load_ncattrs_from_nc_file, \
-                    load_navigation_from_nc_file
+                    load_geometry_from_nc_file, \
+                    load_gcp_from_nc_file
 
 def load_l1c_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict, dict, np.ndarray]:
 
     nc_metadata_vars, nc_metadata_attrs = load_l1c_nc_metadata(nc_file_path=nc_file_path)
 
-    nc_naivigation_vars, nc_navigation_attrs = load_l1c_nc_navigation(nc_file_path=nc_file_path)
+    nc_geometry_vars, nc_geometry_attrs = load_l1c_nc_geometry(nc_file_path=nc_file_path)
 
     nc_cube = load_l1c_nc_cube(nc_file_path=nc_file_path)
 
@@ -26,10 +28,14 @@ def load_l1c_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict, dict,
 
     nc_global_metadata = load_l1c_global_nc_metadata(nc_file_path=nc_file_path)
 
+    nc_gcp_vars, nc_gcp_attrs = load_l1c_nc_gcp(nc_file_path=nc_file_path)
+
     return nc_metadata_vars, \
             nc_metadata_attrs, \
-            nc_naivigation_vars, \
-            nc_navigation_attrs, \
+            nc_geometry_vars, \
+            nc_geometry_attrs, \
+            nc_gcp_vars, \
+            nc_gcp_attrs, \
             nc_global_metadata, \
             nc_cube_attrs, \
             nc_cube
@@ -45,8 +51,28 @@ def load_l1c_nc_cube(nc_file_path: Path) -> np.ndarray:
     """
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
         group = f.groups["products"]
-        # 16-bit according to Original data Capture
-        cube = np.array(group.variables["Lt"][:], dtype='double')
+
+        try:
+            # 16-bit according to Original data Capture
+            cube = np.array(group.variables["Lt"][:], dtype='double')
+
+        except Exception as ex:
+            print("[INFO] Loading Lt cube from separate bands...")
+
+            height, width = np.array(group.variables[list(group.variables)[0]][:], dtype='double').shape
+            depth = len(list(group.variables))
+
+            cube = np.empty((height,width,depth))
+
+            for idx, rhot_band in enumerate(tqdm(list(group.variables))):
+
+                #print("[INFO] Loading band " + str(idx) + "...")
+
+                band = np.array(group.variables[rhot_band][:], dtype='double')
+
+                cube[:,:,idx] = band
+
+            print("[INFO] Loading bands complete.")
 
         return cube
 
@@ -80,11 +106,11 @@ def load_l1c_global_nc_metadata(nc_file_path: Path):
     return global_metadata
 
 
-def load_l1c_nc_navigation(nc_file_path: Path):
+def load_l1c_nc_geometry(nc_file_path: Path):
     
-    navigation_vars, navigation_attrs = load_navigation_from_nc_file(nc_file_path)
+    geometry_vars, geometry_attrs = load_geometry_from_nc_file(nc_file_path)
 
-    return navigation_vars, navigation_attrs
+    return geometry_vars, geometry_attrs
 
 
 def load_l1c_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict]:
@@ -117,3 +143,20 @@ def load_l1c_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict]:
     metadata_attrs['temperature'] = load_temperature_from_nc_file(nc_file_path)[1]
 
     return metadata_vars, metadata_attrs
+
+
+def load_l1c_nc_gcp(nc_file_path: Path) -> Tuple[dict, dict]:
+    """
+    Load l1c.nc Hypso Capture file GCPs
+
+    :param nc_file_path: Absolute path to the l1c.nc file
+
+    :return: "gcp_vars" dictionary with gcp variables, "gcp_attrs" dictionary with gcp attributes 
+    """
+
+    gcp_vars = {}
+    gcp_attrs = {}
+
+    gcp_vars, gcp_attrs = load_gcp_from_nc_file(nc_file_path)
+
+    return gcp_vars, gcp_attrs
