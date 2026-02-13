@@ -366,6 +366,7 @@ def l1b_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
 
 
         # Metadata: Rad calibration coeff ----------------------------------------------------
+
         len_radrows = satobj.rad_coeffs.shape[0]
         len_radcols = satobj.rad_coeffs.shape[1]
 

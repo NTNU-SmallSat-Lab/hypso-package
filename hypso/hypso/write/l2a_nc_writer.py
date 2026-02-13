@@ -135,9 +135,9 @@ def l2a_nc_writer(satobj, correction: str, dst_nc: str, datacube: str = True) ->
 
 
         try:
-            l2a_variable_name = satobj.l2a_cubes[correction].attrs['l2a_variable_name']
+            l2a_variable_name = satobj.l2a_cubes[correction].attrs['l2_variable_name']
         except Exception as ex:
-            print["[WARNING] No 'l2a_variable_name' attrribute found. Defaulting to 'rrs'"]
+            print["[WARNING] No 'l2_variable_name' attrribute found. Defaulting to 'rrs'"]
             print(ex)
             l2a_variable_name = "rrs"
 

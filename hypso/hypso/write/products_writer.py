@@ -14,7 +14,7 @@ def write_products_nc_file(satobj, file_name: Path, overwrite: bool = False, **k
     if Path(file_name).is_file() and not overwrite:
 
         if satobj.VERBOSE:
-            print("[INFO] NetCDF file has already exists.")
+            print("[INFO] NetCDF file already exists.")
 
         return None
 
@@ -70,7 +70,7 @@ def products_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
             #coords = list(product.coords)
 
             variable = netfile.createVariable(
-                'products/' + str(name),  
+                'products/' + str(name).lower(),  
                 'f4',
                 #(coords[0], coords[1]),
                 ('lines', 'samples'),
@@ -81,8 +81,8 @@ def products_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
             #variable.units = ""
             #variable.long_name = ""
 
-            for attr_name, attr_value in product.attrs.items():
-                setattr(variable, attr_name, attr_value)
+            #for attr_name, attr_value in product.attrs.items():
+            #    setattr(variable, attr_name, attr_value)
 
             variable[:] = product.to_numpy()
 
