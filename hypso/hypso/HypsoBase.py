@@ -1465,15 +1465,15 @@ class HypsoBase:
         #polymer_path = Path(self.polymer_dir).absolute()
 
         if polymer_path is not None:
-            polymer_path = str(Path(self.polymer_path).absolute())
+            polymer_path = str(Path(polymer_path).absolute())
             sys.path.insert(0, 'polymer_path')
 
         if eoread_path is not None:
-            eoread_path = str(Path(self.eoread_path).absolute())
+            eoread_path = str(Path(eoread_path).absolute())
             sys.path.insert(0, 'eoread_path')
 
         if eotools_path is not None:
-            eotools_path = str(Path(self.eotools_path).absolute())
+            eotools_path = str(Path(eotools_path).absolute())
             sys.path.insert(0, 'eotools_path')
 
         #sys.path.insert(0, '/home/cameron/Nedlastinger/eoread/')
