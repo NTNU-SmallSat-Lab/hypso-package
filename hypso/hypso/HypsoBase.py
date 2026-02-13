@@ -32,7 +32,8 @@ from hypso.load import load_l1a_nc, \
                         load_l2a_nc, \
                         load_ocsmart_h5, \
                         load_acolite_l2r_nc, \
-                        load_acolite_l2w_nc
+                        load_acolite_l2w_nc, \
+                        load_polymer_l2_nc
 
 from hypso.reflectance import compute_toa_reflectance
 
@@ -569,6 +570,8 @@ class HypsoBase:
         self.acolite_l2r_output_nc_file =  Path(self.capture_dir, f"{self.platform.upper()}_{dt.strftime('%Y_%m_%d_%H_%M_%S')}_L2R.nc")
         self.acolite_l2w_output_nc_file =  Path(self.capture_dir, f"{self.platform.upper()}_{dt.strftime('%Y_%m_%d_%H_%M_%S')}_L2W.nc")
 
+        self.polymer_l2_output_nc_file =  Path(self.parent_dir, f"{str(self.l1d_nc_file)}.polymer.nc") #frohavet_2025-05-22T11-20-44Z-l1d.nc.polymer.nc
+
 
         return None
 
@@ -772,6 +775,7 @@ class HypsoBase:
                          destripe: bool = True,
                          spectral: bool = True,
                          set_coeffs: bool = True,
+                         coeff_type: str = None,
                          **kwargs) -> np.ndarray:
         """
         Get calibrated and corrected cube. Includes Radiometric, Smile and Destriping Correction.
@@ -784,9 +788,19 @@ class HypsoBase:
         if self.VERBOSE:
             print('[INFO] Running calibration routines...')
 
+
+        if coeff_type is None:
+            try:
+                coeff_type = self.nc_corrections_attrs['radiometric_coefficents_version']
+            except:
+                pass
+        else:
+            self.nc_corrections_attrs['radiometric_coefficents_version'] = str(coeff_type).lower()
+            
+
         # TODO: move this function call
         if set_coeffs:
-            self._set_calibration_coeff_files(**kwargs)
+            self._set_calibration_coeff_files(coeff_type=coeff_type, **kwargs)
 
         self._load_calibration_coeff_files()
 
@@ -1121,21 +1135,21 @@ class HypsoBase:
         return solar_zenith_angles, solar_azimuth_angles, sat_zenith_angles, sat_azimuth_angles, relative_azimuth_angles
 
 
-    def generate_l1b_cube(self, **kwargs) -> None:
+    def generate_l1b_cube(self, coeff_type: str = None, **kwargs) -> None:
 
         if self.l1a_cube is None:
             return None
 
-        self.l1b_cube = self._run_calibration(**kwargs)
+        self.l1b_cube = self._run_calibration(coeff_type=coeff_type, **kwargs)
 
         return None
 
 
 
-    def generate_l1c_cube(self) -> None:
+    def generate_l1c_cube(self, coeff_type: str = None, **kwargs) -> None:
         
         if self.l1b_cube is None:
-            self.generate_l1b_cube()
+            self.generate_l1b_cube(coeff_type=coeff_type, **kwargs)
         
         self.run_georeferencing()
         
@@ -1444,10 +1458,84 @@ class HypsoBase:
 
         return l2r_datasets, l2w_datasets
 
+        
+
+    def ac_polymer_run_correction(self):
+
+        #polymer_path = Path(self.polymer_dir).absolute()
+
+        sys.path.insert(0, '/home/cameron/Nedlastinger/eoread/')
+        sys.path.insert(0, '/home/cameron/Nedlastinger/eotools/')
+        sys.path.insert(0, '/home/cameron/Nedlastinger/polymer/')
+
+        from polymer.level1 import Level1
+        from polymer.level2 import Level2
+
+        from eoread.hypso import Level1_HYPSO
+        from core.files.fileutils import mdir
+        from polymer.main_v5 import run_polymer, run_polymer_dataset
+
+
+        polymer_input_file = Path(self.parent_dir, self.l1d_nc_file)
+        polymer_output_dir = Path(self.parent_dir)
+
+        polymer_output_file = run_polymer(Level1_HYPSO(polymer_input_file), dir_out=mdir(polymer_output_dir), split_bands=False)
+
+        return Path(polymer_output_file)
+
+
+    def ac_polymer_open_output(self, polymer_l2_output_nc_file: Path = None):
+        
+        if polymer_l2_output_nc_file is not None:
+            polymer_l2_output_nc_file = Path(polymer_l2_output_nc_file).absolute()
+        else:
+            polymer_l2_output_nc_file = Path(self.polymer_l2_output_nc_file).absolute()
+
+        
+        
+
+        if polymer_l2_output_nc_file.is_file():
+            print("[INFO] Opening Polymer L2 NetCDF output file " + str(polymer_l2_output_nc_file))
+            polymer_datasets = load_polymer_l2_nc(polymer_l2_output_nc_file)
+
+            try:
+                key = "rho_w"
+                inferred_wavelengths = polymer_datasets['bands'].data
+
+                # Map inferred Polymer wavelengths to HYPSO wavelengths
+                wl_band_map = self._get_inferred_wavelength_band_map(inferred_wavelengths=inferred_wavelengths)
+
+                # Create empty cube with standard HYPSO cube dims
+                shape = (self.spatial_dimensions[0], self.spatial_dimensions[1], self.bands)
+                cube = np.full(shape=shape, fill_value=np.nan)
+                cube[:,:,wl_band_map] = polymer_datasets[key]
+
+                self.l2a_cube["polymer"] = cube
+                self.l2a_cube["polymer"].attrs['l2_variable_name'] = key
+
+            except Exception as ex:
+                print("[ERROR] Unable to load Polymer output dataset.")
+                polymer_datasets = None
+
+        else:
+            print("[ERROR] Polymer L2 NetCDF output file " + str(polymer_l2_output_nc_file) + " does not exist.")
+            polymer_datasets = None
+
+        
+        return polymer_datasets
+
+
+
+
+
+
+
+
+
 
     def _get_inferred_wavelength_band_map(self, inferred_wavelengths):
 
-        # Map inferred ACOLITE wavelengths to HYPSO wavelengths
+        # Map inferred wavelengths to HYPSO wavelengths
         A = np.array(inferred_wavelengths, dtype=float)
         B = np.array(self.wavelengths, dtype=float)
 
