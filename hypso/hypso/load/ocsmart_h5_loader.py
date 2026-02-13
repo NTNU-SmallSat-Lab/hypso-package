@@ -109,7 +109,3 @@ def load_ocsmart_h5(h5_file_path: Path) -> dict:
 
     return datasets
 
-
-#h5_file_path = "/home/cameron/Dokumenter/aeronetvenice_2025-06-22T10-46-15Z/HYPSO2_HSI_aeronetvenice_2025-06-22T10-46-15Z-l1d_L2_OCSMART.h5"
-#datasets = load_ocsmart_h5(h5_file_path)
-#print(datasets["Rrs"])

@@ -5,3 +5,4 @@ from .l1d_nc_loader import load_l1d_nc, load_l1d_nc_cube, load_l1d_nc_metadata
 from .l2a_nc_loader import load_l2a_nc, load_l2a_nc_cube, load_l2a_nc_metadata
 from .ocsmart_h5_loader import load_ocsmart_h5
 from .acolite_l2_nc_loader import load_acolite_l2r_nc, load_acolite_l2w_nc
+from .polymer_l2_nc_loader import load_polymer_l2_nc
