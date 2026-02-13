@@ -51,7 +51,7 @@ class Hypso2(HypsoBase):
 
 
 
-    def _set_calibration_coeff_files(self, **kwargs) -> None:     
+    def _set_calibration_coeff_files(self, coeff_type='moved', **kwargs) -> None:     
         """
         Set the absolute path for the calibration coefficients included in the package. This includes radiometric,
         smile and destriping correction.
@@ -60,12 +60,13 @@ class Hypso2(HypsoBase):
 
         capture_type = self.capture_type
 
-        #coeff_type = kwargs.get('coeff_type', 'original')  # Default to 'original' if not provided
-        #print(f"[INFO] Setting calibration coefficient files with coeff_type: {coeff_type}")
-        #calibration_files = get_hypso2_calibration_files(capture_type, coeff_type=coeff_type) # 'moved', 'adjusted', or 'original.'
+        #self.coeff_type = kwargs.get('coeff_type', 'moved')  # Default to 'original' if not provided
+        print(f"[INFO] Setting calibration coefficient files with coeff_type: {coeff_type}")
+        calibration_files = get_hypso2_calibration_files(capture_type, coeff_type=coeff_type) # 'moved', 'adjusted', or 'original.'
 
-        calibration_files = get_hypso2_calibration_files(capture_type, **kwargs)
+        #calibration_files = get_hypso2_calibration_files(capture_type, **kwargs)
 
+        self.coeff_type = coeff_type
         self.rad_coeff_file = calibration_files['radiometric']
         self.smile_coeff_file = calibration_files['smile']
         self.destriping_coeff_file = calibration_files['destriping']
