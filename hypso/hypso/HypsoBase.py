@@ -1491,8 +1491,13 @@ class HypsoBase:
         polymer_input_file = Path(self.parent_dir, self.l1d_nc_file)
         polymer_output_dir = Path(self.parent_dir)
 
+        #import os
+        #cwd = os.getcwd()
+        #os.chdir(polymer_path)
+
         polymer_output_file = run_polymer(Level1_HYPSO(polymer_input_file), dir_out=mdir(polymer_output_dir), split_bands=False)
 
+        #os.chdir(cwd)
         return Path(polymer_output_file)
 
 
