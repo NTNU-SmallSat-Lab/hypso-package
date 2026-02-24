@@ -161,6 +161,9 @@ def l1b_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
                 Lt.wave_name = wave_name
                 Lt.band = band
 
+                Lt.coordinates = '/geometry/longitude /geometry/latitude'
+                Lt.grid_mapping = '/geometry/crs_wgs84'
+
                 Lt[:] = Lt_cube[:,:,band]
 
 
