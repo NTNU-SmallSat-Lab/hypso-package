@@ -12,7 +12,7 @@ from hypso.calibration import read_coeffs_from_file
 
 class Hypso2(HypsoBase):
 
-    def __init__(self, path: Union[str, Path], verbose=False) -> None:
+    def __init__(self, path: Union[str, Path], label: str = None, verbose=False) -> None:
         
         """
         Initialization of HYPSO-2 Class.
@@ -29,6 +29,10 @@ class Hypso2(HypsoBase):
         self.platform = 'hypso2'
         self.sensor = 'hypso2_hsi'
         self.VERBOSE = verbose
+        self.label = label
+
+        print("[INFO] Detected plaform: " + self.platform)
+        print("[INFO] Detected sensor: " + self.sensor)        
 
         self.fwhm = np.array([5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46,
                               5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46,

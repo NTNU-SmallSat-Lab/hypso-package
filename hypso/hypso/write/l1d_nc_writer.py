@@ -6,7 +6,7 @@ from .geometry_group_writer import geometry_group_writer
 from .calibration_filenames_writer import calibration_filenames_writer
 from .metadata_gcp_group_writer import metadata_gcp_group_writer
 
-def write_l1d_nc_file(satobj, overwrite: bool = False, **kwargs) -> None:
+def write_l1d_nc_file(satobj, label: str = None, overwrite: bool = False, **kwargs) -> None:
     
     if Path(satobj.l1d_nc_file).is_file() and not overwrite:
 

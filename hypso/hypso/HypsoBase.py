@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union
+from typing import Union, Literal
 import xarray as xr
 import copy
 #from .DataArrayValidator import DataArrayValidator
@@ -33,7 +33,8 @@ from hypso.load import load_l1a_nc, \
                         load_ocsmart_h5, \
                         load_acolite_l2r_nc, \
                         load_acolite_l2w_nc, \
-                        load_polymer_l2_nc
+                        load_polymer_l2_v1_nc, \
+                        load_polymer_l2_v2_nc
 
 from hypso.reflectance import compute_toa_reflectance
 
@@ -461,10 +462,25 @@ class HypsoBase:
         self.capture_dir = Path(path.parent.absolute(), capture_name + "_tmp")
         self.parent_dir = Path(path.parent.absolute())
 
-        self.l1a_nc_file = Path(path.parent, capture_name + "-l1a.nc")
-        self.l1b_nc_file = Path(path.parent, capture_name + "-l1b.nc")
-        self.l1c_nc_file = Path(path.parent, capture_name + "-l1c.nc")
-        self.l1d_nc_file = Path(path.parent, capture_name + "-l1d.nc")
+
+        if self.label is not None:
+            label = "-" + str(self.label)
+        else:
+            label = "" 
+
+        self.l1a_name = capture_name + label + "-l1a"
+        self.l1b_name = capture_name + label + "-l1b"
+        self.l1c_name = capture_name + label + "-l1c"
+        self.l1d_name = capture_name + label + "-l1d"
+        self.l2a_name = capture_name + label + "-l2a"
+
+        self.l1a_nc_file = Path(path.parent, self.l1a_name + ".nc")
+        self.l1b_nc_file = Path(path.parent, self.l1b_name + ".nc")
+        self.l1c_nc_file = Path(path.parent, self.l1c_name + ".nc")
+        self.l1d_nc_file = Path(path.parent, self.l1d_name + ".nc")
+
+
+
 
         match fields['product_level']:
             case "l1a":
@@ -569,9 +585,6 @@ class HypsoBase:
         dt = datetime.fromtimestamp(self.unixtime, tz=timezone.utc)
         self.acolite_l2r_output_nc_file =  Path(self.capture_dir, f"{self.platform.upper()}_{dt.strftime('%Y_%m_%d_%H_%M_%S')}_L2R.nc")
         self.acolite_l2w_output_nc_file =  Path(self.capture_dir, f"{self.platform.upper()}_{dt.strftime('%Y_%m_%d_%H_%M_%S')}_L2W.nc")
-
-        self.polymer_l2_output_nc_file =  Path(self.parent_dir, f"{str(self.l1d_nc_file)}.polymer.nc") #frohavet_2025-05-22T11-20-44Z-l1d.nc.polymer.nc
-
 
         return None
 
@@ -791,11 +804,11 @@ class HypsoBase:
 
         if coeff_type is None:
             try:
-                coeff_type = self.nc_corrections_attrs['radiometric_coefficents_version']
+                coeff_type = self.nc_corrections_attrs['radiometric_coefficients_version']
             except:
                 pass
         else:
-            self.nc_corrections_attrs['radiometric_coefficents_version'] = str(coeff_type).lower()
+            self.nc_corrections_attrs['radiometric_coefficients_version'] = str(coeff_type).lower()
             
 
         # TODO: move this function call
@@ -1460,7 +1473,16 @@ class HypsoBase:
 
         
 
-    def ac_polymer_run_correction(self, polymer_path: str = None, eoread_path: str = None, eotools_path: str = None):
+    def ac_polymer_run_correction(self, 
+                                  polymer_base_path: str,
+                                  polymer_path: str = None, 
+                                  eoread_path: str = None, 
+                                  eotools_path: str = None, 
+                                  core_path: str = None, 
+                                  input_product_level: str = "l1c",
+                                  #coeff_type: str = None,
+                                  optional_output_datasets: list = ["SPM"],
+                                  if_exists: str = "overwrite"):
 
         #polymer_path = Path(self.polymer_dir).absolute()
 
@@ -1468,71 +1490,154 @@ class HypsoBase:
             polymer_path = str(Path(polymer_path).absolute())
             sys.path.insert(0, polymer_path)
 
-        if eoread_path is not None:
-            eoread_path = str(Path(eoread_path).absolute())
-            sys.path.insert(0, eoread_path)
-
         if eotools_path is not None:
             eotools_path = str(Path(eotools_path).absolute())
             sys.path.insert(0, eotools_path)
 
-        #sys.path.insert(0, '/home/cameron/Nedlastinger/eoread/')
-        #sys.path.insert(0, '/home/cameron/Nedlastinger/eotools/')
-        #sys.path.insert(0, '/home/cameron/Nedlastinger/polymer/')
+        if eoread_path is not None:
+            eoread_path = str(Path(eoread_path).absolute())
+            sys.path.insert(0, eoread_path)
 
-        from polymer.level1 import Level1
-        from polymer.level2 import Level2
+        if core_path is not None:
+            core_path = str(Path(core_path).absolute())
+            sys.path.insert(0, core_path)
+
+        sys.path.insert(0, polymer_base_path)
 
         from eoread.hypso import Level1_HYPSO
-        from core.files.fileutils import mdir
-        from polymer.main_v5 import run_polymer, run_polymer_dataset
+        from polymer.main_v5 import run_polymer, run_polymer_dataset, default_output_datasets
 
 
-        polymer_input_file = Path(self.parent_dir, self.l1d_nc_file)
-        polymer_output_dir = Path(self.parent_dir)
+        #if coeff_type is not None:
+        #    coeff_type_str = "-" + str(coeff_type).lower()
+        #else:
+        #    coeff_type_str = ""
+
+        match input_product_level.lower():
+            
+            case "l1c":
+                polymer_l1_input_nc_file = Path(self.parent_dir, self.l1c_nc_file)
+                polymer_l2_output_nc_file = Path(self.parent_dir, str(self.l1c_name) + ".polymer.nc")
+            case "l1d":
+                polymer_l1_input_nc_file = Path(self.parent_dir, self.l1d_nc_file)
+                polymer_l2_output_nc_file = Path(self.parent_dir, str(self.l1d_name) + ".polymer.nc")
+            case _:
+                return None
+            
+        
 
         #import os
         #cwd = os.getcwd()
         #os.chdir(polymer_path)
 
-        polymer_output_file = run_polymer(Level1_HYPSO(polymer_input_file), dir_out=mdir(polymer_output_dir), split_bands=False)
+        # This is from the Feb 2026 version of Polymer
+        #from polymer.level1 import Level1
+        #from polymer.level2 import Level2
+        #from eoread.hypso import Level1_HYPSO
+        #from polymer.main_v5 import run_polymer, run_polymer_dataset
+        #from core.files.fileutils import mdir
+        #polymer_output_file = run_polymer(Level1_HYPSO(polymer_input_file), dir_out=mdir(polymer_output_dir), split_bands=False)
 
-        #os.chdir(cwd)
-        return Path(polymer_output_file)
+        # Run Polymer
+        if True:
+            output_file = run_polymer(
+                Level1_HYPSO(polymer_l1_input_nc_file),
+                dir_out=str(self.parent_dir),
+                output_datasets=default_output_datasets + optional_output_datasets,
+                if_exists = if_exists
+            )
+
+        try:
+            polymer_l2_output_nc_file = Path(output_file).rename(polymer_l2_output_nc_file)
+        except FileNotFoundError:
+            print("[WARNING] Polymer L2 NetCDF output file has already been renamed.")
+            pass
+
+        print(output_file)
+        print(polymer_l2_output_nc_file)
+
+        return Path(polymer_l2_output_nc_file)
 
 
-    def ac_polymer_open_output(self, polymer_l2_output_nc_file: Path = None):
+
+
+
+
+
+
+    def ac_polymer_open_output(self, 
+                               polymer_l2_output_nc_file: Path = None, 
+                               input_product_level="l1c",
+                               version = "v1" 
+                               #coeff_type: str = None
+                               ):
         
+        #if coeff_type is not None:
+        #    coeff_type_str = "-" + str(coeff_type).lower()
+        #else:
+        #    coeff_type_str = ""
+
         if polymer_l2_output_nc_file is not None:
-            polymer_l2_output_nc_file = Path(polymer_l2_output_nc_file).absolute()
+            polymer_l2_output_nc_file = Path(polymer_l2_output_nc_file)
         else:
-            polymer_l2_output_nc_file = Path(self.polymer_l2_output_nc_file).absolute()
+            match input_product_level.lower():
 
-        
+                case "l1c":
+                    print("[INFO] Reading Polymer L2 NetCDF output file generated using L1c product.")
+                    polymer_l2_output_nc_file = Path(self.parent_dir, str(self.l1c_name)+ ".polymer.nc") #frohavet_2025-05-22T11-20-44Z-l1c.nc.polymer.nc
+
+                case "l1d":
+                    print("[INFO] Reading Polymer L2 NetCDF output file generated using L1d product.")
+                    polymer_l2_output_nc_file = Path(self.parent_dir, str(self.l1d_name) + ".polymer.nc") #frohavet_2025-05-22T11-20-44Z-l1d.nc.polymer.nc
+            
+
+        polymer_l2_output_nc_file = polymer_l2_output_nc_file.absolute()
         
 
         if polymer_l2_output_nc_file.is_file():
-            print("[INFO] Opening Polymer L2 NetCDF output file " + str(polymer_l2_output_nc_file))
-            polymer_datasets = load_polymer_l2_nc(polymer_l2_output_nc_file)
 
-            try:
-                key = "rho_w"
-                inferred_wavelengths = polymer_datasets['bands'].data
+            if version == "v1":
+                polymer_datasets = load_polymer_l2_v1_nc(polymer_l2_output_nc_file)
 
-                # Map inferred Polymer wavelengths to HYPSO wavelengths
-                wl_band_map = self._get_inferred_wavelength_band_map(inferred_wavelengths=inferred_wavelengths)
+                try:
+                    key = "rho_w"
+                    inferred_wavelengths = polymer_datasets['bands'].data
 
-                # Create empty cube with standard HYPSO cube dims
-                shape = (self.spatial_dimensions[0], self.spatial_dimensions[1], self.bands)
-                cube = np.full(shape=shape, fill_value=np.nan)
-                cube[:,:,wl_band_map] = polymer_datasets[key]
+                    # Map inferred Polymer wavelengths to HYPSO wavelengths
+                    wl_band_map = self._get_inferred_wavelength_band_map(inferred_wavelengths=inferred_wavelengths)
 
-                self.l2a_cube["polymer"] = cube
-                self.l2a_cube["polymer"].attrs['l2_variable_name'] = key
+                    # Create empty cube with standard HYPSO cube dims
+                    shape = (self.spatial_dimensions[0], self.spatial_dimensions[1], self.bands)
+                    cube = np.full(shape=shape, fill_value=np.nan)
+                    cube[:,:,wl_band_map] = polymer_datasets[key]
 
-            except Exception as ex:
-                print("[ERROR] Unable to load Polymer output dataset.")
-                polymer_datasets = None
+                    self.l2a_cube["polymer"] = cube
+                    self.l2a_cube["polymer"].attrs['l2_variable_name'] = key
+
+                except Exception as ex:
+                    print("[ERROR] Unable to load Polymer output dataset.") 
+
+            elif version == "v2":
+
+                polymer_datasets = load_polymer_l2_v2_nc(polymer_l2_output_nc_file)
+            
+                try:
+                    key = "rho_w"
+                    inferred_wavelengths = polymer_datasets['bands'].data
+
+                    # Map inferred Polymer wavelengths to HYPSO wavelengths
+                    wl_band_map = self._get_inferred_wavelength_band_map(inferred_wavelengths=inferred_wavelengths)
+
+                    # Create empty cube with standard HYPSO cube dims
+                    shape = (self.spatial_dimensions[0], self.spatial_dimensions[1], self.bands)
+                    cube = np.full(shape=shape, fill_value=np.nan)
+                    cube[:,:,wl_band_map] = polymer_datasets[key]
+
+                    self.l2a_cube["polymer"] = cube
+                    self.l2a_cube["polymer"].attrs['l2_variable_name'] = key
+
+                except Exception as ex:
+                    print("[ERROR] Unable to load Polymer output dataset.")
 
         else:
             print("[ERROR] Polymer L2 NetCDF output file " + str(polymer_l2_output_nc_file) + " does not exist.")
