@@ -6,7 +6,7 @@ from .geometry_group_writer import geometry_group_writer
 from .calibration_filenames_writer import calibration_filenames_writer
 from .metadata_gcp_group_writer import metadata_gcp_group_writer
 
-def write_l1d_nc_file(satobj, label: str = None, overwrite: bool = False, **kwargs) -> None:
+def write_l1d_nc_file(satobj, label: str = None, overwrite: bool = False, masked: bool = False, **kwargs) -> None:
     
     if Path(satobj.l1d_nc_file).is_file() and not overwrite:
 
@@ -17,12 +17,13 @@ def write_l1d_nc_file(satobj, label: str = None, overwrite: bool = False, **kwar
 
     l1d_nc_writer(satobj=satobj, 
                     dst_nc=satobj.l1d_nc_file, 
+                    masked=masked, 
                     **kwargs)
 
     return None
 
 
-def l1d_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
+def l1d_nc_writer(satobj, dst_nc: str, datacube: bool = True, masked: bool = False) -> None:
     """
     Create a l1d.nc file using the top-of-atmosphere data.
 
@@ -126,12 +127,21 @@ def l1d_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
             rhot.wavelength_units = "nanometers"
             rhot.fwhm = satobj.fwhm
             rhot.wavelengths = np.around(satobj.wavelengths, 1)
-            rhot[:] = satobj.l1d_cube.to_numpy()
+
+            if masked:
+                rhot[:] = satobj.masked_l1d_cube.to_numpy()
+            else:
+                rhot[:] = satobj.l1d_cube.to_numpy()
+
 
         else:
 
             # Store as bands
-            rhot_cube = satobj.l1d_cube.to_numpy()
+            if masked:
+                rhot_cube = satobj.masked_l1d_cube.to_numpy()
+            else:
+                rhot_cube = satobj.l1d_cube.to_numpy()
+
             for band in range(0, rhot_cube.shape[-1]):
 
                 wave = np.around(satobj.wavelengths, 1)[band]
