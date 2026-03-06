@@ -1150,6 +1150,7 @@ class HypsoBase:
 
     def generate_l1b_cube(self, coeff_type: str = None, **kwargs) -> None:
 
+        print("[INFO] Generating L1b cube")
         if self.l1a_cube is None:
             return None
 
@@ -1161,6 +1162,7 @@ class HypsoBase:
 
     def generate_l1c_cube(self, coeff_type: str = None, **kwargs) -> None:
         
+        print("[INFO] Generating L1c cube")
         if self.l1b_cube is None:
             self.generate_l1b_cube(coeff_type=coeff_type, **kwargs)
         
@@ -1172,6 +1174,7 @@ class HypsoBase:
 
     def generate_l1d_cube(self, use_direct_georef=False, use_thuillier=False, generate_figures=False) -> None:
 
+        print("[INFO] Generating L1d cube")
         self._get_fwhm()
         self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_direct_georef=use_direct_georef,
                                                                        use_thuillier=use_thuillier,

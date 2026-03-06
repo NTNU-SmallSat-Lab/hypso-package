@@ -192,6 +192,9 @@ def l2a_nc_writer(satobj, correction: str, dst_nc: str, datacube: str = True) ->
                 rrs.wave_name = wave_name
                 rrs.band = band
 
+                rrs.coordinates = '/geometry/longitude /geometry/latitude'
+                rrs.grid_mapping = '/geometry/crs_wgs84'
+
                 rrs[:] = rrs_cube[:,:,band]
 
 

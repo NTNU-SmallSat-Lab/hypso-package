@@ -171,6 +171,9 @@ def l1d_nc_writer(satobj, dst_nc: str, datacube: bool = True, masked: bool = Fal
                 rhot.wave_name = wave_name
                 rhot.band = band
 
+                rhot.coordinates = '/geometry/longitude /geometry/latitude'
+                rhot.grid_mapping = '/geometry/crs_wgs84'
+
                 rhot[:] = rhot_cube[:,:,band]
 
 
