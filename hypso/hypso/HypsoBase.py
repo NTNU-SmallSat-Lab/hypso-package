@@ -891,6 +891,14 @@ class HypsoBase:
         except:
             self.spectral_coeffs = None
 
+        try:
+            self.spectral_coeffs_unbinned = read_coeffs_from_file(self.spectral_coeff_file, 'spectral', self.x_start, self.x_stop, self.y_start, self.y_stop, 1)
+        except:
+            self.spectral_coeffs_unbinned = None
+
+        print(self.spectral_coeffs_unbinned)
+        print(len(self.spectral_coeffs_unbinned))
+
         return None
     
 
