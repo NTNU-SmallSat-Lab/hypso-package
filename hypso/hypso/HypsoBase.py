@@ -911,7 +911,7 @@ class HypsoBase:
         return None
     
 
-    def _run_toa_reflectance(self, use_direct_georef=False, use_thuillier=False, generate_figures=False) -> np.ndarray:
+    def _run_toa_reflectance(self, use_direct_georef=False, use_thuillier=False, generate_figures=False, use_unbinned=True) -> np.ndarray:
 
         if self.l1b_cube is not None:
             toa_radiance = self.l1b_cube
@@ -930,9 +930,17 @@ class HypsoBase:
 
             solar_zenith_angles=self.solar_zenith_angles_direct
 
+
+        if use_unbinned:
+            sensor_wavelengths = self.wavelengths_unbinned
+            sensor_fwhm = self.fwhm_unbinned
+        else:
+            sensor_wavelengths = self.wavelengths
+            sensor_fwhm = self.fwhm
+
             
-        toa_reflectance, srf, esun = compute_toa_reflectance(sensor_wavelengths=self.wavelengths,
-                                                             sensor_fwhm=self.fwhm,
+        toa_reflectance, srf, esun = compute_toa_reflectance(sensor_wavelengths=sensor_wavelengths,
+                                                             sensor_fwhm=sensor_fwhm,
                                                              toa_radiance=toa_radiance,
                                                              iso_time=self.iso_time,
                                                              solar_zenith_angles=solar_zenith_angles,
@@ -1697,40 +1705,32 @@ class HypsoBase:
 
         return wl_band_map
 
+
     def _get_fwhm(self) -> None:
         
-        try:
-            fwhm_per_band = []
-            for band in self.wavelengths: 
-                idx = np.argmin(np.abs(band - self.srf_wl))
-                fwhm_per_band.append(self.srf_fwhm[idx])
+        fwhm_per_band = []
+        for band in self.wavelengths: 
+            idx = np.argmin(np.abs(band - self.srf_wl))
+            fwhm_per_band.append(self.srf_fwhm[idx])
 
-            fwhm = fwhm_per_band
+        fwhm = fwhm_per_band
 
-            self.fwhm = fwhm
+        self.fwhm = fwhm
         
-        except Exception as ex:
-            print(ex)
-            self.fwhm = self.fwhm_fixed
-
         return None
+
 
     def _get_fwhm_unbinned(self) -> None:
         
-        try:
-            fwhm_per_band = []
-            for band in self.wavelengths_unbinned: 
-                idx = np.argmin(np.abs(band - self.srf_wl))
-                fwhm_per_band.append(self.srf_fwhm[idx])
+        fwhm_per_band = []
+        for band in self.wavelengths_unbinned: 
+            idx = np.argmin(np.abs(band - self.srf_wl))
+            fwhm_per_band.append(self.srf_fwhm[idx])
 
-            fwhm = fwhm_per_band
+        fwhm = fwhm_per_band
 
-            self.fwhm = fwhm
+        self.fwhm_unbinned = fwhm
         
-        except Exception as ex:
-            print(ex)
-            self.fwhm = self.fwhm_fixed
-
         return None
 
 
