@@ -858,9 +858,16 @@ class HypsoBase:
         if self.spectral_coeffs is not None:
             if spectral:
                 if self.VERBOSE:
-                    print("[INFO] Running spectral correction...")
+                    print("[INFO] Running spectral correction (binned)...")
 
                 self.wavelengths = self.spectral_coeffs
+
+        if self.spectral_coeffs_unbinned is not None:
+            if spectral:
+                if self.VERBOSE:
+                    print("[INFO] Running spectral correction (unbinned)...")
+
+                self.wavelengths_unbinned = self.spectral_coeffs_unbinned
 
         return calibrated_cube
 
@@ -1708,11 +1715,11 @@ class HypsoBase:
 
         return None
 
-    def _get_fwhm_binned(self) -> None:
+    def _get_fwhm_unbinned(self) -> None:
         
         try:
             fwhm_per_band = []
-            for band in self.wavelengths: 
+            for band in self.wavelengths_unbinned: 
                 idx = np.argmin(np.abs(band - self.srf_wl))
                 fwhm_per_band.append(self.srf_fwhm[idx])
 
