@@ -905,51 +905,10 @@ class HypsoBase:
         except:
             self.spectral_coeffs_unbinned = None
 
-        print(self.spectral_coeffs_unbinned)
-        print(len(self.spectral_coeffs_unbinned))
-
         return None
     
 
-    def _run_toa_reflectance(self, use_direct_georef=False, use_thuillier=False, generate_figures=False, use_unbinned=True) -> np.ndarray:
 
-        if self.l1b_cube is not None:
-            toa_radiance = self.l1b_cube
-        elif self.l1c_cube is not None:
-            toa_radiance = self.l1c_cube
-        else:
-            self.generate_l1b_cube()
-            toa_radiance = self.l1b_cube
-
-        solar_zenith_angles=self.solar_zenith_angles
-        
-        if use_direct_georef and hasattr(self, 'solar_zenith_angles_direct'):
-
-            if self.VERBOSE:
-                print('[WARNING] Computing TOA reflectance using DIRECT georeferencing geometry.')
-
-            solar_zenith_angles=self.solar_zenith_angles_direct
-
-
-        if use_unbinned:
-            sensor_wavelengths = self.wavelengths_unbinned
-            sensor_fwhm = self.fwhm_unbinned
-        else:
-            sensor_wavelengths = self.wavelengths
-            sensor_fwhm = self.fwhm
-
-            
-        toa_reflectance, srf, esun = compute_toa_reflectance(sensor_wavelengths=sensor_wavelengths,
-                                                             sensor_fwhm=sensor_fwhm,
-                                                             toa_radiance=toa_radiance,
-                                                             iso_time=self.iso_time,
-                                                             solar_zenith_angles=solar_zenith_angles,
-                                                             output_dir = self.capture_dir,
-                                                             generate_figures=generate_figures,
-                                                             use_thuillier = use_thuillier
-                                                            )
-
-        return toa_reflectance, srf, esun
 
     def run_direct_georeferencing(self) -> None: 
 
@@ -1197,14 +1156,57 @@ class HypsoBase:
 
 
 
-    def generate_l1d_cube(self, use_direct_georef=False, use_thuillier=False, generate_figures=False) -> None:
+    def generate_l1d_cube(self, use_direct_georef=False, use_thuillier=False, store_srf = False, use_unbinned=True) -> None:
 
         print("[INFO] Generating L1d cube")
         self._get_fwhm()
-        self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_direct_georef=use_direct_georef,
-                                                                       use_thuillier=use_thuillier,
-                                                                       generate_figures=generate_figures)
+        self._get_fwhm_unbinned()
+        
 
+        if self.l1b_cube is not None:
+            toa_radiance = self.l1b_cube
+        elif self.l1c_cube is not None:
+            toa_radiance = self.l1c_cube
+        else:
+            self.generate_l1b_cube()
+            toa_radiance = self.l1b_cube
+
+        solar_zenith_angles=self.solar_zenith_angles
+        
+        if use_direct_georef and hasattr(self, 'solar_zenith_angles_direct'):
+
+            if self.VERBOSE:
+                print('[WARNING] Computing TOA reflectance using DIRECT georeferencing geometry.')
+
+            solar_zenith_angles=self.solar_zenith_angles_direct
+
+
+        if use_unbinned:
+            sensor_wavelengths = self.wavelengths_unbinned
+            sensor_fwhm = self.fwhm_unbinned
+            sensor_bin_factor = self.bin_factor
+        else:
+            sensor_wavelengths = self.wavelengths
+            sensor_fwhm = self.fwhm
+            sensor_bin_factor = 1
+
+
+        toa_reflectance, srf, srf_ssi, srf_ssi_wl, esun = compute_toa_reflectance(sensor_wavelengths=sensor_wavelengths,
+                                                                sensor_fwhm=sensor_fwhm,
+                                                                bin_factor = sensor_bin_factor,
+                                                                toa_radiance=toa_radiance,
+                                                                iso_time=self.iso_time,
+                                                                solar_zenith_angles=solar_zenith_angles,
+                                                                use_thuillier = use_thuillier
+                                                                )
+
+        self.l1d_cube = toa_reflectance
+        
+        if store_srf:
+            self.srf = srf
+            self.srf_ssi = srf_ssi
+            self.srf_ssi_wl = srf_ssi_wl
+            self.esun = esun
 
         return None
 
