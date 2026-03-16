@@ -111,6 +111,7 @@ class HypsoBase:
         # Constants
         self.UNIX_TIME_OFFSET = 20 # TODO: Verify offset validity. Sivert had 20 here
         self.AVERAGE_FWHM = 3.33 #8.2 
+        self.UNBINNED_BAND_COUNT = 1936
         
         # Atmospheric Correction
         self.ocsmart_dir = None
@@ -648,7 +649,8 @@ class HypsoBase:
             if 'fwhm' in self.nc_cube_attrs.keys():
                 self.fwhm = self.nc_cube_attrs['fwhm']
             else:
-                self.fwhm = [self.AVERAGE_FWHM] * self.bands
+                #self.fwhm = [self.AVERAGE_FWHM] * self.bands
+                self.fwhm = [self.AVERAGE_FWHM] * self.UNBINNED_BAND_COUNT
 
 
 
@@ -1688,7 +1690,6 @@ class HypsoBase:
 
         return wl_band_map
 
-
     def _get_fwhm(self) -> None:
         
         try:
@@ -1707,41 +1708,24 @@ class HypsoBase:
 
         return None
 
-
-    '''
-    def _get_fwhm(self, wavelengths) -> None:
+    def _get_fwhm_binned(self) -> None:
         
-        self.fwhm = [8.2] * self.bands
+        try:
+            fwhm_per_band = []
+            for band in self.wavelengths: 
+                idx = np.argmin(np.abs(band - self.srf_wl))
+                fwhm_per_band.append(self.srf_fwhm[idx])
 
-        fwhm = copy.deepcopy(self.wavelengths)
+            fwhm = fwhm_per_band
 
-        start_wl = self.wavelengths[0]
-        end_wl = self.wavelengths[-1]
-
-        for i in range(0,len(fwhm)):
-
-            if start_wl <= fwhm[i] < 430:
-                fwhm[i] = 9.6
-            elif 430 <= fwhm[i] < 480:
-                fwhm[i] = 9.6
-            elif 480 <= fwhm[i] < 530:
-                fwhm[i] = 6.6
-            elif 530 <= fwhm[i] < 580:
-                fwhm[i] = 8.2
-            elif 580 <= fwhm[i] < 630:
-                fwhm[i] = 5.8
-            elif 630 <= fwhm[i] < 680:
-                fwhm[i] = 5.8
-            elif 680 <= fwhm[i] < 730:
-                fwhm[i] = 4.1
-            elif 730 <= fwhm[i] < 780:
-                fwhm[i] = 4.0
-            elif 780 <= fwhm[i] < end_wl:
-                fwhm[i] = 4.0
-            else:
-                fwhm[i] = 8.2
-
-        self.fwhm = fwhm
+            self.fwhm = fwhm
+        
+        except Exception as ex:
+            print(ex)
+            self.fwhm = self.fwhm_fixed
 
         return None
-    '''
+
+
+
+
