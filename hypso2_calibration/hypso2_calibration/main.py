@@ -45,6 +45,8 @@ def get_hypso2_calibration_files(capture_type=None, coeff_type='moved') -> None:
     npz_file_smile = "smile_correction_matrix_HYPSO-2_full.npz" 
     npz_file_destriping = None
 
+    npz_file_spectral_full_frame = "spectral_array_calibrated_poly_full.npz"
+
     if npz_file_radiometric:
         rad_coeff_file = files('hypso2_calibration').joinpath(f'data/{npz_file_radiometric}')
     else:
@@ -65,11 +67,17 @@ def get_hypso2_calibration_files(capture_type=None, coeff_type='moved') -> None:
     else:
         spectral_coeff_file = None
 
+    if npz_file_spectral_full_frame:
+        spectral_full_frame_coeff_file = files('hypso2_calibration').joinpath(f'data/{npz_file_spectral_full_frame}')
+    else:
+        spectral_full_frame_coeff_file = None
+
     calibration_files = {
         "radiometric": rad_coeff_file,
         "smile": smile_coeff_file,
         "destriping": destriping_coeff_file,
-        "spectral": spectral_coeff_file
+        "spectral": spectral_coeff_file,
+        "spectral_full_frame": spectral_full_frame_coeff_file
     }
 
     return calibration_files
