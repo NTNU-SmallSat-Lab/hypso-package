@@ -43,8 +43,12 @@ class Hypso1(HypsoBase):
                               4.1, 4.1, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 
                               4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0])
 
-        self.srf_wl = np.array([455 ,505 ,555 ,605 ,655 ,705, 755 ])
-        self.srf_fwhm = np.array([9.6, 6.6, 8.2, 5.8, 5.8, 4.1, 4.0])
+        #self.srf_wl = np.array([455 ,505 ,555 ,605 ,655 ,705, 755 ])
+        #self.srf_fwhm = np.array([9.6, 6.6, 8.2, 5.8, 5.8, 4.1, 4.0])
+
+        # HYPSO-1, based on pre-launch calibration modelled for unbinned spectrum. Based on https://ieeexplore.ieee.org/abstract/document/9843655
+        self.srf_wl = np.array([435.85,546.07,696.54,706.72,738.40,763.51])
+        self.srf_fwhm = np.array([4.3,4.3,4.05,3.65,3.60,3.85])
 
         self._load_capture_file(path=path)
 
