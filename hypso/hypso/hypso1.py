@@ -4,7 +4,7 @@ import numpy as np
 
 # Development use only:
 import sys
-sys.path.insert(0, '/home/ariaa/smallSatLab/hypso-package-new/hypso1_calibration/')
+sys.path.insert(0, '/home/ariaa/smallSatLab/hypso-package/hypso1_calibration/')
 
 from .HypsoBase import HypsoBase
 from hypso1_calibration import get_hypso1_calibration_files
@@ -13,7 +13,7 @@ from hypso1_calibration import get_hypso1_calibration_files
 class Hypso1(HypsoBase):
 
     def __init__(self, path: Union[str, Path], verbose=False) -> None:
-        
+
         """
         Initialization of HYPSO-1 Class.
 
@@ -29,9 +29,11 @@ class Hypso1(HypsoBase):
         self.platform = 'hypso1'
         self.sensor = 'hypso1_hsi'
         self.VERBOSE = verbose
+        self.srf_wl = np.array([435.85,546.07,696.54,706.72,738.40,763.51])
+        self.srf_fwhm = np.array([4.3,4.3,4.05,3.65,3.60,3.85])
 
-        self.srf_wl = np.array([455 ,505 ,555 ,605 ,655 ,705, 755 ])
-        self.srf_fwhm = np.array([9.6, 6.6, 8.2, 5.8, 5.8, 4.1, 4.0])
+        # self.srf_wl = np.array([455 ,505 ,555 ,605 ,655 ,705, 755 ])
+        # self.srf_fwhm = np.array([9.6, 6.6, 8.2, 5.8, 5.8, 4.1, 4.0])
 
         self._load_capture_file(path=path)
 
@@ -57,17 +59,3 @@ class Hypso1(HypsoBase):
         self.spectral_coeff_file = calibration_files['spectral']
 
         return None
-
-
-
-
-
-
-
-
-
-
-
-
-
-

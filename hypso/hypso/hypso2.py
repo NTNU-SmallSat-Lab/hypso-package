@@ -4,7 +4,7 @@ import numpy as np
 
 # Development use only:
 import sys
-sys.path.insert(0, '/home/ariaa/smallSatLab/hypso-package-new/hypso2_calibration/')
+sys.path.insert(0, '/home/ariaa/smallSatLab/hypso-package/hypso2_calibration/')
 
 from .HypsoBase import HypsoBase
 from hypso2_calibration import get_hypso2_calibration_files
@@ -13,7 +13,7 @@ from hypso2_calibration import get_hypso2_calibration_files
 class Hypso2(HypsoBase):
 
     def __init__(self, path: Union[str, Path], verbose=False) -> None:
-        
+
         """
         Initialization of HYPSO-2 Class.
 
@@ -49,20 +49,3 @@ class Hypso2(HypsoBase):
         self.spectral_coeff_file = calibration_files['spectral']
 
         return None
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

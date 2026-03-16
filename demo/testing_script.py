@@ -2,7 +2,7 @@
 # Development use only:
 import sys
 # sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso/')
-sys.path.insert(0, '/home/ariaa/smallSatLab/hypso-package-new/hypso/')
+sys.path.insert(0, '/home/ariaa/smallSatLab/hypso-package/hypso/')
 
 from hypso import Hypso1, Hypso2
 import os
@@ -31,7 +31,7 @@ if level == 'l1a':
     satobj_h1 = Hypso1(path=h1_core_path + '-l1a.nc', verbose=True)
     satobj_h1.generate_l1b_cube()
     write_l1b_nc_file(satobj=satobj_h1, overwrite=True)
-if level in ['l1a','l1b']:    
+if level in ['l1a','l1b']:
     # Generate L1c geolocated TOA radiance product
     satobj_h1 = Hypso1(path=h1_core_path + '-l1b.nc', verbose=True)
     satobj_h1.generate_l1c_cube()
@@ -51,7 +51,7 @@ if level == 'l1a':
     satobj_h2 = Hypso2(path=h2_core_path + '-l1a.nc', verbose=True)
     satobj_h2.generate_l1b_cube()
     write_l1b_nc_file(satobj=satobj_h2, overwrite=True)
-if level in ['l1a','l1b']:    
+if level in ['l1a','l1b']:
     # Generate L1c geolocated TOA radiance product
     satobj_h2 = Hypso2(path=h2_core_path + '-l1b.nc', verbose=True)
     satobj_h2.generate_l1c_cube()
