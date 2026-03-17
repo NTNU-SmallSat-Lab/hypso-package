@@ -460,7 +460,7 @@ class HypsoBase:
 
         self.capture_name = capture_name
 
-        self.capture_dir = Path(path.parent.absolute(), capture_name + "_tmp")
+        self.capture_dir = Path(path.parent.absolute())
         self.parent_dir = Path(path.parent.absolute())
 
 
@@ -1156,7 +1156,7 @@ class HypsoBase:
 
 
 
-    def generate_l1d_cube(self, use_direct_georef=False, use_thuillier=False, store_srf = False, use_unbinned=True) -> None:
+    def generate_l1d_cube(self, use_direct_georef=False, use_thuillier=False, use_unbinned=True) -> None:
 
         print("[INFO] Generating L1d cube")
         self._get_fwhm()
@@ -1171,15 +1171,14 @@ class HypsoBase:
             self.generate_l1b_cube()
             toa_radiance = self.l1b_cube
 
-        solar_zenith_angles=self.solar_zenith_angles
-        
         if use_direct_georef and hasattr(self, 'solar_zenith_angles_direct'):
 
             if self.VERBOSE:
                 print('[WARNING] Computing TOA reflectance using DIRECT georeferencing geometry.')
 
             solar_zenith_angles=self.solar_zenith_angles_direct
-
+        else:
+            solar_zenith_angles=self.solar_zenith_angles
 
         if use_unbinned:
             sensor_wavelengths = self.wavelengths_unbinned
@@ -1202,11 +1201,10 @@ class HypsoBase:
 
         self.l1d_cube = toa_reflectance
         
-        if store_srf:
-            self.srf = srf
-            self.srf_ssi = srf_ssi
-            self.srf_ssi_wl = srf_ssi_wl
-            self.esun = esun
+        self.srf = srf
+        self.srf_ssi = srf_ssi
+        self.srf_ssi_wl = srf_ssi_wl
+        self.esun = esun
 
         return None
 
@@ -1503,6 +1501,76 @@ class HypsoBase:
 
         
 
+
+    def ac_polymer_generate_srfs(self):
+
+
+        match str(self.coeff_type):
+
+            case "original": # old radiometric coefficients
+                sensor_version = "_v1" 
+            case "moved" | "adjusted": # new radiometric coefficients
+                sensor_version = "_v2"
+            case _:
+                return None
+
+        # combine sensor name ("HYPSO-1" or "HYPSO-2") with coefficients version
+        # Polymer expects format like "HYPSO-2_v2"
+        id_sensor = str(self.sat_id) + sensor_version 
+
+
+
+        ds = xr.Dataset()
+        ds.attrs["desc"] = f'Spectral response functions for {id_sensor}'
+        ds.attrs["sensor"] = id_sensor
+
+
+        for idx, wl in enumerate(self.wavelengths):
+            
+            # Construct band ID            
+            bid = "Band_" + str(idx)
+
+            # Read ith SRF and convert from CSR sparse array
+            srf = self.srf[idx,:].toarray().flatten()
+            srf_wavelengths = self.srf_ssi_wl
+
+            # Find where SRF is non-zero
+            nonzero_mask = srf > 0
+            
+            # Extract non-zero portion of SRF and SRF wavelength array
+            if np.any(nonzero_mask):
+                srf_nonzero = srf[nonzero_mask]
+                srf_wavelengths_nonzero = srf_wavelengths[nonzero_mask]
+            else:
+                srf_nonzero = srf
+                srf_wavelengths_nonzero = srf_wavelengths
+
+            # Add band entry to dataset
+            ds[bid] = xr.DataArray(
+                srf_nonzero,
+                coords={f"wav_{bid}": srf_wavelengths_nonzero},
+                attrs={
+                    "band_info": bid,
+                    "band_wavelength": wl,
+                    "index": idx,
+                },
+            )
+            ds[f"wav_{bid}"].attrs["units"] = "nm"
+            
+
+        # Sort dataarrays within dataset based on index
+        ds = ds[sorted(ds, key=lambda x: ds[x].attrs['index'])]
+
+        srf_netcdf_path = Path(self.parent_dir, id_sensor + "_srf.nc")
+
+        ds.to_netcdf(srf_netcdf_path)
+
+
+        # save ds as pickle or something
+
+
+        return None        
+
     def ac_polymer_run_correction(self, 
                                   polymer_base_path: str,
                                   polymer_path: str = None, 
@@ -1589,7 +1657,7 @@ class HypsoBase:
         return Path(polymer_l2_output_nc_file)
 
 
-
+    
 
 
 

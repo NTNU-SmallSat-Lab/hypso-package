@@ -28,6 +28,7 @@ class Hypso2(HypsoBase):
         # General -----------------------------------------------------
         self.platform = 'hypso2'
         self.sensor = 'hypso2_hsi'
+        self.sat_id = 'HYPSO-2'
         self.VERBOSE = verbose
         self.label = label
 

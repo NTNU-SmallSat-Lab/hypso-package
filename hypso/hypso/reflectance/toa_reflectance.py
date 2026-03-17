@@ -7,8 +7,9 @@ import xarray as xr
 from scipy.interpolate import CubicSpline
 import matplotlib.pyplot as plt
 from scipy.sparse import lil_matrix, csr_matrix, vstack, csr_matrix
+from tqdm import tqdm
 
-
+GENERATE_FIGURES = True
 
 def compute_toa_reflectance(sensor_wavelengths,
                             sensor_fwhm,
@@ -39,7 +40,7 @@ def compute_toa_reflectance(sensor_wavelengths,
 
     binned_sensor_wavelengths = bin_sensor_wavelengths(sensor_wavelengths, bin_factor)
 
-    binned_srfs_csr = bin_srf(srfs_csr, bin_factor)
+    binned_srfs_csr = bin_srf(srfs_csr, bin_factor, truncated_solar_wavelengths)
 
 
     esun_list = compute_esun(srfs_csr=binned_srfs_csr, ssi=truncated_ssi, method="sparse")
@@ -109,7 +110,7 @@ def compute_toa_reflectance(sensor_wavelengths,
 
 
 
-    return toa_reflectance, srfs_csr, truncated_ssi, truncated_solar_wavelengths, esun_list
+    return toa_reflectance, binned_srfs_csr, truncated_ssi, truncated_solar_wavelengths, esun_list
 
 
 
@@ -234,7 +235,7 @@ def bin_srf(srfs_csr, bin_factor, truncated_solar_wavelengths=None):
     binned_rows = []
     bin_indices = []
     
-    for bin_idx in range(n_bins):
+    for bin_idx in tqdm(range(n_bins), desc="Binning bands"):
         start_band = bin_idx * bin_factor
         end_band = start_band + bin_factor
         
@@ -245,14 +246,19 @@ def bin_srf(srfs_csr, bin_factor, truncated_solar_wavelengths=None):
         # .sum(axis=0) returns a matrix, .A1 flattens to 1D array
         binned_srf = band_slice.sum(axis=0).A1
         
+        # Normalize
+        srf_max = binned_srf.max()
+        if srf_max > 0:
+            binned_srf = binned_srf / srf_max
+
         # Store as sparse row
         binned_rows.append(csr_matrix(binned_srf))
         
         # Keep track of which original bands are in this bin
         bin_indices.append(list(range(start_band, end_band)))
         
-        if (bin_idx + 1) % 10 == 0:
-            print(f"Processed {bin_idx + 1}/{n_bins} bins")
+        #if (bin_idx + 1) % 10 == 0:
+        #    print(f"Processed {bin_idx + 1}/{n_bins} bins")
     
     # Stack all binned rows into a single CSR matrix
     binned_srfs_csr = vstack(binned_rows, format='csr')
@@ -263,7 +269,7 @@ def bin_srf(srfs_csr, bin_factor, truncated_solar_wavelengths=None):
     
 
     # Optional visualization
-    if truncated_solar_wavelengths is not None:
+    if truncated_solar_wavelengths is not None and GENERATE_FIGURES:
         visualize_srf_binning(srfs_csr, binned_srfs_csr, bin_factor, 
                          truncated_solar_wavelengths, bin_indices)
     
