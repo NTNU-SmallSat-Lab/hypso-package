@@ -38,7 +38,7 @@ hypso_height_sensor = 1216
 
 def interpolate_at_frame_nc(adcs,
                             lines_timestamps: np.ndarray,
-                            additional_time_offset: float=0.0, 
+                            additional_time_offset: float=0.0,
                             framerate: float=15,
                             exposure: float=25,
                             verbose=False) -> np.ndarray:
@@ -69,16 +69,16 @@ def interpolate_at_frame_nc(adcs,
 
 def interpolate_at_frame(adcs_timestamps: np.ndarray, position: np.ndarray,
                          quaternion: np.ndarray, lines_timestamps: np.ndarray,
-                         additional_time_offset: float=0.0, 
+                         additional_time_offset: float=0.0,
                          framerate: float=15,
                          exposure: float=25,
                          verbose=False) -> np.ndarray:
     """
     Function to interpolate at the frame based on the quaternion, position and timestamps
 
-    :param adcs_timestamps: 
-    :param position: 
-    :param quaternion: 
+    :param adcs_timestamps:
+    :param position:
+    :param quaternion:
     :param lines_timestamps: lines_Timestamps
     :param additional_time_offset: Tuning offset for timestamps
     :param framerate: framerate in fps
@@ -129,7 +129,7 @@ def interpolate_at_frame(adcs_timestamps: np.ndarray, position: np.ndarray,
         return -1
 
     if verbose:
-        # Printing how many samples there are in the 
+        # Printing how many samples there are in the hyperspectral data time range
         a = adcs_timestamps[:] > lines_timestamps[0]
         b = adcs_timestamps[:] < lines_timestamps[-1]
         print(f'[INFO] {np.sum(a & b)} sample(s) inside frame time range')
@@ -150,7 +150,7 @@ def interpolate_at_frame(adcs_timestamps: np.ndarray, position: np.ndarray,
 
     framepose_data = np.column_stack((lines_timestamps, flashindices, posdata_eci_x_interp, posdata_eci_y_interp, posdata_eci_z_interp, quatdata_q0_interp, quatdata_q1_interp, quatdata_q2_interp, quatdata_q3_interp))
 
-    return framepose_data 
+    return framepose_data
 
 
 def pixel_index_to_angle(index, aoi_offset, fov_full, pixels_full) -> float:
@@ -193,7 +193,7 @@ def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_o
     :return: latitudes numpy arra, longitudes numpy array
     """
 
-    # This time parameter is an offset to the time used in determining the 
+    # This time parameter is an offset to the time used in determining the
     # to the rotation of the earth, effectively shifting the lotations east-west
     # The north south offset is in the "interpolate_at_frame()" function
     additional_time_offset = -650.0 * 0.0 + 0.0
@@ -214,6 +214,12 @@ def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_o
     latlon_mid_bot = np.zeros([frame_count, 2])
     latlon_bot = np.zeros([frame_count, 2])
 
+    pathlength_top = np.zeros([frame_count])
+    pathlength_mid_top = np.zeros([frame_count])
+    pathlength_mid = np.zeros([frame_count])
+    pathlength_mid_bot = np.zeros([frame_count])
+    pathlength_bot = np.zeros([frame_count])
+
     campos_itrs = np.zeros([frame_count, 3])
     body_x_itrs = np.zeros([frame_count, 3])
     body_z_itrs = np.zeros([frame_count, 3])
@@ -232,6 +238,7 @@ def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_o
         mat = mat_from_quat(quat_teme[i, :])
 
         # Defining body axes, z is hsi pointing direction and x is usually the along track direction
+        # change this after boresight calibration
         body_x_body = np.array([1.0, 0.0, 0.0])
         body_z_body = np.array([0.0, 0.0, 1.0])
 
@@ -244,7 +251,7 @@ def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_o
         body_z_astropy_teme = astropy.coordinates.TEME(astropy.coordinates.CartesianRepresentation(body_z_teme * astropy.units.m), obstime=time_astropy)
         pos_astropy_teme = astropy.coordinates.TEME(astropy.coordinates.CartesianRepresentation(pos_teme[i, :] * astropy.units.m), obstime=time_astropy)
 
-        # TEME to ITRS transformation 
+        # TEME to ITRS transformation
         body_x_astropy_itrs = body_x_astropy_teme.transform_to(astropy.coordinates.ITRS(obstime=time_astropy))
         body_z_astropy_itrs = body_z_astropy_teme.transform_to(astropy.coordinates.ITRS(obstime=time_astropy))
         pos_astropy_itrs = pos_astropy_teme.transform_to(astropy.coordinates.ITRS(obstime=time_astropy))
@@ -256,7 +263,7 @@ def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_o
 
         # Comments about orientations and reference frames and stuff:
         # For dayside captures, the HYPSO-1 and 2 satellite is moving ca. north to south.
-        # Looking at raw data, 
+        # Looking at raw data,
         # The lowest pixel index (0) ('bottom of frame') is west
         # corresponds to +y axis side of the slit
         # highest pixel index (683) ('top of frame') is east
@@ -296,8 +303,14 @@ def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_o
         pos_itrs_viewpoint_mid_bot, t4 = ellipsoid_line_intersection(campos_itrs[i, :], view_dir_mid_bot)
         pos_itrs_viewpoint_bot, t5     = ellipsoid_line_intersection(campos_itrs[i, :], view_dir_bot)
 
-        # Convert the intersection position an astropy type and tell astropy that it is a position
-        # given in ITRS frame at the given frame/line timestamp
+        pathlength_top[i]     = m.sqrt(((t1 * view_dir_top)**2).sum())
+        pathlength_mid_top[i] = m.sqrt(((t2 * view_dir_mid_top)**2).sum())
+        pathlength_mid[i]     = m.sqrt(((t3 * view_dir_mid)**2).sum())
+        pathlength_mid_bot[i] = m.sqrt(((t4 * view_dir_mid_bot)**2).sum())
+        pathlength_bot[i]     = m.sqrt(((t5 * view_dir_bot)**2).sum())
+
+        # Convert the intersection position to an astropy type and tell astropy that it is a
+        # position given in ITRS frame at the given frame/line timestamp
         pos_itrs_viewpoint_top_astropy_certesian = astropy.coordinates.CartesianRepresentation(pos_itrs_viewpoint_top * astropy.units.m)
         pos_itrs_viewpoint_mid_top_astropy_certesian = astropy.coordinates.CartesianRepresentation(pos_itrs_viewpoint_mid_top * astropy.units.m)
         pos_itrs_viewpoint_mid_astropy_certesian = astropy.coordinates.CartesianRepresentation(pos_itrs_viewpoint_mid * astropy.units.m)
@@ -342,6 +355,7 @@ def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_o
 
     pixels_lat = np.zeros([frame_count, image_height])
     pixels_lon = np.zeros([frame_count, image_height])
+    pixels_pathlength = np.zeros([frame_count, image_height])
 
     subsample_pixels_indices = np.array([image_height, 3 * image_height / 4, image_height / 2, image_height / 4, 1])
     all_pixels_indices = np.linspace(1, image_height, image_height)
@@ -351,13 +365,16 @@ def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_o
     for i in range(frame_count):
         lats = np.array([latlon_top[i, 0], latlon_mid_top[i, 0], latlon_mid[i, 0], latlon_mid_bot[i, 0], latlon_bot[i, 0]])
         lons = np.array([latlon_top[i, 1], latlon_mid_top[i, 1], latlon_mid[i, 1], latlon_mid_bot[i, 1], latlon_bot[i, 1]])
+        pathlengths = np.array([pathlength_top[i], pathlength_mid_top[i], pathlength_mid[i], pathlength_mid_bot[i], pathlength_bot[i]])
+
         pixels_lat[i, :] = si.griddata(subsample_pixels_indices, lats, all_pixels_indices, method=interpolation_method)
         pixels_lon[i, :] = si.griddata(subsample_pixels_indices, lons, all_pixels_indices, method=interpolation_method)
+        pixels_pathlength[i, :] = si.griddata(subsample_pixels_indices, pathlengths, all_pixels_indices, method=interpolation_method)
 
     if verbose:
         print('[INFO] Direct georeferencing done')
 
-    return pixels_lat, pixels_lon, [campos_itrs, body_x_itrs, body_z_itrs]
+    return pixels_lat, pixels_lon, [campos_itrs, body_x_itrs, body_z_itrs, pixels_pathlength]
 
 
 # https://pyorbital.readthedocs.io/en/latest/#computing-astronomical-parameters
