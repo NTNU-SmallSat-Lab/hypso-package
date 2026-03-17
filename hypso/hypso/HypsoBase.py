@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union
+from typing import Union, Literal
 import xarray as xr
 import copy
 #from .DataArrayValidator import DataArrayValidator
@@ -32,7 +32,9 @@ from hypso.load import load_l1a_nc, \
                         load_l2a_nc, \
                         load_ocsmart_h5, \
                         load_acolite_l2r_nc, \
-                        load_acolite_l2w_nc
+                        load_acolite_l2w_nc, \
+                        load_polymer_l2_v1_nc, \
+                        load_polymer_l2_v2_nc
 
 from hypso.reflectance import compute_toa_reflectance
 
@@ -109,6 +111,7 @@ class HypsoBase:
         # Constants
         self.UNIX_TIME_OFFSET = 20 # TODO: Verify offset validity. Sivert had 20 here
         self.AVERAGE_FWHM = 3.33 #8.2 
+        self.UNBINNED_BAND_COUNT = 1936
         
         # Atmospheric Correction
         self.ocsmart_dir = None
@@ -457,13 +460,28 @@ class HypsoBase:
 
         self.capture_name = capture_name
 
-        self.capture_dir = Path(path.parent.absolute(), capture_name + "_tmp")
+        self.capture_dir = Path(path.parent.absolute())
         self.parent_dir = Path(path.parent.absolute())
 
-        self.l1a_nc_file = Path(path.parent, capture_name + "-l1a.nc")
-        self.l1b_nc_file = Path(path.parent, capture_name + "-l1b.nc")
-        self.l1c_nc_file = Path(path.parent, capture_name + "-l1c.nc")
-        self.l1d_nc_file = Path(path.parent, capture_name + "-l1d.nc")
+
+        if self.label is not None:
+            label = "-" + str(self.label)
+        else:
+            label = "" 
+
+        self.l1a_name = capture_name + label + "-l1a"
+        self.l1b_name = capture_name + label + "-l1b"
+        self.l1c_name = capture_name + label + "-l1c"
+        self.l1d_name = capture_name + label + "-l1d"
+        self.l2a_name = capture_name + label + "-l2a"
+
+        self.l1a_nc_file = Path(path.parent, self.l1a_name + ".nc")
+        self.l1b_nc_file = Path(path.parent, self.l1b_name + ".nc")
+        self.l1c_nc_file = Path(path.parent, self.l1c_name + ".nc")
+        self.l1d_nc_file = Path(path.parent, self.l1d_name + ".nc")
+
+
+
 
         match fields['product_level']:
             case "l1a":
@@ -569,7 +587,6 @@ class HypsoBase:
         self.acolite_l2r_output_nc_file =  Path(self.capture_dir, f"{self.platform.upper()}_{dt.strftime('%Y_%m_%d_%H_%M_%S')}_L2R.nc")
         self.acolite_l2w_output_nc_file =  Path(self.capture_dir, f"{self.platform.upper()}_{dt.strftime('%Y_%m_%d_%H_%M_%S')}_L2W.nc")
 
-
         return None
 
 
@@ -632,7 +649,8 @@ class HypsoBase:
             if 'fwhm' in self.nc_cube_attrs.keys():
                 self.fwhm = self.nc_cube_attrs['fwhm']
             else:
-                self.fwhm = [self.AVERAGE_FWHM] * self.bands
+                #self.fwhm = [self.AVERAGE_FWHM] * self.bands
+                self.fwhm = [self.AVERAGE_FWHM] * self.UNBINNED_BAND_COUNT
 
 
 
@@ -772,6 +790,7 @@ class HypsoBase:
                          destripe: bool = True,
                          spectral: bool = True,
                          set_coeffs: bool = True,
+                         coeff_type: str = None,
                          **kwargs) -> np.ndarray:
         """
         Get calibrated and corrected cube. Includes Radiometric, Smile and Destriping Correction.
@@ -784,9 +803,19 @@ class HypsoBase:
         if self.VERBOSE:
             print('[INFO] Running calibration routines...')
 
+
+        if coeff_type is None:
+            try:
+                coeff_type = self.nc_corrections_attrs['radiometric_coefficients_version']
+            except:
+                pass
+        else:
+            self.nc_corrections_attrs['radiometric_coefficients_version'] = str(coeff_type).lower()
+            
+
         # TODO: move this function call
         if set_coeffs:
-            self._set_calibration_coeff_files(**kwargs)
+            self._set_calibration_coeff_files(coeff_type=coeff_type, **kwargs)
 
         self._load_calibration_coeff_files()
 
@@ -829,9 +858,16 @@ class HypsoBase:
         if self.spectral_coeffs is not None:
             if spectral:
                 if self.VERBOSE:
-                    print("[INFO] Running spectral correction...")
+                    print("[INFO] Running spectral correction (binned)...")
 
                 self.wavelengths = self.spectral_coeffs
+
+        if self.spectral_coeffs_unbinned is not None:
+            if spectral:
+                if self.VERBOSE:
+                    print("[INFO] Running spectral correction (unbinned)...")
+
+                self.wavelengths_unbinned = self.spectral_coeffs_unbinned
 
         return calibrated_cube
 
@@ -864,40 +900,15 @@ class HypsoBase:
         except:
             self.spectral_coeffs = None
 
+        try:
+            self.spectral_coeffs_unbinned = read_coeffs_from_file(self.spectral_coeff_file, 'spectral', self.x_start, self.x_stop, self.y_start, self.y_stop, 1)
+        except:
+            self.spectral_coeffs_unbinned = None
+
         return None
     
 
-    def _run_toa_reflectance(self, use_direct_georef=False, use_thuillier=False, generate_figures=False) -> np.ndarray:
 
-        if self.l1b_cube is not None:
-            toa_radiance = self.l1b_cube
-        elif self.l1c_cube is not None:
-            toa_radiance = self.l1c_cube
-        else:
-            self.generate_l1b_cube()
-            toa_radiance = self.l1b_cube
-
-        solar_zenith_angles=self.solar_zenith_angles
-        
-        if use_direct_georef and hasattr(self, 'solar_zenith_angles_direct'):
-
-            if self.VERBOSE:
-                print('[WARNING] Computing TOA reflectance using DIRECT georeferencing geometry.')
-
-            solar_zenith_angles=self.solar_zenith_angles_direct
-
-            
-        toa_reflectance, srf, esun = compute_toa_reflectance(sensor_wavelengths=self.wavelengths,
-                                                             sensor_fwhm=self.fwhm,
-                                                             toa_radiance=toa_radiance,
-                                                             iso_time=self.iso_time,
-                                                             solar_zenith_angles=solar_zenith_angles,
-                                                             output_dir = self.capture_dir,
-                                                             generate_figures=generate_figures,
-                                                             use_thuillier = use_thuillier
-                                                            )
-
-        return toa_reflectance, srf, esun
 
     def run_direct_georeferencing(self) -> None: 
 
@@ -1121,21 +1132,23 @@ class HypsoBase:
         return solar_zenith_angles, solar_azimuth_angles, sat_zenith_angles, sat_azimuth_angles, relative_azimuth_angles
 
 
-    def generate_l1b_cube(self, **kwargs) -> None:
+    def generate_l1b_cube(self, coeff_type: str = None, **kwargs) -> None:
 
+        print("[INFO] Generating L1b cube")
         if self.l1a_cube is None:
             return None
 
-        self.l1b_cube = self._run_calibration(**kwargs)
+        self.l1b_cube = self._run_calibration(coeff_type=coeff_type, **kwargs)
 
         return None
 
 
 
-    def generate_l1c_cube(self) -> None:
+    def generate_l1c_cube(self, coeff_type: str = None, **kwargs) -> None:
         
+        print("[INFO] Generating L1c cube")
         if self.l1b_cube is None:
-            self.generate_l1b_cube()
+            self.generate_l1b_cube(coeff_type=coeff_type, **kwargs)
         
         self.run_georeferencing()
         
@@ -1143,13 +1156,55 @@ class HypsoBase:
 
 
 
-    def generate_l1d_cube(self, use_direct_georef=False, use_thuillier=False, generate_figures=False) -> None:
+    def generate_l1d_cube(self, use_direct_georef=False, use_thuillier=False, use_unbinned=True) -> None:
 
+        print("[INFO] Generating L1d cube")
         self._get_fwhm()
-        self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_direct_georef=use_direct_georef,
-                                                                       use_thuillier=use_thuillier,
-                                                                       generate_figures=generate_figures)
+        self._get_fwhm_unbinned()
+        
 
+        if self.l1b_cube is not None:
+            toa_radiance = self.l1b_cube
+        elif self.l1c_cube is not None:
+            toa_radiance = self.l1c_cube
+        else:
+            self.generate_l1b_cube()
+            toa_radiance = self.l1b_cube
+
+        if use_direct_georef and hasattr(self, 'solar_zenith_angles_direct'):
+
+            if self.VERBOSE:
+                print('[WARNING] Computing TOA reflectance using DIRECT georeferencing geometry.')
+
+            solar_zenith_angles=self.solar_zenith_angles_direct
+        else:
+            solar_zenith_angles=self.solar_zenith_angles
+
+        if use_unbinned:
+            sensor_wavelengths = self.wavelengths_unbinned
+            sensor_fwhm = self.fwhm_unbinned
+            sensor_bin_factor = self.bin_factor
+        else:
+            sensor_wavelengths = self.wavelengths
+            sensor_fwhm = self.fwhm
+            sensor_bin_factor = 1
+
+
+        toa_reflectance, srf, srf_ssi, srf_ssi_wl, esun = compute_toa_reflectance(sensor_wavelengths=sensor_wavelengths,
+                                                                sensor_fwhm=sensor_fwhm,
+                                                                bin_factor = sensor_bin_factor,
+                                                                toa_radiance=toa_radiance,
+                                                                iso_time=self.iso_time,
+                                                                solar_zenith_angles=solar_zenith_angles,
+                                                                use_thuillier = use_thuillier
+                                                                )
+
+        self.l1d_cube = toa_reflectance
+        
+        self.srf = srf
+        self.srf_ssi = srf_ssi
+        self.srf_ssi_wl = srf_ssi_wl
+        self.esun = esun
 
         return None
 
@@ -1444,10 +1499,263 @@ class HypsoBase:
 
         return l2r_datasets, l2w_datasets
 
+        
+
+
+    def ac_polymer_generate_srfs(self):
+
+
+        match str(self.coeff_type):
+
+            case "original": # old radiometric coefficients
+                sensor_version = "_v1" 
+            case "moved" | "adjusted": # new radiometric coefficients
+                sensor_version = "_v2"
+            case _:
+                return None
+
+        # combine sensor name ("HYPSO-1" or "HYPSO-2") with coefficients version
+        # Polymer expects format like "HYPSO-2_v2"
+        id_sensor = str(self.sat_id) + sensor_version 
+
+
+
+        ds = xr.Dataset()
+        ds.attrs["desc"] = f'Spectral response functions for {id_sensor}'
+        ds.attrs["sensor"] = id_sensor
+
+
+        for idx, wl in enumerate(self.wavelengths):
+            
+            # Construct band ID            
+            bid = "Band_" + str(idx)
+
+            # Read ith SRF and convert from CSR sparse array
+            srf = self.srf[idx,:].toarray().flatten()
+            srf_wavelengths = self.srf_ssi_wl
+
+            # Find where SRF is non-zero
+            nonzero_mask = srf > 0
+            
+            # Extract non-zero portion of SRF and SRF wavelength array
+            if np.any(nonzero_mask):
+                srf_nonzero = srf[nonzero_mask]
+                srf_wavelengths_nonzero = srf_wavelengths[nonzero_mask]
+            else:
+                srf_nonzero = srf
+                srf_wavelengths_nonzero = srf_wavelengths
+
+            # Add band entry to dataset
+            ds[bid] = xr.DataArray(
+                srf_nonzero,
+                coords={f"wav_{bid}": srf_wavelengths_nonzero},
+                attrs={
+                    "band_info": bid,
+                    "band_wavelength": wl,
+                    "index": idx,
+                },
+            )
+            ds[f"wav_{bid}"].attrs["units"] = "nm"
+            
+
+        # Sort dataarrays within dataset based on index
+        ds = ds[sorted(ds, key=lambda x: ds[x].attrs['index'])]
+
+        srf_netcdf_path = Path(self.parent_dir, id_sensor + "_srf.nc")
+
+        ds.to_netcdf(srf_netcdf_path)
+
+
+        # save ds as pickle or something
+
+
+        return None        
+
+    def ac_polymer_run_correction(self, 
+                                  polymer_base_path: str,
+                                  polymer_path: str = None, 
+                                  eoread_path: str = None, 
+                                  eotools_path: str = None, 
+                                  core_path: str = None, 
+                                  input_product_level: str = "l1c",
+                                  #coeff_type: str = None,
+                                  optional_output_datasets: list = ["SPM"],
+                                  if_exists: str = "overwrite"):
+
+        #polymer_path = Path(self.polymer_dir).absolute()
+
+        if polymer_path is not None:
+            polymer_path = str(Path(polymer_path).absolute())
+            sys.path.insert(0, polymer_path)
+
+        if eotools_path is not None:
+            eotools_path = str(Path(eotools_path).absolute())
+            sys.path.insert(0, eotools_path)
+
+        if eoread_path is not None:
+            eoread_path = str(Path(eoread_path).absolute())
+            sys.path.insert(0, eoread_path)
+
+        if core_path is not None:
+            core_path = str(Path(core_path).absolute())
+            sys.path.insert(0, core_path)
+
+        sys.path.insert(0, polymer_base_path)
+
+        from eoread.hypso import Level1_HYPSO
+        from polymer.main_v5 import run_polymer, run_polymer_dataset, default_output_datasets
+
+
+        #if coeff_type is not None:
+        #    coeff_type_str = "-" + str(coeff_type).lower()
+        #else:
+        #    coeff_type_str = ""
+
+        match input_product_level.lower():
+            
+            case "l1c":
+                polymer_l1_input_nc_file = Path(self.parent_dir, self.l1c_nc_file)
+                polymer_l2_output_nc_file = Path(self.parent_dir, str(self.l1c_name) + ".polymer.nc")
+            case "l1d":
+                polymer_l1_input_nc_file = Path(self.parent_dir, self.l1d_nc_file)
+                polymer_l2_output_nc_file = Path(self.parent_dir, str(self.l1d_name) + ".polymer.nc")
+            case _:
+                return None
+            
+        
+
+        #import os
+        #cwd = os.getcwd()
+        #os.chdir(polymer_path)
+
+        # This is from the Feb 2026 version of Polymer
+        #from polymer.level1 import Level1
+        #from polymer.level2 import Level2
+        #from eoread.hypso import Level1_HYPSO
+        #from polymer.main_v5 import run_polymer, run_polymer_dataset
+        #from core.files.fileutils import mdir
+        #polymer_output_file = run_polymer(Level1_HYPSO(polymer_input_file), dir_out=mdir(polymer_output_dir), split_bands=False)
+
+        # Run Polymer
+        if True:
+            output_file = run_polymer(
+                Level1_HYPSO(polymer_l1_input_nc_file),
+                dir_out=str(self.parent_dir),
+                output_datasets=default_output_datasets + optional_output_datasets,
+                if_exists = if_exists
+            )
+
+        try:
+            polymer_l2_output_nc_file = Path(output_file).rename(polymer_l2_output_nc_file)
+        except FileNotFoundError:
+            print("[WARNING] Polymer L2 NetCDF output file has already been renamed.")
+            pass
+
+        print(output_file)
+        print(polymer_l2_output_nc_file)
+
+        return Path(polymer_l2_output_nc_file)
+
+
+    
+
+
+
+
+
+    def ac_polymer_open_output(self, 
+                               polymer_l2_output_nc_file: Path = None, 
+                               input_product_level="l1c",
+                               version = "v1" 
+                               #coeff_type: str = None
+                               ):
+        
+        #if coeff_type is not None:
+        #    coeff_type_str = "-" + str(coeff_type).lower()
+        #else:
+        #    coeff_type_str = ""
+
+        if polymer_l2_output_nc_file is not None:
+            polymer_l2_output_nc_file = Path(polymer_l2_output_nc_file)
+        else:
+            match input_product_level.lower():
+
+                case "l1c":
+                    print("[INFO] Reading Polymer L2 NetCDF output file generated using L1c product.")
+                    polymer_l2_output_nc_file = Path(self.parent_dir, str(self.l1c_name)+ ".polymer.nc") #frohavet_2025-05-22T11-20-44Z-l1c.nc.polymer.nc
+
+                case "l1d":
+                    print("[INFO] Reading Polymer L2 NetCDF output file generated using L1d product.")
+                    polymer_l2_output_nc_file = Path(self.parent_dir, str(self.l1d_name) + ".polymer.nc") #frohavet_2025-05-22T11-20-44Z-l1d.nc.polymer.nc
+            
+
+        polymer_l2_output_nc_file = polymer_l2_output_nc_file.absolute()
+        
+
+        if polymer_l2_output_nc_file.is_file():
+
+            if version == "v1":
+                polymer_datasets = load_polymer_l2_v1_nc(polymer_l2_output_nc_file)
+
+                try:
+                    key = "rho_w"
+                    inferred_wavelengths = polymer_datasets['bands'].data
+
+                    # Map inferred Polymer wavelengths to HYPSO wavelengths
+                    wl_band_map = self._get_inferred_wavelength_band_map(inferred_wavelengths=inferred_wavelengths)
+
+                    # Create empty cube with standard HYPSO cube dims
+                    shape = (self.spatial_dimensions[0], self.spatial_dimensions[1], self.bands)
+                    cube = np.full(shape=shape, fill_value=np.nan)
+                    cube[:,:,wl_band_map] = polymer_datasets[key]
+
+                    self.l2a_cube["polymer"] = cube
+                    self.l2a_cube["polymer"].attrs['l2_variable_name'] = key
+
+                except Exception as ex:
+                    print("[ERROR] Unable to load Polymer output dataset.") 
+
+            elif version == "v2":
+
+                polymer_datasets = load_polymer_l2_v2_nc(polymer_l2_output_nc_file)
+            
+                try:
+                    key = "rho_w"
+                    inferred_wavelengths = polymer_datasets['bands'].data
+
+                    # Map inferred Polymer wavelengths to HYPSO wavelengths
+                    wl_band_map = self._get_inferred_wavelength_band_map(inferred_wavelengths=inferred_wavelengths)
+
+                    # Create empty cube with standard HYPSO cube dims
+                    shape = (self.spatial_dimensions[0], self.spatial_dimensions[1], self.bands)
+                    cube = np.full(shape=shape, fill_value=np.nan)
+                    cube[:,:,wl_band_map] = polymer_datasets[key]
+
+                    self.l2a_cube["polymer"] = cube
+                    self.l2a_cube["polymer"].attrs['l2_variable_name'] = key
+
+                except Exception as ex:
+                    print("[ERROR] Unable to load Polymer output dataset.")
+
+        else:
+            print("[ERROR] Polymer L2 NetCDF output file " + str(polymer_l2_output_nc_file) + " does not exist.")
+            polymer_datasets = None
+
+        
+        return polymer_datasets
+
+
+
+
+
+
+
+
+
 
     def _get_inferred_wavelength_band_map(self, inferred_wavelengths):
 
-        # Map inferred ACOLITE wavelengths to HYPSO wavelengths
+        # Map inferred wavelengths to HYPSO wavelengths
         A = np.array(inferred_wavelengths, dtype=float)
         B = np.array(self.wavelengths, dtype=float)
 
@@ -1470,57 +1778,31 @@ class HypsoBase:
 
     def _get_fwhm(self) -> None:
         
-        try:
-            fwhm_per_band = []
-            for band in self.wavelengths: 
-                idx = np.argmin(np.abs(band - self.srf_wl))
-                fwhm_per_band.append(self.srf_fwhm[idx])
+        fwhm_per_band = []
+        for band in self.wavelengths: 
+            idx = np.argmin(np.abs(band - self.srf_wl))
+            fwhm_per_band.append(self.srf_fwhm[idx])
 
-            fwhm = fwhm_per_band
-
-            self.fwhm = fwhm
-        
-        except Exception as ex:
-            print(ex)
-            self.fwhm = self.fwhm_fixed
-
-        return None
-
-
-    '''
-    def _get_fwhm(self, wavelengths) -> None:
-        
-        self.fwhm = [8.2] * self.bands
-
-        fwhm = copy.deepcopy(self.wavelengths)
-
-        start_wl = self.wavelengths[0]
-        end_wl = self.wavelengths[-1]
-
-        for i in range(0,len(fwhm)):
-
-            if start_wl <= fwhm[i] < 430:
-                fwhm[i] = 9.6
-            elif 430 <= fwhm[i] < 480:
-                fwhm[i] = 9.6
-            elif 480 <= fwhm[i] < 530:
-                fwhm[i] = 6.6
-            elif 530 <= fwhm[i] < 580:
-                fwhm[i] = 8.2
-            elif 580 <= fwhm[i] < 630:
-                fwhm[i] = 5.8
-            elif 630 <= fwhm[i] < 680:
-                fwhm[i] = 5.8
-            elif 680 <= fwhm[i] < 730:
-                fwhm[i] = 4.1
-            elif 730 <= fwhm[i] < 780:
-                fwhm[i] = 4.0
-            elif 780 <= fwhm[i] < end_wl:
-                fwhm[i] = 4.0
-            else:
-                fwhm[i] = 8.2
+        fwhm = fwhm_per_band
 
         self.fwhm = fwhm
-
+        
         return None
-    '''
+
+
+    def _get_fwhm_unbinned(self) -> None:
+        
+        fwhm_per_band = []
+        for band in self.wavelengths_unbinned: 
+            idx = np.argmin(np.abs(band - self.srf_wl))
+            fwhm_per_band.append(self.srf_fwhm[idx])
+
+        fwhm = fwhm_per_band
+
+        self.fwhm_unbinned = fwhm
+        
+        return None
+
+
+
+

@@ -7,7 +7,7 @@ from .hypso1 import Hypso1
 from .hypso2 import Hypso2
 
 
-def Hypso(path: Union[str, Path], verbose=False):
+def Hypso(path: Union[str, Path], label: str = None, verbose=False):
 
     try:
         with nc.Dataset(path, format="NETCDF4") as f:
@@ -16,12 +16,12 @@ def Hypso(path: Union[str, Path], verbose=False):
 
         if sat_id == "HYPSO-1":
 
-            return Hypso1(path=path, verbose=verbose)
+            return Hypso1(path=path, label=label, verbose=verbose)
 
 
         elif sat_id == "HYPSO-2":
 
-            return Hypso2(path=path, verbose=verbose)
+            return Hypso2(path=path, label=label, verbose=verbose)
 
         else:
             print("[ERROR] Unrecognized file.")

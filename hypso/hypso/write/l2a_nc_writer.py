@@ -24,7 +24,7 @@ def write_l2a_nc_file(satobj, correction: str = None, overwrite: bool = False, *
 
     for correction in l2a_nc_file_list:
 
-        l2a_nc_file = Path(parent_dir, str(capture_name) + "-l2a-" + str(correction) + ".nc")
+        l2a_nc_file = Path(parent_dir, satobj.l2a_name + "-" + str(correction) + ".nc")
 
         print(l2a_nc_file)
 
@@ -42,7 +42,7 @@ def write_l2a_nc_file(satobj, correction: str = None, overwrite: bool = False, *
                     )
 
 
-    return None
+    return l2a_nc_file
 
 
 def l2a_nc_writer(satobj, correction: str, dst_nc: str, datacube: str = True) -> None:
@@ -135,9 +135,9 @@ def l2a_nc_writer(satobj, correction: str, dst_nc: str, datacube: str = True) ->
 
 
         try:
-            l2a_variable_name = satobj.l2a_cubes[correction].attrs['l2a_variable_name']
+            l2a_variable_name = satobj.l2a_cubes[correction].attrs['l2_variable_name']
         except Exception as ex:
-            print["[WARNING] No 'l2a_variable_name' attrribute found. Defaulting to 'rrs'"]
+            print["[WARNING] No 'l2_variable_name' attrribute found. Defaulting to 'rrs'"]
             print(ex)
             l2a_variable_name = "rrs"
 
@@ -191,6 +191,9 @@ def l2a_nc_writer(satobj, correction: str, dst_nc: str, datacube: str = True) ->
                 rrs.parameter = name
                 rrs.wave_name = wave_name
                 rrs.band = band
+
+                rrs.coordinates = '/geometry/longitude /geometry/latitude'
+                rrs.grid_mapping = '/geometry/crs_wgs84'
 
                 rrs[:] = rrs_cube[:,:,band]
 

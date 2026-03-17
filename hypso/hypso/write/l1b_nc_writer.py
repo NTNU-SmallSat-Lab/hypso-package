@@ -6,7 +6,7 @@ from .geometry_group_writer import geometry_group_writer
 from .calibration_filenames_writer import calibration_filenames_writer
 from .metadata_gcp_group_writer import metadata_gcp_group_writer
 
-def write_l1b_nc_file(satobj, overwrite: bool = False, **kwargs) -> None:
+def write_l1b_nc_file(satobj, overwrite: bool = False, masked: bool = False, **kwargs) -> None:
 
     if Path(satobj.l1b_nc_file).is_file() and not overwrite:
 
@@ -17,12 +17,13 @@ def write_l1b_nc_file(satobj, overwrite: bool = False, **kwargs) -> None:
 
     l1b_nc_writer(satobj=satobj, 
                     dst_nc=satobj.l1b_nc_file, 
+                    masked=masked, 
                     **kwargs)
 
     return None
 
 
-def l1b_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
+def l1b_nc_writer(satobj, dst_nc: str, datacube: bool = True, masked: bool = False) -> None:
     """
     Create a l1b.nc file using the radiometrically corrected data.
 
@@ -126,12 +127,20 @@ def l1b_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
             Lt.fwhm = satobj.fwhm
             Lt.wavelengths = np.around(satobj.wavelengths, 1)
             print(satobj.l1b_cube.to_numpy().shape)
-            Lt[:] = satobj.l1b_cube.to_numpy()
+
+            if masked:
+                Lt[:] = satobj.masked_l1b_cube.to_numpy()
+            else:
+                Lt[:] = satobj.l1b_cube.to_numpy()
 
         else:
 
             # Store as bands
-            Lt_cube = satobj.l1b_cube.to_numpy()
+            if masked:
+                Lt_cube = satobj.masked_l1b_cube.to_numpy()
+            else:
+                Lt_cube = satobj.l1b_cube.to_numpy()
+
             for band in range(0, Lt_cube.shape[-1]):
 
                 wave = np.around(satobj.wavelengths, 1)[band]
@@ -160,6 +169,9 @@ def l1b_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
                 Lt.parameter = name
                 Lt.wave_name = wave_name
                 Lt.band = band
+
+                Lt.coordinates = '/geometry/longitude /geometry/latitude'
+                Lt.grid_mapping = '/geometry/crs_wgs84'
 
                 Lt[:] = Lt_cube[:,:,band]
 
@@ -366,6 +378,7 @@ def l1b_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
 
 
         # Metadata: Rad calibration coeff ----------------------------------------------------
+
         len_radrows = satobj.rad_coeffs.shape[0]
         len_radcols = satobj.rad_coeffs.shape[1]
 

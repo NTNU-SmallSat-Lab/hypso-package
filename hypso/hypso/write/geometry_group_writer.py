@@ -101,6 +101,18 @@ def geometry_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', COM
     if (hasattr(satobj, 'latitudes') and satobj.latitudes is not None) and \
         (hasattr(satobj, 'longitudes') and satobj.longitudes is not None):
 
+
+        try:
+
+            crs_var = netfile.createVariable('geometry/crs_wgs84', 'i4', ())
+            crs_var.grid_mapping_name = 'latitude_longitude'
+            crs_var.longitude_of_prime_meridian = 0.0
+            crs_var.semi_major_axis = 6378137.0
+            crs_var.inverse_flattening = 298.257223563
+            crs_var.geographic_crs_name = 'WGS84'
+        except Exception as ex:
+            pass
+
         try:
             # Sensor Zenith --------------------------
             sensor_z = netfile.createVariable(

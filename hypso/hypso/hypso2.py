@@ -12,7 +12,7 @@ from hypso.calibration import read_coeffs_from_file
 
 class Hypso2(HypsoBase):
 
-    def __init__(self, path: Union[str, Path], verbose=False) -> None:
+    def __init__(self, path: Union[str, Path], label: str = None, verbose=False) -> None:
         
         """
         Initialization of HYPSO-2 Class.
@@ -28,7 +28,12 @@ class Hypso2(HypsoBase):
         # General -----------------------------------------------------
         self.platform = 'hypso2'
         self.sensor = 'hypso2_hsi'
+        self.sat_id = 'HYPSO-2'
         self.VERBOSE = verbose
+        self.label = label
+
+        print("[INFO] Detected plaform: " + self.platform)
+        print("[INFO] Detected sensor: " + self.sensor)        
 
         self.fwhm = np.array([5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46,
                               5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46,
@@ -51,7 +56,7 @@ class Hypso2(HypsoBase):
 
 
 
-    def _set_calibration_coeff_files(self, **kwargs) -> None:     
+    def _set_calibration_coeff_files(self, coeff_type='moved', **kwargs) -> None:     
         """
         Set the absolute path for the calibration coefficients included in the package. This includes radiometric,
         smile and destriping correction.
@@ -60,12 +65,13 @@ class Hypso2(HypsoBase):
 
         capture_type = self.capture_type
 
-        #coeff_type = kwargs.get('coeff_type', 'original')  # Default to 'original' if not provided
-        #print(f"[INFO] Setting calibration coefficient files with coeff_type: {coeff_type}")
-        #calibration_files = get_hypso2_calibration_files(capture_type, coeff_type=coeff_type) # 'moved', 'adjusted', or 'original.'
+        #self.coeff_type = kwargs.get('coeff_type', 'moved')  # Default to 'original' if not provided
+        print(f"[INFO] Setting calibration coefficient files with coeff_type: {coeff_type}")
+        calibration_files = get_hypso2_calibration_files(capture_type, coeff_type=coeff_type) # 'moved', 'adjusted', or 'original.'
 
-        calibration_files = get_hypso2_calibration_files(capture_type, **kwargs)
+        #calibration_files = get_hypso2_calibration_files(capture_type, **kwargs)
 
+        self.coeff_type = coeff_type
         self.rad_coeff_file = calibration_files['radiometric']
         self.smile_coeff_file = calibration_files['smile']
         self.destriping_coeff_file = calibration_files['destriping']
@@ -84,7 +90,7 @@ def get_hypso2_wavelengths(aoi_x=428, column_count=1080, bin_factor=9):
     x_stop = aoi_x + column_count
 
     spectral_coeffs = read_coeffs_from_file(coeff_path=spectral_coeff_file, coeff_type='spectral', x_start=x_start, x_stop=x_stop, bin_factor=bin_factor)
-    
+
     return spectral_coeffs
 
 

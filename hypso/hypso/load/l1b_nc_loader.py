@@ -64,11 +64,11 @@ def load_l1b_nc_cube(nc_file_path: Path) -> np.ndarray:
 
             cube = np.empty((height,width,depth))
 
-            for idx, rhot_band in enumerate(tqdm(list(group.variables))):
+            for idx, lt_band in enumerate(tqdm(list(group.variables))):
 
                 #print("[INFO] Loading band " + str(idx) + "...")
 
-                band = np.array(group.variables[rhot_band][:], dtype='double')
+                band = np.array(group.variables[lt_band][:], dtype='double')
 
                 cube[:,:,idx] = band
 
@@ -85,16 +85,48 @@ def load_l1b_nc_cube_attrs(nc_file_path: Path) -> np.ndarray:
 
     :return: Numpy array with raw data cube extracted from nc file
     """
-    with nc.Dataset(nc_file_path, format="NETCDF4") as f:
-        group = f.groups["products"]["Lt"]
 
-        nc_cube_attrs = {}
-        for attrname in group.ncattrs():
-            value = getattr(group, attrname)
-            nc_cube_attrs[attrname] = value
+    nc_cube_attrs = {}
 
-        return nc_cube_attrs
+    try:
+        with nc.Dataset(nc_file_path, format="NETCDF4") as f:
+            group = f.groups["products"]["Lt"]
 
+            nc_cube_attrs = {}
+            for attrname in group.ncattrs():
+                value = getattr(group, attrname)
+                nc_cube_attrs[attrname] = value
+            return nc_cube_attrs
+        
+    except Exception as ex:
+        with nc.Dataset(nc_file_path, format="NETCDF4") as f:
+            group = f.groups["products"]
+
+            print("[INFO] Loading Lt cube attributes from separate bands...")
+
+            wavelengths = []
+            fwhm = []
+
+            for idx, lt_band in enumerate(tqdm(list(group.variables))):
+
+                #print("[INFO] Loading band " + str(idx) + "...")
+
+                #band = np.array(group.variables[lt_band][:], dtype='double')
+                wavelength_value = getattr(group.variables[lt_band], "wavelength")
+                fwhm_value = getattr(group.variables[lt_band], "fwhm")
+
+                wavelengths.append(wavelength_value)
+                fwhm.append(fwhm_value)
+
+                #cube[:,:,idx] = band
+
+            nc_cube_attrs["units"] = "W/m^2/micrometer/sr"
+            nc_cube_attrs["long_name"] = "Top-of-Atmosphere Radiance"
+            nc_cube_attrs["wavelength_units"] = "nanometers"
+            nc_cube_attrs["fwhm"] = fwhm
+            nc_cube_attrs["wavelengths"] = wavelengths
+
+    return nc_cube_attrs
 
 def load_l1b_global_nc_metadata(nc_file_path: Path):
 
