@@ -1190,14 +1190,14 @@ class HypsoBase:
             sensor_bin_factor = 1
 
 
-        toa_reflectance, srf, srf_ssi, srf_ssi_wl, esun = compute_toa_reflectance(sensor_wavelengths=sensor_wavelengths,
-                                                                sensor_fwhm=sensor_fwhm,
-                                                                bin_factor = sensor_bin_factor,
-                                                                toa_radiance=toa_radiance,
-                                                                iso_time=self.iso_time,
-                                                                solar_zenith_angles=solar_zenith_angles,
-                                                                use_thuillier = use_thuillier
-                                                                )
+        toa_reflectance, effective_fwhm, srf, srf_ssi, srf_ssi_wl, esun = compute_toa_reflectance(sensor_wavelengths=sensor_wavelengths,
+                                                                                        sensor_fwhm=sensor_fwhm,
+                                                                                        bin_factor = sensor_bin_factor,
+                                                                                        toa_radiance=toa_radiance,
+                                                                                        iso_time=self.iso_time,
+                                                                                        solar_zenith_angles=solar_zenith_angles,
+                                                                                        use_thuillier = use_thuillier
+                                                                                        )
 
         self.l1d_cube = toa_reflectance
         
@@ -1205,6 +1205,7 @@ class HypsoBase:
         self.srf_ssi = srf_ssi
         self.srf_ssi_wl = srf_ssi_wl
         self.esun = esun
+        self.effective_fwhm = effective_fwhm
 
         return None
 

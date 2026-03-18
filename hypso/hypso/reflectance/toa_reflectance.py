@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 from scipy.sparse import lil_matrix, csr_matrix, vstack, csr_matrix
 from tqdm import tqdm
 
-GENERATE_FIGURES = True
 
 def compute_toa_reflectance(sensor_wavelengths,
                             sensor_fwhm,
@@ -17,7 +16,8 @@ def compute_toa_reflectance(sensor_wavelengths,
                             toa_radiance: np.ndarray,
                             iso_time,
                             solar_zenith_angles,
-                            use_thuillier = False
+                            use_thuillier: bool = False,
+                            generate_figures: bool = False
                             ) -> xr.DataArray:
 
 
@@ -40,13 +40,14 @@ def compute_toa_reflectance(sensor_wavelengths,
 
     binned_sensor_wavelengths = bin_sensor_wavelengths(sensor_wavelengths, bin_factor)
 
-    binned_srfs_csr = bin_srf(srfs_csr, bin_factor, truncated_solar_wavelengths)
+    binned_srfs_csr = bin_srf(srfs_csr, bin_factor, truncated_solar_wavelengths, generate_figures)
 
 
     esun_list = compute_esun(srfs_csr=binned_srfs_csr, ssi=truncated_ssi, method="sparse")
     #esun_list = compute_esun(srfs_csr=binned_srfs_csr, ssi=truncated_ssi, method="vectorized")
     #esun_list = compute_esun(srfs_csr=binned_srfs_csr, ssi=truncated_ssi, method="loop")
 
+    effective_fwhm = compute_effective_fwhm(srfs_csr=binned_srfs_csr, truncated_solar_wavelengths=truncated_solar_wavelengths)
 
     scene_date = parser.isoparse(iso_time)
     julian_day = scene_date.timetuple().tm_yday
@@ -76,7 +77,7 @@ def compute_toa_reflectance(sensor_wavelengths,
 
 
 
-    if True:
+    if generate_figures:
         import csv
         import matplotlib.pyplot as plt
 
@@ -110,7 +111,7 @@ def compute_toa_reflectance(sensor_wavelengths,
 
 
 
-    return toa_reflectance, binned_srfs_csr, truncated_ssi, truncated_solar_wavelengths, esun_list
+    return toa_reflectance, effective_fwhm, binned_srfs_csr, truncated_ssi, truncated_solar_wavelengths, esun_list
 
 
 
@@ -197,7 +198,7 @@ def bin_sensor_wavelengths(sensor_wavelengths, bin_factor):
     return sensor_wavelengths.reshape(-1, bin_factor).mean(axis=1).reshape(-1)
 
 
-def bin_srf(srfs_csr, bin_factor, truncated_solar_wavelengths=None):
+def bin_srf(srfs_csr, bin_factor, truncated_solar_wavelengths=None, generate_figures=False):
     """
     Bin neighboring SRFs by adding them element-wise.
     
@@ -269,7 +270,7 @@ def bin_srf(srfs_csr, bin_factor, truncated_solar_wavelengths=None):
     
 
     # Optional visualization
-    if truncated_solar_wavelengths is not None and GENERATE_FIGURES:
+    if truncated_solar_wavelengths is not None and generate_figures:
         visualize_srf_binning(srfs_csr, binned_srfs_csr, bin_factor, 
                          truncated_solar_wavelengths, bin_indices)
     
@@ -503,7 +504,47 @@ def compute_esun(srfs_csr, ssi, method='sparse'):
 
 
 
+def compute_effective_fwhm(srfs_csr, truncated_solar_wavelengths):
 
+    wavelengths = truncated_solar_wavelengths
+
+    band_indices = range(srfs_csr.shape[0])
+    
+    effective_fwhm_array = np.zeros(len(band_indices))
+
+    
+    for i in band_indices:
+
+        # Get the SRF for this band (as dense array)
+        # .A1 flattens the matrix to 1D array
+        srf = srfs_csr[i, :].toarray().flatten()
+        
+        max_idx = np.argmax(srf)
+        max_srf = srf[max_idx]
+
+        half_max = max_srf / 2
+
+        indices = np.where(srf >= half_max)[0]
+
+        if len(indices) > 0:
+            lower_idx = indices[0]
+            upper_idx = indices[-1]
+            
+            # Get corresponding x values
+            lower_wl = wavelengths[lower_idx]
+            upper_wl = wavelengths[upper_idx]
+            
+            # Calculate FWHM
+            effective_fwhm = upper_wl - lower_wl
+
+        else:
+            effective_fwhm = 0
+
+        effective_fwhm_array[i] = float(effective_fwhm)
+
+    print(effective_fwhm_array)
+
+    return effective_fwhm_array
 
 
 
