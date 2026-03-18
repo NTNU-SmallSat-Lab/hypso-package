@@ -1502,23 +1502,13 @@ class HypsoBase:
         
 
 
-    def ac_polymer_generate_srfs(self):
+    def ac_polymer_generate_srf_nc(self):
 
-
-        match str(self.coeff_type):
-
-            case "original": # old radiometric coefficients
-                sensor_version = "_v1" 
-            case "moved" | "adjusted": # new radiometric coefficients
-                sensor_version = "_v2"
-            case _:
-                return None
+        sensor_version = "_" + str(self.coeff_type)
 
         # combine sensor name ("HYPSO-1" or "HYPSO-2") with coefficients version
-        # Polymer expects format like "HYPSO-2_v2"
+        # Polymer expects format like "HYPSO-2_moved"
         id_sensor = str(self.sat_id) + sensor_version 
-
-
 
         ds = xr.Dataset()
         ds.attrs["desc"] = f'Spectral response functions for {id_sensor}'
