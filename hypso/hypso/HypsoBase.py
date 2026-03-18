@@ -1499,16 +1499,39 @@ class HypsoBase:
 
         return l2r_datasets, l2w_datasets
 
-        
 
-
-    def ac_polymer_generate_srf_nc(self):
+    def ac_polymer_get_id_sensor(self):
 
         sensor_version = "_" + str(self.coeff_type)
 
         # combine sensor name ("HYPSO-1" or "HYPSO-2") with coefficients version
         # Polymer expects format like "HYPSO-2_moved"
         id_sensor = str(self.sat_id) + sensor_version 
+
+        return id_sensor
+
+
+    def ac_polymer_get_srf_nc_path(self):
+
+
+        id_sensor = self.ac_polymer_get_id_sensor()
+
+        srf_nc_file = id_sensor + "_srf.nc"
+        srf_nc_path = Path(self.parent_dir, srf_nc_file )
+
+        self.srf_nc_file = srf_nc_file
+        self.srf_nc_path = srf_nc_path
+
+        return srf_nc_file, srf_nc_path
+
+
+    def ac_polymer_generate_srf_nc(self):
+
+
+        id_sensor = self.ac_polymer_get_id_sensor()
+
+        _, srf_nc_path = self.ac_polymer_get_srf_nc_path()
+
 
         ds = xr.Dataset()
         ds.attrs["desc"] = f'Spectral response functions for {id_sensor}'
@@ -1548,19 +1571,14 @@ class HypsoBase:
             )
             ds[f"wav_{bid}"].attrs["units"] = "nm"
             
-
         # Sort dataarrays within dataset based on index
         ds = ds[sorted(ds, key=lambda x: ds[x].attrs['index'])]
 
-        srf_netcdf_path = Path(self.parent_dir, id_sensor + "_srf.nc")
-
-        ds.to_netcdf(srf_netcdf_path)
 
 
-        # save ds as pickle or something
+        ds.to_netcdf(srf_nc_path)
 
-
-        return None        
+        return srf_nc_path        
 
 
 
@@ -1595,6 +1613,15 @@ class HypsoBase:
             sys.path.insert(0, core_path)
 
         sys.path.insert(0, polymer_base_path)
+
+
+
+        # TODO
+        srf_nc_path, srf_nc_path = self.ac_polymer_get_srf_nc_path()
+
+        run_polymer_kwargs = {"srf_getter": "hypso.ac.ac_polymer_srf_getter",
+                                "srf_getter_arg": srf_nc_path}
+
 
         from eoread.hypso import Level1_HYPSO
         from polymer.main_v5 import run_polymer, run_polymer_dataset, default_output_datasets
@@ -1636,7 +1663,10 @@ class HypsoBase:
                 Level1_HYPSO(polymer_l1_input_nc_file),
                 dir_out=str(self.parent_dir),
                 output_datasets=default_output_datasets + optional_output_datasets,
-                if_exists = if_exists
+                if_exists = if_exists,
+                srf_getter = "hypso.ac.ac_polymer_srf_getter",
+                srf_getter_arg = srf_nc_path
+
             )
 
         try:
