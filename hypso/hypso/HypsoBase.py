@@ -1568,7 +1568,7 @@ class HypsoBase:
                     "band_info": bid,
                     "band_wavelength": wl,
                     "index": idx,
-                    "effective_fwhm": self.effective_fwhm[idx]
+                    "effective_fwhm": self.effective_fwhm[idx],
                     "center_fwhm": self.fwhm[idx]
                 },
             )
