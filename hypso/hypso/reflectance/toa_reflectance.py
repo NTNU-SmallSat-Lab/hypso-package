@@ -542,8 +542,6 @@ def compute_effective_fwhm(srfs_csr, truncated_solar_wavelengths):
 
         effective_fwhm_array[i] = float(effective_fwhm)
 
-    print(effective_fwhm_array)
-
     return effective_fwhm_array
 
 
