@@ -1513,6 +1513,7 @@ class HypsoBase:
         ds = xr.Dataset()
         ds.attrs["desc"] = f'Spectral response functions for {id_sensor}'
         ds.attrs["sensor"] = id_sensor
+        ds.attrs["platform"] = self.platform
 
 
         for idx, wl in enumerate(self.wavelengths):
@@ -1560,6 +1561,9 @@ class HypsoBase:
 
 
         return None        
+
+
+
 
     def ac_polymer_run_correction(self, 
                                   polymer_base_path: str,
