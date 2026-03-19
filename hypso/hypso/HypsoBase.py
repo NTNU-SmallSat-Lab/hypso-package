@@ -1156,7 +1156,7 @@ class HypsoBase:
 
 
 
-    def generate_l1d_cube(self, use_direct_georef=False, use_thuillier=False, use_unbinned=True) -> None:
+    def generate_l1d_cube(self, use_direct_georef=False, use_thuillier=False, use_unbinned=True, generate_figures=False) -> None:
 
         print("[INFO] Generating L1d cube")
         self._get_fwhm()
@@ -1196,7 +1196,8 @@ class HypsoBase:
                                                                                         toa_radiance=toa_radiance,
                                                                                         iso_time=self.iso_time,
                                                                                         solar_zenith_angles=solar_zenith_angles,
-                                                                                        use_thuillier = use_thuillier
+                                                                                        use_thuillier = use_thuillier,
+                                                                                        generate_figures=generate_figures
                                                                                         )
 
         self.l1d_cube = toa_reflectance
