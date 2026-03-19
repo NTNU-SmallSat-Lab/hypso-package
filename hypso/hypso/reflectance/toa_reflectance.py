@@ -107,7 +107,7 @@ def compute_toa_reflectance(sensor_wavelengths,
         plt.tight_layout()
         plt.savefig('1_hypso_spectrum_tsis.png')
 
-        plt.close
+        plt.close()
 
 
 
@@ -322,7 +322,8 @@ def visualize_srf_binning(original_srfs, binned_srfs, bin_factor,
         ax.grid(True, alpha=0.3)
     
     plt.tight_layout()
-    plt.show()
+    plt.savefig('1_hypso_srf_visualized.png')
+    plt.close()
     
     return fig
 
