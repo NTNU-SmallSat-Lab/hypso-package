@@ -1190,15 +1190,21 @@ class HypsoBase:
             sensor_bin_factor = 1
 
 
-        toa_reflectance, effective_fwhm, srf, srf_ssi, srf_ssi_wl, esun = compute_toa_reflectance(sensor_wavelengths=sensor_wavelengths,
-                                                                                        sensor_fwhm=sensor_fwhm,
-                                                                                        bin_factor = sensor_bin_factor,
-                                                                                        toa_radiance=toa_radiance,
-                                                                                        iso_time=self.iso_time,
-                                                                                        solar_zenith_angles=solar_zenith_angles,
-                                                                                        use_thuillier = use_thuillier,
-                                                                                        generate_figures=generate_figures
-                                                                                        )
+        toa_reflectance, \
+        effective_fwhm, \
+        srf, \
+        srf_ssi, \
+        srf_ssi_wl, \
+        esun, \
+        esun_wl = compute_toa_reflectance(sensor_wavelengths=sensor_wavelengths,
+                                            sensor_fwhm=sensor_fwhm,
+                                            bin_factor = sensor_bin_factor,
+                                            toa_radiance=toa_radiance,
+                                            iso_time=self.iso_time,
+                                            solar_zenith_angles=solar_zenith_angles,
+                                            use_thuillier = use_thuillier,
+                                            generate_figures=generate_figures
+                                            )
 
         self.l1d_cube = toa_reflectance
         
@@ -1206,6 +1212,7 @@ class HypsoBase:
         self.srf_ssi = srf_ssi
         self.srf_ssi_wl = srf_ssi_wl
         self.esun = esun
+        self.esun_wl = esun_wl
         self.effective_fwhm = effective_fwhm
 
         return None
@@ -1515,7 +1522,6 @@ class HypsoBase:
 
     def ac_polymer_get_srf_nc_path(self):
 
-
         id_sensor = self.ac_polymer_get_id_sensor()
 
         srf_nc_file = id_sensor + "_srf.nc"
@@ -1525,10 +1531,43 @@ class HypsoBase:
         self.srf_nc_path = srf_nc_path
 
         return srf_nc_file, srf_nc_path
+    
+
+    def ac_polymer_get_ssi_nc_path(self):
+
+        id_sensor = self.ac_polymer_get_id_sensor()
+
+        ssi_nc_file = id_sensor + "_ssi.nc"
+        ssi_nc_path = Path(self.parent_dir, ssi_nc_file )
+
+        self.ssi_nc_file = ssi_nc_file
+        self.ssi_nc_path = ssi_nc_path
+
+        return ssi_nc_file, ssi_nc_path
+    
+
+    def ac_polymer_get_esun_nc_path(self):
+
+        id_sensor = self.ac_polymer_get_id_sensor()
+
+        esun_nc_file = id_sensor + "_esun.nc"
+        esun_nc_path = Path(self.parent_dir, esun_nc_file )
+
+        self.ssi_nc_file = esun_nc_file
+        self.ssi_nc_path = esun_nc_path
+
+        return esun_nc_file, esun_nc_path
+
+
+
+
+
+
+
+
 
 
     def ac_polymer_generate_srf_nc(self):
-
 
         id_sensor = self.ac_polymer_get_id_sensor()
 
@@ -1539,7 +1578,6 @@ class HypsoBase:
         ds.attrs["desc"] = f'Spectral response functions for {id_sensor}'
         ds.attrs["sensor"] = id_sensor
         ds.attrs["platform"] = self.platform
-
 
         for idx, wl in enumerate(self.wavelengths):
             
@@ -1583,6 +1621,80 @@ class HypsoBase:
         ds.to_netcdf(srf_nc_path)
 
         return srf_nc_path        
+
+
+
+
+
+
+    def ac_polymer_generate_ssi_nc(self):
+
+        id_sensor = self.ac_polymer_get_id_sensor()
+
+        _, ssi_nc_path = self.ac_polymer_get_ssi_nc_path()
+
+
+        ds = xr.Dataset()
+        ds.attrs["desc"] = f'TSIS-1 solar spectral irradiance for {id_sensor} (0.005 nm spectral resolution)'
+        ds.attrs["sensor"] = id_sensor
+        ds.attrs["platform"] = self.platform
+
+        ds["ssi"] = xr.DataArray(
+            self.srf_ssi,
+            coords={f"wav_ssi": self.srf_ssi_wl},
+            attrs={
+                "units": "mW m-2 nm-1",
+            },
+        )
+        ds[f"wav_ssi"].attrs["units"] = "nm"
+
+
+        ds.to_netcdf(ssi_nc_path)
+
+        return ssi_nc_path        
+
+
+
+
+
+    def ac_polymer_generate_esun_nc(self):
+
+        id_sensor = self.ac_polymer_get_id_sensor()
+
+        _, esun_nc_path = self.ac_polymer_get_esun_nc_path()
+
+
+        ds = xr.Dataset()
+        ds.attrs["desc"] = f'ESUN for {id_sensor}'
+        ds.attrs["sensor"] = id_sensor
+        ds.attrs["platform"] = self.platform
+
+        #ds.attrs["ssi"] = self.srf_ssi
+        #ds.attrs["ssi_wavelengths"] = self.srf_ssi_wl
+        #ds.attrs["ssi_units"] = "mW m-2 nm-1"
+
+        #ds.attrs["esun"] = self.esun
+        #ds.attrs["esun_wavlengths"] = self.esun_wl
+        #ds.attrs["esun_units"] = "mW m-2 nm-1"
+
+
+        ds["esun"] = xr.DataArray(
+            self.esun,
+            coords={f"wav_esun": self.esun_wl},
+            attrs={
+                "units": "mW m-2 nm-1",
+            },
+        )
+        ds[f"wav_esun"].attrs["units"] = "nm"
+
+
+        ds.to_netcdf(esun_nc_path)
+
+        return esun_nc_path    
+
+
+
+
 
 
 

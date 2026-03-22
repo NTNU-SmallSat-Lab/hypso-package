@@ -110,8 +110,9 @@ def compute_toa_reflectance(sensor_wavelengths,
         plt.close()
 
 
+    esun = np.array(esun_list)
 
-    return toa_reflectance, effective_fwhm, binned_srfs_csr, truncated_ssi, truncated_solar_wavelengths, esun_list
+    return toa_reflectance, effective_fwhm, binned_srfs_csr, truncated_ssi, truncated_solar_wavelengths, esun, binned_sensor_wavelengths
 
 
 
