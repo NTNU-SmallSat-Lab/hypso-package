@@ -883,26 +883,31 @@ class HypsoBase:
         try:
             self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file, 'radiometric', self.x_start, self.x_stop, self.y_start, self.y_stop, self.bin_factor)
         except:
+            print('[WARNING] Failed to load radiometic coefficients')
             self.rad_coeffs = None
 
         try:
             self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file, 'smile', self.x_start, self.x_stop, self.y_start, self.y_stop, self.bin_factor)
         except:
+            print('[WARNING] Failed to load smile coefficients')
             self.smile_coeffs = None
 
         try:
             self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file, 'destriping', self.x_start, self.x_stop, self.y_start, self.y_stop, self.bin_factor)
         except:
+            print('[WARNING] Failed to load destriping coefficients')
             self.destriping_coeffs = None
 
         try:
             self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file, 'spectral', self.x_start, self.x_stop, self.y_start, self.y_stop, self.bin_factor)
         except:
+            print('[WARNING] Failed to load spectral coefficients')
             self.spectral_coeffs = None
 
         try:
             self.spectral_coeffs_unbinned = read_coeffs_from_file(self.spectral_coeff_file, 'spectral', self.x_start, self.x_stop, self.y_start, self.y_stop, 1)
         except:
+            print('[WARNING] Failed to load unbinned spectral coefficients')
             self.spectral_coeffs_unbinned = None
 
         return None
