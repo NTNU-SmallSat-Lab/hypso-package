@@ -546,7 +546,7 @@ def compute_old_srf(sensor_wavelengths,
 
 
 
-        if generate_figures:
+        if True:
 
             import matplotlib.pyplot as plt
             plt.plot(srf_wl_single, srf_single)

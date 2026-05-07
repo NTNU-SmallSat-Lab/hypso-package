@@ -23,11 +23,17 @@ def compute_toa_reflectance(sensor_wavelengths,
 
     if use_thuillier:
         ssi, solar_wavelengths = load_thuillier_ssi()
+        ssi_name = "thuillier"
     else:
         ssi, solar_wavelengths= load_ssi()
+        ssi_name = "tsis"
 
 
+    print(len(sensor_wavelengths))
+    print(len(sensor_fwhm))
 
+    from .toa_reflectance_v1 import compute_old_srf
+    compute_old_srf(sensor_wavelengths=sensor_wavelengths, sensor_fwhm=sensor_fwhm)
 
 
 
@@ -83,13 +89,13 @@ def compute_toa_reflectance(sensor_wavelengths,
 
         ssi_values = np.array(ssi)
 
-        with open('ssi_data_tsis.csv', mode='w', newline='') as file:
+        with open('ssi_data_' + ssi_name + '.csv', mode='w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(['Wavelength', 'SSI'])  # Header
             for wl, ssi_value in zip(solar_wavelengths, ssi_values):
                 writer.writerow([wl, ssi_value])
 
-        with open('esun_data_tsis.csv', mode='w', newline='') as file:
+        with open('esun_data_' + ssi_name + '.csv', mode='w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(['Wavelength', 'ESUN'])  # Header
             for wl, esun_value in zip(binned_sensor_wavelengths, esun_list):
@@ -105,7 +111,7 @@ def compute_toa_reflectance(sensor_wavelengths,
         plt.xlabel('Wavelength (nm)')
         plt.ylabel('Solar Spectral Irradiance [W m$^{-2}$ nm$^{-1}$]')
         plt.tight_layout()
-        plt.savefig('1_hypso_spectrum_tsis.png')
+        plt.savefig('1_hypso_spectrum_' + ssi_name + '.png')
 
         plt.close()
 
