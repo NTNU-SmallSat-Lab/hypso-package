@@ -7,6 +7,7 @@ import numpy as np
 from datetime import datetime, timezone
 from trollsift import Parser
 import sys
+import re
 
 
 from hypso.calibration import read_coeffs_from_file, \
@@ -429,6 +430,41 @@ class HypsoBase:
     def _parse_filename(self, path: str) -> dict:
 
         path = Path(path).absolute()
+        filename = path.name
+
+        pattern = re.compile(
+            r"""
+            (?P<capture_target>.+?)_
+            (?P<capture_datetime>\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z)
+            -
+            (?:(?P<coeff_type>[^-]+)-)?
+            (?P<product_level>l\d[a-z])
+            (?:-(?P<atmospheric_correction>[^.]+))?
+            \.
+            (?P<file_type>\w+)
+            """,
+            re.VERBOSE,
+        )
+
+        match = pattern.fullmatch(filename)
+
+        if not match:
+            raise ValueError(f"Could not parse filename: {filename}")
+
+        fields = match.groupdict()
+
+        fields["capture_datetime"] = datetime.strptime(
+            fields["capture_datetime"],
+            "%Y-%m-%dT%H-%M-%SZ",
+        )
+
+        return fields
+
+
+    '''
+    def _parse_filename(self, path: str) -> dict:
+
+        path = Path(path).absolute()
         field = None
 
         try:
@@ -443,7 +479,7 @@ class HypsoBase:
             fields = p.parse(str(path.name))
         
         return fields
-
+    '''
 
     def _load_capture_file(self, path: Path) -> None:
 
