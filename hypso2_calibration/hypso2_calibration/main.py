@@ -44,7 +44,7 @@ def get_hypso2_calibration_files(capture_type=None, coeff_type='moved') -> None:
 
     # npz_file_smile = "smile_correction_matrix_HYPSO-2_full.npz"
     # npz_file_smile = "smile_correction_matrix_HYPSO-2_full_v2.npz"
-    npz_file_smile = "h2_spectral_calibration_matrix_smoothed.npz"
+    npz_file_smile = "smile_correction_matrix_HYPSO-2_full_v2.npz"
     npz_file_destriping = None
 
     npz_file_spectral_full_frame = "spectral_array_calibrated_poly_full.npz"
