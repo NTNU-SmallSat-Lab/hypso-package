@@ -10,6 +10,7 @@ import requests
 from io import StringIO
 from datetime import datetime, timedelta
 import re
+from importlib.resources import files
 
 from .utils import download_aeronet_oc_data, read_aeronet_oc_data, parse_aeronet_oc_products
 
@@ -158,3 +159,20 @@ def aeronet_oc_load_matchup_products(satobj, aeronet_oc_data_file):
     return products
 
 #def aeronet_oc_get_matchup_data(satobj, aeronet_oc_site)
+
+
+
+
+def aeronet_oc_load_ssi():
+
+    solar_data_path = str(files('hypso.reflectance').joinpath("hybrid_reference_spectrum_p005nm_resolution_c2022-11-30_with_unc.npz"))
+    ds = np.load(solar_data_path)
+
+    solar_wavelengths = ds["solar_x"] 
+    ssi = ds["solar_y"] * 1000 # convert to milliwatts
+
+    #return ssi, solar_wavelengths
+
+    f0 = {"wave":np.asarray(solar_wavelengths), "data":np.asarray(ssi)}
+
+    return f0
