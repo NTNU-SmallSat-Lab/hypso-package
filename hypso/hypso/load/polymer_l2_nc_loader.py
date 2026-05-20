@@ -133,7 +133,7 @@ def load_polymer_l2_v1_nc(nc_file_path: Path) -> dict:
                 print("[WARNING] Unable to load " + str(polymer_dataset))
 
 
-        print("[INFO] Accessing rhos reflectances (" + str(len(rho_w_varnames)) + " bands)")
+        print("[INFO] Accessing rho_w reflectances (" + str(len(rho_w_varnames)) + " bands)")
 
         data = _load_reflectances_cube_v1(f, rho_w_varnames, datasets['bands'], dim_names_3d)
 
