@@ -5,5 +5,7 @@ global-include *.txt
 global-include *.xls
 global-include *.xlsx
 include hypso2_calibration/_version.py
+exclude hypso2_calibration/data/smile_correction_matrix_HYPSO-2_full_v2.npz
+exclude hypso2_calibration/data/smile_correction_matrix_HYPSO-2_full.npz
 
 
