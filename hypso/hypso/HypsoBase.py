@@ -481,7 +481,7 @@ class HypsoBase:
         return fields
     '''
 
-    def _load_capture_file(self, path: Path) -> None:
+    def _load_capture_file(self, path: Path, load_cube: bool = True) -> None:
 
         path = Path(path).absolute()
 
@@ -574,7 +574,7 @@ class HypsoBase:
         nc_gcp_attrs, \
         nc_global_metadata, \
         nc_cube_attrs, \
-        nc_cube = load_func(nc_file_path=path)
+        nc_cube = load_func(nc_file_path=path, load_cube=load_cube)
 
         setattr(self, "nc_adcs_vars", nc_metadata_vars["adcs"])
         setattr(self, "nc_capture_config_vars", nc_metadata_vars["capture_config"])
@@ -608,11 +608,14 @@ class HypsoBase:
         self._set_hypso_attributes()
         self._check_capture_type()
 
-        if self.product_level.lower() == "l2a":
-            self.l2a_cubes[self.atmospheric_correction] = nc_cube
-        else:
-            setattr(self, cube_name, nc_cube)
+        if load_cube:
+            if self.product_level.lower() == "l2a":
+                self.l2a_cubes[self.atmospheric_correction] = nc_cube
+            else:
+                setattr(self, cube_name, nc_cube)
         
+        else:
+            print("[WARNING] Datacube is not loaded!")
 
 
         self.ocsmart_l1d_input_nc_file = Path(path.parent, str(self.sensor).upper() + "_" + str(capture_name) + "-l1d.nc")

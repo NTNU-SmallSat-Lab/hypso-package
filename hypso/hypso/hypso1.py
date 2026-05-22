@@ -12,7 +12,7 @@ from hypso.calibration import read_coeffs_from_file
 
 class Hypso1(HypsoBase):
 
-    def __init__(self, path: Union[str, Path], label: str = None, verbose=False) -> None:
+    def __init__(self, path: Union[str, Path], label: str = None, load_cube: bool = True, verbose=False) -> None:
         
         """
         Initialization of HYPSO-1 Class.
@@ -51,7 +51,7 @@ class Hypso1(HypsoBase):
         self.srf_wl = np.array([435.85,546.07,696.54,706.72,738.40,763.51])
         self.srf_fwhm = np.array([4.3,4.3,4.05,3.65,3.60,3.85])
 
-        self._load_capture_file(path=path)
+        self._load_capture_file(path=path, load_cube=load_cube)
 
         return None
 

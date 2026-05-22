@@ -16,14 +16,17 @@ from .utils import load_capture_config_from_nc_file, \
                     load_geometry_from_nc_file, \
                     load_gcp_from_nc_file
 
-def load_l1d_nc(nc_file_path: Path) -> Tuple[dict, dict, dict, dict, dict, dict, np.ndarray]:
+def load_l1d_nc(nc_file_path: Path, load_cube: bool = False) -> Tuple[dict, dict, dict, dict, dict, dict, np.ndarray]:
 
     nc_metadata_vars, nc_metadata_attrs = load_l1d_nc_metadata(nc_file_path=nc_file_path)
 
     nc_geometry_vars, nc_geometry_attrs = load_l1d_nc_geometry(nc_file_path=nc_file_path)
 
-    nc_cube = load_l1d_nc_cube(nc_file_path=nc_file_path)
-
+    if load_cube:
+        nc_cube = load_l1d_nc_cube(nc_file_path=nc_file_path)
+    else:
+        nc_cube = None
+    
     nc_cube_attrs = load_l1d_nc_cube_attrs(nc_file_path=nc_file_path)
 
     nc_global_metadata = load_l1d_global_nc_metadata(nc_file_path=nc_file_path)
