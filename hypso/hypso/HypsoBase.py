@@ -110,9 +110,9 @@ class HypsoBase:
 
         # Constants
         self.UNIX_TIME_OFFSET = 20 # TODO: Verify offset validity. Sivert had 20 here
-        self.AVERAGE_FWHM = 3.33 #8.2 
+        self.AVERAGE_FWHM = 3.33 #8.2
         self.UNBINNED_BAND_COUNT = 1936
-        
+
         # Atmospheric Correction
         self.ocsmart_dir = None
         self.acolite_dir = None
@@ -140,7 +140,7 @@ class HypsoBase:
         self._l2a_cubes.dim_names = self.dim_names_3d
         self._l2a_cubes.num_dims = 3
 
-        return self._l2a_cubes   
+        return self._l2a_cubes
 
     @l2a_cube.setter
     def l2a_cubes(self, value):
@@ -148,7 +148,7 @@ class HypsoBase:
 
 
 
-    
+
 
     def _update_dataarray_attrs(self, data: xr.DataArray, attrs: dict) -> xr.DataArray:
 
@@ -171,7 +171,7 @@ class HypsoBase:
         data = self._update_dataarray_attrs(data, attributes)
 
         return data
-    
+
     def _format_l1b_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
 
         attributes = {'level': "L1b",
@@ -248,7 +248,7 @@ class HypsoBase:
 
     @property
     def l1a_cube(self):
-        return self._l1a_cube   
+        return self._l1a_cube
 
 
     @l1a_cube.setter
@@ -258,7 +258,7 @@ class HypsoBase:
 
     @property
     def l1b_cube(self):
-        return self._l1b_cube   
+        return self._l1b_cube
 
 
     @l1b_cube.setter
@@ -271,7 +271,7 @@ class HypsoBase:
         # Return l1b cube since it is the same as the l1c cube
         cube = copy.deepcopy(self._l1b_cube)
         cube.attrs['level'] = 'L1c'
-        return cube 
+        return cube
 
 
     @l1c_cube.setter
@@ -281,7 +281,7 @@ class HypsoBase:
 
     @property
     def l1d_cube(self):
-        return self._l1d_cube   
+        return self._l1d_cube
 
     @l1d_cube.setter
     def l1d_cube(self, value):
@@ -290,7 +290,7 @@ class HypsoBase:
 
     @property
     def land_mask(self):
-        return self._land_mask 
+        return self._land_mask
 
     @land_mask.setter
     def land_mask(self, value):
@@ -302,7 +302,7 @@ class HypsoBase:
 
     @property
     def cloud_mask(self):
-        return self._cloud_mask   
+        return self._cloud_mask
 
     @cloud_mask.setter
     def cloud_mask(self, value):
@@ -322,8 +322,8 @@ class HypsoBase:
             return self._l1a_cube.where(~unified_mask, other=np.nan)
 
         else:
-            return self._l1a_cube   
-        
+            return self._l1a_cube
+
 
     @property
     def masked_l1b_cube(self) -> xr.DataArray:
@@ -335,7 +335,7 @@ class HypsoBase:
             return self._l1b_cube.where(~unified_mask, other=np.nan)
 
         else:
-            return self._l1b_cube   
+            return self._l1b_cube
 
 
     @property
@@ -348,7 +348,7 @@ class HypsoBase:
             return self._l1c_cube.where(~unified_mask, other=np.nan)
 
         else:
-            return self._l1c_cube   
+            return self._l1c_cube
 
 
     @property
@@ -361,7 +361,7 @@ class HypsoBase:
             return self._l1d_cube.where(~unified_mask, other=np.nan)
 
         else:
-            return self._l1d_cube           
+            return self._l1d_cube
 
 
     def _unified_mask(self) -> xr.DataArray:
@@ -373,7 +373,7 @@ class HypsoBase:
             unified_mask = self._cloud_mask
         else:
             return None
-        
+
         return unified_mask
 
 
@@ -384,7 +384,7 @@ class HypsoBase:
         self._products.dim_names = self.dim_names_2d
         self._products.num_dims = 2
 
-        return self._products   
+        return self._products
 
     @products.setter
     def products(self, value):
@@ -441,7 +441,7 @@ class HypsoBase:
             setattr(self, '_use_old_filename_format', True)
             p = Parser("{capture_target}_{capture_datetime:%Y-%m-%d_%H%MZ}-{product_level:3s}{atmospheric_correction:->}.{file_type}")
             fields = p.parse(str(path.name))
-        
+
         return fields
 
 
@@ -467,7 +467,7 @@ class HypsoBase:
         if self.label is not None:
             label = "-" + str(self.label)
         else:
-            label = "" 
+            label = ""
 
         self.l1a_name = capture_name + label + "-l1a"
         self.l1b_name = capture_name + label + "-l1b"
@@ -489,7 +489,7 @@ class HypsoBase:
 
                 load_func = load_l1a_nc
                 cube_name = "l1a_cube"
-                
+
             case "l1b":
                 if self.VERBOSE: print('[INFO] Loading L1b capture ' + self.capture_name)
 
@@ -521,7 +521,7 @@ class HypsoBase:
 
                 load_func = load_l2a_nc
                 cube_name = "l2a_cube"
-                
+
 
 
             case _:
@@ -555,7 +555,7 @@ class HypsoBase:
         setattr(self, "nc_logfiles_attrs", nc_metadata_attrs["logfiles"])
         setattr(self, "nc_temperature_attrs", nc_metadata_attrs["temperature"])
         setattr(self, "nc_timing_attrs", nc_metadata_attrs["timing"])
- 
+
         setattr(self, "nc_geometry_vars", nc_geometry_vars)
         setattr(self, "nc_geometry_attrs", nc_geometry_attrs)
 
@@ -576,7 +576,7 @@ class HypsoBase:
             self.l2a_cubes[self.atmospheric_correction] = nc_cube
         else:
             setattr(self, cube_name, nc_cube)
-        
+
 
 
         self.ocsmart_l1d_input_nc_file = Path(path.parent, str(self.sensor).upper() + "_" + str(capture_name) + "-l1d.nc")
@@ -601,7 +601,7 @@ class HypsoBase:
             self.nc_capture_config_attrs['fps'] = self.nc_capture_config_attrs['framerate']
         except:
             self.nc_capture_config_attrs['framerate'] = self.nc_capture_config_attrs['fps']
-            
+
         self.background_value = 8 * self.nc_capture_config_attrs["bin_factor"]
         self.exposure = self.nc_capture_config_attrs["exposure"] / 1000  # in seconds
 
@@ -706,7 +706,7 @@ class HypsoBase:
                 setattr(self, 'relative_azimuth_angles_direct', value)
                 if getattr(self, 'relative_azimuth_angles', None) is None:
                     setattr(self, 'relative_azimuth_angles', value)
-                
+
             else:
                 setattr(self, key, value)
 
@@ -784,7 +784,7 @@ class HypsoBase:
             print(f"[INFO] Capture capture type: {self.capture_type}")
 
 
-    def _run_calibration(self, 
+    def _run_calibration(self,
                          radiometric: bool = True,
                          smile: bool = True,
                          destripe: bool = True,
@@ -811,7 +811,7 @@ class HypsoBase:
                 pass
         else:
             self.nc_corrections_attrs['radiometric_coefficients_version'] = str(coeff_type).lower()
-            
+
 
         # TODO: move this function call
         if set_coeffs:
@@ -827,7 +827,7 @@ class HypsoBase:
                 if self.VERBOSE:
                     print("[INFO] Running radiometric calibration...")
 
-                calibrated_cube = run_radiometric_calibration(cube=calibrated_cube, 
+                calibrated_cube = run_radiometric_calibration(cube=calibrated_cube,
                                                 background_value=self.background_value,
                                                 exp=self.exposure,
                                                 image_height=self.image_height,
@@ -843,7 +843,7 @@ class HypsoBase:
                 if self.VERBOSE:
                     print("[INFO] Running smile correction...")
 
-                calibrated_cube = run_smile_correction(cube=calibrated_cube, 
+                calibrated_cube = run_smile_correction(cube=calibrated_cube,
                                                 smile_coeffs=self.smile_coeffs)
 
         if self.destriping_coeffs is not None:
@@ -852,7 +852,7 @@ class HypsoBase:
                 if self.VERBOSE:
                     print("[INFO] Running destriping correction...")
 
-                calibrated_cube = run_destriping_correction(cube=calibrated_cube, 
+                calibrated_cube = run_destriping_correction(cube=calibrated_cube,
                                                     destriping_coeffs=self.destriping_coeffs)
 
         if self.spectral_coeffs is not None:
@@ -883,34 +883,39 @@ class HypsoBase:
         try:
             self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file, 'radiometric', self.x_start, self.x_stop, self.y_start, self.y_stop, self.bin_factor)
         except:
+            print('[WARNING] Failed to load radiometic coefficients')
             self.rad_coeffs = None
 
         try:
             self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file, 'smile', self.x_start, self.x_stop, self.y_start, self.y_stop, self.bin_factor)
         except:
+            print('[WARNING] Failed to load smile coefficients')
             self.smile_coeffs = None
 
         try:
             self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file, 'destriping', self.x_start, self.x_stop, self.y_start, self.y_stop, self.bin_factor)
         except:
+            print('[WARNING] Failed to load destriping coefficients')
             self.destriping_coeffs = None
 
         try:
             self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file, 'spectral', self.x_start, self.x_stop, self.y_start, self.y_stop, self.bin_factor)
         except:
+            print('[WARNING] Failed to load spectral coefficients')
             self.spectral_coeffs = None
 
         try:
             self.spectral_coeffs_unbinned = read_coeffs_from_file(self.spectral_coeff_file, 'spectral', self.x_start, self.x_stop, self.y_start, self.y_stop, 1)
         except:
+            print('[WARNING] Failed to load unbinned spectral coefficients')
             self.spectral_coeffs_unbinned = None
 
         return None
-    
 
 
 
-    def run_direct_georeferencing(self) -> None: 
+
+    def run_direct_georeferencing(self) -> None:
 
         if self.VERBOSE:
             print("[INFO] Running direct georeferencing...")
@@ -925,7 +930,7 @@ class HypsoBase:
                                                         aoi_offset=self.y_start,
                                                         verbose=self.VERBOSE
                                                         )
-        
+
         if type(pixels_lat) == int and type(pixels_lon) == int:
             if self.VERBOSE:
                 print('[INFO] according to ADCS telemetry, parts or all of the image is pointing')
@@ -966,14 +971,14 @@ class HypsoBase:
                             latitudes: np.ndarray = None,
                             longitudes: np.ndarray = None
                             ) -> None:
-        
+
 
         if self.VERBOSE:
             print('[INFO] Running georeferencing...')
-    
+
         if latitudes is not None and longitudes is not None:
             self.latitudes = latitudes
-            self.longitudes = longitudes   
+            self.longitudes = longitudes
 
         bbox, \
         resolution, \
@@ -1000,24 +1005,24 @@ class HypsoBase:
         setattr(self, 'relative_azimuth_angles', relative_azimuth_angles)
 
         return None
-    
 
 
 
 
 
-    def _run_custom_georeferencing(self, 
+
+    def _run_custom_georeferencing(self,
                           latitudes: np.ndarray,
                           longitudes: np.ndarray
                           ) -> None:
-        
+
         if self.VERBOSE:
             print('[INFO] Running custom georeferencing...')
-        
+
 
         self.latitudes = latitudes
         self.longitudes = longitudes
-    
+
 
         bbox, \
         resolution, \
@@ -1056,21 +1061,21 @@ class HypsoBase:
             timing = self.nc_timing_vars['timestamps_srv']
         except:
             timing = self.nc_timing_vars['timestamps']
-        
+
         framepose_data = interpolate_at_frame_nc(adcs=self.nc_adcs_vars,
                                               lines_timestamps=timing,
                                               framerate=self.nc_capture_config_attrs['framerate'],
                                               exposure=self.nc_capture_config_attrs['exposure'],
                                               verbose=self.VERBOSE
                                               )
-        
+
         setattr(self, "framepose", framepose_data)
 
 
         return None
 
 
-    def _run_track_geometry(self, latitudes: np.ndarray, longitudes: np.ndarray) -> None: 
+    def _run_track_geometry(self, latitudes: np.ndarray, longitudes: np.ndarray) -> None:
 
         print("[INFO] Running track geometry computations...")
 
@@ -1081,13 +1086,13 @@ class HypsoBase:
 
         bbox = compute_bbox(latitudes=latitudes, longitudes=longitudes)
 
-        along_track_gsd, across_track_gsd = compute_gsd(frame_count=self.frame_count, 
-                                                                  image_height=self.image_height, 
-                                                                  latitudes=latitudes, 
+        along_track_gsd, across_track_gsd = compute_gsd(frame_count=self.frame_count,
+                                                                  image_height=self.image_height,
+                                                                  latitudes=latitudes,
                                                                   longitudes=longitudes,
                                                                   verbose=self.VERBOSE)
 
-        resolution = compute_resolution(along_track_gsd=along_track_gsd, 
+        resolution = compute_resolution(along_track_gsd=along_track_gsd,
                                              across_track_gsd=across_track_gsd)
 
 
@@ -1097,7 +1102,7 @@ class HypsoBase:
         return bbox, resolution, along_track_gsd, across_track_gsd
 
 
-    def _run_angles_geometry(self,  latitudes: np.ndarray, longitudes: np.ndarray) -> None: 
+    def _run_angles_geometry(self,  latitudes: np.ndarray, longitudes: np.ndarray) -> None:
 
         print("[INFO] Running angles geometry computations...")
 
@@ -1110,11 +1115,11 @@ class HypsoBase:
 
         sun_azimuth, sun_zenith, \
         sat_azimuth, sat_zenith = compute_local_angles(framepose_data=self.framepose,
-                                                       lats=latitudes, 
+                                                       lats=latitudes,
                                                        lons=longitudes,
                                                        indices=indices,
                                                        verbose=self.VERBOSE)
-        
+
         solar_zenith_angles = sun_zenith.reshape(self.spatial_dimensions)
         solar_azimuth_angles = sun_azimuth.reshape(self.spatial_dimensions)
         sat_zenith_angles = sat_zenith.reshape(self.spatial_dimensions)
@@ -1122,8 +1127,8 @@ class HypsoBase:
 
         relative_azimuth_angles = abs(sat_azimuth_angles - solar_azimuth_angles)
 
-        relative_azimuth_angles = np.where(relative_azimuth_angles > 180, 
-                                           360 - relative_azimuth_angles, 
+        relative_azimuth_angles = np.where(relative_azimuth_angles > 180,
+                                           360 - relative_azimuth_angles,
                                            relative_azimuth_angles)
 
         if self.VERBOSE:
@@ -1143,33 +1148,34 @@ class HypsoBase:
         return None
 
 
+    def generate_l1c_cube(self, coeff_type: str = None, use_direct_georef=False,**kwargs) -> None:
 
-    def generate_l1c_cube(self, coeff_type: str = None, **kwargs) -> None:
-        
-        print("[INFO] Generating L1c cube")
-        if self.l1b_cube is None:
-            self.generate_l1b_cube(coeff_type=coeff_type, **kwargs)
-        
-        self.run_georeferencing()
-        
-        return None
+            print("[INFO] Generating L1c cube")
+            if self.l1b_cube is None:
+                self.generate_l1b_cube(coeff_type=coeff_type, **kwargs)
 
+            if use_direct_georef:
+                self.run_direct_georeferencing()
+            else:
+                self.run_georeferencing()
 
+            return None
 
-    def generate_l1d_cube(self, use_direct_georef=False, use_thuillier=False, use_unbinned=True) -> None:
+    def generate_l1d_cube(self, coeff_type: str = None, use_direct_georef=False, use_thuillier=False, store_srf = False, use_unbinned=True, **kwargs) -> None:
 
         print("[INFO] Generating L1d cube")
         self._get_fwhm()
         self._get_fwhm_unbinned()
-        
+
 
         if self.l1b_cube is not None:
             toa_radiance = self.l1b_cube
         elif self.l1c_cube is not None:
             toa_radiance = self.l1c_cube
         else:
-            self.generate_l1b_cube()
+            self.generate_l1b_cube(coeff_type=coeff_type, **kwargs)
             toa_radiance = self.l1b_cube
+
 
         if use_direct_georef and hasattr(self, 'solar_zenith_angles_direct'):
 
@@ -1200,7 +1206,7 @@ class HypsoBase:
                                                                 )
 
         self.l1d_cube = toa_reflectance
-        
+
         self.srf = srf
         self.srf_ssi = srf_ssi
         self.srf_ssi_wl = srf_ssi_wl
@@ -1223,7 +1229,7 @@ class HypsoBase:
 
         if self.ocsmart_dir is not None:
             try:
-                
+
                 dst_dir = Path(self.ocsmart_dir, "L1B/")
                 dst_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1322,7 +1328,7 @@ class HypsoBase:
 
             wl_band_map = ocsmart_dataset_indices
             '''
-            
+
             # Create empty cube with standard HYPSO cube dims
             shape = (self.spatial_dimensions[0], self.spatial_dimensions[1], self.bands)
             cube = np.full(shape=shape, fill_value=np.nan)
@@ -1337,20 +1343,20 @@ class HypsoBase:
         return datasets
 
 
-    
 
 
-    def ac_acolite_run_correction(self, settings_file: Path = None, 
+
+    def ac_acolite_run_correction(self, settings_file: Path = None,
                                   input_product_level: str = 'l1c',
                                   EARTHDATA_u: str = None,
                                   EARTHDATA_p: str = None
                                   ):
-        
 
-        
+
+
 
         acolite_path = Path(self.acolite_dir).absolute()
-        
+
         print("[INFO] Running ACOLITE atmospheric correction installed in " + str(acolite_path))
 
         sys.path.append(str(acolite_path))
@@ -1359,7 +1365,7 @@ class HypsoBase:
         import acolite as ac
         from acolite.acolite.settings import load
         from acolite.acolite import acolite_run
-        
+
         # optional file with processing settings
         # if set to None defaults will be used
 
@@ -1413,12 +1419,12 @@ class HypsoBase:
         print("[INFO] ACOLITE atmospheric correction complete.")
 
         return None
-    
+
 
 
 
     def ac_acolite_open_output(self, acolite_l2r_output_nc_file: Path = None, acolite_l2w_output_nc_file: Path = None):
-        
+
         """
         Open and read ACOLITE atmospheric correction L2R and L2W NetCDF output files. The remote sensing reflectance (Rrs) dataset is written to the satobj's 'l2a_cube' dictionary.
 
@@ -1499,7 +1505,7 @@ class HypsoBase:
 
         return l2r_datasets, l2w_datasets
 
-        
+
 
 
     def ac_polymer_generate_srfs(self):
@@ -1508,7 +1514,7 @@ class HypsoBase:
         match str(self.coeff_type):
 
             case "original": # old radiometric coefficients
-                sensor_version = "_v1" 
+                sensor_version = "_v1"
             case "moved" | "adjusted": # new radiometric coefficients
                 sensor_version = "_v2"
             case _:
@@ -1516,7 +1522,7 @@ class HypsoBase:
 
         # combine sensor name ("HYPSO-1" or "HYPSO-2") with coefficients version
         # Polymer expects format like "HYPSO-2_v2"
-        id_sensor = str(self.sat_id) + sensor_version 
+        id_sensor = str(self.sat_id) + sensor_version
 
 
 
@@ -1526,8 +1532,8 @@ class HypsoBase:
 
 
         for idx, wl in enumerate(self.wavelengths):
-            
-            # Construct band ID            
+
+            # Construct band ID
             bid = "Band_" + str(idx)
 
             # Read ith SRF and convert from CSR sparse array
@@ -1536,7 +1542,7 @@ class HypsoBase:
 
             # Find where SRF is non-zero
             nonzero_mask = srf > 0
-            
+
             # Extract non-zero portion of SRF and SRF wavelength array
             if np.any(nonzero_mask):
                 srf_nonzero = srf[nonzero_mask]
@@ -1556,7 +1562,7 @@ class HypsoBase:
                 },
             )
             ds[f"wav_{bid}"].attrs["units"] = "nm"
-            
+
 
         # Sort dataarrays within dataset based on index
         ds = ds[sorted(ds, key=lambda x: ds[x].attrs['index'])]
@@ -1569,14 +1575,14 @@ class HypsoBase:
         # save ds as pickle or something
 
 
-        return None        
+        return None
 
-    def ac_polymer_run_correction(self, 
+    def ac_polymer_run_correction(self,
                                   polymer_base_path: str,
-                                  polymer_path: str = None, 
-                                  eoread_path: str = None, 
-                                  eotools_path: str = None, 
-                                  core_path: str = None, 
+                                  polymer_path: str = None,
+                                  eoread_path: str = None,
+                                  eotools_path: str = None,
+                                  core_path: str = None,
                                   input_product_level: str = "l1c",
                                   #coeff_type: str = None,
                                   optional_output_datasets: list = ["SPM"],
@@ -1612,7 +1618,7 @@ class HypsoBase:
         #    coeff_type_str = ""
 
         match input_product_level.lower():
-            
+
             case "l1c":
                 polymer_l1_input_nc_file = Path(self.parent_dir, self.l1c_nc_file)
                 polymer_l2_output_nc_file = Path(self.parent_dir, str(self.l1c_name) + ".polymer.nc")
@@ -1621,8 +1627,8 @@ class HypsoBase:
                 polymer_l2_output_nc_file = Path(self.parent_dir, str(self.l1d_name) + ".polymer.nc")
             case _:
                 return None
-            
-        
+
+
 
         #import os
         #cwd = os.getcwd()
@@ -1657,19 +1663,19 @@ class HypsoBase:
         return Path(polymer_l2_output_nc_file)
 
 
-    
 
 
 
 
 
-    def ac_polymer_open_output(self, 
-                               polymer_l2_output_nc_file: Path = None, 
+
+    def ac_polymer_open_output(self,
+                               polymer_l2_output_nc_file: Path = None,
                                input_product_level="l1c",
-                               version = "v1" 
+                               version = "v1"
                                #coeff_type: str = None
                                ):
-        
+
         #if coeff_type is not None:
         #    coeff_type_str = "-" + str(coeff_type).lower()
         #else:
@@ -1687,10 +1693,10 @@ class HypsoBase:
                 case "l1d":
                     print("[INFO] Reading Polymer L2 NetCDF output file generated using L1d product.")
                     polymer_l2_output_nc_file = Path(self.parent_dir, str(self.l1d_name) + ".polymer.nc") #frohavet_2025-05-22T11-20-44Z-l1d.nc.polymer.nc
-            
+
 
         polymer_l2_output_nc_file = polymer_l2_output_nc_file.absolute()
-        
+
 
         if polymer_l2_output_nc_file.is_file():
 
@@ -1713,12 +1719,12 @@ class HypsoBase:
                     self.l2a_cube["polymer"].attrs['l2_variable_name'] = key
 
                 except Exception as ex:
-                    print("[ERROR] Unable to load Polymer output dataset.") 
+                    print("[ERROR] Unable to load Polymer output dataset.")
 
             elif version == "v2":
 
                 polymer_datasets = load_polymer_l2_v2_nc(polymer_l2_output_nc_file)
-            
+
                 try:
                     key = "rho_w"
                     inferred_wavelengths = polymer_datasets['bands'].data
@@ -1741,7 +1747,7 @@ class HypsoBase:
             print("[ERROR] Polymer L2 NetCDF output file " + str(polymer_l2_output_nc_file) + " does not exist.")
             polymer_datasets = None
 
-        
+
         return polymer_datasets
 
 
@@ -1777,32 +1783,28 @@ class HypsoBase:
 
 
     def _get_fwhm(self) -> None:
-        
+
         fwhm_per_band = []
-        for band in self.wavelengths: 
+        for band in self.wavelengths:
             idx = np.argmin(np.abs(band - self.srf_wl))
             fwhm_per_band.append(self.srf_fwhm[idx])
 
         fwhm = fwhm_per_band
 
         self.fwhm = fwhm
-        
+
         return None
 
 
     def _get_fwhm_unbinned(self) -> None:
-        
+
         fwhm_per_band = []
-        for band in self.wavelengths_unbinned: 
+        for band in self.wavelengths_unbinned:
             idx = np.argmin(np.abs(band - self.srf_wl))
             fwhm_per_band.append(self.srf_fwhm[idx])
 
         fwhm = fwhm_per_band
 
         self.fwhm_unbinned = fwhm
-        
+
         return None
-
-
-
-
