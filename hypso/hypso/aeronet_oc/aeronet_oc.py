@@ -83,11 +83,17 @@ def aeronet_oc_detect_matchup(satobj, aeronet_oc_sites_csv_path, ac_algorithm="p
 
 def aeronet_oc_download_data(satobj, matchup, aeronet_oc_data_dir, data_level=1.0):
 
+    if matchup is None:
+        print("[WARNING] No matchup detected!")
+        return None
+
+
     dt = satobj.capture_datetime
 
     output_file = f"aeronet_{dt.year}{dt.month:02d}{dt.day:02d}.csv"
 
     site_name = matchup["aeronet_name"]
+
 
     aeronet_oc_data_file = download_aeronet_oc_data(
                             site_name=site_name,  
@@ -158,10 +164,6 @@ def aeronet_oc_load_matchup_products(satobj, aeronet_oc_data_file):
 
     return products
 
-#def aeronet_oc_get_matchup_data(satobj, aeronet_oc_site)
-
-
-
 
 def aeronet_oc_load_ssi():
 
@@ -179,9 +181,10 @@ def aeronet_oc_load_ssi():
 
 
 
-def aeronet_oc_extract_matchup_area(matchup, satobj, ac_algorithm="polymer", n_size=5):
+def aeronet_oc_extract_matchup_area(satobj, matchup, ac_algorithm="polymer", n_size=5):
     """
     Extract an NxN area from the datacube centered at the matchup point.
+    Out-of-bounds indices are filled with NaN to always return exactly NxN.
     
     Parameters:
     -----------
@@ -214,8 +217,8 @@ def aeronet_oc_extract_matchup_area(matchup, satobj, ac_algorithm="polymer", n_s
         n_size = n_size + 1
     
     # Get center coordinates
-    center_x = matchup.get("hypso_x_point")
     center_y = matchup.get("hypso_y_point")
+    center_x = matchup.get("hypso_x_point")
     
     if center_x is None or center_y is None:
         print("Error: Missing center coordinates in matchup dictionary")
@@ -231,16 +234,17 @@ def aeronet_oc_extract_matchup_area(matchup, satobj, ac_algorithm="polymer", n_s
         print(f"Error: {ac_algorithm} not found in l2a_cube")
         return None
     
-    # Get cube shape (bands, height, width)
     if len(datacube.shape) == 3:
-        n_bands, height, width = datacube.shape
+        # (height, width, bands)
+        height, width, n_bands = datacube.shape
+        print(f"Detected cube shape: (height={height}, width={width}, bands={n_bands})")
     else:
         print(f"Error: Unexpected datacube shape: {datacube.shape}")
         return None
     
     # Validate center coordinates are within bounds
     if center_y < 0 or center_y >= height or center_x < 0 or center_x >= width:
-        print(f"Error: Center coordinates ({center_y}, {center_x}) out of bounds for cube of size ({height}, {width})")
+        print(f"Error: Center coordinates (x={center_x}, y={center_y}) out of bounds for cube of size (width={width}, height={height})")
         return None
     
     # Calculate window boundaries
@@ -250,40 +254,29 @@ def aeronet_oc_extract_matchup_area(matchup, satobj, ac_algorithm="polymer", n_s
     x_start = center_x - half_size
     x_end = center_x + half_size + 1
     
-    # Track edge adjustments
-    y_start_original = y_start
-    y_end_original = y_end
-    x_start_original = x_start
-    x_end_original = x_end
+    # Cube is (height, width, bands) - output (n_size, n_size, bands)
+    extracted_area = np.full((n_size, n_size, n_bands), np.nan, dtype=datacube.dtype)
     
-    # Handle edge cases (clip to valid ranges)
-    y_start = max(0, y_start)
-    y_end = min(height, y_end)
-    x_start = max(0, x_start)
-    x_end = min(width, x_end)
+    # Calculate overlap between requested window and actual cube
+    src_y_start = max(0, y_start)
+    src_y_end = min(height, y_end)
+    src_x_start = max(0, x_start)
+    src_x_end = min(width, x_end)
     
-    # Check if window is completely outside the cube
-    if y_start >= height or y_end <= 0 or x_start >= width or x_end <= 0:
-        print(f"Error: Window completely outside cube boundaries")
-        return None
+    # Destination (output) coordinates
+    dst_y_start = max(0, -y_start)
+    dst_y_end = dst_y_start + (src_y_end - src_y_start)
+    dst_x_start = max(0, -x_start)
+    dst_x_end = dst_x_start + (src_x_end - src_x_start)
     
-    # Calculate actual window size
-    actual_size_y = y_end - y_start
-    actual_size_x = x_end - x_start
-    
-    # Calculate how much we truncated
-    truncate_top = max(0, -y_start_original)
-    truncate_bottom = max(0, y_end_original - height)
-    truncate_left = max(0, -x_start_original)
-    truncate_right = max(0, x_end_original - width)
-    
-    # Check if we have a valid window (at least 1x1)
-    if actual_size_y < 1 or actual_size_x < 1:
-        print(f"Error: Invalid window size: {actual_size_y}x{actual_size_x}")
-        return None
-    
-    # Extract the area
-    extracted_area = datacube[:, y_start:y_end, x_start:x_end]
+    # Check if there's any overlap
+    if src_y_start < src_y_end and src_x_start < src_x_end:
+        # Extract valid data from cube and place into output array
+        # (height, width, bands)
+        valid_data = datacube[src_y_start:src_y_end, src_x_start:src_x_end, :]
+        
+        # Place into output array
+        extracted_area[dst_y_start:dst_y_end, dst_x_start:dst_x_end, :] = valid_data
     
     # Extract corresponding latitudes and longitudes if available
     latitudes_area = None
@@ -291,43 +284,66 @@ def aeronet_oc_extract_matchup_area(matchup, satobj, ac_algorithm="polymer", n_s
     
     if hasattr(satobj, 'latitudes') and satobj.latitudes is not None:
         if satobj.latitudes.shape == (height, width):
-            latitudes_area = satobj.latitudes[y_start:y_end, x_start:x_end]
+            latitudes_area = np.full((n_size, n_size), np.nan, dtype=satobj.latitudes.dtype)
+            valid_lats = satobj.latitudes[src_y_start:src_y_end, src_x_start:src_x_end]
+            latitudes_area[dst_y_start:dst_y_end, dst_x_start:dst_x_end] = valid_lats
         else:
             print(f"Warning: latitudes shape {satobj.latitudes.shape} doesn't match cube shape ({height}, {width})")
     
     if hasattr(satobj, 'longitudes') and satobj.longitudes is not None:
         if satobj.longitudes.shape == (height, width):
-            longitudes_area = satobj.longitudes[y_start:y_end, x_start:x_end]
+            longitudes_area = np.full((n_size, n_size), np.nan, dtype=satobj.longitudes.dtype)
+            valid_lons = satobj.longitudes[src_y_start:src_y_end, src_x_start:src_x_end]
+            longitudes_area[dst_y_start:dst_y_end, dst_x_start:dst_x_end] = valid_lons
         else:
             print(f"Warning: longitudes shape {satobj.longitudes.shape} doesn't match cube shape ({height}, {width})")
     
-    # Check if extraction was successful (not empty)
-    if extracted_area.size == 0:
-        print("Error: Extracted area is empty")
-        return None
+    # Calculate truncation amounts (for reporting)
+    truncate_top = max(0, -y_start)
+    truncate_bottom = max(0, y_end - height)
+    truncate_left = max(0, -x_start)
+    truncate_right = max(0, x_end - width)
+    
+    is_edge_case = (truncate_top > 0 or truncate_bottom > 0 or truncate_left > 0 or truncate_right > 0)
+    
+    # Calculate valid pixel statistics across all bands
+    # Method 1: Pixel is valid if ANY band has data (useful for edge cases)
+    valid_mask_any = ~np.all(np.isnan(extracted_area), axis=2)  # Shape: (n_size, n_size)
+    valid_pixel_count_any = np.sum(valid_mask_any)
+    valid_pixel_percentage_any = 100 * valid_pixel_count_any / (n_size * n_size)
+    
+    # Method 2: Pixel is valid only if ALL bands have data (stricter, for complete spectra)
+    valid_mask_all = ~np.any(np.isnan(extracted_area), axis=2)  # Shape: (n_size, n_size)
+    valid_pixel_count_all = np.sum(valid_mask_all)
+    valid_pixel_percentage_all = 100 * valid_pixel_count_all / (n_size * n_size)
+    
+    # Per-band valid pixel counts
+    valid_pixels_per_band = np.sum(~np.isnan(extracted_area), axis=(0, 1))  # Shape: (n_bands,)
     
     # Print edge case information
-    if actual_size_y != n_size or actual_size_x != n_size:
-        print(f"Edge case detected: Window truncated")
-        print(f"  Requested: {n_size}x{n_size} centered at ({center_y}, {center_x})")
-        print(f"  Actual: {actual_size_y}x{actual_size_x}")
+    if is_edge_case:
+        print(f"Edge case detected: Window extends beyond cube boundaries")
+        print(f"  Requested: {n_size}x{n_size} centered at (x={center_x}, y={center_y})")
+        print(f"  Out-of-bounds pixels filled with NaN")
         if truncate_top > 0:
-            print(f"  Truncated {truncate_top} row(s) from top")
+            print(f"  {truncate_top} row(s) truncated from top (filled with NaN)")
         if truncate_bottom > 0:
-            print(f"  Truncated {truncate_bottom} row(s) from bottom")
+            print(f"  {truncate_bottom} row(s) truncated from bottom (filled with NaN)")
         if truncate_left > 0:
-            print(f"  Truncated {truncate_left} column(s) from left")
+            print(f"  {truncate_left} column(s) truncated from left (filled with NaN)")
         if truncate_right > 0:
-            print(f"  Truncated {truncate_right} column(s) from right")
+            print(f"  {truncate_right} column(s) truncated from right (filled with NaN)")
+        
+        print(f"  Valid pixels (any band): {valid_pixel_percentage_any:.1f}% of window")
+        print(f"  Valid pixels (all bands): {valid_pixel_percentage_all:.1f}% of window")
     
     # Create result dictionary
     result = {
-        "extracted_cube": extracted_area,
+        "extracted_cube": extracted_area,  # Shape: (n_size, n_size, n_bands)
         "center_x": center_x,
         "center_y": center_y,
         "requested_size": n_size,
-        "actual_size_y": actual_size_y,
-        "actual_size_x": actual_size_x,
+        "actual_size": n_size,
         "y_start": y_start,
         "y_end": y_end,
         "x_start": x_start,
@@ -336,17 +352,28 @@ def aeronet_oc_extract_matchup_area(matchup, satobj, ac_algorithm="polymer", n_s
         "truncated_bottom": truncate_bottom,
         "truncated_left": truncate_left,
         "truncated_right": truncate_right,
-        "is_edge_case": (actual_size_y != n_size or actual_size_x != n_size),
+        "is_edge_case": is_edge_case,
+        # Valid pixel statistics (any band)
+        "valid_pixel_count": valid_pixel_count_any,
+        "valid_pixel_percentage": valid_pixel_percentage_any,
+        # Valid pixel statistics (all bands)
+        "valid_pixel_count_all_bands": valid_pixel_count_all,
+        "valid_pixel_percentage_all_bands": valid_pixel_percentage_all,
+        # Per-band valid pixel counts
+        "valid_pixels_per_band": valid_pixels_per_band,
         "latitudes": latitudes_area,
         "longitudes": longitudes_area,
         "ac_algorithm": ac_algorithm,
         "hypso_name": matchup.get("hypso_name"),
         "aeronet_name": matchup.get("aeronet_name"),
         "aeronet_latitude": matchup.get("aeronet_latitude"),
-        "aeronet_longitude": matchup.get("aeronet_longitude")
+        "aeronet_longitude": matchup.get("aeronet_longitude"),
+        "hypso_latitude": matchup.get("hypso_latitude"),
+        "hypso_longitude": matchup.get("hypso_y_longitudes")
     }
     
-    print(f"Successfully extracted {actual_size_y}x{actual_size_x} area")
-    print(f"Extracted cube shape: {extracted_area.shape}")
+    print(f"Successfully extracted {n_size}x{n_size} area (shape: {extracted_area.shape})")
+    print(f"  Valid pixels (any band): {valid_pixel_count_any}/{n_size*n_size} ({valid_pixel_percentage_any:.1f}%)")
+    print(f"  Valid pixels (all bands): {valid_pixel_count_all}/{n_size*n_size} ({valid_pixel_percentage_all:.1f}%)")
     
     return result
