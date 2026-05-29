@@ -176,3 +176,177 @@ def aeronet_oc_load_ssi():
     f0 = {"wave":np.asarray(solar_wavelengths), "data":np.asarray(ssi)}
 
     return f0
+
+
+
+def aeronet_oc_extract_matchup_area(matchup, satobj, ac_algorithm="polymer", n_size=5):
+    """
+    Extract an NxN area from the datacube centered at the matchup point.
+    
+    Parameters:
+    -----------
+    matchup : dict
+        The matchup dictionary returned by aeronet_oc_detect_matchup
+    satobj : object
+        Satellite object containing l2a_cube
+    ac_algorithm : str
+        Atmospheric correction algorithm to use (default "polymer")
+    n_size : int
+        Size of the square window to extract (default 5, meaning 5x5 area)
+        Must be an odd number to have a true center.
+        
+    Returns:
+    --------
+    dict : Dictionary containing extracted area and metadata, or None if invalid
+    """
+    
+    if matchup is None:
+        print("No matchup provided. Cannot extract area.")
+        return None
+    
+    # Validate n_size
+    if n_size < 1:
+        print(f"Error: n_size must be >= 1, got {n_size}")
+        return None
+    
+    if n_size % 2 == 0:
+        print(f"Warning: n_size={n_size} is even. Using n_size={n_size+1} for proper centering.")
+        n_size = n_size + 1
+    
+    # Get center coordinates
+    center_x = matchup.get("hypso_x_point")
+    center_y = matchup.get("hypso_y_point")
+    
+    if center_x is None or center_y is None:
+        print("Error: Missing center coordinates in matchup dictionary")
+        return None
+    
+    # Get the datacube
+    if not hasattr(satobj, 'l2a_cube'):
+        print("Error: satobj has no l2a_cube attribute")
+        return None
+    
+    datacube = satobj.l2a_cube.get(ac_algorithm)
+    if datacube is None:
+        print(f"Error: {ac_algorithm} not found in l2a_cube")
+        return None
+    
+    # Get cube shape (bands, height, width)
+    if len(datacube.shape) == 3:
+        n_bands, height, width = datacube.shape
+    else:
+        print(f"Error: Unexpected datacube shape: {datacube.shape}")
+        return None
+    
+    # Validate center coordinates are within bounds
+    if center_y < 0 or center_y >= height or center_x < 0 or center_x >= width:
+        print(f"Error: Center coordinates ({center_y}, {center_x}) out of bounds for cube of size ({height}, {width})")
+        return None
+    
+    # Calculate window boundaries
+    half_size = n_size // 2
+    y_start = center_y - half_size
+    y_end = center_y + half_size + 1
+    x_start = center_x - half_size
+    x_end = center_x + half_size + 1
+    
+    # Track edge adjustments
+    y_start_original = y_start
+    y_end_original = y_end
+    x_start_original = x_start
+    x_end_original = x_end
+    
+    # Handle edge cases (clip to valid ranges)
+    y_start = max(0, y_start)
+    y_end = min(height, y_end)
+    x_start = max(0, x_start)
+    x_end = min(width, x_end)
+    
+    # Check if window is completely outside the cube
+    if y_start >= height or y_end <= 0 or x_start >= width or x_end <= 0:
+        print(f"Error: Window completely outside cube boundaries")
+        return None
+    
+    # Calculate actual window size
+    actual_size_y = y_end - y_start
+    actual_size_x = x_end - x_start
+    
+    # Calculate how much we truncated
+    truncate_top = max(0, -y_start_original)
+    truncate_bottom = max(0, y_end_original - height)
+    truncate_left = max(0, -x_start_original)
+    truncate_right = max(0, x_end_original - width)
+    
+    # Check if we have a valid window (at least 1x1)
+    if actual_size_y < 1 or actual_size_x < 1:
+        print(f"Error: Invalid window size: {actual_size_y}x{actual_size_x}")
+        return None
+    
+    # Extract the area
+    extracted_area = datacube[:, y_start:y_end, x_start:x_end]
+    
+    # Extract corresponding latitudes and longitudes if available
+    latitudes_area = None
+    longitudes_area = None
+    
+    if hasattr(satobj, 'latitudes') and satobj.latitudes is not None:
+        if satobj.latitudes.shape == (height, width):
+            latitudes_area = satobj.latitudes[y_start:y_end, x_start:x_end]
+        else:
+            print(f"Warning: latitudes shape {satobj.latitudes.shape} doesn't match cube shape ({height}, {width})")
+    
+    if hasattr(satobj, 'longitudes') and satobj.longitudes is not None:
+        if satobj.longitudes.shape == (height, width):
+            longitudes_area = satobj.longitudes[y_start:y_end, x_start:x_end]
+        else:
+            print(f"Warning: longitudes shape {satobj.longitudes.shape} doesn't match cube shape ({height}, {width})")
+    
+    # Check if extraction was successful (not empty)
+    if extracted_area.size == 0:
+        print("Error: Extracted area is empty")
+        return None
+    
+    # Print edge case information
+    if actual_size_y != n_size or actual_size_x != n_size:
+        print(f"Edge case detected: Window truncated")
+        print(f"  Requested: {n_size}x{n_size} centered at ({center_y}, {center_x})")
+        print(f"  Actual: {actual_size_y}x{actual_size_x}")
+        if truncate_top > 0:
+            print(f"  Truncated {truncate_top} row(s) from top")
+        if truncate_bottom > 0:
+            print(f"  Truncated {truncate_bottom} row(s) from bottom")
+        if truncate_left > 0:
+            print(f"  Truncated {truncate_left} column(s) from left")
+        if truncate_right > 0:
+            print(f"  Truncated {truncate_right} column(s) from right")
+    
+    # Create result dictionary
+    result = {
+        "extracted_cube": extracted_area,
+        "center_x": center_x,
+        "center_y": center_y,
+        "requested_size": n_size,
+        "actual_size_y": actual_size_y,
+        "actual_size_x": actual_size_x,
+        "y_start": y_start,
+        "y_end": y_end,
+        "x_start": x_start,
+        "x_end": x_end,
+        "truncated_top": truncate_top,
+        "truncated_bottom": truncate_bottom,
+        "truncated_left": truncate_left,
+        "truncated_right": truncate_right,
+        "is_edge_case": (actual_size_y != n_size or actual_size_x != n_size),
+        "latitudes": latitudes_area,
+        "longitudes": longitudes_area,
+        "ac_algorithm": ac_algorithm,
+        "hypso_name": matchup.get("hypso_name"),
+        "aeronet_name": matchup.get("aeronet_name"),
+        "aeronet_latitude": matchup.get("aeronet_latitude"),
+        "aeronet_longitude": matchup.get("aeronet_longitude")
+    }
+    
+    print(f"Successfully extracted {actual_size_y}x{actual_size_x} area")
+    print(f"Extracted cube shape: {extracted_area.shape}")
+    
+    return result
