@@ -7,7 +7,7 @@ from .utils import set_or_create_attr
 
 
 
-def write_aeronet_oc_matchup_nc_file(satobj, extraction_result, correction: str, dst_nc: str = None, datacube: str = True):
+def write_aeronet_oc_matchup_nc_file(satobj, matchup_data, correction: str, dst_nc: str = None, datacube: str = True):
     """
     Write AERONET-OC matchup extraction results to a NetCDF file.
     
@@ -15,7 +15,7 @@ def write_aeronet_oc_matchup_nc_file(satobj, extraction_result, correction: str,
     -----------
     satobj : object
         Satellite object containing metadata
-    extraction_result : dict
+    matchup_data : dict
         The dictionary returned by aeronet_oc_extract_matchup_area
     dst_nc : str or Path, optional
         Directory to save the file. If None, uses satobj.parent_dir
@@ -27,7 +27,7 @@ def write_aeronet_oc_matchup_nc_file(satobj, extraction_result, correction: str,
     Path : Path to the created NetCDF file
     """
     
-    if extraction_result is None:
+    if matchup_data is None:
         print("Error: No extraction result provided")
         return None
     
@@ -41,8 +41,8 @@ def write_aeronet_oc_matchup_nc_file(satobj, extraction_result, correction: str,
     
     # Create filename
     capture_name = satobj.capture_name
-    hypso_name = extraction_result.get("hypso_name", "unknown")
-    aeronet_name = extraction_result.get("aeronet_name", "unknown")
+    hypso_name = matchup_data.get("hypso_name", "unknown")
+    aeronet_name = matchup_data.get("aeronet_name", "unknown")
     
     filename = f"{capture_name}_AERONET-OC_{hypso_name}_{aeronet_name}_{correction}.nc"
     output_path = dst_nc / filename
@@ -53,13 +53,18 @@ def write_aeronet_oc_matchup_nc_file(satobj, extraction_result, correction: str,
     COMP_SHUFFLE = True
     
     # Get extracted data
-    extracted_cube = extraction_result["extracted_cube"]  # Shape: (n_size, n_size, n_bands)
-    n_size = extraction_result["requested_size"]
+    extracted_cube = matchup_data["extracted_cube"]  # Shape: (n_size, n_size, n_bands)
+    n_size = matchup_data["requested_size"]
     n_bands = extracted_cube.shape[2]
     
     # Get wavelengths if available
     wavelengths = getattr(satobj, 'wavelengths', None)
     fwhm = getattr(satobj, 'fwhm', None)
+
+    # Get AERONET-OC wavelengths
+    aeronet_wavelengths = matchup_data.get("aeronet_wavelengths")["values"]
+    n_aeronet_bands = len(aeronet_wavelengths)
+
     
     # Create NetCDF file
     with nc.Dataset(output_path, 'w', format='NETCDF4') as netfile:
@@ -74,26 +79,38 @@ def write_aeronet_oc_matchup_nc_file(satobj, extraction_result, correction: str,
         set_or_create_attr(netfile, "creation_date", datetime.now().isoformat())
         
         # AERONET site info
-        set_or_create_attr(netfile, "aeronet_latitude", extraction_result.get("aeronet_latitude"))
-        set_or_create_attr(netfile, "aeronet_longitude", extraction_result.get("aeronet_longitude"))
+        set_or_create_attr(netfile, "aeronet_latitude", matchup_data.get("aeronet_latitude"))
+        set_or_create_attr(netfile, "aeronet_longitude", matchup_data.get("aeronet_longitude"))
         
+        # AERONET info
+
+        aeronet_time = matchup_data.get("aeronet_time")["values"]
+        aeronet_date = matchup_data.get("aeronet_date")["values"]
+        if aeronet_time and aeronet_date:
+            combined = datetime.combine(aeronet_date, aeronet_time)
+            set_or_create_attr(netfile, "aeronet_datetime", combined.isoformat())
+
+
         # HYPSO matchup info
-        set_or_create_attr(netfile, "hypso_pixel_x", extraction_result.get("center_x"))
-        set_or_create_attr(netfile, "hypso_pixel_y", extraction_result.get("center_y"))
+        set_or_create_attr(netfile, "hypso_pixel_x", matchup_data.get("center_x"))
+        set_or_create_attr(netfile, "hypso_pixel_y", matchup_data.get("center_y"))
         
         # Window info
         set_or_create_attr(netfile, "window_size", n_size)
-        set_or_create_attr(netfile, "is_edge_case", extraction_result.get("is_edge_case", False))
-        set_or_create_attr(netfile, "valid_pixel_count", extraction_result.get("valid_pixel_count", 0))
-        set_or_create_attr(netfile, "valid_pixel_percentage", extraction_result.get("valid_pixel_percentage", 0))
+        set_or_create_attr(netfile, "is_edge_case", matchup_data.get("is_edge_case", False))
+        set_or_create_attr(netfile, "valid_pixel_count", matchup_data.get("valid_pixel_count", 0))
+        set_or_create_attr(netfile, "valid_pixel_percentage", matchup_data.get("valid_pixel_percentage", 0))
         
         # Edge case details if applicable
-        if extraction_result.get("is_edge_case", False):
-            set_or_create_attr(netfile, "truncated_top", extraction_result.get("truncated_top", 0))
-            set_or_create_attr(netfile, "truncated_bottom", extraction_result.get("truncated_bottom", 0))
-            set_or_create_attr(netfile, "truncated_left", extraction_result.get("truncated_left", 0))
-            set_or_create_attr(netfile, "truncated_right", extraction_result.get("truncated_right", 0))
+        if matchup_data.get("is_edge_case", False):
+            set_or_create_attr(netfile, "truncated_top", matchup_data.get("truncated_top", 0))
+            set_or_create_attr(netfile, "truncated_bottom", matchup_data.get("truncated_bottom", 0))
+            set_or_create_attr(netfile, "truncated_left", matchup_data.get("truncated_left", 0))
+            set_or_create_attr(netfile, "truncated_right", matchup_data.get("truncated_right", 0))
         
+
+
+
 
         # Create dimensions
         #netfile.createDimension('window_size', n_size)
@@ -102,9 +119,16 @@ def write_aeronet_oc_matchup_nc_file(satobj, extraction_result, correction: str,
         netfile.createDimension('lines', n_size)
         netfile.createDimension('samples', n_size)
         netfile.createDimension('bands', n_bands)
-        
+
+        netfile.createDimension('aeronet_lines', 1)
+        netfile.createDimension('aeronet_samples', 1)
+        netfile.createDimension('aeronet_bands', n_aeronet_bands)
+
+
         # Create groups
         netfile.createGroup('products')
+        netfile.createGroup('products/hypso')
+        netfile.createGroup('products/aeronet')
         netfile.createGroup('geometry')
 
         # Set pseudoglobal vars like compression level
@@ -120,7 +144,7 @@ def write_aeronet_oc_matchup_nc_file(satobj, extraction_result, correction: str,
             # complevel=COMP_LEVEL,
             # shuffle=COMP_SHUFFLE,
         )
-        latitude[:] = extraction_result.get("latitudes")
+        latitude[:] = matchup_data.get("latitudes")
         latitude.long_name = "Latitude"
         latitude.units = "degrees"
         # latitude.valid_range = [-180, 180]
@@ -134,7 +158,7 @@ def write_aeronet_oc_matchup_nc_file(satobj, extraction_result, correction: str,
             # complevel=COMP_LEVEL,
             # shuffle=COMP_SHUFFLE,
         )
-        longitude[:] = extraction_result.get("longitudes")
+        longitude[:] = matchup_data.get("longitudes")
         longitude.long_name = "Longitude"
         longitude.units = "degrees"
         # longitude.valid_range = [-180, 180]
@@ -142,181 +166,129 @@ def write_aeronet_oc_matchup_nc_file(satobj, extraction_result, correction: str,
         longitude.valid_max = 180
 
 
+
+
+        # Latitude (AERONET) ---------------------------------
+        latitude = netfile.createVariable(
+            'geometry/aeronet_latitude', 'f4', ('aeronet_lines', 'aeronet_samples'),
+            # compression=COMP_SCHEME,
+            # complevel=COMP_LEVEL,
+            # shuffle=COMP_SHUFFLE,
+        )
+        latitude[:] = matchup_data.get("aeronet_latitude")
+        latitude.long_name = "Latitude (AERONET)"
+        latitude.units = "degrees"
+        # latitude.valid_range = [-180, 180]
+        latitude.valid_min = -180
+        latitude.valid_max = 180
+
+        # Longitude (AERONET) ----------------------------------
+        longitude = netfile.createVariable(
+            'geometry/aeronet_longitude', 'f4', ('aeronet_lines', 'aeronet_samples'),
+            # compression=COMP_SCHEME,
+            # complevel=COMP_LEVEL,
+            # shuffle=COMP_SHUFFLE,
+        )
+        longitude[:] = matchup_data.get("aeronet_longitude")
+        longitude.long_name = "Longitude (AERONET)"
+        longitude.units = "degrees"
+        # longitude.valid_range = [-180, 180]
+        longitude.valid_min = -180
+        longitude.valid_max = 180
+
+
+
+        '''
         try:
             l2a_variable_name = satobj.l2a_cubes[correction].attrs['l2_variable_name']
         except Exception as ex:
-            print["[WARNING] No 'l2_variable_name' attrribute found. Defaulting to 'rrs'"]
+            print["[WARNING] No 'l2_variable_name' attrribute found. Defaulting to 'Rrs'"]
             print(ex)
-            l2a_variable_name = "rrs"
+            l2a_variable_name = "Rrs"
+        '''
 
-        extracted_cube
+        l2a_variable_name = "Rrs"
+
 
         # Create and populate variables
         if datacube:
 
             # Store as datacube
-            rrs = netfile.createVariable(
-                'products/' + l2a_variable_name.lower(), 'f4',
+            Rrs = netfile.createVariable(
+                'products/hypso/' + l2a_variable_name, 'f4',
                 ('lines', 'samples', 'bands'),
                 compression=COMP_SCHEME,
                 complevel=COMP_LEVEL,
                 shuffle=COMP_SHUFFLE)
-            rrs.units = ""
-            rrs.long_name = "Bottom-of-Atmosphere Reflectance"
-            rrs.wavelength_units = "nanometers"
-            rrs.fwhm = satobj.fwhm
-            rrs.wavelengths = np.around(satobj.wavelengths, 1)
-            rrs[:] = extracted_cube
+            Rrs.units = ""
+            Rrs.long_name = "Bottom-of-Atmosphere Reflectance"
+            Rrs.wavelength_units = "nanometers"
+            Rrs.fwhm = satobj.fwhm
+            Rrs.wavelengths = np.around(satobj.wavelengths, 1)
+            Rrs[:] = extracted_cube
 
         else:
 
             # Store as bands
-            rrs_cube = extracted_cube
+            Rrs_cube = extracted_cube
             for band in range(0, n_bands):
 
                 wave = np.around(satobj.wavelengths, 1)[band]
                 wave_name = str(int(wave))
-                name = l2a_variable_name.lower() + '_' + wave_name
+                name = l2a_variable_name + '_' + wave_name
 
-                rrs = netfile.createVariable(
-                    'products/' + name, 'f4',
+                Rrs = netfile.createVariable(
+                    'products/hypso/' + name, 'f4',
                     ('lines', 'samples'),
                     compression=COMP_SCHEME,
                     complevel=COMP_LEVEL,
                     shuffle=COMP_SHUFFLE)
                 
-                rrs.units = ""
-                rrs.long_name = "Bottom-of-Atmosphere Reflectance Band " + str(band) + " (" + wave_name + " nm)"
-                rrs.wavelength_units = "nanometers"
-                rrs.fwhm = satobj.fwhm[band]
-                rrs.wavelength = wave
+                Rrs.units = ""
+                Rrs.long_name = "Bottom-of-Atmosphere Reflectance Band " + str(band) + " (" + wave_name + " nm)"
+                Rrs.wavelength_units = "nanometers"
+                Rrs.fwhm = satobj.fwhm[band]
+                Rrs.wavelength = wave
 
-                rrs.radiation_wavelength = float(satobj.wavelengths[band]),
-                rrs.radiation_wavelength_unit = "nm"
+                Rrs.radiation_wavelength = float(satobj.wavelengths[band]),
+                Rrs.radiation_wavelength_unit = "nm"
 
-                #rrs.f0 = None
-                #rrs.width = satobj.fwhm[band]
-                rrs.wave = wave
-                rrs.parameter = name
-                rrs.wave_name = wave_name
-                rrs.band = band
+                #Rrs.f0 = None
+                #Rrs.width = satobj.fwhm[band]
+                Rrs.wave = wave
+                Rrs.parameter = name
+                Rrs.wave_name = wave_name
+                Rrs.band = band
 
-                rrs.coordinates = '/geometry/longitude /geometry/latitude'
-                rrs.grid_mapping = '/geometry/crs_wgs84'
+                Rrs.coordinates = '/geometry/longitude /geometry/latitude'
+                Rrs.grid_mapping = '/geometry/crs_wgs84'
 
-                rrs[:] = rrs_cube[:,:,band]
-
-
+                Rrs[:] = Rrs_cube[:,:,band]
 
 
+        # Write AERONET-OC datasets
+        for aeronet_var_name in ['Rrs', 'Lwn', 'Lwn_fQ', 'Rho', 'Solar_Zenith_Angle']:
 
+            aeronet_var_values = matchup_data[aeronet_var_name]["values"]
+            aeronet_var_units = matchup_data[aeronet_var_name]["metadata"]["units"]
 
-
-
-
-
-
-
-
-
-
-
-
-    '''
-        # Write reflectance cube
-        reflectance_var = netfile.createVariable(
-            'reflectance_cube', 'f4',
-            ('window_size', 'window_size', 'bands'),
-            compression=COMP_SCHEME,
-            complevel=COMP_LEVEL,
-            shuffle=COMP_SHUFFLE,
-            fill_value=np.nan
-        )
-        reflectance_var.units = "sr^-1"
-        reflectance_var.long_name = "Remote sensing reflectance (Rrs) extracted area"
-        reflectance_var.coordinates = "latitude longitude"
-        
-        if wavelengths is not None:
-            reflectance_var.wavelengths = wavelengths[:n_bands]
-            reflectance_var.wavelength_units = "nanometers"
-        if fwhm is not None:
-            reflectance_var.fwhm = fwhm[:n_bands]
-        
-        reflectance_var[:] = extracted_cube
-        
-        # Write latitudes if available
-        if extraction_result.get("latitudes") is not None:
-            lat_var = netfile.createVariable(
-                'latitude', 'f4',
-                ('window_size', 'window_size'),
+            # Store as datacube
+            aeronet_var = netfile.createVariable(
+                'products/aeronet/' + aeronet_var_name, 'f4',
+                ('aeronet_lines', 'aeronet_samples', 'aeronet_bands'),
                 compression=COMP_SCHEME,
                 complevel=COMP_LEVEL,
-                shuffle=COMP_SHUFFLE,
-                fill_value=np.nan
-            )
-            lat_var.units = "degrees_north"
-            lat_var.long_name = "Latitude of each pixel"
-            lat_var[:] = extraction_result["latitudes"]
-        
-        # Write longitudes if available
-        if extraction_result.get("longitudes") is not None:
-            lon_var = netfile.createVariable(
-                'longitude', 'f4',
-                ('window_size', 'window_size'),
-                compression=COMP_SCHEME,
-                complevel=COMP_LEVEL,
-                shuffle=COMP_SHUFFLE,
-                fill_value=np.nan
-            )
-            lon_var.units = "degrees_east"
-            lon_var.long_name = "Longitude of each pixel"
-            lon_var[:] = extraction_result["longitudes"]
-        
-        # Compute and write per-band statistics
-        statistics_group = netfile.createGroup('statistics')
-        
-        valid_mask = ~np.isnan(extracted_cube[:, :, 0])
-        valid_pixels = np.sum(valid_mask)
-        
-        for band_idx in range(n_bands):
-            band_data = extracted_cube[:, :, band_idx]
-            band_valid = band_data[~np.isnan(band_data)]
-            
-            if len(band_valid) > 0:
-                band_stats = statistics_group.createVariable(f'band_{band_idx:03d}', 'f4')
-                band_stats.mean = np.mean(band_valid)
-                band_stats.std = np.std(band_valid)
-                band_stats.median = np.median(band_valid)
-                band_stats.min = np.min(band_valid)
-                band_stats.max = np.max(band_valid)
-                band_stats.cv = np.std(band_valid) / np.mean(band_valid) if np.mean(band_valid) != 0 else np.nan
-                band_stats.n_valid_pixels = len(band_valid)
-                
-                if wavelengths is not None and band_idx < len(wavelengths):
-                    band_stats.wavelength = wavelengths[band_idx]
-        
-        # Write overall statistics
-        overall_stats = statistics_group.createVariable('overall', 'f4')
-        overall_stats.window_size = n_size
-        overall_stats.total_pixels = n_size * n_size
-        overall_stats.valid_pixels = valid_pixels
-        overall_stats.valid_percentage = extraction_result.get("valid_pixel_percentage", 0)
-        overall_stats.is_edge_case = 1 if extraction_result.get("is_edge_case", False) else 0
-        
-        # Copy relevant satellite metadata if available
-        if hasattr(satobj, 'nc_attrs'):
-            metadata_group = netfile.createGroup('satellite_metadata')
-            for key, value in satobj.nc_attrs.items():
-                if key not in ['title', 'processing_level']:
-                    try:
-                        set_or_create_attr(metadata_group, key, value)
-                    except:
-                        pass
-    '''
+                shuffle=COMP_SHUFFLE)
+            aeronet_var.units = aeronet_var_units
+            aeronet_var.long_name = "AERONET-OC " + aeronet_var_name
+            aeronet_var.wavelength_units = "nanometers"
+            aeronet_var.wavelengths = aeronet_wavelengths
+            aeronet_var[:] = aeronet_var_values
+
 
     print(f"Successfully wrote AERONET-OC matchup to: {output_path}")
     print(f"  Window size: {n_size}x{n_size}")
-    print(f"  Valid pixels: {extraction_result.get('valid_pixel_percentage', 0):.1f}%")
+    print(f"  Valid pixels: {matchup_data.get('valid_pixel_percentage', 0):.1f}%")
     
     return output_path
 

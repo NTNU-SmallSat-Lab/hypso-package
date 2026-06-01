@@ -12,7 +12,92 @@ from datetime import datetime, timedelta
 import re
 from importlib.resources import files
 
-from .utils import download_aeronet_oc_data, read_aeronet_oc_data, parse_aeronet_oc_products
+#from .utils import download_aeronet_oc_data, read_aeronet_oc_data, parse_aeronet_oc_products
+
+
+
+
+
+
+def download_aeronet_oc_data(site_name, year, month, day, data_level=1.0, output_dir='aeronet_data'):
+    """
+    Download Lwn data for a single site and date.
+    Skips download if file already exists.
+    
+    Parameters:
+    -----------
+    site_name : str
+        AERONET site name
+    year, month, day : int
+        Date for download
+    data_level : float
+        1.0 or 1.5
+    output_dir : str
+        Base directory for storing files
+    
+    Returns:
+    --------
+    str or None
+        Path to the downloaded file if successful, None if failed
+    """
+    
+    # Create subdirectory for this site
+    site_dir = Path(output_dir) / site_name
+    site_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Build filename
+    data_type = 'LWN10' if data_level == 1.0 else 'LWN15'
+    filename = f"{site_name}_{data_type}_{year}{month:02d}{day:02d}.csv"
+    filepath = site_dir / filename
+    
+    # Check if file already exists
+    if filepath.exists():
+        print(f"File already exists: {filepath}")
+        return str(filepath)
+    
+    # Build URL
+    url = (f"https://aeronet.gsfc.nasa.gov/cgi-bin/print_web_data_v3"
+           f"?site={site_name}&year={year}&month={month}&day={day}"
+           f"&year2={year}&month2={month}&day2={day}"
+           f"&{data_type}=1&AVG=10&if_no_html=1")
+    
+    print(url)
+
+    print(f"Downloading: {site_name} for {year}-{month:02d}-{day:02d}")
+    
+    # Download
+    response = requests.get(url, verify=False)
+    
+    if response.status_code == 200:
+        # Save raw response text to file
+        with open(filepath, 'w') as f:
+            f.write(response.text)
+        print(f"Saved to: {filepath}")
+        return str(filepath)
+    else:
+        print(f"Error for {site_name}: HTTP {response.status_code}")
+        return None
+    
+
+
+def aeronet_oc_read_data(filepath):
+    """
+    Read AERONET CSV file, skipping the first 5 metadata lines.
+    Line 6 (index 5) contains the column headers.
+    """
+    with open(filepath, 'r') as f:
+        lines = f.readlines()
+    
+    # Skip first 5 metadata lines, keep from line 6 onwards
+    data_lines = lines[5:]  # lines[5] is the 6th line (column headers)
+    data_text = ''.join(data_lines)
+    
+    # Read into dataframe
+    df = pd.read_csv(StringIO(data_text), delimiter=',')
+    
+    return df
+
+
 
 
 def aeronet_oc_detect_matchup(satobj, aeronet_oc_sites_csv_path, ac_algorithm="polymer"):
@@ -107,14 +192,13 @@ def aeronet_oc_download_data(satobj, matchup, aeronet_oc_data_dir, data_level=1.
     return aeronet_oc_data_file
 
 
-def aeronet_oc_read_data(aeronet_oc_file):
-
-    return read_aeronet_oc_data(aeronet_oc_file)
 
 
-def aeronet_oc_read_matchup_data(satobj, aeronet_oc_data_file, df_time_column="Time(hh:mm:ss)"):
+
+def aeronet_oc_get_closest_matchup_data(satobj, aeronet_oc_data_file, df_time_column="Time(hh:mm:ss)", df_date_column="Date(dd-mm-yyyy)"):
 
     df = aeronet_oc_read_data(aeronet_oc_data_file)
+
 
     dt = satobj.capture_datetime
 
@@ -123,6 +207,8 @@ def aeronet_oc_read_matchup_data(satobj, aeronet_oc_data_file, df_time_column="T
     
     # Parse AERONET time strings to datetime.time objects
     df['parsed_time'] = pd.to_datetime(df[df_time_column], format='%H:%M:%S').dt.time
+    df['parsed_date'] = pd.to_datetime(df[df_date_column], format='%d:%m:%Y')
+    
     
     # Calculate time difference (convert to minutes for easier comparison)
     def time_diff(time_obj):
@@ -149,20 +235,319 @@ def aeronet_oc_read_matchup_data(satobj, aeronet_oc_data_file, df_time_column="T
 
     return df_series
 
+'''
+def aeronet_oc_matchup_aeronet_data(satobj, matchup_aeronet_data):
+    """
+    Extract and organize all AERONET-OC products from a pandas Series (row).
+    
+    Parameters:
+    -----------
+    closest_series : pandas Series
+        A single row from AERONET-OC DataFrame (result of .iloc[] or .loc[])
+    
+    Returns:
+    --------
+    dict : Dictionary containing categorized products by type and wavelength
+    """
+    
+    products = {
+        'Lw': {},
+        'Lt': {},
+        'Lwn': {},
+        'Lwn_fQ': {},
+        'Rho': {},
+        'aeronet_solar_zenith_angle': {},
+        'aeronet_wavelengths': {},
+        'aeronet_time': {},
+        'aeronet_date': {},
+    }
 
-def aeronet_oc_parse_products(satobj, df_series):
 
-    products = parse_aeronet_oc_products(df_series)
+    products['aeronet_time'] = matchup_aeronet_data['parsed_time']
+    products['aeronet_date'] = matchup_aeronet_data['parsed_date']
+
+    # Iterate through all columns in the Series
+    for col_name in matchup_aeronet_data.index:
+        
+        # Parse Lw[412], Lw[443], etc.
+        if col_name.startswith('Lwn[') and col_name.endswith(']'):
+
+            value = matchup_aeronet_data[col_name]
+            match = re.search(r'\[(\d+)nm\]', col_name)
+            if match:
+                wavelength = int(match.group(1))
+
+            products['Lwn'][wavelength] = value
+        
+    
+        # Parse Lw_f/Q[412], Lw_f/Q[443], etc.
+        if col_name.startswith('Lw_f/Q[') and col_name.endswith(']'):
+
+            value = matchup_aeronet_data[col_name]
+            match = re.search(r'\[(\d+)nm\]', col_name)
+            if match:
+                wavelength = int(match.group(1))
+
+            products['Lwn_fQ'][wavelength] = value
+
+        # Parse Rho[412], Rho[443], etc.
+        if col_name.startswith('Rho[') and col_name.endswith(']'):
+
+            value = matchup_aeronet_data[col_name]
+            match = re.search(r'\[(\d+)nm\]', col_name)
+            if match:
+                wavelength = int(match.group(1))
+
+            products['Rho'][wavelength] = value
+
+        # Parse Solar_Zenith_Angle[412], Solar_Zenith_Angle[443], etc.
+        if col_name.startswith('Solar_Zenith_Angle[') and col_name.endswith(']'):
+
+            value = matchup_aeronet_data[col_name]
+            match = re.search(r'\[(\d+)nm\]', col_name)
+            if match:
+                wavelength = int(match.group(1))
+
+            products['aeronet_solar_zenith_angle'][wavelength] = value
+
+
+        # Parse Exact_Wavelengths(um)_412, etc.
+        if col_name.startswith('Exact_Wavelengths(um)_'):
+
+            value = matchup_aeronet_data[col_name]
+            try:
+                wavelength = int(col_name.split('_')[-1])
+            except:
+                break
+
+            products['aeronet_wavelengths'][wavelength] = value
+
+
+    return products
+'''
+
+
+
+
+
+def aeronet_oc_matchup_aeronet_data(satobj, matchup_aeronet_data):
+    """
+    Extract and organize all AERONET-OC products from a pandas Series (row).
+    
+    Parameters:
+    -----------
+    satobj : object
+        Satellite object containing matching information
+    matchup_aeronet_data : pandas Series
+        A single row from AERONET-OC DataFrame (result of .iloc[] or .loc[])
+    
+    Returns:
+    --------
+    dict : Dictionary containing categorized products by type and wavelength,
+           with metadata including units and descriptions
+    """
+    
+    # Define metadata for each product type
+    metadata = {
+        'Lw': {
+            'description': 'Water-leaving radiance',
+            'units': 'mW cm^-2 μm^-1 sr^-1',
+            'long_name': 'Water-leaving radiance'
+        },
+        'Lt': {
+            'description': 'Total radiance',
+            'units': 'mW cm^-2 μm^-1 sr^-1',
+            'long_name': 'Total radiance'
+        },
+        'Lwn': {
+            'description': 'Normalized water-leaving radiance',
+            'units': 'mW cm^-2 μm^-1 sr^-1',
+            'long_name': 'Normalized water-leaving radiance'
+        },
+        'Lwn_fQ': {
+            'description': 'Normalized water-leaving radiance with f/Q correction',
+            'units': 'mW cm^-2 μm^-1 sr^-1',
+            'long_name': 'Normalized water-leaving radiance (f/Q corrected)'
+        },
+        'Rho': {
+            'description': 'Remote sensing reflectance',
+            'units': 'sr^-1',
+            'long_name': 'Remote sensing reflectance'
+        },
+        'Solar_Zenith_Angle': {
+            'description': 'Solar zenith angle at time of AERONET measurement',
+            'units': 'degrees',
+            'long_name': 'Solar zenith angle'
+        },
+        'aeronet_wavelengths': {
+            'description': 'Exact measurement wavelengths',
+            'units': 'nanometers (nm)',
+            'long_name': 'AERONET measured wavelengths'
+        },
+        'aeronet_time': {
+            'description': 'Time of AERONET measurement',
+            'units': 'UTC',
+            'long_name': 'Measurement time'
+        },
+        'aeronet_date': {
+            'description': 'Date of AERONET measurement',
+            'units': 'YYYY-MM-DD',
+            'long_name': 'Measurement date'
+        },
+        'Rrs': {
+            'description': 'Remote sensing reflectance',
+            'units': 'sr^-1',
+            'long_name': 'Remote sensing reflectance'
+        },
+    }
+    
+    products = {
+        'Lw': {'values': {}, 'metadata': metadata['Lw']},
+        'Lt': {'values': {}, 'metadata': metadata['Lt']},
+        'Lwn': {'values': {}, 'metadata': metadata['Lwn']},
+        'Lwn_fQ': {'values': {}, 'metadata': metadata['Lwn_fQ']},
+        'Rho': {'values': {}, 'metadata': metadata['Rho']},
+        'Solar_Zenith_Angle': {'values': {}, 'metadata': metadata['Solar_Zenith_Angle']},
+        'aeronet_wavelengths': {'values': {}, 'metadata': metadata['aeronet_wavelengths']},
+        'aeronet_time': {'values': None, 'metadata': metadata['aeronet_time']},
+        'aeronet_date': {'values': None, 'metadata': metadata['aeronet_date']},
+        'Rrs': {'values': None, 'metadata': metadata['Rrs']},
+    }
+
+    def convert_from_dict(product):
+        """Convert wavelength dictionary to sorted arrays"""
+        values = product.get("values", {})
+        if not values:
+            return np.array([]), []
+        
+        wavelengths = sorted(values.keys())
+        values_list = [values[wl] for wl in wavelengths]
+        values_array = np.array(values_list)
+        
+        return values_array, wavelengths
+
+    products['aeronet_time']['values'] = matchup_aeronet_data['parsed_time']
+    products['aeronet_date']['values'] = matchup_aeronet_data['parsed_date']
+
+    # Iterate through all columns in the Series
+    for col_name in matchup_aeronet_data.index:
+        
+        # Parse Lwn[412], Lwn[443], etc.
+        if col_name.startswith('Lwn[') and col_name.endswith(']'):
+            value = matchup_aeronet_data[col_name]
+            match = re.search(r'\[(\d+)nm\]', col_name)
+            if match:
+                wavelength = int(match.group(1))
+                products['Lwn']['values'][wavelength] = value
+        
+        # Parse Lwn_f/Q[412], Lwn_f/Q[443], etc.
+        if col_name.startswith('Lwn_f/Q[') and col_name.endswith(']'):
+            value = matchup_aeronet_data[col_name]
+            match = re.search(r'\[(\d+)nm\]', col_name)
+            if match:
+                wavelength = int(match.group(1))
+                products['Lwn_fQ']['values'][wavelength] = value
+
+        # Parse Rho[412], Rho[443], etc.
+        if col_name.startswith('Rho[') and col_name.endswith(']'):
+            value = matchup_aeronet_data[col_name]
+            match = re.search(r'\[(\d+)nm\]', col_name)
+            if match:
+                wavelength = int(match.group(1))
+                products['Rho']['values'][wavelength] = value
+
+        # Parse Solar_Zenith_Angle[412], Solar_Zenith_Angle[443], etc.
+        if col_name.startswith('Solar_Zenith_Angle[') and col_name.endswith(']'):
+            value = matchup_aeronet_data[col_name]
+            match = re.search(r'\[(\d+)nm\]', col_name)
+            if match:
+                wavelength = int(match.group(1))
+                products['Solar_Zenith_Angle']['values'][wavelength] = value
+
+        # Parse Exact_Wavelengths(um)_412, etc.
+        if col_name.startswith('Exact_Wavelengths(um)_'):
+            value = matchup_aeronet_data[col_name]
+            try:
+                wavelength = int(col_name.split('_')[-1])
+                # Convert from micrometers to nanometers and store
+                if value != -999:
+                    value = value * 1000
+                products['aeronet_wavelengths']['values'][wavelength] = value
+            except (ValueError, IndexError):
+                continue
+
+    # Convert dictionaries to arrays for easier handling
+    for product_key in ['Lwn', 'Lwn_fQ', 'Rho', 'Solar_Zenith_Angle', 'aeronet_wavelengths']:
+        values_array, wavelengths = convert_from_dict(products[product_key])
+        products[product_key]['values'] = values_array
+        products[product_key]['wavelengths'] = wavelengths
+
+    # Calculate Rrs from Lwn if needed (requires solar zenith angle)
+
+    Lwn_wavelengths = products['aeronet_wavelengths']['values']
+    Lwn = products['Lwn']['values']
+    Rrs = aeronet_oc_calculate_rrs(Lwn, Lwn_wavelengths)
+
+    products['Rrs']['values'] = Rrs
 
     return products
 
 
+def aeronet_oc_calculate_rrs(Lwn, wavelengths):
 
-def aeronet_oc_load_matchup_products(satobj, aeronet_oc_data_file):
-    df_series = aeronet_oc_read_matchup_data(satobj, aeronet_oc_data_file)
-    products = aeronet_oc_parse_products(satobj, df_series)
+    # Load SSI
+    f0 = aeronet_oc_load_ssi()
 
-    return products
+    # Filter out indices where Lwn is -999
+    valid_indices = [i for i, l in enumerate(Lwn) if l != -999]
+    invalid_indicies = [i for i, l in enumerate(Lwn) if l == -999]
+
+    wavelengths = np.array(wavelengths)
+    Lwn = np.array(Lwn)
+
+    #wavelengths = wavelengths*1000
+
+    F0_values = []
+    for wl in wavelengths:
+        F0_value = np.interp(wl, f0['wave'], f0['data'])
+        F0_values.append(F0_value)
+    F0 = np.array(F0_values)
+
+    # We apply a factor of 10 here since TSIS-1 F0 units are mW/(m^2 nm) and AERONET-OC Lwn units are mW/(cm^2 sr um) 
+    aeronet_Rrs = 10 * Lwn/(F0)
+
+    aeronet_Rrs[invalid_indicies] = -999
+
+    print(aeronet_Rrs)
+
+    return aeronet_Rrs
+    
+
+
+
+def aeronet_oc_generate_matchup(satobj,
+                                matchup,
+                                AERONET_OC_DATA_DIR,
+                                ac_algorithm = "polymer",
+                                n_size = 5
+                                ):
+
+    aeronet_oc_data_file = aeronet_oc_download_data(satobj, 
+                                                    matchup, 
+                                                    AERONET_OC_DATA_DIR)
+
+
+    matchup_aeronet_data = aeronet_oc_get_closest_matchup_data(satobj, aeronet_oc_data_file)
+    matchup_aeronet_data = aeronet_oc_matchup_aeronet_data(satobj, matchup_aeronet_data)
+
+    matchup_hypso_data = aeronet_oc_matchup_hypso_data(satobj, matchup, ac_algorithm=ac_algorithm, n_size=n_size)
+
+
+    matchup_data = matchup_hypso_data | matchup_aeronet_data
+
+    return matchup_data
+
+
 
 
 def aeronet_oc_load_ssi():
@@ -181,7 +566,7 @@ def aeronet_oc_load_ssi():
 
 
 
-def aeronet_oc_extract_matchup_area(satobj, matchup, ac_algorithm="polymer", n_size=5):
+def aeronet_oc_matchup_hypso_data(satobj, matchup, ac_algorithm="polymer", n_size=5):
     """
     Extract an NxN area from the datacube centered at the matchup point.
     Out-of-bounds indices are filled with NaN to always return exactly NxN.

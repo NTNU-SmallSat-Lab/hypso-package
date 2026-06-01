@@ -57,20 +57,28 @@ def load_l2a_nc_cube(nc_file_path: Path) -> np.ndarray:
         
         try:
             # 16-bit according to Original data Capture
-            cube = np.array(group.variables["rrs"][:], dtype='double')
+            #cube = np.array(group.variables["rrs"][:], dtype='double')
+
+            if 'rrs' in group.variables:
+                cube = np.array(group.variables["rrs"][:], dtype='double')
+            elif 'Rrs' in group.variables:
+                cube = np.array(group.variables["Rrs"][:], dtype='double')
+            else:
+                cube = np.array(group.variables["rho_w"][:], dtype='double')
+            
         except Exception as ex:
-            print("[INFO] Loading rrs cube from separate bands...")
+            print("[INFO] Loading Rrs cube from separate bands...")
 
             height, width = np.array(group.variables[list(group.variables)[0]][:], dtype='double').shape
             depth = len(list(group.variables))
 
             cube = np.empty((height,width,depth))
 
-            for idx, rrs_band in enumerate(tqdm(list(group.variables))):
+            for idx, Rrs_band in enumerate(tqdm(list(group.variables))):
 
                 #print("[INFO] Loading band " + str(idx) + "...")
 
-                band = np.array(group.variables[rrs_band][:], dtype='double')
+                band = np.array(group.variables[Rrs_band][:], dtype='double')
 
                 cube[:,:,idx] = band
 
@@ -90,7 +98,11 @@ def load_l2a_nc_cube_attrs(nc_file_path: Path) -> np.ndarray:
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
         
         try:
-            group = f.groups["products"]["rrs"]
+
+            if 'rrs' in f.groups['products'].groups:
+                group = f.groups['products']['rrs']
+            elif 'Rrs' in f.groups['products'].groups:
+                group = f.groups['products']['Rrs']
 
             nc_cube_attrs = {}
             for attrname in group.ncattrs():
@@ -109,9 +121,9 @@ def load_l2a_nc_cube_attrs(nc_file_path: Path) -> np.ndarray:
 
             group = f.groups["products"]
 
-            for idx, rrs_band in enumerate(list(group.variables)):
+            for idx, Rrs_band in enumerate(list(group.variables)):
                 
-                subgroup = f.groups["products"][rrs_band]
+                subgroup = f.groups["products"][Rrs_band]
 
                 wavelength = getattr(subgroup, "wavelength")
                 fwhm = getattr(subgroup, "fwhm")

@@ -137,65 +137,65 @@ def l2a_nc_writer(satobj, correction: str, dst_nc: str, datacube: str = True) ->
         try:
             l2a_variable_name = satobj.l2a_cubes[correction].attrs['l2_variable_name']
         except Exception as ex:
-            print["[WARNING] No 'l2_variable_name' attrribute found. Defaulting to 'rrs'"]
+            print["[WARNING] No 'l2_variable_name' attrribute found. Defaulting to 'Rrs'"]
             print(ex)
-            l2a_variable_name = "rrs"
+            l2a_variable_name = "Rrs"
 
 
         # Create and populate variables
         if datacube:
 
             # Store as datacube
-            rrs = netfile.createVariable(
-                'products/' + l2a_variable_name.lower(), 'f4',
+            Rrs = netfile.createVariable(
+                'products/' + l2a_variable_name, 'f4',
                 ('lines', 'samples', 'bands'),
                 compression=COMP_SCHEME,
                 complevel=COMP_LEVEL,
                 shuffle=COMP_SHUFFLE)
-            rrs.units = ""
-            rrs.long_name = "Bottom-of-Atmosphere Reflectance"
-            rrs.wavelength_units = "nanometers"
-            rrs.fwhm = satobj.fwhm
-            rrs.wavelengths = np.around(satobj.wavelengths, 1)
-            rrs[:] = satobj.l2a_cubes[correction].to_numpy()
+            Rrs.units = ""
+            Rrs.long_name = "Bottom-of-Atmosphere Reflectance"
+            Rrs.wavelength_units = "nanometers"
+            Rrs.fwhm = satobj.fwhm
+            Rrs.wavelengths = np.around(satobj.wavelengths, 1)
+            Rrs[:] = satobj.l2a_cubes[correction].to_numpy()
 
         else:
 
             # Store as bands
-            rrs_cube = satobj.l2a_cubes[correction].to_numpy()
-            for band in range(0, rrs_cube.shape[-1]):
+            Rrs_cube = satobj.l2a_cubes[correction].to_numpy()
+            for band in range(0, Rrs_cube.shape[-1]):
 
                 wave = np.around(satobj.wavelengths, 1)[band]
                 wave_name = str(int(wave))
-                name = l2a_variable_name.lower() + '_' + wave_name
+                name = l2a_variable_name + '_' + wave_name
 
-                rrs = netfile.createVariable(
+                Rrs = netfile.createVariable(
                     'products/' + name, 'f4',
                     ('lines', 'samples'),
                     compression=COMP_SCHEME,
                     complevel=COMP_LEVEL,
                     shuffle=COMP_SHUFFLE)
                 
-                rrs.units = ""
-                rrs.long_name = "Bottom-of-Atmosphere Reflectance Band " + str(band) + " (" + wave_name + " nm)"
-                rrs.wavelength_units = "nanometers"
-                rrs.fwhm = satobj.fwhm[band]
-                rrs.wavelength = wave
+                Rrs.units = ""
+                Rrs.long_name = "Bottom-of-Atmosphere Reflectance Band " + str(band) + " (" + wave_name + " nm)"
+                Rrs.wavelength_units = "nanometers"
+                Rrs.fwhm = satobj.fwhm[band]
+                Rrs.wavelength = wave
 
-                rrs.radiation_wavelength = float(satobj.wavelengths[band]),
-                rrs.radiation_wavelength_unit = "nm"
+                Rrs.radiation_wavelength = float(satobj.wavelengths[band]),
+                Rrs.radiation_wavelength_unit = "nm"
 
-                #rrs.f0 = None
-                #rrs.width = satobj.fwhm[band]
-                rrs.wave = wave
-                rrs.parameter = name
-                rrs.wave_name = wave_name
-                rrs.band = band
+                #Rrs.f0 = None
+                #Rrs.width = satobj.fwhm[band]
+                Rrs.wave = wave
+                Rrs.parameter = name
+                Rrs.wave_name = wave_name
+                Rrs.band = band
 
-                rrs.coordinates = '/geometry/longitude /geometry/latitude'
-                rrs.grid_mapping = '/geometry/crs_wgs84'
+                Rrs.coordinates = '/geometry/longitude /geometry/latitude'
+                Rrs.grid_mapping = '/geometry/crs_wgs84'
 
-                rrs[:] = rrs_cube[:,:,band]
+                Rrs[:] = Rrs_cube[:,:,band]
 
 
         # ADCS Timestamps ----------------------------------------------------
