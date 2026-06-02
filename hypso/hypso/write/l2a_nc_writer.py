@@ -24,7 +24,7 @@ def write_l2a_nc_file(satobj, correction: str = None, overwrite: bool = False, *
 
     for correction in l2a_nc_file_list:
 
-        l2a_nc_file = Path(parent_dir, satobj.l2a_name + "-" + str(correction) + ".nc")
+        l2a_nc_file = Path(parent_dir, satobj.l2a_name() + "-" + str(correction) + ".nc")
 
         print(l2a_nc_file)
 
