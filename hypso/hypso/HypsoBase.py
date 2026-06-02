@@ -147,8 +147,29 @@ class HypsoBase:
     def l2a_cubes(self, value):
         raise AttributeError("[ERROR] Use \"l2a_cubes[key] = value\" to set items.")
 
+    def l2a_name(self, coeff_type: str = None, atmospheric_correction: str = None):
+
+        if coeff_type:
+            coeff_type = "-" + str(coeff_type)
+        elif hasattr(self, "coeff_type"):
+            coeff_type = "-" + str(getattr(self, "coeff_type"))
+        else:
+            coeff_type = ""
 
 
+        if atmospheric_correction:
+            atmospheric_correction = "-" + str(atmospheric_correction)
+        elif hasattr(self, "atmospheric_correction"):
+            atmospheric_correction = "-" + str(getattr(self, "atmospheric_correction"))
+        else:
+            atmospheric_correction = ""
+
+
+        #aeronetvenice_2025-07-22T09-57-52Z-moved-l2a-polymer
+        l2a_name = self.capture_name + coeff_type + "-l2a" + atmospheric_correction + ".nc" 
+
+
+        return l2a_name
     
 
     def _update_dataarray_attrs(self, data: xr.DataArray, attrs: dict) -> xr.DataArray:
@@ -500,16 +521,13 @@ class HypsoBase:
         self.parent_dir = Path(path.parent.absolute())
 
 
-        if self.label is not None:
-            label = "-" + str(self.label)
-        else:
-            label = "" 
 
-        self.l1a_name = capture_name + label + "-l1a"
-        self.l1b_name = capture_name + label + "-l1b"
-        self.l1c_name = capture_name + label + "-l1c"
-        self.l1d_name = capture_name + label + "-l1d"
-        self.l2a_name = capture_name + label + "-l2a"
+
+        self.l1a_name = capture_name + "-l1a"
+        self.l1b_name = capture_name + "-l1b"
+        self.l1c_name = capture_name + "-l1c"
+        self.l1d_name = capture_name + "-l1d"
+        #self.l2a_name = capture_name + "-l2a"
 
         self.l1a_nc_file = Path(path.parent, self.l1a_name + ".nc")
         self.l1b_nc_file = Path(path.parent, self.l1b_name + ".nc")

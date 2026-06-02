@@ -100,7 +100,7 @@ def aeronet_oc_read_data(filepath):
 
 
 
-def aeronet_oc_detect_matchup(satobj, aeronet_oc_sites_csv_path, ac_algorithm="polymer"):
+def aeronet_oc_detect_matchup(satobj, aeronet_oc_sites_csv_path, atmospheric_correction="polymer"):
 
     # Load the CSV file
     df = pd.read_csv(aeronet_oc_sites_csv_path)  # Replace with your actual file path
@@ -135,7 +135,7 @@ def aeronet_oc_detect_matchup(satobj, aeronet_oc_sites_csv_path, ac_algorithm="p
         hypso_latitudes = satobj.latitudes
         hypso_longitudes = satobj.longitudes
 
-        capture_shape = satobj.l2a_cube[ac_algorithm].shape[0:2]
+        capture_shape = satobj.l2a_cube[atmospheric_correction].shape[0:2]
 
         min_error = np.inf
         for i in range(capture_shape[0]):
@@ -528,7 +528,7 @@ def aeronet_oc_calculate_rrs(Lwn, wavelengths):
 def aeronet_oc_generate_matchup(satobj,
                                 matchup,
                                 AERONET_OC_DATA_DIR,
-                                ac_algorithm = "polymer",
+                                atmospheric_correction = "polymer",
                                 n_size = 5
                                 ):
 
@@ -540,7 +540,7 @@ def aeronet_oc_generate_matchup(satobj,
     matchup_aeronet_data = aeronet_oc_get_closest_matchup_data(satobj, aeronet_oc_data_file)
     matchup_aeronet_data = aeronet_oc_matchup_aeronet_data(satobj, matchup_aeronet_data)
 
-    matchup_hypso_data = aeronet_oc_matchup_hypso_data(satobj, matchup, ac_algorithm=ac_algorithm, n_size=n_size)
+    matchup_hypso_data = aeronet_oc_matchup_hypso_data(satobj, matchup, atmospheric_correction=atmospheric_correction, n_size=n_size)
 
 
     matchup_data = matchup_hypso_data | matchup_aeronet_data
@@ -566,7 +566,7 @@ def aeronet_oc_load_ssi():
 
 
 
-def aeronet_oc_matchup_hypso_data(satobj, matchup, ac_algorithm="polymer", n_size=5):
+def aeronet_oc_matchup_hypso_data(satobj, matchup, atmospheric_correction="polymer", n_size=5):
     """
     Extract an NxN area from the datacube centered at the matchup point.
     Out-of-bounds indices are filled with NaN to always return exactly NxN.
@@ -577,7 +577,7 @@ def aeronet_oc_matchup_hypso_data(satobj, matchup, ac_algorithm="polymer", n_siz
         The matchup dictionary returned by aeronet_oc_detect_matchup
     satobj : object
         Satellite object containing l2a_cube
-    ac_algorithm : str
+    atmospheric_correction : str
         Atmospheric correction algorithm to use (default "polymer")
     n_size : int
         Size of the square window to extract (default 5, meaning 5x5 area)
@@ -614,9 +614,9 @@ def aeronet_oc_matchup_hypso_data(satobj, matchup, ac_algorithm="polymer", n_siz
         print("Error: satobj has no l2a_cube attribute")
         return None
     
-    datacube = satobj.l2a_cube.get(ac_algorithm)
+    datacube = satobj.l2a_cube.get(atmospheric_correction)
     if datacube is None:
-        print(f"Error: {ac_algorithm} not found in l2a_cube")
+        print(f"Error: {atmospheric_correction} not found in l2a_cube")
         return None
     
     if len(datacube.shape) == 3:
@@ -748,7 +748,7 @@ def aeronet_oc_matchup_hypso_data(satobj, matchup, ac_algorithm="polymer", n_siz
         "valid_pixels_per_band": valid_pixels_per_band,
         "latitudes": latitudes_area,
         "longitudes": longitudes_area,
-        "ac_algorithm": ac_algorithm,
+        "atmospheric_correction": atmospheric_correction,
         "hypso_name": matchup.get("hypso_name"),
         "aeronet_name": matchup.get("aeronet_name"),
         "aeronet_latitude": matchup.get("aeronet_latitude"),

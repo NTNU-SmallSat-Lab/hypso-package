@@ -44,7 +44,13 @@ def write_aeronet_oc_matchup_nc_file(satobj, matchup_data, correction: str, dst_
     hypso_name = matchup_data.get("hypso_name", "unknown")
     aeronet_name = matchup_data.get("aeronet_name", "unknown")
     
-    filename = f"{capture_name}_AERONET-OC_{hypso_name}_{aeronet_name}_{correction}.nc"
+    coeff_type = getattr(satobj, "coeff_type", None)
+    if coeff_type:
+        coeff_type = "_" + str(coeff_type)
+    else:
+        coeff_type = ""
+
+    filename = f"{capture_name}_AERONET-OC_{hypso_name}_{aeronet_name}{coeff_type}_{correction}.nc"
     output_path = dst_nc / filename
     
     # Compression settings
@@ -221,7 +227,7 @@ def write_aeronet_oc_matchup_nc_file(satobj, matchup_data, correction: str, dst_
                 complevel=COMP_LEVEL,
                 shuffle=COMP_SHUFFLE)
             Rrs.units = ""
-            Rrs.long_name = "Bottom-of-Atmosphere Reflectance"
+            Rrs.long_name = "HYPSO Rrs"
             Rrs.wavelength_units = "nanometers"
             Rrs.fwhm = satobj.fwhm
             Rrs.wavelengths = np.around(satobj.wavelengths, 1)
