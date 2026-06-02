@@ -28,6 +28,7 @@ def load_adcs_from_nc_file(nc_file_path: Path) -> Tuple[dict, dict]:
             value = group.variables[key][:]
             adcs_vars[key] = value
 
+
         adcs_vars['adcssamples'] = len(f.dimensions['adcssamples'])
 
         for attrname in group.ncattrs():
