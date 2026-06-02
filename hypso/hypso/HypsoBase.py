@@ -521,13 +521,17 @@ class HypsoBase:
         self.parent_dir = Path(path.parent.absolute())
 
 
+        if self.label is not None:
+            label = "-" + str(self.label)
+        else:
+            label = "" 
 
 
-        self.l1a_name = capture_name + "-l1a"
-        self.l1b_name = capture_name + "-l1b"
-        self.l1c_name = capture_name + "-l1c"
-        self.l1d_name = capture_name + "-l1d"
-        #self.l2a_name = capture_name + "-l2a"
+        self.l1a_name = capture_name + label + "-l1a"
+        self.l1b_name = capture_name + label + "-l1b"
+        self.l1c_name = capture_name + label + "-l1c"
+        self.l1d_name = capture_name + label + "-l1d"
+        #self.l2a_name = capture_name + label + "-l2a"
 
         self.l1a_nc_file = Path(path.parent, self.l1a_name + ".nc")
         self.l1b_nc_file = Path(path.parent, self.l1b_name + ".nc")
