@@ -147,14 +147,14 @@ class HypsoBase:
     def l2a_cubes(self, value):
         raise AttributeError("[ERROR] Use \"l2a_cubes[key] = value\" to set items.")
 
-    def l2a_name(self, coeff_type: str = None, atmospheric_correction: str = None):
+    def l2a_name(self, label: str = None, atmospheric_correction: str = None):
 
-        if coeff_type:
-            coeff_type = "-" + str(coeff_type)
+        if label:
+            label = "-" + str(label)
         elif hasattr(self, "coeff_type"):
-            coeff_type = "-" + str(getattr(self, "coeff_type"))
+            label = "-" + str(getattr(self, "label"))
         else:
-            coeff_type = ""
+            label = ""
 
 
         if atmospheric_correction:
@@ -166,7 +166,7 @@ class HypsoBase:
 
 
         #aeronetvenice_2025-07-22T09-57-52Z-moved-l2a-polymer
-        l2a_name = self.capture_name + coeff_type + "-l2a" + atmospheric_correction + ".nc" 
+        l2a_name = self.capture_name + label + "-l2a" + atmospheric_correction + ".nc" 
 
 
         return l2a_name
