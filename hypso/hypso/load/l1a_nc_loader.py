@@ -12,7 +12,8 @@ from .utils import load_capture_config_from_nc_file, \
                     load_logfiles_from_nc_file, \
                     load_temperature_from_nc_file, \
                     load_ncattrs_from_nc_file, \
-                    load_gcp_from_nc_file
+                    load_gcp_from_nc_file, \
+                    load_srf_from_nc_file
 
 def load_l1a_nc(nc_file_path: Path, load_cube: bool = True) -> Tuple[dict, dict, dict, dict, dict, dict, np.ndarray]:
 
@@ -91,6 +92,7 @@ def load_l1a_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict]:
     metadata_vars['corrections'] = load_corrections_from_nc_file(nc_file_path)[0]
     metadata_vars['logfiles'] = load_logfiles_from_nc_file(nc_file_path)[0]
     metadata_vars['temperature'] = load_temperature_from_nc_file(nc_file_path)[0]
+    metadata_vars['srf'] = load_srf_from_nc_file(nc_file_path)[0]
 
     metadata_attrs = {}
 
@@ -101,6 +103,7 @@ def load_l1a_nc_metadata(nc_file_path: Path) -> Tuple[dict, dict]:
     metadata_attrs['corrections'] = load_corrections_from_nc_file(nc_file_path)[1]
     metadata_attrs['logfiles'] = load_logfiles_from_nc_file(nc_file_path)[1]
     metadata_attrs['temperature'] = load_temperature_from_nc_file(nc_file_path)[1]
+    metadata_attrs['srf'] = load_srf_from_nc_file(nc_file_path)[1]
 
     return metadata_vars, metadata_attrs
 

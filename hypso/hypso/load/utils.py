@@ -311,25 +311,32 @@ def load_geometry_from_nc_file(nc_file_path: Path) -> dict:
     return (geometry_vars, geometry_attrs)
 
 
-    '''
-    geometry = {}
+def load_srf_from_nc_file(nc_file_path: Path) -> Tuple[dict, dict]:
 
-    with nc.Dataset(nc_file_path, format="NETCDF4") as f:
+    srf_attrs = {}
+    srf_vars = {}
 
-        try:
-            group = f.groups["geometry"]
-
+    try:
+        with nc.Dataset(nc_file_path, format="NETCDF4") as f:
+            group = f.groups["metadata"]["srf"]
+            
             for key in group.variables.keys():
+                value = group.variables[key][:]
+                srf_vars[key] = value
+            
 
+            for attrname in group.ncattrs():
+                value = getattr(group, attrname)
                 try:
-                    value = group.variables[key][:]
-                    geometry[key] = value
-                except:
-                    pass
-        except:
-            pass
+                    if is_integer_num(float(value)):
+                        srf_attrs[attrname] = int(value)
+                    else:
+                        srf_attrs[attrname] = float(value)
+                except BaseException:
+                    srf_attrs[attrname] = value
+    except:
+        pass
 
-    return geometry
-    '''
+    return (srf_vars, srf_attrs)
 
 

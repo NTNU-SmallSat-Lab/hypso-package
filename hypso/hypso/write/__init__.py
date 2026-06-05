@@ -5,5 +5,6 @@ from .l1d_nc_writer import write_l1d_nc_file
 from .products_writer import write_products_nc_file
 from .l2a_nc_writer import write_l2a_nc_file
 from .aeronet_oc_writer import write_aeronet_oc_matchup_nc_file
+from .metadata_srf_group_writer import metadata_srf_group_writer
 
 

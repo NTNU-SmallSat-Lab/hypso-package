@@ -506,8 +506,6 @@ class HypsoBase:
 
         path = Path(path).absolute()
 
-
-
         fields = self._parse_filename(path=path)
 
         for key, value in fields.items():
@@ -538,33 +536,44 @@ class HypsoBase:
         self.l1c_nc_file = Path(path.parent, self.l1c_name + ".nc")
         self.l1d_nc_file = Path(path.parent, self.l1d_name + ".nc")
 
+        product_level = fields['product_level']
 
-
-
-        match fields['product_level']:
+        match product_level:
             case "l1a":
                 if self.VERBOSE: print('[INFO] Loading L1a capture ' + self.capture_name)
 
                 load_func = load_l1a_nc
                 cube_name = "l1a_cube"
+                setattr(self, "cube_name", cube_name)
+                setattr(self, "product_level", "l1a")
+                setattr(self, "product_symbol", "DN")
                 
             case "l1b":
                 if self.VERBOSE: print('[INFO] Loading L1b capture ' + self.capture_name)
 
                 load_func = load_l1b_nc
                 cube_name = "l1b_cube"
+                setattr(self, "cube_name", cube_name)
+                setattr(self, "product_level", "l1b")
+                setattr(self, "product_symbol", "Lt")
 
             case "l1c":
                 if self.VERBOSE: print('[INFO] Loading L1c capture ' + self.capture_name)
 
                 load_func = load_l1c_nc
                 cube_name = "l1b_cube" # L1c cube is the same as the L1b cube
+                setattr(self, "cube_name", cube_name)
+                setattr(self, "product_level", "l1c")
+                setattr(self, "product_symbol", "lt")
 
             case "l1d":
                 if self.VERBOSE: print('[INFO] Loading L1d capture ' + self.capture_name)
 
                 load_func = load_l1d_nc
                 cube_name = "l1d_cube"
+                setattr(self, "cube_name", cube_name)
+                setattr(self, "product_level", "l1d")
+                setattr(self, "product_symbol", "rhot")
 
             case "l2a":
                 if self.VERBOSE: print('[INFO] Loading L2a capture ' + self.capture_name)
@@ -579,12 +588,13 @@ class HypsoBase:
 
                 load_func = load_l2a_nc
                 cube_name = "l2a_cube"
+                setattr(self, "cube_name", cube_name)
+                setattr(self, "product_level", "l2a")
+                setattr(self, "product_symbol", "Rrs")
                 
-
-
             case _:
-                print("[ERROR] Unsupported product level.")
-                print(fields['product_level'])
+                print("[ERROR] Unsupported product level:")
+                print(product_level)
                 return None
 
         # TODO: find a better method to pass all of this information
@@ -605,6 +615,7 @@ class HypsoBase:
         setattr(self, "nc_logfiles_vars", nc_metadata_vars["logfiles"])
         setattr(self, "nc_temperature_vars", nc_metadata_vars["temperature"])
         setattr(self, "nc_timing_vars", nc_metadata_vars["timing"])
+        setattr(self, "nc_srf_vars", nc_metadata_vars["srf"])
 
         setattr(self, "nc_adcs_attrs", nc_metadata_attrs["adcs"])
         setattr(self, "nc_capture_config_attrs", nc_metadata_attrs["capture_config"])
@@ -613,6 +624,7 @@ class HypsoBase:
         setattr(self, "nc_logfiles_attrs", nc_metadata_attrs["logfiles"])
         setattr(self, "nc_temperature_attrs", nc_metadata_attrs["temperature"])
         setattr(self, "nc_timing_attrs", nc_metadata_attrs["timing"])
+        setattr(self, "nc_srf_attrs", nc_metadata_attrs["srf"])
  
         setattr(self, "nc_geometry_vars", nc_geometry_vars)
         setattr(self, "nc_geometry_attrs", nc_geometry_attrs)
@@ -706,12 +718,32 @@ class HypsoBase:
             else:
                 self.wavelengths = np.array(range(0, self.image_width))
 
+        if not hasattr(self, 'wavelengths_unbinned'):
+            if ('wavelengths_unbinned' in self.nc_corrections_vars.keys()):
+                self.wavelengths_unbinned = self.nc_corrections_vars['wavelengths_unbinned']
+            else:
+                self.wavelengths_unbinned = np.array(range(0, self.image_width))
+
         if not hasattr(self, 'fwhm'):
             if 'fwhm' in self.nc_cube_attrs.keys():
                 self.fwhm = self.nc_cube_attrs['fwhm']
             else:
                 #self.fwhm = [self.AVERAGE_FWHM] * self.bands
                 self.fwhm = [self.AVERAGE_FWHM] * self.UNBINNED_BAND_COUNT
+
+
+        if not hasattr(self, 'effective_fwhm'):
+            if 'effective_fwhm' in self.nc_srf_vars.keys():
+                self.effective_fwhm = self.nc_srf_vars['effective_fwhm']
+
+        if not hasattr(self, 'esun'):
+            if 'esun' in self.nc_srf_vars.keys():
+                self.esun = self.nc_srf_vars['esun']
+
+        if not hasattr(self, 'esun_wl'):
+            if 'esun_wavelengths' in self.nc_srf_vars.keys():
+                self.esun_wl = self.nc_srf_vars['esun_wavelengths']
+
 
 
 

@@ -525,6 +525,53 @@ def aeronet_oc_calculate_rrs(Lwn, wavelengths):
 
 
 
+
+
+
+def aeronet_oc_calculate_rrs_csiro(Lwn, wavelengths):
+
+
+    # Approach taken in "Evaluation of the ACOLITE atmospheric correction algorithm at a tropical coastal site" (2025)
+
+    # Load SSI
+    f0 = aeronet_oc_load_ssi()
+
+    # Filter out indices where Lwn is -999
+    valid_indices = [i for i, l in enumerate(Lwn) if l != -999]
+    invalid_indicies = [i for i, l in enumerate(Lwn) if l == -999]
+
+    wavelengths = np.array(wavelengths)
+    Lwn = np.array(Lwn)
+
+    #wavelengths = wavelengths*1000
+
+    F0_values = []
+    for wl in wavelengths:
+        F0_value = np.interp(wl, f0['wave'], f0['data'])
+        F0_values.append(F0_value)
+    F0 = np.array(F0_values)
+
+    # We apply a factor of 10 here since TSIS-1 F0 units are mW/(m^2 nm) and AERONET-OC Lwn units are mW/(cm^2 sr um) 
+    aeronet_Rrs = 10 * Lwn/(F0)
+
+    aeronet_Rrs[invalid_indicies] = -999
+
+    print(aeronet_Rrs)
+
+    return aeronet_Rrs
+
+
+
+
+
+
+
+
+
+
+
+
+
 def aeronet_oc_generate_matchup(satobj,
                                 matchup,
                                 AERONET_OC_DATA_DIR,
@@ -540,12 +587,9 @@ def aeronet_oc_generate_matchup(satobj,
     matchup_aeronet_data = aeronet_oc_get_closest_matchup_data(satobj, aeronet_oc_data_file)
     matchup_aeronet_data = aeronet_oc_matchup_aeronet_data(satobj, matchup_aeronet_data)
 
-    matchup_hypso_data = aeronet_oc_matchup_hypso_data(satobj, matchup, atmospheric_correction=atmospheric_correction, n_size=n_size)
 
 
-    matchup_data = matchup_hypso_data | matchup_aeronet_data
-
-    return matchup_data
+    return matchup_aeronet_data
 
 
 
@@ -566,7 +610,7 @@ def aeronet_oc_load_ssi():
 
 
 
-def aeronet_oc_matchup_hypso_data(satobj, matchup, atmospheric_correction="polymer", n_size=5):
+def aeronet_oc_matchup_load_hypso_data(satobj, matchup, atmospheric_correction="polymer", n_size=5):
     """
     Extract an NxN area from the datacube centered at the matchup point.
     Out-of-bounds indices are filled with NaN to always return exactly NxN.
@@ -594,7 +638,7 @@ def aeronet_oc_matchup_hypso_data(satobj, matchup, atmospheric_correction="polym
     
     # Validate n_size
     if n_size < 1:
-        print(f"Error: n_size must be >= 1, got {n_size}")
+        print(f"[ERROR] n_size must be >= 1, got {n_size}")
         return None
     
     if n_size % 2 == 0:
@@ -606,30 +650,50 @@ def aeronet_oc_matchup_hypso_data(satobj, matchup, atmospheric_correction="polym
     center_x = matchup.get("hypso_x_point")
     
     if center_x is None or center_y is None:
-        print("Error: Missing center coordinates in matchup dictionary")
+        print("[ERROR] Missing center coordinates in matchup dictionary")
         return None
     
+
+    cube_name = satobj.cube_name
+
     # Get the datacube
-    if not hasattr(satobj, 'l2a_cube'):
-        print("Error: satobj has no l2a_cube attribute")
+    if not hasattr(satobj, cube_name):
+        print(f"[ERROR] satobj has no {cube_name} attribute!")
         return None
-    
-    datacube = satobj.l2a_cube.get(atmospheric_correction)
-    if datacube is None:
-        print(f"Error: {atmospheric_correction} not found in l2a_cube")
-        return None
+
+
+    hypso_product_level = satobj.product_level
+    hypso_product_symbol = satobj.product_symbol
+
+    print(f"[INFO] Detected HYPSO product level: {hypso_product_level}")
+
+    if hypso_product_level == "l2a":
+
+        datacube = satobj.l2a_cube.get(atmospheric_correction)
+        if datacube is None:
+            print(f"[ERROR] {atmospheric_correction} not found in l2a_cube")
+            return None
+        
+    else:
+
+        datacube = getattr(satobj, cube_name, None)
+        if datacube is None:
+            print(f"[ERROR] {cube_name} not found!")
+            return None
+
+
     
     if len(datacube.shape) == 3:
         # (height, width, bands)
         height, width, n_bands = datacube.shape
         print(f"Detected cube shape: (height={height}, width={width}, bands={n_bands})")
     else:
-        print(f"Error: Unexpected datacube shape: {datacube.shape}")
+        print(f"[ERROR] Unexpected datacube shape: {datacube.shape}")
         return None
     
     # Validate center coordinates are within bounds
     if center_y < 0 or center_y >= height or center_x < 0 or center_x >= width:
-        print(f"Error: Center coordinates (x={center_x}, y={center_y}) out of bounds for cube of size (width={width}, height={height})")
+        print(f"[ERROR] Center coordinates (x={center_x}, y={center_y}) out of bounds for cube of size (width={width}, height={height})")
         return None
     
     # Calculate window boundaries
@@ -754,7 +818,9 @@ def aeronet_oc_matchup_hypso_data(satobj, matchup, atmospheric_correction="polym
         "aeronet_latitude": matchup.get("aeronet_latitude"),
         "aeronet_longitude": matchup.get("aeronet_longitude"),
         "hypso_latitude": matchup.get("hypso_latitude"),
-        "hypso_longitude": matchup.get("hypso_y_longitudes")
+        "hypso_longitude": matchup.get("hypso_y_longitudes"),
+        "hypso_product_level": hypso_product_level,
+        "hypso_product_symbol": hypso_product_symbol
     }
     
     print(f"Successfully extracted {n_size}x{n_size} area (shape: {extracted_area.shape})")

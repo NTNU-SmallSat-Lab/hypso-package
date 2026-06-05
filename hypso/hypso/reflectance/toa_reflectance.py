@@ -29,8 +29,8 @@ def compute_toa_reflectance(sensor_wavelengths,
         ssi_name = "tsis"
 
 
-    print(len(sensor_wavelengths))
-    print(len(sensor_fwhm))
+    #print(len(sensor_wavelengths))
+    #print(len(sensor_fwhm))
 
     from .toa_reflectance_v1 import compute_old_srf
     compute_old_srf(sensor_wavelengths=sensor_wavelengths, sensor_fwhm=sensor_fwhm)

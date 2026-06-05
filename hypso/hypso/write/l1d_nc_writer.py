@@ -5,6 +5,7 @@ import numpy as np
 from .geometry_group_writer import geometry_group_writer
 from .calibration_filenames_writer import calibration_filenames_writer
 from .metadata_gcp_group_writer import metadata_gcp_group_writer
+from .metadata_srf_group_writer import metadata_srf_group_writer
 
 def write_l1d_nc_file(satobj, label: str = None, overwrite: bool = False, masked: bool = False, **kwargs) -> None:
     
@@ -407,12 +408,38 @@ def l1d_nc_writer(satobj, dst_nc: str, datacube: bool = True, masked: bool = Fal
         except:
             pass
         try:
+            wavelengths = satobj.spectral_coeffs_unbinned
+            len_spectral = satobj.wavelengths_unbinned.shape[0]
+            netfile.createDimension('bands_unbinned', len_spectral)
+            meta_corrections_wl = netfile.createVariable(
+                'metadata/corrections/wavelengths_unbinned', 'f4',
+                ('bands_unbinned',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE)
+            meta_corrections_wl[:] = wavelengths
+        except:
+            pass
+        try:
             spectral_coeffs = satobj.spectral_coeffs
             len_spectral = satobj.wavelengths.shape[0]
             netfile.createDimension('specrows', len_spectral)
             meta_corrections_spec = netfile.createVariable(
                 'metadata/corrections/spec_coeffs', 'f4',
                 ('specrows',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE)
+            meta_corrections_spec[:] = spectral_coeffs
+        except:
+            pass
+        try:
+            spectral_coeffs = satobj.spectral_coeffs_unbinned
+            len_spectral = satobj.spectral_coeffs_unbinned.shape[0]
+            netfile.createDimension('specrows_unbinned', len_spectral)
+            meta_corrections_spec = netfile.createVariable(
+                'metadata/corrections/spec_coeffs_unbinned', 'f4',
+                ('specrows_unbinned',),
                 compression=COMP_SCHEME,
                 complevel=COMP_LEVEL,
                 shuffle=COMP_SHUFFLE)
@@ -447,5 +474,7 @@ def l1d_nc_writer(satobj, dst_nc: str, datacube: bool = True, masked: bool = Fal
         geometry_group_writer(satobj=satobj, netfile=netfile, COMP_SCHEME=COMP_SCHEME, COMP_LEVEL=COMP_LEVEL, COMP_SHUFFLE=COMP_SHUFFLE)
 
         metadata_gcp_group_writer(satobj, netfile, COMP_SCHEME=COMP_SCHEME, COMP_LEVEL=COMP_LEVEL, COMP_SHUFFLE=COMP_SHUFFLE)
+
+        metadata_srf_group_writer(satobj, netfile, COMP_SCHEME=COMP_SCHEME, COMP_LEVEL=COMP_LEVEL, COMP_SHUFFLE=COMP_SHUFFLE)
 
     return None

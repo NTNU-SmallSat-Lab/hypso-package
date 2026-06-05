@@ -7,7 +7,7 @@ from .utils import set_or_create_attr
 
 
 
-def write_aeronet_oc_matchup_nc_file(satobj, matchup_data, correction: str, dst_nc: str = None, datacube: str = True):
+def write_aeronet_oc_matchup_nc_file(satobj, matchup_data, atmospheric_correction: str = None, dst_nc: str = None, datacube: str = True):
     """
     Write AERONET-OC matchup extraction results to a NetCDF file.
     
@@ -19,7 +19,7 @@ def write_aeronet_oc_matchup_nc_file(satobj, matchup_data, correction: str, dst_
         The dictionary returned by aeronet_oc_extract_matchup_area
     dst_nc : str or Path, optional
         Directory to save the file. If None, uses satobj.parent_dir
-    correction : str
+    atmospheric_correction : str
         Atmospheric correction algorithm used (default "polymer")
     
     Returns:
@@ -39,18 +39,37 @@ def write_aeronet_oc_matchup_nc_file(satobj, matchup_data, correction: str, dst_
     
     dst_nc.mkdir(parents=True, exist_ok=True)
     
+
     # Create filename
     capture_name = satobj.capture_name
     hypso_name = matchup_data.get("hypso_name", "unknown")
     aeronet_name = matchup_data.get("aeronet_name", "unknown")
-    
-    coeff_type = getattr(satobj, "coeff_type", None)
-    if coeff_type:
-        coeff_type = "_" + str(coeff_type)
-    else:
-        coeff_type = ""
 
-    filename = f"{capture_name}_AERONET-OC_{hypso_name}_{aeronet_name}{coeff_type}_{correction}.nc"
+    product_symbol = getattr(satobj, "product_symbol", None)
+    product_level = getattr(satobj, "product_level", None)
+    
+    label = getattr(satobj, "label", None)
+    if label:
+        label = "_" + str(label)
+    else:
+        label = ""
+
+
+    filename_parts = [
+        capture_name,
+        "AERONET-OC",
+        hypso_name,
+        aeronet_name,
+        product_level,
+        atmospheric_correction,
+        label
+    ]
+
+    # Keep only non-None and non-empty values
+    parts = [p for p in filename_parts if p]
+
+    filename = "_".join(parts) + ".nc"
+
     output_path = dst_nc / filename
     
     # Compression settings
@@ -64,8 +83,8 @@ def write_aeronet_oc_matchup_nc_file(satobj, matchup_data, correction: str, dst_
     n_bands = extracted_cube.shape[2]
     
     # Get wavelengths if available
-    wavelengths = getattr(satobj, 'wavelengths', None)
-    fwhm = getattr(satobj, 'fwhm', None)
+    #wavelengths = getattr(satobj, 'wavelengths', None)
+    #fwhm = getattr(satobj, 'fwhm', None)
 
     # Get AERONET-OC wavelengths
     aeronet_wavelengths = matchup_data.get("aeronet_wavelengths")["values"]
@@ -80,7 +99,7 @@ def write_aeronet_oc_matchup_nc_file(satobj, matchup_data, correction: str, dst_
         set_or_create_attr(netfile, "hypso_capture_name", capture_name)
         set_or_create_attr(netfile, "hypso_target_name", hypso_name)
         set_or_create_attr(netfile, "aeronet_oc_site_name", aeronet_name)
-        set_or_create_attr(netfile, "atmospheric_correction_algorithm", correction)
+        set_or_create_attr(netfile, "atmospheric_correction_algorithm", atmospheric_correction)
         set_or_create_attr(netfile, "processing_level", "L2_AERONET_OC_MATCHUP")
         set_or_create_attr(netfile, "creation_date", datetime.now().isoformat())
         
@@ -203,73 +222,75 @@ def write_aeronet_oc_matchup_nc_file(satobj, matchup_data, correction: str, dst_
         longitude.valid_max = 180
 
 
-
-        '''
         try:
-            l2a_variable_name = satobj.l2a_cubes[correction].attrs['l2_variable_name']
-        except Exception as ex:
-            print["[WARNING] No 'l2_variable_name' attrribute found. Defaulting to 'Rrs'"]
-            print(ex)
-            l2a_variable_name = "Rrs"
-        '''
-
-        l2a_variable_name = "Rrs"
+            wavelengths = satobj.spectral_coeffs
+            len_spectral = satobj.wavelengths.shape[0]
+            netfile.createDimension('bands', len_spectral)
+            meta_corrections_wl = netfile.createVariable(
+                'metadata/corrections/wavelengths', 'f4',
+                ('bands',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE)
+            meta_corrections_wl[:] = wavelengths
+        except:
+            pass
 
 
         # Create and populate variables
         if datacube:
 
             # Store as datacube
-            Rrs = netfile.createVariable(
-                'products/hypso/' + l2a_variable_name, 'f4',
+            product_data = netfile.createVariable(
+                'products/hypso/' + product_symbol, 'f4',
                 ('lines', 'samples', 'bands'),
                 compression=COMP_SCHEME,
                 complevel=COMP_LEVEL,
                 shuffle=COMP_SHUFFLE)
-            Rrs.units = ""
-            Rrs.long_name = "HYPSO Rrs"
-            Rrs.wavelength_units = "nanometers"
-            Rrs.fwhm = satobj.fwhm
-            Rrs.wavelengths = np.around(satobj.wavelengths, 1)
-            Rrs[:] = extracted_cube
+            product_data.units = ""
+            product_data.long_name = "HYPSO product_data"
+            product_data.wavelength_units = "nanometers"
+            #product_data.fwhm = satobj.fwhm
+            product_data.wavelengths = np.around(satobj.wavelengths, 1)
+            product_data[:] = extracted_cube
 
         else:
 
             # Store as bands
-            Rrs_cube = extracted_cube
+            product_data_cube = extracted_cube
             for band in range(0, n_bands):
 
                 wave = np.around(satobj.wavelengths, 1)[band]
                 wave_name = str(int(wave))
-                name = l2a_variable_name + '_' + wave_name
+                name = product_symbol + '_' + wave_name
 
-                Rrs = netfile.createVariable(
+                product_data = netfile.createVariable(
                     'products/hypso/' + name, 'f4',
                     ('lines', 'samples'),
                     compression=COMP_SCHEME,
                     complevel=COMP_LEVEL,
                     shuffle=COMP_SHUFFLE)
                 
-                Rrs.units = ""
-                Rrs.long_name = "Bottom-of-Atmosphere Reflectance Band " + str(band) + " (" + wave_name + " nm)"
-                Rrs.wavelength_units = "nanometers"
-                Rrs.fwhm = satobj.fwhm[band]
-                Rrs.wavelength = wave
+                product_data.units = ""
+                product_data.long_name = "HYPSO product_data"
+                product_data.wavelength_units = "nanometers"
+                #product_data.fwhm = satobj.fwhm[band]
+                product_data.wavelength = wave
 
-                Rrs.radiation_wavelength = float(satobj.wavelengths[band]),
-                Rrs.radiation_wavelength_unit = "nm"
+                product_data.radiation_wavelength = float(satobj.wavelengths[band]),
+                product_data.radiation_wavelength_unit = "nm"
 
-                #Rrs.f0 = None
-                #Rrs.width = satobj.fwhm[band]
-                Rrs.wave = wave
-                Rrs.parameter = name
-                Rrs.wave_name = wave_name
-                Rrs.band = band
+                #product_data.f0 = None
+                #product_data.width = satobj.fwhm[band]
+                product_data.wave = wave
+                product_data.parameter = name
+                product_data.wave_name = wave_name
+                product_data.band = band
 
-                Rrs.coordinates = '/geometry/longitude /geometry/latitude'
-                Rrs.grid_mapping = '/geometry/crs_wgs84'
+                product_data.coordinates = '/geometry/longitude /geometry/latitude'
+                product_data.grid_mapping = '/geometry/crs_wgs84'
 
-                Rrs[:] = Rrs_cube[:,:,band]
+                product_data[:] = product_data_cube[:,:,band]
 
 
         # Write AERONET-OC datasets
