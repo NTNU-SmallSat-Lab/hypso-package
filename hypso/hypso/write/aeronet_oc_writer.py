@@ -7,7 +7,7 @@ from .utils import set_or_create_attr
 
 
 
-def write_aeronet_oc_matchup_nc_file(satobj, matchup_data, atmospheric_correction: str = None, dst_nc: str = None, datacube: str = True):
+def write_aeronet_oc_matchup_nc_file(satobj, matchup_data, atmospheric_correction: str = None, dst_nc: str = None, datacube: str = True, matchup_number: int = 0):
     """
     Write AERONET-OC matchup extraction results to a NetCDF file.
     
@@ -60,6 +60,7 @@ def write_aeronet_oc_matchup_nc_file(satobj, matchup_data, atmospheric_correctio
         "AERONET-OC",
         hypso_name,
         aeronet_name,
+        str(matchup_number),
         product_level,
         atmospheric_correction,
         label

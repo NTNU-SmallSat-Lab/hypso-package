@@ -100,7 +100,7 @@ def aeronet_oc_read_data(filepath):
 
 
 
-def aeronet_oc_detect_matchup(satobj, aeronet_oc_sites_csv_path, atmospheric_correction="polymer"):
+def aeronet_oc_detect_matchups(satobj, aeronet_oc_sites_csv_path, atmospheric_correction="polymer"):
 
     # Load the CSV file
     df = pd.read_csv(aeronet_oc_sites_csv_path)  # Replace with your actual file path
@@ -108,53 +108,79 @@ def aeronet_oc_detect_matchup(satobj, aeronet_oc_sites_csv_path, atmospheric_cor
 
     capture_target = str(satobj.capture_target).lower()
 
-    print("Searching AERONET-OC site matchup for " + capture_target + " HYPSO target...")
+    print("[INFO] Searching AERONET-OC site matchup for " + capture_target + " HYPSO target...")
 
     matching_rows = df[df['HYPSO_NAME'] == capture_target]
 
     if not matching_rows.empty:
-        # Get the first matching row
-        row = matching_rows.iloc[0]
 
-        hypso_name = row.HYPSO_NAME  # Note: spaces become underscores
-        aeronet_name = row.AERONETOC_NAME
-        aeronet_latitude = row.LATITUDE
-        aeronet_longitude = row.LONGITUDE
-        elevation = row.ELEVATION
-        
-        matchup = {
-            "hypso_name": row.HYPSO_NAME,
-            "aeronet_name": row.AERONETOC_NAME,
-            "aeronet_latitude": row.LATITUDE,
-            "aeronet_longitude": row.LONGITUDE,
-            "elevation": row.ELEVATION
-}
-        print("Detected AERONET-OC site match:")
-        print(f"{hypso_name} - {aeronet_name}: ({aeronet_latitude}, {aeronet_longitude})")
+        matchups = []
 
-        hypso_latitudes = satobj.latitudes
-        hypso_longitudes = satobj.longitudes
+        print("[INFO] Matching rows:")
+        print(matching_rows)
 
-        capture_shape = satobj.l2a_cube[atmospheric_correction].shape[0:2]
+        for idx in range(len(matching_rows)):
+            try:
+                print("idx")
 
-        min_error = np.inf
-        for i in range(capture_shape[0]):
-            for j in range(capture_shape[1]):
-                error = np.abs(hypso_latitudes[i, j] - aeronet_latitude) + np.abs(hypso_longitudes[i, j] - aeronet_longitude)
-                if error < min_error:
-                    min_error = error
-                    y_point = i
-                    x_point = j
+                # Get the first matching row
+                #row = matching_rows.iloc[0]
+                #row = matching_row
+                #print(row)
 
-        print(f"HYPSO Closest Geographic Coordinates (lat,lon): ({hypso_latitudes[y_point, x_point]}, {hypso_longitudes[y_point, x_point]})")
-        print(f"HYPSO Coordinates (y,x): ({y_point}, {x_point})")
+                print(idx)
+                row = matching_rows.iloc[idx]
+                print(row)
 
-        matchup["hypso_x_point"] = x_point
-        matchup["hypso_y_point"] = y_point
-        matchup["hypso_latitude"] = hypso_latitudes[y_point, x_point]
-        matchup["hypso_y_longitudes"] = hypso_longitudes[y_point, x_point]
-        
-        return matchup
+                hypso_name = row.HYPSO_NAME  # Note: spaces become underscores
+                aeronet_name = row.AERONETOC_NAME
+                aeronet_latitude = row.LATITUDE
+                aeronet_longitude = row.LONGITUDE
+                elevation = row.ELEVATION
+                
+                matchup = {
+                    "hypso_name": row.HYPSO_NAME,
+                    "aeronet_name": row.AERONETOC_NAME,
+                    "aeronet_latitude": row.LATITUDE,
+                    "aeronet_longitude": row.LONGITUDE,
+                    "elevation": row.ELEVATION
+                }
+
+                print("Detected AERONET-OC site match:")
+                print(f"{hypso_name} - {aeronet_name}: ({aeronet_latitude}, {aeronet_longitude})")
+
+                hypso_latitudes = satobj.latitudes
+                hypso_longitudes = satobj.longitudes
+
+                capture_shape = satobj.l2a_cube[atmospheric_correction].shape[0:2]
+
+                min_error = np.inf
+                for i in range(capture_shape[0]):
+                    for j in range(capture_shape[1]):
+                        error = np.abs(hypso_latitudes[i, j] - aeronet_latitude) + np.abs(hypso_longitudes[i, j] - aeronet_longitude)
+                        if error < min_error:
+                            min_error = error
+                            y_point = i
+                            x_point = j
+
+                print(f"HYPSO Closest Geographic Coordinates (lat,lon): ({hypso_latitudes[y_point, x_point]}, {hypso_longitudes[y_point, x_point]})")
+                print(f"HYPSO Coordinates (y,x): ({y_point}, {x_point})")
+
+                matchup["hypso_x_point"] = x_point
+                matchup["hypso_y_point"] = y_point
+                matchup["hypso_latitude"] = hypso_latitudes[y_point, x_point]
+                matchup["hypso_y_longitudes"] = hypso_longitudes[y_point, x_point]
+            
+                matchups.append(matchup)
+
+            except Exception as ex:
+                print(ex)
+                print("[INFO] Error parsing AERONET-OC site information:")
+                print(df)
+                continue
+
+
+        return matchups
 
     else:
         print("No AERONET-OC site matchup detected for " + capture_target)
@@ -197,8 +223,12 @@ def aeronet_oc_download_data(satobj, matchup, aeronet_oc_data_dir, data_level=1.
 
 def aeronet_oc_get_closest_matchup_data(satobj, aeronet_oc_data_file, df_time_column="Time(hh:mm:ss)", df_date_column="Date(dd-mm-yyyy)"):
 
-    df = aeronet_oc_read_data(aeronet_oc_data_file)
-
+    try:
+        df = aeronet_oc_read_data(aeronet_oc_data_file)
+    except pd.errors.EmptyDataError as ex:
+        print(ex)
+        print(f"[WARNING] Matchup data in {aeronet_oc_data_file} is empty.")
+        return None
 
     dt = satobj.capture_datetime
 
@@ -575,8 +605,8 @@ def aeronet_oc_calculate_rrs_csiro(Lwn, wavelengths):
 def aeronet_oc_generate_matchup(satobj,
                                 matchup,
                                 AERONET_OC_DATA_DIR,
-                                atmospheric_correction = "polymer",
-                                n_size = 5
+                                #atmospheric_correction = "polymer",
+                                #n_size = 5
                                 ):
 
     aeronet_oc_data_file = aeronet_oc_download_data(satobj, 
@@ -585,6 +615,10 @@ def aeronet_oc_generate_matchup(satobj,
 
 
     matchup_aeronet_data = aeronet_oc_get_closest_matchup_data(satobj, aeronet_oc_data_file)
+
+    if matchup_aeronet_data is None:
+        return None
+
     matchup_aeronet_data = aeronet_oc_matchup_aeronet_data(satobj, matchup_aeronet_data)
 
 
@@ -618,7 +652,7 @@ def aeronet_oc_matchup_load_hypso_data(satobj, matchup, atmospheric_correction="
     Parameters:
     -----------
     matchup : dict
-        The matchup dictionary returned by aeronet_oc_detect_matchup
+        The matchup dictionary returned by aeronet_oc_detect_matchups
     satobj : object
         Satellite object containing l2a_cube
     atmospheric_correction : str

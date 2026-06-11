@@ -745,6 +745,13 @@ class HypsoBase:
                 self.esun_wl = self.nc_srf_vars['esun_wavelengths']
 
 
+        csiro_list =  ["csiro_ssi", "csiro_solar_wavelengths", "csiro_binned_srfs"
+                       "csiro_effective_fwhm", "csiro_esun"]
+
+        for csiro_key in csiro_list:
+            if not hasattr(self, csiro_key):
+                if csiro_key in self.nc_srf_vars.keys():
+                    setattr(self, csiro_key, self.nc_srf_vars[csiro_key])
 
 
         # Geometry atrributes
@@ -2037,5 +2044,7 @@ class HypsoBase:
         return None
 
 
+    from hypso.reflectance import compute_csiro_srfs
 
+    compute_csiro_srfs = compute_csiro_srfs
 

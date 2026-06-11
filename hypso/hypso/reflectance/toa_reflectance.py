@@ -32,8 +32,9 @@ def compute_toa_reflectance(sensor_wavelengths,
     #print(len(sensor_wavelengths))
     #print(len(sensor_fwhm))
 
-    from .toa_reflectance_v1 import compute_old_srf
-    compute_old_srf(sensor_wavelengths=sensor_wavelengths, sensor_fwhm=sensor_fwhm)
+    # For comparing old SRF wit new
+    #from .toa_reflectance_v1 import compute_old_srf
+    #compute_old_srf(sensor_wavelengths=sensor_wavelengths, sensor_fwhm=sensor_fwhm)
 
 
 
@@ -53,7 +54,7 @@ def compute_toa_reflectance(sensor_wavelengths,
     #esun_list = compute_esun(srfs_csr=binned_srfs_csr, ssi=truncated_ssi, method="vectorized")
     #esun_list = compute_esun(srfs_csr=binned_srfs_csr, ssi=truncated_ssi, method="loop")
 
-    effective_fwhm = compute_effective_fwhm(srfs_csr=binned_srfs_csr, truncated_solar_wavelengths=truncated_solar_wavelengths)
+    effective_fwhm = compute_effective_fwhm(srfs_csr=binned_srfs_csr, solar_wavelengths=truncated_solar_wavelengths)
 
     scene_date = parser.isoparse(iso_time)
     julian_day = scene_date.timetuple().tm_yday
@@ -122,8 +123,93 @@ def compute_toa_reflectance(sensor_wavelengths,
 
 
 
+def compute_csiro_srfs(self,
+                       #sensor_wavelengths,
+                       # sensor_fwhm,
+                        #bin_factor: int,
+                        generate_figures: bool = False
+                        ) -> xr.DataArray:
+        
+    self._get_fwhm_unbinned()
+
+    sensor_wavelengths = self.wavelengths_unbinned
+    sensor_fwhm = self.fwhm_unbinned
+    bin_factor = self.bin_factor
+
+    ssi_original, solar_wavelengths_original= load_ssi()
+
+    # Reduce to 1000 element arrays
+    solar_wavelengths = np.linspace(350,850,1000)
+    ssi = np.interp(solar_wavelengths, solar_wavelengths_original, ssi_original)
+
+    del ssi_original, solar_wavelengths_original
 
 
+    fwhm_nm = sensor_fwhm
+
+    # Calculate sigma from FWHM
+    sigma_nm = fwhm_nm / (2 * np.sqrt(2 * np.log(2)))
+
+
+    # Find indices of sensor bands in solar wavelength array
+    sensor_band_indices = [np.abs(solar_wavelengths - w).argmin() for w in sensor_wavelengths]
+
+    n_bands = len(sensor_wavelengths)
+    n_solar_wavelengths = len(solar_wavelengths)
+
+    # Initialize sparse matrix in LIL format for efficient construction
+    aligned_srfs_sparse = lil_matrix((n_bands, n_solar_wavelengths), dtype=np.float32)
+
+
+    for i, (adjusted_idx, center_wavelength) in enumerate(zip(sensor_band_indices, sensor_wavelengths)):
+
+        # Calculate 3 sigma range for this band
+        start_lambda = center_wavelength - (3 * sigma_nm[i])
+        end_lambda = center_wavelength + (3 * sigma_nm[i])
+
+        #print(f"{start_lambda}, {end_lambda}")
+
+        # Find indices directly in the truncated wavelength array (only searching within truncated range)
+        start_idx = np.abs(solar_wavelengths - start_lambda).argmin()
+        end_idx = np.abs(solar_wavelengths - end_lambda).argmin()
+
+        # Get the wavelengths for this SRF from truncated array
+        srf_wavelengths = solar_wavelengths[start_idx:end_idx + 1]
+
+        # Create x-values for Gaussian (centered at 0)
+        gx = np.linspace(-3 * sigma_nm[i], 3 * sigma_nm[i], len(srf_wavelengths))
+
+        # Create Gaussian SRF (peak = 1.0)
+        gaussian_srf = np.exp(-(gx / sigma_nm[i]) ** 2 / 2)
+
+        # Store in aligned arrays (both dense and sparse)
+        aligned_srfs_sparse[i, start_idx:end_idx + 1] = gaussian_srf
+
+    # Convert to CSR for efficient row access
+    srfs_csr = aligned_srfs_sparse.tocsr()
+
+    binned_sensor_wavelengths = bin_sensor_wavelengths(sensor_wavelengths, bin_factor)
+
+    binned_srfs_csr = bin_srf(srfs_csr, bin_factor, solar_wavelengths, generate_figures)    
+
+    effective_fwhm = compute_effective_fwhm(srfs_csr=binned_srfs_csr, solar_wavelengths=solar_wavelengths)
+
+
+    binned_srfs = binned_srfs_csr.toarray()
+
+    esun = np.array(compute_esun(srfs_csr=binned_srfs_csr, ssi=ssi, method="sparse"))
+
+    self.csiro_srfs_csr = srfs_csr
+    self.csiro_ssi = ssi
+    self.csiro_solar_wavelengths = solar_wavelengths
+    self.csiro_binned_srfs = binned_srfs
+    self.csiro_effective_fwhm = effective_fwhm
+    self.csiro_esun = esun
+
+    return #srfs_csr, ssi, solar_wavelengths, binned_srfs, effective_fwhm, esun
+
+
+    
 
 
 def compute_srf(ssi,
@@ -205,7 +291,7 @@ def bin_sensor_wavelengths(sensor_wavelengths, bin_factor):
     return sensor_wavelengths.reshape(-1, bin_factor).mean(axis=1).reshape(-1)
 
 
-def bin_srf(srfs_csr, bin_factor, truncated_solar_wavelengths=None, generate_figures=False):
+def bin_srf(srfs_csr, bin_factor, solar_wavelengths=None, generate_figures=False):
     """
     Bin neighboring SRFs by adding them element-wise.
     
@@ -215,7 +301,7 @@ def bin_srf(srfs_csr, bin_factor, truncated_solar_wavelengths=None, generate_fig
         Sparse CSR matrix of SRFs (n_bands times n_wavelengths)
     bin_factor : int
         Number of neighboring bands to bin together
-    truncated_solar_wavelengths : array, optional
+    solar_wavelengths : array, optional
         Wavelength array for plotting/debugging
 
     Returns:
@@ -277,9 +363,9 @@ def bin_srf(srfs_csr, bin_factor, truncated_solar_wavelengths=None, generate_fig
     
 
     # Optional visualization
-    if truncated_solar_wavelengths is not None and generate_figures:
+    if solar_wavelengths is not None and generate_figures:
         visualize_srf_binning(srfs_csr, binned_srfs_csr, bin_factor, 
-                         truncated_solar_wavelengths, bin_indices)
+                         solar_wavelengths, bin_indices)
     
     return binned_srfs_csr
 
@@ -337,14 +423,14 @@ def visualize_srf_binning(original_srfs, binned_srfs, bin_factor,
 
 def compute_esun_from_csr(srfs_csr, ssi, band_indices=None):
     """
-    Compute Esun values from CSR-formatted SRFs and truncated SSI.
+    Compute Esun values from CSR-formatted SRFs and SSI.
     
     Parameters:
     -----------
     srfs_csr : scipy.sparse.csr_matrix
         CSR matrix of aligned SRFs (n_bands × n_wavelengths)
-    truncated_ssi : numpy array
-        Truncated solar spectral irradiance (aligned with SRF wavelengths)
+    ssi : numpy array
+        Solar spectral irradiance (aligned with SRF wavelengths)
     band_indices : list or array, optional
         Specific band indices to compute. If None, compute for all bands.
     
@@ -400,7 +486,7 @@ def compute_esun_vectorized(srfs_csr, ssi):
     srfs_csr : scipy.sparse.csr_matrix
         CSR matrix of aligned SRFs (n_bands × n_wavelengths)
     ssi : numpy array
-        Truncated solar spectral irradiance
+        Solar spectral irradiance
     
     Returns:
     --------
@@ -445,7 +531,7 @@ def compute_esun_sparse_efficient(srfs_csr, ssi):
     srfs_csr : scipy.sparse.csr_matrix
         CSR matrix of aligned SRFs
     ssi : numpy array
-        Truncated solar spectral irradiance
+        Solar spectral irradiance
     
     Returns:
     --------
@@ -488,8 +574,8 @@ def compute_esun(srfs_csr, ssi, method='sparse'):
     -----------
     srfs_csr : scipy.sparse.csr_matrix
         CSR matrix of aligned SRFs
-    truncated_ssi : numpy array
-        Truncated solar spectral irradiance
+    ssi : numpy array
+        Solar spectral irradiance
     method : str
         'sparse' - most memory efficient (recommended)
         'vectorized' - good balance
@@ -512,9 +598,9 @@ def compute_esun(srfs_csr, ssi, method='sparse'):
 
 
 
-def compute_effective_fwhm(srfs_csr, truncated_solar_wavelengths):
+def compute_effective_fwhm(srfs_csr, solar_wavelengths):
 
-    wavelengths = truncated_solar_wavelengths
+    wavelengths = solar_wavelengths
 
     band_indices = range(srfs_csr.shape[0])
     

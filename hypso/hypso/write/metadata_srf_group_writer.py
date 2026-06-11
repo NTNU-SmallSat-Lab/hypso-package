@@ -73,4 +73,93 @@ def metadata_srf_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib',
             print(ex)
 
 
+
+    # CSIRO
+
+    if (hasattr(satobj, 'csiro_ssi') and satobj.csiro_ssi is not None):
+
+        try:
+            csiro_ssi = satobj.csiro_ssi
+            length = len(satobj.csiro_ssi)
+            netfile.createDimension('csiro_ssi', length)
+            csiro_ssi_var = netfile.createVariable(
+                'metadata/srf/csiro_ssi', 'f4',
+                ('csiro_ssi',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE)
+            csiro_ssi_var[:] = csiro_ssi
+        except Exception as ex:
+            print(ex)
+
+
+    if (hasattr(satobj, 'csiro_solar_wavelengths') and satobj.csiro_solar_wavelengths is not None):
+
+        try:
+            csiro_solar_wavelengths = satobj.csiro_solar_wavelengths
+            length = len(satobj.csiro_solar_wavelengths)
+            netfile.createDimension('csiro_solar_wavelengths', length)
+            csiro_solar_wavelengths_var = netfile.createVariable(
+                'metadata/srf/csiro_solar_wavelengths', 'f4',
+                ('csiro_solar_wavelengths',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE)
+            csiro_solar_wavelengths_var[:] = csiro_solar_wavelengths
+        except Exception as ex:
+            print(ex)
+
+    if (hasattr(satobj, 'csiro_binned_srfs') and satobj.csiro_binned_srfs is not None):
+
+        try:
+            csiro_binned_srfs = satobj.csiro_binned_srfs
+            length = len(satobj.csiro_binned_srfs)
+            csiro_binned_srfs_x = satobj.csiro_binned_srfs.shape[0]
+            csiro_binned_srfs_y = satobj.csiro_binned_srfs.shape[1]
+            netfile.createDimension('csiro_binned_srfs_x', csiro_binned_srfs_x)
+            netfile.createDimension('csiro_binned_srfs_y', csiro_binned_srfs_y)
+            csiro_binned_srfs_var = netfile.createVariable(
+                'metadata/srf/csiro_binned_srfs', 'f4',
+                ('csiro_binned_srfs_x', 'csiro_binned_srfs_y'),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE)
+            csiro_binned_srfs_var[:] = csiro_binned_srfs
+        except Exception as ex:
+            print(ex)
+
+    if (hasattr(satobj, 'csiro_effective_fwhm') and satobj.csiro_effective_fwhm is not None):
+
+        try:
+            csiro_effective_fwhm = satobj.csiro_effective_fwhm
+            length = len(satobj.csiro_effective_fwhm)
+            netfile.createDimension('csiro_effective_fwhm', length)
+            csiro_effective_fwhm_var = netfile.createVariable(
+                'metadata/srf/csiro_effective_fwhm', 'f4',
+                ('csiro_effective_fwhm',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE)
+            csiro_effective_fwhm_var[:] = csiro_effective_fwhm
+        except Exception as ex:
+            print(ex)
+
+
+    if (hasattr(satobj, 'csiro_esun') and satobj.csiro_esun is not None):
+
+        try:
+            csiro_esun = satobj.csiro_esun
+            length = len(satobj.csiro_esun)
+            netfile.createDimension('csiro_esun', length)
+            csiro_esun_var = netfile.createVariable(
+                'metadata/srf/csiro_esun', 'f4',
+                ('csiro_esun',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE)
+            csiro_esun_var[:] = csiro_esun
+        except Exception as ex:
+            print(ex)
+
+
     return None
