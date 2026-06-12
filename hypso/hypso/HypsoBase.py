@@ -1144,13 +1144,17 @@ class HypsoBase:
 
 
 
-    def generate_l1c_cube(self, coeff_type: str = None, **kwargs) -> None:
+    def generate_l1c_cube(self, coeff_type: str = None, use_direct_georef=True, **kwargs) -> None:
         
         print("[INFO] Generating L1c cube")
         if self.l1b_cube is None:
             self.generate_l1b_cube(coeff_type=coeff_type, **kwargs)
+
+        if use_direct_georef:
+            self.run_direct_georeferencing()
+        else:
+            self.run_georeferencing()
         
-        self.run_georeferencing()
         
         return None
 
