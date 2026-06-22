@@ -72,6 +72,8 @@ SAT_LOOKUP = {
     "NOAA-21": "VIIRSJ2_L2_OC",
     "SUOMI-NPP": "VIIRSN_L2_OC"
     }
+    #"PACE": "PACE_OCI_L2_AOP_NRT",
+    #"PACE": "PACE_OCI_L2_SFREFL",
 
 # List l2 flags, then build them into a dict
 l2_flags_list = [
@@ -630,7 +632,7 @@ def parse_quality_flags(flag_value):
             if (flag_value & value) != 0]
 
 
-def get_fivebyfive(file, latitude, longitude, rrs_wavelengths):
+def get_fivebyfive(file, latitude, longitude, rrs_wavelengths, granule_date):
     """
     Get stats on a 5x5 box around station coordinates of a satellite granule.
 
@@ -706,10 +708,12 @@ def get_fivebyfive(file, latitude, longitude, rrs_wavelengths):
         rrs_cv_median = np.nan
         rrs_mean = np.nan * np.empty_like(rrs_wavelengths)
 
+    #granule_date = pd.to_datetime(file.granule["umm"]["TemporalExtent"]["RangeDateTime"]["BeginningDateTime"])
+
+
     # Put in dictionary of the row
     row = {
-        "oci_datetime": pd.to_datetime(file.granule["umm"]["TemporalExtent"]
-                                       ["RangeDateTime"]["BeginningDateTime"]),
+        "oci_datetime": granule_date,
         "oci_cv": rrs_cv_median,
         "oci_latitude": sat_lat[center_line, center_pixel],
         "oci_longitude": sat_lon[center_line, center_pixel],
@@ -724,8 +728,260 @@ def get_fivebyfive(file, latitude, longitude, rrs_wavelengths):
     return row
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def get_fivebyfive_Lwn(file, latitude, longitude, Lwn_wavelengths, granule_date):
+    """
+    Get stats on a 5x5 box around station coordinates of a satellite granule.
+
+    Parameters
+    ----------
+    file : earthaccess granule object
+        Satellite granule from earthaccess.
+    latitude : float
+        In decimal degrees for Aeronet-OC site for matchups
+    longitude : float
+        In decimal degrees (negative West) for Aeronet-OC site for matchups
+    rrs_wavelengths ; numpy array
+        Rrs wavelengths (from wavelength_3d for OCI)
+
+    Returns
+    -------
+    None.
+    """
+    with xr.open_dataset(file, group="geolocation_data") as ds_nav:
+        sat_lat = ds_nav['latitude'].values
+        sat_lon = ds_nav['longitude'].values
+
+    # Calculate the Euclidean distance for 2D lat/lon arrays
+    distances = np.sqrt((sat_lat - latitude)**2 + (sat_lon - longitude)**2)
+
+    # Find the index of the minimum distance
+    # Dimensions are (lines, pixels)
+    min_dist_idx = np.unravel_index(np.argmin(distances), distances.shape)
+    center_line, center_pixel = min_dist_idx
+
+    # Get indices for a 5x5 box around the center pixel
+    line_start = max(center_line - 2, 0)
+    line_end = min(center_line + 2 + 1, sat_lat.shape[0])
+    pixel_start = max(center_pixel - 2, 0)
+    pixel_end = min(center_pixel + 2 + 1, sat_lat.shape[1])
+
+    # Extract the data
+    with xr.open_dataset(file, group="observation_data") as ds_data:
+        
+        i_shape = ds_data['i'].shape
+        
+        if i_shape[2] < 2:
+            number_of_views = i_shape[2] - 1
+        else:
+            number_of_views = 1
+
+        Lwn_data = ds_data['i'].isel(
+            number_of_views=number_of_views,  # Take only the first view
+            bins_along_track=slice(line_start, line_end),
+            bins_across_track=slice(pixel_start, pixel_end)
+            ).values
+
+    valid_mask_dims = (Lwn_data.shape[0], Lwn_data.shape[1])
+    valid_mask = np.full(valid_mask_dims, True)
+
+
+
+    Lwn_valid = Lwn_data[valid_mask]
+    Lwn_std_initial = np.std(Lwn_valid, axis=0)
+    Lwn_mean_initial = np.mean(Lwn_valid, axis=0)
+
+    # Exclude spectra > 1.5 stdevs away
+    std_mask = np.all(
+        np.abs(Lwn_valid - Lwn_mean_initial) <= 1.5 * Lwn_std_initial,
+        axis=1)
+    Lwn_std = np.std(Lwn_valid[std_mask], axis=0)
+    Lwn_mean = np.mean(Lwn_valid[std_mask], axis=0).flatten()
+
+    # Matchup criteria uses cv as median of 405-570nm
+    Lwn_cv = Lwn_std / Lwn_mean
+    Lwn_cv_median = np.median(Lwn_cv[(Lwn_wavelengths >= 405)
+                                        & (Lwn_wavelengths <= 570)])
+
+
+    #granule_date = pd.to_datetime(file.granule["umm"]["TemporalExtent"]["RangeDateTime"]["BeginningDateTime"])
+
+
+    # Put in dictionary of the row
+    row = {
+        "oci_lwn_datetime": granule_date,
+        "oci_lwn_cv": Lwn_cv_median,
+        "oci_lwn_latitude": sat_lat[center_line, center_pixel],
+        "oci_lwn_longitude": sat_lon[center_line, center_pixel],
+        "oci_lwn_pixel_valid": 5*5
+    }
+
+    # Add mean spectra to the row dictionary
+    for wavelength, mean_value in zip(Lwn_wavelengths, Lwn_mean):
+        key = f'oci_lwn{int(wavelength)}'
+        row[key] = mean_value
+
+    return row
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def get_fivebyfive_rhot(file, latitude, longitude, rhot_wavelengths, granule_date):
+    """
+    Get stats on a 5x5 box around station coordinates of a satellite granule.
+
+    Parameters
+    ----------
+    file : earthaccess granule object
+        Satellite granule from earthaccess.
+    latitude : float
+        In decimal degrees for Aeronet-OC site for matchups
+    longitude : float
+        In decimal degrees (negative West) for Aeronet-OC site for matchups
+    rrs_wavelengths ; numpy array
+        Rrs wavelengths (from wavelength_3d for OCI)
+
+    Returns
+    -------
+    None.
+    """
+    with xr.open_dataset(file, group="geolocation_data") as ds_nav:
+        sat_lat = ds_nav['latitude'].values
+        sat_lon = ds_nav['longitude'].values
+
+    # Calculate the Euclidean distance for 2D lat/lon arrays
+    distances = np.sqrt((sat_lat - latitude)**2 + (sat_lon - longitude)**2)
+
+    # Find the index of the minimum distance
+    # Dimensions are (lines, pixels)
+    min_dist_idx = np.unravel_index(np.argmin(distances), distances.shape)
+    center_line, center_pixel = min_dist_idx
+
+    # Get indices for a 5x5 box around the center pixel
+    line_start = max(center_line - 2, 0)
+    line_end = min(center_line + 2 + 1, sat_lat.shape[0])
+    pixel_start = max(center_pixel - 2, 0)
+    pixel_end = min(center_pixel + 2 + 1, sat_lat.shape[1])
+
+    # Extract the data
+    with xr.open_dataset(file, group="observation_data") as ds_data:
+        rhot_blue_data = ds_data['rhot_blue'].isel(
+            scans=slice(line_start, line_end),
+            pixels=slice(pixel_start, pixel_end)
+            ).values
+        rhot_red_data = ds_data['rhot_red'].isel(
+            scans=slice(line_start, line_end),
+            pixels=slice(pixel_start, pixel_end)
+            ).values
+
+
+    rhot_blue_data = np.transpose(rhot_blue_data, (1, 2, 0))
+    rhot_red_data = np.transpose(rhot_red_data, (1, 2, 0))
+
+    rhot_data = np.concatenate((rhot_blue_data, rhot_red_data), axis=2)
+
+    del rhot_blue_data, rhot_red_data
+
+    valid_mask_dims = (rhot_data.shape[0], rhot_data.shape[1])
+    valid_mask = np.full(valid_mask_dims, True)
+
+
+
+    rhot_valid = rhot_data[valid_mask]
+    rhot_std_initial = np.std(rhot_valid, axis=0)
+    rhot_mean_initial = np.mean(rhot_valid, axis=0)
+
+    # Exclude spectra > 1.5 stdevs away
+    std_mask = np.all(
+        np.abs(rhot_valid - rhot_mean_initial) <= 1.5 * rhot_std_initial,
+        axis=1)
+    rhot_std = np.std(rhot_valid[std_mask], axis=0)
+    rhot_mean = np.mean(rhot_valid[std_mask], axis=0).flatten()
+
+    # Matchup criteria uses cv as median of 405-570nm
+    rhot_cv = rhot_std / rhot_mean
+    rhot_cv_median = np.median(rhot_cv[(rhot_wavelengths >= 405)
+                                        & (rhot_wavelengths <= 570)])
+
+
+    #granule_date = pd.to_datetime(file.granule["umm"]["TemporalExtent"]["RangeDateTime"]["BeginningDateTime"])
+
+
+    # Put in dictionary of the row
+    row = {
+        "oci_rhot_datetime": granule_date,
+        "oci_rhot_cv": rhot_cv_median,
+        "oci_rhot_latitude": sat_lat[center_line, center_pixel],
+        "oci_rhot_longitude": sat_lon[center_line, center_pixel],
+        "oci_rhot_pixel_valid": 5*5
+    }
+
+    # Add mean spectra to the row dictionary
+    for wavelength, mean_value in zip(rhot_wavelengths, rhot_mean):
+        key = f'oci_rhot{int(wavelength)}'
+        row[key] = mean_value
+
+    return row
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def process_satellite(start_date, end_date, latitude, longitude, sat="PACE",
-                      selected_dates=None):
+                      selected_dates=None, local_path=None):
     """
     Download and process satellite data for matchups.
 
@@ -777,34 +1033,230 @@ def process_satellite(start_date, end_date, latitude, longitude, sat="PACE",
     time_bounds = (f"{start_date}T00:00:00", f"{end_date}T23:59:59")
 
     # Run Earthaccess data search
-    results = earthaccess.search_data(point=(longitude, latitude),
-                                      temporal=time_bounds,
-                                      short_name=short_name)
-    if selected_dates is not None:
-        filtered_results = [
-            result for result in results
-            if result["umm"]["TemporalExtent"]["RangeDateTime"]["BeginningDateTime"][:10]
-            in selected_dates
-            ]
-        print(f"Filtered to {len(filtered_results)} Granules.")
-        files = earthaccess.open(filtered_results)
-    else:
-        files = earthaccess.open(results)
+    #results_old = earthaccess.search_data(point=(longitude, latitude),
+    #                                  temporal=time_bounds,
+    #                                  short_name=short_name)
+    # NB: short_name was renamed from "PACE_OCI_L2_AOP_NRT" to "PACE_OCI_L2_AOP"
 
-    # Pull out Rrs wavelengths for easier processing
-    with xr.open_dataset(files[0], group="sensor_band_parameters") as ds_bands:
-        rrs_wavelengths = ds_bands["wavelength_3d"].values
 
-    # Loop through files and process
-    sat_rows = []
-    for idx, file in enumerate(files):
-        granule_date = pd.to_datetime(file.granule["umm"]["TemporalExtent"]
-                                      ["RangeDateTime"]["BeginningDateTime"])
-        print(f"Running Granule: {granule_date}")
-        row = get_fivebyfive(file, latitude, longitude, rrs_wavelengths)
-        sat_rows.append(row)
+    pace_products = [("PACE_OCI_L2_AOP", "3.2"), ("PACE_OCI_L1C_SCI", "3"), ("PACE_OCI_L1B_SCI", "3")]
 
-    return pd.DataFrame(sat_rows)
+    for pace_product in pace_products:
+
+        short_name = pace_product[0]
+        version = pace_product[1]
+
+        results = earthaccess.search_data(point=(longitude, latitude),
+                                        temporal=time_bounds,
+                                        short_name=short_name,
+                                        version=version)
+        print("Earthaccess granule search results:")
+        print(results)
+
+
+
+        if selected_dates is not None:
+            filtered_results = [
+                result for result in results
+                if result["umm"]["TemporalExtent"]["RangeDateTime"]["BeginningDateTime"][:10]
+                in selected_dates
+                ]
+            print(f"Filtered to {len(filtered_results)} Granules.")
+            #files = earthaccess.open(filtered_results)
+            selected_results = filtered_results
+        else:
+            #files = earthaccess.open(results)
+            selected_results = results
+
+        print("Selected granules:")
+        print(selected_results)
+
+        open_remote_file = False
+
+        try:
+            print(f"Downloading {str(short_name)} granule files to {local_path}")
+            files = earthaccess.download(results, local_path=local_path, show_progress=True)
+            print("Downloaded granules:")
+            print(files)
+
+
+            try:
+                print("Checking if files can be opened")
+                for file in files:
+                    with xr.open_dataset(file):
+                        print(f"Succeeded at opening {file}!")
+                        pass
+            except Exception as ex:
+                print(ex)
+                print("Corrupt file detected! Attempting to re-download with force=True argument.")
+                print(f"Downloading {str(short_name)} granule files to {local_path}")
+                files = earthaccess.download(results, local_path=local_path, show_progress=True, force=True) 
+                print("Downloaded granules:")
+                print(files)
+
+
+        except Exception:
+            open_remote_file = True
+
+        if open_remote_file:
+            print(f"Opening {str(short_name)} granule files from S3/HTTPS")
+            files = earthaccess.open(selected_results)
+            print("Opened granules:")
+            print(files)
+
+        if len(files) == 0:
+            print("No granules found!")
+            return None
+
+        if short_name == "PACE_OCI_L2_AOP":
+
+            # Pull out Rrs wavelengths for easier processing
+            with xr.open_dataset(files[0], group="sensor_band_parameters") as ds_bands:
+                rrs_wavelengths = ds_bands["wavelength_3d"].values
+
+            # Loop through files and process
+            sat_rrs_rows = []
+            for idx, file in enumerate(files):
+                
+                try:
+                    granule_date = pd.to_datetime(file.granule["umm"]["TemporalExtent"]["RangeDateTime"]["BeginningDateTime"])
+                except:
+                    ds = xr.open_dataset(file)
+                    granule_date = pd.to_datetime(ds.attrs['time_coverage_start']) 
+                    granule_date = granule_date.floor('s') 
+                
+
+                print(f"Running Granule: {granule_date}")
+                row = get_fivebyfive(file, latitude, longitude, rrs_wavelengths, granule_date)
+                sat_rrs_rows.append(row)
+
+        if short_name == "PACE_OCI_L1C_SCI":
+
+            # Pull out Rrs wavelengths for easier processing
+            try:
+                with xr.open_dataset(files[0], group="sensor_views_bands") as ds_bands:
+                    Lwn_wavelengths = ds_bands["intensity_wavelength"].values[0] # Two views in L1C
+            except Exception as ex:
+                print(f"NetCDF file {files[0]} is likely corrupt. Unable to load data.")
+                break
+
+            # Loop through files and process
+            sat_Lwn_rows = []
+            for idx, file in enumerate(files):
+                
+                try:
+                    granule_date = pd.to_datetime(file.granule["umm"]["TemporalExtent"]["RangeDateTime"]["BeginningDateTime"])
+                except:
+                    ds = xr.open_dataset(file)
+                    granule_date = pd.to_datetime(ds.attrs['time_coverage_start']) 
+                    granule_date = granule_date.floor('s') 
+                
+
+                print(f"Running Granule: {granule_date}")
+                row = get_fivebyfive_Lwn(file, latitude, longitude, Lwn_wavelengths, granule_date)
+                sat_Lwn_rows.append(row)
+
+
+        if short_name == "PACE_OCI_L1B_SCI":
+
+            # Pull out Rrs wavelengths for easier processing
+            try:
+                with xr.open_dataset(files[0], group="sensor_band_parameters") as ds_bands:
+                    rhot_blue_wavelengths = ds_bands["blue_wavelength"].values
+                    rhot_red_wavelengths = ds_bands["red_wavelength"].values
+                    rhot_wavelengths = np.concatenate([rhot_blue_wavelengths, rhot_red_wavelengths])
+            except Exception as ex:
+                print(ex)
+                print(f"NetCDF file {files[0]} is likely corrupt. Unable to load data.")
+                break
+
+            # Loop through files and process
+            sat_rhot_rows = []
+            for idx, file in enumerate(files):
+                
+                try:
+                    granule_date = pd.to_datetime(file.granule["umm"]["TemporalExtent"]["RangeDateTime"]["BeginningDateTime"])
+                except:
+                    ds = xr.open_dataset(file)
+                    granule_date = pd.to_datetime(ds.attrs['time_coverage_start']) 
+                    granule_date = granule_date.floor('s') 
+                
+
+                print(f"Running Granule: {granule_date}")
+                row = get_fivebyfive_rhot(file, latitude, longitude, rhot_wavelengths, granule_date)
+                sat_rhot_rows.append(row)
+
+
+
+    rrs = pd.DataFrame(sat_rrs_rows)
+    
+    try:
+        Lwn = pd.DataFrame(sat_Lwn_rows)
+    except Exception as ex:
+        print("Could not convert Lwn row to DataFrame!")
+        print(ex)
+        Lwn = None
+
+
+    try:
+        rhot = pd.DataFrame(sat_rhot_rows)
+    except Exception as ex:
+        print("Could not convert Lwn row to DataFrame!")
+        print(ex)
+        rhot = None
+
+    '''
+    data = pd.merge(
+        rrs,
+        Lwn,
+        left_on='oci_datetime',
+        right_on='oci_lwn_datetime',
+        how='left'
+    )
+    '''
+
+
+
+    # Ensure datetime columns are properly formatted
+    rrs['oci_datetime'] = pd.to_datetime(rrs['oci_datetime'])
+    Lwn['oci_lwn_datetime'] = pd.to_datetime(Lwn['oci_lwn_datetime'])
+    rhot['oci_rhot_datetime'] = pd.to_datetime(rhot['oci_rhot_datetime'])
+
+    # Sort both DataFrames by datetime (required for merge_asof)
+    rrs_sorted = rrs.sort_values('oci_datetime')
+    Lwn_sorted = Lwn.sort_values('oci_lwn_datetime')
+    rhot_sorted = rhot.sort_values('oci_rhot_datetime')
+
+    # Merge by closest datetime (forward direction - finds nearest previous)
+    data = pd.merge_asof(
+        rrs_sorted,
+        Lwn_sorted,
+        left_on='oci_datetime',
+        right_on='oci_lwn_datetime',
+        direction='nearest'  # Finds closest in either direction
+    )
+
+    data = pd.merge_asof(
+        data,
+        rhot_sorted,
+        left_on='oci_datetime',
+        right_on='oci_rhot_datetime',
+        direction='nearest'  # Finds closest in either direction
+    )
+
+    # Optional: Specify tolerance to avoid matching far-apart times
+    # data = pd.merge_asof(
+    #     rrs_sorted,
+    #     Lwn_sorted,
+    #     left_on='oci_datetime',
+    #     right_on='oci_lwn_datetime',
+    #     direction='nearest',
+    #     tolerance=pd.Timedelta('1 hour')  # Only match within 1 hour
+    # )
+
+    
+
+    return data
 
 # --------------------------------------------------------------------------- #
 #                              Matchup Utilities                              #

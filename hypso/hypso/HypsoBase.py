@@ -2048,3 +2048,6 @@ class HypsoBase:
 
     compute_csiro_srfs = compute_csiro_srfs
 
+    from hypso.ac import ac_dark_pixel_subtraction
+
+    ac_dark_pixel_subtraction = ac_dark_pixel_subtraction

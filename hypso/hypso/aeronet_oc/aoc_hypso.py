@@ -555,8 +555,8 @@ def process_hypso(satobj, latitude, longitude, atmospheric_correction="polymer")
 
 
     # Get stats - calculate mean and std across spatial dimensions (y, x)
-    data_mean = np.mean(data_values, axis=(0, 1))  # Shape: (n_bands,)
-    data_std = np.std(data_values, axis=(0, 1))    # Shape: (n_bands,)
+    data_mean = np.nanmean(data_values, axis=(0, 1))  # Shape: (n_bands,)
+    data_std = np.nanstd(data_values, axis=(0, 1))    # Shape: (n_bands,)
 
     # Matchup criteria uses cv as median of 405-570nm
     data_cv = data_std / data_mean
@@ -608,6 +608,231 @@ def process_hypso(satobj, latitude, longitude, atmospheric_correction="polymer")
 
 
 def match_hypso_data(df_hypso, df_aoc, cv_max=0.5, senz_max=60.0,
+               min_percent_valid=55.0, max_time_diff=180, std_max=1.5):
+    """Create matchup dataframe based on selection criteria.
+
+    Parameters
+    ----------
+    df_hypso : pandas dataframe
+        HYPSO data from flat validation file.
+    df_aoc : pandas dataframe
+        Field data from flat validation file.
+    cv_max : float, default 0.15
+        Maximum coefficient of variation (stdev/mean) for sat data.
+    senz_max : float, default 60.0
+        Maximum sensor zenith for sat data.
+    min_percent_valid : float, default 55.0
+        Minimum percentage of valid satellite pixels.
+    max_time_diff : int, default 180
+        Maximum time difference (minutes) between sat and field matchup.
+    std_max : float, default 1.5
+        If multiple valid field matchups, select within std_max stdevs of mean.
+
+    Returns
+    -------
+    pandas dataframe of matchups for product
+    """
+    # Setup
+    time_window = pd.Timedelta(minutes=max_time_diff)
+    df_match_list = []
+
+
+
+    # Make copies to avoid modifying originals
+    #df_aoc = df_aoc.copy()
+    #df_hypso = df_hypso.copy()
+    
+
+    # Filter Field data based on Solar Zenith
+    df_aoc_filtered = df_aoc[df_aoc['aoc_solar_zenith'] <= senz_max]
+
+    # Filter satellite data based on cv threshold
+    df_hypso_filtered = df_hypso[df_hypso['hypso_cv'] <= cv_max]
+
+    # Filter satellite data based on percent good pixels
+    df_hypso_filtered = df_hypso_filtered[
+        df_hypso_filtered['hypso_pixel_valid'] >= min_percent_valid * 25 / 100]
+
+    for _, hypso_row in df_hypso_filtered.iterrows():
+        # Filter field data based on time difference and coordinates
+        hypso_datetime_aware = pd.to_datetime(hypso_row['hypso_datetime']).tz_localize('UTC')
+        time_diff = abs(df_aoc_filtered['aoc_datetime']-hypso_datetime_aware)
+        within_time = time_diff <= time_window
+        within_lat = 0.2 >= abs(
+            df_aoc_filtered['aoc_latitude'] - hypso_row['hypso_latitude'])
+        within_lon = 0.2 >= abs(
+            df_aoc_filtered['aoc_longitude'] - hypso_row['hypso_longitude'])
+        field_matches = df_aoc_filtered[within_time & within_lat & within_lon]
+
+        if field_matches.shape[0] > 5:
+            # Filter by Standard Deviation for rrs columns
+            rrs_cols = [col for col in field_matches.columns
+                        if col.startswith('aoc_rrs')]
+            if rrs_cols:
+                mean_spectra = field_matches[rrs_cols].mean(axis=0)
+                std_spectra = field_matches[rrs_cols].std(axis=0)
+                within_std = (abs(field_matches[rrs_cols] - mean_spectra)
+                              <= std_max * std_spectra)
+                field_matches = field_matches[within_std.all(axis=1)]
+
+        if not field_matches.empty:
+            # Select the best match based on time delta
+            time_diff = abs(
+                field_matches['aoc_datetime']-hypso_datetime_aware)
+            best_match = field_matches.loc[time_diff.idxmin()]
+            df_match_list.append({**best_match.to_dict(), **hypso_row.to_dict()})
+
+    df_match = pd.DataFrame(df_match_list)
+    return df_match
+
+
+
+
+
+
+
+
+
+
+
+
+def match_all_data(df_aoc, df_hypso, df_pace=None,
+               cv_max_hypso=0.5, cv_max_pace=0.15, senz_max=60.0,
+               min_percent_valid=55.0, max_time_diff=180, std_max=1.5):
+    """Create AERONET-HYPSO (and optionally PACE) matchup dataframe.
+
+    Each row is a HYPSO-AERONET matchup. If a PACE observation also
+    satisfies the matchup conditions for the same AERONET point, its
+    columns are appended to that row.
+
+    Parameters
+    ----------
+    df_aoc : pandas dataframe
+        AERONET field data from flat validation file.
+    df_hypso : pandas dataframe
+        HYPSO satellite data from flat validation file.
+    df_pace : pandas dataframe, optional
+        PACE/OCI satellite data from flat validation file.
+    cv_max_hypso : float, default 0.5
+        Maximum coefficient of variation for HYPSO data.
+    cv_max_pace : float, default 0.15
+        Maximum coefficient of variation for PACE data.
+    senz_max : float, default 60.0
+        Maximum sensor/solar zenith.
+    min_percent_valid : float, default 55.0
+        Minimum percentage of valid satellite pixels.
+    max_time_diff : int, default 180
+        Maximum time difference (minutes) for matchup.
+    std_max : float, default 1.5
+        Stdev threshold for filtering multiple field matches.
+
+    Returns
+    -------
+    pandas dataframe of combined matchups.
+    """
+    time_window = pd.Timedelta(minutes=max_time_diff)
+
+    # --- Filter AERONET ---
+    df_aoc_filtered = df_aoc[df_aoc['aoc_solar_zenith'] <= senz_max]
+
+    # --- Filter HYPSO ---
+    print("Filtering based on CV")
+    print(f"HYPSO CV: {df_hypso['hypso_cv']}")
+    print(f"Maxiumum allowed CV: {cv_max_hypso}")
+    df_hypso_filtered = df_hypso[df_hypso['hypso_cv'] <= cv_max_hypso]
+    df_hypso_filtered = df_hypso_filtered[
+        df_hypso_filtered['hypso_pixel_valid'] >= min_percent_valid * 25 / 100]
+
+    # --- Filter PACE (if provided) ---
+    df_pace_filtered = None
+    if df_pace is not None:
+        df_pace_filtered = df_pace[df_pace['oci_cv'] <= cv_max_pace]
+        df_pace_filtered = df_pace_filtered[
+            df_pace_filtered['oci_pixel_valid'] >= min_percent_valid * 25 / 100]
+
+    def find_best_field_match(field_df, ref_datetime):
+        """Find best AERONET match for a given sat datetime."""
+
+        print("Comparing times:")
+        print(f"Sensor time: {ref_datetime}")
+        print(f"AERONET-OC time: {field_df['aoc_datetime']}")
+        
+
+        time_diff = abs(field_df['aoc_datetime'] - ref_datetime)
+        within_time = time_diff <= time_window
+        within_lat = 0.2 >= abs(field_df['aoc_latitude'] - sat_lat)
+        within_lon = 0.2 >= abs(field_df['aoc_longitude'] - sat_lon)
+        matches = field_df[within_time & within_lat & within_lon]
+
+        if matches.shape[0] <= 5:
+            return None
+
+        rrs_cols = [c for c in matches.columns if c.startswith('aoc_rrs')]
+        if rrs_cols:
+            mean_spectra = matches[rrs_cols].mean(axis=0)
+            std_spectra = matches[rrs_cols].std(axis=0)
+            within_std = (abs(matches[rrs_cols] - mean_spectra)
+                          <= std_max * std_spectra)
+            matches = matches[within_std.all(axis=1)]
+
+        if matches.empty:
+            return None
+
+        time_diff = abs(matches['aoc_datetime'] - ref_datetime)
+
+        print(f"Computed time difference: {time_diff}")
+
+        return matches.loc[time_diff.idxmin()]
+
+    df_match_list = []
+
+    for _, hypso_row in df_hypso_filtered.iterrows():
+        hypso_datetime = pd.to_datetime(hypso_row['hypso_datetime']).tz_localize('UTC')
+        sat_lat = hypso_row['hypso_latitude']
+        sat_lon = hypso_row['hypso_longitude']
+
+        best_match = find_best_field_match(df_aoc_filtered, hypso_datetime)
+        if best_match is None:
+            continue
+
+        combined_row = {**best_match.to_dict(), **hypso_row.to_dict()}
+
+        # --- Try to find a PACE match for the same AERONET point ---
+        if df_pace_filtered is not None and not df_pace_filtered.empty:
+            time_diff_pace = abs(df_pace_filtered['oci_datetime'] - best_match['aoc_datetime'])
+            within_time = time_diff_pace <= time_window
+            within_lat = 0.2 >= abs(df_pace_filtered['oci_latitude'] - best_match['aoc_latitude'])
+            within_lon = 0.2 >= abs(df_pace_filtered['oci_longitude'] - best_match['aoc_longitude'])
+            pace_candidates = df_pace_filtered[within_time & within_lat & within_lon]
+
+            if not pace_candidates.empty:
+                # Pick PACE obs closest in time to the AERONET point
+                time_diff_pace = abs(pace_candidates['oci_datetime'] - best_match['aoc_datetime'])
+                pace_row = pace_candidates.loc[time_diff_pace.idxmin()]
+                combined_row.update(pace_row.to_dict())
+
+        df_match_list.append(combined_row)
+
+    df_match = pd.DataFrame(df_match_list)
+    return df_match
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def match_hypso_and_pace_data(df_hypso, df_pace, df_aoc, cv_max=0.5, senz_max=60.0,
                min_percent_valid=55.0, max_time_diff=180, std_max=1.5):
     """Create matchup dataframe based on selection criteria.
 
