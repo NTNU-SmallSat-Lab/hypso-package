@@ -569,7 +569,9 @@ def process_aeronet(aoc_site="AAOT", start_date="2024-03-01", end_date=None,
     df_rrs = pd.DataFrame(rrs, columns=aoc_rrs_cols)
 
 
-
+    #plt.close()
+    #plt.plot(wavelengths, rrs[4,:])
+    #plt.savefig("test_aoc.png")
 
 
     if "Solar_Zenith_Angle[400nm]" in df_aoc_full.columns:
@@ -606,7 +608,7 @@ def process_aeronet(aoc_site="AAOT", start_date="2024-03-01", end_date=None,
     # Do some final cleanup
     df_aoc.rename(columns=COLUMN_RENAME, inplace=True)
 
-    return df_aoc
+    return df_aoc, wavelengths
 
 
 # --------------------------------------------------------------------------- #

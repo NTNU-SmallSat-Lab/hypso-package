@@ -594,6 +594,48 @@ def aeronet_oc_calculate_rrs_csiro(Lwn, wavelengths):
 
 
 
+def aeronet_oc_generate_csiro_gaussian_srfs(wavelength_grid, center_wavelengths, fwhm=10.0):
+    """
+    Generate Gaussian Spectral Response Functions (SRFs) for given center wavelengths.
+    
+    Parameters:
+    -----------
+    wavelength_grid : np.ndarray
+        The wavelength grid (e.g., np.linspace(350, 850, 1000))
+    center_wavelengths : list or np.ndarray
+        Center wavelengths where SRFs are generated
+    fwhm : float
+        Full Width at Half Maximum in nm (default: 10.0)
+    
+    Returns:
+    --------
+    np.ndarray : 2D array with shape (len(center_wavelengths), len(wavelength_grid))
+                 Each row is the SRF for one center wavelength
+    """
+    # Convert sigma from FWHM
+    sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
+    
+    wavelength_grid = np.linspace(350, 850, 1000)
+
+    # Initialize array for all SRFs
+    n_srfs = len(center_wavelengths)
+    n_wavelengths = len(wavelength_grid)
+    srfs = np.zeros((n_srfs, n_wavelengths))
+    
+    # Generate Gaussian for each center wavelength
+    for i, center_wl in enumerate(center_wavelengths):
+        # Gaussian function
+        srfs[i] = np.exp(-0.5 * ((wavelength_grid - center_wl) / sigma)**2)
+        
+        # Optional: Normalize to peak = 1 (already done by Gaussian formula)
+        # srfs[i] = srfs[i] / np.max(srfs[i])
+    
+    print(f"SRFs shape: {srfs.shape}")
+    print(f"Number of SRFs: {srfs.shape[0]}")
+    print(f"Wavelength grid size: {srfs.shape[1]}")
+
+    return srfs
+
 
 
 

@@ -1,13 +1,13 @@
 import numpy as np
 
 
-def ac_dark_pixel_subtraction(self, VERBOSE=True):
+def ac_dark_pixel_subtraction(self, method='min', VERBOSE=True):
 
     key = "Rrs"
 
     l1d_cube = self.l1d_cube
 
-    corrected_cube, dark_spectrum = dark_pixel_subtraction_per_band(datacube=l1d_cube)
+    corrected_cube, dark_spectrum = dark_pixel_subtraction_per_band(datacube=l1d_cube, method=method)
 
     self.l2a_cube["dps"] = corrected_cube
     self.l2a_cube["dps"].attrs['l2_variable_name'] = key
@@ -50,9 +50,10 @@ def dark_pixel_subtraction_per_band(datacube, method='min', percentile=None):
     else:
         raise ValueError("Method must be 'min' or 'percentile'")
     
+    #print(dark_spectrum.shape)
     # Subtract dark spectrum from all pixels
     # Broadcast dark_spectrum to match datacube shape
-    corrected_cube = datacube - dark_spectrum[np.newaxis, np.newaxis, :]
+    corrected_cube = datacube - dark_spectrum
     
     # Clip negative values to zero
     corrected_cube = np.clip(corrected_cube, 0, None)

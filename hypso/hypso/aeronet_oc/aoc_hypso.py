@@ -20,6 +20,7 @@ from scipy import stats, odr
 import seaborn as sns
 import xarray as xr
 import os
+from scipy.interpolate import interp1d
 
 
 
@@ -464,6 +465,7 @@ def process_hypso(satobj, latitude, longitude, atmospheric_correction="polymer")
         if datacube is None:
             print(f"[ERROR] {atmospheric_correction} not found in l2a_cube")
             return None
+        col_name = atmospheric_correction
         
     else:
 
@@ -471,8 +473,9 @@ def process_hypso(satobj, latitude, longitude, atmospheric_correction="polymer")
         if datacube is None:
             print(f"[ERROR] {cube_name} not found!")
             return None
+        col_name = cube_name
 
-
+    print(f"[INFO] Using column name '{col_name}'")
     
     if len(datacube.shape) == 3:
         # (height, width, bands)
@@ -493,31 +496,6 @@ def process_hypso(satobj, latitude, longitude, atmospheric_correction="polymer")
         # Assume it's already UTC if naive
         hypso_datetime = hypso_datetime
 
-    """
-    hypso_latitudes = satobj.latitudes
-    hypso_longitudes = satobj.longitudes    
-
-    # Find x and y coord of AERONET-OC site based on provided lat/lon
-    capture_shape = datacube.shape[0:2]
-
-    min_error = np.inf
-    for i in range(capture_shape[0]):
-        for j in range(capture_shape[1]):
-            error = np.abs(hypso_latitudes[i, j] - latitude) + np.abs(hypso_longitudes[i, j] - longitude)
-            if error < min_error:
-                min_error = error
-                y_point = i
-                x_point = j
-
-    print(f"[INFO] AERONET-OC Geographic Coordinates (lat,lon): ({latitude}, {longitude})")
-    print(f"[INFO] HYPSO Closest Geographic Coordinates (lat,lon): ({hypso_latitudes[y_point, x_point]}, {hypso_longitudes[y_point, x_point]})")
-    print(f"[INFO] HYPSO Coordinates (y,x): ({y_point}, {x_point})")
-
-    hypso_x_point = x_point
-    hypso_y_point = y_point
-    hypso_latitude = hypso_latitudes[y_point, x_point]
-    hypso_y_longitudes = hypso_longitudes[y_point, x_point]
-    """
 
     hypso_wavelengths = satobj.wavelengths
 
@@ -565,17 +543,17 @@ def process_hypso(satobj, latitude, longitude, atmospheric_correction="polymer")
 
     # Put in dictionary of the row
     row = {
-        "hypso_datetime": hypso_datetime,
-        "hypso_cv": data_cv,
-        "hypso_latitude": float(sat_lat[center_y, center_x]),
-        "hypso_longitude": float(sat_lon[center_y, center_x]),
-        "hypso_pixel_valid": data_values.shape[0] * data_values.shape[1],  # 5x5 = 25
-        "hypso_box_size": f"{data_values.shape[0]}x{data_values.shape[1]}"
+        f"hypso_{col_name}_datetime": hypso_datetime,
+        f"hypso_{col_name}_cv": data_cv,
+        f"hypso_{col_name}_latitude": float(sat_lat[center_y, center_x]),
+        f"hypso_{col_name}_longitude": float(sat_lon[center_y, center_x]),
+        f"hypso_{col_name}_pixel_valid": data_values.shape[0] * data_values.shape[1],  # 5x5 = 25
+        f"hypso_{col_name}_box_size": f"{data_values.shape[0]}x{data_values.shape[1]}"
     }
 
     # Add mean spectra to the row dictionary
     for wavelength, mean_value in zip(hypso_wavelengths, data_mean):
-        key = f'hypso_{hypso_product_symbol.lower()}{int(wavelength)}'
+        key = f'hypso_{col_name}_{hypso_product_symbol.lower()}{int(wavelength)}'
         row[key] = float(mean_value)
 
 
@@ -599,6 +577,265 @@ def process_hypso(satobj, latitude, longitude, atmospheric_correction="polymer")
 
 
 
+
+
+
+
+def process_hypso_convolved(satobj, aeronet_wavelengths, latitude, longitude, atmospheric_correction="polymer", aeronet_fwhm=10.0):
+    """
+    Download and process HYPSO data for matchups including convolution with AERONET-OC SRFs.
+
+    Workflow:
+        1. Load HYPSO capture
+        2. Find closest pixel to station, extract 5x5 pixel box
+            2a. Exclude pixels based on l2_flags (future)
+        3. Convolve spectra with AERONET-OC 10nm FWHM SRFs
+        3. Filtered mean to get single spectra
+        4. Compute statistics and save data row
+        5. Organize output pandas dataframe
+
+    Parameters
+    ----------
+    satobj : HYPSO object
+        HYPSO captures.
+    latitude : float
+        In decimal degrees for Aeronet-OC site for matchups
+    longitude : float
+        In decimal degrees (negative West) for Aeronet-OC site for matchups
+
+    Returns
+    -------
+    pandas DataFrame object
+        Flattened table of HYPSO capture matchup.
+
+    """
+
+
+
+    cube_name = satobj.cube_name
+
+    # Get the datacube
+    if not hasattr(satobj, cube_name):
+        print(f"[ERROR] satobj has no {cube_name} attribute!")
+        return None
+
+
+    hypso_product_level = satobj.product_level
+    hypso_product_symbol = satobj.product_symbol
+
+    print(f"[INFO] Detected HYPSO product level: {hypso_product_level}")
+
+    if hypso_product_level == "l2a":
+
+        datacube = satobj.l2a_cube.get(atmospheric_correction)
+        if datacube is None:
+            print(f"[ERROR] {atmospheric_correction} not found in l2a_cube")
+            return None
+        col_name = atmospheric_correction
+        
+    else:
+
+        datacube = getattr(satobj, cube_name, None)
+        if datacube is None:
+            print(f"[ERROR] {cube_name} not found!")
+            return None
+        col_name = cube_name
+
+    print(f"[INFO] Using column name '{col_name}'")
+
+
+    
+    if len(datacube.shape) == 3:
+        # (height, width, bands)
+        height, width, n_bands = datacube.shape
+        print(f"[INFO] Detected cube shape: (height={height}, width={width}, bands={n_bands})")
+    else:
+        print(f"[ERROR] Unexpected datacube shape: {datacube.shape}")
+        return None
+
+
+
+    hypso_datetime = satobj.capture_datetime
+    print(f"Running Capture: {hypso_datetime}")
+
+    if hasattr(hypso_datetime, 'tzinfo') and hypso_datetime.tzinfo is not None:
+        hypso_datetime = hypso_datetime.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+    else:
+        # Assume it's already UTC if naive
+        hypso_datetime = hypso_datetime
+
+
+    hypso_wavelengths = satobj.wavelengths
+
+
+
+    sat_lat = satobj.latitudes
+    sat_lon = satobj.longitudes
+
+    # Calculate the Euclidean distance for 2D lat/lon arrays
+    distances = np.sqrt((sat_lat - latitude)**2 + (sat_lon - longitude)**2)
+
+    # Find the index of the minimum distance
+    # Dimensions are (lines, pixels)
+    min_dist_idx = np.unravel_index(np.argmin(distances), distances.shape)
+    center_y, center_x = min_dist_idx
+
+    # Get indices for a 5x5 box around the center pixel
+    y_start = max(center_y - 2, 0)
+    y_end = min(center_y + 2 + 1, sat_lat.shape[0])
+    x_start = max(center_x - 2, 0)
+    x_end = min(center_x + 2 + 1, sat_lat.shape[1])
+
+    print(f"[INFO] AERONET-OC Geographic Coordinates (lat,lon): ({latitude}, {longitude})")
+    print(f"[INFO] HYPSO Closest Geographic Coordinates (lat,lon): ({sat_lat[center_y, center_x]}, {sat_lon[center_y, center_x]})")
+    print(f"[INFO] HYPSO Coordinates (y,x): ({center_y}, {center_x})")
+
+
+    data = datacube.isel(
+        y=slice(y_start, y_end),
+        x=slice(x_start, x_end)
+    )
+
+
+    data_values = data.values
+
+
+    #print(data_values)
+
+
+    convolved_data_values = np.full((data.shape[0], data.shape[1], len(aeronet_wavelengths)), np.nan)
+
+
+    extension = 5 * aeronet_fwhm
+
+    wl_base_min = 350
+    wl_base_max = 800
+    n_base_points = 1000
+
+    step = (wl_base_max - wl_base_min) / (n_base_points - 1)
+    print(f"[INFO] Base grid step size: {step:.3f} nm")
+
+    n_extension_points = int(np.ceil(extension / step))
+
+    wl_min = wl_base_min - n_extension_points * step
+    wl_max = wl_base_max + n_extension_points * step
+
+    wl_min = max(0, wl_min)
+
+    n_total_points = n_base_points + 2 * n_extension_points
+    fine_wavelengths = np.linspace(wl_min, wl_max, n_total_points)
+
+    print(f"[INFO] Extended grid: {wl_min:.1f} - {wl_max:.1f} nm")
+    print(f"[INFO] Extension: {n_extension_points} points on each side ({n_extension_points * step:.1f} nm)")
+    print(f"[INFO] Total points: {n_total_points}")
+
+
+
+
+    out_of_range_band_detected = False
+
+    for y in range(0, data_values.shape[0]):
+        for x in range(0, data_values.shape[1]):
+
+            hypso_rrs = data_values[y,x] 
+
+
+            valid_mask = ~np.isnan(hypso_rrs)
+            rrs_fine = None
+
+
+            if not np.any(valid_mask):
+                print("[WARNING] All spectrum values are NaN!")
+                convolved_data_values[y,x,:] = np.nan
+
+            else:
+                # Extract valid data
+                valid_wavelengths = hypso_wavelengths[valid_mask]
+                valid_spectrum = hypso_rrs[valid_mask]
+
+                try:
+                    f_interp = interp1d(valid_wavelengths, valid_spectrum, 
+                                    kind='linear', 
+                                    bounds_error=False, 
+                                    fill_value=0)
+                    rrs_fine = f_interp(fine_wavelengths)
+                except Exception as e:
+                    print(f"[ERROR] Interpolation failed: {e}")
+
+                    # All np.nan values
+                    convolved_data_values[y,x,:] = np.nan
+
+
+            if rrs_fine is not None:
+                sigma = aeronet_fwhm / (2 * np.sqrt(2 * np.log(2)))
+
+
+                for k, center_wl in enumerate(aeronet_wavelengths):
+
+                    # Generate Gaussian SRF
+                    srf = np.exp(-0.5 * ((fine_wavelengths - center_wl) / sigma)**2)
+                    
+                    # Normalize to area = 1
+                    srf_area = np.trapz(srf, fine_wavelengths)
+                    if srf_area > 0:
+                        srf = srf / srf_area
+                    else:
+                        if not out_of_range_band_detected:
+                            print(f"[WARNING] SRF area is zero for {center_wl}nm")
+                            out_of_range_band_detected = True
+                        continue
+                    
+                    # Convolve (weighted average)
+                    convolved = np.trapz(rrs_fine * srf, fine_wavelengths)
+                    
+                    convolved_data_values[y,x,k] = convolved
+
+    data_values = convolved_data_values
+
+
+    # Get stats - calculate mean and std across spatial dimensions (y, x)
+    data_mean = np.nanmean(data_values, axis=(0, 1))  # Shape: (n_bands,)
+    data_std = np.nanstd(data_values, axis=(0, 1))    # Shape: (n_bands,)
+
+    # Matchup criteria uses cv as median of 405-570nm
+    data_cv = data_std / data_mean
+    cv_mask = (aeronet_wavelengths >= 405) & (aeronet_wavelengths <= 570)
+    data_cv = np.median(data_cv[cv_mask])
+
+    # Put in dictionary of the row
+    row = {
+        f"hypso_{col_name}_convolved_datetime": hypso_datetime,
+        f"hypso_{col_name}_convolved_cv": data_cv,
+        f"hypso_{col_name}_convolved_latitude": float(sat_lat[center_y, center_x]),
+        f"hypso_{col_name}_convolved_longitude": float(sat_lon[center_y, center_x]),
+        f"hypso_{col_name}_convolved_pixel_valid": data_values.shape[0] * data_values.shape[1],  # 5x5 = 25
+        f"hypso_{col_name}_convolved_box_size": f"{data_values.shape[0]}x{data_values.shape[1]}"
+    }
+
+    # Add mean spectra to the row dictionary
+    for wavelength, mean_value in zip(aeronet_wavelengths, data_mean):
+        key = f'hypso_{col_name}_convolved_{hypso_product_symbol.lower()}{int(wavelength)}'
+        row[key] = float(mean_value)
+
+
+    #for v in data_mean:
+    #    print(v)
+
+    #plt.close()
+    #plt.plot(aeronet_wavelengths, data_mean)
+    #plt.savefig("test2.png")
+
+
+    print(f"[INFO] Processed box: {data_values.shape[0]}x{data_values.shape[1]}")
+    print(f"[INFO] CV median (405-570nm): {data_cv:.4f}")
+
+
+    #plot_aoi_rgb(datacube, satobj, center_y, center_x, box_size=5, rgb_bands=None)
+
+
+    #print(pd.DataFrame(row, index=[0]))
+
+    return pd.DataFrame(row, index=[0])
 
 
 
@@ -696,9 +933,9 @@ def match_hypso_data(df_hypso, df_aoc, cv_max=0.5, senz_max=60.0,
 
 
 
-def match_all_data(df_aoc, df_hypso, df_pace=None,
-               cv_max_hypso=0.5, cv_max_pace=0.15, senz_max=60.0,
-               min_percent_valid=55.0, max_time_diff=180, std_max=1.5):
+def match_all_data(df_aoc, df_hypso, df_pace=None, df_hypso_convolved=None,
+               cv_max_hypso=0.5, cv_max_pace=0.15, cv_max_hypso_convolved=0.15, senz_max=60.0,
+               min_percent_valid=55.0, max_time_diff=180, std_max=1.5, atmospheric_correction=None):
     """Create AERONET-HYPSO (and optionally PACE) matchup dataframe.
 
     Each row is a HYPSO-AERONET matchup. If a PACE observation also
@@ -713,10 +950,14 @@ def match_all_data(df_aoc, df_hypso, df_pace=None,
         HYPSO satellite data from flat validation file.
     df_pace : pandas dataframe, optional
         PACE/OCI satellite data from flat validation file.
+    df_hypso_convolved : pandas dataframe
+        HYPSO satellite data convolved with AERONET-OC SRFs from flat validation file.
     cv_max_hypso : float, default 0.5
         Maximum coefficient of variation for HYPSO data.
     cv_max_pace : float, default 0.15
         Maximum coefficient of variation for PACE data.
+    cv_max_hypso_convolved : float, default 0.5
+        Maximum coefficient of variation for convolved HYPSO data.
     senz_max : float, default 60.0
         Maximum sensor/solar zenith.
     min_percent_valid : float, default 55.0
@@ -730,18 +971,30 @@ def match_all_data(df_aoc, df_hypso, df_pace=None,
     -------
     pandas dataframe of combined matchups.
     """
+
+
+    if atmospheric_correction is not None:
+        aca = str(atmospheric_correction) + "_"
+    else:
+        aca = ""
+
+
     time_window = pd.Timedelta(minutes=max_time_diff)
 
     # --- Filter AERONET ---
     df_aoc_filtered = df_aoc[df_aoc['aoc_solar_zenith'] <= senz_max]
 
     # --- Filter HYPSO ---
-    print("Filtering based on CV")
-    print(f"HYPSO CV: {df_hypso['hypso_cv']}")
-    print(f"Maxiumum allowed CV: {cv_max_hypso}")
-    df_hypso_filtered = df_hypso[df_hypso['hypso_cv'] <= cv_max_hypso]
-    df_hypso_filtered = df_hypso_filtered[
-        df_hypso_filtered['hypso_pixel_valid'] >= min_percent_valid * 25 / 100]
+    
+    if True:
+        print("Filtering based on CV")
+        print(f"HYPSO CV: {df_hypso[f'hypso_{aca}cv']}")
+        print(f"Maxiumum allowed CV: {cv_max_hypso}")
+        df_hypso_filtered = df_hypso[df_hypso[f'hypso_{aca}cv'] <= cv_max_hypso]
+        df_hypso_filtered = df_hypso_filtered[
+            df_hypso_filtered[f'hypso_{aca}pixel_valid'] >= min_percent_valid * 25 / 100]
+    else:
+        df_hypso_filtered = df_hypso
 
     # --- Filter PACE (if provided) ---
     df_pace_filtered = None
@@ -749,6 +1002,17 @@ def match_all_data(df_aoc, df_hypso, df_pace=None,
         df_pace_filtered = df_pace[df_pace['oci_cv'] <= cv_max_pace]
         df_pace_filtered = df_pace_filtered[
             df_pace_filtered['oci_pixel_valid'] >= min_percent_valid * 25 / 100]
+
+        
+    # --- Filter convolved HYPSO (if provided) ---
+
+    df_hypso_convolved_filtered = df_hypso_convolved
+    #df_hypso_convolved_filtered = None
+    #if df_hypso_convolved is not None:
+        #df_hypso_convolved_filtered = df_hypso_convolved[df_hypso_convolved['convolved_hypso_cv'] <= cv_max_hypso_convolved]
+        #df_hypso_convolved_filtered = df_hypso_convolved_filtered[
+        #    df_hypso_convolved_filtered['convolved_hypso_pixel_valid'] >= min_percent_valid * 25 / 100]
+
 
     def find_best_field_match(field_df, ref_datetime):
         """Find best AERONET match for a given sat datetime."""
@@ -786,10 +1050,13 @@ def match_all_data(df_aoc, df_hypso, df_pace=None,
 
     df_match_list = []
 
+
+
+
     for _, hypso_row in df_hypso_filtered.iterrows():
-        hypso_datetime = pd.to_datetime(hypso_row['hypso_datetime']).tz_localize('UTC')
-        sat_lat = hypso_row['hypso_latitude']
-        sat_lon = hypso_row['hypso_longitude']
+        hypso_datetime = pd.to_datetime(hypso_row[f'hypso_{aca}datetime']).tz_localize('UTC')
+        sat_lat = hypso_row[f'hypso_{aca}latitude']
+        sat_lon = hypso_row[f'hypso_{aca}longitude']
 
         best_match = find_best_field_match(df_aoc_filtered, hypso_datetime)
         if best_match is None:
@@ -810,6 +1077,32 @@ def match_all_data(df_aoc, df_hypso, df_pace=None,
                 time_diff_pace = abs(pace_candidates['oci_datetime'] - best_match['aoc_datetime'])
                 pace_row = pace_candidates.loc[time_diff_pace.idxmin()]
                 combined_row.update(pace_row.to_dict())
+
+
+
+
+        # --- Try to find a convolved HYPSO match for the same AERONET point ---
+        if df_hypso_convolved is not None and not df_hypso_convolved.empty:
+
+            tz = df_hypso_convolved_filtered[f'hypso_{aca}convolved_datetime'].dt.tz
+            best_match_localized = pd.Timestamp(best_match['aoc_datetime']).tz_localize(tz)
+
+            #time_diff_hypso_convolved = abs(df_hypso_convolved_filtered['hypso_convolved_datetime'] - best_match['aoc_datetime'])
+            time_diff_hypso_convolved = abs(df_hypso_convolved_filtered[f'hypso_{aca}convolved_datetime'] - best_match_localized)
+
+            within_time = time_diff_hypso_convolved <= time_window
+            within_lat = 0.2 >= abs(df_hypso_convolved_filtered[f'hypso_{aca}convolved_latitude'] - best_match['aoc_latitude'])
+            within_lon = 0.2 >= abs(df_hypso_convolved_filtered[f'hypso_{aca}convolved_longitude'] - best_match['aoc_longitude'])
+            hypso_convolved_candidates = df_hypso_convolved_filtered[within_time & within_lat & within_lon]
+
+            if not hypso_convolved_candidates.empty:
+                # Pick convolved HYPSO obs closest in time to the AERONET point
+                #time_diff_hypso_convolved = abs(hypso_convolved_candidates['hypso_convolved_datetime'] - best_match['aoc_datetime'])
+                time_diff_hypso_convolved = abs(hypso_convolved_candidates[f'hypso_{aca}convolved_datetime'] - best_match_localized)
+                hypso_convolved_row = hypso_convolved_candidates.loc[time_diff_hypso_convolved.idxmin()]
+                combined_row.update(hypso_convolved_row.to_dict())
+
+
 
         df_match_list.append(combined_row)
 
