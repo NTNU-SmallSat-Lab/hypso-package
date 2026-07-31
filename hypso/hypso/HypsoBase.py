@@ -590,7 +590,7 @@ class HypsoBase:
                 cube_name = "l2a_cube"
                 setattr(self, "cube_name", cube_name)
                 setattr(self, "product_level", "l2a")
-                setattr(self, "product_symbol", "Rrs")
+                setattr(self, "product_symbol", "Rrs") # TODO: polymer and dps is rho_w
                 
             case _:
                 print("[ERROR] Unsupported product level:")

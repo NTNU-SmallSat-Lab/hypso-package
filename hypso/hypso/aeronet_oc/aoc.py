@@ -499,7 +499,7 @@ def get_data_dict(df, search_str=None):
 
 
 def process_aeronet(aoc_site="AAOT", start_date="2024-03-01", end_date=None,
-                    data_level=15):
+                    data_level=15, pyowt_path=None):
     """
     Download and process AERONET-OC data for matchups.
 
@@ -564,6 +564,33 @@ def process_aeronet(aoc_site="AAOT", start_date="2024-03-01", end_date=None,
     # Normalize to get Rrs
     rrs = lwn_iop / f0_spectra[None, :]
 
+    owt = np.full(rrs.shape[0], np.nan)
+
+
+    if pyowt_path is not None:
+        try:
+
+            import sys
+            sys.path.insert(0, pyowt_path)
+
+            from pyowt.OWT import OWT
+            from pyowt.OpticalVariables import OpticalVariables
+            from pyowt.PlotOWT import PlotOV, PlotSpec
+
+            ov = OpticalVariables(Rrs=rrs, band=wavelengths, sensor="AERONET_OC_2")
+
+            owt = OWT(AVW=ov.AVW, Area=ov.Area, NDI=ov.NDI)
+
+
+            owt = owt.type_str.flatten()
+            #print(owt)
+
+        except Exception as ex:
+            print(ex)
+
+
+    df_aoc_full['aoc_owt'] = owt
+
     # Generate new column names and make the rrs dataframe
     aoc_rrs_cols = [f"aoc_rrs{wavelength}" for wavelength in wavelengths]
     df_rrs = pd.DataFrame(rrs, columns=aoc_rrs_cols)
@@ -590,9 +617,40 @@ def process_aeronet(aoc_site="AAOT", start_date="2024-03-01", end_date=None,
     if solar_zenith_col is None:
         raise ValueError("No Solar_Zenith_Angle column found in AERONET-OC data")
     
+
+
+
+
+    # Get subset of AOD columns
+    subset_aod = [col for col in df_aoc_full.columns
+                if "Aerosol_Optical_Depth" in col]
+
+    if subset_aod:
+        aod_values = df_aoc_full[subset_aod].values
+
+        # Pull wavelengths out of the column names, reusing your helper
+        aod_wavelengths, _ = get_data_dict(df_aoc_full[subset_aod],
+                                        "Aerosol_Optical_Depth")
+
+        # Build renamed AOD dataframe
+        aoc_aod_cols = [f"aoc_aod{wl}" for wl in aod_wavelengths]
+        df_aod = pd.DataFrame(aod_values, columns=aoc_aod_cols)
+    else:
+        print("[INFO] No Aerosol_Optical_Depth columns found")
+        df_aod = pd.DataFrame(index=df_aoc_full.index)
+
+
+
+
+
+
+
+
+
+
     # Define keep columns with the found column
     AOC_KEEP_COLS = ["AERONET_Site", "aoc_datetime", "Site_Latitude(Degrees)",
-                     "Site_Longitude(Degrees)", solar_zenith_col]
+                     "Site_Longitude(Degrees)", solar_zenith_col, "aoc_owt"]
     
     COLUMN_RENAME = {
         "Site_Latitude(Degrees)": "aoc_latitude",
@@ -603,7 +661,7 @@ def process_aeronet(aoc_site="AAOT", start_date="2024-03-01", end_date=None,
 
 
     # Now combine with the subset of the full dataframe
-    df_aoc = pd.concat([df_aoc_full[AOC_KEEP_COLS], df_rrs], axis=1)
+    df_aoc = pd.concat([df_aoc_full[AOC_KEEP_COLS], df_rrs, df_aod], axis=1)
 
     # Do some final cleanup
     df_aoc.rename(columns=COLUMN_RENAME, inplace=True)

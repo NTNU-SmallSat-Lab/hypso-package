@@ -415,7 +415,7 @@ def plot_aoi_rgb(datacube, satobj, center_y, center_x, box_size=5, rgb_bands=Non
 
 
 
-def process_hypso(satobj, latitude, longitude, atmospheric_correction="polymer"):
+def process_hypso(satobj, latitude, longitude, atmospheric_correction="polymer", divide_by_pi=False, pyowt_path=None):
     """
     Download and process HYPSO data for matchups.
 
@@ -466,7 +466,16 @@ def process_hypso(satobj, latitude, longitude, atmospheric_correction="polymer")
             print(f"[ERROR] {atmospheric_correction} not found in l2a_cube")
             return None
         col_name = atmospheric_correction
-        
+
+
+    elif hypso_product_level == "l1d":
+
+        datacube = getattr(satobj, cube_name, None)
+        if datacube is None:
+            print(f"[ERROR] {atmospheric_correction} not found")
+            return None
+        col_name = "l1d"
+
     else:
 
         datacube = getattr(satobj, cube_name, None)
@@ -499,7 +508,9 @@ def process_hypso(satobj, latitude, longitude, atmospheric_correction="polymer")
 
     hypso_wavelengths = satobj.wavelengths
 
-
+    mean_solar_zenith_angle = np.mean(satobj.solar_zenith_angles)
+    mean_sat_zenith_angle = np.mean(satobj.sat_zenith_angles)
+    mean_relative_azimuth_angle = np.mean(satobj.relative_azimuth_angles)
 
     sat_lat = satobj.latitudes
     sat_lon = satobj.longitudes
@@ -529,7 +540,13 @@ def process_hypso(satobj, latitude, longitude, atmospheric_correction="polymer")
     )
 
 
-    data_values = data.values
+    if divide_by_pi:
+        pi_factor = np.pi
+    else:
+        pi_factor = 1
+
+
+    data_values = data.values / pi_factor
 
 
     # Get stats - calculate mean and std across spatial dimensions (y, x)
@@ -541,6 +558,47 @@ def process_hypso(satobj, latitude, longitude, atmospheric_correction="polymer")
     cv_mask = (hypso_wavelengths >= 405) & (hypso_wavelengths <= 570)
     data_cv = np.median(data_cv[cv_mask])
 
+
+
+    #owt_data = data_mean[10:]
+    #owt_bands = hypso_wavelengths[10:]
+
+    owt_data = data_mean
+    owt_bands = hypso_wavelengths
+
+    # Clean to remove any nan values otherwise OWT will return NaN
+    nan_mask = np.isnan(owt_data)
+    owt_data = owt_data[~nan_mask]
+    owt_bands = owt_bands[~nan_mask]
+
+    owt = None
+
+    if pyowt_path is not None:
+        try:
+
+            import sys
+            sys.path.insert(0, pyowt_path)
+
+            from pyowt.OWT import OWT
+            from pyowt.OpticalVariables import OpticalVariables
+            from pyowt.PlotOWT import PlotOV, PlotSpec
+
+            ov = OpticalVariables(Rrs=owt_data, band=owt_bands, sensor=None)
+
+            owt = OWT(AVW=ov.AVW, Area=ov.Area, NDI=ov.NDI)
+
+            owt = owt.type_str.flatten()[0]
+
+        except Exception as ex:
+            print(ex)
+
+
+
+
+
+
+
+
     # Put in dictionary of the row
     row = {
         f"hypso_{col_name}_datetime": hypso_datetime,
@@ -548,8 +606,15 @@ def process_hypso(satobj, latitude, longitude, atmospheric_correction="polymer")
         f"hypso_{col_name}_latitude": float(sat_lat[center_y, center_x]),
         f"hypso_{col_name}_longitude": float(sat_lon[center_y, center_x]),
         f"hypso_{col_name}_pixel_valid": data_values.shape[0] * data_values.shape[1],  # 5x5 = 25
-        f"hypso_{col_name}_box_size": f"{data_values.shape[0]}x{data_values.shape[1]}"
+        f"hypso_{col_name}_box_size": f"{data_values.shape[0]}x{data_values.shape[1]}",
+        f"hypso_{col_name}_mean_solar_zenith_angle": mean_solar_zenith_angle,
+        f"hypso_{col_name}_mean_sat_zenith_angle": mean_sat_zenith_angle,
+        f"hypso_{col_name}_mean_relative_azimuth_angle": mean_relative_azimuth_angle,
+        f"hypso_{col_name}_owt": owt
     }
+
+
+
 
     # Add mean spectra to the row dictionary
     for wavelength, mean_value in zip(hypso_wavelengths, data_mean):
@@ -581,7 +646,14 @@ def process_hypso(satobj, latitude, longitude, atmospheric_correction="polymer")
 
 
 
-def process_hypso_convolved(satobj, aeronet_wavelengths, latitude, longitude, atmospheric_correction="polymer", aeronet_fwhm=10.0):
+def process_hypso_convolved(satobj, 
+                            aeronet_wavelengths, 
+                            latitude, 
+                            longitude, 
+                            atmospheric_correction="polymer", 
+                            divide_by_pi=False,
+                            aeronet_fwhm=10.0,
+                            pyowt_path=None):
     """
     Download and process HYPSO data for matchups including convolution with AERONET-OC SRFs.
 
@@ -632,9 +704,15 @@ def process_hypso_convolved(satobj, aeronet_wavelengths, latitude, longitude, at
             print(f"[ERROR] {atmospheric_correction} not found in l2a_cube")
             return None
         col_name = atmospheric_correction
-        
-    else:
 
+    elif hypso_product_level == "l1d":
+        datacube = getattr(satobj, cube_name, None)
+        if datacube is None:
+            print(f"[ERROR] {cube_name} not found!")
+            return None
+        col_name = "l1d"
+      
+    else:
         datacube = getattr(satobj, cube_name, None)
         if datacube is None:
             print(f"[ERROR] {cube_name} not found!")
@@ -667,7 +745,9 @@ def process_hypso_convolved(satobj, aeronet_wavelengths, latitude, longitude, at
 
     hypso_wavelengths = satobj.wavelengths
 
-
+    mean_solar_zenith_angle = np.mean(satobj.solar_zenith_angles)
+    mean_sat_zenith_angle = np.mean(satobj.sat_zenith_angles)
+    mean_relative_azimuth_angle = np.mean(satobj.relative_azimuth_angles)
 
     sat_lat = satobj.latitudes
     sat_lon = satobj.longitudes
@@ -697,7 +777,12 @@ def process_hypso_convolved(satobj, aeronet_wavelengths, latitude, longitude, at
     )
 
 
-    data_values = data.values
+    if divide_by_pi:
+        pi_factor = np.pi
+    else:
+        pi_factor = 1
+
+    data_values = data.values / pi_factor
 
 
     #print(data_values)
@@ -705,6 +790,8 @@ def process_hypso_convolved(satobj, aeronet_wavelengths, latitude, longitude, at
 
     convolved_data_values = np.full((data.shape[0], data.shape[1], len(aeronet_wavelengths)), np.nan)
 
+    convolved_data_values = convolved_data_values / pi_factor
+    
 
     extension = 5 * aeronet_fwhm
 
@@ -802,6 +889,38 @@ def process_hypso_convolved(satobj, aeronet_wavelengths, latitude, longitude, at
     cv_mask = (aeronet_wavelengths >= 405) & (aeronet_wavelengths <= 570)
     data_cv = np.median(data_cv[cv_mask])
 
+
+    owt_data = data_mean
+    owt_bands = aeronet_wavelengths
+
+    owt = None
+
+    if pyowt_path is not None:
+        try:
+
+            import sys
+            sys.path.insert(0, pyowt_path)
+
+            from pyowt.OWT import OWT
+            from pyowt.OpticalVariables import OpticalVariables
+            from pyowt.PlotOWT import PlotOV, PlotSpec
+
+            ov = OpticalVariables(Rrs=owt_data, band=owt_bands, sensor="AERONET_OC_2")
+
+            owt = OWT(AVW=ov.AVW, Area=ov.Area, NDI=ov.NDI)
+
+            owt = owt.type_str.flatten()[0]
+
+        except Exception as ex:
+            print(ex)
+
+
+
+
+
+
+
+
     # Put in dictionary of the row
     row = {
         f"hypso_{col_name}_convolved_datetime": hypso_datetime,
@@ -809,7 +928,11 @@ def process_hypso_convolved(satobj, aeronet_wavelengths, latitude, longitude, at
         f"hypso_{col_name}_convolved_latitude": float(sat_lat[center_y, center_x]),
         f"hypso_{col_name}_convolved_longitude": float(sat_lon[center_y, center_x]),
         f"hypso_{col_name}_convolved_pixel_valid": data_values.shape[0] * data_values.shape[1],  # 5x5 = 25
-        f"hypso_{col_name}_convolved_box_size": f"{data_values.shape[0]}x{data_values.shape[1]}"
+        f"hypso_{col_name}_convolved_box_size": f"{data_values.shape[0]}x{data_values.shape[1]}",
+        f"hypso_{col_name}_convolved_mean_solar_zenith_angle": mean_solar_zenith_angle,
+        f"hypso_{col_name}_convolved_mean_sat_zenith_angle": mean_sat_zenith_angle,
+        f"hypso_{col_name}_convolved_mean_relative_azimuth_angle": mean_relative_azimuth_angle,
+        f"hypso_{col_name}_convolved_owt": owt
     }
 
     # Add mean spectra to the row dictionary
