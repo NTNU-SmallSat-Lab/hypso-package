@@ -863,7 +863,8 @@ def process_hypso_convolved(satobj,
                     srf = np.exp(-0.5 * ((fine_wavelengths - center_wl) / sigma)**2)
                     
                     # Normalize to area = 1
-                    srf_area = np.trapz(srf, fine_wavelengths)
+                    #srf_area = np.trapz(srf, fine_wavelengths)
+                    srf_area = np.trapezoid(srf, fine_wavelengths)
                     if srf_area > 0:
                         srf = srf / srf_area
                     else:
@@ -873,7 +874,7 @@ def process_hypso_convolved(satobj,
                         continue
                     
                     # Convolve (weighted average)
-                    convolved = np.trapz(rrs_fine * srf, fine_wavelengths)
+                    convolved = np.trapezoid(rrs_fine * srf, fine_wavelengths)
                     
                     convolved_data_values[y,x,k] = convolved
 

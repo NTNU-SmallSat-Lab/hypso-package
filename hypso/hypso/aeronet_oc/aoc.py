@@ -7,6 +7,7 @@ Authors:
 import datetime
 from pathlib import Path
 import re
+import sys
 
 import earthaccess
 import matplotlib.colors as mcolors
@@ -20,6 +21,9 @@ from scipy import stats, odr
 import seaborn as sns
 from importlib.resources import files
 import xarray as xr
+
+from hypso.load import load_acolite_l2w_nc, load_polymer_l2_v2_nc
+from hypso.ac.ac_dark_pixel_subtraction import dark_pixel_subtraction_per_band
 
 # AERONET-OC Download Constants
 # Valid AERONET-OC site list
@@ -1314,7 +1318,1065 @@ def process_satellite(start_date, end_date, latitude, longitude, sat="PACE",
     #     tolerance=pd.Timedelta('1 hour')  # Only match within 1 hour
     # )
 
-    
+
+
+    return data
+
+
+def run_acolite_correction(input_file, acolite_dir, output_dir,
+                           settings_file=None, EARTHDATA_u=None,
+                           EARTHDATA_p=None, skip_existing=True):
+    """
+    Run ACOLITE atmospheric correction on a single input NetCDF file (e.g. a
+    downloaded PACE OCI L1B granule; ACOLITE's PACE reader only supports L1B
+    or L2 input, not L1C).
+
+    Parameters
+    ----------
+    input_file : str or Path
+        Path to a locally downloaded input NetCDF file for ACOLITE.
+    acolite_dir : str or Path
+        Path to the ACOLITE installation directory.
+    output_dir : str or Path
+        Directory to write (or look for) ACOLITE output. Should be dedicated
+        to this input file, since it is globbed to check for pre-existing
+        output and to locate output files if ACOLITE doesn't report them.
+    settings_file : str or Path, optional
+        Optional ACOLITE settings file. Defaults are used if None.
+    EARTHDATA_u : str, optional
+        EarthData username. If given along with EARTHDATA_p, ancillary data
+        retrieval is enabled.
+    EARTHDATA_p : str, optional
+        EarthData password. If given along with EARTHDATA_u, ancillary data
+        retrieval is enabled.
+    skip_existing : bool, default True
+        If True and an L2W NetCDF already exists in output_dir, ACOLITE is
+        not re-run and the existing file is returned instead.
+
+    Returns
+    -------
+    str or None
+        Path to the ACOLITE L2W NetCDF output, or None if no L2W output was
+        produced.
+    """
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    existing_l2w = sorted(output_dir.glob("*_L2W.nc"))
+    if skip_existing and existing_l2w:
+        print(f"[INFO] ACOLITE L2W output already exists in {output_dir}. Skipping ACOLITE processing.")
+        return str(existing_l2w[0])
+
+    acolite_path = Path(acolite_dir).absolute()
+
+    print("[INFO] Running ACOLITE atmospheric correction installed in " + str(acolite_path))
+
+    sys.path.append(str(acolite_path))
+
+    import acolite as ac
+    from acolite.acolite.settings import load, read
+    from acolite.acolite import acolite_run
+
+    # Load ACOLITE's PACE_OCI sensor defaults (config/defaults/PACE_OCI.txt)
+    # rather than the generic defaults. Notably this sets
+    # add_detector_name=True, which is required for ACOLITE to match its
+    # reconstructed hyperspectral band names (rhot_<wave>) against the
+    # detector-prefixed dataset names PACE L1R files actually use
+    # (rhot_<detector>_<wave>, e.g. rhot_red_749). Without it, every band is
+    # silently skipped in the DSF AOT retrieval loop and ACOLITE fails with
+    # "No valid data found for aot retrieval with current settings" on every
+    # PACE granule, since none of the rhot_<wave> lookups ever match.
+    settings = load('PACE_OCI')
+
+    # Layer any user-supplied settings file on top of the PACE_OCI defaults.
+    if settings_file is not None:
+        settings.update(read(settings_file))
+
+    if EARTHDATA_u is not None and EARTHDATA_p is not None:
+        settings['EARTHDATA_u'] = EARTHDATA_u
+        settings['EARTHDATA_p'] = EARTHDATA_p
+        settings['ancillary_data'] = True
+
+    print("[INFO] Using input NetCDF as ACOLITE input: " + str(input_file))
+    settings['inputfile'] = str(input_file)
+
+    print("[INFO] Writing ACOLITE output to " + str(output_dir))
+    settings['output'] = str(output_dir)
+
+    settings['polygon'] = None
+    settings['rgb_rhot'] = True
+    settings['rgb_rhos'] = True
+    settings['map_l2w'] = False #produces blank .pngs
+    settings['l2w_mask'] = False
+    settings['l2w_mask_threshold'] = 0.2
+
+    settings['l2w_parameters'] = ['Rrs_*', \
+                                'spm_nechad2010', \
+                                'spm_nechad2016', \
+                                'chl_re_mishra',\
+                                'chl_oc2', \
+                                'chl_oc3', \
+                                'chl_re_moses3b', \
+                                'chl_re_moses3b740', \
+                                'fai', \
+                                'fai_rhot', \
+                                'fait', \
+                                'ndci']
+
+    processed = acolite_run(settings=settings)
+
+    print("[INFO] ACOLITE atmospheric correction complete.")
+
+    l2w_files = []
+    if processed:
+        for entry in processed.values():
+            l2w_files.extend(entry.get('l2w', []))
+
+    if not l2w_files:
+        # Fall back to globbing the output directory if acolite_run didn't
+        # report L2W files directly (e.g. an older ACOLITE version).
+        l2w_files = sorted(str(f) for f in output_dir.glob("*_L2W.nc"))
+
+    if not l2w_files:
+        print(f"[ERROR] No ACOLITE L2W output found for {input_file}.")
+        return None
+
+    return l2w_files[0]
+
+
+def get_fivebyfive_acolite(l2w_file, latitude, longitude, granule_date):
+    """
+    Get stats on a 5x5 box around station coordinates from an ACOLITE L2W
+    NetCDF output file (e.g. produced by run_acolite_correction on a PACE
+    OCI L1C granule).
+
+    Parameters
+    ----------
+    l2w_file : str or Path
+        Path to the ACOLITE L2W NetCDF output file.
+    latitude : float
+        In decimal degrees for Aeronet-OC site for matchups
+    longitude : float
+        In decimal degrees (negative West) for Aeronet-OC site for matchups
+    granule_date : datetime-like
+        Timestamp of the granule the L2W file was generated from.
+
+    Returns
+    -------
+    dict
+        Row of extracted ACOLITE L2W Rrs stats.
+    """
+    datasets = load_acolite_l2w_nc(l2w_file)
+
+    rrs_cube = datasets['Rrs'].values  # (y, x, band)
+    wavelengths = datasets['Rrs'].band.to_numpy()
+    sat_lat = datasets['lat'].values
+    sat_lon = datasets['lon'].values
+
+    # Calculate the Euclidean distance for 2D lat/lon arrays
+    distances = np.sqrt((sat_lat - latitude)**2 + (sat_lon - longitude)**2)
+
+    # Find the index of the minimum distance
+    min_dist_idx = np.unravel_index(np.argmin(distances), distances.shape)
+    center_line, center_pixel = min_dist_idx
+
+    # Get indices for a 5x5 box around the center pixel
+    line_start = max(center_line - 2, 0)
+    line_end = min(center_line + 2 + 1, sat_lat.shape[0])
+    pixel_start = max(center_pixel - 2, 0)
+    pixel_end = min(center_pixel + 2 + 1, sat_lat.shape[1])
+
+    rrs_box = rrs_cube[line_start:line_end, pixel_start:pixel_end, :]
+
+    # ACOLITE has no equivalent to the l2_flags mask, so just exclude fill/NaN pixels
+    valid_mask = np.all(np.isfinite(rrs_box), axis=2)
+
+    if valid_mask.any():
+        rrs_valid = rrs_box[valid_mask]
+        rrs_std_initial = np.std(rrs_valid, axis=0)
+        rrs_mean_initial = np.mean(rrs_valid, axis=0)
+
+        # Exclude spectra > 1.5 stdevs away
+        std_mask = np.all(
+            np.abs(rrs_valid - rrs_mean_initial) <= 1.5 * rrs_std_initial,
+            axis=1)
+        rrs_std = np.std(rrs_valid[std_mask], axis=0)
+        rrs_mean = np.mean(rrs_valid[std_mask], axis=0).flatten()
+
+        # Matchup criteria uses cv as median of 405-570nm
+        rrs_cv = rrs_std / rrs_mean
+        rrs_cv_median = np.median(rrs_cv[(wavelengths >= 405)
+                                         & (wavelengths <= 570)])
+    else:
+        rrs_cv_median = np.nan
+        rrs_mean = np.nan * np.empty_like(wavelengths, dtype=float)
+
+    row = {
+        "oci_acolite_datetime": granule_date,
+        "oci_acolite_cv": rrs_cv_median,
+        "oci_acolite_latitude": sat_lat[center_line, center_pixel],
+        "oci_acolite_longitude": sat_lon[center_line, center_pixel],
+        "oci_acolite_pixel_valid": np.sum(valid_mask)
+    }
+
+    for wavelength, mean_value in zip(wavelengths, rrs_mean):
+        key = f'oci_acolite_rrs{int(round(wavelength))}'
+        row[key] = mean_value
+
+    return row
+
+
+def get_fivebyfive_dps(file, latitude, longitude, rhot_wavelengths,
+                       granule_date, method='min', percentile=None,
+                       divide_by_pi=True):
+    """
+    Run dark pixel subtraction on the full PACE OCI L1B rhot swath and get
+    stats on a 5x5 box around station coordinates.
+
+    Parameters
+    ----------
+    file : earthaccess granule object
+        Local PACE OCI L1B granule NetCDF file.
+    latitude : float
+        In decimal degrees for Aeronet-OC site for matchups
+    longitude : float
+        In decimal degrees (negative West) for Aeronet-OC site for matchups
+    rhot_wavelengths : numpy array
+        rhot wavelengths (blue + red, from sensor_band_parameters for OCI)
+    granule_date : datetime-like
+        Timestamp of the granule.
+    method : str, default 'min'
+        Method passed to dark_pixel_subtraction_per_band ('min' or
+        'percentile').
+    percentile : float, optional
+        Percentile passed to dark_pixel_subtraction_per_band when
+        method='percentile'.
+    divide_by_pi : bool, default True
+        DPS is run on rhot (reflectance), so divide the dark-pixel-corrected
+        reflectance by pi to get an Rrs-comparable quantity, same convention
+        used for HYPSO DPS/Polymer in aoc_hypso.process_hypso().
+
+    Returns
+    -------
+    dict
+        Row of extracted dark-pixel-subtracted rhot stats.
+    """
+    with xr.open_dataset(file, group="geolocation_data") as ds_nav:
+        sat_lat = ds_nav['latitude'].values
+        sat_lon = ds_nav['longitude'].values
+
+    # Calculate the Euclidean distance for 2D lat/lon arrays
+    distances = np.sqrt((sat_lat - latitude)**2 + (sat_lon - longitude)**2)
+
+    # Find the index of the minimum distance
+    min_dist_idx = np.unravel_index(np.argmin(distances), distances.shape)
+    center_line, center_pixel = min_dist_idx
+
+    # Get indices for a 5x5 box around the center pixel
+    line_start = max(center_line - 2, 0)
+    line_end = min(center_line + 2 + 1, sat_lat.shape[0])
+    pixel_start = max(center_pixel - 2, 0)
+    pixel_end = min(center_pixel + 2 + 1, sat_lat.shape[1])
+
+    # Read the full granule swath (not just the 5x5 box) so the dark pixel
+    # spectrum is drawn from the whole scene
+    with xr.open_dataset(file, group="observation_data") as ds_data:
+        rhot_blue_data = ds_data['rhot_blue'].values
+        rhot_red_data = ds_data['rhot_red'].values
+
+    rhot_blue_data = np.transpose(rhot_blue_data, (1, 2, 0))
+    rhot_red_data = np.transpose(rhot_red_data, (1, 2, 0))
+    rhot_data = np.concatenate((rhot_blue_data, rhot_red_data), axis=2)
+    del rhot_blue_data, rhot_red_data
+
+    print(f"[INFO] Running dark pixel subtraction on full granule swath, shape {rhot_data.shape}")
+    corrected_cube, dark_spectrum = dark_pixel_subtraction_per_band(
+        datacube=rhot_data, method=method, percentile=percentile)
+    del rhot_data
+
+    dps_box = corrected_cube[line_start:line_end, pixel_start:pixel_end, :]
+    del corrected_cube
+
+    if divide_by_pi:
+        dps_box = dps_box / np.pi
+
+    valid_mask = np.all(np.isfinite(dps_box), axis=2)
+
+    if valid_mask.any():
+        dps_valid = dps_box[valid_mask]
+        dps_std_initial = np.std(dps_valid, axis=0)
+        dps_mean_initial = np.mean(dps_valid, axis=0)
+
+        # Exclude spectra > 1.5 stdevs away
+        std_mask = np.all(
+            np.abs(dps_valid - dps_mean_initial) <= 1.5 * dps_std_initial,
+            axis=1)
+        dps_std = np.std(dps_valid[std_mask], axis=0)
+        dps_mean = np.mean(dps_valid[std_mask], axis=0).flatten()
+
+        # Matchup criteria uses cv as median of 405-570nm
+        dps_cv = dps_std / dps_mean
+        dps_cv_median = np.median(dps_cv[(rhot_wavelengths >= 405)
+                                         & (rhot_wavelengths <= 570)])
+    else:
+        dps_cv_median = np.nan
+        dps_mean = np.nan * np.empty_like(rhot_wavelengths, dtype=float)
+
+    row = {
+        "oci_dps_datetime": granule_date,
+        "oci_dps_cv": dps_cv_median,
+        "oci_dps_latitude": sat_lat[center_line, center_pixel],
+        "oci_dps_longitude": sat_lon[center_line, center_pixel],
+        "oci_dps_pixel_valid": np.sum(valid_mask)
+    }
+
+    for wavelength, mean_value in zip(rhot_wavelengths, dps_mean):
+        key = f'oci_dps_rrs{int(wavelength)}'
+        row[key] = mean_value
+
+    return row
+
+
+def run_polymer_correction(input_file, polymer_path, eoread_path, eotools_path,
+                           core_path, output_dir, optional_output_datasets=None,
+                           if_exists='overwrite', skip_existing=True):
+    """
+    Run Polymer atmospheric correction on a single PACE OCI L1B granule.
+
+    Mirrors the configuration used for HYPSO Polymer processing in
+    2b_process_capture.py (ac_polymer_run_correction): same sys.path setup
+    via explicit package directories, split_bands=False, and
+    default_output_datasets + optional_output_datasets.
+
+    Parameters
+    ----------
+    input_file : str or Path
+        Path to a locally downloaded PACE OCI L1B granule NetCDF file.
+    polymer_path : str or Path
+        Path to the directory containing the `polymer` package (i.e. the
+        parent of polymer/polymer/main_v5.py).
+    eoread_path : str or Path
+        Path to the directory containing the `eoread` package (must include
+        the PACE OCI L1B reader eoread.pace.Level1B_PACE_OCI).
+    eotools_path : str or Path
+        Path to the directory containing the `eotools` package.
+    core_path : str or Path
+        Path to the directory containing the `core` package.
+    output_dir : str or Path
+        Directory to write (or look for) the Polymer output NetCDF. Should
+        be dedicated to this input file, since it is globbed to check for
+        pre-existing output.
+    optional_output_datasets : list of str, optional
+        Extra datasets to request in addition to Polymer's
+        default_output_datasets (latitude, longitude, rho_w, logchl, logfb,
+        Rgli, Rnir, flags). Defaults to ["SPM"], same as HYPSO processing.
+    if_exists : str, default 'overwrite'
+        How Polymer should handle an existing output file when it actually
+        runs ('skip', 'overwrite', 'backup', 'error').
+    skip_existing : bool, default True
+        If True and a Polymer output NetCDF already exists in output_dir,
+        Polymer is not re-run and the existing file is returned instead.
+
+    Returns
+    -------
+    str or None
+        Path to the Polymer L2 NetCDF output, or None if processing failed.
+    """
+    if optional_output_datasets is None:
+        optional_output_datasets = ["SPM"]
+
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    existing_output = sorted(output_dir.glob("*.polymer.nc"))
+    if skip_existing and existing_output:
+        print(f"[INFO] Polymer output already exists in {output_dir}. Skipping Polymer processing.")
+        return str(existing_output[0])
+
+    for path in (polymer_path, eoread_path, eotools_path, core_path):
+        if path is not None:
+            sys.path.insert(0, str(Path(path).absolute()))
+
+    polymer_base_path = str(Path(polymer_path).parent)
+    sys.path.insert(0, str(Path(polymer_base_path).absolute()))
+
+    sys.path.insert(0, str(Path(polymer_path).absolute()))
+
+    try:
+        from eoread.pace import Level1B_PACE_OCI
+        from polymer.main_v5 import run_polymer, default_output_datasets
+    except Exception as ex:
+        print(ex)
+        print("[ERROR] Failed to import POLYMER!")
+
+    print("[INFO] Running Polymer atmospheric correction installed in " + str(polymer_path))
+    print("[INFO] Using PACE OCI L1B NetCDF as Polymer input: " + str(input_file))
+    level1 = Level1B_PACE_OCI(Path(input_file))
+
+    print("[INFO] Writing Polymer output to " + str(output_dir))
+    output_file = run_polymer(
+        level1,
+        dir_out=str(output_dir),
+        output_datasets=default_output_datasets + optional_output_datasets,
+        if_exists=if_exists,
+        split_bands=False,
+        )
+
+    print("[INFO] Polymer atmospheric correction complete.")
+
+    return str(output_file)
+
+
+def get_fivebyfive_polymer(polymer_file, latitude, longitude, granule_date,
+                           divide_by_pi=True):
+    """
+    Get stats on a 5x5 box around station coordinates from a Polymer L2
+    NetCDF output file (e.g. produced by run_polymer_correction on a PACE
+    OCI L1B granule).
+
+    Parameters
+    ----------
+    polymer_file : str or Path
+        Path to the Polymer L2 NetCDF output file.
+    latitude : float
+        In decimal degrees for Aeronet-OC site for matchups
+    longitude : float
+        In decimal degrees (negative West) for Aeronet-OC site for matchups
+    granule_date : datetime-like
+        Timestamp of the granule the Polymer file was generated from.
+    divide_by_pi : bool, default True
+        Polymer's rho_w is a reflectance, so divide by pi to get an
+        Rrs-comparable quantity, same convention used for HYPSO DPS/Polymer
+        in aoc_hypso.process_hypso().
+
+    Returns
+    -------
+    dict
+        Row of extracted Polymer rho_w (converted to Rrs) stats.
+    """
+    datasets = load_polymer_l2_v2_nc(polymer_file)
+
+    rho_w_cube = datasets['rho_w'].values  # (y, x, band)
+    wavelengths = np.asarray(datasets['bands'].values, dtype=float)
+    sat_lat = datasets['latitude'].values
+    sat_lon = datasets['longitude'].values
+
+    # Calculate the Euclidean distance for 2D lat/lon arrays
+    distances = np.sqrt((sat_lat - latitude)**2 + (sat_lon - longitude)**2)
+
+    # Find the index of the minimum distance
+    min_dist_idx = np.unravel_index(np.argmin(distances), distances.shape)
+    center_line, center_pixel = min_dist_idx
+
+    # Get indices for a 5x5 box around the center pixel
+    line_start = max(center_line - 2, 0)
+    line_end = min(center_line + 2 + 1, sat_lat.shape[0])
+    pixel_start = max(center_pixel - 2, 0)
+    pixel_end = min(center_pixel + 2 + 1, sat_lat.shape[1])
+
+    rrs_box = rho_w_cube[line_start:line_end, pixel_start:pixel_end, :]
+
+    if divide_by_pi:
+        rrs_box = rrs_box / np.pi
+
+    # Polymer has no equivalent to the l2_flags mask here, so just exclude fill/NaN pixels
+    valid_mask = np.all(np.isfinite(rrs_box), axis=2)
+
+    if valid_mask.any():
+        rrs_valid = rrs_box[valid_mask]
+        rrs_std_initial = np.std(rrs_valid, axis=0)
+        rrs_mean_initial = np.mean(rrs_valid, axis=0)
+
+        # Exclude spectra > 1.5 stdevs away
+        std_mask = np.all(
+            np.abs(rrs_valid - rrs_mean_initial) <= 1.5 * rrs_std_initial,
+            axis=1)
+        rrs_std = np.std(rrs_valid[std_mask], axis=0)
+        rrs_mean = np.mean(rrs_valid[std_mask], axis=0).flatten()
+
+        # Matchup criteria uses cv as median of 405-570nm
+        rrs_cv = rrs_std / rrs_mean
+        rrs_cv_median = np.median(rrs_cv[(wavelengths >= 405)
+                                         & (wavelengths <= 570)])
+    else:
+        rrs_cv_median = np.nan
+        rrs_mean = np.nan * np.empty_like(wavelengths, dtype=float)
+
+    row = {
+        "oci_polymer_datetime": granule_date,
+        "oci_polymer_cv": rrs_cv_median,
+        "oci_polymer_latitude": sat_lat[center_line, center_pixel],
+        "oci_polymer_longitude": sat_lon[center_line, center_pixel],
+        "oci_polymer_pixel_valid": np.sum(valid_mask)
+    }
+
+    for wavelength, mean_value in zip(wavelengths, rrs_mean):
+        key = f'oci_polymer_rrs{int(round(wavelength))}'
+        row[key] = mean_value
+
+    return row
+
+
+def _nearest_index_to_datetime(datetimes, reference_datetime):
+    """
+    Return the index of the entry in `datetimes` closest to
+    `reference_datetime`, comparing in UTC (tz-naive) to avoid tz-aware vs
+    tz-naive comparison errors.
+    """
+    ref = pd.to_datetime(reference_datetime)
+    if ref.tzinfo is not None:
+        ref = ref.tz_convert('UTC').tz_localize(None)
+
+    diffs = []
+    for dt in datetimes:
+        dt = pd.to_datetime(dt)
+        if dt.tzinfo is not None:
+            dt = dt.tz_convert('UTC').tz_localize(None)
+        diffs.append(abs(dt - ref))
+
+    return int(np.argmin(diffs))
+
+
+def process_satellite_ac(start_date, end_date, latitude, longitude, sat="PACE",
+                         selected_dates=None, local_path=None,
+                         ac_method=None, nearest_to_datetime=None,
+                         acolite_dir=None, acolite_settings_file=None,
+                         acolite_output_dir=None,
+                         EARTHDATA_u=None, EARTHDATA_p=None,
+                         skip_existing_acolite=True,
+                         dps_method='min', dps_percentile=None,
+                         dps_divide_by_pi=True,
+                         polymer_path=None, eoread_path=None,
+                         eotools_path=None, core_path=None,
+                         polymer_output_dir=None,
+                         polymer_optional_output_datasets=None,
+                         polymer_if_exists='overwrite',
+                         skip_existing_polymer=True,
+                         polymer_divide_by_pi=True):
+    """
+    Download and process satellite data for matchups, same as
+    process_satellite(), but with the option to also run an atmospheric
+    correction on each PACE granule considered for the matchup and add the
+    AC'ed PACE reflectance to the returned matchup data.
+
+    Caution: If the date or coordinates aren't formatted correctly, it might
+    pull a huge granule list and take forever to run. If it takes more than 45
+    seconds to print the number of granules, just kill the process.
+
+    Uses the earthaccess package. Defaults to the PACE OCI L2 IOP datasets,
+    but other satellites can be used if they have a corresponding short_name
+    in the SAT_LOOKUP dictionary.
+
+    Workflow:
+        1. Get list of matchup granules
+        2. Loop through each file and:
+            2a. Find closest pixel to station, extract 5x5 pixel box
+            2b. Exclude pixels based on l2_flags
+            2c. Filtered mean to get single spectra
+            2d. Compute statistics and save data row
+            2e. If ac_method is set, run that AC on the granule and save the
+                5x5 box stats of the AC'ed reflectance as well
+        3. Organize output pandas dataframe
+
+    Parameters
+    ----------
+    start_date : datetime or str
+        Beginning of Aeronet data to run.
+    end_date : datetime or str, optional
+        End of Aeronet data to run.
+    latitude : float
+        In decimal degrees for Aeronet-OC site for matchups
+    longitude : float
+        In decimal degrees (negative West) for Aeronet-OC site for matchups
+    sat : str
+        Name of satellite to search. Must be in SAT_LOOKUP dict constant.
+    selected_dates : list of str, optional
+        If given, only pull granules if the dates are in this list
+    local_path : str or Path, optional
+        Local directory to download granules to.
+    ac_method : None, str, or list/set of str, optional
+        Which atmospheric correction(s) to additionally run on the PACE
+        granules considered for the matchup, in addition to the operational
+        PACE L2 Rrs product (which is always included). Accepts None, a
+        single method name, or a list/set of method names to run several at
+        once:
+            - None (default): no additional AC, only the operational PACE
+              L2 Rrs product is used (same as process_satellite()).
+            - 'acolite_l2w': run ACOLITE on each PACE OCI L1B granule and add
+              the 5x5 box stats of the resulting L2W Rrs to the matchup data.
+              (ACOLITE's PACE reader only supports L1B or L2 input, not
+              L1C, so the L1B granule is used here.)
+            - 'dps': run dark pixel subtraction on each PACE OCI L1B
+              granule's full rhot swath and add the 5x5 box stats of the
+              resulting corrected reflectance to the matchup data.
+            - 'polymer': run Polymer on each PACE OCI L1B granule and add
+              the 5x5 box stats of the resulting rho_w (converted to Rrs by
+              dividing by pi) to the matchup data.
+        e.g. ac_method=['acolite_l2w', 'dps', 'polymer'] runs all three and
+        adds all of their columns to the returned matchup data.
+    nearest_to_datetime : datetime-like, optional
+        If given, ACOLITE/DPS/Polymer are only run on the single L1B granule
+        whose timestamp is closest to this reference time (e.g. the HYPSO
+        capture datetime for a HYPSO-PACE inter-comparison), instead of
+        every candidate granule found in the search window. The base PACE
+        L2 Rrs, Lwn, and rhot rows are still computed for every candidate
+        granule either way; this only limits which granule(s) the (slow)
+        AC processing runs on.
+    acolite_dir : str or Path, optional
+        Path to the ACOLITE installation directory. Required if
+        ac_method='acolite_l2w'.
+    acolite_settings_file : str or Path, optional
+        Optional ACOLITE settings file, used if ac_method='acolite_l2w'.
+        Defaults are used if None.
+    acolite_output_dir : str or Path, optional
+        Base directory to write ACOLITE output to, used if
+        ac_method='acolite_l2w'. Each granule gets its own subdirectory
+        (named after the granule file) under this directory. Defaults to a
+        directory next to the downloaded granule.
+    EARTHDATA_u : str, optional
+        EarthData username, passed through to ACOLITE for ancillary data.
+        Used if ac_method='acolite_l2w'.
+    EARTHDATA_p : str, optional
+        EarthData password, passed through to ACOLITE for ancillary data.
+        Used if ac_method='acolite_l2w'.
+    skip_existing_acolite : bool, default True
+        If True, skip re-running ACOLITE for a granule if its L2W output
+        already exists in that granule's output directory. Used if
+        ac_method='acolite_l2w'.
+    dps_method : str, default 'min'
+        Method passed to dark_pixel_subtraction_per_band ('min' or
+        'percentile'). Used if ac_method='dps'.
+    dps_percentile : float, optional
+        Percentile passed to dark_pixel_subtraction_per_band when
+        dps_method='percentile'. Used if ac_method='dps'.
+    dps_divide_by_pi : bool, default True
+        Divide the dark-pixel-corrected rhot by pi to get an Rrs-comparable
+        quantity (same convention as HYPSO DPS/Polymer in
+        aoc_hypso.process_hypso()). Used if ac_method='dps'.
+    polymer_path : str or Path, optional
+        Path to the directory containing the `polymer` package (parent of
+        polymer/polymer/main_v5.py). Required if ac_method includes
+        'polymer'.
+    eoread_path : str or Path, optional
+        Path to the directory containing the `eoread` package (must include
+        eoread.pace.Level1B_PACE_OCI). Required if ac_method includes
+        'polymer'.
+    eotools_path : str or Path, optional
+        Path to the directory containing the `eotools` package. Required if
+        ac_method includes 'polymer'.
+    core_path : str or Path, optional
+        Path to the directory containing the `core` package. Required if
+        ac_method includes 'polymer'.
+    polymer_output_dir : str or Path, optional
+        Base directory to write Polymer output to, used if ac_method
+        includes 'polymer'. Each granule gets its own subdirectory (named
+        after the granule file) under this directory. Defaults to a
+        directory next to the downloaded granule.
+    polymer_optional_output_datasets : list of str, optional
+        Extra datasets to request from Polymer in addition to its
+        default_output_datasets. Defaults to ["SPM"], same as HYPSO
+        processing in 2b_process_capture.py. Used if ac_method includes
+        'polymer'.
+    polymer_if_exists : str, default 'overwrite'
+        How Polymer should handle an existing output file when it actually
+        runs. Used if ac_method includes 'polymer'.
+    skip_existing_polymer : bool, default True
+        If True, skip re-running Polymer for a granule if its output already
+        exists in that granule's output directory. Used if ac_method
+        includes 'polymer'.
+    polymer_divide_by_pi : bool, default True
+        Divide Polymer's rho_w by pi to get an Rrs-comparable quantity. Used
+        if ac_method includes 'polymer'.
+
+    Returns
+    -------
+    pandas DataFrame object
+        Flattened table of all satellite granule matchups. If 'acolite_l2w',
+        'dps', and/or 'polymer' are requested via ac_method, the
+        corresponding oci_acolite_*, oci_dps_*, and/or oci_polymer_* columns
+        are included.
+    """
+    if ac_method is None:
+        ac_methods = []
+    elif isinstance(ac_method, str):
+        ac_methods = [ac_method]
+    else:
+        ac_methods = list(ac_method)
+
+    invalid_methods = set(ac_methods) - {'acolite_l2w', 'dps', 'polymer'}
+    if invalid_methods:
+        raise ValueError(f"ac_method must only contain 'acolite_l2w', 'dps', and/or 'polymer', got: {sorted(invalid_methods)}")
+
+    if 'acolite_l2w' in ac_methods and acolite_dir is None:
+        raise ValueError("acolite_dir must be provided when ac_method includes 'acolite_l2w'")
+
+    if 'polymer' in ac_methods and (polymer_path is None or eoread_path is None
+                                     or eotools_path is None or core_path is None):
+        raise ValueError("polymer_path, eoread_path, eotools_path, and core_path must all be "
+                         "provided when ac_method includes 'polymer'")
+
+    # Look up short name from constants
+    if sat not in SAT_LOOKUP.keys():
+        raise ValueError(f"{sat} is not in the lookup dictionary. Available "
+                         f"sats are: {', '.join(SAT_LOOKUP)}")
+    short_name = SAT_LOOKUP[sat]
+
+    # Format search parameters
+    time_bounds = (f"{start_date}T00:00:00", f"{end_date}T23:59:59")
+
+    pace_products = [("PACE_OCI_L2_AOP", "3.2"), ("PACE_OCI_L1C_SCI", "3"), ("PACE_OCI_L1B_SCI", "3")]
+
+    for pace_product in pace_products:
+
+        short_name = pace_product[0]
+        version = pace_product[1]
+
+        results = earthaccess.search_data(point=(longitude, latitude),
+                                        temporal=time_bounds,
+                                        short_name=short_name,
+                                        version=version)
+        print("Earthaccess granule search results:")
+        print(results)
+
+
+
+        if selected_dates is not None:
+            filtered_results = [
+                result for result in results
+                if result["umm"]["TemporalExtent"]["RangeDateTime"]["BeginningDateTime"][:10]
+                in selected_dates
+                ]
+            print(f"Filtered to {len(filtered_results)} Granules.")
+            #files = earthaccess.open(filtered_results)
+            selected_results = filtered_results
+        else:
+            #files = earthaccess.open(results)
+            selected_results = results
+
+        print("Selected granules:")
+        print(selected_results)
+
+        open_remote_file = False
+
+        try:
+            print(f"Downloading {str(short_name)} granule files to {local_path}")
+            files = earthaccess.download(results, local_path=local_path, show_progress=True)
+            print("Downloaded granules:")
+            print(files)
+
+
+            try:
+                print("Checking if files can be opened")
+                for file in files:
+                    with xr.open_dataset(file):
+                        print(f"Succeeded at opening {file}!")
+                        pass
+            except Exception as ex:
+                print(ex)
+                print("Corrupt file detected! Attempting to re-download with force=True argument.")
+                print(f"Downloading {str(short_name)} granule files to {local_path}")
+                files = earthaccess.download(results, local_path=local_path, show_progress=True, force=True)
+                print("Downloaded granules:")
+                print(files)
+
+
+        except Exception:
+            open_remote_file = True
+
+        if open_remote_file:
+            print(f"Opening {str(short_name)} granule files from S3/HTTPS")
+            files = earthaccess.open(selected_results)
+            print("Opened granules:")
+            print(files)
+
+        if len(files) == 0:
+            print("No granules found!")
+            return None
+
+        if short_name == "PACE_OCI_L2_AOP":
+
+            # Pull out Rrs wavelengths for easier processing
+            with xr.open_dataset(files[0], group="sensor_band_parameters") as ds_bands:
+                rrs_wavelengths = ds_bands["wavelength_3d"].values
+
+            # Loop through files and process
+            sat_rrs_rows = []
+            for idx, file in enumerate(files):
+
+                try:
+                    granule_date = pd.to_datetime(file.granule["umm"]["TemporalExtent"]["RangeDateTime"]["BeginningDateTime"])
+                except:
+                    ds = xr.open_dataset(file)
+                    granule_date = pd.to_datetime(ds.attrs['time_coverage_start'])
+                    granule_date = granule_date.floor('s')
+
+
+                print(f"Running Granule: {granule_date}")
+                row = get_fivebyfive(file, latitude, longitude, rrs_wavelengths, granule_date)
+                sat_rrs_rows.append(row)
+
+        if short_name == "PACE_OCI_L1C_SCI":
+
+            # Pull out Rrs wavelengths for easier processing
+            try:
+                with xr.open_dataset(files[0], group="sensor_views_bands") as ds_bands:
+                    Lwn_wavelengths = ds_bands["intensity_wavelength"].values[0] # Two views in L1C
+            except Exception as ex:
+                print(f"NetCDF file {files[0]} is likely corrupt. Unable to load data.")
+                break
+
+            # Loop through files and process
+            sat_Lwn_rows = []
+            for idx, file in enumerate(files):
+
+                try:
+                    granule_date = pd.to_datetime(file.granule["umm"]["TemporalExtent"]["RangeDateTime"]["BeginningDateTime"])
+                except:
+                    ds = xr.open_dataset(file)
+                    granule_date = pd.to_datetime(ds.attrs['time_coverage_start'])
+                    granule_date = granule_date.floor('s')
+
+
+                print(f"Running Granule: {granule_date}")
+                row = get_fivebyfive_Lwn(file, latitude, longitude, Lwn_wavelengths, granule_date)
+                sat_Lwn_rows.append(row)
+
+
+        if short_name == "PACE_OCI_L1B_SCI":
+
+            # Pull out Rrs wavelengths for easier processing
+            try:
+                with xr.open_dataset(files[0], group="sensor_band_parameters") as ds_bands:
+                    rhot_blue_wavelengths = ds_bands["blue_wavelength"].values
+                    rhot_red_wavelengths = ds_bands["red_wavelength"].values
+                    rhot_wavelengths = np.concatenate([rhot_blue_wavelengths, rhot_red_wavelengths])
+            except Exception as ex:
+                print(ex)
+                print(f"NetCDF file {files[0]} is likely corrupt. Unable to load data.")
+                break
+
+            # Loop through files and process
+            sat_rhot_rows = []
+            sat_dps_rows = []
+            sat_acolite_rows = []
+            sat_polymer_rows = []
+            l1b_granule_dates = []
+            for idx, file in enumerate(files):
+
+                try:
+                    granule_date = pd.to_datetime(file.granule["umm"]["TemporalExtent"]["RangeDateTime"]["BeginningDateTime"])
+                except:
+                    ds = xr.open_dataset(file)
+                    granule_date = pd.to_datetime(ds.attrs['time_coverage_start'])
+                    granule_date = granule_date.floor('s')
+
+
+                print(f"Running Granule: {granule_date}")
+                row = get_fivebyfive_rhot(file, latitude, longitude, rhot_wavelengths, granule_date)
+                sat_rhot_rows.append(row)
+                l1b_granule_dates.append(granule_date)
+
+            # Run dark pixel subtraction separately, after all candidate
+            # granules have been scanned, so it can be limited to a single
+            # nearest granule (it is expensive: full-swath per band).
+            if 'dps' in ac_methods:
+                if nearest_to_datetime is not None:
+                    dps_indices = [_nearest_index_to_datetime(l1b_granule_dates, nearest_to_datetime)]
+                    print(f"[INFO] ac_method='dps': running dark pixel subtraction only on the L1B granule nearest to {nearest_to_datetime}.")
+                else:
+                    dps_indices = list(range(len(files)))
+
+                for idx in dps_indices:
+                    file = files[idx]
+                    granule_date = l1b_granule_dates[idx]
+
+                    try:
+                        dps_row = get_fivebyfive_dps(file, latitude, longitude, rhot_wavelengths,
+                                                     granule_date, method=dps_method,
+                                                     percentile=dps_percentile,
+                                                     divide_by_pi=dps_divide_by_pi)
+                        sat_dps_rows.append(dps_row)
+                    except Exception as ex:
+                        print(f"[ERROR] Dark pixel subtraction failed for {file}: {ex}")
+
+            # Run ACOLITE separately, after all candidate granules have been
+            # scanned, so it can be limited to a single nearest granule.
+            # NB: ACOLITE's PACE reader only supports L1B or L2 input (not
+            # L1C, which falls into an unhandled "Format ... not supported"
+            # branch), so the L1B granule is used here rather than L1C.
+            if 'acolite_l2w' in ac_methods:
+                if nearest_to_datetime is not None:
+                    acolite_indices = [_nearest_index_to_datetime(l1b_granule_dates, nearest_to_datetime)]
+                    print(f"[INFO] ac_method='acolite_l2w': running ACOLITE only on the L1B granule nearest to {nearest_to_datetime}.")
+                else:
+                    acolite_indices = list(range(len(files)))
+
+                for idx in acolite_indices:
+                    file = files[idx]
+                    granule_date = l1b_granule_dates[idx]
+
+                    if open_remote_file:
+                        print("[WARNING] ACOLITE requires a locally downloaded granule. Skipping ACOLITE since this granule was opened remotely.")
+                        continue
+
+                    try:
+                        if acolite_output_dir is not None:
+                            granule_output_dir = Path(acolite_output_dir) / Path(file).stem
+                        else:
+                            granule_output_dir = Path(file).parent / f"{Path(file).stem}_acolite"
+
+                        l2w_file = run_acolite_correction(
+                            input_file=file,
+                            acolite_dir=acolite_dir,
+                            output_dir=granule_output_dir,
+                            settings_file=acolite_settings_file,
+                            EARTHDATA_u=EARTHDATA_u,
+                            EARTHDATA_p=EARTHDATA_p,
+                            skip_existing=skip_existing_acolite
+                            )
+
+                        if l2w_file is not None:
+                            acolite_row = get_fivebyfive_acolite(l2w_file, latitude, longitude, granule_date)
+                            sat_acolite_rows.append(acolite_row)
+                    except Exception as ex:
+                        print(f"[ERROR] ACOLITE processing failed for {file}: {ex}")
+
+            # Run Polymer separately, after all candidate granules have been
+            # scanned, so it can be limited to a single nearest granule.
+            if 'polymer' in ac_methods:
+                if nearest_to_datetime is not None:
+                    polymer_indices = [_nearest_index_to_datetime(l1b_granule_dates, nearest_to_datetime)]
+                    print(f"[INFO] ac_method='polymer': running Polymer only on the L1B granule nearest to {nearest_to_datetime}.")
+                else:
+                    polymer_indices = list(range(len(files)))
+
+                for idx in polymer_indices:
+                    file = files[idx]
+                    granule_date = l1b_granule_dates[idx]
+
+                    if open_remote_file:
+                        print("[WARNING] Polymer requires a locally downloaded granule. Skipping Polymer since this granule was opened remotely.")
+                        continue
+
+                    try:
+                        if polymer_output_dir is not None:
+                            granule_output_dir = Path(polymer_output_dir) / Path(file).stem
+                        else:
+                            granule_output_dir = Path(file).parent / f"{Path(file).stem}_polymer"
+
+                        polymer_file = run_polymer_correction(
+                            input_file=file,
+                            polymer_path=polymer_path,
+                            eoread_path=eoread_path,
+                            eotools_path=eotools_path,
+                            core_path=core_path,
+                            output_dir=granule_output_dir,
+                            optional_output_datasets=polymer_optional_output_datasets,
+                            if_exists=polymer_if_exists,
+                            skip_existing=skip_existing_polymer
+                            )
+
+                        if polymer_file is not None:
+                            polymer_row = get_fivebyfive_polymer(polymer_file, latitude, longitude,
+                                                                 granule_date, divide_by_pi=polymer_divide_by_pi)
+                            sat_polymer_rows.append(polymer_row)
+                    except Exception as ex:
+                        print(f"[ERROR] Polymer processing failed for {file}: {ex}")
+
+
+
+    rrs = pd.DataFrame(sat_rrs_rows)
+
+    try:
+        Lwn = pd.DataFrame(sat_Lwn_rows)
+    except Exception as ex:
+        print("Could not convert Lwn row to DataFrame!")
+        print(ex)
+        Lwn = None
+
+
+    try:
+        rhot = pd.DataFrame(sat_rhot_rows)
+    except Exception as ex:
+        print("Could not convert Lwn row to DataFrame!")
+        print(ex)
+        rhot = None
+
+
+    # Ensure datetime columns are properly formatted
+    rrs['oci_datetime'] = pd.to_datetime(rrs['oci_datetime'])
+    Lwn['oci_lwn_datetime'] = pd.to_datetime(Lwn['oci_lwn_datetime'])
+    rhot['oci_rhot_datetime'] = pd.to_datetime(rhot['oci_rhot_datetime'])
+
+    # Sort both DataFrames by datetime (required for merge_asof)
+    rrs_sorted = rrs.sort_values('oci_datetime')
+    Lwn_sorted = Lwn.sort_values('oci_lwn_datetime')
+    rhot_sorted = rhot.sort_values('oci_rhot_datetime')
+
+    # Merge by closest datetime (forward direction - finds nearest previous)
+    data = pd.merge_asof(
+        rrs_sorted,
+        Lwn_sorted,
+        left_on='oci_datetime',
+        right_on='oci_lwn_datetime',
+        direction='nearest'  # Finds closest in either direction
+    )
+
+    data = pd.merge_asof(
+        data,
+        rhot_sorted,
+        left_on='oci_datetime',
+        right_on='oci_rhot_datetime',
+        direction='nearest'  # Finds closest in either direction
+    )
+
+    if 'acolite_l2w' in ac_methods:
+        try:
+            acolite_df = pd.DataFrame(sat_acolite_rows)
+            acolite_df['oci_acolite_datetime'] = pd.to_datetime(acolite_df['oci_acolite_datetime'])
+            acolite_sorted = acolite_df.sort_values('oci_acolite_datetime')
+            data = pd.merge_asof(
+                data.sort_values('oci_datetime'),
+                acolite_sorted,
+                left_on='oci_datetime',
+                right_on='oci_acolite_datetime',
+                direction='nearest'
+                )
+        except Exception as ex:
+            print("Could not merge ACOLITE L2W matchup data!")
+            print(ex)
+
+    if 'dps' in ac_methods:
+        try:
+            dps_df = pd.DataFrame(sat_dps_rows)
+            dps_df['oci_dps_datetime'] = pd.to_datetime(dps_df['oci_dps_datetime'])
+            dps_sorted = dps_df.sort_values('oci_dps_datetime')
+            data = pd.merge_asof(
+                data.sort_values('oci_datetime'),
+                dps_sorted,
+                left_on='oci_datetime',
+                right_on='oci_dps_datetime',
+                direction='nearest'
+                )
+        except Exception as ex:
+            print("Could not merge DPS matchup data!")
+            print(ex)
+
+    if 'polymer' in ac_methods:
+        try:
+            polymer_df = pd.DataFrame(sat_polymer_rows)
+            polymer_df['oci_polymer_datetime'] = pd.to_datetime(polymer_df['oci_polymer_datetime'])
+            polymer_sorted = polymer_df.sort_values('oci_polymer_datetime')
+            data = pd.merge_asof(
+                data.sort_values('oci_datetime'),
+                polymer_sorted,
+                left_on='oci_datetime',
+                right_on='oci_polymer_datetime',
+                direction='nearest'
+                )
+        except Exception as ex:
+            print("Could not merge Polymer matchup data!")
+            print(ex)
 
     return data
 
