@@ -1474,14 +1474,7 @@ class HypsoBase:
 
         # import settings
         #settings = ac.acolite.settings.load(settings_file)
-        # load() only applies a sensor's own config/defaults/<name>.txt (e.g.
-        # HYPSO2.txt's dsf_wave_range=450,750) when explicitly given that
-        # name - it does not auto-detect sensor from the input file. Passing
-        # None (as this always did before) silently fell back to ACOLITE's
-        # fully generic defaults.txt (dsf_wave_range=400,2500) instead,
-        # mirroring the fix ac_runners.py's PACE runner already has via its
-        # explicit load("PACE_OCI") call.
-        settings = load(settings_file if settings_file is not None else self.platform.upper())
+        settings = load(settings_file)
 
         if EARTHDATA_u is not None and EARTHDATA_p is not None:
             settings['EARTHDATA_u'] = EARTHDATA_u
