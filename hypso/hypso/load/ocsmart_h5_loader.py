@@ -55,7 +55,14 @@ def load_ocsmart_h5(h5_file_path: Path) -> dict:
             try:
                 data = f[ocsmart_dataset][:]
 
-                attrs = {a: getattr(f[ocsmart_dataset], a) for a in f[ocsmart_dataset].ncattrs()}
+                # f[ocsmart_dataset].ncattrs() doesn't exist on h5py objects
+                # (that's a netCDF4 API method) - this file is opened with
+                # h5py.File, whose attribute dict is .attrs. The old
+                # .ncattrs() call raised AttributeError unconditionally here,
+                # silently discarding every one of these datasets (caught by
+                # the bare except below) even though they're actually
+                # present in the file.
+                attrs = dict(f[ocsmart_dataset].attrs)
 
                 data = xr.DataArray(data, dims=dim_names_2d, attrs=attrs)
 
