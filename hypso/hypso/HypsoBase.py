@@ -657,8 +657,16 @@ class HypsoBase:
 
 
         dt = datetime.fromtimestamp(self.unixtime, tz=timezone.utc)
-        self.acolite_l2r_output_nc_file =  Path(self.capture_dir, f"{self.platform.upper()}_{dt.strftime('%Y_%m_%d_%H_%M_%S')}_L2R.nc")
-        self.acolite_l2w_output_nc_file =  Path(self.capture_dir, f"{self.platform.upper()}_{dt.strftime('%Y_%m_%d_%H_%M_%S')}_L2W.nc")
+        # Moved into a capture_dir/acolite/ subfolder (2026-08-05, was
+        # capture_dir directly) - matches ac_acolite_run_correction's own
+        # settings['output'] below, and the PACE-side ACOLITE connector's
+        # existing convention (ac_runners_pace.py). ACOLITE writes several
+        # per-run log/settings .txt files alongside its L2R/L2W output
+        # (delete_acolite_run_text_files defaults False), which had been
+        # accumulating directly in the capture directory root with no
+        # cleanup - one set per run, indefinitely.
+        self.acolite_l2r_output_nc_file =  Path(self.capture_dir, "acolite", f"{self.platform.upper()}_{dt.strftime('%Y_%m_%d_%H_%M_%S')}_L2R.nc")
+        self.acolite_l2w_output_nc_file =  Path(self.capture_dir, "acolite", f"{self.platform.upper()}_{dt.strftime('%Y_%m_%d_%H_%M_%S')}_L2W.nc")
 
         return None
 
@@ -1498,8 +1506,14 @@ class HypsoBase:
             settings['inputfile'] = str(self.l1c_nc_file) # default L1c (radiance)
 
 
-        print("[INFO] Writing ACOLITE output to " + str(self.capture_dir))
-        settings['output'] = str(self.capture_dir)
+        # capture_dir/acolite/, not capture_dir directly (2026-08-05) - see
+        # the matching comment on self.acolite_l2r_output_nc_file above for
+        # why (keeps ACOLITE's own per-run log/settings .txt files out of
+        # the capture directory root).
+        acolite_output_dir = Path(self.capture_dir, "acolite")
+        acolite_output_dir.mkdir(parents=True, exist_ok=True)
+        print("[INFO] Writing ACOLITE output to " + str(acolite_output_dir))
+        settings['output'] = str(acolite_output_dir)
 
         settings['polygon'] = None
         settings['rgb_rhot'] = True
@@ -1806,16 +1820,29 @@ class HypsoBase:
 
 
 
-    def ac_polymer_run_correction(self, 
+    def ac_polymer_run_correction(self,
                                   polymer_base_path: str,
-                                  polymer_path: str = None, 
-                                  eoread_path: str = None, 
-                                  eotools_path: str = None, 
-                                  core_path: str = None, 
+                                  polymer_path: str = None,
+                                  eoread_path: str = None,
+                                  eotools_path: str = None,
+                                  core_path: str = None,
                                   input_product_level: str = "l1c",
                                   #coeff_type: str = None,
                                   optional_output_datasets: list = ["SPM"],
-                                  if_exists: str = "overwrite"):
+                                  if_exists: str = "overwrite",
+                                  polymer_version: str = "v1"):
+        """
+        polymer_version: which Polymer build polymer_path (etc.) point at -
+            mirrors ac_polymer_open_output's version parameter.
+            - "v1": Polymer_HYPSO_SRF_Oct_2025 - run_polymer's output
+              selection is driven by output_datasets, and it writes a
+              linear-scale "chla"/"fb" directly.
+            - "v2": the newer stock Polymer build - run_polymer no longer
+              has an output_datasets parameter (silently ignored if passed -
+              it lands in **kwargs and is never used for selection), so
+              output selection is driven by outputs_names instead; the
+              solver only exposes log-scale "logchl"/"logfb", not "chla"/"fb".
+        """
 
         #polymer_path = Path(self.polymer_dir).absolute()
 
@@ -1855,14 +1882,22 @@ class HypsoBase:
         #else:
         #    coeff_type_str = ""
 
+        # Output (not input) moved into a parent_dir/polymer/ subfolder
+        # (2026-08-05, was parent_dir directly) - same reasoning as
+        # ac_acolite_run_correction's equivalent change above (keeps
+        # per-run AC output out of the capture directory root; matches the
+        # PACE-side Polymer connector's existing convention).
+        polymer_output_dir = Path(self.parent_dir, "polymer")
+        polymer_output_dir.mkdir(parents=True, exist_ok=True)
+
         match input_product_level.lower():
-            
+
             case "l1c":
                 polymer_l1_input_nc_file = Path(self.parent_dir, self.l1c_nc_file)
-                polymer_l2_output_nc_file = Path(self.parent_dir, str(self.l1c_name) + ".polymer.nc")
+                polymer_l2_output_nc_file = Path(polymer_output_dir, str(self.l1c_name) + ".polymer.nc")
             case "l1d":
                 polymer_l1_input_nc_file = Path(self.parent_dir, self.l1d_nc_file)
-                polymer_l2_output_nc_file = Path(self.parent_dir, str(self.l1d_name) + ".polymer.nc")
+                polymer_l2_output_nc_file = Path(polymer_output_dir, str(self.l1d_name) + ".polymer.nc")
             case _:
                 return None
             
@@ -1880,15 +1915,31 @@ class HypsoBase:
         #from core.files.fileutils import mdir
         #polymer_output_file = run_polymer(Level1_HYPSO(polymer_input_file), dir_out=mdir(polymer_output_dir), split_bands=False)
 
+        match polymer_version:
+            case "v1":
+                output_selection_kwargs = {
+                    "output_datasets": default_output_datasets + optional_output_datasets,
+                }
+            case "v2":
+                output_selection_kwargs = {
+                    "outputs": "named",
+                    "outputs_names": [
+                        "latitude", "longitude", "rho_w", "logchl", "logfb",
+                        "Rgli", "Rnir", "flags",
+                    ] + optional_output_datasets,
+                }
+            case _:
+                raise ValueError(f"Unknown polymer_version: {polymer_version!r}")
+
         # Run Polymer
         if True:
             output_file = run_polymer(
                 Level1_HYPSO(polymer_l1_input_nc_file),
-                dir_out=str(self.parent_dir),
-                output_datasets=default_output_datasets + optional_output_datasets,
+                dir_out=str(polymer_output_dir),
                 if_exists = if_exists,
                 srf_getter = "hypso.ac.ac_polymer_srf_getter",
-                srf_getter_arg = srf_nc_path
+                srf_getter_arg = srf_nc_path,
+                **output_selection_kwargs,
 
             )
 
@@ -1929,11 +1980,13 @@ class HypsoBase:
 
                 case "l1c":
                     print("[INFO] Reading Polymer L2 NetCDF output file generated using L1c product.")
-                    polymer_l2_output_nc_file = Path(self.parent_dir, str(self.l1c_name)+ ".polymer.nc") #frohavet_2025-05-22T11-20-44Z-l1c.nc.polymer.nc
+                    # parent_dir/polymer/, not parent_dir directly - see
+                    # ac_polymer_run_correction's matching change.
+                    polymer_l2_output_nc_file = Path(self.parent_dir, "polymer", str(self.l1c_name)+ ".polymer.nc") #frohavet_2025-05-22T11-20-44Z-l1c.nc.polymer.nc
 
                 case "l1d":
                     print("[INFO] Reading Polymer L2 NetCDF output file generated using L1d product.")
-                    polymer_l2_output_nc_file = Path(self.parent_dir, str(self.l1d_name) + ".polymer.nc") #frohavet_2025-05-22T11-20-44Z-l1d.nc.polymer.nc
+                    polymer_l2_output_nc_file = Path(self.parent_dir, "polymer", str(self.l1d_name) + ".polymer.nc") #frohavet_2025-05-22T11-20-44Z-l1d.nc.polymer.nc
             
 
         polymer_l2_output_nc_file = polymer_l2_output_nc_file.absolute()
