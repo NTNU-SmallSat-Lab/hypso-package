@@ -5,3 +5,5 @@ from . import cf
 from .writer import write_level_nc, write_l2a_nc
 from .reader import load_level_nc, load_l1b_nc, load_l1c_nc, load_l1d_nc, load_l2a_nc, \
                      discover_product_variables, list_band_datasets
+from .dispatch import load_capture_file, set_hypso_attributes, check_capture_type, \
+                       parse_filename, compose_capture_name

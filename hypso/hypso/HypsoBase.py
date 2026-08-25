@@ -6,9 +6,7 @@ import copy
 #from .DataArrayValidator import DataArrayValidator
 import numpy as np
 from datetime import datetime, timezone
-from trollsift import Parser
 import sys
-import re
 import warnings
 
 logger = logging.getLogger(__name__)
@@ -18,15 +16,12 @@ from hypso.calibration import pipeline as calibration_pipeline
 
 from hypso import geo
 
+from hypso.io import dispatch as io_dispatch
+
 from hypso.georeferencing import Georeferencer, \
                                 check_star_tracker_orientation
 
-from hypso.load import load_l1a_nc, \
-                        load_l1b_nc, \
-                        load_l1c_nc, \
-                        load_l1d_nc, \
-                        load_l2a_nc, \
-                        load_ocsmart_h5, \
+from hypso.load import load_ocsmart_h5, \
                         load_acolite_l2r_nc, \
                         load_acolite_l2w_nc, \
                         load_polymer_l2_v1_nc, \
@@ -58,11 +53,12 @@ class HypsoBase:
             registered SensorProfile works via HypsoBase directly - see hypso.hypso1/hypso.hypso2
             for the (now ~10-line) subclasses kept for named-class/isinstance() compatibility.
         :param label: Capture processing label (e.g. "moved", "moved_unmasked") - see
-            _load_capture_file/_parse_filename. Previously left unset by HypsoBase.__init__ (only
-            subclasses set it), which meant a subclass forgetting to set self.label before calling
-            _load_capture_file would hit an unexplained AttributeError; always set here instead.
+            hypso.io.dispatch's load_capture_file/parse_filename. Previously left unset by
+            HypsoBase.__init__ (only subclasses set it), which meant a subclass forgetting to set
+            self.label before calling load_capture_file would hit an unexplained AttributeError;
+            always set here instead.
         :param load_cube: Whether to load the capture's data cube immediately. Forwarded to
-            _load_capture_file.
+            hypso.io.dispatch.load_capture_file.
         :param verbose: Verbose logging.
 
         """
@@ -161,9 +157,9 @@ class HypsoBase:
         # used directly (no per-sensor subclass required) for any sensor with a registered
         # profile. A subclass that omits sensor_profile keeps the old contract: it's responsible
         # for setting whatever it needs (platform/sensor/sat_id/fwhm/etc.) and calling
-        # self._load_capture_file(...) itself, after its own __init__ body runs.
+        # io_dispatch.load_capture_file(self, ...) itself, after its own __init__ body runs.
         if sensor_profile is not None:
-            self._load_capture_file(path=path, load_cube=load_cube)
+            io_dispatch.load_capture_file(self, path=path, load_cube=load_cube)
 
 
     @property
@@ -619,462 +615,12 @@ class HypsoBase:
 
 
 
-    def _compose_capture_name(self, fields: dict) -> str:
-
-
-        if hasattr(self, '_use_old_filename_format'):
-            p = Parser("{capture_target}_{capture_datetime:%Y-%m-%d_%H%MZ}") # Old filename format
-        else:
-            p = Parser("{capture_target}_{capture_datetime:%Y-%m-%dT%H-%M-%SZ}") # New filename format
-
-        capture_name = p.compose(fields)
-
-        return capture_name
-
-
-    def _parse_filename(self, path: str) -> dict:
-
-        path = Path(path).absolute()
-        filename = path.name
-
-        pattern = re.compile(
-            r"""
-            (?P<capture_target>.+?)_
-            (?P<capture_datetime>\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z)
-            -
-            (?:(?P<coeff_type>[^-]+)-)?
-            (?P<product_level>l\d[a-z])
-            (?:-(?P<atmospheric_correction>[^.]+))?
-            \.
-            (?P<file_type>\w+)
-            """,
-            re.VERBOSE,
-        )
-
-        match = pattern.fullmatch(filename)
-
-        if not match:
-            raise ValueError(f"Could not parse filename: {filename}")
-
-        fields = match.groupdict()
-
-        fields["capture_datetime"] = datetime.strptime(
-            fields["capture_datetime"],
-            "%Y-%m-%dT%H-%M-%SZ",
-        )
-
-        return fields
-
-
-    '''
-    def _parse_filename(self, path: str) -> dict:
-
-        path = Path(path).absolute()
-        field = None
-
-        try:
-            # New filename format
-            #aegean_2024-08-22T08-41-46Z-l1a.nc
-            p = Parser("{capture_target}_{capture_datetime:%Y-%m-%dT%H-%M-%SZ}-{product_level:3s}{atmospheric_correction:->}.{file_type}")
-            fields = p.parse(str(path.name))
-        except:
-            # Old filename format
-            setattr(self, '_use_old_filename_format', True)
-            p = Parser("{capture_target}_{capture_datetime:%Y-%m-%d_%H%MZ}-{product_level:3s}{atmospheric_correction:->}.{file_type}")
-            fields = p.parse(str(path.name))
-        
-        return fields
-    '''
-
-    def _load_capture_file(self, path: Path, load_cube: bool = True) -> None:
-
-        path = Path(path).absolute()
-
-        fields = self._parse_filename(path=path)
-
-        for key, value in fields.items():
-            setattr(self, key, value)
-
-        capture_name = self._compose_capture_name(fields=fields)
-
-        self.capture_name = capture_name
-
-        self.capture_dir = Path(path.parent.absolute())
-        self.parent_dir = Path(path.parent.absolute())
-
-
-        if self.label is not None:
-            label = "-" + str(self.label)
-        else:
-            label = "" 
-
-
-        self.l1a_name = capture_name + label + "-l1a"
-        self.l1b_name = capture_name + label + "-l1b"
-        self.l1c_name = capture_name + label + "-l1c"
-        self.l1d_name = capture_name + label + "-l1d"
-        #self.l2a_name = capture_name + label + "-l2a"
-
-        self.l1a_nc_file = Path(path.parent, self.l1a_name + ".nc")
-        self.l1b_nc_file = Path(path.parent, self.l1b_name + ".nc")
-        self.l1c_nc_file = Path(path.parent, self.l1c_name + ".nc")
-        self.l1d_nc_file = Path(path.parent, self.l1d_name + ".nc")
-
-        product_level = fields['product_level']
-
-        match product_level:
-            case "l1a":
-                if self.VERBOSE: print('[INFO] Loading L1a capture ' + self.capture_name)
-
-                load_func = load_l1a_nc
-                cube_name = "l1a_cube"
-                setattr(self, "cube_name", cube_name)
-                setattr(self, "product_level", "l1a")
-                setattr(self, "product_symbol", "DN")
-                
-            case "l1b":
-                if self.VERBOSE: print('[INFO] Loading L1b capture ' + self.capture_name)
-
-                load_func = load_l1b_nc
-                cube_name = "l1b_cube"
-                setattr(self, "cube_name", cube_name)
-                setattr(self, "product_level", "l1b")
-                setattr(self, "product_symbol", "Lt")
-
-            case "l1c":
-                if self.VERBOSE: print('[INFO] Loading L1c capture ' + self.capture_name)
-
-                load_func = load_l1c_nc
-                cube_name = "l1b_cube" # L1c cube is the same as the L1b cube
-                setattr(self, "cube_name", cube_name)
-                setattr(self, "product_level", "l1c")
-                setattr(self, "product_symbol", "lt")
-
-            case "l1d":
-                if self.VERBOSE: print('[INFO] Loading L1d capture ' + self.capture_name)
-
-                load_func = load_l1d_nc
-                cube_name = "l1d_cube"
-                setattr(self, "cube_name", cube_name)
-                setattr(self, "product_level", "l1d")
-                setattr(self, "product_symbol", "rhot")
-
-            case "l2a":
-                if self.VERBOSE: print('[INFO] Loading L2a capture ' + self.capture_name)
-
-                ac = getattr(self, 'atmospheric_correction', None)
-
-                if ac is not None:
-                    print("[INFO] L2a Detected atmospheric correction: " + str(ac))
-                else:
-                    print("[WARNING] No L2a atmospheric correction detected.")
-                    setattr(self, "atmospheric_correction", "default")
-
-                load_func = load_l2a_nc
-                cube_name = "l2a_cube"
-                setattr(self, "cube_name", cube_name)
-                setattr(self, "product_level", "l2a")
-                setattr(self, "product_symbol", "Rrs") # TODO: polymer and dps is rho_w
-                
-            case _:
-                print("[ERROR] Unsupported product level:")
-                print(product_level)
-                return None
-
-        # TODO: find a better method to pass all of this information
-        nc_metadata_vars, \
-        nc_metadata_attrs, \
-        nc_geometry_vars, \
-        nc_geometry_attrs, \
-        nc_gcp_vars, \
-        nc_gcp_attrs, \
-        nc_global_metadata, \
-        nc_cube_attrs, \
-        nc_cube = load_func(nc_file_path=path, load_cube=load_cube)
-
-        setattr(self, "nc_adcs_vars", nc_metadata_vars["adcs"])
-        setattr(self, "nc_capture_config_vars", nc_metadata_vars["capture_config"])
-        setattr(self, "nc_corrections_vars", nc_metadata_vars["corrections"])
-        setattr(self, "nc_database_vars", nc_metadata_vars["database"])
-        setattr(self, "nc_logfiles_vars", nc_metadata_vars["logfiles"])
-        setattr(self, "nc_temperature_vars", nc_metadata_vars["temperature"])
-        setattr(self, "nc_timing_vars", nc_metadata_vars["timing"])
-        setattr(self, "nc_srf_vars", nc_metadata_vars["srf"])
-
-        setattr(self, "nc_adcs_attrs", nc_metadata_attrs["adcs"])
-        setattr(self, "nc_capture_config_attrs", nc_metadata_attrs["capture_config"])
-        setattr(self, "nc_corrections_attrs", nc_metadata_attrs["corrections"])
-        setattr(self, "nc_database_attrs", nc_metadata_attrs["database"])
-        setattr(self, "nc_logfiles_attrs", nc_metadata_attrs["logfiles"])
-        setattr(self, "nc_temperature_attrs", nc_metadata_attrs["temperature"])
-        setattr(self, "nc_timing_attrs", nc_metadata_attrs["timing"])
-        setattr(self, "nc_srf_attrs", nc_metadata_attrs["srf"])
- 
-        setattr(self, "nc_geometry_vars", nc_geometry_vars)
-        setattr(self, "nc_geometry_attrs", nc_geometry_attrs)
-
-        setattr(self, "nc_gcp_vars", nc_gcp_vars)
-        setattr(self, "nc_gcp_attrs", nc_gcp_attrs)
-
-        setattr(self, "nc_dimensions", nc_global_metadata["dimensions"])
-        setattr(self, "nc_attrs", nc_global_metadata["ncattrs"])
-
-        setattr(self, "nc_cube_attrs", nc_cube_attrs)
-
-        # TODO: pass the dicts returned by load_func to _set_hypso_attributes()
-        # Note: this MUST be run before writing datacubes in order to pass correct dimensions to DataArrayValidator
-        self._set_hypso_attributes()
-        self._check_capture_type()
-
-        if load_cube:
-            if self.product_level.lower() == "l2a":
-                self.l2a_cubes[self.atmospheric_correction] = nc_cube
-            else:
-                setattr(self, cube_name, nc_cube)
-        
-        else:
-            print("[WARNING] Datacube is not loaded!")
-
-
-        self.ocsmart_l1d_input_nc_file = Path(path.parent, str(self.sensor).upper() + "_" + str(capture_name) + "-l1d.nc")
-        self.ocsmart_l2a_output_h5_file = Path(path.parent, str(self.sensor).upper() + "_" + str(capture_name) + "-l1d_L2_OCSMART.h5") #HYPSO2_HSI_aeronetvenice_2025-06-22T10-46-15Z-l1d_L2_OCSMART
-
-
-        dt = datetime.fromtimestamp(self.unixtime, tz=timezone.utc)
-        # Moved into a capture_dir/acolite/ subfolder (2026-08-05, was
-        # capture_dir directly) - matches ac_acolite_run_correction's own
-        # settings['output'] below, and the PACE-side ACOLITE connector's
-        # existing convention (ac_runners_pace.py). ACOLITE writes several
-        # per-run log/settings .txt files alongside its L2R/L2W output
-        # (delete_acolite_run_text_files defaults False), which had been
-        # accumulating directly in the capture directory root with no
-        # cleanup - one set per run, indefinitely.
-        self.acolite_l2r_output_nc_file =  Path(self.capture_dir, "acolite", f"{self.platform.upper()}_{dt.strftime('%Y_%m_%d_%H_%M_%S')}_L2R.nc")
-        self.acolite_l2w_output_nc_file =  Path(self.capture_dir, "acolite", f"{self.platform.upper()}_{dt.strftime('%Y_%m_%d_%H_%M_%S')}_L2W.nc")
-
-        return None
-
-
-    # TODO: Clean up this function. Use setattr, hasattr, getattr for setting class variables?
-    def _set_hypso_attributes(self) -> None:
-
-        # Capture config related attributes
-        for attr in self.nc_capture_config_attrs.keys():
-            setattr(self, attr, self.nc_capture_config_attrs[attr])
-        # FPS has been renamed to framerate. Need to support both since old .nc files may still use FPS
-        try:
-            self.nc_capture_config_attrs['fps'] = self.nc_capture_config_attrs['framerate']
-        except:
-            self.nc_capture_config_attrs['framerate'] = self.nc_capture_config_attrs['fps']
-            
-        self.background_value = 8 * self.nc_capture_config_attrs["bin_factor"]
-        self.exposure = self.nc_capture_config_attrs["exposure"] / 1000  # in seconds
-
-
-        # Capture dimensions attributes
-        self.x_start = self.nc_capture_config_attrs["aoi_x"]
-        self.x_stop = self.nc_capture_config_attrs["aoi_x"] + self.nc_capture_config_attrs["column_count"]
-        self.y_start = self.nc_capture_config_attrs["aoi_y"]
-        self.y_stop = self.nc_capture_config_attrs["aoi_y"] + self.nc_capture_config_attrs["row_count"]
-        self.bin_factor = self.nc_capture_config_attrs["bin_factor"]
-        # Try/except here since not all captures have sample_div
-        try:
-            self.sample_div = self.nc_capture_config_attrs['sample_div']
-        except:
-            self.sample_div = 1
-        self.row_count = self.nc_capture_config_attrs["row_count"]
-        self.frame_count = self.nc_capture_config_attrs["frame_count"]
-        self.column_count = self.nc_capture_config_attrs["column_count"]
-        self.image_height = int(self.nc_capture_config_attrs["row_count"] / self.sample_div)
-        self.image_width = int(self.nc_capture_config_attrs["column_count"] / self.nc_capture_config_attrs["bin_factor"])
-        self.im_size = self.image_height * self.image_width
-        self.bands = self.image_width
-        self.lines = self.nc_capture_config_attrs["frame_count"]  # AKA Frames AKA Rows
-        self.samples = self.image_height  # AKA Cols
-        self.spatial_dimensions = (self.nc_capture_config_attrs["frame_count"], self.image_height)
-        if self.VERBOSE:
-            print(f"[INFO] Capture spatial dimensions: {self.spatial_dimensions}")
-
-
-        # Calibration related atrributes
-        self.rad_coeffs = self.nc_corrections_vars['rad_matrix']
-
-        try:
-            self.spectral_coeffs = self.nc_corrections_vars['spec_coeffs']
-        except KeyError:
-            self.spectral_coeffs = self.nc_corrections_vars['wavelengths']
-
-        if not hasattr(self, 'wavelengths'):
-            if ('wavelengths' in self.nc_cube_attrs.keys()):
-                self.wavelengths = self.nc_cube_attrs['wavelengths']
-            else:
-                self.wavelengths = np.array(range(0, self.image_width))
-
-        if not hasattr(self, 'wavelengths_unbinned'):
-            if ('wavelengths_unbinned' in self.nc_corrections_vars.keys()):
-                self.wavelengths_unbinned = self.nc_corrections_vars['wavelengths_unbinned']
-            else:
-                self.wavelengths_unbinned = np.array(range(0, self.image_width))
-
-        if not hasattr(self, 'fwhm'):
-            if 'fwhm' in self.nc_cube_attrs.keys():
-                self.fwhm = self.nc_cube_attrs['fwhm']
-            else:
-                #self.fwhm = [self.AVERAGE_FWHM] * self.bands
-                self.fwhm = [self.AVERAGE_FWHM] * self.UNBINNED_BAND_COUNT
-
-
-        if not hasattr(self, 'effective_fwhm'):
-            if 'effective_fwhm' in self.nc_srf_vars.keys():
-                self.effective_fwhm = self.nc_srf_vars['effective_fwhm']
-
-        if not hasattr(self, 'esun'):
-            if 'esun' in self.nc_srf_vars.keys():
-                self.esun = self.nc_srf_vars['esun']
-
-        if not hasattr(self, 'esun_wl'):
-            if 'esun_wavelengths' in self.nc_srf_vars.keys():
-                self.esun_wl = self.nc_srf_vars['esun_wavelengths']
-
-
-        csiro_list =  ["csiro_ssi", "csiro_solar_wavelengths", "csiro_binned_srfs"
-                       "csiro_effective_fwhm", "csiro_esun"]
-
-        for csiro_key in csiro_list:
-            if not hasattr(self, csiro_key):
-                if csiro_key in self.nc_srf_vars.keys():
-                    setattr(self, csiro_key, self.nc_srf_vars[csiro_key])
-
-
-        # Geometry atrributes
-        for key, value in self.nc_geometry_vars.items():
-            if key == 'unixtime':
-                continue
-            elif key == 'latitude':
-                setattr(self, 'latitudes', value)
-            elif key == 'longitude':
-                setattr(self, 'longitudes', value)
-
-            elif key == 'latitude_direct':
-                setattr(self, 'latitudes_direct', value)
-            elif key == 'longitude_direct':
-                setattr(self, 'longitudes_direct', value)
-
-
-            elif key == 'sensor_zenith':
-                setattr(self, 'sat_zenith_angles', value)
-            elif key == 'sensor_azimuth':
-                setattr(self, 'sat_azimuth_angles', value)
-
-            elif key == 'sensor_zenith_direct':
-                setattr(self, 'sat_zenith_angles_direct', value)
-                if getattr(self, 'sat_zenith_angles', None) is None:
-                    setattr(self, 'sat_zenith_angles', value)
-
-            elif key == 'sensor_azimuth_direct':
-                setattr(self, 'sat_azimuth_angles_direct', value)
-                if getattr(self, 'sat_azimuth_angles', None) is None:
-                    setattr(self, 'sat_azimuth_angles', value)
-
-            elif key == 'solar_zenith':
-                setattr(self, 'solar_zenith_angles', value)
-            elif key == 'solar_azimuth':
-                setattr(self, 'solar_azimuth_angles', value)
-
-            elif key == 'solar_zenith_direct':
-                setattr(self, 'solar_zenith_angles_direct', value)
-                if getattr(self, 'solar_zenith_angles', None) is None:
-                    setattr(self, 'solar_zenith_angles', value)
-
-            elif key == 'solar_azimuth_direct':
-                setattr(self, 'solar_azimuth_angles_direct', value)
-                if getattr(self, 'solar_azimuth_angles', None) is None:
-                    setattr(self, 'solar_azimuth_angles', value)
-
-            elif key == 'relative_azimuth':
-                setattr(self, 'relative_azimuth_angles', value)
-
-            elif key == 'relative_azimuth_direct':
-                setattr(self, 'relative_azimuth_angles_direct', value)
-                if getattr(self, 'relative_azimuth_angles', None) is None:
-                    setattr(self, 'relative_azimuth_angles', value)
-                
-            else:
-                setattr(self, key, value)
-
-
-
-
-
-
-
-        # Capture timing attributes
-        try:
-            self.start_timestamp_capture = int(self.timing['capture_start_unix']) + self.UNIX_TIME_OFFSET
-        except:
-            try:
-                datestring = self.nc_attrs['date_aquired']
-            except:
-                datestring = self.nc_attrs['timestamp_acquired']
-
-
-            try:
-                dt = datetime.strptime(datestring, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=timezone.utc)
-            except ValueError:
-                dt = datetime.strptime(datestring, '%Y-%m-%dT%H:%M:%S.%f%zZ').replace(tzinfo=timezone.utc)
-
-            self.start_timestamp_capture = dt.timestamp()
-
-        #self.start_timestamp_capture = int(self.nc_timing_attrs['capture_start_unix']) + self.UNIX_TIME_OFFSET
-
-        # Get END_TIMESTAMP_CAPTURE
-        # can't compute end timestamp using frame count and frame rate
-        # assuming some default value if framerate and exposure not available
-        try:
-            self.end_timestamp_capture = self.start_timestamp_capture + self.nc_capture_config_attrs["frame_count"] / self.nc_capture_config_attrs["framerate"] + self.nc_capture_config_attrs["exposure"] / 1000.0
-        except:
-            if self.VERBOSE:
-                print("[WARNING] Framerate or exposure values not found. Assuming 20.0 for each.")
-            self.end_timestamp_capture = self.start_timestamp_capture + self.nc_capture_config_attrs["frame_count"] / 20.0 + 20.0 / 1000.0
-
-        # using 'awk' for floating point arithmetic ('expr' only support integer arithmetic): {printf \"%.2f\n\", 100/3}"
-        time_margin_start = 641.0  # 70.0
-        time_margin_end = 180.0  # 70.0
-        self.start_timestamp_adcs = self.start_timestamp_capture - time_margin_start
-        self.end_timestamp_adcs = self.end_timestamp_capture + time_margin_end
-        self.unixtime = self.start_timestamp_capture
-
-        #self.iso_time = datetime.utcfromtimestamp(self.unixtime).isoformat()
-        self.iso_time = datetime.fromtimestamp(self.unixtime, tz=timezone.utc).isoformat()
-
-        return None
-
-
-    def _check_capture_type(self):
-
-        #self.spatial_dimensions = (956, 684)  # 1092 x variable
-        #self.standard_dimensions = {
-        #    "nominal": 956,  # Along frame_count
-        #    "wide": 1092  # Along image_height (row_count)
-        #}
-
-        if self.nc_capture_config_attrs["frame_count"] == 956:
-        #if self.nc_capture_config_attrs["frame_count"] == self.standard_dimensions["nominal"]:
-            self.capture_type = "nominal"
-        elif self.nc_capture_config_attrs["frame_count"] == 106:
-                    self.capture_type = "moon"
-        elif self.image_height == 1092:
-        #elif self.image_height == self.standard_dimensions["wide"]:
-            self.capture_type = "wide"
-        else:
-            # EXPERIMENTAL_FEATURES
-            if self.VERBOSE:
-                print("[WARNING] Number of Rows (AKA frame_count) Is Not Standard.")
-            self.capture_type = "custom"
-
-        if self.VERBOSE:
-            print(f"[INFO] Capture capture type: {self.capture_type}")
-
+    # Load dispatch (_load_capture_file/_set_hypso_attributes/_check_capture_type/
+    # _parse_filename/_compose_capture_name) was extracted verbatim into
+    # hypso.io.dispatch - part of the HypsoBase breakup called for in the approved
+    # refactor plan (self.io composition). No wrapper methods kept here: confirmed
+    # via grep these five had zero external callers. HypsoBase.__init__ now calls
+    # io_dispatch.load_capture_file(self, ...) directly.
 
     # Calibration orchestration (_set_calibration_coeff_files/_run_calibration/
     # _load_calibration_coeff_files) was extracted verbatim into
