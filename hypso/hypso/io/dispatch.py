@@ -319,7 +319,11 @@ def set_hypso_attributes(satobj) -> None:
             satobj.esun_wl = satobj.nc_srf_vars['esun_wavelengths']
 
 
-    csiro_list = ["csiro_ssi", "csiro_solar_wavelengths", "csiro_binned_srfs"
+    # Fixed a missing comma (inherited verbatim from the old HypsoBase): the
+    # implicit string concatenation "csiro_binned_srfs" "csiro_effective_fwhm"
+    # produced one bogus name, so neither attribute was ever restored when
+    # loading an L1D file.
+    csiro_list = ["csiro_ssi", "csiro_solar_wavelengths", "csiro_binned_srfs",
                   "csiro_effective_fwhm", "csiro_esun"]
 
     for csiro_key in csiro_list:

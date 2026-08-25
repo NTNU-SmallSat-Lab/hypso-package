@@ -35,13 +35,13 @@ def test_profile_field_completeness(key):
     # every field HypsoBase reads off the profile must be populated
     for field in ("key", "sat_id", "sensor", "platform"):
         assert isinstance(getattr(p, field), str) and getattr(p, field), field
-    for field in ("fwhm", "srf_wl", "srf_fwhm"):
+    for field in ("fwhm", "fwhm_lookup_wl", "fwhm_lookup_fwhm"):
         arr = np.asarray(getattr(p, field))
         assert arr.size > 0, field
         assert np.all(np.isfinite(arr)), field
     assert callable(p.calibration_files)
-    # srf_wl/srf_fwhm are paired reference arrays for nearest-neighbor lookup
-    assert np.asarray(p.srf_wl).shape == np.asarray(p.srf_fwhm).shape
+    # fwhm_lookup_wl/fwhm_lookup_fwhm are paired reference arrays for nearest-neighbor lookup
+    assert np.asarray(p.fwhm_lookup_wl).shape == np.asarray(p.fwhm_lookup_fwhm).shape
 
 
 def test_profiles_are_frozen():

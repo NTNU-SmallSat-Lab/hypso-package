@@ -62,8 +62,12 @@ class PolymerAdapter(ACAdapter):
         esun_nc_file = id_sensor + "_esun.nc"
         esun_nc_path = Path(satobj.parent_dir, esun_nc_file )
 
-        satobj.ssi_nc_file = esun_nc_file
-        satobj.ssi_nc_path = esun_nc_path
+        # Fixed copy-paste bug (was satobj.ssi_nc_file/ssi_nc_path, clobbering
+        # get_ssi_nc_path's attributes): harmless in practice - nothing reads
+        # these cached attributes, the return values are what callers use -
+        # but the cached names now match what they hold.
+        satobj.esun_nc_file = esun_nc_file
+        satobj.esun_nc_path = esun_nc_path
 
         return esun_nc_file, esun_nc_path
 

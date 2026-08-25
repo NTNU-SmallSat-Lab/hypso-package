@@ -19,74 +19,47 @@ def compute_toa_reflectance(sensor_wavelengths,
                             use_thuillier: bool = False,
                             generate_figures: bool = False
                             ) -> xr.DataArray:
+    """Legacy wrapper, superseded by hypso.reflectance.spectral_response (see
+    that module's docstring for what changed and why). The SRF/esun block that
+    used to live inline here is now compute_spectral_response(grid=
+    "native-truncated"); the reflectance math is compute_reflectance below.
+    Kept because callers still expect the original 7-tuple return - migrating
+    them to consume a SpectralResponse directly happens in the later
+    AC-connector pass (REFACTOR_PROGRESS.md).
 
+    Returns (toa_reflectance, effective_fwhm, binned_srfs_csr, truncated_ssi,
+    truncated_solar_wavelengths, esun, binned_sensor_wavelengths) - unchanged.
+    """
+    # Deferred import: spectral_response imports this module's low-level
+    # helpers (compute_srf/bin_srf/...), so a module-level import here would
+    # be circular.
+    from .spectral_response import compute_spectral_response
 
-    if use_thuillier:
-        ssi, solar_wavelengths = load_thuillier_ssi()
-        ssi_name = "thuillier"
-    else:
-        ssi, solar_wavelengths= load_ssi()
-        ssi_name = "tsis"
+    sr = compute_spectral_response(
+        band_centers_unbinned=sensor_wavelengths,
+        fwhm_unbinned=sensor_fwhm,
+        bin_factor=bin_factor,
+        ssi_source="thuillier" if use_thuillier else "tsis",
+        grid="native-truncated",
+        generate_figures=generate_figures,
+    )
 
-
-    #print(len(sensor_wavelengths))
-    #print(len(sensor_fwhm))
-
-    # For comparing old SRF wit new
-    #from .toa_reflectance_v1 import compute_old_srf
-    #compute_old_srf(sensor_wavelengths=sensor_wavelengths, sensor_fwhm=sensor_fwhm)
-
-
-
-    srfs_csr, truncated_ssi, truncated_solar_wavelengths  = compute_srf(ssi=ssi,
-                                                        solar_wavelengths=solar_wavelengths,
-                                                        sensor_wavelengths=sensor_wavelengths,
-                                                        sensor_fwhm=sensor_fwhm,
-                                                        )
-    
-
-    binned_sensor_wavelengths = bin_sensor_wavelengths(sensor_wavelengths, bin_factor)
-
-    binned_srfs_csr = bin_srf(srfs_csr, bin_factor, truncated_solar_wavelengths, generate_figures)
-
-
-    esun_list = compute_esun(srfs_csr=binned_srfs_csr, ssi=truncated_ssi, method="sparse")
-    #esun_list = compute_esun(srfs_csr=binned_srfs_csr, ssi=truncated_ssi, method="vectorized")
-    #esun_list = compute_esun(srfs_csr=binned_srfs_csr, ssi=truncated_ssi, method="loop")
-
-    effective_fwhm = compute_effective_fwhm(srfs_csr=binned_srfs_csr, solar_wavelengths=truncated_solar_wavelengths)
-
-    scene_date = parser.isoparse(iso_time)
-    julian_day = scene_date.timetuple().tm_yday
-
-
-    toa_reflectance = np.empty_like(toa_radiance)
-
-    for band, esun in enumerate(esun_list):
-
-        # Earth-Sun distance scaler (from day of year) using julian date
-        # (R/R_0) earth-sun distance divided by average earth-sun distance
-        # http://physics.stackexchange.com/questions/177949/earth-sun-distance-on-a-given-day-of-the-year
-        # 4 is when earth reaches perihelion, day 4 for 2025
-        sun_distance_scaler = 1 - 0.01672 * np.cos(0.9856 * (julian_day - 4))  
-
-        # Get toa_reflectance
-        # equation for "Normalized reflectances" found here:
-        # https://oceanopticsbook.info/view/atmospheric-correction/normalized-reflectances 
-        solar_angle_correction = np.cos(np.radians(solar_zenith_angles))
-        multiplier = (esun * solar_angle_correction) / (np.pi * sun_distance_scaler ** 2)
-        
-        toa_reflectance[:, :, band] = toa_radiance[:, :, band] / multiplier
-
-
-
-
-
-
+    toa_reflectance = compute_reflectance(toa_radiance=toa_radiance, sr=sr,
+                                          iso_time=iso_time,
+                                          solar_zenith_angles=solar_zenith_angles)
 
     if generate_figures:
+        # Debug/figure output over the FULL (untruncated) SSI - reloaded here
+        # since the SpectralResponse deliberately carries only the grid the
+        # SRFs live on.
         import csv
-        import matplotlib.pyplot as plt
+
+        if use_thuillier:
+            ssi, solar_wavelengths = load_thuillier_ssi()
+            ssi_name = "thuillier"
+        else:
+            ssi, solar_wavelengths = load_ssi()
+            ssi_name = "tsis"
 
         ssi_values = np.array(ssi)
 
@@ -99,12 +72,11 @@ def compute_toa_reflectance(sensor_wavelengths,
         with open('esun_data_' + ssi_name + '.csv', mode='w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(['Wavelength', 'ESUN'])  # Header
-            for wl, esun_value in zip(binned_sensor_wavelengths, esun_list):
+            for wl, esun_value in zip(sr.band_centers, sr.esun):
                 writer.writerow([wl, esun_value])
 
-
         plt.plot(solar_wavelengths, ssi, label='TSIS-1 SSI', linewidth=0.15)
-        plt.plot(np.array(binned_sensor_wavelengths), np.array(esun_list), label='HYPSO-2 $F_0$')
+        plt.plot(np.array(sr.band_centers), np.array(sr.esun), label='HYPSO-2 $F_0$')
 
         plt.xlim(350, 850)
         plt.ylim(0,2500)
@@ -116,100 +88,72 @@ def compute_toa_reflectance(sensor_wavelengths,
 
         plt.close()
 
-
-    esun = np.array(esun_list)
-
-    return toa_reflectance, effective_fwhm, binned_srfs_csr, truncated_ssi, truncated_solar_wavelengths, esun, binned_sensor_wavelengths
+    return (toa_reflectance, sr.effective_fwhm, sr.srf, sr.ssi, sr.grid_wl,
+            sr.esun, sr.band_centers)
 
 
+def compute_reflectance(toa_radiance: np.ndarray, sr, iso_time,
+                        solar_zenith_angles) -> np.ndarray:
+    """TOA radiance -> TOA reflectance using a SpectralResponse's per-band
+    esun. Extracted verbatim from the old compute_toa_reflectance body - same
+    Earth-Sun-distance and solar-zenith math."""
+    scene_date = parser.isoparse(iso_time)
+    julian_day = scene_date.timetuple().tm_yday
 
-def compute_csiro_srfs(self,
-                       #sensor_wavelengths,
-                       # sensor_fwhm,
-                        #bin_factor: int,
-                        generate_figures: bool = False
-                        ) -> xr.DataArray:
-        
+    toa_reflectance = np.empty_like(toa_radiance)
+
+    for band, esun in enumerate(sr.esun):
+
+        # Earth-Sun distance scaler (from day of year) using julian date
+        # (R/R_0) earth-sun distance divided by average earth-sun distance
+        # http://physics.stackexchange.com/questions/177949/earth-sun-distance-on-a-given-day-of-the-year
+        # 4 is when earth reaches perihelion, day 4 for 2025
+        sun_distance_scaler = 1 - 0.01672 * np.cos(0.9856 * (julian_day - 4))
+
+        # Get toa_reflectance
+        # equation for "Normalized reflectances" found here:
+        # https://oceanopticsbook.info/view/atmospheric-correction/normalized-reflectances
+        solar_angle_correction = np.cos(np.radians(solar_zenith_angles))
+        multiplier = (esun * solar_angle_correction) / (np.pi * sun_distance_scaler ** 2)
+
+        toa_reflectance[:, :, band] = toa_radiance[:, :, band] / multiplier
+
+    return toa_reflectance
+
+
+def compute_csiro_srfs(self, generate_figures: bool = False) -> xr.DataArray:
+    """Legacy wrapper (bound as a HypsoBase method), superseded by
+    hypso.reflectance.spectral_response's compute_spectral_response(grid=
+    "uniform-1000") - the CSIRO-variant computation body moved there verbatim.
+
+    Keeps populating the csiro_* attribute family (csiro_srfs_csr/csiro_ssi/
+    csiro_solar_wavelengths/csiro_binned_srfs/csiro_effective_fwhm/csiro_esun)
+    because write/metadata_srf_group_writer.py persists those into L1D files;
+    also stores the new canonical object as self.spectral_response_csiro.
+    """
+    from .spectral_response import compute_spectral_response  # deferred, see above
+
     self._get_fwhm_unbinned()
 
-    sensor_wavelengths = self.wavelengths_unbinned
-    sensor_fwhm = self.fwhm_unbinned
-    bin_factor = self.bin_factor
+    sr = compute_spectral_response(
+        band_centers_unbinned=self.wavelengths_unbinned,
+        fwhm_unbinned=self.fwhm_unbinned,
+        bin_factor=self.bin_factor,
+        ssi_source="tsis",
+        grid="uniform-1000",
+        generate_figures=generate_figures,
+    )
 
-    ssi_original, solar_wavelengths_original= load_ssi()
+    self.spectral_response_csiro = sr
 
-    # Reduce to 1000 element arrays
-    solar_wavelengths = np.linspace(350,850,1000)
-    ssi = np.interp(solar_wavelengths, solar_wavelengths_original, ssi_original)
+    self.csiro_srfs_csr = sr.srf_unbinned
+    self.csiro_ssi = sr.ssi
+    self.csiro_solar_wavelengths = sr.grid_wl
+    self.csiro_binned_srfs = sr.srf.toarray()
+    self.csiro_effective_fwhm = sr.effective_fwhm
+    self.csiro_esun = sr.esun
 
-    del ssi_original, solar_wavelengths_original
-
-
-    fwhm_nm = sensor_fwhm
-
-    # Calculate sigma from FWHM
-    sigma_nm = fwhm_nm / (2 * np.sqrt(2 * np.log(2)))
-
-
-    # Find indices of sensor bands in solar wavelength array
-    sensor_band_indices = [np.abs(solar_wavelengths - w).argmin() for w in sensor_wavelengths]
-
-    n_bands = len(sensor_wavelengths)
-    n_solar_wavelengths = len(solar_wavelengths)
-
-    # Initialize sparse matrix in LIL format for efficient construction
-    aligned_srfs_sparse = lil_matrix((n_bands, n_solar_wavelengths), dtype=np.float32)
-
-
-    for i, (adjusted_idx, center_wavelength) in enumerate(zip(sensor_band_indices, sensor_wavelengths)):
-
-        # Calculate 3 sigma range for this band
-        start_lambda = center_wavelength - (3 * sigma_nm[i])
-        end_lambda = center_wavelength + (3 * sigma_nm[i])
-
-        #print(f"{start_lambda}, {end_lambda}")
-
-        # Find indices directly in the truncated wavelength array (only searching within truncated range)
-        start_idx = np.abs(solar_wavelengths - start_lambda).argmin()
-        end_idx = np.abs(solar_wavelengths - end_lambda).argmin()
-
-        # Get the wavelengths for this SRF from truncated array
-        srf_wavelengths = solar_wavelengths[start_idx:end_idx + 1]
-
-        # Create x-values for Gaussian (centered at 0)
-        gx = np.linspace(-3 * sigma_nm[i], 3 * sigma_nm[i], len(srf_wavelengths))
-
-        # Create Gaussian SRF (peak = 1.0)
-        gaussian_srf = np.exp(-(gx / sigma_nm[i]) ** 2 / 2)
-
-        # Store in aligned arrays (both dense and sparse)
-        aligned_srfs_sparse[i, start_idx:end_idx + 1] = gaussian_srf
-
-    # Convert to CSR for efficient row access
-    srfs_csr = aligned_srfs_sparse.tocsr()
-
-    binned_sensor_wavelengths = bin_sensor_wavelengths(sensor_wavelengths, bin_factor)
-
-    binned_srfs_csr = bin_srf(srfs_csr, bin_factor, solar_wavelengths, generate_figures)    
-
-    effective_fwhm = compute_effective_fwhm(srfs_csr=binned_srfs_csr, solar_wavelengths=solar_wavelengths)
-
-
-    binned_srfs = binned_srfs_csr.toarray()
-
-    esun = np.array(compute_esun(srfs_csr=binned_srfs_csr, ssi=ssi, method="sparse"))
-
-    self.csiro_srfs_csr = srfs_csr
-    self.csiro_ssi = ssi
-    self.csiro_solar_wavelengths = solar_wavelengths
-    self.csiro_binned_srfs = binned_srfs
-    self.csiro_effective_fwhm = effective_fwhm
-    self.csiro_esun = esun
-
-    return #srfs_csr, ssi, solar_wavelengths, binned_srfs, effective_fwhm, esun
-
-
-    
+    return
 
 
 def compute_srf(ssi,
@@ -421,106 +365,6 @@ def visualize_srf_binning(original_srfs, binned_srfs, bin_factor,
     return fig
 
 
-def compute_esun_from_csr(srfs_csr, ssi, band_indices=None):
-    """
-    Compute Esun values from CSR-formatted SRFs and SSI.
-    
-    Parameters:
-    -----------
-    srfs_csr : scipy.sparse.csr_matrix
-        CSR matrix of aligned SRFs (n_bands × n_wavelengths)
-    ssi : numpy array
-        Solar spectral irradiance (aligned with SRF wavelengths)
-    band_indices : list or array, optional
-        Specific band indices to compute. If None, compute for all bands.
-    
-    Returns:
-    --------
-    esun_list : list
-        Esun values for each band
-    """
-    
-    if band_indices is None:
-        band_indices = range(srfs_csr.shape[0])
-    
-    esun_list = []
-    
-    for i in band_indices:
-        # Get the SRF for this band (as dense array)
-        # .A1 flattens the matrix to 1D array
-        gaussian_srf = srfs_csr[i, :].toarray().flatten()
-        
-        # Find where SRF is non-zero (for numerical stability)
-        nonzero_mask = gaussian_srf > 0
-        
-        if np.any(nonzero_mask):
-            # Extract non-zero portion
-            srf_nonzero = gaussian_srf[nonzero_mask]
-            ssi_nonzero = ssi[nonzero_mask]
-            
-            # Calculate sum of SRF for normalization
-            gaussian_srf_sum = np.sum(srf_nonzero)
-            
-            # Calculate weights
-            srf_weights = srf_nonzero / gaussian_srf_sum
-            
-            # Calculate Esun value
-            esun_value = np.sum(ssi_nonzero * srf_weights)
-        else:
-            # Handle case where SRF is all zeros (shouldn't happen)
-            esun_value = 0.0
-            print(f"Warning: Band {i} has all-zero SRF")
-        
-        esun_list.append(esun_value)
-    
-    return esun_list
-
-
-# More efficient vectorized version
-def compute_esun_vectorized(srfs_csr, ssi):
-    """
-    Vectorized computation of Esun values (faster for many bands).
-    
-    Parameters:
-    -----------
-    srfs_csr : scipy.sparse.csr_matrix
-        CSR matrix of aligned SRFs (n_bands × n_wavelengths)
-    ssi : numpy array
-        Solar spectral irradiance
-    
-    Returns:
-    --------
-    esun_list : numpy array
-        Esun values for all bands
-    """
-    
-    # Get dimensions
-    n_bands, n_wavelengths = srfs_csr.shape
-    
-    # Pre-allocate result array
-    esun_values = np.zeros(n_bands)
-    
-    # Process each band (still need loop due to variable non-zero patterns)
-    for i in range(n_bands):
-        # Get SRF row as dense array
-        srf_row = srfs_csr[i, :].toarray().flatten()
-        
-        # Find non-zero elements
-        nonzero_idx = srf_row > 0
-        
-        if np.any(nonzero_idx):
-            # Extract non-zero portions
-            srf_nonzero = srf_row[nonzero_idx]
-            ssi_nonzero = ssi[nonzero_idx]
-            
-            # Normalize and compute
-            srf_sum = np.sum(srf_nonzero)
-            esun_values[i] = np.sum(ssi_nonzero * (srf_nonzero / srf_sum))
-    
-    return esun_values.tolist()
-
-
-# Ultra-efficient version using sparse matrix operations
 def compute_esun_sparse_efficient(srfs_csr, ssi):
     """
     Most efficient version using sparse matrix operations.
@@ -568,34 +412,25 @@ def compute_esun_sparse_efficient(srfs_csr, ssi):
 
 def compute_esun(srfs_csr, ssi, method='sparse'):
     """
-    Wrapper function to compute Esun with different methods.
-    
-    Parameters:
-    -----------
-    srfs_csr : scipy.sparse.csr_matrix
-        CSR matrix of aligned SRFs
-    ssi : numpy array
-        Solar spectral irradiance
-    method : str
-        'sparse' - most memory efficient (recommended)
-        'vectorized' - good balance
-        'loop' - original loop style
-    
+    Compute per-band Esun (SSI weighted by each band's SRF).
+
+    Only the sparse implementation remains - the 'vectorized' and 'loop'
+    variants were unused alternatives (every caller passed method='sparse')
+    and were removed in the spectral-response cleanup; the `method` parameter
+    is kept for signature compatibility and rejects anything else loudly
+    rather than silently computing with a different algorithm.
+
     Returns:
     --------
     esun_list : list
         Esun values for all bands
     """
-    
-    if method == 'sparse':
-        esun_list = compute_esun_sparse_efficient(srfs_csr, ssi)
-    elif method == 'vectorized':
-        esun_list = compute_esun_vectorized(srfs_csr, ssi)
-    else:  # 'loop'
-        esun_list = compute_esun_from_csr(srfs_csr, ssi)
-    
-    return esun_list
-
+    if method != 'sparse':
+        raise ValueError(
+            f"compute_esun method {method!r} was removed - only 'sparse' remains "
+            f"(the variant every caller used; see hypso.reflectance.spectral_response)."
+        )
+    return compute_esun_sparse_efficient(srfs_csr, ssi)
 
 
 def compute_effective_fwhm(srfs_csr, solar_wavelengths):

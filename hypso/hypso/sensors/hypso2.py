@@ -1,4 +1,4 @@
-"""HYPSO-2 sensor profile. fwhm/srf_wl/srf_fwhm values moved verbatim from
+"""HYPSO-2 sensor profile. fwhm/fwhm_lookup_wl/fwhm_lookup_fwhm values moved verbatim from
 the old hypso.hypso2.Hypso2.__init__ (unchanged - this is a relocation, not
 a recalibration)."""
 import numpy as np
@@ -19,8 +19,8 @@ FWHM = np.array([5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.4
                   3.42, 3.42, 3.42, 3.42, 3.42, 3.42, 3.42, 3.54, 3.54, 3.54, 3.54,
                   3.58, 3.58, 3.58, 3.59, 3.59, 3.59, 3.59, 3.59, 3.59, 3.59])
 
-SRF_WL = np.array([435.84, 546.07, 696.54, 706.72, 738.4, 751.46, 763.51, 772.38, 811.53, 826.45, 842.46, 871.68, 912])
-SRF_FWHM = np.array([5.46, 3.34, 3.29, 3.32, 3.42, 3.54, 3.58, 3.59, 4.16, 4.06, 4.66, 4.47, 5.06])
+FWHM_LOOKUP_WL = np.array([435.84, 546.07, 696.54, 706.72, 738.4, 751.46, 763.51, 772.38, 811.53, 826.45, 842.46, 871.68, 912])
+FWHM_LOOKUP_FWHM = np.array([5.46, 3.34, 3.29, 3.32, 3.42, 3.54, 3.58, 3.59, 4.16, 4.06, 4.66, 4.47, 5.06])
 
 
 def _calibration_files(capture_type: str, coeff_type: str = "moved") -> dict:
@@ -33,8 +33,8 @@ HYPSO2_PROFILE = SensorProfile(
     sensor="hypso2_hsi",
     platform="hypso2",
     fwhm=FWHM,
-    srf_wl=SRF_WL,
-    srf_fwhm=SRF_FWHM,
+    fwhm_lookup_wl=FWHM_LOOKUP_WL,
+    fwhm_lookup_fwhm=FWHM_LOOKUP_FWHM,
     calibration_files=_calibration_files,
 )
 

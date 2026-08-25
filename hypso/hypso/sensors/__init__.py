@@ -40,8 +40,8 @@ class SensorProfile:
     sensor: str
     platform: str
     fwhm: np.ndarray
-    srf_wl: np.ndarray
-    srf_fwhm: np.ndarray
+    fwhm_lookup_wl: np.ndarray
+    fwhm_lookup_fwhm: np.ndarray
     calibration_files: Callable[[str, str], dict]
 
 

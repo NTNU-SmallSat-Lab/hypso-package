@@ -22,7 +22,7 @@ from hypso.ac.adapters import AC_ADAPTERS
 from hypso.georeferencing import Georeferencer, \
                                 check_star_tracker_orientation
 
-from hypso.reflectance import compute_toa_reflectance
+from hypso.reflectance import compute_reflectance, compute_spectral_response
 
 from hypso.DataArrayValidator import DataArrayValidator
 from hypso.DataArrayDict import DataArrayDict
@@ -47,7 +47,7 @@ class HypsoBase:
 
         :param path: Absolute path to NetCDF file
         :param sensor_profile: SensorProfile (see hypso.sensors) describing the sensor this
-            capture is from - platform/sensor/sat_id names, fwhm/srf_wl/srf_fwhm arrays, and
+            capture is from - platform/sensor/sat_id names, fwhm/fwhm_lookup_wl/fwhm_lookup_fwhm arrays, and
             the calibration-coefficient-file resolver. Previously each sensor required its own
             HypsoBase subclass (Hypso1/Hypso2) to hardcode these; now any sensor with a
             registered SensorProfile works via HypsoBase directly - see hypso.hypso1/hypso.hypso2
@@ -73,8 +73,8 @@ class HypsoBase:
             self.sensor = sensor_profile.sensor
             self.sat_id = sensor_profile.sat_id
             self.fwhm = sensor_profile.fwhm.copy()
-            self.srf_wl = sensor_profile.srf_wl
-            self.srf_fwhm = sensor_profile.srf_fwhm
+            self.fwhm_lookup_wl = sensor_profile.fwhm_lookup_wl
+            self.fwhm_lookup_fwhm = sensor_profile.fwhm_lookup_fwhm
         else:
             # No profile given (e.g. a subclass that still wants to set these fields itself) -
             # match the previous defaults so downstream code that checks hasattr(self, 'fwhm')
@@ -764,30 +764,39 @@ class HypsoBase:
             sensor_bin_factor = 1
 
 
-        toa_reflectance, \
-        effective_fwhm, \
-        srf, \
-        srf_ssi, \
-        srf_ssi_wl, \
-        esun, \
-        esun_wl = compute_toa_reflectance(sensor_wavelengths=sensor_wavelengths,
-                                            sensor_fwhm=sensor_fwhm,
-                                            bin_factor = sensor_bin_factor,
-                                            toa_radiance=toa_radiance,
-                                            iso_time=self.iso_time,
-                                            solar_zenith_angles=solar_zenith_angles,
-                                            use_thuillier = use_thuillier,
-                                            generate_figures=generate_figures
-                                            )
+        # The spectral response (SRFs/SSI/esun/effective FWHM) is now one
+        # value object - see hypso.reflectance.spectral_response's module
+        # docstring for what this supersedes and the naming it fixes.
+        sr = compute_spectral_response(
+            band_centers_unbinned=sensor_wavelengths,
+            fwhm_unbinned=sensor_fwhm,
+            bin_factor=sensor_bin_factor,
+            ssi_source="thuillier" if use_thuillier else "tsis",
+            grid="native-truncated",
+            generate_figures=generate_figures,
+        )
 
-        self.l1d_cube = toa_reflectance
-        
-        self.srf = srf
-        self.srf_ssi = srf_ssi
-        self.srf_ssi_wl = srf_ssi_wl
-        self.esun = esun
-        self.esun_wl = esun_wl
-        self.effective_fwhm = effective_fwhm
+        self.l1d_cube = compute_reflectance(toa_radiance=toa_radiance, sr=sr,
+                                            iso_time=self.iso_time,
+                                            solar_zenith_angles=solar_zenith_angles)
+
+        self.spectral_response = sr
+
+        # Legacy attribute family - SUPERSEDED by self.spectral_response but
+        # still populated with the exact same values because the Polymer
+        # connector (hypso.ac.adapters.polymer's generate_srf_nc/ssi/esun) and
+        # write/metadata_srf_group_writer.py still read these names. To be
+        # removed when the AC connectors are migrated to read
+        # self.spectral_response directly (the later AC-connector pass, see
+        # REFACTOR_PROGRESS.md). Note what the old names actually held:
+        # srf = the BINNED SRF matrix, esun_wl = binned BAND CENTERS (not an
+        # SSI wavelength grid, despite the srf_ssi_wl name symmetry).
+        self.srf = sr.srf
+        self.srf_ssi = sr.ssi
+        self.srf_ssi_wl = sr.grid_wl
+        self.esun = sr.esun
+        self.esun_wl = sr.band_centers
+        self.effective_fwhm = sr.effective_fwhm
 
         return None
 
@@ -967,8 +976,8 @@ class HypsoBase:
         
         fwhm_per_band = []
         for band in self.wavelengths: 
-            idx = np.argmin(np.abs(band - self.srf_wl))
-            fwhm_per_band.append(self.srf_fwhm[idx])
+            idx = np.argmin(np.abs(band - self.fwhm_lookup_wl))
+            fwhm_per_band.append(self.fwhm_lookup_fwhm[idx])
 
         fwhm = fwhm_per_band
 
@@ -981,8 +990,8 @@ class HypsoBase:
         
         fwhm_per_band = []
         for band in self.wavelengths_unbinned: 
-            idx = np.argmin(np.abs(band - self.srf_wl))
-            fwhm_per_band.append(self.srf_fwhm[idx])
+            idx = np.argmin(np.abs(band - self.fwhm_lookup_wl))
+            fwhm_per_band.append(self.fwhm_lookup_fwhm[idx])
 
         fwhm = fwhm_per_band
 

@@ -1,4 +1,4 @@
-"""HYPSO-1 sensor profile. fwhm/srf_wl/srf_fwhm values moved verbatim from
+"""HYPSO-1 sensor profile. fwhm/fwhm_lookup_wl/fwhm_lookup_fwhm values moved verbatim from
 the old hypso.hypso1.Hypso1.__init__ (unchanged - this is a relocation, not
 a recalibration)."""
 import numpy as np
@@ -18,8 +18,8 @@ FWHM = np.array([9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6, 9.6
 
 # HYPSO-1, based on pre-launch calibration modelled for unbinned spectrum.
 # Based on https://ieeexplore.ieee.org/abstract/document/9843655
-SRF_WL = np.array([435.85, 546.07, 696.54, 706.72, 738.40, 763.51])
-SRF_FWHM = np.array([4.3, 4.3, 4.05, 3.65, 3.60, 3.85])
+FWHM_LOOKUP_WL = np.array([435.85, 546.07, 696.54, 706.72, 738.40, 763.51])
+FWHM_LOOKUP_FWHM = np.array([4.3, 4.3, 4.05, 3.65, 3.60, 3.85])
 
 
 def _calibration_files(capture_type: str, coeff_type: str = "moved") -> dict:
@@ -32,8 +32,8 @@ HYPSO1_PROFILE = SensorProfile(
     sensor="hypso1_hsi",
     platform="hypso1",
     fwhm=FWHM,
-    srf_wl=SRF_WL,
-    srf_fwhm=SRF_FWHM,
+    fwhm_lookup_wl=FWHM_LOOKUP_WL,
+    fwhm_lookup_fwhm=FWHM_LOOKUP_FWHM,
     calibration_files=_calibration_files,
 )
 
