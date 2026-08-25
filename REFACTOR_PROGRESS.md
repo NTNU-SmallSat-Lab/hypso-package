@@ -110,6 +110,31 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-25 (continued further, ×23): srf_getter maintainability fix + a future Polymer-side wishlist.**
+  User asked for a plain-language explanation of the `srf_getter` dotted-string mechanism and why
+  `ac_polymer.py` sits outside `adapters/`. Investigated precisely (read `eotools/srf.py`'s actual
+  `srf_getter.rsplit(".", 1)` → `importlib.import_module` → `getattr` resolution) and corrected an
+  overstatement from an earlier turn: the location isn't "frozen by an external constraint" — checked, and
+  nothing outside this repo's own `_polymer_driver.py` hardcodes the string, so moving the function was always
+  technically possible, just required updating the string in lockstep with no functional upside.
+
+  User asked what would make this easiest to maintain: **derive the dotted path from the function object
+  instead of hand-typing it** (`5d5be8db`) — `ac_polymer.py` now has `SRF_GETTER_PATH = f"{fn.__module__}.
+  {fn.__qualname__}"`, imported by `_polymer_driver.py` instead of a retyped literal. Real finding while
+  making the change: the derived value (`"hypso.ac.ac_polymer.ac_polymer_srf_getter"`, the function's true
+  defining module) differs from the old hand-typed one (`"hypso.ac.ac_polymer_srf_getter"`, which only worked
+  via `hypso/ac/__init__.py`'s re-export) — both resolve to the same function (verified), but a new test that
+  first asserted the OLD literal failed immediately, which is exactly the drift class this fix exists to
+  prevent. Fixed by asserting resolvability (reproducing Polymer's own `rsplit`/`import_module`/`getattr`
+  mechanism) rather than any hardcoded string, in both a new test and a strengthened existing one. Verified
+  end-to-end against the real Polymer installation too. Full suite: 104 tests pass.
+
+  **Recorded per user request**: a wishlist item for Polymer's own side (not this repo) — add a native HYPSO
+  entry to Polymer's `eotools/srf.py` sensor/platform auto-lookup (the `srf.csv`-based mechanism `get_SRF()`
+  already uses for sensors it recognizes out of the box), so Polymer resolves HYPSO's SRF itself and
+  hypso-package's whole `srf_getter`/`generate_srf_nc` handoff mechanism becomes unnecessary. See the
+  AC-connector design-notes section above for the full note.
+
 - **2026-08-25 (continued further, ×22): submodule-layout audit acted on.** User asked "is everything in the
   correct submodules?" — did a fresh survey (not from memory) of the current layout. Found: (1) a stray empty
   `utils/data/` directory left over from the HSI2RGB move (×16) — removed; (2) `ac/loading_acolite_output.py`'s
