@@ -7,7 +7,6 @@
 from .utils import set_or_create_attr
 from hypso.io.writer import write_l1b_nc_file, write_l1c_nc_file, write_l1d_nc_file, write_l2a_nc_file
 from .products_writer import write_products_nc_file
-from .aeronet_oc_writer import write_aeronet_oc_matchup_nc_file
 from .metadata_srf_group_writer import metadata_srf_group_writer
 
 

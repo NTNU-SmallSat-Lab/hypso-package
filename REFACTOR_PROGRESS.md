@@ -51,6 +51,95 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-25 (continued further, ×9):** User asked (mid-cleanup, IDE had `dimensionality_reduction/__init__.py`
+  open, likely incidental) whether `hypso.aeronet_oc` is used by `hypso-processing-pipeline` and could be
+  removed if not. Confirmed via grep: NOT used by `hypso-processing-pipeline` (which reimplemented its own
+  AERONET-OC matchup logic independently in `hypso_pipeline/aeronet.py`/`extraction.py`, per that module's own
+  "Ported from hypso-matchup-processing" docstring) and NOT imported anywhere inside `hypso-package` itself
+  (`hypso/__init__.py`, `HypsoBase.py`) - **but** initially found it IS imported by a third repo,
+  `/home/camerop/AC/hypso-ac-processing/` (`2b_process_capture.py`/`2c_process_matchups.py`, last commit
+  2026-08-02) that this session had no prior context on. Flagged this to the user rather than assuming it was
+  safe to delete just because the *specifically-asked-about* repo didn't use it. User confirmed
+  `hypso-processing-pipeline` supersedes `hypso-ac-processing` and explicitly said not to worry about breaking
+  it (this is a refactor branch). Deleted `hypso/aeronet_oc/` (5 files: `aeronet_oc.py`, `aoc.py`,
+  `aoc_hypso.py`, `plotting.py`, `utils.py`, ~190KB) and `hypso/write/aeronet_oc_writer.py`, and removed the
+  latter's `write_aeronet_oc_matchup_nc_file` export from `hypso/write/__init__.py` (confirmed nothing else in
+  `hypso-package` imported it first). Verified: `from hypso import Hypso; from hypso.write import
+  write_l1c_nc_file` still imports cleanly, `tests/baseline/compare_to_baseline.py` still passes.
+
+  **Note for future sessions**: confirming "is X used by hypso-processing-pipeline" is not the same question as
+  "is X safe to delete" - there is at least one other repo (`hypso-ac-processing`) that historically depended on
+  parts of this package outside `hypso-processing-pipeline`. It's now confirmed superseded/not a concern per the
+  user, but the general lesson (check beyond the one repo you already have open) applies to any future
+  similar-looking cleanup question.
+- **2026-08-25 (continued further, ×8):** Continued the main refactor plan (composition work, item 7). Extracted
+  georeferencing orchestration (`run_direct_georeferencing`, `run_georeferencing`, and the private
+  `_run_frame_interpolation`/`_run_track_geometry`/`_run_angles_geometry` helpers) verbatim into a new
+  `hypso/geo.py` module - matches the plan's `self.geo` composition item, and the AC-adapter convention already
+  used elsewhere in this codebase (`hypso/ac/*.py`'s free functions taking `satobj` as an explicit first
+  parameter, rather than a stored back-reference, since these read many `HypsoBase` attributes).
+  `HypsoBase.run_direct_georeferencing()`/`run_georeferencing()` are now thin delegating wrappers (`return
+  geo.run_direct_georeferencing(self)` etc.) - kept as methods, not moved, since `run_direct_georeferencing()`
+  is called externally (`hypso/ac/loading_acolite_output.py`) and `run_georeferencing()` by
+  `hypso-processing-pipeline`; both names/signatures are unchanged. The private `_run_*` helpers had zero
+  external callers (confirmed by grep before moving) so they moved outright with no wrapper kept on
+  `HypsoBase`. Also converted this code's `print(...)` calls to `logger.info(...)` while it was already being
+  touched, consistent with the user's earlier logging-module request. Removed the now-unused `from
+  hypso.geometry import (...)` block from `HypsoBase.py` (confirmed via grep those six names had zero remaining
+  uses there) in favor of `from hypso import geo`.
+
+  **Hit and resolved a testing artifact (not a real bug)**: running a bare `python3 -c "from hypso import
+  Hypso; ..."` from CWD `hypso-package-refactor/hypso-package` (rather than with the `sys.path.insert(0,
+  'hypso')` used throughout this whole session, since the package is now `pip install -e`'d) returned an EMPTY
+  Python **namespace package** for `hypso` instead of the real package - because that CWD contains a
+  subdirectory literally named `hypso` (the project root, one level above the real `hypso/hypso/` package dir)
+  which Python's implicit-namespace-package resolution picks up via the CWD-on-sys.path entry, shadowing the
+  real editable-installed package. Confirmed by re-running the identical test from `/tmp` (a CWD without a
+  same-named subdirectory), which worked correctly. **Not a code bug** - purely an artifact of testing from that
+  specific directory now that the old `sys.path.insert` workaround is gone; future sessions testing this repo
+  post-`pip install -e` should `cd` somewhere without a `hypso/` subdirectory (or keep using
+  `sys.path.insert`) to avoid hitting this again.
+
+  Verified: `from hypso import Hypso` imports cleanly (from a clean CWD),
+  `tests/baseline/compare_to_baseline.py` still passes (this is the highest-risk area touched so far given it's
+  literally the geolocation math baseline compares latitude/longitude against), and separately verified
+  `run_direct_georeferencing()` (the direct-georef code path, NOT exercised by `compare_to_baseline.py` which
+  uses indirect georeferencing) still runs correctly and populates `latitudes_direct`/angle attributes.
+- **2026-08-25 (continued further, ×7 - back to the main refactor plan):** User asked to continue the plan and
+  clean up/reorganize submodules where it makes sense. Surveyed via an Explore agent (`.bak` files, the two
+  `ac_6sv1_luts_*` files, and the `geometry`/`geometry_definition`/`georeferencing` submodules for overlap and
+  dead code), confirmed each finding with a direct grep before acting rather than trusting the agent's report
+  blindly:
+  - Deleted `HypsoBase.py.bak` (confirmed `HypsoBase.py` itself is current/actively maintained; git history keeps
+    the `.bak` content anyway).
+  - Deleted `hypso/ac/ac_6sv1_luts_OLD.py` and `ac_6sv1_luts_deepthought.py` - confirmed zero references anywhere
+    in `hypso/hypso/` **and** in `hypso-processing-pipeline` (the known external consumer) before removing, per
+    the plan's explicit instruction.
+  - Deleted `hypso/georeferencing/example.py` and `example_image_mode_change.py` (confirmed both have a genuinely
+    broken bare `import georeferencing` - not `from . import`/`from hypso.georeferencing import` - meaning
+    they've never been runnable as part of the installed package) plus their three orphaned data assets
+    (`erie_2022_08_27T16_05_36-bin3.png`/`.points`, `transformation_settings.png`) that only those two scripts
+    referenced.
+  - **Did NOT touch `geometry_definition/`** despite it being unused anywhere inside `hypso/hypso/` (including
+    `HypsoBase.py`) - checked the read-only original `/home/camerop/AC/hypso-package/demo/demo_processing.py`
+    first (a real external consumer this refactor workspace doesn't otherwise touch) and found
+    `from hypso.geometry_definition import generate_area_def` there. Renaming/merging it into `geometry/` for
+    naming-clarity reasons alone would have broken that real, existing usage for a purely cosmetic gain - not
+    worth it, left as-is.
+  - **Did NOT rename `geometry`/`geometry_definition`/`georeferencing`** despite their similar names (flagged in
+    the original plan as worth a naming pass) - the survey confirmed they have genuinely distinct, non-
+    overlapping responsibilities (automated satellite-pose geolocation math / pyresample area-def builders /
+    manual GCP-based calibration respectively), so the "confusion" is naming-similarity only, and per the
+    `geometry_definition` finding above, at least one of these three has a real external import path that a
+    rename would break. Decided the risk wasn't justified by a purely cosmetic improvement.
+  - Consolidated `run_georeferencing`/`_run_custom_georeferencing` (the exact duplication flagged in the
+    original plan) by **deleting `_run_custom_georeferencing`** entirely, rather than merging: confirmed via
+    grep it had zero callers anywhere (internal or in `hypso-processing-pipeline`) and its body was a pure
+    duplicate of `run_georeferencing`'s "explicit latitudes/longitudes passed in" branch -
+    `run_georeferencing(latitudes=None, longitudes=None)` already covers both the override and
+    use-self.latitudes-as-is cases in one method, so there was nothing left to actually merge.
+  Verified after each deletion: `from hypso import Hypso` still imports cleanly and
+  `tests/baseline/compare_to_baseline.py` still passes.
 - **2026-08-25 (continued further, ×6 - separate plan-mode task):** User asked about Satpy compatibility, then
   clarified they want it "more tightly integrated... working with other sensors as well as with visualization" -
   a real registered Satpy reader plugin, not an extension of the existing hand-built-Scene converter functions
@@ -279,15 +368,26 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
    (`43183e49`). `_load_capture_file` needed no code change (already imports load_l1b_nc/etc. from `hypso.load`,
    which now transparently resolves to the new reader).
 6. ~~Add `HypsoBase.discard_cube(level)` / cube property deleters~~ — done, committed (`0f79edf5`).
-6b. ~~Add `to_l1b()`/`to_l1c()`/`to_l1d()` (non-mutating, always-return-new-object counterparts)~~ — done,
-   verified against real data. Commit this (this session's uncommitted work — do this first on resume).
-7. Update `HypsoBase`: `self.io`/`self.geo` composition, fix the `self.label` uninitialized-attribute trap
-   (**already fixed** as part of the sensor_profile wiring, `884b8d5f`), consolidate
-   `run_georeferencing`/`_run_custom_georeferencing`.
-8. Extract `hypso/ac/` adapters (`self.ac`), moving `ac_*` method bodies verbatim.
-9. Cleanup: delete `.bak` files, delete `ac_6sv1_luts_OLD.py`/`_deepthought.py` (after grep-confirming unused).
-10. Build `tests/` (golden-file regression + CF/format assertions + unit tests, per plan §Verification).
-11. Run full verification against real data; update this file with results.
+6b. ~~Add `to_l1b()`/`to_l1c()`/`to_l1d()`~~ — done, committed (`602acb88`). ~~Deprecate `generate_l1b/l1c/
+   l1d_cube()`~~ — done, committed (`d09c272e`).
+6c. ~~Register a real Satpy reader plugin (`hypso_l1c`/`hypso_l1d`)~~ — separate plan-mode task, not part of the
+   original plan below but done and committed (`3c3354e7`) at the user's request; see the status entry above.
+7. `self.io`/`self.geo` composition on `HypsoBase` — **not started**. The `self.label` uninitialized-attribute
+   trap is **already fixed** (sensor_profile wiring, `884b8d5f`). ~~Consolidate `run_georeferencing`/
+   `_run_custom_georeferencing`~~ — done, committed: `_run_custom_georeferencing` deleted outright (confirmed
+   dead code, zero callers anywhere - see status entry above), `run_georeferencing`'s existing optional
+   `latitudes=None, longitudes=None` signature already covers what a merge would have produced.
+8. Extract `hypso/ac/` adapters (`self.ac`), moving `ac_*` method bodies verbatim. **Not started.**
+9. ~~Cleanup: delete `.bak` files, delete `ac_6sv1_luts_OLD.py`/`_deepthought.py`~~ — done (see status entry
+   above for what was deleted and, just as importantly, what was deliberately left alone and why -
+   `geometry_definition/` has a real external consumer, `geometry`/`geometry_definition`/`georeferencing` were
+   not renamed despite similar names).
+10. Build `tests/` (golden-file regression + CF/format assertions + unit tests, per plan §Verification). **Not
+    started** - `tests/baseline/` (golden-file real-data regression) exists and has been the verification method
+    used throughout, but the formal pytest suite (CF/format assertions, sensor/schema/adapter unit tests) is not
+    built yet.
+11. Run full verification against real data; update this file with results. **Ongoing** - every step above has
+    been verified against the real capture as it landed, not deferred to the end.
 
 **Commit frequently** (this repo tracks `origin` = `NTNU-SmallSat-Lab/hypso-package`, but this is the user's own
 writable clone — commit locally as each numbered step above completes, don't wait for the whole refactor to
