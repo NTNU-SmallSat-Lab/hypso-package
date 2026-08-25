@@ -133,3 +133,28 @@ def test_written_file_round_trips_through_reader(written_nc_files, satobj):
     assert np.allclose(np.asarray(cube), satobj.l1b_cube.to_numpy(), equal_nan=True)
     assert np.allclose(np.asarray(nc_geometry_vars["latitude"]),
                        np.asarray(satobj.latitudes), equal_nan=True)
+
+
+def test_spectral_response_lazy_rebuild_from_file(written_nc_files, satobj, tmp_path):
+    # A capture LOADED from a written L1D file must rebuild an identical
+    # SpectralResponse lazily (the SRF matrix is not persisted; the builder is
+    # deterministic given the file's full-precision wavelengths/fwhm inputs).
+    import shutil
+    from hypso import Hypso
+
+    named = tmp_path / "aeronetvenice_2025-03-04T10-38-05Z-l1d.nc"
+    shutil.copy2(written_nc_files["l1d"], named)
+
+    loaded = Hypso(str(named), load_cube=False)
+    assert loaded._spectral_response is None
+    sr = loaded.spectral_response  # triggers the rebuild
+
+    ref = satobj.spectral_response
+    assert np.array_equal(sr.srf.toarray(), ref.srf.toarray())
+    assert np.array_equal(sr.esun, ref.esun)
+    assert np.array_equal(np.asarray(loaded.wavelengths, dtype=float),
+                          np.asarray(satobj.wavelengths, dtype=float))
+    assert np.array_equal(np.asarray(loaded.fwhm, dtype=float),
+                          np.asarray(satobj.fwhm, dtype=float))
+    # legacy attrs backfilled for the Polymer connector
+    assert loaded.srf is sr.srf

@@ -29,7 +29,7 @@ def metadata_srf_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib',
             length = len(satobj.esun)
             netfile.createDimension('esun', length)
             esun_var = netfile.createVariable(
-                'metadata/srf/esun', 'f4',
+                'metadata/srf/esun', 'f8',
                 ('esun',),
                 compression=COMP_SCHEME,
                 complevel=COMP_LEVEL,
@@ -46,7 +46,7 @@ def metadata_srf_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib',
             length = len(satobj.esun_wl)
             netfile.createDimension('esun_wavelengths', length)
             esun_wl_var = netfile.createVariable(
-                'metadata/srf/esun_wavelengths', 'f4',
+                'metadata/srf/esun_wavelengths', 'f8',
                 ('esun_wavelengths',),
                 compression=COMP_SCHEME,
                 complevel=COMP_LEVEL,
@@ -63,7 +63,7 @@ def metadata_srf_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib',
             length = len(satobj.effective_fwhm)
             netfile.createDimension('effective_fwhm', length)
             effective_fwhm_var = netfile.createVariable(
-                'metadata/srf/effective_fwhm', 'f4',
+                'metadata/srf/effective_fwhm', 'f8',
                 ('effective_fwhm',),
                 compression=COMP_SCHEME,
                 complevel=COMP_LEVEL,

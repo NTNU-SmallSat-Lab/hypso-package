@@ -110,13 +110,18 @@ def _write_metadata_common(satobj, netfile: nc.Dataset) -> None:
     # re-created the already-existing top-level 'bands' dimension here) without
     # changing the written values - same dimension, same size, just reused instead
     # of re-declared.
+    # Written as f8, not the f4 the original used: these are the band-center
+    # wavelengths the lazy SpectralResponse rebuild (HypsoBase.spectral_response)
+    # regenerates SRFs from after loading a file - f4's ~3e-5 nm rounding was
+    # enough to shift a few Gaussian grid-snap indices, making the rebuilt SRF
+    # differ from the in-session one. Full precision makes the round trip exact.
     for attr_name, dim_name, var_name, length_attr in _CORRECTIONS_ARRAYS:
         try:
             values = getattr(satobj, attr_name)
             length = getattr(satobj, length_attr).shape[0]
             if dim_name not in netfile.dimensions:
                 netfile.createDimension(dim_name, length)
-            var = netfile.createVariable(f'metadata/corrections/{var_name}', 'f4', (dim_name,),
+            var = netfile.createVariable(f'metadata/corrections/{var_name}', 'f8', (dim_name,),
                                           compression=COMP_SCHEME, complevel=COMP_LEVEL, shuffle=COMP_SHUFFLE)
             var[:] = values
         except Exception:

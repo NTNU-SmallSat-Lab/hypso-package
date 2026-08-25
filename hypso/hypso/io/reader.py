@@ -207,7 +207,16 @@ def _load_cube_attrs(nc_file_path: Path, product_prefix_hint: str) -> dict:
             return {attrname: getattr(var, attrname) for attrname in var.ncattrs()}
 
         names_sorted = sorted(names, key=lambda n: int(f.variables[n].band))
-        wavelengths = [float(getattr(f.variables[n], "wavelength")) for n in names_sorted]
+        # Prefer radiation_wavelength (the precise as-calibrated band center,
+        # i.e. exactly what satobj.wavelengths holds after in-session L1
+        # processing) over `wavelength` (the rounded nominal label) - so a
+        # capture loaded from file gets the same wavelengths an in-session
+        # capture has, and the lazy SpectralResponse rebuild reproduces
+        # identical per-band metadata. The old loaders used the rounded label,
+        # which is kept only as the fallback for files lacking the precise attr.
+        wavelengths = [float(getattr(f.variables[n], "radiation_wavelength",
+                                     getattr(f.variables[n], "wavelength")))
+                       for n in names_sorted]
         fwhm = [float(getattr(f.variables[n], "fwhm")) for n in names_sorted]
 
         first = f.variables[names_sorted[0]]

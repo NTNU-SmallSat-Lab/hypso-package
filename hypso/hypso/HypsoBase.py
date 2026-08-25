@@ -103,6 +103,9 @@ class HypsoBase:
         self._l1c_cube = None
         self._l1d_cube = None
 
+        # Canonical spectral response (see the spectral_response property).
+        self._spectral_response = None
+
 
         # Initialize dimensions
         #self.capture_type = None
@@ -728,6 +731,62 @@ class HypsoBase:
         )
         return self._generate_l1d_cube_impl(use_direct_georef=use_direct_georef, use_thuillier=use_thuillier,
                                             use_unbinned=use_unbinned, generate_figures=generate_figures)
+
+
+    @property
+    def spectral_response(self) -> "SpectralResponse":
+        """The capture's canonical SpectralResponse (see
+        hypso.reflectance.spectral_response for what it supersedes).
+
+        Set by L1D generation; for a capture LOADED from a file it is rebuilt
+        lazily on first access - the SRF matrix itself is not persisted in the
+        NetCDF files (only esun/effective_fwhm reach metadata/srf), and the
+        builder is deterministic given wavelengths_unbinned/fwhm_unbinned/
+        bin_factor, which the file does carry. The rebuild assumes the default
+        L1D configuration (TSIS SSI, unbinned inputs, native-truncated grid) -
+        a capture originally processed with use_thuillier=True or
+        use_unbinned=False would need compute_spectral_response called
+        explicitly with those settings instead.
+
+        The rebuild also backfills any *missing* legacy SRF attributes
+        (srf/srf_ssi/srf_ssi_wl, plus esun/esun_wl/effective_fwhm when the
+        file lacked them) so the Polymer connector's generate_srf_nc/ssi/esun
+        work on a file-loaded capture; values already loaded from the file are
+        left untouched.
+        """
+        if self._spectral_response is None:
+            if not hasattr(self, "fwhm_unbinned"):
+                self._get_fwhm_unbinned()
+            # Mirror the in-session L1D path (_generate_l1d_cube_impl), which
+            # recomputes per-band fwhm from the (precise) wavelengths via the
+            # sensor's lookup table - a file-loaded capture otherwise still
+            # carries the static profile default, which differs at lookup
+            # boundary bands.
+            self._get_fwhm()
+
+            sr = compute_spectral_response(
+                band_centers_unbinned=self.wavelengths_unbinned,
+                fwhm_unbinned=np.asarray(self.fwhm_unbinned),
+                bin_factor=self.bin_factor,
+                ssi_source="tsis",
+                grid="native-truncated",
+            )
+            self._spectral_response = sr
+
+            for attr, value in (("srf", sr.srf),
+                                ("srf_ssi", sr.ssi),
+                                ("srf_ssi_wl", sr.grid_wl),
+                                ("esun", sr.esun),
+                                ("esun_wl", sr.band_centers),
+                                ("effective_fwhm", sr.effective_fwhm)):
+                if getattr(self, attr, None) is None:
+                    setattr(self, attr, value)
+
+        return self._spectral_response
+
+    @spectral_response.setter
+    def spectral_response(self, value):
+        self._spectral_response = value
 
 
     def _generate_l1d_cube_impl(self, use_direct_georef=False, use_thuillier=False, use_unbinned=True, generate_figures=False) -> None:
