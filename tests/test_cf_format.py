@@ -158,3 +158,35 @@ def test_spectral_response_lazy_rebuild_from_file(written_nc_files, satobj, tmp_
                           np.asarray(satobj.fwhm, dtype=float))
     # legacy attrs backfilled for the Polymer connector
     assert loaded.srf is sr.srf
+
+
+def test_products_on_dataset_dict(satobj, tmp_path):
+    # satobj.products migrated from DataArrayDict to DatasetDict (like
+    # l2a_cube/custom_masks before it) - confirmed real usage: hypso-
+    # processing-pipeline's Polymer stage does exactly this pattern
+    # (satobj.products['chla'] = ...) then persists via
+    # write_products_nc_file. Validation now RAISES on a bad shape instead
+    # of DataArrayDict's old print-and-silently-store-anyway behavior.
+    from hypso.write import write_products_nc_file
+    import netCDF4 as nc
+
+    fake_chla = np.random.rand(*satobj.spatial_dimensions).astype(np.float64)
+    satobj.products['chla'] = fake_chla
+
+    assert list(satobj.products) == ['chla']
+    assert satobj.products['chla'].dims == ('y', 'x')
+    assert np.array_equal(satobj.products['chla'].values, fake_chla)
+
+    with pytest.raises(AttributeError):
+        satobj.products = {}
+
+    with pytest.raises(ValueError):
+        satobj.products['badshape'] = np.zeros((4, 4, 4))  # wrong ndim
+
+    out = tmp_path / "products_test.nc"
+    write_products_nc_file(satobj, file_name=out, overwrite=True)
+    assert out.is_file()
+    with nc.Dataset(out) as f:
+        assert "chla" in f.groups["products"].variables
+
+    del satobj.products['chla']  # clean up so this fixture stays reusable

@@ -1,8 +1,12 @@
 """Dataset-backed keyed cube/mask containers.
 
-DatasetDict supersedes DataArrayDict (hypso/DataArrayDict.py) for
-HypsoBase._l2a_cubes and HypsoBase._custom_masks. DataArrayDict had three
-defects this class exists to fix:
+DatasetDict supersedes the old hand-rolled DataArrayDict (now deleted) for
+every keyed-collection use in this package - HypsoBase._l2a_cubes,
+._custom_masks, and ._products (products was migrated last, once confirmed
+to be a real, actively-used surface - hypso-processing-pipeline's Polymer
+stage writes satobj.products['chla'] and persists it via
+write_products_nc_file - not dead code, see REFACTOR_PROGRESS.md).
+DataArrayDict had three defects this class exists to fix:
 
 1. Validation failed silently - its __setitem__ caught every exception,
    *printed* it, and stored the unvalidated value anyway. Here validation
@@ -13,8 +17,11 @@ defects this class exists to fix:
    keys ('Rrs' in d was False while d['Rrs'] worked). This class implements
    collections.abc.MutableMapping, whose derived methods all funnel through
    the four core methods, so every path validates and every path lowercases.
-3. It multiply-inherited DataArrayValidator but never used the inheritance
-   (it instantiated a fresh validator inside __setitem__).
+3. It multiply-inherited a separate DataArrayValidator class but never
+   actually used the inheritance (it instantiated a fresh validator inside
+   __setitem__ instead) - that class is also deleted now; its logic lives on
+   as this module's as_dataarray() (below), the single place in this package
+   that now does array shape/dims normalization.
 
 Backing the entries with a real xarray.Dataset (instead of a plain dict of
 DataArrays) is what makes this the standard/generalizable choice: xarray
@@ -23,15 +30,56 @@ ordinary DataArray attrs, and the whole collection serializes with
 .dataset.to_netcdf() / converts with .dataset for any cross-entry xarray
 operation - none of which the hand-rolled dict could do.
 
-DataArrayDict itself is NOT deleted: HypsoBase._products still uses it, and
-the products/_products surface is intentionally-untouched forward-looking
-infrastructure (user instruction, see REFACTOR_PROGRESS.md). Migrating it here
-can happen whenever that surface is next worked on.
+as_dataarray() (below) is shared by DatasetDict._as_dataarray and
+HypsoBase's single-array cube/mask formatters (_format_cube_dataarray/
+_format_mask_dataarray) - one implementation of "is this the right shape/
+dims, and if it's a bare ndarray, wrap it" instead of two.
 """
 from collections.abc import MutableMapping
 
 import numpy as np
 import xarray as xr
+
+
+def as_dataarray(value, dim_names: tuple, num_dims: int, dim_shape: tuple = None) -> xr.DataArray:
+    """Normalize `value` (an ndarray or xr.DataArray) to an xr.DataArray with
+    exactly `num_dims` dimensions named `dim_names[:num_dims]` - raising
+    TypeError/ValueError on anything that doesn't fit, never silently
+    accepting or mangling bad data. Optionally enforces that the array's
+    leading two dimensions match `dim_shape` (a capture's own
+    spatial_dimensions).
+    """
+    if isinstance(value, np.ndarray):
+        if value.ndim not in (2, 3):
+            raise ValueError(f"Data must be 2D or 3D, not {value.ndim}D.")
+        dims = dim_names[:value.ndim]
+        value = xr.DataArray(
+            value,
+            dims=dims,
+            coords={d: np.arange(n) for d, n in zip(dims, value.shape)},
+        )
+    elif not isinstance(value, xr.DataArray):
+        raise TypeError(
+            f"Value must be a numpy ndarray or xarray DataArray, "
+            f"not {type(value).__name__}."
+        )
+
+    if len(value.dims) != num_dims:
+        raise ValueError(
+            f"Data must be {num_dims}-dimensional, not {len(value.dims)}-dimensional."
+        )
+
+    expected = dim_names[:len(value.dims)]
+    if tuple(value.dims) != expected:
+        value = value.rename(dict(zip(value.dims, expected)))
+
+    if dim_shape is not None and value.shape[:2] != tuple(dim_shape):
+        raise ValueError(
+            f"Data shape {value.shape[:2]} does not match required "
+            f"spatial dimensions {dim_shape}."
+        )
+
+    return value
 
 
 class DatasetDict(MutableMapping):
@@ -67,36 +115,7 @@ class DatasetDict(MutableMapping):
     # --- validation/conversion (raises on failure, never stores bad data) ---
 
     def _as_dataarray(self, value) -> xr.DataArray:
-        if isinstance(value, np.ndarray):
-            dims = self.dim_names[:value.ndim]
-            if value.ndim not in (2, 3):
-                raise ValueError(f"Data must be 2D or 3D, not {value.ndim}D.")
-            value = xr.DataArray(
-                value,
-                dims=dims,
-                coords={d: np.arange(n) for d, n in zip(dims, value.shape)},
-            )
-        elif not isinstance(value, xr.DataArray):
-            raise TypeError(
-                f"Value must be a numpy ndarray or xarray DataArray, "
-                f"not {type(value).__name__}."
-            )
-
-        if len(value.dims) != self.num_dims:
-            raise ValueError(
-                f"Data must be {self.num_dims}-dimensional, "
-                f"not {len(value.dims)}-dimensional."
-            )
-
-        expected = self.dim_names[:len(value.dims)]
-        if tuple(value.dims) != expected:
-            value = value.rename(dict(zip(value.dims, expected)))
-
-        if self.dim_shape is not None and value.shape[:2] != self.dim_shape:
-            raise ValueError(
-                f"Data shape {value.shape[:2]} does not match required "
-                f"spatial dimensions {self.dim_shape}."
-            )
+        value = as_dataarray(value, self.dim_names, self.num_dims, self.dim_shape)
 
         # Guard against xarray's assignment alignment: Dataset.__setitem__
         # REINDEXES an incoming array whose indexed dims disagree with the

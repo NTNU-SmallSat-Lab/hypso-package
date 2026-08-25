@@ -1,12 +1,14 @@
-"""Unit tests for hypso.containers.DatasetDict - the Dataset-backed container
-superseding DataArrayDict for l2a cubes and custom masks. Each test maps to one
-of the defects that motivated the replacement (see the module docstring of
-hypso/containers.py). No real data needed."""
+"""Unit tests for hypso.containers.DatasetDict and as_dataarray - the
+Dataset-backed container (and its underlying single-array normalizer) that
+superseded DataArrayDict/DataArrayValidator (both now deleted) for every
+keyed collection in this package: l2a cubes, custom masks, and products. Each
+test maps to one of the defects that motivated the replacement (see the
+module docstring of hypso/containers.py). No real data needed."""
 import numpy as np
 import pytest
 import xarray as xr
 
-from hypso.containers import DatasetDict
+from hypso.containers import DatasetDict, as_dataarray
 
 
 @pytest.fixture()
@@ -100,3 +102,36 @@ def test_2d_mask_container():
     masks["quadrant"] = np.zeros((4, 5), dtype=bool)
     assert masks["quadrant"].dims == ("y", "x")
     assert dict(masks).keys() == {"quadrant"}
+
+
+# --- as_dataarray: the standalone single-array normalizer DatasetDict and
+# HypsoBase's cube/mask formatters (_format_cube_dataarray/
+# _format_mask_dataarray) both call, replacing the deleted DataArrayValidator ---
+
+def test_as_dataarray_wraps_ndarray():
+    da = as_dataarray(np.ones((4, 5, 3)), ("y", "x", "band"), num_dims=3)
+    assert isinstance(da, xr.DataArray)
+    assert da.dims == ("y", "x", "band")
+    assert da.shape == (4, 5, 3)
+
+
+def test_as_dataarray_renames_dataarray_dims():
+    da_in = xr.DataArray(np.ones((4, 5)), dims=("lines", "samples"))
+    da_out = as_dataarray(da_in, ("y", "x"), num_dims=2)
+    assert da_out.dims == ("y", "x")
+
+
+def test_as_dataarray_rejects_wrong_ndim():
+    with pytest.raises(ValueError, match="3-dimensional"):
+        as_dataarray(np.ones((4, 5)), ("y", "x", "band"), num_dims=3)
+
+
+def test_as_dataarray_rejects_non_array():
+    with pytest.raises(TypeError):
+        as_dataarray([[1, 2], [3, 4]], ("y", "x"), num_dims=2)
+
+
+def test_as_dataarray_enforces_dim_shape():
+    as_dataarray(np.ones((4, 5)), ("y", "x"), num_dims=2, dim_shape=(4, 5))
+    with pytest.raises(ValueError, match="spatial dimensions"):
+        as_dataarray(np.ones((4, 5)), ("y", "x"), num_dims=2, dim_shape=(9, 9))

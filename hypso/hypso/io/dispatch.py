@@ -205,7 +205,7 @@ def load_capture_file(satobj, path: Path, load_cube: bool = True) -> None:
     setattr(satobj, "nc_cube_attrs", nc_cube_attrs)
 
     # TODO: pass the dicts returned by load_func to set_hypso_attributes()
-    # Note: this MUST be run before writing datacubes in order to pass correct dimensions to DataArrayValidator
+    # Note: this MUST be run before writing datacubes in order to pass correct dimensions to as_dataarray()
     set_hypso_attributes(satobj)
     check_capture_type(satobj)
 

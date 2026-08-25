@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Union, Literal
 import xarray as xr
 import copy
-#from .DataArrayValidator import DataArrayValidator
 import numpy as np
 from datetime import datetime, timezone
 import warnings
@@ -24,11 +23,24 @@ from hypso.georeferencing import Georeferencer, \
 
 from hypso.reflectance import compute_reflectance, compute_spectral_response
 
-from hypso.DataArrayValidator import DataArrayValidator
-from hypso.DataArrayDict import DataArrayDict
-from hypso.containers import DatasetDict
+from hypso.containers import DatasetDict, as_dataarray
 
 import netCDF4 as nc
+
+
+# Per-level attrs stamped onto l1a_cube/l1b_cube/l1c_cube/l1d_cube by
+# HypsoBase._format_cube_dataarray. L1b/L1c share the same units/description
+# (L1c is L1b data + georeferencing, no new physical quantity - see
+# HypsoBase.l1c_cube's own docstring).
+_CUBE_DATAARRAY_ATTRS = {
+    "l1a": {'level': "L1a", 'units': "counts", 'description': "Digital Number (DN)"},
+    "l1b": {'level': "L1b", 'units': r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$',
+           'description': "Top-of-Atmosphere Radiance (Lt)"},
+    "l1c": {'level': "L1c", 'units': r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$',
+           'description': "Top-of-Atmosphere Radiance (Lt)"},
+    "l1d": {'level': "L1d", 'units': r"sr^{-1}", 'description': "Top-of-Atmosphere Reflectance (Rhot)",
+           'correction': None},
+}
 
 
 class HypsoBase:
@@ -134,8 +146,13 @@ class HypsoBase:
         self.dim_names_3d = ["y", "x", "band"]
         self.dim_names_2d = ["y", "x"]
 
-        # Products dictionary
-        self._products = DataArrayDict()
+        # Products dictionary - a DatasetDict (see hypso.containers for what
+        # it supersedes and why), matching _custom_masks/_l2a_cubes'
+        # construction. Confirmed live external consumer: hypso-processing-
+        # pipeline's Polymer stage writes the chlorophyll product here
+        # (satobj.products['chla'] = ...) and persists it via
+        # write_products_nc_file - this is NOT unused/dead infrastructure.
+        self._products = DatasetDict(dim_names=('y', 'x'), num_dims=2)
 
         # Constants
         self.UNIX_TIME_OFFSET = 20 # TODO: Verify offset validity. Sivert had 20 here
@@ -217,60 +234,16 @@ class HypsoBase:
 
         return data
 
-    def _format_l1a_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
-
-        attributes = {'level': "L1a",
-                      'units': "counts",
-                      'description': "Digital Number (DN)"
-                     }
-
-        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dim_names=self.dim_names_3d)
-
-        data = v.validate(data=data)
-        data = self._update_dataarray_attrs(data, attributes)
-
-        return data
-    
-    def _format_l1b_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
-
-        attributes = {'level': "L1b",
-                      'units': r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$',
-                      'description': "Top-of-Atmosphere Radiance (Lt)"
-                     }
-
-        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dim_names=self.dim_names_3d)
-
-        data = v.validate(data=data)
-        data = self._update_dataarray_attrs(data, attributes)
-
-        return data
-
-    def _format_l1c_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
-
-        attributes = {'level': "L1c",
-                      'units': r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$',
-                      'description': "Top-of-Atmosphere Radiance (Lt)"
-                     }
-
-        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dim_names=self.dim_names_3d)
-
-        data = v.validate(data=data)
-        data = self._update_dataarray_attrs(data, attributes)
-
-        return data
-
-    def _format_l1d_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
-
-        attributes = {'level': "L1d",
-                      'units': r"sr^{-1}",
-                      'description': "Top-of-Atmosphere Reflectance (Rhot)",
-                      'correction': None
-                     }
-
-        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dim_names=self.dim_names_3d)
-
-        data = v.validate(data=data)
-        data = self._update_dataarray_attrs(data, attributes)
+    def _format_cube_dataarray(self, data: Union[np.ndarray, xr.DataArray], level: str) -> xr.DataArray:
+        """Validate/wrap a 3D (lines, samples, band) cube array for the given
+        product level, stamping that level's standard attrs. One shared
+        implementation instead of a near-identical _format_l1a_dataarray/
+        _format_l1b_dataarray/_format_l1c_dataarray/_format_l1d_dataarray
+        method per level - each of those only ever differed in this attrs
+        dict, called from exactly one place (the matching l1x_cube setter)."""
+        data = as_dataarray(data, tuple(self.dim_names_3d), num_dims=3,
+                            dim_shape=tuple(self.spatial_dimensions))
+        data = self._update_dataarray_attrs(data, _CUBE_DATAARRAY_ATTRS[level])
 
         return data
 
@@ -284,9 +257,8 @@ class HypsoBase:
                       'method': None
                      }
 
-        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dim_names=self.dim_names_2d, num_dims=2)
-
-        data = v.validate(data=data)
+        data = as_dataarray(data, tuple(self.dim_names_2d), num_dims=2,
+                            dim_shape=tuple(self.spatial_dimensions))
         data = self._update_dataarray_attrs(data, attributes)
 
         return data
@@ -307,7 +279,7 @@ class HypsoBase:
 
     @l1a_cube.setter
     def l1a_cube(self, value):
-        self._l1a_cube = self._format_l1a_dataarray(value)
+        self._l1a_cube = self._format_cube_dataarray(value, "l1a")
 
 
     @l1a_cube.deleter
@@ -322,7 +294,7 @@ class HypsoBase:
 
     @l1b_cube.setter
     def l1b_cube(self, value):
-        self._l1b_cube = self._format_l1b_dataarray(value)
+        self._l1b_cube = self._format_cube_dataarray(value, "l1b")
 
 
     @l1b_cube.deleter
@@ -342,7 +314,7 @@ class HypsoBase:
 
     @l1c_cube.setter
     def l1c_cube(self, value):
-        self._l1c_cube = self._format_l1c_dataarray(value)
+        self._l1c_cube = self._format_cube_dataarray(value, "l1c")
 
 
     @l1c_cube.deleter
@@ -358,7 +330,7 @@ class HypsoBase:
 
     @l1d_cube.setter
     def l1d_cube(self, value):
-        self._l1d_cube = self._format_l1d_dataarray(value)
+        self._l1d_cube = self._format_cube_dataarray(value, "l1d")
 
 
     @l1d_cube.deleter
@@ -591,11 +563,11 @@ class HypsoBase:
     @property
     def products(self):
 
-        self._products.dim_shape = self.spatial_dimensions
-        self._products.dim_names = self.dim_names_2d
+        self._products.dim_shape = tuple(self.spatial_dimensions)
+        self._products.dim_names = tuple(self.dim_names_2d)
         self._products.num_dims = 2
 
-        return self._products   
+        return self._products
 
     @products.setter
     def products(self, value):
