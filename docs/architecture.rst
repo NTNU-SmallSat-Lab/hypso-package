@@ -211,7 +211,7 @@ One adapter class per external AC tool - ``PolymerAdapter``, ``ACOLITEAdapter``,
 ``OCSMARTAdapter`` - behind a shared two-method interface
 (``run_correction(satobj, **kwargs)`` / ``open_output(satobj, **kwargs)``), plus
 per-tool extras (Polymer's SRF/SSI/ESUN NetCDF generators, OC-SMART's
-``stage_input``). Registered like sensors: ``get_ac_adapter("polymer")``,
+``output_path``). Registered like sensors: ``get_ac_adapter("polymer")``,
 ``registered_ac_adapters()``, and the ``AC_ADAPTERS`` namespace exposed as
 ``satobj.ac`` (so ``satobj.ac.polymer.run_correction(satobj, ...)`` is the
 underlying call every ``satobj.ac_polymer_*``-style wrapper method makes).
@@ -293,14 +293,49 @@ gained an ``extra_env`` parameter, and ``_acolite_driver.py`` reads
 ``HYPSO_ACOLITE_EARTHDATA_USERNAME``/``PASSWORD`` from the subprocess's own
 environment instead, set only for that one subprocess call.
 
-**OC-SMART** is not yet migrated onto this shared mechanism - it already runs
-as a subprocess (via ``hypso-processing-pipeline``'s own
-``ac_runners_hypso.run_ocsmart_correction``, which this package's
-``OCSMARTAdapter`` doesn't yet replicate; see ``REFACTOR_PROGRESS.md``'s
-AC-connector design notes). The fuller proposal there (config dataclasses, a
-uniform result/exception contract, moving output-path computation out of
-``hypso.io.dispatch``, folding the pipeline's ``_read_polymer_chla``
-version-handling into the adapter) is still open.
+**OC-SMART** doesn't use ``run_subprocess_driver`` - it has no importable
+Python API and no "import the tool" step to isolate (it was already always a
+subprocess: a bare ``python OCSMART.py`` invocation), so
+``OCSMARTAdapter.run_correction`` calls ``subprocess.Popen`` directly. Its
+design was folded in verbatim from ``hypso-processing-pipeline``'s own
+field-tested ``ac_runners_hypso.run_ocsmart_correction`` - capture-local
+staging (``capture_dir/ocsmart_staging/l1b/``, not OC-SMART's shared
+install-dir ``L1B/`` - a real concurrent-run collision was observed there in
+production), save/restore of OC-SMART's one global ``OCSMART_Input.txt``
+config file (unavoidable, since OC-SMART reads every run parameter, including
+its own I/O paths, from that one fixed-path file - even on failure), output
+routed into ``capture_dir`` (``OCSMARTAdapter.output_path()``, matching every
+other AC method's convention), and streamed console output. Failures raise
+``ACRunError`` here too, for a consistent exception type across all three
+adapters regardless of internal mechanism.
+
+A real, previously-undocumented bug was found and fixed in the same pass:
+both the old adapter and ``hypso.io.dispatch.load_capture_file`` staged/named
+files using ``str(satobj.sensor).upper()`` (e.g. ``"HYPSO2_HSI"``) - but
+OC-SMART's own sensor autodetection only recognizes the satellite-agnostic
+``"HYPSO_HSI"`` prefix (no satellite digit; confirmed independently by
+``hypso-processing-pipeline``'s own prior debugging of the identical issue).
+Staging under the wrong prefix makes OC-SMART silently produce **no output at
+all** (exit code 0, no exception) - verified live against the real
+installation: the corrected ``OCSMARTAdapter.HYPSO_PREFIX = "HYPSO_HSI"``
+produces the console line ``"Sensor : HYPSO HSI"``, proving autodetection now
+succeeds. Fixing this at the source also resolved the output-path-computation
+coupling the original AC-connector proposal flagged: ``io.dispatch`` no
+longer computes any OC-SMART-specific paths at all - that's the adapter's own
+job now, via ``output_path()``, confirmed to have zero other readers before
+removing the two attributes from ``io/dispatch.py``.
+
+``stage_input``/``run_correction`` (previously two separate calls) are merged
+into one ``run_correction`` - the config save/restore has to wrap staging and
+the subprocess call together to restore correctly on any failure in between,
+so the split was never actually safe to call independently (confirmed zero
+external callers of the two-call form anywhere).
+
+Still open from the AC-connector proposal (see ``REFACTOR_PROGRESS.md``):
+per-tool config dataclasses, a uniform ``run_correction``/``open_output``
+result *return* shape (as opposed to the exception type, which is now
+uniform), and folding the pipeline's ``_read_polymer_chla``
+chla-vs-logchl version-handling into the Polymer adapter.
 
 Keyed cube/mask containers (``hypso.containers.DatasetDict``)
 -----------------------------------------------------------------

@@ -26,8 +26,8 @@ the connectors should have been:
    as plaintext kwargs.
 
 Proposal (changes in hypso-package only; external tools untouched, per standing instruction):
-- **Fold the pipeline's runner design back into the adapters** (subprocess + configurable interpreter +
-  capture-local staging + config save/restore + capture-dir output).
+- ~~Fold the pipeline's runner design back into the adapters~~ — **done for all three tools** (Polymer
+  `8f0c2f98`, ACOLITE `d13127f2`, OC-SMART `b22388fe` — see the ×18/×19/×20 status entries).
 - **Config dataclass per tool** (paths/version/interpreter) instead of 5-kwarg plumbing and satobj.*_dir
   mutation; credentials via env/netrc-style provider, not kwargs.
 - ~~Process isolation for Polymer/ACOLITE~~ — **both done**: Polymer `8f0c2f98` (see ×18 status entry: real
@@ -100,6 +100,52 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-25 (continued further, ×20): AC-connector pass, part 3 — OC-SMART, the last of the three.**
+  Resumed after a detour into `hypso-processing-pipeline` credential hygiene (hardcoded EARTHDATA secret
+  found in `hypso/ac/loading_acolite_output.py` while checking OC-SMART callers → led to a template-config
+  system + netrc/env-var credential resolution across both repos — see that repo's own history; paused
+  mid-way when told a different Claude session was concurrently working there, so **all of that work was
+  left uncommitted in that repo** and not touched further here). Folded `hypso-processing-pipeline`'s own
+  field-tested `ac_runners_hypso.run_ocsmart_correction` design into `OCSMARTAdapter` verbatim
+  (capture-local staging, `OCSMART_Input.txt` save/restore even on failure, output routed into
+  `capture_dir`, streamed console output, new `python_path`/`skip_existing`/`l2_prod`/`solz_limit`/
+  `senz_limit` params, `ACRunError` on failure — consistent exception type across all three adapters now).
+  **Found and fixed a real, previously-undocumented bug**: both the old adapter and
+  `io.dispatch.load_capture_file` staged/named OC-SMART files using `str(satobj.sensor).upper()` (e.g.
+  `"HYPSO2_HSI"`) — but OC-SMART's own autodetection only recognizes the satellite-agnostic `"HYPSO_HSI"`
+  prefix, confirmed independently by the pipeline's own prior debugging of the identical issue. Wrong
+  prefix → OC-SMART silently produces NO output at all (exit 0, no exception). Fixed at the source
+  (`OCSMARTAdapter.HYPSO_PREFIX = "HYPSO_HSI"`), and removed the two now-redundant path attributes from
+  `io/dispatch.py` entirely — output-path ownership moves into the adapter (`output_path()`), closing the
+  "coupling smell" the original AC-connector proposal flagged, confirmed zero other readers first. Merged
+  `stage_input`+`run_correction` into one call (the config save/restore has to wrap both together to
+  restore correctly on failure, so the two-call split was never actually independently safe) — confirmed
+  zero external callers of the split anywhere before merging; updated the one internal caller
+  (`loading_acolite_output.py`).
+
+  **Verified against the real OC-SMART installation and a real written L1D file**: staged correctly, and
+  OC-SMART's own console output showed `"Sensor : HYPSO HSI"` — direct proof the prefix fix actually works
+  (pre-fix, this exact scenario produced silent nothing). The run then failed inside OC-SMART's *own*
+  `src/L1B.py` (`AttributeError: 'L1B' object has no attribute 'latitude'`) reading geolocation from the
+  new flattened NetCDF layout — **the same class of breakage already known/accepted for eoread/ACOLITE, now
+  confirmed for a third external reader** (not a bug here — everything up to that point, staging through
+  config-restore-on-failure, worked correctly, separately confirmed via a mocked-subprocess test forcing a
+  non-zero exit). 4 new tests + 2 pre-existing tests updated for the removed `stage_input` API. Full suite:
+  90 tests pass. Committed (`b22388fe`), docs extended.
+
+  **All three AC connectors now share a consistent design**: subprocess-based (isolated for Polymer/ACOLITE,
+  always-was for OC-SMART), `ACRunError` on failure, `python_path`-configurable interpreter. Remaining AC-
+  connector proposal items: per-tool config dataclasses, a uniform `run_correction`/`open_output` *return*
+  shape, folding `_read_polymer_chla`'s v1/v2 handling into the Polymer adapter.
+
+  **New TODO (user request, ×20): variable capture dimensions/bands/sizes.** User wants `hypso-package` to
+  be able to handle captures with differing spatial dimensions, band counts, etc. — not yet scoped. Likely
+  touches: `hypso.sensors.SensorProfile` (currently assumes fixed `UNBINNED_BAND_COUNT`/fwhm arrays sized
+  for one specific configuration per sensor), `io.schema.LevelSchema` (dimension naming/sizing is currently
+  swath-specific and largely assumed-fixed per the `spatial_dims` seam left for L3), and anywhere `bin_factor`/
+  `image_height`/`image_width` are treated as constant across a session. Needs a real scoping pass before
+  implementation — flagging here so it isn't lost, not starting it yet.
+
 - **2026-08-25 (continued further, ×19): AC-connector pass, part 2 — ACOLITE subprocess isolation.** Same
   `run_subprocess_driver`/`ACRunError` mechanism as Polymer (×18), applied to `ACOLITEAdapter.run_correction`
   via a new `_acolite_driver.py`. Checked first whether ACOLITE has a Polymer-like multi-build conflict: it
@@ -125,11 +171,10 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
   existing 6 Polymer ones (12 total in `tests/test_ac_subprocess.py`). Full suite: 86 tests pass. Committed
   (`d13127f2`), docs extended.
 
-  **Remaining from the AC-connector proposal**: OC-SMART not yet migrated onto `run_subprocess_driver` (it
-  already runs as a subprocess via the pipeline's own `ac_runners_hypso.run_ocsmart_correction`, which this
-  package's `OCSMARTAdapter` doesn't replicate); per-tool config dataclasses; uniform `run_correction`/
-  `open_output` result contract; moving output-path computation out of `hypso.io.dispatch`; folding the
-  pipeline's `_read_polymer_chla` v1/v2 chla-vs-logchl handling into the Polymer adapter.
+  ~~**Remaining from the AC-connector proposal**: OC-SMART not yet migrated...~~ — OC-SMART done, see the
+  ×20 status entry below (`b22388fe`). Still open: per-tool config dataclasses; uniform `run_correction`/
+  `open_output` result *return* shape (the exception type is now uniform — `ACRunError` — across all three);
+  folding the pipeline's `_read_polymer_chla` v1/v2 chla-vs-logchl handling into the Polymer adapter.
 
 - **2026-08-25 (continued further, ×18): AC-connector pass, part 1 — Polymer subprocess isolation.**
   Investigated two user questions before writing any code:
