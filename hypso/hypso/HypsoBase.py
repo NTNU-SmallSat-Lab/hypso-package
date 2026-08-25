@@ -21,12 +21,7 @@ from hypso.calibration import read_coeffs_from_file, \
                               get_custom_calibration_coeffs
 
 
-from hypso.geometry import interpolate_at_frame_nc, \
-                           direct_georeference, \
-                           compute_local_angles, \
-                           compute_gsd, \
-                           compute_bbox, \
-                           compute_resolution
+from hypso import geo
 
 from hypso.georeferencing import Georeferencer, \
                                 check_star_tracker_orientation
@@ -1263,226 +1258,24 @@ class HypsoBase:
 
 
 
-    def run_direct_georeferencing(self) -> None: 
+    # Georeferencing orchestration (run_direct_georeferencing/run_georeferencing and
+    # their private _run_* helpers) was extracted verbatim into hypso.geo - part of
+    # the HypsoBase breakup called for in the approved refactor plan (self.geo
+    # composition). These stay as thin delegating wrappers, not moved themselves,
+    # because run_direct_georeferencing() is called externally
+    # (hypso/ac/loading_acolite_output.py) and run_georeferencing() by
+    # hypso-processing-pipeline - both names/signatures must keep working unchanged.
+    # The private _run_frame_interpolation/_run_track_geometry/_run_angles_geometry
+    # helpers had no external callers, so they moved to hypso.geo outright with no
+    # wrapper kept here.
 
-        if self.VERBOSE:
-            print("[INFO] Running direct georeferencing...")
-
-        try:
-            getattr(self, 'framepose')
-        except:
-            self._run_frame_interpolation()
-
-        pixels_lat, pixels_lon, _ = direct_georeference(framepose_data=self.framepose,
-                                                        image_height=self.image_height,
-                                                        aoi_offset=self.y_start,
-                                                        verbose=self.VERBOSE
-                                                        )
-        
-        if type(pixels_lat) == int and type(pixels_lon) == int:
-            if self.VERBOSE:
-                print('[INFO] according to ADCS telemetry, parts or all of the image is pointing')
-                print('[INFO] off the earth\'s horizon. Cant georeference this image.')
-            return None
-
-        self.latitudes_direct = pixels_lat.reshape(self.spatial_dimensions)
-        self.longitudes_direct = pixels_lon.reshape(self.spatial_dimensions)
-
-        bbox, \
-        resolution, \
-        along_track_gsd, \
-        across_track_gsd = self._run_track_geometry(latitudes=self.latitudes_direct,
-                                                    longitudes=self.longitudes_direct)
-
-        setattr(self, 'bbox_direct', bbox)
-        setattr(self, 'along_track_gsd_direct', along_track_gsd)
-        setattr(self, 'across_track_gsd_direct', across_track_gsd)
-        setattr(self, 'resolution_direct', resolution)
-
-        solar_zenith_angles_direct, \
-        solar_azimuth_angles_direct, \
-        sat_zenith_angles_direct, \
-        sat_azimuth_angles_direct, \
-        relative_azimuth_angles_direct = self._run_angles_geometry(latitudes=self.latitudes_direct,
-                                                        longitudes=self.longitudes_direct)
-
-        setattr(self, 'solar_zenith_angles_direct', solar_zenith_angles_direct)
-        setattr(self, 'solar_azimuth_angles_direct', solar_azimuth_angles_direct)
-        setattr(self, 'sat_zenith_angles_direct', sat_zenith_angles_direct)
-        setattr(self, 'sat_azimuth_angles_direct', sat_azimuth_angles_direct)
-        setattr(self, 'relative_azimuth_angles_direct', relative_azimuth_angles_direct)
-
-        return None
+    def run_direct_georeferencing(self) -> None:
+        return geo.run_direct_georeferencing(self)
 
 
-    def run_georeferencing(self,
-                            latitudes: np.ndarray = None,
-                            longitudes: np.ndarray = None
-                            ) -> None:
-        
+    def run_georeferencing(self, latitudes: np.ndarray = None, longitudes: np.ndarray = None) -> None:
+        return geo.run_georeferencing(self, latitudes=latitudes, longitudes=longitudes)
 
-        if self.VERBOSE:
-            print('[INFO] Running georeferencing...')
-    
-        if latitudes is not None and longitudes is not None:
-            self.latitudes = latitudes
-            self.longitudes = longitudes   
-
-        bbox, \
-        resolution, \
-        along_track_gsd, \
-        across_track_gsd = self._run_track_geometry(latitudes=self.latitudes,
-                                                    longitudes=self.longitudes)
-
-        setattr(self, 'bbox', bbox)
-        setattr(self, 'along_track_gsd', along_track_gsd)
-        setattr(self, 'across_track_gsd', across_track_gsd)
-        setattr(self, 'resolution', resolution)
-
-        solar_zenith_angles, \
-        solar_azimuth_angles, \
-        sat_zenith_angles, \
-        sat_azimuth_angles, \
-        relative_azimuth_angles = self._run_angles_geometry(latitudes=self.latitudes,
-                                                        longitudes=self.longitudes)
-
-        setattr(self, 'solar_zenith_angles', solar_zenith_angles)
-        setattr(self, 'solar_azimuth_angles', solar_azimuth_angles)
-        setattr(self, 'sat_zenith_angles', sat_zenith_angles)
-        setattr(self, 'sat_azimuth_angles', sat_azimuth_angles)
-        setattr(self, 'relative_azimuth_angles', relative_azimuth_angles)
-
-        return None
-    
-
-
-
-
-
-    def _run_custom_georeferencing(self, 
-                          latitudes: np.ndarray,
-                          longitudes: np.ndarray
-                          ) -> None:
-        
-        if self.VERBOSE:
-            print('[INFO] Running custom georeferencing...')
-        
-
-        self.latitudes = latitudes
-        self.longitudes = longitudes
-    
-
-        bbox, \
-        resolution, \
-        along_track_gsd, \
-        across_track_gsd = self._run_track_geometry(latitudes=self.latitudes,
-                                                    longitudes=self.longitudes)
-
-        setattr(self, 'bbox', bbox)
-        setattr(self, 'along_track_gsd', along_track_gsd)
-        setattr(self, 'across_track_gsd', across_track_gsd)
-        setattr(self, 'resolution', resolution)
-
-        solar_zenith_angles, \
-        solar_azimuth_angles, \
-        sat_zenith_angles, \
-        sat_azimuth_angles, \
-        relative_azimuth_angles = self._run_angles_geometry(latitudes=self.latitudes,
-                                                        longitudes=self.longitudes)
-
-        setattr(self, 'solar_zenith_angles', solar_zenith_angles)
-        setattr(self, 'solar_azimuth_angles', solar_azimuth_angles)
-        setattr(self, 'sat_zenith_angles', sat_zenith_angles)
-        setattr(self, 'sat_azimuth_angles', sat_azimuth_angles)
-        setattr(self, 'relative_azimuth_angles', relative_azimuth_angles)
-
-        return None
-
-
-
-
-
-
-    def _run_frame_interpolation(self) -> None:
-
-        try:
-            timing = self.nc_timing_vars['timestamps_srv']
-        except:
-            timing = self.nc_timing_vars['timestamps']
-        
-        framepose_data = interpolate_at_frame_nc(adcs=self.nc_adcs_vars,
-                                              lines_timestamps=timing,
-                                              framerate=self.nc_capture_config_attrs['framerate'],
-                                              exposure=self.nc_capture_config_attrs['exposure'],
-                                              verbose=self.VERBOSE
-                                              )
-        
-        setattr(self, "framepose", framepose_data)
-
-
-        return None
-
-
-    def _run_track_geometry(self, latitudes: np.ndarray, longitudes: np.ndarray) -> None: 
-
-        print("[INFO] Running track geometry computations...")
-
-        try:
-            getattr(self, 'framepose')
-        except:
-            self._run_frame_interpolation()
-
-        bbox = compute_bbox(latitudes=latitudes, longitudes=longitudes)
-
-        along_track_gsd, across_track_gsd = compute_gsd(frame_count=self.frame_count, 
-                                                                  image_height=self.image_height, 
-                                                                  latitudes=latitudes, 
-                                                                  longitudes=longitudes,
-                                                                  verbose=self.VERBOSE)
-
-        resolution = compute_resolution(along_track_gsd=along_track_gsd, 
-                                             across_track_gsd=across_track_gsd)
-
-
-        if self.VERBOSE:
-            print("[INFO] Track geometry computations done.")
-
-        return bbox, resolution, along_track_gsd, across_track_gsd
-
-
-    def _run_angles_geometry(self,  latitudes: np.ndarray, longitudes: np.ndarray) -> None: 
-
-        print("[INFO] Running angles geometry computations...")
-
-        try:
-            getattr(self, 'framepose')
-        except:
-            self._run_frame_interpolation()
-
-        indices = np.array([ 0, self.samples//4 - 1, self.samples//2 - 1, 3*self.samples//4 - 1, self.samples - 1], dtype='uint16')
-
-        sun_azimuth, sun_zenith, \
-        sat_azimuth, sat_zenith = compute_local_angles(framepose_data=self.framepose,
-                                                       lats=latitudes, 
-                                                       lons=longitudes,
-                                                       indices=indices,
-                                                       verbose=self.VERBOSE)
-        
-        solar_zenith_angles = sun_zenith.reshape(self.spatial_dimensions)
-        solar_azimuth_angles = sun_azimuth.reshape(self.spatial_dimensions)
-        sat_zenith_angles = sat_zenith.reshape(self.spatial_dimensions)
-        sat_azimuth_angles = sat_azimuth.reshape(self.spatial_dimensions)
-
-        relative_azimuth_angles = abs(sat_azimuth_angles - solar_azimuth_angles)
-
-        relative_azimuth_angles = np.where(relative_azimuth_angles > 180, 
-                                           360 - relative_azimuth_angles, 
-                                           relative_azimuth_angles)
-
-        if self.VERBOSE:
-            print("[INFO] Angles geometry computations done.")
-
-        return solar_zenith_angles, solar_azimuth_angles, sat_zenith_angles, sat_azimuth_angles, relative_azimuth_angles
 
 
     def generate_l1b_cube(self, coeff_type: str = None, **kwargs) -> None:
