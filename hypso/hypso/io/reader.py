@@ -108,7 +108,7 @@ def _load_geometry_root(nc_file_path: Path, has_geometry: bool) -> Tuple[dict, d
     return geometry_vars, {}
 
 
-def _discover_product_variables(available_names, hint: str) -> Tuple[str, list]:
+def discover_product_variables(available_names, hint: str) -> Tuple[str, list]:
     """Return (mode, names): mode is 'datacube' (one 3D variable) or 'per_band'
     (multiple 2D variables, names unsorted - callers sort by each variable's
     `band` attribute, not this function, since sorting requires opening the
@@ -138,9 +138,51 @@ def _discover_product_variables(available_names, hint: str) -> Tuple[str, list]:
                      f"root variables {candidates}")
 
 
+def list_band_datasets(nc_file_path: Path, product_prefix_hint: str) -> list:
+    """Per-band metadata for every product variable in a written L1B/L1C/L1D/
+    L2A file, sorted by each variable's `band` attribute (same fix as
+    _load_cube/_load_cube_attrs - see their comments). Returns a list of dicts
+    (`name`, `band`, `wavelength`, `radiation_wavelength`, `fwhm`, `units`,
+    `long_name`) - one entry per band - or a single-entry list describing the
+    whole cube if the file was written in single-datacube mode. Doesn't read
+    any pixel data, only attrs - built for callers that need to enumerate
+    what's in a file without loading it (e.g. hypso.satpy's reader plugin,
+    which needs this for Satpy's available_datasets() hook).
+    """
+    with nc.Dataset(nc_file_path, format="NETCDF4") as f:
+        mode, names = discover_product_variables(f.variables.keys(), product_prefix_hint)
+
+        if mode == 'datacube':
+            var = f.variables[names[0]]
+            return [{
+                "name": names[0],
+                "band": None,
+                "wavelength": None,
+                "radiation_wavelength": None,
+                "fwhm": None,
+                "units": getattr(var, "units", ""),
+                "long_name": getattr(var, "long_name", ""),
+            }]
+
+        names_sorted = sorted(names, key=lambda n: int(f.variables[n].band))
+        datasets = []
+        for name in names_sorted:
+            var = f.variables[name]
+            datasets.append({
+                "name": name,
+                "band": int(var.band),
+                "wavelength": float(var.wavelength),
+                "radiation_wavelength": float(getattr(var, "radiation_wavelength", var.wavelength)),
+                "fwhm": float(var.fwhm),
+                "units": getattr(var, "units", ""),
+                "long_name": getattr(var, "long_name", ""),
+            })
+        return datasets
+
+
 def _load_cube(nc_file_path: Path, product_prefix_hint: str) -> np.ndarray:
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
-        mode, names = _discover_product_variables(f.variables.keys(), product_prefix_hint)
+        mode, names = discover_product_variables(f.variables.keys(), product_prefix_hint)
 
         if mode == 'datacube':
             return np.array(f.variables[names[0]][:], dtype='double')
@@ -158,7 +200,7 @@ def _load_cube(nc_file_path: Path, product_prefix_hint: str) -> np.ndarray:
 
 def _load_cube_attrs(nc_file_path: Path, product_prefix_hint: str) -> dict:
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
-        mode, names = _discover_product_variables(f.variables.keys(), product_prefix_hint)
+        mode, names = discover_product_variables(f.variables.keys(), product_prefix_hint)
 
         if mode == 'datacube':
             var = f.variables[names[0]]
@@ -213,7 +255,7 @@ def load_l1d_nc(nc_file_path: Path, load_cube: bool = True):
 
 def load_l2a_nc(nc_file_path: Path, load_cube: bool = True):
     """L2A's product variable name is AC-tool-specific (l2_variable_name), not
-    a fixed schema constant - see _discover_product_variables. A written L2A
+    a fixed schema constant - see discover_product_variables. A written L2A
     file holds exactly one correction's output, matching the original
     load_l2a_nc's per-file (not per-correction) contract."""
     return load_level_nc(nc_file_path, "L2A", load_cube=load_cube)

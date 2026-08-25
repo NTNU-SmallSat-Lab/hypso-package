@@ -51,6 +51,65 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-25 (continued further, ×6 - separate plan-mode task):** User asked about Satpy compatibility, then
+  clarified they want it "more tightly integrated... working with other sensors as well as with visualization" -
+  a real registered Satpy reader plugin, not an extension of the existing hand-built-Scene converter functions
+  in `hypso/hypso/satpy/satpy.py` (left untouched, still valid for anyone with an already-loaded HypsoBase
+  object). This was planned separately in plan mode (approved plan written to
+  `/home/camerop/.claude/plans/rosy-frolicking-summit.md`, overwriting the completed sensor-generalization plan
+  that had lived there - that plan's content is preserved in this file's own approved-plan block further down,
+  so nothing was lost) since it's a distinct, non-trivial feature, not a continuation of the CF/NetCDF refactor
+  itself.
+
+  **Built and verified working end-to-end against real data:**
+  - `hypso/hypso/satpy/etc/readers/hypso_l1c.yaml` and `hypso_l1d.yaml` - reader configs, `file_patterns`
+    matching HYPSO's existing filename convention with `{start_time:...}` so Satpy's default `start_time`/
+    `end_time` (parsed straight from the filename, standard Satpy behavior) needed zero extra code.
+  - `hypso/hypso/satpy/hypso_handler.py` - `HypsoL1FileHandler(NetCDF4FileHandler)`, one class shared by both
+    readers (level implied by `self.filetype_info['file_type']`). `available_datasets()` dynamically discovers
+    per-band datasets (band count/wavelengths vary by binning/calibration config, unlike a fixed-band
+    instrument) by calling the newly-promoted-to-public `hypso.io.reader.list_band_datasets()` - reusing the
+    exact band-discovery-and-sort-by-`band`-attribute logic `io.reader`'s cube loader already had, not
+    reimplementing it. Sets `self.sensor = "hypso1"/"hypso2"` (confirmed this must match
+    `hypso.sensors.hypso1.HYPSO1_PROFILE.key`, NOT `.sensor` which is the different, already-used
+    `"hypso1_hsi"` string) so the existing `composites/hypso1.yaml`'s `sensor_name: hypso1` lookup finds it
+    with zero changes needed to that file.
+  - `hypso/pyproject.toml`: added `[project.entry-points."satpy.readers"]` (`hypso = "hypso.satpy"`) -
+    confirmed via reading Satpy's own `_config.py`/`readers/core/config.py` source that this is exactly how
+    third-party reader discovery works (resolves the entry point to a module, looks for `etc/` next to it).
+    `hypso/MANIFEST.in`: added `recursive-include hypso/satpy/etc/ *` so the reader YAMLs are actually included
+    in built distributions (noted along the way: the *existing* `composites/hypso1.yaml` doesn't have a
+    MANIFEST.in entry either - a pre-existing gap, not introduced by this work, not fixed here since it's out
+    of scope).
+  - **Ran `pip install -e hypso/`** in the `ac` conda environment (confirmed with the user first - this is the
+    first environment-modifying command run this session, everything before this used `sys.path.insert` for
+    testing) - required because Satpy's entry-point discovery reads installed package metadata, not just
+    sys.path importability. This also means `hypso1_calibration`/`hypso2_calibration` are now real installed
+    dependencies going forward, not just sys.path hacks.
+  - `hypso.io.reader`: renamed `_discover_product_variables` → `discover_product_variables` (now public, no
+    behavior change, confirmed no other references to the old name anywhere in the repo) and added
+    `list_band_datasets(nc_file_path, product_prefix_hint) -> list[dict]` (per-band `name`/`band`/`wavelength`/
+    `radiation_wavelength`/`fwhm`/`units`/`long_name`, sorted by `band` - metadata-only, no pixel data) - the
+    new public entry point `hypso_handler.py`'s `available_datasets()` needed, built as an addition alongside
+    the existing tested `_load_cube`/`_load_cube_attrs`, not a modification to them.
+
+  **Verified against a real capture** (generated L1C/L1D files via the already-tested `write_level_nc`, renamed
+  to match the real filename convention `aeronetvenice_2025-03-04T10-38-05Z-l1c.nc`/`-l1d.nc`): both
+  `hypso_l1c`/`hypso_l1d` appear in `satpy.available_readers()`; `Scene(reader="hypso_l1c", filenames=[...])`
+  finds 122 datasets (120 bands + latitude + longitude); loading a mid-spectrum band
+  (`Lt_588`) through the Satpy `Scene` gives a value matching a direct `netCDF4` read of the same variable
+  exactly; `scn.start_time` correctly parses from the filename; `hypso_l1d`'s `rhot_*` datasets load
+  correctly too. `tests/baseline/compare_to_baseline.py` still passes (confirms the `io.reader` rename/addition
+  didn't touch anything the core pipeline depends on).
+
+  **Known follow-up, not yet done** (documented in `docs/architecture.rst`, not silently left broken): the
+  existing `composites/hypso1.yaml` RGB recipe references `band_89`/`band_70`/`band_59` (the *old* converter
+  functions' position-based naming) which doesn't match this reader's `Lt_<wavelength>` dynamic naming - so
+  `scn.load(["rgb"])` won't resolve against the new reader yet. Re-pointing the recipe at real wavelengths
+  (ideally via Satpy's `DataQuery(wavelength=...)`, which would also make it portable across sensors) needs
+  HYPSO-1's actual band-to-wavelength mapping to get right - flagged rather than guessed, since getting this
+  wrong would produce a wrong-looking RGB composite silently.
+
 - **2026-08-25 (continued further, ×5):** User confirmed the eventual-deprecation direction from the previous
   entry and asked to add the `DeprecationWarning` now (pipeline migration still deferred - the warning itself is
   invisible in production by default, Python suppresses `DeprecationWarning` unless a caller opts in to seeing

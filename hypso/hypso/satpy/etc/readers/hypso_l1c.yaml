@@ -1,0 +1,32 @@
+reader:
+  name: hypso_l1c
+  short_name: HYPSO L1C
+  long_name: HYPSO Level 1C Top-of-Atmosphere Radiance (georeferenced)
+  description: >
+    Reader for HYPSO-1/HYPSO-2 Level 1C (georeferenced top-of-atmosphere radiance)
+    NetCDF files, as written by hypso.io.writer.write_l1c_nc_file. Per-band
+    datasets (Lt_<wavelength>) are discovered dynamically at load time - see
+    hypso.satpy.hypso_handler.HypsoL1FileHandler.available_datasets - since the
+    exact band set varies by binning/calibration configuration, not fixed per
+    sensor.
+  reader: !!python/name:satpy.readers.core.yaml_reader.FileYAMLReader
+  sensors: [hypso1, hypso2]
+
+file_types:
+  hypso_l1c_nc:
+    file_reader: !!python/name:hypso.satpy.hypso_handler.HypsoL1FileHandler
+    file_patterns:
+    - '{capture_target}_{start_time:%Y-%m-%dT%H-%M-%SZ}-l1c.nc'
+    - '{capture_target}_{start_time:%Y-%m-%dT%H-%M-%SZ}-{label}-l1c.nc'
+
+datasets:
+  latitude:
+    name: latitude
+    standard_name: latitude
+    units: degree
+    file_type: hypso_l1c_nc
+  longitude:
+    name: longitude
+    standard_name: longitude
+    units: degree
+    file_type: hypso_l1c_nc

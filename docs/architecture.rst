@@ -214,3 +214,54 @@ available for callers that want it.
    ``l1_convert.py``) will need a matching update before they can read output written
    by the new writer. This is expected, tracked breakage - not a regression - and is
    deferred to a separate pass; see ``REFACTOR_PROGRESS.md``.
+
+Satpy reader plugin (``hypso.satpy``)
+-----------------------------------------
+
+``hypso-package`` already had *ad hoc* Satpy support - ``hypso.satpy.satpy``'s
+``get_l1c_satpy_scene()``/etc. hand-build a ``satpy.Scene`` from an already-loaded
+``Hypso1``/``Hypso2`` object. This adds a real, registered Satpy **reader plugin**
+(Satpy's standard third-party extension point) so HYPSO L1C/L1D files work through
+the same ``Scene(reader=..., filenames=[...])`` interface as any other
+Satpy-supported instrument, without loading a HYPSO object first - this is what lets
+HYPSO participate in Satpy's cross-sensor tooling (composites, resampling,
+multi-instrument scenes) on equal footing::
+
+    from satpy import Scene
+
+    scn = Scene(reader="hypso_l1c", filenames=["capture-l1c.nc"])
+    scn.load(["Lt_550", "latitude", "longitude"])
+
+Two reader names, ``hypso_l1c`` and ``hypso_l1d`` (L1B/L2A intentionally not covered
+yet - both L1C and L1D have geometry, the case visualization/compositing needs; a
+follow-on can add the other levels using the same pattern). Both share one
+``HypsoL1FileHandler`` (``hypso/hypso/satpy/hypso_handler.py``, subclassing Satpy's
+``NetCDF4FileHandler``) - which level is being read comes from which reader YAML's
+``file_patterns`` matched, not a separate code path.
+
+Registered via a ``satpy.readers`` entry point in ``hypso/pyproject.toml`` pointing
+at the ``hypso.satpy`` module - Satpy's entry-point discovery looks for an ``etc/``
+directory next to that module, which is where the reader YAMLs live
+(``hypso/hypso/satpy/etc/readers/hypso_l1c.yaml``/``hypso_l1d.yaml``). **Requires an
+installed (not just importable-via-sys.path) ``hypso`` package** - entry points are
+read from installed package metadata; an editable install (``pip install -e
+hypso/``) is enough and keeps working as source files change.
+
+Per-band datasets (``Lt_378``, ``rhot_378``, ...) aren't statically enumerated in the
+reader YAML the way a fixed-band instrument's would be - HYPSO's exact band set
+varies by binning/calibration configuration - so ``HypsoL1FileHandler.
+available_datasets()`` discovers them dynamically per file, reusing
+``hypso.io.reader.list_band_datasets()`` (the same band-discovery-and-sort-by-
+``band``-attribute logic ``io.reader``'s own cube loader already uses, promoted to a
+public function rather than reimplemented a second time).
+
+.. note::
+   The existing ``composites/hypso1.yaml`` RGB recipe references band names from the
+   *old* hand-built-Scene converter (``band_89``/``band_70``/``band_59``, i.e.
+   position-based names), which this reader plugin's dynamic ``Lt_<wavelength>``
+   naming doesn't match - the recipe needs to be re-pointed at specific wavelengths
+   (Satpy composites can reference prerequisites by wavelength via ``DataQuery``,
+   which would also make the recipe portable across sensors instead of hardcoded to
+   HYPSO-1's specific band indices) before ``scn.load(["rgb"])`` works against this
+   new reader. Not yet done - needs the real HYPSO-1 band-to-wavelength mapping to
+   pick correct values, flagged here rather than guessed.

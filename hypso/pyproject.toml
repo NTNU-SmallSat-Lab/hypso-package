@@ -82,6 +82,13 @@ dependencies=[
 "Homepage" = "https://github.com/NTNU-SmallSat-Lab/hypso-package"
 "Bug Tracker" = "https://github.com/NTNU-SmallSat-Lab/hypso-package/issues"
 
+[project.entry-points."satpy.readers"]
+# Registers hypso_l1c/hypso_l1d with Satpy's third-party reader discovery -
+# the module target (not the key) is what matters: Satpy looks for an etc/
+# directory next to hypso.satpy, i.e. hypso/hypso/satpy/etc/readers/*.yaml.
+# See hypso/hypso/satpy/hypso_handler.py and docs/architecture.rst.
+hypso = "hypso.satpy"
+
 [tool.setuptools]
 license-files = [ "LICENSE" ]
 include-package-data=true
