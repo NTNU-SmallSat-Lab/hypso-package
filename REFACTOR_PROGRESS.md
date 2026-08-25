@@ -51,6 +51,31 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-25 (continued further, ×14):** Second cleanup pass at the user's request ("clean up the submodules,
+  some are un-used"), committed (`9b2f2903`). Deleted after function-level (not just module-level) zero-caller
+  confirmation across this repo + `hypso-processing-pipeline` + the original repo's demo:
+  `chlorophyll_estimation/` + `dimensionality_reduction/` (both user-confirmed mid-survey), `download/`,
+  `mask/` (live mask generation is `classification/`'s CNN decoders, which the pipeline imports - `hypso.mask`'s
+  land/cloud/water functions had zero callers anywhere), `plot/` including `composites/hypso1.yaml` (user:
+  **RGB composite not needed** - the Satpy integration's job is Scene loading, already covered by the reader
+  plugin + the `get_l1*_satpy_scene` converters, both kept; this also closes follow-ups (2) and (3) from the
+  ×13 entry), the four shadowed per-level loader files and four shadowed per-level writer files that
+  `hypso.io.reader`/`writer` replaced (previously "kept in case anything imports their internals" - now
+  confirmed nothing does), and dead `reflectance/` data: `toa_reflectance_v1.py`, the **58MB** p005nm source
+  `.nc` (only its derived 7.7MB `.npz` is read - by `toa_reflectance.py` AND `hypso-processing-pipeline`'s
+  `get_f0`, so the `.npz` is load-bearing external API), the p1nm `.nc` (only v1 read it), the `.xls` duplicate
+  of the used Thuillier `.csv`, and `f0.txt`. Kept deliberately: `classification/`, `resample/`,
+  `spectral_analysis/`, `geometry_definition/` (each has a real external consumer), `write_ssi_npz.py`
+  (provenance for the shipped `.npz`). Pruned MANIFEST.in entries pointing at directories that don't exist.
+  `hypso/hypso/` is now 9.1MB. Verified: all imports, 40 unit tests, baseline exact match.
+
+  **New TODO (user request, ×14): HYPSO-2 RGB camera support.** HYPSO-2 carries an RGB camera alongside the
+  HSI; the package should support loading its imagery and provide a method for mapping/registering the RGB
+  image onto the HSI image - both a fixed (calibrated/default) mapping and a custom (user-supplied) one.
+  Natural fits with existing seams: `SensorProfile` (HYPSO-2's profile can declare the RGB camera + default
+  mapping), `hypso.io` (loading), and the custom-mask-style registration API (user-supplied mappings). Not
+  started - design TBD with the user.
+
 - **2026-08-25 (continued further, ×13): ALL NUMBERED PLAN ITEMS COMPLETE.** Built the formal pytest suite (plan
   item 10, the last open item): `tests/conftest.py` (session-scoped real-capture fixture running the exact
   baseline pipeline; per-level written-NetCDF fixture; real-data tests auto-skip when `HYPSO_DATA_AOC` is absent
