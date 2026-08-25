@@ -14,12 +14,7 @@ import warnings
 logger = logging.getLogger(__name__)
 
 
-from hypso.calibration import read_coeffs_from_file, \
-                              run_radiometric_calibration, \
-                              run_destriping_correction, \
-                              run_smile_correction, \
-                              get_custom_calibration_coeffs
-
+from hypso.calibration import pipeline as calibration_pipeline
 
 from hypso import geo
 
@@ -1081,181 +1076,15 @@ class HypsoBase:
             print(f"[INFO] Capture capture type: {self.capture_type}")
 
 
-    def _set_calibration_coeff_files(self, coeff_type: str = 'moved', coeff_files: dict = None, **kwargs) -> None:
-        """
-        Set the absolute path for the calibration coefficients (radiometric, smile,
-        destriping, spectral) for this capture's sensor. Three ways to supply them,
-        checked in order:
-
-        1. `coeff_files` - an explicit dict (radiometric/smile/destriping/spectral/
-           spectral_full_frame -> path) for a true one-off set, no registration needed.
-        2. `coeff_type` matching a name previously registered via
-           hypso.calibration.register_calibration_coeffs(sat_id, name, files) - a
-           custom, reusable, named set, plugged in without touching the bundled
-           hypsoN_calibration packages.
-        3. `coeff_type` falling through to self.sensor_profile's calibration_files
-           resolver (the sensor's built-in presets, e.g. "moved"/"adjusted"/
-           "original" for HYPSO-1/-2). Previously implemented separately per
-           Hypso1/Hypso2 subclass, each hardcoding a call to
-           get_hypsoN_calibration_files - now generic: the sensor-specific lookup
-           lives in the SensorProfile instead, so this method works for any sensor.
-
-        :return: None.
-        """
-        if self.sensor_profile is None:
-            raise AttributeError(
-                "_set_calibration_coeff_files requires self.sensor_profile to be set - "
-                "either construct this capture with a SensorProfile (see hypso.sensors), "
-                "or override this method in a subclass."
-            )
-
-        capture_type = self.capture_type
-
-        if coeff_files is not None:
-            logger.debug("Using explicitly-supplied calibration coefficient files (coeff_files=...)")
-            calibration_files = {key: coeff_files.get(key) for key in
-                                  ("radiometric", "smile", "destriping", "spectral", "spectral_full_frame")}
-        else:
-            custom = get_custom_calibration_coeffs(self.sat_id, coeff_type)
-            if custom is not None:
-                logger.debug("Using registered custom calibration coefficient set %r", coeff_type)
-                calibration_files = custom
-            else:
-                logger.debug("Setting calibration coefficient files with coeff_type: %s", coeff_type)
-                calibration_files = self.sensor_profile.calibration_files(capture_type, coeff_type=coeff_type)
-
-        self.coeff_type = coeff_type if coeff_type is not None else "custom"
-        self.rad_coeff_file = calibration_files['radiometric']
-        self.smile_coeff_file = calibration_files['smile']
-        self.destriping_coeff_file = calibration_files['destriping']
-        self.spectral_coeff_file = calibration_files['spectral']
-
-        return None
-
-    def _run_calibration(self,
-                         radiometric: bool = True,
-                         smile: bool = True,
-                         destripe: bool = True,
-                         spectral: bool = True,
-                         set_coeffs: bool = True,
-                         coeff_type: str = None,
-                         **kwargs) -> np.ndarray:
-        """
-        Get calibrated and corrected cube. Includes Radiometric, Smile and Destriping Correction.
-            Assumes all coefficients has been adjusted to the frame size (cropped and
-            binned), and that the data cube contains 12-bit values.
-
-        :return: None
-        """
-
-        if self.VERBOSE:
-            print('[INFO] Running calibration routines...')
-
-
-        if coeff_type is None:
-            try:
-                coeff_type = self.nc_corrections_attrs['radiometric_coefficients_version']
-            except:
-                pass
-        else:
-            self.nc_corrections_attrs['radiometric_coefficients_version'] = str(coeff_type).lower()
-            
-
-        # TODO: move this function call
-        if set_coeffs:
-            self._set_calibration_coeff_files(coeff_type=coeff_type, **kwargs)
-
-        self._load_calibration_coeff_files()
-
-        calibrated_cube = self.l1a_cube.to_numpy()
-
-        if self.rad_coeffs is not None:
-            if radiometric:
-
-                if self.VERBOSE:
-                    print("[INFO] Running radiometric calibration...")
-
-                calibrated_cube = run_radiometric_calibration(cube=calibrated_cube, 
-                                                background_value=self.background_value,
-                                                exp=self.exposure,
-                                                image_height=self.image_height,
-                                                image_width=self.image_width,
-                                                frame_count=self.frame_count,
-                                                bin_factor=self.bin_factor,
-                                                rad_coeffs=self.rad_coeffs
-                                                )
-
-        if self.smile_coeffs is not None:
-            if smile:
-
-                if self.VERBOSE:
-                    print("[INFO] Running smile correction...")
-
-                calibrated_cube = run_smile_correction(cube=calibrated_cube, 
-                                                smile_coeffs=self.smile_coeffs)
-
-        if self.destriping_coeffs is not None:
-            if destripe:
-
-                if self.VERBOSE:
-                    print("[INFO] Running destriping correction...")
-
-                calibrated_cube = run_destriping_correction(cube=calibrated_cube, 
-                                                    destriping_coeffs=self.destriping_coeffs)
-
-        if self.spectral_coeffs is not None:
-            if spectral:
-                if self.VERBOSE:
-                    print("[INFO] Running spectral correction (binned)...")
-
-                self.wavelengths = self.spectral_coeffs
-
-        if self.spectral_coeffs_unbinned is not None:
-            if spectral:
-                if self.VERBOSE:
-                    print("[INFO] Running spectral correction (unbinned)...")
-
-                self.wavelengths_unbinned = self.spectral_coeffs_unbinned
-
-        return calibrated_cube
-
-
-    def _load_calibration_coeff_files(self) -> None:
-        """
-        Load the calibration coefficients included in the package. This includes radiometric,
-        smile and destriping correction.
-
-        :return: None.
-        """
-
-        try:
-            self.rad_coeffs = read_coeffs_from_file(self.rad_coeff_file, 'radiometric', self.x_start, self.x_stop, self.y_start, self.y_stop, self.bin_factor)
-        except:
-            self.rad_coeffs = None
-
-        try:
-            self.smile_coeffs = read_coeffs_from_file(self.smile_coeff_file, 'smile', self.x_start, self.x_stop, self.y_start, self.y_stop, self.bin_factor)
-        except:
-            self.smile_coeffs = None
-
-        try:
-            self.destriping_coeffs = read_coeffs_from_file(self.destriping_coeff_file, 'destriping', self.x_start, self.x_stop, self.y_start, self.y_stop, self.bin_factor)
-        except:
-            self.destriping_coeffs = None
-
-        try:
-            self.spectral_coeffs = read_coeffs_from_file(self.spectral_coeff_file, 'spectral', self.x_start, self.x_stop, self.y_start, self.y_stop, self.bin_factor)
-        except:
-            self.spectral_coeffs = None
-
-        try:
-            self.spectral_coeffs_unbinned = read_coeffs_from_file(self.spectral_coeff_file, 'spectral', self.x_start, self.x_stop, self.y_start, self.y_stop, 1)
-        except:
-            self.spectral_coeffs_unbinned = None
-
-        return None
-    
-
+    # Calibration orchestration (_set_calibration_coeff_files/_run_calibration/
+    # _load_calibration_coeff_files) was extracted verbatim into
+    # hypso.calibration.pipeline - part of the HypsoBase breakup called for in the
+    # approved refactor plan (self.calibration composition). No wrapper methods kept
+    # here: confirmed via grep these three had zero external callers, unlike
+    # hypso.geo's run_georeferencing()/run_direct_georeferencing(), which stayed as
+    # methods because those specific names are called externally. Internal callers
+    # within this file now call calibration_pipeline.set_calibration_coeff_files/
+    # load_calibration_coeff_files/run_calibration(self, ...) directly.
 
 
     # Georeferencing orchestration (run_direct_georeferencing/run_georeferencing and
@@ -1301,7 +1130,7 @@ class HypsoBase:
         if self.l1a_cube is None:
             return None
 
-        self.l1b_cube = self._run_calibration(coeff_type=coeff_type, **kwargs)
+        self.l1b_cube = calibration_pipeline.run_calibration(self, coeff_type=coeff_type, **kwargs)
 
         return None
 

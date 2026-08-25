@@ -3,4 +3,5 @@ from .radiometric import run_radiometric_calibration
 from .smile import run_smile_correction
 from .destriping import run_destriping_correction, get_destriping_correction_matrix, run_destriping_correction_with_computed_matrix
 from .registry import register_calibration_coeffs, get_custom_calibration_coeffs, registered_calibration_coeffs
+from .pipeline import set_calibration_coeff_files, load_calibration_coeff_files, run_calibration
 
