@@ -51,6 +51,19 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-25 (continued further, ×3):** User asked (across a few turns) whether product levels should live in
+  separate objects (L1a object produces an L1b object, discard the old one) given real memory concern - large
+  datacubes, several potentially resident at once. Discussed prior art (Satpy's one-Scene-per-capture model with
+  GC-based disposal; ACOLITE/POLYMER's own disk-per-stage model with no in-memory chain at all) and recommended
+  keeping the single coordinator object (levels share geometry/calibration/metadata state that a per-level split
+  would have to either duplicate or reference back to a shared container anyway) with an explicit opt-out for
+  memory-conscious workflows. Added `HypsoBase.discard_cube(level, correction=None)` plus property deleters
+  (`del satobj.l1a_cube`/`l1b_cube`/`l1c_cube`/`l1d_cube`) - `"l1b"`/`"l1c"` free the same underlying array (l1c
+  has no independent storage, see its property getter), and `discard_cube("l2a", correction=...)` removes one
+  registered AC correction's cube (or all of them, if `correction` omitted) from the `l2a_cube` dict. Verified
+  against the real capture: discarding l1a/l1b/l1d individually, discarding via `del satobj.l1c_cube` correctly
+  also frees `l1b_cube`, per-correction and discard-all l2a behavior, and an unknown level raising `ValueError` -
+  all pass; `tests/baseline/compare_to_baseline.py` still passes. Documented in `docs/architecture.rst`.
 - **2026-08-25 (continued further, ×2):** Built `hypso/io/reader.py` — `load_level_nc(nc_file_path, level,
   load_cube=True)` + thin wrappers `load_l1b_nc`/`load_l1c_nc`/`load_l1d_nc`/`load_l2a_nc`, the read-side
   counterpart to `io/writer.py`, resolving the ⚠️ inconsistency noted below. Reuses `load/utils.py`'s group
@@ -162,12 +175,11 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 3. ~~Build `hypso/io/cf.py`, `io/schema.py`, `calibration/registry.py`~~ — done, committed (`326aec45`).
 4. ~~Build/commit `io/writer.py`, `hypso/write/__init__.py` rewiring, `spatial_dims`, `docs/architecture.rst`~~ —
    done, committed (`289521bd`).
-5. ~~Build `hypso/io/reader.py`, wire `hypso/load/__init__.py`, fix the band-sort bug~~ — done. `_load_capture_file`
-   needed no code change (already imports load_l1b_nc/etc. from `hypso.load`, which now transparently resolves
-   to the new reader). Commit this (this session's uncommitted work — do this first on resume).
-6. Add `HypsoBase.discard_cube(level)` / cube property deleters (`del satobj.l1a_cube`) — user asked (mid-refactor,
-   after weighing "one object with all levels" vs. per-level objects) for an explicit way to free a generated
-   cube's memory without giving up the single-coordinator-object model. Not yet built.
+5. ~~Build `hypso/io/reader.py`, wire `hypso/load/__init__.py`, fix the band-sort bug~~ — done, committed
+   (`43183e49`). `_load_capture_file` needed no code change (already imports load_l1b_nc/etc. from `hypso.load`,
+   which now transparently resolves to the new reader).
+6. ~~Add `HypsoBase.discard_cube(level)` / cube property deleters~~ — done, verified against real data. Commit
+   this (this session's uncommitted work — do this first on resume).
 7. Update `HypsoBase`: `self.io`/`self.geo` composition, fix the `self.label` uninitialized-attribute trap
    (**already fixed** as part of the sensor_profile wiring, `884b8d5f`), consolidate
    `run_georeferencing`/`_run_custom_georeferencing`.

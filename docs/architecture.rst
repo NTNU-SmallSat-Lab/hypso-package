@@ -113,6 +113,36 @@ combined by ``_unified_mask()`` - nothing else needs to change to pick up a
 newly-registered mask. ``set_custom_mask(name, None)`` or
 ``clear_custom_masks()`` removes them.
 
+Freeing cube memory (``discard_cube``)
+-----------------------------------------
+
+A capture's cubes (``l1a_cube``/``l1b_cube``/``l1d_cube``/``l2a_cube[correction]``)
+can each be large, and a single ``Hypso1``/``Hypso2`` object holds them all for as
+long as they're referenced - generating several levels in sequence for a workflow
+that only needs the last one leaves the earlier ones resident until you release
+them. This is a deliberate design choice, not an oversight: one object per *capture*
+(not one per *level*) is kept because the levels share state that isn't level-
+specific (geometry, calibration coefficients, capture metadata) - splitting into
+separate per-level objects would mean either duplicating that shared state or each
+object holding a reference back to something shared anyway, which just becomes an
+orchestrating container by another name. The tradeoff is made explicit instead, with
+a way to opt out of it::
+
+    satobj.generate_l1b_cube(coeff_type="moved")
+    # ... use satobj.l1b_cube ...
+    satobj.generate_l1d_cube()
+    satobj.discard_cube("l1b")   # or: del satobj.l1b_cube
+    # satobj.l1b_cube is now None; l1d_cube, geometry, calibration state, etc.
+    # are untouched.
+
+``discard_cube(level, correction=None)`` (equivalently, ``del satobj.l1a_cube`` /
+``l1b_cube`` / ``l1c_cube`` / ``l1d_cube`` for those four) frees one level's cube.
+``"l1b"`` and ``"l1c"`` free the *same* underlying array - ``l1c_cube`` has no
+independent storage, it's a georeferenced view over the L1B data (see its property
+getter). For L2A, pass ``correction=`` to discard one AC tool's result
+(``discard_cube("l2a", correction="polymer")``) or omit it to discard every
+registered correction at once.
+
 NetCDF I/O (``hypso.io``)
 ---------------------------
 

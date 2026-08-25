@@ -306,7 +306,7 @@ class HypsoBase:
 
     @property
     def l1a_cube(self):
-        return self._l1a_cube   
+        return self._l1a_cube
 
 
     @l1a_cube.setter
@@ -314,9 +314,14 @@ class HypsoBase:
         self._l1a_cube = self._format_l1a_dataarray(value)
 
 
+    @l1a_cube.deleter
+    def l1a_cube(self):
+        self._l1a_cube = None
+
+
     @property
     def l1b_cube(self):
-        return self._l1b_cube   
+        return self._l1b_cube
 
 
     @l1b_cube.setter
@@ -324,12 +329,19 @@ class HypsoBase:
         self._l1b_cube = self._format_l1b_dataarray(value)
 
 
+    @l1b_cube.deleter
+    def l1b_cube(self):
+        # Also frees l1c_cube's data - see its property getter, l1c has no
+        # independent storage, it's a georeferenced view over this same array.
+        self._l1b_cube = None
+
+
     @property
     def l1c_cube(self):
         # Return l1b cube since it is the same as the l1c cube
         cube = copy.deepcopy(self._l1b_cube)
         cube.attrs['level'] = 'L1c'
-        return cube 
+        return cube
 
 
     @l1c_cube.setter
@@ -337,13 +349,25 @@ class HypsoBase:
         self._l1c_cube = self._format_l1c_dataarray(value)
 
 
+    @l1c_cube.deleter
+    def l1c_cube(self):
+        # l1c has no independent storage (see the getter above) - deleting it
+        # deletes the l1b data it's a view over.
+        self._l1b_cube = None
+
+
     @property
     def l1d_cube(self):
-        return self._l1d_cube   
+        return self._l1d_cube
 
     @l1d_cube.setter
     def l1d_cube(self, value):
         self._l1d_cube = self._format_l1d_dataarray(value)
+
+
+    @l1d_cube.deleter
+    def l1d_cube(self):
+        self._l1d_cube = None
 
 
     @property
@@ -508,7 +532,47 @@ class HypsoBase:
             return self._l1d_cube.where(~unified_mask, other=np.nan)
 
         else:
-            return self._l1d_cube           
+            return self._l1d_cube
+
+
+    def discard_cube(self, level: str, correction: str = None) -> None:
+        """Free a generated cube's memory (sets it to None) without discarding
+        the rest of this capture (geometry, calibration coefficients, metadata)
+        - for a workflow that generates several levels in sequence and wants to
+        release each one once done with it, rather than holding every level's
+        full-size cube in memory for the lifetime of this object. Equivalent to
+        `del satobj.l1a_cube` / `del satobj.l1b_cube` / `del satobj.l1d_cube`
+        for those three levels; provided as one method so the level can be a
+        variable/config value instead of a hardcoded attribute name, and
+        because l2a needs an extra argument (correction) that a plain `del`
+        can't take.
+
+        :param level: one of "l1a", "l1b", "l1c", "l1d", "l2a" (case-insensitive).
+            "l1b" and "l1c" both free the same underlying array - see
+            l1c_cube's property getter, l1c has no independent storage, it's a
+            georeferenced view over the l1b data.
+        :param correction: for level="l2a" only - the correction key to
+            discard (e.g. "polymer"). If None, every registered l2a correction
+            is discarded.
+        """
+        level = level.lower()
+
+        if level == 'l1a':
+            self._l1a_cube = None
+        elif level in ('l1b', 'l1c'):
+            self._l1b_cube = None
+        elif level == 'l2a':
+            if correction is None:
+                self._l2a_cubes.clear()
+            else:
+                self._l2a_cubes.pop(correction, None)
+        elif level == 'l1d':
+            self._l1d_cube = None
+        else:
+            raise ValueError(f"discard_cube: unknown level {level!r}, expected one of "
+                             f"'l1a', 'l1b', 'l1c', 'l1d', 'l2a'")
+
+        return None
 
 
     def _unified_mask(self) -> xr.DataArray:
