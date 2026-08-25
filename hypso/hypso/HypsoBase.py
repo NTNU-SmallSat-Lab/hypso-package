@@ -128,6 +128,7 @@ class HypsoBase:
         # Initialize masks
         self._land_mask = None
         self._cloud_mask = None
+        self._custom_masks: dict = {}
 
         # Initialize latitude and longitude
         # TODO: store latitude and longitude as xarray
@@ -278,10 +279,12 @@ class HypsoBase:
         return data
 
 
-    def _format_land_mask_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
-
+    def _format_mask_dataarray(self, data: Union[np.ndarray, xr.DataArray], description: str) -> xr.DataArray:
+        """Validate/wrap a 2D (lines, samples) boolean-ish mask array. Shared by
+        land_mask/cloud_mask and set_custom_mask - a mask is a mask regardless of
+        what it represents, so there's one validation path, not one per name."""
         attributes = {
-                      'description': "Land mask",
+                      'description': description,
                       'method': None
                      }
 
@@ -291,21 +294,14 @@ class HypsoBase:
         data = self._update_dataarray_attrs(data, attributes)
 
         return data
+
+
+    def _format_land_mask_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
+        return self._format_mask_dataarray(data, "Land mask")
 
 
     def _format_cloud_mask_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
-
-        attributes = {
-                      'description': "Cloud mask",
-                      'method': None
-                     }
-
-        v = DataArrayValidator(dims_shape=self.spatial_dimensions, dim_names=self.dim_names_2d, num_dims=2)
-
-        data = v.validate(data=data)
-        data = self._update_dataarray_attrs(data, attributes)
-
-        return data
+        return self._format_mask_dataarray(data, "Cloud mask")
 
 
     @property
@@ -375,6 +371,95 @@ class HypsoBase:
 
 
     @property
+    def custom_masks(self) -> dict:
+        """Read-only view of every mask registered via set_custom_mask, keyed by
+        name (e.g. "sea_land_cloud"). Combined into masked_l1a/b/c/d_cube the same
+        way land_mask/cloud_mask are - see _unified_mask."""
+        return dict(self._custom_masks)
+
+
+    def set_custom_mask(self, name: str, value: Union[np.ndarray, xr.DataArray, None],
+                        description: str = None) -> None:
+        """Register (or clear, if value is None) a named custom mask - e.g. an
+        externally-produced sea/land/cloud classification, not just the built-in
+        land_mask/cloud_mask slots. Any number of custom masks may be registered
+        at once; all of them (plus land_mask/cloud_mask, if set) are OR'd
+        together by _unified_mask and applied by masked_l1a/b/c/d_cube - no
+        further wiring needed once registered.
+
+        :param name: key this mask is stored/removed under (also used in
+            load_mask_from_file's `name=` argument).
+        :param value: 2D (lines, samples) boolean-ish array/DataArray, True where
+            a pixel should be masked out. None removes this mask.
+        :param description: optional human-readable note, stored on the
+            DataArray's `description` attribute (defaults to `name`).
+        """
+        if value is None:
+            self._custom_masks.pop(name, None)
+            return None
+
+        self._custom_masks[name] = self._format_mask_dataarray(value, description or name)
+        return None
+
+
+    def clear_custom_masks(self) -> None:
+        """Remove every registered custom mask (land_mask/cloud_mask are unaffected)."""
+        self._custom_masks = {}
+        return None
+
+
+    def load_mask_from_file(self, path: Union[str, Path], name: str = None, variable: str = None,
+                            dtype=np.bool_, invert: bool = False) -> xr.DataArray:
+        """Load a 2D (lines, samples) mask from disk and, if `name` is given,
+        register it via set_custom_mask in the same call.
+
+        Supported formats, dispatched by file extension:
+          - .nc: reads `variable` (required) from the file's root group via
+            netCDF4 - for a mask produced by another tool (e.g. a sea/land/cloud
+            classification saved as its own NetCDF product).
+          - .npy: numpy .npy array.
+          - .dat/.bin: raw binary, reshaped to self.spatial_dimensions using
+            `dtype` (matches the convention HYPSO's own indirect-georeferencing
+            lat/lon files use).
+
+        :param path: path to the mask file.
+        :param name: if given, also calls set_custom_mask(name, data) - the mask
+            is registered and immediately reflected in masked_l1a/b/c/d_cube.
+        :param variable: required for .nc input - the variable name to read.
+        :param dtype: numpy dtype to interpret raw binary (.dat/.bin) data as.
+        :param invert: if True, flip the mask (use when the source file marks
+            *valid* pixels with True rather than masked-out pixels).
+        :return: the loaded mask as a validated xr.DataArray (same object stored
+            under `name`, if `name` was given).
+        """
+        path = Path(path)
+        suffix = path.suffix.lower()
+
+        if suffix == '.nc':
+            if variable is None:
+                raise ValueError("load_mask_from_file requires variable=... for a .nc source file")
+            with nc.Dataset(path, format="NETCDF4") as f:
+                data = np.array(f.variables[variable][:])
+        elif suffix == '.npy':
+            data = np.load(path)
+        elif suffix in ('.dat', '.bin'):
+            data = np.fromfile(path, dtype=dtype).reshape(self.spatial_dimensions)
+        else:
+            raise ValueError(f"load_mask_from_file: unsupported file extension {suffix!r} "
+                             f"(expected .nc, .npy, .dat, or .bin)")
+
+        data = data.astype(bool)
+        if invert:
+            data = ~data
+
+        if name is not None:
+            self.set_custom_mask(name, data)
+            return self._custom_masks[name]
+
+        return self._format_mask_dataarray(data, path.name)
+
+
+    @property
     def masked_l1a_cube(self) -> xr.DataArray:
 
         unified_mask = self._unified_mask()
@@ -427,15 +512,19 @@ class HypsoBase:
 
 
     def _unified_mask(self) -> xr.DataArray:
-        if self._land_mask is not None and self._cloud_mask is not None:
-            unified_mask = self._land_mask | self._cloud_mask
-        elif self._land_mask is not None:
-            unified_mask = self._land_mask
-        elif self._cloud_mask is not None:
-            unified_mask = self._cloud_mask
-        else:
+        """OR land_mask, cloud_mask, and every registered custom mask (see
+        set_custom_mask/load_mask_from_file) together - masked_l1a/b/c/d_cube all
+        apply whatever this returns, so a custom mask needs no changes there."""
+        masks = [m for m in (self._land_mask, self._cloud_mask) if m is not None]
+        masks.extend(self._custom_masks.values())
+
+        if not masks:
             return None
-        
+
+        unified_mask = masks[0]
+        for mask in masks[1:]:
+            unified_mask = unified_mask | mask
+
         return unified_mask
 
 

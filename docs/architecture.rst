@@ -86,6 +86,33 @@ the custom registry first, and only falls back to the sensor's built-in presets 
 no custom set is registered under that name. Existing calls that only ever passed
 ``coeff_type="moved"``/``"adjusted"``/``"original"`` are unaffected.
 
+Custom masks (``set_custom_mask`` / ``load_mask_from_file``)
+----------------------------------------------------------------
+
+``land_mask`` and ``cloud_mask`` are the two built-in mask slots that
+``masked_l1a_cube``/``masked_l1b_cube``/``masked_l1c_cube``/``masked_l1d_cube``
+apply (OR'd together, masked pixels set to NaN). To apply an arbitrary
+additional mask - e.g. an externally-produced sea/land/cloud classification -
+without it having to fit into one of those two slots::
+
+    import numpy as np
+
+    # from an in-memory array
+    satobj.set_custom_mask("sea_land_cloud", my_mask_array)
+
+    # or loaded directly from a file (.nc requires variable=, .npy and .dat/.bin
+    # are also supported - .dat/.bin uses the same raw-binary + reshape
+    # convention as HYPSO's own indirect-georeferencing lat/lon files)
+    satobj.load_mask_from_file("slc_mask.nc", variable="mask", name="sea_land_cloud")
+
+    satobj.masked_l1d_cube  # reflects every registered mask automatically
+
+Any number of custom masks may be registered at once (``satobj.custom_masks``
+lists them by name); all of them, plus ``land_mask``/``cloud_mask`` if set, are
+combined by ``_unified_mask()`` - nothing else needs to change to pick up a
+newly-registered mask. ``set_custom_mask(name, None)`` or
+``clear_custom_masks()`` removes them.
+
 NetCDF I/O (``hypso.io``)
 ---------------------------
 

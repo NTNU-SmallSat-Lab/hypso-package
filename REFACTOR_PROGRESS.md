@@ -51,6 +51,30 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-25 (continued further):** User asked for the ability to load and apply custom masks (e.g. a
+  sea-land-cloud mask), beyond the existing hardcoded `land_mask`/`cloud_mask` slots. Added
+  `HypsoBase.set_custom_mask(name, value)`/`clear_custom_masks()`/`custom_masks` property (a
+  `dict[str, xr.DataArray]`, same validation path as land/cloud via a new shared `_format_mask_dataarray`
+  helper — `_format_land_mask_dataarray`/`_format_cloud_mask_dataarray` are now thin wrappers over it) and
+  `load_mask_from_file(path, name=..., variable=..., dtype=..., invert=...)` (`.nc`/`.npy`/`.dat`/`.bin`
+  supported). `_unified_mask()` now ORs land_mask + cloud_mask + every registered custom mask together, so
+  `masked_l1a/b/c/d_cube` pick up custom masks automatically with no other changes. Verified against the real
+  capture: no-mask baseline unchanged, a fabricated quadrant mask correctly NaNs only that region of
+  `masked_l1a_cube` and leaves the rest untouched, `clear_custom_masks()` reverts to unmasked, and
+  `load_mask_from_file(.npy)` round-trips correctly. `tests/baseline/compare_to_baseline.py` still passes
+  (confirms this is additive, not a change to the existing calibration/georeferencing path). Documented in
+  `docs/architecture.rst`. **Not yet committed** — do this first on resume, then continue to `io/reader.py`
+  (was in progress when this mask request interrupted it — see the ⚠️ note right below, still the current state
+  of this repo).
+
+  ⚠️ **Known temporary inconsistency: `hypso.write` and `hypso.load` disagree on file layout right now.**
+  `io/writer.py` (committed `289521bd`) writes products/geometry at the root group; `hypso/load/*.py` (not yet
+  touched) still reads them from nested `products`/`geometry` groups. A file written by the *new* writer cannot
+  currently be read back by `hypso.load`'s functions or by `HypsoBase._load_capture_file` — round-tripping is
+  broken until `io/reader.py` (next step) lands and `_load_capture_file` is wired to it. This is expected and
+  scoped exactly this way in the approved plan (write, then read, as two separate steps) - not an accidental
+  regression - but if this session is interrupted before `io/reader.py` is committed, a future Claude session
+  should NOT assume `Hypso(path=<file written by the new writer>)` works yet.
 - **2026-08-25 (continued):** Built `hypso/io/writer.py` — `write_level_nc(satobj, level, dst_nc, ...)` and
   `write_l2a_nc(satobj, correction, dst_nc, ...)`, the schema-driven replacement for
   `write/l1b_nc_writer.py`/`l1c_nc_writer.py`/`l1d_nc_writer.py`/`l2a_nc_writer.py`. Implements the flattened
