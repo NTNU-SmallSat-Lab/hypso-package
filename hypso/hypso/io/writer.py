@@ -25,10 +25,13 @@ from pathlib import Path
 import numpy as np
 import netCDF4 as nc
 
-from hypso.write.utils import set_or_create_attr
-from hypso.write.calibration_filenames_writer import calibration_filenames_writer
-from hypso.write.metadata_gcp_group_writer import metadata_gcp_group_writer
-from hypso.write.metadata_srf_group_writer import metadata_srf_group_writer
+# hypso.write.* imports are deliberately deferred into the functions that use
+# them (below), not done at module level: hypso/write/__init__.py imports
+# write_l1b_nc_file/etc *from this module*, so an eager top-level import here
+# would try to fully execute hypso.write's __init__ (importing any of its
+# submodules does that) while hypso.io.writer is itself still mid-import,
+# causing a circular ImportError. By call time this module is fully loaded,
+# so the cycle doesn't bite.
 
 from . import cf
 from .schema import LevelSchema, get_schema
@@ -61,6 +64,8 @@ def _write_metadata_common(satobj, netfile: nc.Dataset) -> None:
     """metadata/capture_config, timing, adcs, corrections - the group/attr/
     dimension boilerplate that was previously duplicated verbatim across every
     per-level writer file."""
+    from hypso.write.utils import set_or_create_attr
+
     netfile.createGroup('metadata')
 
     meta_capcon = netfile.createGroup('metadata/capture_config')
@@ -266,6 +271,11 @@ def _write_level_nc(satobj, schema: LevelSchema, dst_nc: str, cube: np.ndarray,
     """Shared implementation behind write_level_nc/write_l2a_nc. `cube` is
     already resolved by the caller (masking / AC-correction selection is a
     caller concern, not this function's)."""
+    from hypso.write.utils import set_or_create_attr
+    from hypso.write.calibration_filenames_writer import calibration_filenames_writer
+    from hypso.write.metadata_gcp_group_writer import metadata_gcp_group_writer
+    from hypso.write.metadata_srf_group_writer import metadata_srf_group_writer
+
     with nc.Dataset(dst_nc, 'w', format='NETCDF4') as netfile:
         lines = satobj.nc_capture_config_attrs["frame_count"]
         samples = satobj.image_height

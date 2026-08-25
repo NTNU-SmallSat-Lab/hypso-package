@@ -51,6 +51,30 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-25 (continued further, ×2):** Built `hypso/io/reader.py` — `load_level_nc(nc_file_path, level,
+  load_cube=True)` + thin wrappers `load_l1b_nc`/`load_l1c_nc`/`load_l1d_nc`/`load_l2a_nc`, the read-side
+  counterpart to `io/writer.py`, resolving the ⚠️ inconsistency noted below. Reuses `load/utils.py`'s group
+  readers unchanged for `metadata/*` (unaffected by flattening) and `load_gcp_from_nc_file`; adds a new
+  root-level geometry reader (matches a fixed set of known geometry variable names against whatever's at root,
+  since geometry and product variables are now siblings there) and a new cube/cube_attrs reader that **sorts
+  per-band variables by their `band` attribute** before reconstructing the cube - fixes the plan's flagged
+  latent bug (the original per-level loaders used dict/insertion order instead). Also handles L2A's dynamic
+  product variable name (AC-tool-specific `l2_variable_name`, e.g. "chla" - the *old* `load_l2a_nc_cube` only
+  ever tried a hardcoded `['rrs','Rrs','rho_w']`, so it could never have found "chla" either): tries
+  `schema.product_prefix` first, falls back to auto-detecting the actual non-geometry root variable(s) present.
+  `load_l1a_nc` is untouched/not migrated - L1A is raw ground-segment input (no `write_l1a_nc_file` exists), not
+  something this package's own writer format change affects. Rewired `hypso/load/__init__.py` to source
+  `load_l1b_nc`/`load_l1c_nc`/`load_l1d_nc`/`load_l2a_nc` from `hypso.io.reader`.
+  **Found and fixed a circular import** introduced by this wiring: `hypso.io.writer` imported from
+  `hypso.write.*` at module level, but `hypso/write/__init__.py` imports `write_l1b_nc_file` etc. *from*
+  `hypso.io.writer` - triggering `hypso.write`'s init while `hypso.io.writer` was still mid-import raised
+  `ImportError: cannot import name 'write_l1b_nc_file' from partially initialized module`. Fixed by moving those
+  four `hypso.write.*` imports from module level into the two functions that use them (`_write_metadata_common`,
+  `_write_level_nc`) - deferred enough that `hypso.io.writer` is fully loaded by the time they run.
+  Verified end-to-end against the real capture: `tests/baseline/compare_to_baseline.py` still passes, and a full
+  write-then-read-back round trip (L1C and a fabricated `l2_variable_name="chla"` L2A correction, both
+  datacube=True/False) matches the in-memory cube/latitude/wavelengths exactly. **Not yet committed** — do this
+  first on resume.
 - **2026-08-25 (continued further):** User asked for the ability to load and apply custom masks (e.g. a
   sea-land-cloud mask), beyond the existing hardcoded `land_mask`/`cloud_mask` slots. Added
   `HypsoBase.set_custom_mask(name, value)`/`clear_custom_masks()`/`custom_masks` property (a
@@ -67,14 +91,9 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
   (was in progress when this mask request interrupted it — see the ⚠️ note right below, still the current state
   of this repo).
 
-  ⚠️ **Known temporary inconsistency: `hypso.write` and `hypso.load` disagree on file layout right now.**
-  `io/writer.py` (committed `289521bd`) writes products/geometry at the root group; `hypso/load/*.py` (not yet
-  touched) still reads them from nested `products`/`geometry` groups. A file written by the *new* writer cannot
-  currently be read back by `hypso.load`'s functions or by `HypsoBase._load_capture_file` — round-tripping is
-  broken until `io/reader.py` (next step) lands and `_load_capture_file` is wired to it. This is expected and
-  scoped exactly this way in the approved plan (write, then read, as two separate steps) - not an accidental
-  regression - but if this session is interrupted before `io/reader.py` is committed, a future Claude session
-  should NOT assume `Hypso(path=<file written by the new writer>)` works yet.
+  ✅ **Resolved** by the `io/reader.py` entry above (was: `hypso.write` and `hypso.load` disagreed on file
+  layout between `289521bd` and the reader landing). `hypso.write`/`hypso.load` are consistent again as of this
+  point.
 - **2026-08-25 (continued):** Built `hypso/io/writer.py` — `write_level_nc(satobj, level, dst_nc, ...)` and
   `write_l2a_nc(satobj, correction, dst_nc, ...)`, the schema-driven replacement for
   `write/l1b_nc_writer.py`/`l1c_nc_writer.py`/`l1d_nc_writer.py`/`l2a_nc_writer.py`. Implements the flattened
@@ -141,19 +160,21 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 1. ~~Capture pre-refactor baseline~~ — done, committed.
 2. ~~Build `hypso/sensors/`~~ — done, committed.
 3. ~~Build `hypso/io/cf.py`, `io/schema.py`, `calibration/registry.py`~~ — done, committed (`326aec45`).
-4. Commit `io/writer.py`, `hypso/write/__init__.py` rewiring, `spatial_dims`, `docs/architecture.rst` (this
-   session's uncommitted work — do this first on resume).
-5. Build `hypso/io/reader.py` (generic loader, consolidating `load/utils.py`'s near-identical functions, fixing
-   the band-sorted-by-`band`-attribute latent bug) and wire `HypsoBase._load_capture_file` to dispatch through it.
-   (~~write_l1b/l1c/l1d/l2a_nc_file backward-compat wrappers~~ — done as part of step 4, `write_products_nc_file`
-   intentionally left on `write/products_writer.py`.)
-6. Update `HypsoBase`: `self.io`/`self.geo` composition, fix the `self.label` uninitialized-attribute trap
+4. ~~Build/commit `io/writer.py`, `hypso/write/__init__.py` rewiring, `spatial_dims`, `docs/architecture.rst`~~ —
+   done, committed (`289521bd`).
+5. ~~Build `hypso/io/reader.py`, wire `hypso/load/__init__.py`, fix the band-sort bug~~ — done. `_load_capture_file`
+   needed no code change (already imports load_l1b_nc/etc. from `hypso.load`, which now transparently resolves
+   to the new reader). Commit this (this session's uncommitted work — do this first on resume).
+6. Add `HypsoBase.discard_cube(level)` / cube property deleters (`del satobj.l1a_cube`) — user asked (mid-refactor,
+   after weighing "one object with all levels" vs. per-level objects) for an explicit way to free a generated
+   cube's memory without giving up the single-coordinator-object model. Not yet built.
+7. Update `HypsoBase`: `self.io`/`self.geo` composition, fix the `self.label` uninitialized-attribute trap
    (**already fixed** as part of the sensor_profile wiring, `884b8d5f`), consolidate
    `run_georeferencing`/`_run_custom_georeferencing`.
-7. Extract `hypso/ac/` adapters (`self.ac`), moving `ac_*` method bodies verbatim.
-8. Cleanup: delete `.bak` files, delete `ac_6sv1_luts_OLD.py`/`_deepthought.py` (after grep-confirming unused).
-9. Build `tests/` (golden-file regression + CF/format assertions + unit tests, per plan §Verification).
-10. Run full verification against real data; update this file with results.
+8. Extract `hypso/ac/` adapters (`self.ac`), moving `ac_*` method bodies verbatim.
+9. Cleanup: delete `.bak` files, delete `ac_6sv1_luts_OLD.py`/`_deepthought.py` (after grep-confirming unused).
+10. Build `tests/` (golden-file regression + CF/format assertions + unit tests, per plan §Verification).
+11. Run full verification against real data; update this file with results.
 
 **Commit frequently** (this repo tracks `origin` = `NTNU-SmallSat-Lab/hypso-package`, but this is the user's own
 writable clone — commit locally as each numbered step above completes, don't wait for the whole refactor to
