@@ -316,12 +316,11 @@ available_datasets()`` discovers them dynamically per file, reusing
 public function rather than reimplemented a second time).
 
 .. note::
-   The existing ``composites/hypso1.yaml`` RGB recipe references band names from the
-   *old* hand-built-Scene converter (``band_89``/``band_70``/``band_59``, i.e.
-   position-based names), which this reader plugin's dynamic ``Lt_<wavelength>``
-   naming doesn't match - the recipe needs to be re-pointed at specific wavelengths
-   (Satpy composites can reference prerequisites by wavelength via ``DataQuery``,
-   which would also make the recipe portable across sensors instead of hardcoded to
-   HYPSO-1's specific band indices) before ``scn.load(["rgb"])`` works against this
-   new reader. Not yet done - needs the real HYPSO-1 band-to-wavelength mapping to
-   pick correct values, flagged here rather than guessed.
+   No RGB composite recipe ships with the reader - the old ``plot/composites/
+   hypso1.yaml`` (written for the hand-built-Scene converter's position-based
+   ``band_NN`` names, incompatible with this reader's ``Lt_<wavelength>`` naming)
+   was removed as unused rather than ported, per the decision that the Satpy
+   integration's job is making HYPSO data loadable as a ``Scene``, not shipping
+   visualization recipes. If a composite is ever wanted, Satpy's ``DataQuery``
+   wavelength-based prerequisites are the right mechanism (portable across band
+   configurations, no hardcoded band indices).

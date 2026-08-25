@@ -46,8 +46,9 @@ class HypsoL1FileHandler(NetCDF4FileHandler):
         sat_id = self["/attr/sat_id"]
         # Matches hypso.sensors.hypso1.HYPSO1_PROFILE.key / hypso2's .key -
         # NOT SensorProfile.sensor ("hypso1_hsi"/"hypso2_hsi", a different,
-        # already-used string) - this is what composites/hypso1.yaml's
-        # `sensor_name: hypso1` is matched against.
+        # already-used string). This is also the name Satpy would match a
+        # `sensor_name:` against if per-sensor composite/enhancement YAMLs are
+        # ever added.
         self.sensor = "hypso1" if sat_id == "HYPSO-1" else "hypso2"
         self.platform_name = sat_id
 
