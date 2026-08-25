@@ -1,30 +1,37 @@
+"""Resample HYPSO cubes/products onto a target pyresample AreaDefinition/
+SwathDefinition. resample_cube() is the one shared implementation -
+resample_l1a_cube/l1b_cube/l1c_cube/l1d_cube below are thin per-level
+wrappers over it (each used to be an independent, near-identical ~25-line
+function differing only in which satobj.l1X_cube attribute it read - zero
+external callers of any of them, confirmed, so collapsing them was free).
+resample_products() applies the same function to every entry in
+satobj.products (see hypso.containers.DatasetDict) - previously a stub whose
+only body was a commented-out block referencing the since-deleted
+DataArrayDict, now a real, working implementation reusing resample_cube like
+everything else here."""
+from typing import Union
+
+import xarray as xr
 
 from ..hypso1 import Hypso1
 from ..hypso2 import Hypso2
 
-#import numpy as np
-import xarray as xr
-from typing import Union
-#from ..DataArrayDict import DataArrayDict
-
 from pyresample.geometry import SwathDefinition, AreaDefinition
-#from pyresample.bilinear.xarr import XArrayBilinearResampler 
-#from pyresample.future.resamplers.nearest import KDTreeNearestXarrayResampler
+
+from .resamplers import resample_dataarray_kd_tree_nearest
 
 
-from .resamplers import resample_dataarray_bilinear, \
-                        resample_dataarray_kd_tree_nearest
+def resample_cube(cube: xr.DataArray, satobj: Union[Hypso1, Hypso2],
+                  area_def: Union[SwathDefinition, AreaDefinition],
+                  use_indirect_georef: bool = False):
+    """Resample one (lines, samples[, band]) array sharing satobj's own
+    geolocation onto area_def via nearest-neighbor. Not tied to a specific
+    hardcoded satobj attribute - works for any cube (l1a/b/c/d) or product,
+    which is what lets every wrapper function in this module (and
+    resample_products, looping over several) share one implementation.
 
-
-
-def resample_l1a_cube(satobj: Union[Hypso1, Hypso2], 
-                      area_def: Union[SwathDefinition, AreaDefinition],
-                      use_indirect_georef: bool = False
-                      ) -> xr.DataArray:
-
-    datacube = satobj.l1a_cube
-    resolution = satobj.resolution
-
+    :return: (resampled_data, resampled_latitudes, resampled_longitudes)
+    """
     if use_indirect_georef:
         latitudes = satobj.latitudes_indirect
         longitudes = satobj.longitudes_indirect
@@ -32,146 +39,68 @@ def resample_l1a_cube(satobj: Union[Hypso1, Hypso2],
     else:
         latitudes = satobj.latitudes
         longitudes = satobj.longitudes
-        resolution = satobj.resolution  
+        resolution = satobj.resolution
 
-    resampled_data = resample_dataarray_kd_tree_nearest(area_def = area_def, 
-                                                        data = datacube,
+    resampled_data = resample_dataarray_kd_tree_nearest(area_def = area_def,
+                                                        data = cube,
                                                         latitudes = latitudes,
                                                         longitudes = longitudes,
                                                         radius_of_influence=resolution)
-    
+
     resampled_longitudes, resampled_latitudes = area_def.get_lonlats()
 
     return resampled_data, resampled_latitudes, resampled_longitudes
 
 
-def resample_l1b_cube(satobj: Union[Hypso1, Hypso2], 
+def resample_l1a_cube(satobj: Union[Hypso1, Hypso2],
                       area_def: Union[SwathDefinition, AreaDefinition],
-                      use_indirect_georef: bool = False
-                      ) -> xr.DataArray:
+                      use_indirect_georef: bool = False):
+    return resample_cube(satobj.l1a_cube, satobj, area_def, use_indirect_georef)
 
-    datacube = satobj.l1b_cube
-    resolution = satobj.resolution
 
-    if use_indirect_georef:
-        latitudes = satobj.latitudes_indirect
-        longitudes = satobj.longitudes_indirect
-        resolution = satobj.resolution_indirect
-    else:
-        latitudes = satobj.latitudes
-        longitudes = satobj.longitudes
-        resolution = satobj.resolution  
+def resample_l1b_cube(satobj: Union[Hypso1, Hypso2],
+                      area_def: Union[SwathDefinition, AreaDefinition],
+                      use_indirect_georef: bool = False):
+    return resample_cube(satobj.l1b_cube, satobj, area_def, use_indirect_georef)
 
-    resampled_data = resample_dataarray_kd_tree_nearest(area_def = area_def, 
-                                                        data = datacube,
-                                                        latitudes = latitudes,
-                                                        longitudes = longitudes,
-                                                        radius_of_influence=resolution)
-    
+
+def resample_l1c_cube(satobj: Union[Hypso1, Hypso2],
+                      area_def: Union[SwathDefinition, AreaDefinition],
+                      use_indirect_georef: bool = False):
+    return resample_cube(satobj.l1c_cube, satobj, area_def, use_indirect_georef)
+
+
+def resample_l1d_cube(satobj: Union[Hypso1, Hypso2],
+                      area_def: Union[SwathDefinition, AreaDefinition],
+                      use_indirect_georef: bool = False):
+    return resample_cube(satobj.l1d_cube, satobj, area_def, use_indirect_georef)
+
+
+def resample_products(satobj: Union[Hypso1, Hypso2],
+                      area_def: Union[SwathDefinition, AreaDefinition],
+                      use_indirect_georef: bool = False) -> xr.Dataset:
+    """Resample every registered entry in satobj.products (see
+    hypso.containers.DatasetDict) onto area_def, returning a plain
+    xr.Dataset with the target grid's own latitude/longitude as coordinates.
+    A plain Dataset, not wrapped back into a DatasetDict/products-style
+    container - a resampled result is a terminal output for the caller to
+    consume or write, not something meant to be further validated/mutated
+    through the capture's own product-registration path.
+
+    :return: xr.Dataset with one 2D data variable per satobj.products key.
+    """
     resampled_longitudes, resampled_latitudes = area_def.get_lonlats()
 
-    return resampled_data, resampled_latitudes, resampled_longitudes
+    resampled_vars = {}
+    for key, product in satobj.products.items():
+        resampled_data, _, _ = resample_cube(product, satobj, area_def, use_indirect_georef)
+        resampled_vars[key] = resampled_data
 
-
-def resample_l1c_cube(satobj: Union[Hypso1, Hypso2], 
-                      area_def: Union[SwathDefinition, AreaDefinition],
-                      use_indirect_georef: bool = False
-                      ) -> xr.DataArray:
-
-    datacube = satobj.l1c_cube
-    resolution = satobj.resolution
-
-    if use_indirect_georef:
-        latitudes = satobj.latitudes_indirect
-        longitudes = satobj.longitudes_indirect
-        resolution = satobj.resolution_indirect
-    else:
-        latitudes = satobj.latitudes
-        longitudes = satobj.longitudes
-        resolution = satobj.resolution  
-
-    resampled_data = resample_dataarray_kd_tree_nearest(area_def = area_def, 
-                                                        data = datacube,
-                                                        latitudes = latitudes,
-                                                        longitudes = longitudes,
-                                                        radius_of_influence=resolution)
-    
-    resampled_longitudes, resampled_latitudes = area_def.get_lonlats()
-
-    return resampled_data, resampled_latitudes, resampled_longitudes
-
-
-def resample_l1d_cube(satobj: Union[Hypso1, Hypso2], 
-                      area_def: Union[SwathDefinition, AreaDefinition],
-                      use_indirect_georef: bool = False
-                      ) -> xr.DataArray:
-
-    datacube = satobj.l1d_cube
-    resolution = satobj.resolution
-
-    if use_indirect_georef:
-        latitudes = satobj.latitudes_indirect
-        longitudes = satobj.longitudes_indirect
-        resolution = satobj.resolution_indirect
-    else:
-        latitudes = satobj.latitudes
-        longitudes = satobj.longitudes
-        resolution = satobj.resolution  
-
-    resampled_data = resample_dataarray_kd_tree_nearest(area_def = area_def, 
-                                                        data = datacube,
-                                                        latitudes = latitudes,
-                                                        longitudes = longitudes,
-                                                        radius_of_influence=resolution)
-    
-    resampled_longitudes, resampled_latitudes = area_def.get_lonlats()
-
-    return resampled_data, resampled_latitudes, resampled_longitudes
-
-
-# TODO
-def resample_products(satobj: Union[Hypso1, Hypso2], 
-                      area_def: Union[SwathDefinition, AreaDefinition],
-                      use_indirect_georef: bool = False
-                      ) -> xr.DataArray:
-
-    print('[ERROR] This function has not yet been implemented.')
-
-    '''
-    products = satobj.products
-    resolution = satobj.resolution
-    dim_names = satobj.dim_names_2d
-
-
-    if use_indirect_georef:
-        latitudes = satobj.latitudes_indirect
-        longitudes = satobj.longitudes_indirect
-        resolution = satobj.resolution_indirect
-    else:
-        latitudes = satobj.latitudes
-        longitudes = satobj.longitudes
-        resolution = satobj.resolution  
-
-
-    resampled_products = DataArrayDict(dims_shape=area_def.shape, 
-                                    attributes=products.attributes, 
-                                    dims_names=dim_names,
-                                    num_dims=2
-                                    )
-
-    for key, product in products.items():
-
-        resampled_data = resample_dataarray_kd_tree_nearest(area_def = area_def, 
-                                                            data = products,
-                                                            latitudes = latitudes,
-                                                            longitudes = longitudes,
-                                                            radius_of_influence=resolution)
-
-        resampled_products[key] = resampled_data
-
-    return resampled_products    
-
-    '''
-    
-    return None
-    
+    # dims_2d's established convention throughout this module/resamplers.py -
+    # every 2D resample_dataarray_kd_tree_nearest result uses these names.
+    ds = xr.Dataset(resampled_vars)
+    ds = ds.assign_coords(
+        latitude=(("y", "x"), resampled_latitudes),
+        longitude=(("y", "x"), resampled_longitudes),
+    )
+    return ds

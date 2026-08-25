@@ -340,21 +340,54 @@ chla-vs-logchl version-handling into the Polymer adapter.
 Keyed cube/mask containers (``hypso.containers.DatasetDict``)
 -----------------------------------------------------------------
 
-``HypsoBase._l2a_cubes`` (one entry per AC correction) and ``._custom_masks``
-are held in a ``DatasetDict``: dict-style access backed by a real
-``xarray.Dataset``. It supersedes the hand-rolled ``DataArrayDict``, which had
-three defects: validation printed errors and stored the unvalidated value
-anyway; subclassing ``dict`` directly let ``update()``/``setdefault()`` bypass
-validation and made membership checks case-sensitive while lookups weren't;
-and its ``DataArrayValidator`` inheritance was never actually used.
-``DatasetDict`` implements ``collections.abc.MutableMapping`` (every mutation
-path funnels through one validated, key-lowercasing core), raises on bad
-shapes/dims, and exposes the backing dataset as ``.dataset`` for serialization
-or cross-entry xarray operations. One non-obvious guard it adds: xarray's
-``Dataset.__setitem__`` silently *reindexes* (truncates) an incoming array
-whose dims disagree with existing entries - ``DatasetDict`` checks sizes
-explicitly and raises instead. ``DataArrayDict`` itself remains only behind
-the intentionally-untouched ``products`` surface.
+``HypsoBase._l2a_cubes`` (one entry per AC correction), ``._custom_masks``,
+and ``._products`` are all held in a ``DatasetDict``: dict-style access
+backed by a real ``xarray.Dataset``. It supersedes the hand-rolled
+``DataArrayDict`` (deleted), which had three defects: validation printed
+errors and stored the unvalidated value anyway; subclassing ``dict`` directly
+let ``update()``/``setdefault()`` bypass validation and made membership
+checks case-sensitive while lookups weren't; and its ``DataArrayValidator``
+inheritance was never actually used. ``DatasetDict`` implements
+``collections.abc.MutableMapping`` (every mutation path funnels through one
+validated, key-lowercasing core), raises on bad shapes/dims, and exposes the
+backing dataset as ``.dataset`` for serialization or cross-entry xarray
+operations. One non-obvious guard it adds: xarray's ``Dataset.__setitem__``
+silently *reindexes* (truncates) an incoming array whose dims disagree with
+existing entries - ``DatasetDict`` checks sizes explicitly and raises
+instead.
+
+``products`` was migrated last, once confirmed to be a real, actively-used
+surface rather than dead infrastructure - ``hypso-processing-pipeline``'s
+Polymer stage does ``satobj.products['chla'] = ...`` and persists it via
+``write_products_nc_file`` on every Polymer run. ``as_dataarray()``
+(``hypso.containers``) is the single-array normalizer both ``DatasetDict``
+and ``HypsoBase``'s cube/mask formatters (``_format_cube_dataarray``/
+``_format_mask_dataarray``, themselves collapsed from four near-identical
+per-level methods into one) now share, replacing the deleted
+``DataArrayValidator`` - one implementation of "is this the right shape/
+dims" instead of two.
+
+Cube/product resampling (``hypso.resample``)
+-------------------------------------------------
+
+``resample_cube(cube, satobj, area_def, use_indirect_georef=False)`` is the one
+shared implementation behind every resampling entry point in this package -
+it takes the array to resample directly rather than a hardcoded ``satobj``
+attribute name, so it works identically for any ``(lines, samples[, band])``
+array that shares the capture's own geolocation. ``resample_l1a_cube``/
+``l1b_cube``/``l1c_cube``/``l1d_cube`` are thin wrappers over it (previously
+four independent, near-identical ~25-line functions, each differing only in
+which ``satobj.l1X_cube`` attribute it read - zero external callers of any of
+them, confirmed, so collapsing them cost nothing). ``resample_products()``
+applies the same function to every entry in ``satobj.products``
+(``hypso.containers.DatasetDict``), returning a plain ``xr.Dataset`` with the
+target grid's own latitude/longitude as coordinates - a resampled result is a
+terminal output, not something meant to be re-validated through the
+capture's own product-registration path. This was previously a stub (its
+only body was a commented-out block referencing the since-deleted
+``DataArrayDict``, printing "not yet implemented" and returning ``None``) -
+now a real, working implementation, verified against a real capture and a
+real ``pyresample.AreaDefinition``.
 
 Spectral response (``hypso.reflectance.spectral_response``)
 ---------------------------------------------------------------
