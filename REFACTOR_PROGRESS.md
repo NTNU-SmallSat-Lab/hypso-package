@@ -25,6 +25,16 @@ the connectors should have been:
 3. **ACOLITE**: pipeline mutates `satobj.acolite_dir` from config before calling; EARTHDATA credentials pass
    as plaintext kwargs.
 
+**Future wishlist item, Polymer's side (not this repo — flagging for eventual collaboration with the Polymer
+maintainers, per the standing "do not edit the AC processors" instruction):** add a native HYPSO entry to
+Polymer's own `eotools/srf.py` SRF resolution (the `srf.csv`-based sensor/platform auto-lookup `get_SRF()`
+already does for sensors it recognizes out of the box, e.g. EUMETSAT ones) so Polymer can resolve HYPSO's SRF
+itself, the same way it does for those sensors — without hypso-package needing to supply an `srf_getter`
+callback (`ac_polymer.ac_polymer_srf_getter`/`SRF_GETTER_PATH`) or generate a per-capture SRF NetCDF
+(`generate_srf_nc`) at all. This would remove hypso-package's whole SRF-handoff mechanism as dead weight once
+Polymer supports HYPSO natively — the right direction (Polymer owns sensor-specific knowledge for sensors it
+supports, not every calling package supplying a getter), just not something achievable from this side alone.
+
 Proposal (changes in hypso-package only; external tools untouched, per standing instruction):
 - ~~Fold the pipeline's runner design back into the adapters~~ — **done for all three tools** (Polymer
   `8f0c2f98`, ACOLITE `d13127f2`, OC-SMART `b22388fe` — see the ×18/×19/×20 status entries).
