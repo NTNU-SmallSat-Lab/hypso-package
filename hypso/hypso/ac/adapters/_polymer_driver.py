@@ -32,6 +32,8 @@ import sys
 import traceback
 from pathlib import Path
 
+from hypso.ac.ac_polymer import SRF_GETTER_PATH
+
 
 def main(config_path: str, result_path: str) -> int:
     config = json.loads(Path(config_path).read_text())
@@ -69,7 +71,7 @@ def main(config_path: str, result_path: str) -> int:
             Level1_HYPSO(config["polymer_l1_input_nc_file"]),
             dir_out=config["polymer_output_dir"],
             if_exists=config["if_exists"],
-            srf_getter="hypso.ac.ac_polymer_srf_getter",
+            srf_getter=SRF_GETTER_PATH,
             srf_getter_arg=config["srf_nc_path"],
             **output_selection_kwargs,
         )

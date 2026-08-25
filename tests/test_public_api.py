@@ -60,11 +60,22 @@ def test_import_order_independence():
 
 
 def test_polymer_srf_getter_hook_path():
-    # Polymer resolves this BY DOTTED-STRING NAME ("hypso.ac.ac_polymer_srf_getter"
-    # passed as srf_getter=...) - the import path is frozen API even though
-    # nothing in this package calls it by name.
+    # Polymer resolves this BY DOTTED-STRING NAME (srf_getter=<dotted path>,
+    # resolved via importlib.import_module + getattr inside Polymer's own
+    # code - see ac_polymer.py's SRF_GETTER_PATH docstring). SRF_GETTER_PATH
+    # is derived from the function object itself (module + qualname), not
+    # hand-typed - deliberately NOT asserted against a literal string here,
+    # since hardcoding the expected value would reintroduce the exact
+    # drift risk this constant exists to eliminate. Reproduces Polymer's
+    # own resolution (import_module + getattr) to confirm it actually
+    # works, same as test_ac_subprocess.py's
+    # test_srf_getter_path_actually_resolves.
     mod = importlib.import_module("hypso.ac")
     assert callable(mod.ac_polymer_srf_getter)
+
+    module_path, attr_name = mod.SRF_GETTER_PATH.rsplit(".", 1)
+    resolved_mod = importlib.import_module(module_path)
+    assert getattr(resolved_mod, attr_name) is mod.ac_polymer_srf_getter
 
 
 def test_hypso_base_ac_wrapper_surface():

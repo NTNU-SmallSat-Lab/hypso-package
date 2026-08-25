@@ -177,9 +177,33 @@ def test_driver_success_path_with_stubbed_polymer(tmp_path, monkeypatch):
     # driver wired the config through to run_polymer correctly
     assert captured_kwargs["dir_out"] == str(tmp_path)
     assert captured_kwargs["if_exists"] == "skip"
-    assert captured_kwargs["srf_getter"] == "hypso.ac.ac_polymer_srf_getter"
+    # Compared against the derived constant, not a hand-typed literal - see
+    # ac_polymer.py's SRF_GETTER_PATH docstring for why: this string can
+    # never legitimately drift from ac_polymer_srf_getter's real location,
+    # so a test asserting a separately-typed literal would just be a second
+    # place that same drift could go unnoticed.
+    from hypso.ac.ac_polymer import SRF_GETTER_PATH
+    assert captured_kwargs["srf_getter"] == SRF_GETTER_PATH
     assert captured_kwargs["srf_getter_arg"] == "srf.nc"
     assert captured_kwargs["output_datasets"] == ["logchl", "logfb", "SPM"]
+
+
+def test_srf_getter_path_actually_resolves():
+    # Reproduces Polymer's OWN resolution mechanism (eotools/srf.py's
+    # get_SRF: srf_getter.rsplit(".", 1) -> importlib.import_module ->
+    # getattr) against the real SRF_GETTER_PATH value - not just a string
+    # comparison. Catches the actual failure mode this constant exists to
+    # prevent: if ac_polymer_srf_getter ever moves/renames without
+    # SRF_GETTER_PATH being re-derived correctly, this fails here instead
+    # of silently inside a Polymer subprocess.
+    import importlib
+    from hypso.ac.ac_polymer import SRF_GETTER_PATH, ac_polymer_srf_getter
+
+    module_path, attr_name = SRF_GETTER_PATH.rsplit(".", 1)
+    mod = importlib.import_module(module_path)
+    resolved = getattr(mod, attr_name)
+
+    assert resolved is ac_polymer_srf_getter
 
 
 # --- tier 2: real subprocess spawn, no Polymer needed (paths don't exist) ---

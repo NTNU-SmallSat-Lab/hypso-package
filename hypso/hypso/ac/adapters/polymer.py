@@ -6,11 +6,11 @@ renaming happen here in the parent; everything past "import Polymer itself"
 happens in _polymer_driver.py. Every other method is HypsoBase's corresponding
 ac_polymer_* method body relocated verbatim (see base.py's ACAdapter docstring).
 HYPSO's spectral response is passed to Polymer through a generated per-capture
-SRF NetCDF (generate_srf_nc) and the "hypso.ac.ac_polymer_srf_getter" hook -
-that dotted name is resolved *by string* inside Polymer, so it must keep
-pointing at hypso/ac/ac_polymer.py's function regardless of how this adapter is
-reorganized, and the interpreter running Polymer's subprocess must have `hypso`
-importable for that resolution to succeed."""
+SRF NetCDF (generate_srf_nc) and the hypso.ac.ac_polymer.SRF_GETTER_PATH hook -
+that dotted name is resolved *by string* inside Polymer (see ac_polymer.py's
+own docstring for the mechanism and why SRF_GETTER_PATH is derived rather than
+hand-typed), and the interpreter running Polymer's subprocess must have
+`hypso` importable for that resolution to succeed."""
 import sys
 from pathlib import Path
 
