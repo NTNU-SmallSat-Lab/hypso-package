@@ -44,7 +44,7 @@ def test_load_names():
 def test_composition_modules_import():
     # The extracted HypsoBase slices (self.geo / self.calibration / self.io /
     # self.ac composition) - each must import standalone.
-    for mod in ("hypso.geo", "hypso.calibration.pipeline", "hypso.io.dispatch",
+    for mod in ("hypso.georeferencing.geo", "hypso.calibration.pipeline", "hypso.io.dispatch",
                 "hypso.ac.adapters"):
         importlib.import_module(mod)
 

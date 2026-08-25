@@ -2,7 +2,7 @@
 of the HypsoBase breakup called for in the approved refactor plan, see
 REFACTOR_PROGRESS.md). Bodies are moved verbatim from HypsoBase.py, not rewritten -
 same behavior, just relocated - each function takes `satobj` explicitly (matching
-the pattern already used by hypso.geo and hypso.calibration.pipeline).
+the pattern already used by hypso.georeferencing.geo and hypso.calibration.pipeline).
 
 HypsoBase's private _load_capture_file/_set_hypso_attributes/_check_capture_type/
 _parse_filename/_compose_capture_name had no external callers (confirmed by grep

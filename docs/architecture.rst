@@ -185,7 +185,10 @@ functions or adapter methods taking the capture object (``satobj``) as an explic
 first parameter (they read/write many capture attributes, so passing the object in
 beats either duplicating that state or holding a back-reference):
 
-- **Georeferencing orchestration** → ``hypso.geo``.
+- **Georeferencing orchestration** → ``hypso.georeferencing.geo`` (moved here from
+  a bare top-level ``hypso.geo`` module, for symmetry with ``calibration.pipeline``/
+  ``io.dispatch`` below - each orchestration module now lives inside its own
+  subject-matter subpackage rather than loose at the top level).
   ``run_georeferencing()``/``run_direct_georeferencing()`` remain as thin
   delegating *methods* because external code calls those names on the object; the
   private ``_run_*`` helpers moved outright.

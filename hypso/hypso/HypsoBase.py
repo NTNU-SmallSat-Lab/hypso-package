@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 from hypso.calibration import pipeline as calibration_pipeline
 
-from hypso import geo
+from hypso.georeferencing import geo
 
 from hypso.io import dispatch as io_dispatch
 
@@ -608,21 +608,21 @@ class HypsoBase:
     # hypso.calibration.pipeline - part of the HypsoBase breakup called for in the
     # approved refactor plan (self.calibration composition). No wrapper methods kept
     # here: confirmed via grep these three had zero external callers, unlike
-    # hypso.geo's run_georeferencing()/run_direct_georeferencing(), which stayed as
+    # hypso.georeferencing.geo's run_georeferencing()/run_direct_georeferencing(), which stayed as
     # methods because those specific names are called externally. Internal callers
     # within this file now call calibration_pipeline.set_calibration_coeff_files/
     # load_calibration_coeff_files/run_calibration(self, ...) directly.
 
 
     # Georeferencing orchestration (run_direct_georeferencing/run_georeferencing and
-    # their private _run_* helpers) was extracted verbatim into hypso.geo - part of
+    # their private _run_* helpers) was extracted verbatim into hypso.georeferencing.geo - part of
     # the HypsoBase breakup called for in the approved refactor plan (self.geo
     # composition). These stay as thin delegating wrappers, not moved themselves,
     # because run_direct_georeferencing() is called externally
     # (hypso/ac/loading_acolite_output.py) and run_georeferencing() by
     # hypso-processing-pipeline - both names/signatures must keep working unchanged.
     # The private _run_frame_interpolation/_run_track_geometry/_run_angles_geometry
-    # helpers had no external callers, so they moved to hypso.geo outright with no
+    # helpers had no external callers, so they moved to hypso.georeferencing.geo outright with no
     # wrapper kept here.
 
     def run_direct_georeferencing(self) -> None:
