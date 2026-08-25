@@ -89,6 +89,14 @@ dependencies=[
 # See hypso/hypso/satpy/hypso_handler.py and docs/architecture.rst.
 hypso = "hypso.satpy"
 
+[project.entry-points."satpy.composites"]
+# Same module target as satpy.readers above: Satpy's composite config loader
+# does the same etc/-next-to-module lookup (satpy/composites/config_loader.py's
+# get_entry_points_config_dirs("satpy.composites")), finding
+# hypso/hypso/satpy/etc/composites/hypso1.yaml / hypso2.yaml - the
+# wavelength-based true_color recipe.
+hypso = "hypso.satpy"
+
 [tool.setuptools]
 license-files = [ "LICENSE" ]
 include-package-data=true

@@ -1,0 +1,24 @@
+# True-color composite for the hypso_l1c/hypso_l1d Satpy readers.
+#
+# Prerequisites are WAVELENGTHS (micrometers, Satpy's convention), not band
+# names - deliberately. HYPSO's band set varies by binning/calibration
+# configuration, so any band-name-based recipe (like the old, removed
+# plot/composites/hypso1.yaml with its position-based band_89/band_70/band_59)
+# breaks the moment the band layout changes. Wavelength-based prerequisites are
+# resolved against each band dataset's WavelengthRange by Satpy itself, so this
+# recipe works for every binning configuration and for both L1C (Lt_*) and L1D
+# (rhot_*) inputs.
+#
+# Usage:
+#   scn = Scene(reader="hypso_l1c", filenames=[...])
+#   scn.load(["true_color"])
+sensor_name: visir/hypso1
+
+composites:
+  true_color:
+    compositor: !!python/name:satpy.composites.GenericCompositor
+    prerequisites:
+    - wavelength: 0.640
+    - wavelength: 0.550
+    - wavelength: 0.460
+    standard_name: true_color
