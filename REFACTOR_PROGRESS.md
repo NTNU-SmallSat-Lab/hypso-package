@@ -46,8 +46,10 @@ Proposal (changes in hypso-package only; external tools untouched, per standing 
   persisted in our files).
 - Known bugs to fix in the same pass: polymer `open_output` has no `case _` (unknown input_product_level →
   NameError); `run_correction`'s dead `run_polymer_kwargs`/`if True:`/`srf_nc_path, srf_nc_path =` typo.
-- Open question for the user: the csiro_* path is computed+persisted but consumed by nothing — keep as
-  provenance, make it the Polymer SRF source, or drop?
+- ~~Open question for the user: the csiro_* path is computed+persisted but consumed by nothing — keep as
+  provenance, make it the Polymer SRF source, or drop?~~ **Resolved 2026-08-25: drop.** User confirmed after
+  investigation (see the ×17 status entry below) — `satobj.compute_csiro_srfs()` call removed from
+  `hypso-processing-pipeline`.
 
 ## Approved plan summary
 
@@ -93,6 +95,33 @@ Full unabridged plan text: see the "Approved Plan" section pasted at the bottom 
 duplicated per update — if it's missing, check `/home/camerop/.claude/plans/rosy-frolicking-summit.md` instead).
 
 ## Status (update this section as work progresses — most recent at top)
+
+- **2026-08-25 (continued further, ×17): csiro path fully resolved — call removed from the pipeline (a
+  cross-repo change, NOT in this workspace).** Investigated two user questions before acting:
+  1. *Does `hypso-processing-pipeline` need to make the `compute_csiro_srfs()` call?* Traced the call site
+     (`stage2_ac/process_capture.py:193`, right before the three `ac_polymer_generate_*_nc()` calls) and
+     confirmed `_generate_l1d()` (called a few lines earlier) already populates `self.srf`/`self.spectral_
+     response` — the family those three calls actually read. `compute_csiro_srfs()` populates a *different*
+     attribute family that nothing downstream reads (confirmed by grepping the whole pipeline repo). **Dead
+     work, safe to delete.**
+  2. *Would the OLD, unmodified `hypso-package` (`/home/camerop/AC/hypso-package`, still the one actually
+     used for production processing per this file's own note) still function if the call is dropped?*
+     Checked that codebase directly (not this refactor workspace): `write/metadata_srf_group_writer.py`
+     guards every `csiro_*` write with `hasattr(satobj, 'csiro_ssi') and ... is not None`; the old
+     `HypsoBase.__init__` never defaults these attributes to `None`; and the only other `csiro`-named
+     functions in that package (`aeronet_oc/aeronet_oc.py`'s `aeronet_oc_calculate_rrs_csiro`/
+     `aeronet_oc_generate_csiro_gaussian_srfs`) are an unrelated, coincidentally-named Rrs helper family that
+     never touches `satobj.csiro_*`. **Confirmed safe** — the only effect of dropping the call is that L1D
+     files no longer carry the five `metadata/srf/csiro_*` variables, which nothing reads anyway.
+
+  User confirmed: **removed `satobj.compute_csiro_srfs()`** from `/home/camerop/AC/hypso-processing-
+  pipeline/hypso_pipeline/stage2_ac/process_capture.py` (a separate repo/git history from this workspace —
+  left the surrounding unrelated uncommitted work there, config edits + a new `colocation/`/`resampling.py`,
+  untouched and **not committed**, since that's the user's own in-progress work in a different repo). Replaced
+  with an explanatory comment (why it was there, why it's gone, cross-references this file). Left
+  `hypso.reflectance.compute_csiro_srfs()` itself as a `DeprecationWarning`-emitting function (×16 entry) rather
+  than deleting it outright, in case anything else outside this one pipeline still calls it — actual removal
+  from `hypso-package` is a separate future step once nothing calls it anywhere.
 
 - **2026-08-25 (continued further, ×16):** Three user-directed items (`753d9c99`, `7e5d7897`):
   1. **Utils grab-bag split**: `utils/utils_file.py` deleted → `utils/ncdebug.py` (NetCDF inspection family,
