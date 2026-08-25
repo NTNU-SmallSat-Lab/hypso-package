@@ -6,6 +6,49 @@ restart, this file is the durable copy) and `ARCHITECTURE_PROPOSAL.md` (the orig
 implements). This workspace (`~/hypso-package-refactor/hypso-package`) is a git clone the user gave explicit
 permission to modify — unlike `/home/camerop/AC/hypso-package`, which is **read-only**, do not touch it.
 
+## AC-connector pass — design notes (2026-08-25, not yet implemented)
+
+User asked how the AC connectors could be improved. Grounded in reading the adapters + how
+`hypso-processing-pipeline` actually drives them. The decisive evidence: **the pipeline already routes around
+the connectors in three places** — treat `hypso_pipeline/ac_runners_hypso.py` as the field-tested spec for what
+the connectors should have been:
+
+1. **OC-SMART**: pipeline replaced `stage_input`/`run_correction` entirely (`run_ocsmart_correction`) because
+   the connector (a) hardcodes bare `python3` — OC-SMART needs its own pinned Python 3.11 conda env
+   (`python_path` param), (b) stages input into OC-SMART's *shared install dir* — a real concurrent-run
+   collision was observed on the PACE side; pipeline stages into `capture_dir/ocsmart_staging/`, (c) leaves
+   output in the install dir; pipeline redirects it to `capture_dir` and save/restores OC-SMART's global
+   `OCSMART_Input.txt` (fixed-path config, no CLI args) even on failure. Only `open_output` is still used.
+2. **Polymer**: pipeline bypasses `ac_polymer_open_output` for chla (`_read_polymer_chla`) because the v1
+   loader hardcodes a literal "chla" variable; v2 only exposes log-scale "logchl" (pipeline reconstructs
+   `10**logchl`). That version handling belongs in the adapter.
+3. **ACOLITE**: pipeline mutates `satobj.acolite_dir` from config before calling; EARTHDATA credentials pass
+   as plaintext kwargs.
+
+Proposal (changes in hypso-package only; external tools untouched, per standing instruction):
+- **Fold the pipeline's runner design back into the adapters** (subprocess + configurable interpreter +
+  capture-local staging + config save/restore + capture-dir output).
+- **Config dataclass per tool** (paths/version/interpreter) instead of 5-kwarg plumbing and satobj.*_dir
+  mutation; credentials via env/netrc-style provider, not kwargs.
+- **Process isolation for Polymer/ACOLITE** (both currently imported in-process with permanent
+  `sys.path.insert` — can't mix Polymer v1/v2 in one session, tool crash kills the pipeline, dep conflicts,
+  no parallelism). Driver-script subprocess like OC-SMART. Note: the subprocess env must have `hypso`
+  importable for the string-resolved srf_getter.
+- **Uniform contract**: `run_correction -> ACRunResult` (output paths/log); `open_output` registers into
+  l2a_cube + returns one consistent shape; typed exceptions instead of print+None (pipeline currently
+  defensive-checks a different return shape per tool). Fold `_read_polymer_chla`'s chla/logchl handling in.
+- **Output-path ownership moves out of `io.dispatch.load_capture_file`** (it computes acolite/ocsmart output
+  paths at *load* time — a coupling smell) into the adapters.
+- **Adapters consume `SpectralResponse` explicitly** (generate_* take `sr` + band labels; resolve the
+  satobj.wavelengths/fwhm-vs-sr.band_centers subtlety — the SRF nc's `band_wavelength` labels come from
+  satobj.wavelengths, which is NOT sr.band_centers). Add a lazy rebuild so a file-loaded satobj can generate
+  the Polymer SRF nc (today satobj.srf only exists after an in-session L1D run — the SRF matrix is not
+  persisted in our files).
+- Known bugs to fix in the same pass: polymer `open_output` has no `case _` (unknown input_product_level →
+  NameError); `run_correction`'s dead `run_polymer_kwargs`/`if True:`/`srf_nc_path, srf_nc_path =` typo.
+- Open question for the user: the csiro_* path is computed+persisted but consumed by nothing — keep as
+  provenance, make it the Polymer SRF source, or drop?
+
 ## Approved plan summary
 
 Full plan is in the "Approved Plan" block below (copied verbatim from plan-mode approval). Key decisions, most
