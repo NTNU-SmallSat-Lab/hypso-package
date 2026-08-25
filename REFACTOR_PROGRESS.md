@@ -51,6 +51,25 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-25 (continued further, ×10):** Resumed after a session disconnect that left the `self.calibration`
+  composition (plan item 7) mid-flight, uncommitted. Picked up the in-progress work as found: extracted
+  `HypsoBase._set_calibration_coeff_files`/`_run_calibration`/`_load_calibration_coeff_files` verbatim into new
+  module-level functions in `hypso/calibration/pipeline.py` (`set_calibration_coeff_files`/
+  `load_calibration_coeff_files`/`run_calibration`, each taking `satobj` explicitly) — same convention as
+  `hypso.geo`. Confirmed via grep the three original private methods had zero external callers, so (like the
+  private `_run_*` georeferencing helpers, unlike `run_georeferencing`/`run_direct_georeferencing`) no wrapper
+  methods were kept on `HypsoBase` — its `_generate_l1b_cube_impl` now calls
+  `calibration_pipeline.run_calibration(self, ...)` directly. Also found (already staged from before the
+  disconnect) the deletion of three scratch scripts — `calibration/calibration_pipeline.py`,
+  `calibration_pipeline_functions.py`, `make_destriping_matrix.py` — confirmed genuinely dead: hardcoded local
+  data paths (`../../../Data/HYPSO-1/frohavet/`), broken relative imports of modules that don't exist in this
+  package (`utilities`, `read_images`, `show_bip`), never importable as part of the installed package (same
+  pattern as the `georeferencing/example*.py` deletion earlier this session), and confirmed zero references
+  anywhere in this repo or `hypso-processing-pipeline` before finalizing. Cleaned up a leftover multi-blank-line
+  gap in `HypsoBase.py` left by the extraction. Verified: `from hypso import Hypso` imports cleanly (clean CWD),
+  `hypso.calibration.pipeline`'s three functions import and resolve correctly, and
+  `tests/baseline/compare_to_baseline.py` still passes with an exact match (`l1b_cube` mean=42.928984, matching
+  every prior run). Committed (`74990178`).
 - **2026-08-25 (continued further, ×9):** User asked (mid-cleanup, IDE had `dimensionality_reduction/__init__.py`
   open, likely incidental) whether `hypso.aeronet_oc` is used by `hypso-processing-pipeline` and could be
   removed if not. Confirmed via grep: NOT used by `hypso-processing-pipeline` (which reimplemented its own
@@ -378,7 +397,10 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
      `HypsoBase` (external callers depend on them); the private `_run_*` helpers moved outright.
    - `self.io` (wrapping `_load_capture_file`'s dispatch through `hypso.io.reader`/`hypso.io.writer`) —
      **not started**.
-   - `self.calibration` (wrapping `_run_calibration`/`_load_calibration_coeff_files`) — **not started**.
+   - ~~`self.calibration` (wrapping `_run_calibration`/`_load_calibration_coeff_files`)~~ — done, committed
+     (`74990178`): extracted verbatim into `hypso/calibration/pipeline.py` module-level functions
+     (`set_calibration_coeff_files`/`load_calibration_coeff_files`/`run_calibration`), no wrapper methods kept
+     on `HypsoBase` (confirmed zero external callers of the three private methods).
    - The `self.label` uninitialized-attribute trap is **already fixed** (sensor_profile wiring, `884b8d5f`).
    - ~~Consolidate `run_georeferencing`/`_run_custom_georeferencing`~~ — done, committed: `_run_custom_
      georeferencing` deleted outright (confirmed dead code, zero callers anywhere - see status entry above),
