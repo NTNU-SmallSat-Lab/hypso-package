@@ -94,6 +94,33 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-25 (continued further, ×16):** Three user-directed items (`753d9c99`, `7e5d7897`):
+  1. **Utils grab-bag split**: `utils/utils_file.py` deleted → `utils/ncdebug.py` (NetCDF inspection family,
+     kept as one interdependent toolset), `utils/misc.py` (`is_integer_num`, the only function with a caller),
+     `spectral_analysis/hsi2rgb.py` (**HSI2RGB moved per user question "better submodule?"** — rendering RGB
+     from spectra is spectral analysis; kept for the RGB-camera TODO; its `D_illuminants.mat` moved to
+     `spectral_analysis/data/`, MANIFEST updated). Running HSI2RGB for the first time ever revealed it was
+     already broken under NumPy 2.x (`np.trapz` removed) — fixed to `np.trapezoid`, smoke-tested. Deleted with
+     zero callers: `MyProgressBar`, `find_all_files`/`find_file`/`find_dir`, utils-local `haversine`,
+     `find_closest_water_lat_lon_match` (was already fully commented out).
+  2. **Lazy `spectral_response` rebuild for file-loaded captures** (`HypsoBase.spectral_response` is now a
+     property): closes the "file-loaded satobj can't generate the Polymer SRF nc" gap. Made EXACT (all three
+     Polymer ncs xr-identical to in-session references; pinned by
+     `test_spectral_response_lazy_rebuild_from_file`) by fixing three precision leaks: corrections spectral
+     arrays f4→f8 in `io/writer`, srf-group esun/effective_fwhm f4→f8 in `metadata_srf_group_writer`, and
+     `io/reader` now reconstructing `satobj.wavelengths` from precise `radiation_wavelength` instead of the
+     rounded `wavelength` label (fallback kept for old files). Rebuild mirrors the in-session `_get_fwhm()`
+     step (profile-default fwhm differs at lookup boundary bands). Files written pre-f8-fix rebuild to f4
+     precision only.
+  3. **csiro deprecated, not removed**: user said drop unless used — it IS called, by
+     `hypso-processing-pipeline/hypso_pipeline/stage2_ac/process_capture.py:193` (`satobj.compute_csiro_srfs()`),
+     though its results are consumed by nothing (the Polymer generate_* calls right after it read the OTHER
+     attribute family, and the persisted `csiro_*` file fields have no known readers). Added a
+     `DeprecationWarning` (still fully functional, same pattern as `generate_l1*_cube`); actual removal happens
+     when the pipeline drops that call in the AC-connector pass. **User also approved subprocess isolation**
+     for Polymer/ACOLITE (see the AC-connector design notes section) — queued as the next major work item.
+  Full suite: 73 tests pass.
+
 - **2026-08-25 (continued further, ×15):** Four user-directed changes, each committed separately:
   1. **`classification/` → `masks/`** (`cabd8860`): the CNN/SVM classifiers exist to produce sea/land/cloud
      masks, so the mask-oriented name fits; `hypso.classification` stays as a one-line compat shim (confirmed
