@@ -272,10 +272,35 @@ required by default. A caller that does need one may still pass a different
 ``python_path``; that environment must have ``hypso`` importable too, since
 Polymer resolves ``srf_getter`` by dotted string name back into this package.
 
-ACOLITE and OC-SMART are not yet subprocess-isolated - see
-``REFACTOR_PROGRESS.md``'s AC-connector design notes for the fuller proposal
-(config dataclasses, a uniform result/exception contract, moving output-path
-computation out of ``hypso.io.dispatch``) this is the first slice of.
+**ACOLITE** is isolated the same way (``ACOLITEAdapter.run_correction`` /
+``_acolite_driver.py``), for a different reason: it has no demonstrated
+version-conflict bug the way Polymer does (only one ACOLITE build is wired
+into ``hypso-processing-pipeline``'s config today), so the justification is
+crash containment (ACOLITE's gdal/pyresample/cartopy-heavy stack taking down
+the whole host process on a segfault or hang) and parallelism, plus
+consistency with the pattern Polymer's isolation already established. Verified
+against the real ACOLITE installation with a missing input file: unlike
+Polymer's ``Level1_HYPSO``, ACOLITE's own ``acolite_run`` does not raise on a
+missing file - it logs the problem and returns normally - so the proof of real
+execution there is a real ACOLITE-written run log in the output directory,
+not an exception.
+
+One difference from Polymer's isolation: ACOLITE's ``EARTHDATA_u``/
+``EARTHDATA_p`` credentials are **not** written into the JSON config file
+``run_subprocess_driver`` passes to the driver (that file sits on disk, even
+briefly, in the per-call ``TemporaryDirectory``) - ``run_subprocess_driver``
+gained an ``extra_env`` parameter, and ``_acolite_driver.py`` reads
+``HYPSO_ACOLITE_EARTHDATA_USERNAME``/``PASSWORD`` from the subprocess's own
+environment instead, set only for that one subprocess call.
+
+**OC-SMART** is not yet migrated onto this shared mechanism - it already runs
+as a subprocess (via ``hypso-processing-pipeline``'s own
+``ac_runners_hypso.run_ocsmart_correction``, which this package's
+``OCSMARTAdapter`` doesn't yet replicate; see ``REFACTOR_PROGRESS.md``'s
+AC-connector design notes). The fuller proposal there (config dataclasses, a
+uniform result/exception contract, moving output-path computation out of
+``hypso.io.dispatch``, folding the pipeline's ``_read_polymer_chla``
+version-handling into the adapter) is still open.
 
 Keyed cube/mask containers (``hypso.containers.DatasetDict``)
 -----------------------------------------------------------------

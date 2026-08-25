@@ -30,11 +30,14 @@ Proposal (changes in hypso-package only; external tools untouched, per standing 
   capture-local staging + config save/restore + capture-dir output).
 - **Config dataclass per tool** (paths/version/interpreter) instead of 5-kwarg plumbing and satobj.*_dir
   mutation; credentials via env/netrc-style provider, not kwargs.
-- ~~Process isolation for Polymer/ACOLITE~~ — **Polymer done, `8f0c2f98`** (see ×18 status entry: real reason
-  confirmed by direct reproduction — v1/v2 builds' same-named `core` package version conflict, not a Python-
-  version mismatch as first guessed; that guess was checked and disproven). **ACOLITE not started** — same
-  `run_subprocess_driver`/`ACRunError` mechanism should apply directly; ACOLITE's own crash-containment/
-  no-parallelism motivations still stand even without a demonstrated version-conflict bug like Polymer's.
+- ~~Process isolation for Polymer/ACOLITE~~ — **both done**: Polymer `8f0c2f98` (see ×18 status entry: real
+  reason confirmed by direct reproduction — v1/v2 builds' same-named `core` package version conflict, not a
+  Python-version mismatch as first guessed; that guess was checked and disproven), ACOLITE `d13127f2` (see
+  ×19 status entry — no demonstrated version-conflict bug like Polymer's, justified instead by crash
+  containment/parallelism/consistency; also moved EARTHDATA credentials off disk onto subprocess env vars
+  as a security improvement made along the way). **OC-SMART not migrated onto this shared mechanism** — it
+  already runs as a subprocess via `hypso-processing-pipeline`'s own `ac_runners_hypso.
+  run_ocsmart_correction`, which this package's `OCSMARTAdapter` doesn't yet replicate (see item below).
 - **Uniform contract**: `run_correction -> ACRunResult` (output paths/log); `open_output` registers into
   l2a_cube + returns one consistent shape; typed exceptions instead of print+None (pipeline currently
   defensive-checks a different return shape per tool). Fold `_read_polymer_chla`'s chla/logchl handling in.
@@ -97,6 +100,37 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-25 (continued further, ×19): AC-connector pass, part 2 — ACOLITE subprocess isolation.** Same
+  `run_subprocess_driver`/`ACRunError` mechanism as Polymer (×18), applied to `ACOLITEAdapter.run_correction`
+  via a new `_acolite_driver.py`. Checked first whether ACOLITE has a Polymer-like multi-build conflict: it
+  doesn't — every config file in `hypso-processing-pipeline` (HYPSO-stage and PACE-stage alike) points
+  `acolite_path` at the same single checkout — so this isolation's justification is narrower and honestly
+  documented as such: crash containment (ACOLITE's gdal/pyresample/cartopy stack) + parallelism + consistency
+  with Polymer's pattern, not a demonstrated bug. Confirmed real imports work in the active `ac` env exactly
+  as Polymer's did (checked directly, not assumed) — no separate environment needed by default here either.
+  Dropped a dead `import acolite as ac` found while in this code (used only in an already-commented-out line).
+
+  **Security improvement made along the way**: `EARTHDATA_u`/`EARTHDATA_p` credentials no longer travel
+  through the JSON config file `run_subprocess_driver` writes to disk (even briefly, even in a private
+  per-call `TemporaryDirectory`) — `run_subprocess_driver` gained an `extra_env` parameter, and the driver
+  reads `HYPSO_ACOLITE_EARTHDATA_USERNAME`/`PASSWORD` from the subprocess's own environment instead. Pinned
+  by a test asserting `"EARTHDATA"` never appears in the written config.json.
+
+  **Verified against the real ACOLITE installation** (skipped if absent, same pattern as Polymer's real-tool
+  test): unlike Polymer's `Level1_HYPSO`, ACOLITE's own `acolite_run` does **not** raise on a missing input
+  file — it logs `"Path ... does not exist."` and returns normally. So the proof of real execution here isn't
+  an exception but a real ACOLITE-written run log file in the output directory (confirmed present, containing
+  the exact expected message) — proving the real `acolite`/`acolite.acolite.settings`/`acolite.acolite.
+  acolite_run` imports succeeded and real ACOLITE code actually ran. 6 new ACOLITE tests alongside the
+  existing 6 Polymer ones (12 total in `tests/test_ac_subprocess.py`). Full suite: 86 tests pass. Committed
+  (`d13127f2`), docs extended.
+
+  **Remaining from the AC-connector proposal**: OC-SMART not yet migrated onto `run_subprocess_driver` (it
+  already runs as a subprocess via the pipeline's own `ac_runners_hypso.run_ocsmart_correction`, which this
+  package's `OCSMARTAdapter` doesn't replicate); per-tool config dataclasses; uniform `run_correction`/
+  `open_output` result contract; moving output-path computation out of `hypso.io.dispatch`; folding the
+  pipeline's `_read_polymer_chla` v1/v2 chla-vs-logchl handling into the Polymer adapter.
+
 - **2026-08-25 (continued further, ×18): AC-connector pass, part 1 — Polymer subprocess isolation.**
   Investigated two user questions before writing any code:
   1. *Does Polymer need a separate Python env like OC-SMART?* Checked directly (not assumed): the real v1
@@ -127,7 +161,7 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
   with a deliberately-missing input file — confirmed it fails with a clean `FileNotFoundError`, proving
   `eoread`/`polymer`/`core`/`eotools` all import correctly through the isolated subprocess, not with any
   import error. Full suite: 80 tests pass. Committed (`8f0c2f98`), docs extended (architecture.rst).
-  **ACOLITE not yet subprocess-isolated** — natural next slice, same mechanism applies directly.
+  ~~ACOLITE not yet subprocess-isolated~~ — done, see the ×19 status entry above (`d13127f2`).
 
 - **2026-08-25 (continued further, ×17): csiro path fully resolved — call removed from the pipeline (a
   cross-repo change, NOT in this workspace).** Investigated two user questions before acting:
