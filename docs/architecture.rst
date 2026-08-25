@@ -232,6 +232,51 @@ as ``HypsoBase.ac_dark_pixel_subtraction``), and
 Polymer itself via the ``srf_getter=`` argument, so its import path is frozen
 regardless of how the adapters are organized).
 
+**Subprocess isolation (Polymer).** Unlike the other adapters, ``PolymerAdapter.
+run_correction`` is not purely organizational - it runs Polymer in a fresh
+subprocess rather than importing it in-process. This is a real behavior change,
+made for a confirmed reason rather than caution for its own sake: Polymer's v1
+(HYPSO-SRF-patched) and v2 (stock) builds ship different, incompatible versions
+of the same-named top-level packages (``core`` at least - v2's needs
+``core.process.blockwise``, absent from v1's checkout), and Python's
+``sys.modules`` import cache pins whichever version is imported first for the
+rest of the process's lifetime. A long-lived process that runs a v1 correction
+and a v2 correction without restarting (exactly what
+``hypso-processing-pipeline``'s ``polymer_version="v1"/"v2"`` selection makes
+possible) would get a silent mix of stale and fresh modules from the second
+call onward - reproduced directly while building this: importing v1, then v2
+after clearing only the ``polymer.*`` cache entries (a natural but incomplete
+attempt), raised ``ModuleNotFoundError`` from the still-cached v1 ``core``.
+
+The mechanism (``hypso/ac/adapters/base.py``): ``run_subprocess_driver(python_path,
+driver_module, config, tool_name)`` writes ``config`` as JSON into a per-call
+``TemporaryDirectory``, invokes ``<python_path> -m <driver_module> config.json
+result.json``, and reads back the JSON result - raising ``ACRunError`` (carrying
+the subprocess's stdout/stderr and, if available, the tool's own structured
+error) on any failure. The per-call temp directory is deliberate: a shared/fixed
+staging path is exactly the class of bug ``hypso-processing-pipeline`` had to
+work around by hand for OC-SMART (a real concurrent-run collision was observed
+there). ``hypso/ac/adapters/_polymer_driver.py`` is the part of
+``run_correction`` that actually needs Polymer imported - version-specific
+output selection (v1 needs ``polymer.main_v5.default_output_datasets``) and the
+``run_polymer()`` call; path resolution and output-file renaming stay in the
+parent process, in ``PolymerAdapter.run_correction`` itself.
+
+``run_correction`` gained an optional ``python_path`` parameter (default
+``sys.executable``) for this. An initial assumption that Polymer might need a
+genuinely separate Python environment (its ``environment.yml`` pins Python
+3.12) was checked directly and disproven: the real v1 checkout's
+``eoread``/``polymer``/``core``/``eotools`` all import cleanly under whatever
+interpreter this package itself runs under - no separate environment is
+required by default. A caller that does need one may still pass a different
+``python_path``; that environment must have ``hypso`` importable too, since
+Polymer resolves ``srf_getter`` by dotted string name back into this package.
+
+ACOLITE and OC-SMART are not yet subprocess-isolated - see
+``REFACTOR_PROGRESS.md``'s AC-connector design notes for the fuller proposal
+(config dataclasses, a uniform result/exception contract, moving output-path
+computation out of ``hypso.io.dispatch``) this is the first slice of.
+
 Keyed cube/mask containers (``hypso.containers.DatasetDict``)
 -----------------------------------------------------------------
 

@@ -30,10 +30,11 @@ Proposal (changes in hypso-package only; external tools untouched, per standing 
   capture-local staging + config save/restore + capture-dir output).
 - **Config dataclass per tool** (paths/version/interpreter) instead of 5-kwarg plumbing and satobj.*_dir
   mutation; credentials via env/netrc-style provider, not kwargs.
-- **Process isolation for Polymer/ACOLITE** (both currently imported in-process with permanent
-  `sys.path.insert` — can't mix Polymer v1/v2 in one session, tool crash kills the pipeline, dep conflicts,
-  no parallelism). Driver-script subprocess like OC-SMART. Note: the subprocess env must have `hypso`
-  importable for the string-resolved srf_getter.
+- ~~Process isolation for Polymer/ACOLITE~~ — **Polymer done, `8f0c2f98`** (see ×18 status entry: real reason
+  confirmed by direct reproduction — v1/v2 builds' same-named `core` package version conflict, not a Python-
+  version mismatch as first guessed; that guess was checked and disproven). **ACOLITE not started** — same
+  `run_subprocess_driver`/`ACRunError` mechanism should apply directly; ACOLITE's own crash-containment/
+  no-parallelism motivations still stand even without a demonstrated version-conflict bug like Polymer's.
 - **Uniform contract**: `run_correction -> ACRunResult` (output paths/log); `open_output` registers into
   l2a_cube + returns one consistent shape; typed exceptions instead of print+None (pipeline currently
   defensive-checks a different return shape per tool). Fold `_read_polymer_chla`'s chla/logchl handling in.
@@ -95,6 +96,38 @@ Full unabridged plan text: see the "Approved Plan" section pasted at the bottom 
 duplicated per update — if it's missing, check `/home/camerop/.claude/plans/rosy-frolicking-summit.md` instead).
 
 ## Status (update this section as work progresses — most recent at top)
+
+- **2026-08-25 (continued further, ×18): AC-connector pass, part 1 — Polymer subprocess isolation.**
+  Investigated two user questions before writing any code:
+  1. *Does Polymer need a separate Python env like OC-SMART?* Checked directly (not assumed): the real v1
+     (HYPSO-SRF) checkout's `environment.yml` pins Python 3.12, but the active `ac` env is 3.13. Tested the
+     actual import chain (`eoread.hypso.Level1_HYPSO`, `polymer.main_v5.run_polymer`) against the real
+     checkout in the `ac` env — **both import cleanly**. The environment.yml pin is aspirational, not a hard
+     requirement. **Original concern disproven.**
+  2. *Then why does subprocess isolation matter?* Reproduced the real problem live: imported v1's `polymer`,
+     deleted only `sys.modules['polymer']`/`['polymer.main_v5']` (an easy, natural mistake), then imported
+     v2 from a different checkout — got `ModuleNotFoundError: No module named 'core.process'` because v1's
+     `core` was still cached under that name and v2's `polymer.main_v5` needs a different, incompatible
+     `core` (with a `core.process.blockwise` submodule v1's lacks). **Confirmed, demonstrated justification**:
+     v1/v2 builds ship different same-named packages; Python's `sys.modules` cache makes switching between
+     them unsafe within one long-lived process — directly relevant since `hypso-processing-pipeline` supports
+     `polymer_version="v1"/"v2"` per call.
+  User approved proceeding on this basis. Built: `hypso/ac/adapters/base.py`'s `ACRunError`/
+  `run_subprocess_driver` (per-call `TemporaryDirectory` for config/result JSON — directly avoids the
+  concurrent-run collision class of bug already hand-worked-around for OC-SMART's staging dir) and
+  `hypso/ac/adapters/_polymer_driver.py` (the part of `run_correction` needing Polymer imported — version
+  selection + the `run_polymer()` call; path resolution/renaming stay in the parent). `run_correction` gained
+  an additive `python_path=None` param (→ `sys.executable`); threaded through the frozen
+  `ac_polymer_run_correction` wrapper. Also fixed, while in this code: `open_output`'s missing `case _`
+  (unrecognized `input_product_level` → unhelpful `AttributeError`, now a clear `ValueError`), the dead
+  `run_polymer_kwargs`/`srf_nc_path, srf_nc_path =` typo, and the unused `run_polymer_dataset` import.
+  **Verified with real evidence, not just structural checks**: `tests/test_ac_subprocess.py` (6 tests) —
+  driver-logic unit tests with stubbed Polymer, `ACRunError` propagation through a real subprocess spawn,
+  and (the strongest one) a real-subprocess run against the **actual Polymer v1 checkout on this machine**
+  with a deliberately-missing input file — confirmed it fails with a clean `FileNotFoundError`, proving
+  `eoread`/`polymer`/`core`/`eotools` all import correctly through the isolated subprocess, not with any
+  import error. Full suite: 80 tests pass. Committed (`8f0c2f98`), docs extended (architecture.rst).
+  **ACOLITE not yet subprocess-isolated** — natural next slice, same mechanism applies directly.
 
 - **2026-08-25 (continued further, ×17): csiro path fully resolved — call removed from the pipeline (a
   cross-repo change, NOT in this workspace).** Investigated two user questions before acting:
