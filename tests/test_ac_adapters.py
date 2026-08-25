@@ -59,7 +59,14 @@ def test_polymer_extras():
 
 
 def test_ocsmart_extras():
-    assert callable(get_ac_adapter("ocsmart").stage_input)
+    # stage_input/run_correction were merged into one run_correction
+    # (confirmed zero external callers of the old two-call split) - see
+    # ocsmart.py's module docstring for why staging can't safely happen
+    # independently of the subprocess call.
+    ocsmart = get_ac_adapter("ocsmart")
+    assert callable(ocsmart.run_correction)
+    assert callable(ocsmart.output_path)
+    assert ocsmart.HYPSO_PREFIX == "HYPSO_HSI"
 
 
 def test_polymer_open_output_rejects_unknown_input_level():

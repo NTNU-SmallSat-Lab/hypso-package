@@ -219,8 +219,22 @@ def load_capture_file(satobj, path: Path, load_cube: bool = True) -> None:
         print("[WARNING] Datacube is not loaded!")
 
 
-    satobj.ocsmart_l1d_input_nc_file = Path(path.parent, str(satobj.sensor).upper() + "_" + str(capture_name) + "-l1d.nc")
-    satobj.ocsmart_l2a_output_h5_file = Path(path.parent, str(satobj.sensor).upper() + "_" + str(capture_name) + "-l1d_L2_OCSMART.h5")
+    # OC-SMART's own staged-input/output naming (and its output directory)
+    # is computed by hypso.ac.adapters.ocsmart.OCSMARTAdapter itself, not
+    # here - it used to be set on satobj.ocsmart_l1d_input_nc_file/
+    # ocsmart_l2a_output_h5_file at load time, using str(satobj.sensor).
+    # upper() (e.g. "HYPSO2_HSI") as the filename prefix. That was a
+    # confirmed bug: OC-SMART's own sensor autodetection only recognizes the
+    # satellite-agnostic "HYPSO_HSI" prefix (no satellite digit) - staging
+    # under the wrong prefix produced OC-SMART's "Unable to detect sensor"
+    # warning with no output, silently (exit code 0, no exception).
+    # Confirmed via hypso-processing-pipeline's own independent debugging of
+    # the same issue (see its ac_runners_hypso.py). Fixed by moving this
+    # naming into the adapter (which now uses the correct fixed prefix)
+    # rather than patching the wrong value here - see OCSMARTAdapter.
+    # HYPSO_PREFIX/.output_path(). Confirmed zero other readers of either
+    # attribute anywhere in this repo, hypso-processing-pipeline, or the
+    # original hypso-package before removing them from here.
 
 
     dt = datetime.fromtimestamp(satobj.unixtime, tz=timezone.utc)

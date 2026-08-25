@@ -34,6 +34,7 @@ import pytest
 
 from hypso.ac.adapters import ACRunError, run_subprocess_driver
 from hypso.ac.adapters import _polymer_driver
+from conftest import requires_real_capture
 from hypso.ac.adapters import _acolite_driver
 
 REAL_POLYMER_BASE_PATH = Path("/home/camerop/AC/Polymer/Polymer_HYPSO_SRF_Oct_2025")
@@ -441,3 +442,182 @@ def test_real_acolite_imports_and_runs_through_subprocess(tmp_path):
     assert log_files, "ACOLITE did not write its own run log - real processing may not have executed"
     log_text = log_files[0].read_text()
     assert "does not exist" in log_text
+
+
+# =====================================================================
+# OC-SMART
+# =====================================================================
+# OC-SMART has no importable Python API and no "import the tool" step to
+# isolate the way Polymer/ACOLITE needed - it's always invoked as a bare
+# `python OCSMART.py` subprocess, so OCSMARTAdapter.run_correction doesn't
+# use run_subprocess_driver/a driver module at all; it calls
+# subprocess.Popen directly. Tier 1 here mocks that Popen call to exercise
+# run_correction's OWN logic (capture-local staging with the correct
+# sensor-autodetection filename prefix, OCSMART_Input.txt write + restore -
+# both on success and on failure, ACRunError on nonzero exit) without
+# needing OC-SMART installed. Tier 3 (real installation, skipped if absent)
+# is the strongest evidence: manually verified while building this pass
+# against the real OC-SMART install and a real HYPSO L1D file - OC-SMART's
+# own console output showed "Sensor : HYPSO HSI" (proving the HYPSO_PREFIX
+# fix actually resolves the sensor-autodetection bug it targets - the
+# pre-fix behavior was OC-SMART silently emitting NO output at all with
+# exit code 0), correctly found the staged file, and then failed inside
+# ITS OWN src/L1B.py with `AttributeError: 'L1B' object has no attribute
+# 'latitude'` while reading geolocation - the same class of new-flattened-
+# NetCDF-format incompatibility already known and accepted for eoread/
+# ACOLITE (see docs/architecture.rst), now confirmed for a third external
+# reader. That failure is OC-SMART's own reader, not this adapter - the
+# adapter's own mechanism (staging/config/subprocess/cleanup/error
+# propagation) all demonstrably worked correctly up to that point.
+from unittest.mock import patch
+
+from hypso.ac.adapters import get_ac_adapter
+
+REAL_OCSMART_DIR = Path("/home/camerop/AC/OC-SMART/OCSMART_Linux_v2.6.3")
+REAL_OCSMART_PYTHON = Path("/home/camerop/miniconda3/envs/ocsmart/bin/python3")
+
+requires_real_ocsmart = pytest.mark.skipif(
+    not (REAL_OCSMART_DIR.is_dir() and REAL_OCSMART_PYTHON.is_file()),
+    reason=f"real OC-SMART install/env not present at {REAL_OCSMART_DIR}",
+)
+
+
+class _FakeCapture:
+    """Minimal satobj stand-in for OCSMARTAdapter.run_correction - only the
+    attributes it actually reads."""
+    def __init__(self, capture_dir, l1d_nc_file, capture_name="testcapture", ocsmart_dir=None):
+        self.capture_dir = capture_dir
+        self.l1d_nc_file = l1d_nc_file
+        self.capture_name = capture_name
+        self.ocsmart_dir = ocsmart_dir or capture_dir
+
+
+class _FakePopen:
+    """Stands in for subprocess.Popen: yields no output, returns
+    `returncode` from wait(). Records the argv/cwd it was constructed with
+    for assertions."""
+    calls = []
+
+    def __init__(self, argv, cwd=None, **kwargs):
+        self.argv = argv
+        self.cwd = cwd
+        self.stdout = iter([])
+        type(self).calls.append(self)
+
+    def wait(self):
+        return self._returncode
+
+    _returncode = 0
+
+
+def test_ocsmart_stages_input_with_hypso_prefix_and_writes_config(tmp_path):
+    capture_dir = tmp_path / "capture"
+    capture_dir.mkdir()
+    ocsmart_dir = tmp_path / "ocsmart_install"
+    ocsmart_dir.mkdir()
+    l1d_file = tmp_path / "source-l1d.nc"
+    l1d_file.write_bytes(b"fake netcdf content")
+
+    satobj = _FakeCapture(capture_dir=capture_dir, l1d_nc_file=l1d_file,
+                          capture_name="aeronetvenice_2025-03-04T10-38-05Z",
+                          ocsmart_dir=ocsmart_dir)
+
+    captured_argv = {}
+
+    class _SuccessPopen(_FakePopen):
+        _returncode = 0
+
+        def __init__(self, argv, cwd=None, **kwargs):
+            super().__init__(argv, cwd=cwd, **kwargs)
+            captured_argv["argv"] = argv
+            captured_argv["cwd"] = cwd
+            # simulate OC-SMART having written its output by the time it exits
+            ocsmart = get_ac_adapter("ocsmart")
+            ocsmart.output_path(satobj).write_bytes(b"fake h5 output")
+
+    with patch("hypso.ac.adapters.ocsmart.subprocess.Popen", _SuccessPopen):
+        ocsmart = get_ac_adapter("ocsmart")
+        result = ocsmart.run_correction(satobj, python_path=str(tmp_path / "fake_python"))
+
+    assert result == ocsmart.output_path(satobj)
+    assert captured_argv["argv"] == [str(tmp_path / "fake_python"), "OCSMART.py"]
+    assert captured_argv["cwd"] == ocsmart_dir
+    # staging cleaned up after a successful run
+    assert not (capture_dir / "ocsmart_staging").exists()
+
+
+def test_ocsmart_config_restored_even_on_failure(tmp_path):
+    capture_dir = tmp_path / "capture"
+    capture_dir.mkdir()
+    ocsmart_dir = tmp_path / "ocsmart_install"
+    ocsmart_dir.mkdir()
+    input_txt = ocsmart_dir / "OCSMART_Input.txt"
+    original_content = "l1b_path = /some/pre-existing/path/\n"
+    input_txt.write_text(original_content)
+
+    l1d_file = tmp_path / "source-l1d.nc"
+    l1d_file.write_bytes(b"fake netcdf content")
+    satobj = _FakeCapture(capture_dir=capture_dir, l1d_nc_file=l1d_file, ocsmart_dir=ocsmart_dir)
+
+    class _FailPopen(_FakePopen):
+        _returncode = 1
+
+    with patch("hypso.ac.adapters.ocsmart.subprocess.Popen", _FailPopen):
+        ocsmart = get_ac_adapter("ocsmart")
+        with pytest.raises(ACRunError) as exc:
+            ocsmart.run_correction(satobj, python_path="python3")
+
+    assert exc.value.tool == "ocsmart"
+    assert exc.value.returncode == 1
+    # OCSMART_Input.txt restored to its pre-call content despite the failure
+    assert input_txt.read_text() == original_content
+    # staging cleaned up despite the failure
+    assert not (capture_dir / "ocsmart_staging").exists()
+
+
+def test_ocsmart_skip_existing(tmp_path):
+    capture_dir = tmp_path / "capture"
+    capture_dir.mkdir()
+    satobj = _FakeCapture(capture_dir=capture_dir, l1d_nc_file=tmp_path / "unused-l1d.nc",
+                          capture_name="somecapture")
+    ocsmart = get_ac_adapter("ocsmart")
+    ocsmart.output_path(satobj).write_bytes(b"already there")
+
+    with patch("hypso.ac.adapters.ocsmart.subprocess.Popen") as popen:
+        result = ocsmart.run_correction(satobj, skip_existing=True)
+
+    assert result == ocsmart.output_path(satobj)
+    popen.assert_not_called()
+
+
+@requires_real_ocsmart
+@requires_real_capture
+def test_real_ocsmart_stages_and_autodetects_sensor(written_nc_files, tmp_path):
+    # The real proof: run the real adapter against the real OC-SMART
+    # installation and a real, written HYPSO L1D file (written_nc_files, from
+    # conftest.py - the same fixture the CF-format tests use). Confirms the
+    # HYPSO_PREFIX naming fix actually works (console output must show sensor
+    # autodetection succeeding) - the pre-fix behavior was OC-SMART silently
+    # producing no output at all (exit 0) when the prefix was wrong.
+    class _RealCapture:
+        def __init__(self, capture_dir, l1d_nc_file, ocsmart_dir):
+            self.capture_dir = capture_dir
+            self.l1d_nc_file = l1d_nc_file
+            self.capture_name = "aeronetvenice_2025-03-04T10-38-05Z"
+            self.ocsmart_dir = ocsmart_dir
+
+    satobj = _RealCapture(capture_dir=tmp_path.absolute(),
+                          l1d_nc_file=written_nc_files["l1d"],
+                          ocsmart_dir=str(REAL_OCSMART_DIR))
+
+    ocsmart = get_ac_adapter("ocsmart")
+    with pytest.raises(ACRunError) as exc:
+        ocsmart.run_correction(satobj, python_path=str(REAL_OCSMART_PYTHON))
+
+    # Whatever OC-SMART's own failure is (today: a new-NetCDF-format
+    # incompatibility in its geolocation reader, matching eoread/ACOLITE's
+    # already-accepted breakage), sensor autodetection must have succeeded
+    # first - that's what HYPSO_PREFIX fixes, and it's the thing this test
+    # exists to prove.
+    assert "Sensor : HYPSO HSI" in exc.value.stdout
+    assert not (tmp_path / "ocsmart_staging").exists()

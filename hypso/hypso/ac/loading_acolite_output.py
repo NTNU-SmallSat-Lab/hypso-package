@@ -99,8 +99,22 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
     else:
         pass
 
-    EARTHDATA_u = "cpenne"
-    EARTHDATA_p = "Dec1$!onJG0@1$LogoMen5un!"
+    # Resolve from ~/.netrc (host urs.earthdata.nasa.gov) or the
+    # EARTHDATA_USERNAME/EARTHDATA_PASSWORD environment variables - never
+    # hardcode a real credential here.
+    import netrc
+    import os
+
+    try:
+        _authenticators = netrc.netrc().authenticators("urs.earthdata.nasa.gov")
+    except (FileNotFoundError, netrc.NetrcParseError):
+        _authenticators = None
+
+    if _authenticators is not None:
+        EARTHDATA_u, _, EARTHDATA_p = _authenticators
+    else:
+        EARTHDATA_u = os.environ.get("EARTHDATA_USERNAME")
+        EARTHDATA_p = os.environ.get("EARTHDATA_PASSWORD")
 
 
     # Atmospheric correction
@@ -118,7 +132,6 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
     if TOGGLE_OCSMART:
         satobj.ocsmart_dir = "/home/_shared/ARIEL/atmospheric_correction/OC-SMART/OC-SMART_with_HYPSO_9-29-25_release/"
         if TOGGLE_RUN_AC:
-            satobj.ac_ocsmart_stage_input()
             satobj.ac_ocsmart_run_correction()
         if TOGGLE_READ_AC:
             satobj.ac_ocsmart_open_output()

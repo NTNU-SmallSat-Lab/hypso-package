@@ -941,12 +941,16 @@ class HypsoBase:
     # _get_inferred_wavelength_band_map moved without a wrapper (zero external
     # callers; it now lives in hypso.ac.adapters.base).
 
-    def ac_ocsmart_stage_input(self):
-        return self.ac.ocsmart.stage_input(self)
-
-
-    def ac_ocsmart_run_correction(self):
-        return self.ac.ocsmart.run_correction(self)
+    def ac_ocsmart_run_correction(self,
+                                  l2_prod: str = "Lt,Lr,Lrc,rrs,chl,tg_sol,tg_sen,Lwp",
+                                  solz_limit: float = 70.0, senz_limit: float = 70.0,
+                                  skip_existing: bool = True,
+                                  python_path: str = None):
+        return self.ac.ocsmart.run_correction(self, l2_prod=l2_prod,
+                                              solz_limit=solz_limit,
+                                              senz_limit=senz_limit,
+                                              skip_existing=skip_existing,
+                                              python_path=python_path)
 
 
     def ac_ocsmart_open_output(self, h5_file_path: Path = None):
