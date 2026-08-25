@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import Union, Literal
 import xarray as xr
@@ -8,6 +9,8 @@ from datetime import datetime, timezone
 from trollsift import Parser
 import sys
 import re
+
+logger = logging.getLogger(__name__)
 
 
 from hypso.calibration import read_coeffs_from_file, \
@@ -49,20 +52,50 @@ import netCDF4 as nc
 
 class HypsoBase:
 
-    def __init__(self, path: Union[str, Path] = None):
+    def __init__(self, path: Union[str, Path] = None, sensor_profile: "SensorProfile" = None,
+                 label: str = None, load_cube: bool = True, verbose: bool = False):
 
         """
         Initialization of HYPSO Class.
 
         :param path: Absolute path to NetCDF file
+        :param sensor_profile: SensorProfile (see hypso.sensors) describing the sensor this
+            capture is from - platform/sensor/sat_id names, fwhm/srf_wl/srf_fwhm arrays, and
+            the calibration-coefficient-file resolver. Previously each sensor required its own
+            HypsoBase subclass (Hypso1/Hypso2) to hardcode these; now any sensor with a
+            registered SensorProfile works via HypsoBase directly - see hypso.hypso1/hypso.hypso2
+            for the (now ~10-line) subclasses kept for named-class/isinstance() compatibility.
+        :param label: Capture processing label (e.g. "moved", "moved_unmasked") - see
+            _load_capture_file/_parse_filename. Previously left unset by HypsoBase.__init__ (only
+            subclasses set it), which meant a subclass forgetting to set self.label before calling
+            _load_capture_file would hit an unexplained AttributeError; always set here instead.
+        :param load_cube: Whether to load the capture's data cube immediately. Forwarded to
+            _load_capture_file.
+        :param verbose: Verbose logging.
 
         """
 
         self.path = Path(path).absolute()
 
-        # Initialize platform and sensor names
-        self.platform = None
-        self.sensor = None
+        # Sensor identity/characteristics - previously hardcoded per-subclass in Hypso1/Hypso2's
+        # own __init__; now supplied by the caller via a registered SensorProfile (hypso.sensors).
+        self.sensor_profile = sensor_profile
+        if sensor_profile is not None:
+            self.platform = sensor_profile.platform
+            self.sensor = sensor_profile.sensor
+            self.sat_id = sensor_profile.sat_id
+            self.fwhm = sensor_profile.fwhm.copy()
+            self.srf_wl = sensor_profile.srf_wl
+            self.srf_fwhm = sensor_profile.srf_fwhm
+        else:
+            # No profile given (e.g. a subclass that still wants to set these fields itself) -
+            # match the previous defaults so downstream code that checks hasattr(self, 'fwhm')
+            # etc. behaves the same either way.
+            self.platform = None
+            self.sensor = None
+
+        self.label = label
+        self.VERBOSE = verbose
 
         # Initialize capture name and target
         self.capture_name = None
@@ -120,8 +153,6 @@ class HypsoBase:
 
         # DEBUG
         self.DEBUG = False
-        self.VERBOSE = False
-
 
         # Level-2 datacubes
 
@@ -132,6 +163,14 @@ class HypsoBase:
                     }
 
         self._l2a_cubes = DataArrayDict(attributes=l2_attributes, num_dims=3, key_attribute='correction')
+
+        # Only load here when constructed with a sensor_profile - this is what lets HypsoBase be
+        # used directly (no per-sensor subclass required) for any sensor with a registered
+        # profile. A subclass that omits sensor_profile keeps the old contract: it's responsible
+        # for setting whatever it needs (platform/sensor/sat_id/fwhm/etc.) and calling
+        # self._load_capture_file(...) itself, after its own __init__ body runs.
+        if sensor_profile is not None:
+            self._load_capture_file(path=path, load_cube=load_cube)
 
 
     @property
@@ -892,7 +931,39 @@ class HypsoBase:
             print(f"[INFO] Capture capture type: {self.capture_type}")
 
 
-    def _run_calibration(self, 
+    def _set_calibration_coeff_files(self, coeff_type: str = 'moved', **kwargs) -> None:
+        """
+        Set the absolute path for the calibration coefficients (radiometric, smile,
+        destriping, spectral) for this capture's sensor, via self.sensor_profile's
+        calibration_files resolver (see hypso.sensors). Previously implemented
+        separately per Hypso1/Hypso2 subclass, each hardcoding a call to
+        get_hypsoN_calibration_files - now generic: the sensor-specific lookup lives
+        in the SensorProfile instead, so this method works for any sensor.
+
+        :return: None.
+        """
+        if self.sensor_profile is None:
+            raise AttributeError(
+                "_set_calibration_coeff_files requires self.sensor_profile to be set - "
+                "either construct this capture with a SensorProfile (see hypso.sensors), "
+                "or override this method in a subclass."
+            )
+
+        capture_type = self.capture_type
+
+        logger.debug("Setting calibration coefficient files with coeff_type: %s", coeff_type)
+
+        calibration_files = self.sensor_profile.calibration_files(capture_type, coeff_type=coeff_type)
+
+        self.coeff_type = coeff_type
+        self.rad_coeff_file = calibration_files['radiometric']
+        self.smile_coeff_file = calibration_files['smile']
+        self.destriping_coeff_file = calibration_files['destriping']
+        self.spectral_coeff_file = calibration_files['spectral']
+
+        return None
+
+    def _run_calibration(self,
                          radiometric: bool = True,
                          smile: bool = True,
                          destripe: bool = True,
