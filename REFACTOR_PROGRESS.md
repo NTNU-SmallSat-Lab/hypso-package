@@ -51,6 +51,27 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-25 (continued further, ×13): ALL NUMBERED PLAN ITEMS COMPLETE.** Built the formal pytest suite (plan
+  item 10, the last open item): `tests/conftest.py` (session-scoped real-capture fixture running the exact
+  baseline pipeline; per-level written-NetCDF fixture; real-data tests auto-skip when `HYPSO_DATA_AOC` is absent
+  so the suite runs in a fresh clone) plus six test modules — `test_regression_real_capture.py` (golden-file vs
+  `baseline.json`), `test_cf_format.py` (one assertion per confirmed pre-refactor format bug + a full
+  write→read round trip), `test_sensors.py`/`test_io_schema_cf.py`/`test_ac_adapters.py` (registry/builder unit
+  tests, adapter checks structural-only per plan), `test_public_api.py` (frozen external surface incl. the
+  string-resolved `hypso.ac.ac_polymer_srf_getter` path and import-order independence). **62 tests, all
+  passing** (40 unit in ~4s; 22 real-data in ~2.5min). Installed `pytest` into the `ac` conda env (second
+  env-modifying action this session, after the earlier approved `pip install -e`). Committed (`f98f8549`).
+  Noted, not fixed (third-party): netCDF4-vs-NumPy-2.5 `DeprecationWarning`s from inside netCDF4's
+  `__setitem__` on the writer's `var[:] = ...` assignments.
+
+  **Remaining known follow-ups (all deliberate, none blocking):** (1) update `eoread/hypso.py` +
+  `acolite/hypso/l1_convert.py` for the new flat NetCDF layout — the plan's explicitly-accepted breakage,
+  separate later pass (plan verification item 5: confirmed still pending, expected); (2) re-point
+  `composites/hypso1.yaml`'s RGB recipe at real wavelengths for the new Satpy reader (needs the real HYPSO-1
+  band-to-wavelength mapping — flagged in `docs/architecture.rst`, not guessed); (3) `composites/hypso1.yaml`
+  has no MANIFEST.in entry (pre-existing packaging gap, noted ×6); (4) optional later migration of
+  `hypso-processing-pipeline` from `generate_l1*_cube()` to `to_l1*()` at the user's pace.
+
 - **2026-08-25 (continued further, ×12):** Completed plan item 8, the largest remaining piece: extracted all 14
   `ac_polymer_*`/`ac_acolite_*`/`ac_ocsmart_*` methods plus the shared private `_get_inferred_wavelength_band_map`
   helper out of `HypsoBase` into a new `hypso/ac/adapters/` package - `base.py` (the `ACAdapter`
@@ -469,12 +490,13 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
    not renamed despite similar names). Also removed the orphaned `hypso/aeronet_oc/` submodule and
    `write/aeronet_oc_writer.py` (`50217513`) after confirming with the user that its only real consumer,
    `hypso-ac-processing`, is superseded by `hypso-processing-pipeline`.
-10. Build `tests/` (golden-file regression + CF/format assertions + unit tests, per plan §Verification). **Not
-    started** - `tests/baseline/` (golden-file real-data regression) exists and has been the verification method
-    used throughout, but the formal pytest suite (CF/format assertions, sensor/schema/adapter unit tests) is not
-    built yet.
-11. Run full verification against real data; update this file with results. **Ongoing** - every step above has
-    been verified against the real capture as it landed, not deferred to the end.
+10. ~~Build `tests/` (golden-file regression + CF/format assertions + unit tests, per plan §Verification)~~ —
+    done, committed (`f98f8549`): 62 tests (40 unit + 22 real-data, auto-skipping without the reference
+    capture), all passing. Run with `python -m pytest tests/` in the `ac` conda env.
+11. ~~Run full verification against real data; update this file with results~~ — done continuously: every step
+    was verified against the real capture as it landed, and the final suite (item 10) passes in full. Plan
+    verification item 5 confirmed: `eoread/hypso.py` and `acolite/hypso/l1_convert.py` still need their
+    separate-pass update before they can read the new flat-layout output (expected, accepted breakage).
 
 **Commit frequently** (this repo tracks `origin` = `NTNU-SmallSat-Lab/hypso-package`, but this is the user's own
 writable clone — commit locally as each numbered step above completes, don't wait for the whole refactor to
