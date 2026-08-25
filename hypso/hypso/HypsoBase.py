@@ -26,6 +26,7 @@ from hypso.reflectance import compute_toa_reflectance
 
 from hypso.DataArrayValidator import DataArrayValidator
 from hypso.DataArrayDict import DataArrayDict
+from hypso.containers import DatasetDict
 
 import netCDF4 as nc
 
@@ -111,10 +112,13 @@ class HypsoBase:
         #    "wide": 1092  # Along image_height (row_count)
         #}
 
-        # Initialize masks
+        # Initialize masks. Custom masks live in a DatasetDict (see
+        # hypso.containers for what it supersedes and why) - dict-style access
+        # is unchanged, but entries are validated (raising on bad shape/dims)
+        # and backed by one xarray.Dataset.
         self._land_mask = None
         self._cloud_mask = None
-        self._custom_masks: dict = {}
+        self._custom_masks = DatasetDict(dim_names=('y', 'x'), num_dims=2)
 
         # Initialize latitude and longitude
         # TODO: store latitude and longitude as xarray
@@ -142,7 +146,10 @@ class HypsoBase:
         # DEBUG
         self.DEBUG = False
 
-        # Level-2 datacubes
+        # Level-2 datacubes - a DatasetDict (see hypso.containers for what it
+        # supersedes and why); one entry per AC correction, keyed by tool
+        # ("polymer"/"acolite_l2r"/...), each entry's key stored in its
+        # attrs['correction'].
 
         l2_attributes = {'level': "L2",
                     'units': r"sr^{-1}",
@@ -150,7 +157,7 @@ class HypsoBase:
                     'l2_variable_name': "rrs"
                     }
 
-        self._l2a_cubes = DataArrayDict(attributes=l2_attributes, num_dims=3, key_attribute='correction')
+        self._l2a_cubes = DatasetDict(attributes=l2_attributes, num_dims=3, key_attribute='correction')
 
         # Only load here when constructed with a sensor_profile - this is what lets HypsoBase be
         # used directly (no per-sensor subclass required) for any sensor with a registered
@@ -164,11 +171,11 @@ class HypsoBase:
     @property
     def l2a_cube(self):
 
-        self._l2a_cubes.dim_shape = self.spatial_dimensions
-        self._l2a_cubes.dim_names = self.dim_names_3d
+        self._l2a_cubes.dim_shape = tuple(self.spatial_dimensions)
+        self._l2a_cubes.dim_names = tuple(self.dim_names_3d)
         self._l2a_cubes.num_dims = 3
 
-        return self._l2a_cubes   
+        return self._l2a_cubes
 
     @l2a_cube.setter
     def l2a_cubes(self, value):
@@ -414,7 +421,7 @@ class HypsoBase:
 
     def clear_custom_masks(self) -> None:
         """Remove every registered custom mask (land_mask/cloud_mask are unaffected)."""
-        self._custom_masks = {}
+        self._custom_masks = DatasetDict(dim_names=('y', 'x'), num_dims=2)
         return None
 
 
@@ -795,15 +802,16 @@ class HypsoBase:
         new instance is safe and avoids duplicating potentially large data.
 
         Mutable *container* attributes are different - copy.copy() would alias
-        the same dict/DataArrayDict object between self and the new instance,
-        so a later mutation on one (e.g. new_obj.set_custom_mask(...)) would
-        silently also change the other. Those are re-copied one level deep
-        (the dict itself, not what's inside it) so self and the new object
-        can diverge independently after this point.
+        the same DatasetDict object between self and the new instance, so a
+        later mutation on one (e.g. new_obj.set_custom_mask(...)) would
+        silently also change the other. Those are container-copied
+        (DatasetDict.copy(): independent entry registry and per-entry attrs,
+        shared underlying arrays) so self and the new object can diverge
+        independently after this point.
         """
         new_obj = copy.copy(self)
-        new_obj._custom_masks = dict(self._custom_masks)
-        new_obj._l2a_cubes = copy.copy(self._l2a_cubes)
+        new_obj._custom_masks = self._custom_masks.copy()
+        new_obj._l2a_cubes = self._l2a_cubes.copy()
         return new_obj
 
 
