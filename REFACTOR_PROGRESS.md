@@ -51,6 +51,37 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-25 (continued further, ×15):** Four user-directed changes, each committed separately:
+  1. **`classification/` → `masks/`** (`cabd8860`): the CNN/SVM classifiers exist to produce sea/land/cloud
+     masks, so the mask-oriented name fits; `hypso.classification` stays as a one-line compat shim (confirmed
+     external: pipeline imports `decode_jon_cnn_*` from it).
+  2. **Wavelength-based `true_color` Satpy composite** (`cabd8860`, same commit): user reconsidered the earlier
+     "composite not needed" — added `satpy/etc/composites/hypso1.yaml`+`hypso2.yaml` with WAVELENGTH
+     prerequisites (0.640/0.550/0.460 µm) resolved by Satpy against each band's `WavelengthRange` (works across
+     binning configs, unlike the removed position-based recipe), registered via a new `satpy.composites` entry
+     point (verified in satpy's own `composites/config_loader.py`). Editable install re-run to refresh
+     entry-point metadata. Verified `scn.load(["true_color"])` end-to-end against a real L1C file.
+  3. **`DatasetDict`** (`4b3e56b4`): option (b) from the container assessment — `hypso/containers.py`, a
+     `MutableMapping` over a real `xr.Dataset`, replacing `DataArrayDict` for `_l2a_cubes`/`_custom_masks`
+     (validation now raises; `update()` can't bypass; keys lowercase everywhere; `.dataset` exposes the backing
+     Dataset). **Trap found while testing**: xarray `Dataset.__setitem__` silently *reindexes/truncates* an
+     incoming array whose dims disagree with existing entries — DatasetDict guards with an explicit size check.
+     `DataArrayDict` kept only for the untouchable `_products`. 10 new unit tests (`tests/test_containers.py`).
+  4. **`SpectralResponse` redesign** (`d0580af0`): `hypso/reflectance/spectral_response.py` — one frozen
+     dataclass + one `compute_spectral_response()` builder superseding the two near-duplicate SRF paths and both
+     loose attribute families (see the module docstring, written as the canonical explanation of what it
+     supersedes). `compute_toa_reflectance`/`compute_csiro_srfs` stay as thin wrappers; HypsoBase populates
+     `satobj.spectral_response`/`spectral_response_csiro` AND the legacy attrs with identical values (Polymer
+     connector + srf metadata writer still read legacy names — migrating them is the later AC-connector pass;
+     **user explicitly said do not edit the AC processors themselves**). Confirmed from Polymer's own source
+     (`eotools/srf.py`, `main_v5.py`): only the SRF nc is load-bearing (`Band_<n>`/`wav_Band_<n>` format —
+     FROZEN); the SSI/ESUN ncs are read by nothing (eoread uses its own LISIRD F0). Also: renamed
+     `SensorProfile.srf_wl/srf_fwhm` → `fwhm_lookup_wl/fwhm_lookup_fwhm` (they're a FWHM lookup table, not
+     SRFs; zero external users), fixed the `get_esun_nc_path` copy-paste bug and the `io/dispatch` csiro_list
+     missing-comma bug, removed `compute_esun`'s two unused variants. **Verified bit-identical** against
+     pre-change reference outputs (both attr families, L1D mean, all three Polymer ncs via `xr.identical`).
+     Full suite: 72 tests pass.
+
 - **2026-08-25 (continued further, ×14):** Second cleanup pass at the user's request ("clean up the submodules,
   some are un-used"), committed (`9b2f2903`). Deleted after function-level (not just module-level) zero-caller
   confirmation across this repo + `hypso-processing-pipeline` + the original repo's demo:

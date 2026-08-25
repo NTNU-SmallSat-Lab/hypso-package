@@ -232,6 +232,56 @@ as ``HypsoBase.ac_dark_pixel_subtraction``), and
 Polymer itself via the ``srf_getter=`` argument, so its import path is frozen
 regardless of how the adapters are organized).
 
+Keyed cube/mask containers (``hypso.containers.DatasetDict``)
+-----------------------------------------------------------------
+
+``HypsoBase._l2a_cubes`` (one entry per AC correction) and ``._custom_masks``
+are held in a ``DatasetDict``: dict-style access backed by a real
+``xarray.Dataset``. It supersedes the hand-rolled ``DataArrayDict``, which had
+three defects: validation printed errors and stored the unvalidated value
+anyway; subclassing ``dict`` directly let ``update()``/``setdefault()`` bypass
+validation and made membership checks case-sensitive while lookups weren't;
+and its ``DataArrayValidator`` inheritance was never actually used.
+``DatasetDict`` implements ``collections.abc.MutableMapping`` (every mutation
+path funnels through one validated, key-lowercasing core), raises on bad
+shapes/dims, and exposes the backing dataset as ``.dataset`` for serialization
+or cross-entry xarray operations. One non-obvious guard it adds: xarray's
+``Dataset.__setitem__`` silently *reindexes* (truncates) an incoming array
+whose dims disagree with existing entries - ``DatasetDict`` checks sizes
+explicitly and raises instead. ``DataArrayDict`` itself remains only behind
+the intentionally-untouched ``products`` surface.
+
+Spectral response (``hypso.reflectance.spectral_response``)
+---------------------------------------------------------------
+
+``SpectralResponse`` is one frozen dataclass holding everything derived from
+"Gaussian band responses sampled on an SSI wavelength grid": band centers,
+FWHM, binned + unbinned sparse SRF matrices, the grid, the SSI, per-band esun
+and effective FWHM - with ``bin_factor``/``ssi_source``/``grid`` as explicit
+fields. One builder, ``compute_spectral_response()``, replaces the two
+near-duplicate computation paths that existed before (the inline SRF block in
+``compute_toa_reflectance`` and the CSIRO-variant ``compute_csiro_srfs``);
+those two entry points remain as thin wrappers with unchanged signatures and
+outputs (verified bit-identical against pre-change reference outputs).
+
+The capture object's canonical spectral response is ``satobj.spectral_
+response`` (and ``.spectral_response_csiro`` for the uniform-grid variant).
+The legacy attribute families (``srf``/``srf_ssi``/``srf_ssi_wl``/``esun``/
+``esun_wl``/``effective_fwhm`` and ``csiro_*``) are still populated with
+identical values because the Polymer connector and the L1D metadata writer
+read them - they go away when the AC connectors are migrated to consume
+``SpectralResponse`` directly (the planned later AC-connector pass, together
+with the eoread/ACOLITE reader updates for the new file layout). Until then
+the generated Polymer SRF NetCDF format is frozen: Polymer resolves it via
+eotools' ``get_SRF`` (``Band_<n>`` variables on ``wav_Band_<n>`` coords), so
+its structure is external API. The SSI/ESUN NetCDFs the connector also writes
+are informational only - nothing in the Polymer tree reads them (eoread takes
+F0 from its own LISIRD auxdata).
+
+Related renames: ``SensorProfile.srf_wl``/``srf_fwhm`` became
+``fwhm_lookup_wl``/``fwhm_lookup_fwhm`` - they were never SRFs, but a
+FWHM-vs-wavelength nearest-neighbor lookup table.
+
 NetCDF I/O (``hypso.io``)
 ---------------------------
 
