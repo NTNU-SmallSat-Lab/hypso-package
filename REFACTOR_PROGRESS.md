@@ -100,6 +100,41 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-25 (continued further, ×22): submodule-layout audit acted on.** User asked "is everything in the
+  correct submodules?" — did a fresh survey (not from memory) of the current layout. Found: (1) a stray empty
+  `utils/data/` directory left over from the HSI2RGB move (×16) — removed; (2) `ac/loading_acolite_output.py`'s
+  default-on `TOGGLE_6SV1` branch had a confirmed-broken import (`hypso.ac.__init__.py`'s `ac_6sv1` import was
+  already commented out) — pre-existing, not introduced this session; (3) `ac/` had seven loose `ac_6sv1*.py`
+  files plus `ac_srem.py`/`ac_srem_oyam.py` sitting flat, unlike Polymer/ACOLITE/OC-SMART's clean `adapters/`
+  treatment; (4) `geo.py` sat at the top level while its siblings in the same "extracted orchestration"
+  pattern (`calibration/pipeline.py`, `io/dispatch.py`) live inside their subject subpackage.
+
+  User's answers: remove 6S and unused AC methods and loose files; move `geo.py`. Executed (`47ce75f3`,
+  `a9095d4f`):
+  - Deleted all 7 `ac_6sv1*.py` files and `ac_srem.py`/`ac_srem_oyam.py` — confirmed zero callers anywhere
+    (this repo or the pipeline) before removing; SREM/SREM-OYAM were only ever imported into `hypso.ac`'s own
+    namespace and never called.
+  - Fixed `loading_acolite_output.py`: removed the broken `TOGGLE_6SV1` branch and the dead, never-branched-on
+    `TOGGLE_SREM` declaration. While in there, also fixed two OTHER pre-existing stale references found along
+    the way (not part of what was asked, but left broken would have undermined the fix): `from hypso.write
+    import ... write_l2_nc_file` (that name never existed — real one is `write_l2a_nc_file`) and its three call
+    sites — this script's default config path would have raised `ImportError` at module load regardless of
+    which AC toggle was active, before and after the 6SV1/SREM removal.
+  - Moved `geo.py` → `georeferencing/geo.py` (one internal import site, confirmed via grep; no naming
+    collisions with `georeferencing.py`'s own classes) and updated every reference (`HypsoBase.py`,
+    `calibration/pipeline.py`, `io/dispatch.py` comments, `tests/test_public_api.py`'s
+    `test_composition_modules_import` — which would have started failing with `ModuleNotFoundError` on the
+    stale path if left unfixed, docs/architecture.rst).
+
+  Verified: `hypso.ac` no longer exposes any 6SV1/SREM names; `loading_acolite_output.py` parses cleanly; full
+  suite (103 tests) passes both after the AC-method removal and after the `geo.py` move.
+
+  **Still open, not acted on (judgment calls, not asked about yet)**: `ac_polymer.py`'s `ac_polymer_srf_getter`
+  correctly stays outside `adapters/` (Polymer resolves it by dotted string — frozen path regardless of
+  organization); `geometry/`/`geometry_definition/`/`georeferencing/`'s naming similarity was already
+  investigated and deliberately left alone earlier this session (real distinct responsibilities, one has a
+  real external consumer blocking a rename) — still the right call, not revisited.
+
 - **2026-08-25 (continued further, ×21): DataArrayDict/DataArrayValidator fully retired; resample
   generalized.** Started from a user question ("why are DataArrayDict/DataArrayValidator still present?").
   Answer had three parts: (1) `_products` — the standing "do not touch" exception; (2) `DataArrayValidator`
