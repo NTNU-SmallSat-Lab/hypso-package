@@ -13,7 +13,7 @@ sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso2_calibration')
 
 
 from hypso import Hypso
-from hypso.write import write_l1b_nc_file, write_l1c_nc_file, write_l1d_nc_file, write_l2_nc_file
+from hypso.write import write_l1b_nc_file, write_l1c_nc_file, write_l1d_nc_file, write_l2a_nc_file
 
 
 def main(l1a_nc_path, lats_path=None, lons_path=None):
@@ -121,8 +121,6 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
 
     TOGGLE_OCSMART = False
     TOGGLE_ACOLITE = False
-    TOGGLE_6SV1 = True
-    TOGGLE_SREM = True
     TOGGLE_POLYMER = True
 
 
@@ -135,7 +133,7 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
             satobj.ac_ocsmart_run_correction()
         if TOGGLE_READ_AC:
             satobj.ac_ocsmart_open_output()
-            write_l2_nc_file(satobj=satobj, correction="ocsmart", overwrite=True, datacube=False)
+            write_l2a_nc_file(satobj=satobj, correction="ocsmart", overwrite=True, datacube=False)
 
     if TOGGLE_ACOLITE:
         satobj.acolite_dir = "/home/_shared/ARIEL/atmospheric_correction/acolite/"
@@ -143,20 +141,8 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
             satobj.ac_acolite_run_correction(input_product_level='L1D', EARTHDATA_u=EARTHDATA_u, EARTHDATA_p=EARTHDATA_p)
         if TOGGLE_READ_AC:
             satobj.ac_acolite_open_output()
-            write_l2_nc_file(satobj=satobj, correction="acolite_l2r", overwrite=True, datacube=False)
-            write_l2_nc_file(satobj=satobj, correction="acolite_l2w", overwrite=True, datacube=False)
-
-    if TOGGLE_6SV1:
-        from hypso.ac import run_6sv1_atmospheric_correction
-        dem_path = Path("/home/cameron/Nedlastinger/GMTED2km.tif")
-
-        luts_dir = "/home/cameron/Nedlastinger/6S_HYPSO_LUTS"
-
-        cube = run_6sv1_atmospheric_correction(satobj, dem_path, use_luts=True, luts_dir=luts_dir)
-
-        satobj.l2_cube['6sv1'] = cube
-
-        write_l2_nc_file(satobj, correction='6sv1', datacube=False, overwrite=True)
+            write_l2a_nc_file(satobj=satobj, correction="acolite_l2r", overwrite=True, datacube=False)
+            write_l2a_nc_file(satobj=satobj, correction="acolite_l2w", overwrite=True, datacube=False)
 
 '''
 if __name__ == "__main__":
