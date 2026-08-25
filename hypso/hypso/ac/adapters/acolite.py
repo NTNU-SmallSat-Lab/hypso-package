@@ -1,8 +1,11 @@
-"""ACOLITE adapter. Method bodies are HypsoBase's ac_acolite_* methods relocated
-verbatim (see base.py's ACAdapter docstring) - ACOLITE is imported as a package
-from its installation directory (satobj.acolite_dir, appended to sys.path) and
-run in-process via acolite_run(), writing L2R/L2W NetCDF output plus per-run
-log/settings files into <capture_dir>/acolite/."""
+"""ACOLITE adapter. run_correction runs ACOLITE in an ISOLATED SUBPROCESS (see
+_acolite_driver.py's module docstring for the rationale - crash containment
+and parallelism, plus consistency with Polymer's isolation, though ACOLITE has
+no demonstrated version-conflict bug the way Polymer's v1/v2 split does) -
+path/settings resolution stays here in the parent; everything past "import
+ACOLITE itself" happens in _acolite_driver.py. Every other method is
+HypsoBase's corresponding ac_acolite_* method body relocated verbatim (see
+base.py's ACAdapter docstring)."""
 import sys
 from pathlib import Path
 
@@ -10,7 +13,7 @@ import numpy as np
 
 from hypso.load import load_acolite_l2r_nc, load_acolite_l2w_nc
 
-from .base import ACAdapter, get_inferred_wavelength_band_map
+from .base import ACAdapter, get_inferred_wavelength_band_map, run_subprocess_driver
 
 
 class ACOLITEAdapter(ACAdapter):
@@ -20,48 +23,43 @@ class ACOLITEAdapter(ACAdapter):
     def run_correction(self, satobj, settings_file: Path = None,
                        input_product_level: str = 'l1c',
                        EARTHDATA_u: str = None,
-                       EARTHDATA_p: str = None
+                       EARTHDATA_p: str = None,
+                       python_path: str = None
                        ):
+        """
+        Runs ACOLITE in an isolated subprocess - see _acolite_driver.py's
+        module docstring for why.
 
+        EARTHDATA_u/EARTHDATA_p are passed to the subprocess via environment
+        variables (not written into the JSON config file passed to the
+        driver) to avoid putting credentials on disk even briefly.
+
+        python_path: interpreter to run ACOLITE's subprocess under. Defaults
+            to sys.executable (this same process's interpreter).
+
+        Raises hypso.ac.adapters.base.ACRunError on failure (carries the
+        subprocess's stdout/stderr and, if available, ACOLITE's own
+        exception type/message/traceback).
+        """
         acolite_path = Path(satobj.acolite_dir).absolute()
 
         print("[INFO] Running ACOLITE atmospheric correction installed in " + str(acolite_path))
 
-        sys.path.append(str(acolite_path))
-        #print(sys.path)
-
-        import acolite as ac
-        from acolite.acolite.settings import load
-        from acolite.acolite import acolite_run
-
-        # optional file with processing settings
-        # if set to None defaults will be used
-
-        # import settings
-        #settings = ac.acolite.settings.load(settings_file)
         # load() only applies a sensor's own config/defaults/<name>.txt (e.g.
         # HYPSO2.txt's dsf_wave_range=450,750) when explicitly given that
         # name - it does not auto-detect sensor from the input file. Passing
-        # None (as this always did before) silently fell back to ACOLITE's
-        # fully generic defaults.txt (dsf_wave_range=400,2500) instead,
-        # mirroring the fix ac_runners.py's PACE runner already has via its
-        # explicit load("PACE_OCI") call.
-        settings = load(settings_file if settings_file is not None else satobj.platform.upper())
-
-        if EARTHDATA_u is not None and EARTHDATA_p is not None:
-            settings['EARTHDATA_u'] = EARTHDATA_u
-            settings['EARTHDATA_p'] = EARTHDATA_p
-            settings['ancillary_data'] = True
-
-        # set settings provided above
+        # None would silently fall back to ACOLITE's fully generic
+        # defaults.txt (dsf_wave_range=400,2500) instead, mirroring the fix
+        # ac_runners.py's PACE runner already has via its explicit
+        # load("PACE_OCI") call.
+        settings_arg = str(settings_file) if settings_file is not None else satobj.platform.upper()
 
         if input_product_level.upper() == 'L1D':
             print("[INFO] Using L1d NetCDF as ACOLITE input.")
-            settings['inputfile'] = str(satobj.l1d_nc_file) # L1d reflectance
+            inputfile = str(satobj.l1d_nc_file)  # L1d reflectance
         else:
             print("[INFO] Using L1c NetCDF as ACOLITE input.")
-            settings['inputfile'] = str(satobj.l1c_nc_file) # default L1c (radiance)
-
+            inputfile = str(satobj.l1c_nc_file)  # default L1c (radiance)
 
         # capture_dir/acolite/, not capture_dir directly (2026-08-05) - see
         # the matching comment on satobj.acolite_l2r_output_nc_file
@@ -70,32 +68,42 @@ class ACOLITEAdapter(ACAdapter):
         acolite_output_dir = Path(satobj.capture_dir, "acolite")
         acolite_output_dir.mkdir(parents=True, exist_ok=True)
         print("[INFO] Writing ACOLITE output to " + str(acolite_output_dir))
-        settings['output'] = str(acolite_output_dir)
 
-        settings['polygon'] = None
-        settings['rgb_rhot'] = True
-        settings['rgb_rhos'] = True
-        settings['map_l2w'] = False #produces blank .pngs
-        settings['l2w_mask'] = False
-        settings['l2w_mask_threshold'] = 0.2
+        settings_overrides = {
+            "inputfile": inputfile,
+            "output": str(acolite_output_dir),
+            "polygon": None,
+            "rgb_rhot": True,
+            "rgb_rhos": True,
+            "map_l2w": False,  # produces blank .pngs
+            "l2w_mask": False,
+            "l2w_mask_threshold": 0.2,
+            "l2w_parameters": ['Rrs_*', 'spm_nechad2010', 'spm_nechad2016',
+                               'chl_re_mishra', 'chl_oc2', 'chl_oc3',
+                               'chl_re_moses3b', 'chl_re_moses3b740', 'fai',
+                               'fai_rhot', 'fait', 'ndci'],
+        }
 
-        settings['l2w_parameters'] = ['Rrs_*', \
-                                    'spm_nechad2010', \
-                                    'spm_nechad2016', \
-                                    'chl_re_mishra',\
-                                    'chl_oc2', \
-                                    'chl_oc3', \
-                                    'chl_re_moses3b', \
-                                    'chl_re_moses3b740', \
-                                    'fai', \
-                                    'fai_rhot', \
-                                    'fait', \
-                                    'ndci']
+        config = {
+            "acolite_path": str(acolite_path),
+            "settings_arg": settings_arg,
+            "settings_overrides": settings_overrides,
+        }
 
+        extra_env = None
+        if EARTHDATA_u is not None and EARTHDATA_p is not None:
+            extra_env = {
+                "HYPSO_ACOLITE_EARTHDATA_USERNAME": EARTHDATA_u,
+                "HYPSO_ACOLITE_EARTHDATA_PASSWORD": EARTHDATA_p,
+            }
 
-        processed = acolite_run(settings=settings)
-
-        #acolite_l2_file = processed[0]['l2r'][0]
+        run_subprocess_driver(
+            python_path=python_path or sys.executable,
+            driver_module="hypso.ac.adapters._acolite_driver",
+            config=config,
+            tool_name="acolite",
+            extra_env=extra_env,
+        )
 
         print("[INFO] ACOLITE atmospheric correction complete.")
 

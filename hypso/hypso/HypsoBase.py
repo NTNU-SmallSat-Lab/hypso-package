@@ -956,12 +956,14 @@ class HypsoBase:
     def ac_acolite_run_correction(self, settings_file: Path = None,
                                   input_product_level: str = 'l1c',
                                   EARTHDATA_u: str = None,
-                                  EARTHDATA_p: str = None
+                                  EARTHDATA_p: str = None,
+                                  python_path: str = None
                                   ):
         return self.ac.acolite.run_correction(self, settings_file=settings_file,
                                               input_product_level=input_product_level,
                                               EARTHDATA_u=EARTHDATA_u,
-                                              EARTHDATA_p=EARTHDATA_p)
+                                              EARTHDATA_p=EARTHDATA_p,
+                                              python_path=python_path)
 
 
     def ac_acolite_open_output(self, acolite_l2r_output_nc_file: Path = None, acolite_l2w_output_nc_file: Path = None):

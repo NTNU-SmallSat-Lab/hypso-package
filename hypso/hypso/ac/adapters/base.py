@@ -17,6 +17,7 @@ unsafe if a long-lived process (e.g. hypso-processing-pipeline) ever runs a v1
 correction and a v2 correction without restarting. A fresh subprocess per run
 sidesteps this entirely."""
 import json
+import os
 import subprocess
 import tempfile
 from pathlib import Path
@@ -47,7 +48,8 @@ class ACRunError(RuntimeError):
         )
 
 
-def run_subprocess_driver(python_path: str, driver_module: str, config: dict, tool_name: str) -> dict:
+def run_subprocess_driver(python_path: str, driver_module: str, config: dict, tool_name: str,
+                          extra_env: dict = None) -> dict:
     """Run `driver_module` (a hypso.ac.adapters._*_driver module with a
     `python -m`-invocable __main__ block) in a fresh subprocess under
     `python_path`, passing it `config` as JSON and reading back its JSON
@@ -62,6 +64,12 @@ def run_subprocess_driver(python_path: str, driver_module: str, config: dict, to
     importable for any driver whose tool resolves a hook by dotted string name
     back into this package (e.g. Polymer's srf_getter).
 
+    `extra_env`, if given, is merged into the subprocess's environment (on top
+    of this process's own os.environ) - the mechanism for passing secrets
+    (e.g. ACOLITE's EARTHDATA credentials) to a driver WITHOUT writing them
+    into config.json, which lives on disk (even briefly, even in a private
+    TemporaryDirectory) for the run's duration.
+
     Raises ACRunError on any failure (non-zero exit, missing/unparseable
     result.json, or a result.json reporting status != "ok"); returns the
     parsed result dict on success.
@@ -71,9 +79,13 @@ def run_subprocess_driver(python_path: str, driver_module: str, config: dict, to
         result_path = Path(tmp, "result.json")
         config_path.write_text(json.dumps(config, default=str))
 
+        env = os.environ.copy()
+        if extra_env:
+            env.update(extra_env)
+
         proc = subprocess.run(
             [python_path, "-m", driver_module, str(config_path), str(result_path)],
-            capture_output=True, text=True,
+            capture_output=True, text=True, env=env,
         )
 
         result = None
