@@ -51,27 +51,55 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-25:** Built `hypso/io/cf.py` (CF attribute builders: `global_attrs`, `latitude_attrs`,
+  `longitude_attrs`, `zenith_angle_attrs`, `azimuth_angle_attrs`, `crs_wgs84_attrs`, `geolocation_ref_attrs`,
+  `band_attrs`) and `hypso/io/schema.py` (`LevelSchema` + `L1A_SCHEMA`/`L1B_SCHEMA`/`L1C_SCHEMA`/`L1D_SCHEMA`/
+  `L2A_SCHEMA` + `get_schema(level)`). Both smoke-tested importing/calling cleanly. Grounded in a full read of
+  `write/l1c_nc_writer.py`, `write/geometry_group_writer.py`, `write/calibration_filenames_writer.py`,
+  `write/metadata_gcp_group_writer.py`, `write/metadata_srf_group_writer.py`, `write/utils.py` — confirmed the
+  `radiation_wavelength` trailing-comma tuple bug, the lat/lon `units="degrees"`+blanket `valid_min/max=[-180,180]`
+  bug (shared incorrectly with azimuth/zenith), and that geometry compression params are received but never
+  applied (commented out). Also confirmed `write/products_writer.py` (backs the `products` property — **do not
+  touch**, user's explicit instruction) and `write/l2a_nc_writer.py` (the actual `write_l2a_nc_file` used by
+  `hypso-processing-pipeline`, distinct from `products_writer.py`) are separate code paths.
+  Mid-session, user asked for an easy way to **plug in custom calibration coefficient sets** — added
+  `hypso/calibration/registry.py` (`register_calibration_coeffs(sat_id, name, files)` /
+  `get_custom_calibration_coeffs(sat_id, name)`, dict shape matches the bundled `get_hypsoN_calibration_files`
+  resolvers: `radiometric`/`smile`/`destriping`/`spectral`/`spectral_full_frame`) and wired it into
+  `HypsoBase._set_calibration_coeff_files` with three tiers, checked in order: (1) explicit `coeff_files=...`
+  dict for a true one-off set, (2) a `coeff_type` name previously registered via `register_calibration_coeffs`,
+  (3) fallback to `self.sensor_profile.calibration_files(...)` (today's built-in "moved"/"adjusted"/"original"
+  presets) — unchanged for existing callers. `generate_l1b_cube`/`_run_calibration` already forward `**kwargs`
+  through to `_set_calibration_coeff_files`, so `generate_l1b_cube(coeff_files={...})` works with no further
+  wiring. Verified: registry smoke test + a full real-capture `generate_l1b_cube(coeff_type='moved')` run still
+  gives l1b_cube mean=42.92898... matching baseline exactly. **Not yet committed** — next action is to commit
+  `io/cf.py`, `io/schema.py`, `calibration/registry.py`, and the `HypsoBase`/`calibration/__init__.py` edits.
+- **2026-08-25, earlier:** `hypso/sensors/` (SensorProfile + registry + hypso1/hypso2 profiles) built, `HypsoBase`
+  wired to `sensor_profile`, `Hypso1`/`Hypso2` shrunk to thin subclasses, pre-refactor baseline captured and
+  re-verified passing against this point (all committed: `9dfe2952`, `f080a61e`, `884b8d5f`).
 - **2026-08-25, session start:** Plan approved. Verified the repo imports cleanly with
-  `hypso1_calibration`/`hypso2_calibration` siblings on `sys.path` (no pip install needed — they're plain
-  sys.path-importable packages, confirmed: `python3 -c "import sys; sys.path.insert(0,'hypso'); ..."` from repo
-  root works). About to capture the **pre-refactor baseline** (run current, unmodified L1A→L1D pipeline against a
-  real capture, save cube values/shapes for later regression comparison) — this must happen before any code
-  changes, per the plan's verification section. Nothing has been modified in this repo yet beyond this progress
-  file.
+  `hypso1_calibration`/`hypso2_calibration` siblings on `sys.path` (no pip install needed).
 
 ## Next steps (in order)
 
-1. Capture pre-refactor baseline (real capture: `aeronetvenice_2025-03-04T10-38-05Z` under
-   `/home/camerop/HYPSO_DATA_AOC/` — read-only source data, safe to reuse).
-2. Build `hypso/sensors/` (SensorProfile + registry + hypso1/hypso2 profiles).
-3. Build `hypso/io/` (schema.py, cf.py, writer.py, reader.py) targeting the flattened root-group layout.
-4. Update `HypsoBase`: sensor_profile param, `self.io`/`self.calibration`/`self.geo` composition, fix the
-   `self.label` uninitialized-attribute trap, consolidate `run_georeferencing`/`_run_custom_georeferencing`.
-5. Extract `hypso/ac/` adapters (`self.ac`), moving `ac_*` method bodies verbatim.
-6. Update `hypso1.py`/`hypso2.py` to thin subclasses using the new sensor profiles.
-7. Cleanup: delete `.bak` files, delete `ac_6sv1_luts_OLD.py`/`_deepthought.py` (after grep-confirming unused).
-8. Build `tests/` (golden-file regression + CF/format assertions + unit tests, per plan §Verification).
-9. Run full verification against real data; update this file with results.
+1. ~~Capture pre-refactor baseline~~ — done, committed.
+2. ~~Build `hypso/sensors/`~~ — done, committed.
+3. Commit `io/cf.py`, `io/schema.py`, `calibration/registry.py` + wiring (this session's uncommitted work — do
+   this first on resume).
+4. Build `hypso/io/writer.py` (`write_level_nc`, flattened root-group layout, reuses/fixes
+   `geometry_group_writer.py`/`metadata_gcp_group_writer.py`/`metadata_srf_group_writer.py`/
+   `calibration_filenames_writer.py`) and `hypso/io/reader.py` (generic loader, band-sorted-by-attribute fix).
+   Add thin backward-compat wrappers: `write_l1b_nc_file`/`write_l1c_nc_file`/`write_l1d_nc_file`/
+   `write_l2a_nc_file`/`write_products_nc_file` (confirmed external names — leave `products_writer.py` itself
+   untouched).
+5. Update `HypsoBase._load_capture_file` to dispatch through the new generic reader.
+6. Update `HypsoBase`: `self.io`/`self.geo` composition, fix the `self.label` uninitialized-attribute trap
+   (**already fixed** as part of the sensor_profile wiring, `884b8d5f`), consolidate
+   `run_georeferencing`/`_run_custom_georeferencing`.
+7. Extract `hypso/ac/` adapters (`self.ac`), moving `ac_*` method bodies verbatim.
+8. Cleanup: delete `.bak` files, delete `ac_6sv1_luts_OLD.py`/`_deepthought.py` (after grep-confirming unused).
+9. Build `tests/` (golden-file regression + CF/format assertions + unit tests, per plan §Verification).
+10. Run full verification against real data; update this file with results.
 
 **Commit frequently** (this repo tracks `origin` = `NTNU-SmallSat-Lab/hypso-package`, but this is the user's own
 writable clone — commit locally as each numbered step above completes, don't wait for the whole refactor to

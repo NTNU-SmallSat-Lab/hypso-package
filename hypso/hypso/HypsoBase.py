@@ -16,7 +16,8 @@ logger = logging.getLogger(__name__)
 from hypso.calibration import read_coeffs_from_file, \
                               run_radiometric_calibration, \
                               run_destriping_correction, \
-                              run_smile_correction
+                              run_smile_correction, \
+                              get_custom_calibration_coeffs
 
 
 from hypso.geometry import interpolate_at_frame_nc, \
@@ -931,14 +932,24 @@ class HypsoBase:
             print(f"[INFO] Capture capture type: {self.capture_type}")
 
 
-    def _set_calibration_coeff_files(self, coeff_type: str = 'moved', **kwargs) -> None:
+    def _set_calibration_coeff_files(self, coeff_type: str = 'moved', coeff_files: dict = None, **kwargs) -> None:
         """
         Set the absolute path for the calibration coefficients (radiometric, smile,
-        destriping, spectral) for this capture's sensor, via self.sensor_profile's
-        calibration_files resolver (see hypso.sensors). Previously implemented
-        separately per Hypso1/Hypso2 subclass, each hardcoding a call to
-        get_hypsoN_calibration_files - now generic: the sensor-specific lookup lives
-        in the SensorProfile instead, so this method works for any sensor.
+        destriping, spectral) for this capture's sensor. Three ways to supply them,
+        checked in order:
+
+        1. `coeff_files` - an explicit dict (radiometric/smile/destriping/spectral/
+           spectral_full_frame -> path) for a true one-off set, no registration needed.
+        2. `coeff_type` matching a name previously registered via
+           hypso.calibration.register_calibration_coeffs(sat_id, name, files) - a
+           custom, reusable, named set, plugged in without touching the bundled
+           hypsoN_calibration packages.
+        3. `coeff_type` falling through to self.sensor_profile's calibration_files
+           resolver (the sensor's built-in presets, e.g. "moved"/"adjusted"/
+           "original" for HYPSO-1/-2). Previously implemented separately per
+           Hypso1/Hypso2 subclass, each hardcoding a call to
+           get_hypsoN_calibration_files - now generic: the sensor-specific lookup
+           lives in the SensorProfile instead, so this method works for any sensor.
 
         :return: None.
         """
@@ -951,11 +962,20 @@ class HypsoBase:
 
         capture_type = self.capture_type
 
-        logger.debug("Setting calibration coefficient files with coeff_type: %s", coeff_type)
+        if coeff_files is not None:
+            logger.debug("Using explicitly-supplied calibration coefficient files (coeff_files=...)")
+            calibration_files = {key: coeff_files.get(key) for key in
+                                  ("radiometric", "smile", "destriping", "spectral", "spectral_full_frame")}
+        else:
+            custom = get_custom_calibration_coeffs(self.sat_id, coeff_type)
+            if custom is not None:
+                logger.debug("Using registered custom calibration coefficient set %r", coeff_type)
+                calibration_files = custom
+            else:
+                logger.debug("Setting calibration coefficient files with coeff_type: %s", coeff_type)
+                calibration_files = self.sensor_profile.calibration_files(capture_type, coeff_type=coeff_type)
 
-        calibration_files = self.sensor_profile.calibration_files(capture_type, coeff_type=coeff_type)
-
-        self.coeff_type = coeff_type
+        self.coeff_type = coeff_type if coeff_type is not None else "custom"
         self.rad_coeff_file = calibration_files['radiometric']
         self.smile_coeff_file = calibration_files['smile']
         self.destriping_coeff_file = calibration_files['destriping']
