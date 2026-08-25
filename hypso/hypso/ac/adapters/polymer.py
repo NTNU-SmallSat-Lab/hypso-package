@@ -1,11 +1,16 @@
-"""Polymer adapter. Method bodies are HypsoBase's ac_polymer_* methods relocated
-verbatim (see base.py's ACAdapter docstring) - Polymer is imported from a
-caller-supplied checkout (polymer_base_path and friends, inserted onto sys.path)
-and run in-process via run_polymer(), with HYPSO's spectral response passed
-through a generated per-capture SRF NetCDF (generate_srf_nc) and the
-"hypso.ac.ac_polymer_srf_getter" hook - that dotted name is resolved *by string*
-inside Polymer, so it must keep pointing at hypso/ac/ac_polymer.py's function
-regardless of how this adapter is reorganized."""
+"""Polymer adapter. run_correction runs Polymer in an ISOLATED SUBPROCESS (see
+_polymer_driver.py's module docstring for the concrete, demonstrated reason:
+v1/v2 builds' same-named-package incompatibility makes in-process switching
+unsafe within one long-lived process) - path resolution and output-file
+renaming happen here in the parent; everything past "import Polymer itself"
+happens in _polymer_driver.py. Every other method is HypsoBase's corresponding
+ac_polymer_* method body relocated verbatim (see base.py's ACAdapter docstring).
+HYPSO's spectral response is passed to Polymer through a generated per-capture
+SRF NetCDF (generate_srf_nc) and the "hypso.ac.ac_polymer_srf_getter" hook -
+that dotted name is resolved *by string* inside Polymer, so it must keep
+pointing at hypso/ac/ac_polymer.py's function regardless of how this adapter is
+reorganized, and the interpreter running Polymer's subprocess must have `hypso`
+importable for that resolution to succeed."""
 import sys
 from pathlib import Path
 
@@ -14,7 +19,7 @@ import xarray as xr
 
 from hypso.load import load_polymer_l2_v1_nc, load_polymer_l2_v2_nc
 
-from .base import ACAdapter, get_inferred_wavelength_band_map
+from .base import ACAdapter, get_inferred_wavelength_band_map, run_subprocess_driver
 
 
 class PolymerAdapter(ACAdapter):
@@ -194,11 +199,16 @@ class PolymerAdapter(ACAdapter):
                        eotools_path: str = None,
                        core_path: str = None,
                        input_product_level: str = "l1c",
-                       #coeff_type: str = None,
                        optional_output_datasets: list = ["SPM"],
                        if_exists: str = "overwrite",
-                       polymer_version: str = "v1"):
+                       polymer_version: str = "v1",
+                       python_path: str = None):
         """
+        Runs Polymer in an ISOLATED SUBPROCESS - see _polymer_driver.py's
+        module docstring for why (v1/v2 builds' same-named-package
+        incompatibility makes in-process switching between them unsafe within
+        one long-lived process, confirmed by direct reproduction).
+
         polymer_version: which Polymer build polymer_path (etc.) point at -
             mirrors open_output's version parameter.
             - "v1": Polymer_HYPSO_SRF_Oct_2025 - run_polymer's output
@@ -209,45 +219,20 @@ class PolymerAdapter(ACAdapter):
               it lands in **kwargs and is never used for selection), so
               output selection is driven by outputs_names instead; the
               solver only exposes log-scale "logchl"/"logfb", not "chla"/"fb".
+        python_path: interpreter to run Polymer's subprocess under. Defaults
+            to sys.executable (this same process's interpreter) - confirmed
+            sufficient for Polymer's own imports (the environment.yml some
+            Polymer builds ship is aspirational, not a hard requirement this
+            adapter enforces). Pass a different interpreter only if Polymer
+            genuinely needs a separate environment; that environment must have
+            `hypso` importable too, since the srf_getter hook below is
+            resolved by dotted string name inside Polymer's own process.
+
+        Raises hypso.ac.adapters.base.ACRunError on failure (carries the
+        subprocess's stdout/stderr and, if available, Polymer's own
+        exception type/message/traceback).
         """
-
-        #polymer_path = Path(satobj.polymer_dir).absolute()
-
-        if polymer_path is not None:
-            polymer_path = str(Path(polymer_path).absolute())
-            sys.path.insert(0, polymer_path)
-
-        if eotools_path is not None:
-            eotools_path = str(Path(eotools_path).absolute())
-            sys.path.insert(0, eotools_path)
-
-        if eoread_path is not None:
-            eoread_path = str(Path(eoread_path).absolute())
-            sys.path.insert(0, eoread_path)
-
-        if core_path is not None:
-            core_path = str(Path(core_path).absolute())
-            sys.path.insert(0, core_path)
-
-        sys.path.insert(0, polymer_base_path)
-
-
-
-        # TODO
-        srf_nc_path, srf_nc_path = self.get_srf_nc_path(satobj)
-
-        run_polymer_kwargs = {"srf_getter": "hypso.ac.ac_polymer_srf_getter",
-                                "srf_getter_arg": srf_nc_path}
-
-
-        from eoread.hypso import Level1_HYPSO
-        from polymer.main_v5 import run_polymer, run_polymer_dataset, default_output_datasets
-
-
-        #if coeff_type is not None:
-        #    coeff_type_str = "-" + str(coeff_type).lower()
-        #else:
-        #    coeff_type_str = ""
+        _, srf_nc_path = self.get_srf_nc_path(satobj)
 
         # Output (not input) moved into a parent_dir/polymer/ subfolder
         # (2026-08-05, was parent_dir directly) - same reasoning as the
@@ -258,7 +243,6 @@ class PolymerAdapter(ACAdapter):
         polymer_output_dir.mkdir(parents=True, exist_ok=True)
 
         match input_product_level.lower():
-
             case "l1c":
                 polymer_l1_input_nc_file = Path(satobj.parent_dir, satobj.l1c_nc_file)
                 polymer_l2_output_nc_file = Path(polymer_output_dir, str(satobj.l1c_name) + ".polymer.nc")
@@ -268,53 +252,33 @@ class PolymerAdapter(ACAdapter):
             case _:
                 return None
 
+        config = {
+            "polymer_base_path": polymer_base_path,
+            "polymer_path": polymer_path,
+            "eoread_path": eoread_path,
+            "eotools_path": eotools_path,
+            "core_path": core_path,
+            "polymer_l1_input_nc_file": str(polymer_l1_input_nc_file),
+            "polymer_output_dir": str(polymer_output_dir),
+            "if_exists": if_exists,
+            "srf_nc_path": str(srf_nc_path),
+            "polymer_version": polymer_version,
+            "optional_output_datasets": optional_output_datasets,
+        }
 
+        result = run_subprocess_driver(
+            python_path=python_path or sys.executable,
+            driver_module="hypso.ac.adapters._polymer_driver",
+            config=config,
+            tool_name="polymer",
+        )
 
-        #import os
-        #cwd = os.getcwd()
-        #os.chdir(polymer_path)
-
-        # This is from the Feb 2026 version of Polymer
-        #from polymer.level1 import Level1
-        #from polymer.level2 import Level2
-        #from eoread.hypso import Level1_HYPSO
-        #from polymer.main_v5 import run_polymer, run_polymer_dataset
-        #from core.files.fileutils import mdir
-        #polymer_output_file = run_polymer(Level1_HYPSO(polymer_input_file), dir_out=mdir(polymer_output_dir), split_bands=False)
-
-        match polymer_version:
-            case "v1":
-                output_selection_kwargs = {
-                    "output_datasets": default_output_datasets + optional_output_datasets,
-                }
-            case "v2":
-                output_selection_kwargs = {
-                    "outputs": "named",
-                    "outputs_names": [
-                        "latitude", "longitude", "rho_w", "logchl", "logfb",
-                        "Rgli", "Rnir", "flags",
-                    ] + optional_output_datasets,
-                }
-            case _:
-                raise ValueError(f"Unknown polymer_version: {polymer_version!r}")
-
-        # Run Polymer
-        if True:
-            output_file = run_polymer(
-                Level1_HYPSO(polymer_l1_input_nc_file),
-                dir_out=str(polymer_output_dir),
-                if_exists = if_exists,
-                srf_getter = "hypso.ac.ac_polymer_srf_getter",
-                srf_getter_arg = srf_nc_path,
-                **output_selection_kwargs,
-
-            )
+        output_file = result["output_file"]
 
         try:
             polymer_l2_output_nc_file = Path(output_file).rename(polymer_l2_output_nc_file)
         except FileNotFoundError:
             print("[WARNING] Polymer L2 NetCDF output file has already been renamed.")
-            pass
 
         print(output_file)
         print(polymer_l2_output_nc_file)
@@ -348,6 +312,16 @@ class PolymerAdapter(ACAdapter):
                     print("[INFO] Reading Polymer L2 NetCDF output file generated using L1d product.")
                     polymer_l2_output_nc_file = Path(satobj.parent_dir, "polymer", str(satobj.l1d_name) + ".polymer.nc") #frohavet_2025-05-22T11-20-44Z-l1d.nc.polymer.nc
 
+                case _:
+                    # Fixed bug: this match previously had no case _, so an
+                    # unrecognized input_product_level left
+                    # polymer_l2_output_nc_file as None, and the next line's
+                    # .absolute() call raised an unhelpful AttributeError
+                    # instead of naming the actual problem.
+                    raise ValueError(
+                        f"Unsupported input_product_level: {input_product_level!r} "
+                        f"(expected 'l1c' or 'l1d')"
+                    )
 
         polymer_l2_output_nc_file = polymer_l2_output_nc_file.absolute()
 

@@ -60,3 +60,15 @@ def test_polymer_extras():
 
 def test_ocsmart_extras():
     assert callable(get_ac_adapter("ocsmart").stage_input)
+
+
+def test_polymer_open_output_rejects_unknown_input_level():
+    # Regression test for a real bug fixed in this pass: open_output's
+    # input_product_level match had no `case _`, so an unrecognized level
+    # left polymer_l2_output_nc_file as None and the next line's .absolute()
+    # call raised an unhelpful AttributeError instead of naming the problem.
+    # No real data/Polymer needed - the bug is in argument validation, before
+    # any file or tool is touched.
+    polymer = get_ac_adapter("polymer")
+    with pytest.raises(ValueError, match="Unsupported input_product_level"):
+        polymer.open_output(satobj=None, input_product_level="l1a")

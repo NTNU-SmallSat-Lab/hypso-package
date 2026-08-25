@@ -22,7 +22,7 @@ its instance below.
 """
 from types import SimpleNamespace
 
-from .base import ACAdapter, get_inferred_wavelength_band_map
+from .base import ACAdapter, ACRunError, get_inferred_wavelength_band_map, run_subprocess_driver
 from .polymer import PolymerAdapter
 from .acolite import ACOLITEAdapter
 from .ocsmart import OCSMARTAdapter
