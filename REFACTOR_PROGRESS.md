@@ -51,6 +51,29 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-25 (continued further, ×12):** Completed plan item 8, the largest remaining piece: extracted all 14
+  `ac_polymer_*`/`ac_acolite_*`/`ac_ocsmart_*` methods plus the shared private `_get_inferred_wavelength_band_map`
+  helper out of `HypsoBase` into a new `hypso/ac/adapters/` package - `base.py` (the `ACAdapter`
+  `run_correction`/`open_output` interface + the wavelength-map helper, now public as
+  `get_inferred_wavelength_band_map(satobj, ...)`), `polymer.py`/`acolite.py`/`ocsmart.py` (one stateless adapter
+  class per tool, bodies **verbatim** per the plan's explicit decision #6 - prints deliberately NOT converted to
+  logging here, unlike the geo extraction, since this code can't be regression-tested locally and the diff should
+  stay purely mechanical), and a registry in `__init__.py` mirroring `hypso.sensors`
+  (`get_ac_adapter`/`registered_ac_adapters`/`AC_ADAPTERS`). **Unlike the calibration/dispatch extractions, every
+  public `ac_*` name stays on `HypsoBase` as a thin delegating wrapper** (all confirmed called by
+  `hypso-processing-pipeline`); `HypsoBase.ac = AC_ADAPTERS` (class attribute, adapters are stateless singletons)
+  gives the plan's `self.ac.polymer.run_correction(self, ...)` seam. Only the private band-map helper moved
+  wrapper-less (zero external callers). Deliberately NOT adapters: `ac_dark_pixel_subtraction` (no external
+  tool/output file, already a free function in `hypso/ac/`, still bound as a method) and `ac_polymer_srf_getter`
+  (Polymer resolves it BY DOTTED-STRING NAME - `"hypso.ac.ac_polymer_srf_getter"` - so its import path is frozen;
+  noted in the adapter docstrings). One dead commented-out block (ocsmart open_output's inline duplicate of the
+  wavelength mapper) dropped rather than moved. `HypsoBase.py`: 1,638 → **1,000 lines** (2,113 at refactor
+  start); `sys`, the five AC output-loader imports, and the never-used `find_file` import dropped from it.
+  Verified: adapter-registry structural checks, all import orders, baseline exact match, plus real-capture
+  functional checks *through the wrappers* (polymer id/path helpers set satobj attrs correctly; all three
+  `open_output` missing-file branches return their original sentinels without raising). Also extended
+  `docs/architecture.rst` (new "HypsoBase composition" + "Atmospheric-correction adapters" sections; fixed a
+  stale `_set_calibration_coeff_files` reference). Committed (`42be73d2`, docs `1c8b7247`).
 - **2026-08-25 (continued further, ×11):** Finished plan item 7 (`HypsoBase` composition) by extracting the
   load-dispatch slice into `hypso/io/dispatch.py` — `load_capture_file`/`set_hypso_attributes`/
   `check_capture_type`/`parse_filename`/`compose_capture_name`, moved verbatim, each taking `satobj` explicitly,
@@ -436,9 +459,10 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
      georeferencing` deleted outright (confirmed dead code, zero callers anywhere - see status entry above),
      `run_georeferencing`'s existing optional `latitudes=None, longitudes=None` signature already covers what
      a merge would have produced.
-8. Extract `hypso/ac/` adapters (`self.ac`), moving `ac_*` method bodies verbatim. **Not started** - this is the
-   largest remaining piece: many methods, each wrapping a real external tool (Polymer/ACOLITE/OC-SMART)
-   via subprocess/sys.path manipulation - needs careful, well-scoped handling, not a quick pass.
+8. ~~Extract `hypso/ac/` adapters (`self.ac`), moving `ac_*` method bodies verbatim~~ — done, committed
+   (`42be73d2`): `hypso/ac/adapters/` (base interface + registry + one verbatim adapter per tool), every public
+   `ac_*` name kept as a delegating wrapper on `HypsoBase`, `HypsoBase.ac = AC_ADAPTERS`. See status entry ×12
+   for what deliberately stayed out of the adapter pattern and why.
 9. ~~Cleanup: delete `.bak` files, delete `ac_6sv1_luts_OLD.py`/`_deepthought.py`~~ — done (see status entries
    above for what was deleted and, just as importantly, what was deliberately left alone and why -
    `geometry_definition/` has a real external consumer, `geometry`/`geometry_definition`/`georeferencing` were
