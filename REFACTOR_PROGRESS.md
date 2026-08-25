@@ -51,6 +51,39 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-25 (continued):** Built `hypso/io/writer.py` — `write_level_nc(satobj, level, dst_nc, ...)` and
+  `write_l2a_nc(satobj, correction, dst_nc, ...)`, the schema-driven replacement for
+  `write/l1b_nc_writer.py`/`l1c_nc_writer.py`/`l1d_nc_writer.py`/`l2a_nc_writer.py`. Implements the flattened
+  root-group layout (products + geometry at root, `metadata/*` stays nested), fixes the `radiation_wavelength`
+  tuple bug and lat/lon/angle CF attribute bugs via `io/cf.py`, and actually applies compression to geometry
+  variables (previously received but ignored). Reuses `calibration_filenames_writer`/`metadata_gcp_group_writer`/
+  `metadata_srf_group_writer` from `write/` unchanged (already generic, no bugs found there). Found and fixed
+  along the way: `write/l2a_nc_writer.py`'s product variable name/units/long_name are NOT fixed per level —
+  they come from `satobj.l2a_cube[correction].attrs['l2_variable_name']` (e.g. "chla" vs "Rrs", set per AC
+  adapter) — `write_l2a_nc` now reads this dynamically instead of hardcoding a prefix (`L2A_SCHEMA`'s
+  `product_prefix="Rrs"` is only the same-as-original fallback for a missing attribute). Also fixed a latent bug
+  in the original `write_l2a_nc_file` wrapper: when writing multiple corrections and only the *first* file
+  already existed, it `return`ed and silently skipped writing the rest too (should `continue`) — fixed.
+  Added thin backward-compat wrappers `write_l1b_nc_file`/`write_l1c_nc_file`/`write_l1d_nc_file`/
+  `write_l2a_nc_file` (exact original names/signatures) and rewired `hypso/write/__init__.py` to import these 4
+  from `hypso.io.writer` instead of the old per-level modules — `write_products_nc_file` still comes from
+  `write/products_writer.py`, untouched. Verified: all 5 confirmed-external names still importable from
+  `hypso.write` with the right `__module__`; every level × `datacube={True,False}` combination (L1B/L1C/L1D/L2A,
+  L2A using a fabricated `l2_variable_name="chla"` correction) writes successfully with `Conventions=CF-1.10` and
+  correct root-level variable naming; `tests/baseline/compare_to_baseline.py` **still passes** after wiring
+  `hypso.write` through the new writer (confirms `HypsoBase`'s calibration/georeferencing/cube-generation path is
+  untouched by this I/O change).
+  Mid-session, user asked to leave the door open for a future gridded Level 3 product (no L3 generation code
+  exists yet - not implemented). Added `LevelSchema.spatial_dims` (default `("lines", "samples")`, every current
+  schema keeps the default) and threaded it through `io/writer.py` in place of hardcoded `('lines','samples')`
+  dimension-name tuples, so a future L3 schema could declare `spatial_dims=("lat","lon")` and reuse the same
+  product/geometry-writing code - dimension *sizing* (currently swath-specific: frame_count/image_height) would
+  still need a real L3 branch when L3 is actually implemented; this only keeps that door open, not open it.
+  User also asked for docs "as I go along" rather than at the end - added `docs/architecture.rst` (Sphinx,
+  wired into `docs/index.rst`'s toctree) covering `hypso.sensors`, the calibration coefficient registry, and
+  `hypso.io`'s layout/CF rationale; will keep extending this page alongside each future piece rather than
+  writing it in one pass at the end. Not yet committed — next action is to commit `io/writer.py`,
+  `hypso/write/__init__.py`, the `io/schema.py` `spatial_dims` addition, and `docs/`.
 - **2026-08-25:** Built `hypso/io/cf.py` (CF attribute builders: `global_attrs`, `latitude_attrs`,
   `longitude_attrs`, `zenith_angle_attrs`, `azimuth_angle_attrs`, `crs_wgs84_attrs`, `geolocation_ref_attrs`,
   `band_attrs`) and `hypso/io/schema.py` (`LevelSchema` + `L1A_SCHEMA`/`L1B_SCHEMA`/`L1C_SCHEMA`/`L1D_SCHEMA`/
@@ -72,8 +105,7 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
   presets) — unchanged for existing callers. `generate_l1b_cube`/`_run_calibration` already forward `**kwargs`
   through to `_set_calibration_coeff_files`, so `generate_l1b_cube(coeff_files={...})` works with no further
   wiring. Verified: registry smoke test + a full real-capture `generate_l1b_cube(coeff_type='moved')` run still
-  gives l1b_cube mean=42.92898... matching baseline exactly. **Not yet committed** — next action is to commit
-  `io/cf.py`, `io/schema.py`, `calibration/registry.py`, and the `HypsoBase`/`calibration/__init__.py` edits.
+  gives l1b_cube mean=42.92898... matching baseline exactly. Committed (`326aec45`).
 - **2026-08-25, earlier:** `hypso/sensors/` (SensorProfile + registry + hypso1/hypso2 profiles) built, `HypsoBase`
   wired to `sensor_profile`, `Hypso1`/`Hypso2` shrunk to thin subclasses, pre-refactor baseline captured and
   re-verified passing against this point (all committed: `9dfe2952`, `f080a61e`, `884b8d5f`).
@@ -84,15 +116,13 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 1. ~~Capture pre-refactor baseline~~ — done, committed.
 2. ~~Build `hypso/sensors/`~~ — done, committed.
-3. Commit `io/cf.py`, `io/schema.py`, `calibration/registry.py` + wiring (this session's uncommitted work — do
-   this first on resume).
-4. Build `hypso/io/writer.py` (`write_level_nc`, flattened root-group layout, reuses/fixes
-   `geometry_group_writer.py`/`metadata_gcp_group_writer.py`/`metadata_srf_group_writer.py`/
-   `calibration_filenames_writer.py`) and `hypso/io/reader.py` (generic loader, band-sorted-by-attribute fix).
-   Add thin backward-compat wrappers: `write_l1b_nc_file`/`write_l1c_nc_file`/`write_l1d_nc_file`/
-   `write_l2a_nc_file`/`write_products_nc_file` (confirmed external names — leave `products_writer.py` itself
-   untouched).
-5. Update `HypsoBase._load_capture_file` to dispatch through the new generic reader.
+3. ~~Build `hypso/io/cf.py`, `io/schema.py`, `calibration/registry.py`~~ — done, committed (`326aec45`).
+4. Commit `io/writer.py`, `hypso/write/__init__.py` rewiring, `spatial_dims`, `docs/architecture.rst` (this
+   session's uncommitted work — do this first on resume).
+5. Build `hypso/io/reader.py` (generic loader, consolidating `load/utils.py`'s near-identical functions, fixing
+   the band-sorted-by-`band`-attribute latent bug) and wire `HypsoBase._load_capture_file` to dispatch through it.
+   (~~write_l1b/l1c/l1d/l2a_nc_file backward-compat wrappers~~ — done as part of step 4, `write_products_nc_file`
+   intentionally left on `write/products_writer.py`.)
 6. Update `HypsoBase`: `self.io`/`self.geo` composition, fix the `self.label` uninitialized-attribute trap
    (**already fixed** as part of the sensor_profile wiring, `884b8d5f`), consolidate
    `run_georeferencing`/`_run_custom_georeferencing`.

@@ -24,6 +24,14 @@ class LevelSchema:
     source_cube_attr: str          # satobj attribute holding the source cube, e.g. "l1b_cube"
     has_geometry: bool             # whether this level's capture has been georeferenced yet
     title: str                     # used for the global `title` attribute
+    spatial_dims: tuple = ("lines", "samples")
+    # Every level implemented so far is swath-shaped: (lines, samples) tied to the
+    # capture's along-track/across-track geometry. This field exists so a future
+    # gridded Level 3 product (regular lat/lon grid, mosaicked/composited across
+    # captures - not implemented yet, no generation code exists for it) can reuse
+    # io/writer.py's product/geometry-writing code by declaring spatial_dims=
+    # ("lat", "lon") instead, rather than needing a parallel writer. Not otherwise
+    # exercised today - every current schema keeps the default.
 
 
 L1A_SCHEMA = LevelSchema(
@@ -66,14 +74,18 @@ L1D_SCHEMA = LevelSchema(
     title="HYPSO Level 1D Top-of-Atmosphere Reflectance",
 )
 
-# L2A varies by which AC method produced it - callers pass correction=... to
-# write_level_nc rather than there being one fixed L2A schema; this entry
-# supplies everything level-invariant (see io/writer.py's write_l2a_nc).
+# L2A varies by which AC method produced it: the actual product variable name
+# comes from satobj.l2a_cube[correction].attrs['l2_variable_name'] (set by each
+# AC adapter - "chla"/"Rrs"/etc, not a fixed name), not a schema constant -
+# io/writer.py's write_l2a_nc reads it per-call and overrides product_prefix on
+# this schema (dataclasses.replace) before writing. product_prefix/product_units
+# here are only the fallback used if a correction's cube is missing that attr
+# (matches write/l2a_nc_writer.py's original except-fallback to "Rrs").
 L2A_SCHEMA = LevelSchema(
     processing_level="L2",
-    product_prefix="rho_w",
-    product_units="sr-1",
-    product_long_name="Bottom-of-Atmosphere Water-Leaving Reflectance",
+    product_prefix="Rrs",
+    product_units="1",
+    product_long_name="Bottom-of-Atmosphere Reflectance",
     source_cube_attr="l2a_cube",
     has_geometry=True,
     title="HYPSO Level 2 Bottom-of-Atmosphere Reflectance",
