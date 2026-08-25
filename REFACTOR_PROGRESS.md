@@ -51,6 +51,31 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-25 (continued further, ×11):** Finished plan item 7 (`HypsoBase` composition) by extracting the
+  load-dispatch slice into `hypso/io/dispatch.py` — `load_capture_file`/`set_hypso_attributes`/
+  `check_capture_type`/`parse_filename`/`compose_capture_name`, moved verbatim, each taking `satobj` explicitly,
+  same convention as `hypso.geo` and `hypso.calibration.pipeline`. All five had zero external callers (checked
+  this repo and `/home/camerop/AC/hypso-processing-pipeline` — note the repo lives under `AC/`, not directly in
+  `~`, which cost a wasted grep this session), so no wrappers were kept on `HypsoBase`; `__init__` now calls
+  `io_dispatch.load_capture_file(self, path=..., load_cube=...)` directly. `HypsoBase.py` is down from 2,113 →
+  **1,638 lines**. The now-unused `re` and `trollsift.Parser` imports were removed with it, as was a
+  commented-out old `_parse_filename` variant that sat between the two moved methods (dead code, in git history).
+
+  **Found and fixed a pre-existing circular import** surfaced (not caused) by this change: `hypso.io.reader` does
+  `from hypso.load.utils import (...)` at module level, which initializes the `hypso.load` package, whose
+  `__init__.py` in turn did an eager `from hypso.io.reader import load_l1b_nc, ...`. Whichever of the two was
+  imported second failed with `partially initialized module`. This was masked before only because `HypsoBase.py`
+  always imported `hypso.load` (line 24) *before* anything pulled in `hypso.io` — `import hypso.io` on its own
+  was already broken at HEAD, confirmed by the traceback failing at `io/__init__.py`'s reader line, before the
+  new dispatch line. Fixed by deferring those four names in `hypso/load/__init__.py` behind a module-level
+  `__getattr__` (PEP 562) rather than reordering imports (which would have left the same trap for the next
+  entry point — e.g. the Satpy handler, which imports `hypso.io.reader` directly). `from hypso.load import
+  load_l1b_nc` still works unchanged for callers.
+
+  Verified: all three import orders (`hypso.io` first, `hypso.load` first, plain `hypso` first) succeed;
+  `satpy.available_readers()` still finds `hypso_l1c`/`hypso_l1d` and the file handler imports;
+  `tests/baseline/compare_to_baseline.py` passes with exact matches (`l1b_cube` mean=42.928984 as in every prior
+  run). Committed (`98a38c85`).
 - **2026-08-25 (continued further, ×10):** Resumed after a session disconnect that left the `self.calibration`
   composition (plan item 7) mid-flight, uncommitted. Picked up the in-progress work as found: extracted
   `HypsoBase._set_calibration_coeff_files`/`_run_calibration`/`_load_calibration_coeff_files` verbatim into new
@@ -391,12 +416,17 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
    l1d_cube()`~~ — done, committed (`d09c272e`).
 6c. ~~Register a real Satpy reader plugin (`hypso_l1c`/`hypso_l1d`)~~ — separate plan-mode task, not part of the
    original plan below but done and committed (`3c3354e7`) at the user's request; see the status entry above.
-7. `self.io`/`self.geo` composition on `HypsoBase`:
+7. ~~`self.io`/`self.geo` composition on `HypsoBase`~~ — **done** (all four slices landed; `HypsoBase.py` is
+   down from 2,113 to 1,638 lines):
    - ~~Extract georeferencing orchestration into `hypso/geo.py`~~ — done, committed (`29df4546`).
      `run_direct_georeferencing()`/`run_georeferencing()` stay as thin delegating wrapper methods on
      `HypsoBase` (external callers depend on them); the private `_run_*` helpers moved outright.
-   - `self.io` (wrapping `_load_capture_file`'s dispatch through `hypso.io.reader`/`hypso.io.writer`) —
-     **not started**.
+   - ~~`self.io` (wrapping `_load_capture_file`'s dispatch through `hypso.io.reader`/`hypso.io.writer`)~~ —
+     done, committed (`98a38c85`): `_load_capture_file`/`_set_hypso_attributes`/`_check_capture_type`/
+     `_parse_filename`/`_compose_capture_name` extracted verbatim into `hypso/io/dispatch.py`, no wrappers kept
+     (zero external callers). Also fixed the pre-existing `hypso.load` ↔ `hypso.io` circular import this
+     surfaced — see the status entry above; `hypso/load/__init__.py` now resolves the four reader-backed names
+     lazily via PEP 562 `__getattr__`.
    - ~~`self.calibration` (wrapping `_run_calibration`/`_load_calibration_coeff_files`)~~ — done, committed
      (`74990178`): extracted verbatim into `hypso/calibration/pipeline.py` module-level functions
      (`set_calibration_coeff_files`/`load_calibration_coeff_files`/`run_calibration`), no wrapper methods kept
