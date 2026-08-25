@@ -100,6 +100,52 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-25 (continued further, ×21): DataArrayDict/DataArrayValidator fully retired; resample
+  generalized.** Started from a user question ("why are DataArrayDict/DataArrayValidator still present?").
+  Answer had three parts: (1) `_products` — the standing "do not touch" exception; (2) `DataArrayValidator`
+  also had a second, independent live use — HypsoBase's five `_format_l1a/b/c/d_dataarray`/
+  `_format_mask_dataarray` single-array formatters, a different role than the dict-container problem
+  `DatasetDict` fixed, never in scope of that earlier work; (3) a bonus finding — `resample/
+  datacube_resamplers.py`'s `resample_products` referenced `DataArrayDict` but its import was commented out
+  — turned out to be a false alarm on first read (the reference is itself inside a commented-out block; the
+  function's real body was just `print("not yet implemented")` + `return None` — corrected this to the user
+  after initially calling it "broken").
+
+  User then reconsidered `_products` itself ("we have not used them... should be dropped/produced as a
+  separate object") — **checked before agreeing, and found the opposite**: `hypso-processing-pipeline`'s
+  Polymer stage does `satobj.products['chla'] = ...` then `write_products_nc_file(..., file_name=
+  "polymer_chl.nc")` on every Polymer run. Real, active, load-bearing usage — reported this back rather than
+  going along with the premise. **`products/` DEBATE — REVISIT LATER**: given this is real, load-bearing
+  infrastructure with a slightly awkward API shape (a property that raises `AttributeError` on direct
+  assignment, requiring `products[key] = value`), it may be worth a cleaner redesign at some point — e.g. a
+  more explicit "AC-tool-produced auxiliary product" object/API rather than a dict-property bolted onto
+  `HypsoBase`. Not scoped, not urgent — flagged here per user request so the discussion isn't lost.
+
+  Once `products`' real usage was established, user asked to reimplement it (not drop it) on `DatasetDict`
+  anyway — closing the loop `DatasetDict`'s own docstring had left open. Did all three pieces the user asked
+  for (`06abd02c`, `cb0519ba`):
+  1. **`_format_l1x_dataarray` → one method.** Collapsed the four near-identical formatters into
+     `_format_cube_dataarray(data, level)` + a `_CUBE_DATAARRAY_ATTRS` table; extracted the single-array
+     shape/dims logic `DataArrayValidator` provided into `hypso.containers.as_dataarray()`, now shared by
+     both `DatasetDict._as_dataarray` and the HypsoBase formatters.
+  2. **`products` → `DatasetDict`.** `HypsoBase._products` now matches `_custom_masks`'s construction;
+     validation raises instead of silently swallowing (a real fix, not just a container swap).
+     `write_products_nc_file` needed zero changes (only ever called `.items()`/`.to_numpy()`). With every
+     consumer moved, `DataArrayDict.py`/`DataArrayValidator.py` are **deleted outright** — confirmed zero
+     remaining references anywhere in the package.
+  3. **Resamplers generalized** (user: "resamplers could be generalized"). `resample_l1a/b/c/d_cube` collapsed
+     into one `resample_cube(cube, satobj, area_def, ...)` + thin per-level wrappers (zero external callers of
+     any of the four, confirmed, so free to collapse). `resample_products()` — previously the dead stub found
+     above — is now a real, working implementation reusing the same `resample_cube()`, returning a plain
+     `xr.Dataset`.
+
+  **All three verified against real data, not just structurally**: real-capture `products` round-trip through
+  `write_products_nc_file`; real-capture + real `pyresample.AreaDefinition` resampling for all four cube
+  levels and for `resample_products()` (confirmed non-trivial finite fraction in the output, i.e. it actually
+  resampled real data, not a shape-only check). 12 new tests total (`test_containers.py` `as_dataarray` tests,
+  a `test_cf_format.py` products test, `test_resample.py`). Full suite: **103 tests pass**. Docs
+  (architecture.rst) updated for containers and the new resample section.
+
 - **2026-08-25 (continued further, ×20): AC-connector pass, part 3 — OC-SMART, the last of the three.**
   Resumed after a detour into `hypso-processing-pipeline` credential hygiene (hardcoded EARTHDATA secret
   found in `hypso/ac/loading_acolite_output.py` while checking OC-SMART callers → led to a template-config
