@@ -80,7 +80,10 @@ Pass an explicit one-off set
           "spectral": "/path/to/my_spectral.npz",
       })
 
-Resolution order (checked in ``HypsoBase._set_calibration_coeff_files``): an explicit
+Resolution order (checked in ``hypso.calibration.pipeline.set_calibration_coeff_files``,
+which ``generate_l1b_cube()``/``to_l1b()`` reach through
+``hypso.calibration.pipeline.run_calibration`` - see the composition section below):
+an explicit
 ``coeff_files=`` dict wins if given; otherwise a ``coeff_type`` name is looked up in
 the custom registry first, and only falls back to the sensor's built-in presets if
 no custom set is registered under that name. Existing calls that only ever passed
@@ -171,6 +174,63 @@ obvious. ``generate_l1b_cube()``/``generate_l1c_cube()``/``generate_l1d_cube()``
 unchanged and not being replaced - existing callers (``hypso-processing-pipeline``)
 need no changes; migrating to the ``to_l1*()`` family is optional and can happen
 later, at whatever pace makes sense for code that's live in production.
+
+``HypsoBase`` composition: where the god-object methods went
+----------------------------------------------------------------
+
+``HypsoBase`` started this refactor at 2,113 lines / 64 methods spanning five
+unrelated concerns. It is now a coordinator of about 1,000 lines; each coherent
+slice of what it used to implement inline lives in its own module, as free
+functions or adapter methods taking the capture object (``satobj``) as an explicit
+first parameter (they read/write many capture attributes, so passing the object in
+beats either duplicating that state or holding a back-reference):
+
+- **Georeferencing orchestration** → ``hypso.geo``.
+  ``run_georeferencing()``/``run_direct_georeferencing()`` remain as thin
+  delegating *methods* because external code calls those names on the object; the
+  private ``_run_*`` helpers moved outright.
+- **Calibration orchestration** → ``hypso.calibration.pipeline``
+  (``set_calibration_coeff_files``/``load_calibration_coeff_files``/
+  ``run_calibration``). No wrappers kept - the originals were private with no
+  external callers.
+- **Capture-file load dispatch** → ``hypso.io.dispatch``
+  (``load_capture_file``/``set_hypso_attributes``/``check_capture_type``/
+  ``parse_filename``/``compose_capture_name``). No wrappers kept, same reasoning.
+- **Atmospheric-correction orchestration** → ``hypso.ac.adapters`` - see the next
+  section.
+
+The rule of thumb applied throughout: a name moves *without* a wrapper only if it
+was private and a search over this repo and ``hypso-processing-pipeline`` (the
+known external consumer) found zero callers; anything public keeps its exact
+name/signature on ``HypsoBase`` as a one-line delegation.
+
+Atmospheric-correction adapters (``hypso.ac.adapters``)
+-----------------------------------------------------------
+
+One adapter class per external AC tool - ``PolymerAdapter``, ``ACOLITEAdapter``,
+``OCSMARTAdapter`` - behind a shared two-method interface
+(``run_correction(satobj, **kwargs)`` / ``open_output(satobj, **kwargs)``), plus
+per-tool extras (Polymer's SRF/SSI/ESUN NetCDF generators, OC-SMART's
+``stage_input``). Registered like sensors: ``get_ac_adapter("polymer")``,
+``registered_ac_adapters()``, and the ``AC_ADAPTERS`` namespace exposed as
+``satobj.ac`` (so ``satobj.ac.polymer.run_correction(satobj, ...)`` is the
+underlying call every ``satobj.ac_polymer_*``-style wrapper method makes).
+
+This pass is **organizational, not a rewrite**: each adapter method body is the
+corresponding old ``HypsoBase`` method body relocated verbatim - the same
+subprocess/``sys.path``/external-tool-parsing logic, including its ``print``-based
+logging. The point is the seam: a future rewrite of, say, the Polymer integration
+now has one isolated file to work in (``adapters/polymer.py``) that touches neither
+the other tools nor ``HypsoBase``, and a new AC tool means one new adapter module
+plus a registry entry rather than another batch of methods on the coordinator.
+
+Two things deliberately *not* adapters: dark-pixel subtraction (no external tool to
+run or output file to open - it computes in-memory from the L1D cube; it was
+already a free function in ``hypso/ac/ac_dark_pixel_subtraction.py``, still bound
+as ``HypsoBase.ac_dark_pixel_subtraction``), and
+``hypso.ac.ac_polymer_srf_getter`` (resolved *by dotted-string name* inside
+Polymer itself via the ``srf_getter=`` argument, so its import path is frozen
+regardless of how the adapters are organized).
 
 NetCDF I/O (``hypso.io``)
 ---------------------------
