@@ -51,6 +51,23 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-25 (continued further, ×5):** User confirmed the eventual-deprecation direction from the previous
+  entry and asked to add the `DeprecationWarning` now (pipeline migration still deferred - the warning itself is
+  invisible in production by default, Python suppresses `DeprecationWarning` unless a caller opts in to seeing
+  it). Added `warnings.warn(..., DeprecationWarning, stacklevel=2)` to `generate_l1b_cube()`/`generate_l1c_cube()`/
+  `generate_l1d_cube()`, each pointing at its `to_l1*()` counterpart. To avoid the warning firing from *internal*
+  call sites (which would be noisy/wrong - it's meant for external mutating-API callers, not the library's own
+  plumbing), extracted the actual bodies into private `_generate_l1b_cube_impl()`/`_generate_l1c_cube_impl()`/
+  `_generate_l1d_cube_impl()`; the public `generate_*_cube()` methods now just warn then delegate. Updated every
+  internal caller to use the `_impl` versions directly: `generate_l1c_cube()`'s/`generate_l1d_cube()`'s own
+  internal L1B-fallback calls, and `to_l1b()`/`to_l1c()`/`to_l1d()` (added in the previous entry - these must
+  never trigger the warning, they're the *non-deprecated* path). Confirmed `hypso/ac/loading_acolite_output.py`
+  (the only other file calling `generate_l1b_cube()`/etc.) is a standalone personal script using the public API
+  like any external caller, not internal library code - correctly left alone, appropriate for it to warn too.
+  Verified against a real capture with `warnings.catch_warnings(record=True)`:
+  `generate_l1b_cube()`/`generate_l1c_cube()` each emit exactly one `DeprecationWarning` (not a duplicate from
+  the internal L1B fallback), `to_l1b()` emits zero, and cube values are unaffected (`l1b_cube` mean matches
+  baseline exactly in both the warned and unwarned paths). `tests/baseline/compare_to_baseline.py` still passes.
 - **2026-08-25 (continued further, ×4):** Continuation of the "separate objects per level" discussion below -
   user kept pushing on it across several turns (memory concern, then "is `discard_cube` intuitive - shouldn't 1
   object = 1 cube be simpler/more transparent?", then confirmed the operational `hypso-processing-pipeline`

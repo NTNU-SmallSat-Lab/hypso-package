@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from trollsift import Parser
 import sys
 import re
+import warnings
 
 logger = logging.getLogger(__name__)
 
@@ -1485,6 +1486,23 @@ class HypsoBase:
 
 
     def generate_l1b_cube(self, coeff_type: str = None, **kwargs) -> None:
+        """Mutates this object in place (sets self.l1b_cube). Deprecated in favor
+        of to_l1b(), which returns a new object instead - see
+        docs/architecture.rst's "Cube memory" section for why. Kept, unchanged,
+        for existing in-place callers (e.g. hypso-processing-pipeline) - not
+        removed until those have migrated."""
+        warnings.warn(
+            "generate_l1b_cube() mutates this object in place and is deprecated "
+            "in favor of to_l1b(), which returns a new object instead of "
+            "mutating this one - see docs/architecture.rst's 'Cube memory' "
+            "section. generate_l1b_cube() is not being removed yet.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self._generate_l1b_cube_impl(coeff_type=coeff_type, **kwargs)
+
+
+    def _generate_l1b_cube_impl(self, coeff_type: str = None, **kwargs) -> None:
 
         print("[INFO] Generating L1b cube")
         if self.l1a_cube is None:
@@ -1497,30 +1515,60 @@ class HypsoBase:
 
 
     def generate_l1c_cube(self, coeff_type: str = None, **kwargs) -> None:
-        
+        """Mutates this object in place (sets self.l1b_cube, runs
+        georeferencing). Deprecated in favor of to_l1c() - see
+        generate_l1b_cube()'s docstring for why."""
+        warnings.warn(
+            "generate_l1c_cube() mutates this object in place and is deprecated "
+            "in favor of to_l1c(), which returns a new object instead of "
+            "mutating this one - see docs/architecture.rst's 'Cube memory' "
+            "section. generate_l1c_cube() is not being removed yet.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self._generate_l1c_cube_impl(coeff_type=coeff_type, **kwargs)
+
+
+    def _generate_l1c_cube_impl(self, coeff_type: str = None, **kwargs) -> None:
+
         print("[INFO] Generating L1c cube")
         if self.l1b_cube is None:
-            self.generate_l1b_cube(coeff_type=coeff_type, **kwargs)
-        
+            self._generate_l1b_cube_impl(coeff_type=coeff_type, **kwargs)
+
         self.run_georeferencing()
-        
+
         return None
 
 
 
     def generate_l1d_cube(self, use_direct_georef=False, use_thuillier=False, use_unbinned=True, generate_figures=False) -> None:
+        """Mutates this object in place (sets self.l1d_cube). Deprecated in
+        favor of to_l1d() - see generate_l1b_cube()'s docstring for why."""
+        warnings.warn(
+            "generate_l1d_cube() mutates this object in place and is deprecated "
+            "in favor of to_l1d(), which returns a new object instead of "
+            "mutating this one - see docs/architecture.rst's 'Cube memory' "
+            "section. generate_l1d_cube() is not being removed yet.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self._generate_l1d_cube_impl(use_direct_georef=use_direct_georef, use_thuillier=use_thuillier,
+                                            use_unbinned=use_unbinned, generate_figures=generate_figures)
+
+
+    def _generate_l1d_cube_impl(self, use_direct_georef=False, use_thuillier=False, use_unbinned=True, generate_figures=False) -> None:
 
         print("[INFO] Generating L1d cube")
         self._get_fwhm()
         self._get_fwhm_unbinned()
-        
+
 
         if self.l1b_cube is not None:
             toa_radiance = self.l1b_cube
         elif self.l1c_cube is not None:
             toa_radiance = self.l1c_cube
         else:
-            self.generate_l1b_cube()
+            self._generate_l1b_cube_impl()
             toa_radiance = self.l1b_cube
 
         if use_direct_georef and hasattr(self, 'solar_zenith_angles_direct'):
@@ -1603,7 +1651,7 @@ class HypsoBase:
         existing in-place, mutating usage).
         """
         new_obj = self._spawn_next_level()
-        new_obj.generate_l1b_cube(coeff_type=coeff_type, **kwargs)
+        new_obj._generate_l1b_cube_impl(coeff_type=coeff_type, **kwargs)
         new_obj._l1a_cube = None
         return new_obj
 
@@ -1616,7 +1664,7 @@ class HypsoBase:
         populates.
         """
         new_obj = self._spawn_next_level()
-        new_obj.generate_l1c_cube(coeff_type=coeff_type, **kwargs)
+        new_obj._generate_l1c_cube_impl(coeff_type=coeff_type, **kwargs)
         new_obj._l1a_cube = None
         return new_obj
 
@@ -1629,8 +1677,8 @@ class HypsoBase:
         so it holds only l1d_cube.
         """
         new_obj = self._spawn_next_level()
-        new_obj.generate_l1d_cube(use_direct_georef=use_direct_georef, use_thuillier=use_thuillier,
-                                  use_unbinned=use_unbinned, generate_figures=generate_figures)
+        new_obj._generate_l1d_cube_impl(use_direct_georef=use_direct_georef, use_thuillier=use_thuillier,
+                                        use_unbinned=use_unbinned, generate_figures=generate_figures)
         new_obj._l1a_cube = None
         new_obj._l1b_cube = None
         return new_obj
