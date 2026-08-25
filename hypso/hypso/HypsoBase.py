@@ -6,7 +6,6 @@ import copy
 #from .DataArrayValidator import DataArrayValidator
 import numpy as np
 from datetime import datetime, timezone
-import sys
 import warnings
 
 logger = logging.getLogger(__name__)
@@ -18,18 +17,12 @@ from hypso import geo
 
 from hypso.io import dispatch as io_dispatch
 
+from hypso.ac.adapters import AC_ADAPTERS
+
 from hypso.georeferencing import Georeferencer, \
                                 check_star_tracker_orientation
 
-from hypso.load import load_ocsmart_h5, \
-                        load_acolite_l2r_nc, \
-                        load_acolite_l2w_nc, \
-                        load_polymer_l2_v1_nc, \
-                        load_polymer_l2_v2_nc
-
 from hypso.reflectance import compute_toa_reflectance
-
-from hypso.utils import find_file
 
 from hypso.DataArrayValidator import DataArrayValidator
 from hypso.DataArrayDict import DataArrayDict
@@ -38,6 +31,12 @@ import netCDF4 as nc
 
 
 class HypsoBase:
+
+    # Atmospheric-correction adapters (self.ac.polymer/.acolite/.ocsmart - see
+    # hypso.ac.adapters). Class-level because the adapters are stateless
+    # singletons shared between captures; the ac_* wrapper methods below
+    # delegate through this.
+    ac = AC_ADAPTERS
 
     def __init__(self, path: Union[str, Path] = None, sensor_profile: "SensorProfile" = None,
                  label: str = None, load_cube: bool = True, verbose: bool = False):
@@ -854,495 +853,73 @@ class HypsoBase:
 
 
 
+    # Atmospheric-correction orchestration (every ac_polymer_*/ac_acolite_*/
+    # ac_ocsmart_* method, plus the shared _get_inferred_wavelength_band_map
+    # helper) was extracted verbatim into hypso.ac.adapters - one adapter class
+    # per external tool behind a shared run_correction/open_output interface
+    # (self.ac composition; the plan's "prepare the AC functions to be
+    # refactored" step - organizational only, bodies not rewritten). Unlike the
+    # calibration/load-dispatch extractions, every public ac_* name below stays
+    # as a thin delegating wrapper: these are confirmed external API
+    # (hypso-processing-pipeline calls them as satobj methods). Only the private
+    # _get_inferred_wavelength_band_map moved without a wrapper (zero external
+    # callers; it now lives in hypso.ac.adapters.base).
+
     def ac_ocsmart_stage_input(self):
-
-        """
-        Stages OC-SMART input file to the L1B directory located in the OC-SMART installation directory. The L1d file is copied and renamed to the L1B directory.
-
-        :return: None
-        """
-
-
-        if self.ocsmart_dir is not None:
-            try:
-                
-                dst_dir = Path(self.ocsmart_dir, "L1B/")
-                dst_dir.mkdir(parents=True, exist_ok=True)
-
-                src_file = self.l1d_nc_file
-                dst_file = Path(dst_dir, self.ocsmart_l1d_input_nc_file.name)
-
-                self.ocsmart_l1d_input_nc_file = dst_file
-
-                import shutil
-                shutil.copy2(src_file, dst_file)
-
-                print("[INFO] Successfully staged OC-SMART input file to " + str(dst_file))
-
-            except Exception as ex:
-                print("[ERROR] Unable to stage OC-SMART input. An error occured.")
-                print(ex)
-
-        else:
-            print("[ERROR] OC-SMART directory is not configured. The 'ocsmart_dir' attribute is empty.")
-
-        return None
+        return self.ac.ocsmart.stage_input(self)
 
 
     def ac_ocsmart_run_correction(self):
-        """
-        Execute 'OCSMART.py' as a subprocess.
-
-        :return: None
-        """
-
-        print("[INFO] Running OC-SMART atmospheric correction as a subprocess.")
-
-        import subprocess
-        ocsmart_run_script = Path(self.ocsmart_dir, "OCSMART.py")
-        subprocess.run(["python3", ocsmart_run_script], cwd=self.ocsmart_dir, check=True)
-
-        print("[INFO] Removing staged OC-SMART input file " + str(self.ocsmart_l1d_input_nc_file))
-        self.ocsmart_l1d_input_nc_file.unlink(missing_ok=True)
-
-        print("[INFO] OC-SMART atmospheric correction complete.")
-
-        return None
-
+        return self.ac.ocsmart.run_correction(self)
 
 
     def ac_ocsmart_open_output(self, h5_file_path: Path = None):
-        """
-        Open and read OC-SMART atmospheric correction HDF5 output files. The remote sensing reflectance (Rrs) dataset is written to the satobj's 'l2a_cube' dictionary.
-
-        :param h5_file_path: Path to the OC-SMART HDF5 file (optional)
-
-        :return: "datasets" Dictionary containing 2D and 3D datasets read from the HDF5 and stored as xarray DataArrays.
-        """
+        return self.ac.ocsmart.open_output(self, h5_file_path=h5_file_path)
 
 
-        if h5_file_path is not None:
-            h5_file_path = Path(h5_file_path).absolute()
-        else:
-            ocsmart_output_dir = Path(self.ocsmart_dir, "L2/")
-            h5_file_path = Path(ocsmart_output_dir, self.ocsmart_l2a_output_h5_file.name)
-
-
-        if h5_file_path.is_file():
-            print("[INFO] Opening OC-SMART output file " + str(h5_file_path))
-            datasets = load_ocsmart_h5(h5_file_path = h5_file_path)
-
-        else:
-            print("[ERROR] OC-SMART output file " + str(h5_file_path) + " does not exist.")
-            return None
-
-        try:
-            key = "Rrs"
-            inferred_wavelengths = datasets[key].band.to_numpy()
-
-            # Map inferred OC-SMART wavelengths to HYPSO wavelengths
-            wl_band_map = self._get_inferred_wavelength_band_map(inferred_wavelengths=inferred_wavelengths)
-
-            '''
-            l2a_cube_wavelengths = inferred_wavelengths
-
-            A = np.array(l2a_cube_wavelengths, dtype=float)
-            B = np.array(self.wavelengths, dtype=float)
-
-            index_map = {}
-            indices_unique = []
-
-            for a in A:
-                ix = np.argmin(np.abs(B - a))
-                if ix not in index_map: # ensure uniqueness
-                    index_map[ix] = a
-                    indices_unique.append(ix)
-                else:
-                    print("[WARNING] Duplicate prevented:", a, "mapped to", ix)
-
-            ocsmart_dataset_indices = np.array(indices_unique, dtype=int)
-
-            wl_band_map = ocsmart_dataset_indices
-            '''
-            
-            # Create empty cube with standard HYPSO cube dims
-            shape = (self.spatial_dimensions[0], self.spatial_dimensions[1], self.bands)
-            cube = np.full(shape=shape, fill_value=np.nan)
-            cube[:,:,wl_band_map] = datasets[key]
-
-            self.l2a_cube["ocsmart"] = cube
-            self.l2a_cube["ocsmart"].attrs['l2_variable_name'] = key
-
-        except Exception as ex:
-            print("[ERROR] Unable to load OC-SMART L2 Rrs dataset.")
-
-        return datasets
-
-
-    
-
-
-    def ac_acolite_run_correction(self, settings_file: Path = None, 
+    def ac_acolite_run_correction(self, settings_file: Path = None,
                                   input_product_level: str = 'l1c',
                                   EARTHDATA_u: str = None,
                                   EARTHDATA_p: str = None
                                   ):
-        
-
-        
-
-        acolite_path = Path(self.acolite_dir).absolute()
-        
-        print("[INFO] Running ACOLITE atmospheric correction installed in " + str(acolite_path))
-
-        sys.path.append(str(acolite_path))
-        #print(sys.path)
-
-        import acolite as ac
-        from acolite.acolite.settings import load
-        from acolite.acolite import acolite_run
-        
-        # optional file with processing settings
-        # if set to None defaults will be used
-
-        # import settings
-        #settings = ac.acolite.settings.load(settings_file)
-        # load() only applies a sensor's own config/defaults/<name>.txt (e.g.
-        # HYPSO2.txt's dsf_wave_range=450,750) when explicitly given that
-        # name - it does not auto-detect sensor from the input file. Passing
-        # None (as this always did before) silently fell back to ACOLITE's
-        # fully generic defaults.txt (dsf_wave_range=400,2500) instead,
-        # mirroring the fix ac_runners.py's PACE runner already has via its
-        # explicit load("PACE_OCI") call.
-        settings = load(settings_file if settings_file is not None else self.platform.upper())
-
-        if EARTHDATA_u is not None and EARTHDATA_p is not None:
-            settings['EARTHDATA_u'] = EARTHDATA_u
-            settings['EARTHDATA_p'] = EARTHDATA_p
-            settings['ancillary_data'] = True
-
-        # set settings provided above
-
-        if input_product_level.upper() == 'L1D':
-            print("[INFO] Using L1d NetCDF as ACOLITE input.")
-            settings['inputfile'] = str(self.l1d_nc_file) # L1d reflectance
-        else:
-            print("[INFO] Using L1c NetCDF as ACOLITE input.")
-            settings['inputfile'] = str(self.l1c_nc_file) # default L1c (radiance)
-
-
-        # capture_dir/acolite/, not capture_dir directly (2026-08-05) - see
-        # the matching comment on self.acolite_l2r_output_nc_file above for
-        # why (keeps ACOLITE's own per-run log/settings .txt files out of
-        # the capture directory root).
-        acolite_output_dir = Path(self.capture_dir, "acolite")
-        acolite_output_dir.mkdir(parents=True, exist_ok=True)
-        print("[INFO] Writing ACOLITE output to " + str(acolite_output_dir))
-        settings['output'] = str(acolite_output_dir)
-
-        settings['polygon'] = None
-        settings['rgb_rhot'] = True
-        settings['rgb_rhos'] = True
-        settings['map_l2w'] = False #produces blank .pngs
-        settings['l2w_mask'] = False
-        settings['l2w_mask_threshold'] = 0.2
-
-        settings['l2w_parameters'] = ['Rrs_*', \
-                                    'spm_nechad2010', \
-                                    'spm_nechad2016', \
-                                    'chl_re_mishra',\
-                                    'chl_oc2', \
-                                    'chl_oc3', \
-                                    'chl_re_moses3b', \
-                                    'chl_re_moses3b740', \
-                                    'fai', \
-                                    'fai_rhot', \
-                                    'fait', \
-                                    'ndci']
-
-
-        processed = acolite_run(settings=settings)
-
-        #acolite_l2_file = processed[0]['l2r'][0]
-
-        print("[INFO] ACOLITE atmospheric correction complete.")
-
-        return None
-    
-
+        return self.ac.acolite.run_correction(self, settings_file=settings_file,
+                                              input_product_level=input_product_level,
+                                              EARTHDATA_u=EARTHDATA_u,
+                                              EARTHDATA_p=EARTHDATA_p)
 
 
     def ac_acolite_open_output(self, acolite_l2r_output_nc_file: Path = None, acolite_l2w_output_nc_file: Path = None):
-        
-        """
-        Open and read ACOLITE atmospheric correction L2R and L2W NetCDF output files. The remote sensing reflectance (Rrs) dataset is written to the satobj's 'l2a_cube' dictionary.
-
-        :param h5_file_path: Path to the ACOLITE NetCDF file (optional)
-
-        :return: "datasets" Dictionary containing 2D and 3D datasets read from the NetCDFs and stored as xarray DataArrays.
-        """
-
-
-        if acolite_l2r_output_nc_file is not None:
-            acolite_l2r_output_nc_file = Path(acolite_l2r_output_nc_file).absolute()
-        else:
-            acolite_l2r_output_nc_file = Path(self.acolite_l2r_output_nc_file).absolute()
-
-        if acolite_l2w_output_nc_file is not None:
-            acolite_l2w_output_nc_file = Path(acolite_l2w_output_nc_file).absolute()
-        else:
-            acolite_l2w_output_nc_file = Path(self.acolite_l2w_output_nc_file).absolute()
-
-
-
-
-        if acolite_l2r_output_nc_file.is_file():
-            print("[INFO] Opening ACOLITE L2R NetCDF output file " + str(acolite_l2r_output_nc_file))
-            l2r_datasets = load_acolite_l2r_nc(acolite_l2r_output_nc_file)
-
-            try:
-                key = "rhos"
-                inferred_wavelengths = l2r_datasets[key].band.to_numpy()
-
-                # Map inferred ACOLITE wavelengths to HYPSO wavelengths
-                wl_band_map = self._get_inferred_wavelength_band_map(inferred_wavelengths=inferred_wavelengths)
-
-                # Create empty cube with standard HYPSO cube dims
-                shape = (self.spatial_dimensions[0], self.spatial_dimensions[1], self.bands)
-                cube = np.full(shape=shape, fill_value=np.nan)
-                cube[:,:,wl_band_map] = l2r_datasets[key]
-
-                self.l2a_cube["acolite_l2r"] = cube
-                self.l2a_cube["acolite_l2r"].attrs['l2_variable_name'] = key
-
-            except Exception as ex:
-                print("[ERROR] Unable to load ACOLITE L2R dataset.")
-                l2r_datasets = None
-
-        else:
-            print("[ERROR] ACOLITE L2R NetCDF output file " + str(acolite_l2r_output_nc_file) + " does not exist.")
-            l2r_datasets = None
-
-
-        if acolite_l2w_output_nc_file.is_file():
-            print("[INFO] Opening ACOLITE L2W NetCDF output file " + str(acolite_l2w_output_nc_file))
-            l2w_datasets = load_acolite_l2w_nc(acolite_l2w_output_nc_file)
-
-            try:
-                key = "Rrs"
-                inferred_wavelengths = l2w_datasets[key].band.to_numpy()
-
-                # Map inferred ACOLITE wavelengths to HYPSO wavelengths
-                wl_band_map = self._get_inferred_wavelength_band_map(inferred_wavelengths=inferred_wavelengths)
-
-                # Create empty cube with standard HYPSO cube dims
-                shape = (self.spatial_dimensions[0], self.spatial_dimensions[1], self.bands)
-                cube = np.full(shape=shape, fill_value=np.nan)
-                cube[:,:,wl_band_map] = l2w_datasets[key]
-
-                self.l2a_cube["acolite_l2w"] = cube
-                self.l2a_cube["acolite_l2w"].attrs['l2_variable_name'] = key
-
-            except Exception as ex:
-                print("[ERROR] Unable to load ACOLITE L2W dataset.")
-                l2w_datasets = None
-
-        else:
-            print("[ERROR] ACOLITE L2W NetCDF output file " + str(acolite_l2w_output_nc_file) + " does not exist.")
-            l2w_datasets = None
-
-
-        return l2r_datasets, l2w_datasets
+        return self.ac.acolite.open_output(self,
+                                           acolite_l2r_output_nc_file=acolite_l2r_output_nc_file,
+                                           acolite_l2w_output_nc_file=acolite_l2w_output_nc_file)
 
 
     def ac_polymer_get_id_sensor(self):
-
-        sensor_version = "_" + str(self.coeff_type)
-
-        # combine sensor name ("HYPSO-1" or "HYPSO-2") with coefficients version
-        # Polymer expects format like "HYPSO-2_moved"
-        id_sensor = str(self.sat_id) + sensor_version 
-
-        return id_sensor
+        return self.ac.polymer.get_id_sensor(self)
 
 
     def ac_polymer_get_srf_nc_path(self):
+        return self.ac.polymer.get_srf_nc_path(self)
 
-        id_sensor = self.ac_polymer_get_id_sensor()
-
-        srf_nc_file = id_sensor + "_srf.nc"
-        srf_nc_path = Path(self.parent_dir, srf_nc_file )
-
-        self.srf_nc_file = srf_nc_file
-        self.srf_nc_path = srf_nc_path
-
-        return srf_nc_file, srf_nc_path
-    
 
     def ac_polymer_get_ssi_nc_path(self):
+        return self.ac.polymer.get_ssi_nc_path(self)
 
-        id_sensor = self.ac_polymer_get_id_sensor()
-
-        ssi_nc_file = id_sensor + "_ssi.nc"
-        ssi_nc_path = Path(self.parent_dir, ssi_nc_file )
-
-        self.ssi_nc_file = ssi_nc_file
-        self.ssi_nc_path = ssi_nc_path
-
-        return ssi_nc_file, ssi_nc_path
-    
 
     def ac_polymer_get_esun_nc_path(self):
-
-        id_sensor = self.ac_polymer_get_id_sensor()
-
-        esun_nc_file = id_sensor + "_esun.nc"
-        esun_nc_path = Path(self.parent_dir, esun_nc_file )
-
-        self.ssi_nc_file = esun_nc_file
-        self.ssi_nc_path = esun_nc_path
-
-        return esun_nc_file, esun_nc_path
-
-
-
-
-
-
-
-
+        return self.ac.polymer.get_esun_nc_path(self)
 
 
     def ac_polymer_generate_srf_nc(self):
-
-        id_sensor = self.ac_polymer_get_id_sensor()
-
-        _, srf_nc_path = self.ac_polymer_get_srf_nc_path()
-
-
-        ds = xr.Dataset()
-        ds.attrs["desc"] = f'Spectral response functions for {id_sensor}'
-        ds.attrs["sensor"] = id_sensor
-        ds.attrs["platform"] = self.platform
-
-        for idx, wl in enumerate(self.wavelengths):
-            
-            # Construct band ID            
-            bid = "Band_" + str(idx)
-
-            # Read ith SRF and convert from CSR sparse array
-            srf = self.srf[idx,:].toarray().flatten()
-            srf_wavelengths = self.srf_ssi_wl
-
-            # Find where SRF is non-zero
-            nonzero_mask = srf > 0
-            
-            # Extract non-zero portion of SRF and SRF wavelength array
-            if np.any(nonzero_mask):
-                srf_nonzero = srf[nonzero_mask]
-                srf_wavelengths_nonzero = srf_wavelengths[nonzero_mask]
-            else:
-                srf_nonzero = srf
-                srf_wavelengths_nonzero = srf_wavelengths
-
-            # Add band entry to dataset
-            ds[bid] = xr.DataArray(
-                srf_nonzero,
-                coords={f"wav_{bid}": srf_wavelengths_nonzero},
-                attrs={
-                    "band_info": bid,
-                    "band_wavelength": wl,
-                    "index": idx,
-                    "effective_fwhm": self.effective_fwhm[idx],
-                    "center_fwhm": self.fwhm[idx]
-                },
-            )
-            ds[f"wav_{bid}"].attrs["units"] = "nm"
-            
-        # Sort dataarrays within dataset based on index
-        ds = ds[sorted(ds, key=lambda x: ds[x].attrs['index'])]
-
-
-
-        ds.to_netcdf(srf_nc_path)
-
-        return srf_nc_path        
-
-
-
-
+        return self.ac.polymer.generate_srf_nc(self)
 
 
     def ac_polymer_generate_ssi_nc(self):
-
-        id_sensor = self.ac_polymer_get_id_sensor()
-
-        _, ssi_nc_path = self.ac_polymer_get_ssi_nc_path()
-
-
-        ds = xr.Dataset()
-        ds.attrs["desc"] = f'TSIS-1 solar spectral irradiance for {id_sensor} (0.005 nm spectral resolution)'
-        ds.attrs["sensor"] = id_sensor
-        ds.attrs["platform"] = self.platform
-
-        ds["ssi"] = xr.DataArray(
-            self.srf_ssi,
-            coords={f"wav_ssi": self.srf_ssi_wl},
-            attrs={
-                "units": "mW m-2 nm-1",
-            },
-        )
-        ds[f"wav_ssi"].attrs["units"] = "nm"
-
-
-        ds.to_netcdf(ssi_nc_path)
-
-        return ssi_nc_path        
-
-
-
+        return self.ac.polymer.generate_ssi_nc(self)
 
 
     def ac_polymer_generate_esun_nc(self):
-
-        id_sensor = self.ac_polymer_get_id_sensor()
-
-        _, esun_nc_path = self.ac_polymer_get_esun_nc_path()
-
-
-        ds = xr.Dataset()
-        ds.attrs["desc"] = f'ESUN for {id_sensor}'
-        ds.attrs["sensor"] = id_sensor
-        ds.attrs["platform"] = self.platform
-
-        #ds.attrs["ssi"] = self.srf_ssi
-        #ds.attrs["ssi_wavelengths"] = self.srf_ssi_wl
-        #ds.attrs["ssi_units"] = "mW m-2 nm-1"
-
-        #ds.attrs["esun"] = self.esun
-        #ds.attrs["esun_wavlengths"] = self.esun_wl
-        #ds.attrs["esun_units"] = "mW m-2 nm-1"
-
-
-        ds["esun"] = xr.DataArray(
-            self.esun,
-            coords={f"wav_esun": self.esun_wl},
-            attrs={
-                "units": "mW m-2 nm-1",
-            },
-        )
-        ds[f"wav_esun"].attrs["units"] = "nm"
-
-
-        ds.to_netcdf(esun_nc_path)
-
-        return esun_nc_path    
-
-
-
-
-
-
+        return self.ac.polymer.generate_esun_nc(self)
 
 
     def ac_polymer_run_correction(self,
@@ -1352,253 +929,30 @@ class HypsoBase:
                                   eotools_path: str = None,
                                   core_path: str = None,
                                   input_product_level: str = "l1c",
-                                  #coeff_type: str = None,
                                   optional_output_datasets: list = ["SPM"],
                                   if_exists: str = "overwrite",
                                   polymer_version: str = "v1"):
-        """
-        polymer_version: which Polymer build polymer_path (etc.) point at -
-            mirrors ac_polymer_open_output's version parameter.
-            - "v1": Polymer_HYPSO_SRF_Oct_2025 - run_polymer's output
-              selection is driven by output_datasets, and it writes a
-              linear-scale "chla"/"fb" directly.
-            - "v2": the newer stock Polymer build - run_polymer no longer
-              has an output_datasets parameter (silently ignored if passed -
-              it lands in **kwargs and is never used for selection), so
-              output selection is driven by outputs_names instead; the
-              solver only exposes log-scale "logchl"/"logfb", not "chla"/"fb".
-        """
-
-        #polymer_path = Path(self.polymer_dir).absolute()
-
-        if polymer_path is not None:
-            polymer_path = str(Path(polymer_path).absolute())
-            sys.path.insert(0, polymer_path)
-
-        if eotools_path is not None:
-            eotools_path = str(Path(eotools_path).absolute())
-            sys.path.insert(0, eotools_path)
-
-        if eoread_path is not None:
-            eoread_path = str(Path(eoread_path).absolute())
-            sys.path.insert(0, eoread_path)
-
-        if core_path is not None:
-            core_path = str(Path(core_path).absolute())
-            sys.path.insert(0, core_path)
-
-        sys.path.insert(0, polymer_base_path)
+        return self.ac.polymer.run_correction(self,
+                                              polymer_base_path=polymer_base_path,
+                                              polymer_path=polymer_path,
+                                              eoread_path=eoread_path,
+                                              eotools_path=eotools_path,
+                                              core_path=core_path,
+                                              input_product_level=input_product_level,
+                                              optional_output_datasets=optional_output_datasets,
+                                              if_exists=if_exists,
+                                              polymer_version=polymer_version)
 
 
-
-        # TODO
-        srf_nc_path, srf_nc_path = self.ac_polymer_get_srf_nc_path()
-
-        run_polymer_kwargs = {"srf_getter": "hypso.ac.ac_polymer_srf_getter",
-                                "srf_getter_arg": srf_nc_path}
-
-
-        from eoread.hypso import Level1_HYPSO
-        from polymer.main_v5 import run_polymer, run_polymer_dataset, default_output_datasets
-
-
-        #if coeff_type is not None:
-        #    coeff_type_str = "-" + str(coeff_type).lower()
-        #else:
-        #    coeff_type_str = ""
-
-        # Output (not input) moved into a parent_dir/polymer/ subfolder
-        # (2026-08-05, was parent_dir directly) - same reasoning as
-        # ac_acolite_run_correction's equivalent change above (keeps
-        # per-run AC output out of the capture directory root; matches the
-        # PACE-side Polymer connector's existing convention).
-        polymer_output_dir = Path(self.parent_dir, "polymer")
-        polymer_output_dir.mkdir(parents=True, exist_ok=True)
-
-        match input_product_level.lower():
-
-            case "l1c":
-                polymer_l1_input_nc_file = Path(self.parent_dir, self.l1c_nc_file)
-                polymer_l2_output_nc_file = Path(polymer_output_dir, str(self.l1c_name) + ".polymer.nc")
-            case "l1d":
-                polymer_l1_input_nc_file = Path(self.parent_dir, self.l1d_nc_file)
-                polymer_l2_output_nc_file = Path(polymer_output_dir, str(self.l1d_name) + ".polymer.nc")
-            case _:
-                return None
-            
-        
-
-        #import os
-        #cwd = os.getcwd()
-        #os.chdir(polymer_path)
-
-        # This is from the Feb 2026 version of Polymer
-        #from polymer.level1 import Level1
-        #from polymer.level2 import Level2
-        #from eoread.hypso import Level1_HYPSO
-        #from polymer.main_v5 import run_polymer, run_polymer_dataset
-        #from core.files.fileutils import mdir
-        #polymer_output_file = run_polymer(Level1_HYPSO(polymer_input_file), dir_out=mdir(polymer_output_dir), split_bands=False)
-
-        match polymer_version:
-            case "v1":
-                output_selection_kwargs = {
-                    "output_datasets": default_output_datasets + optional_output_datasets,
-                }
-            case "v2":
-                output_selection_kwargs = {
-                    "outputs": "named",
-                    "outputs_names": [
-                        "latitude", "longitude", "rho_w", "logchl", "logfb",
-                        "Rgli", "Rnir", "flags",
-                    ] + optional_output_datasets,
-                }
-            case _:
-                raise ValueError(f"Unknown polymer_version: {polymer_version!r}")
-
-        # Run Polymer
-        if True:
-            output_file = run_polymer(
-                Level1_HYPSO(polymer_l1_input_nc_file),
-                dir_out=str(polymer_output_dir),
-                if_exists = if_exists,
-                srf_getter = "hypso.ac.ac_polymer_srf_getter",
-                srf_getter_arg = srf_nc_path,
-                **output_selection_kwargs,
-
-            )
-
-        try:
-            polymer_l2_output_nc_file = Path(output_file).rename(polymer_l2_output_nc_file)
-        except FileNotFoundError:
-            print("[WARNING] Polymer L2 NetCDF output file has already been renamed.")
-            pass
-
-        print(output_file)
-        print(polymer_l2_output_nc_file)
-
-        return Path(polymer_l2_output_nc_file)
-
-
-    
-
-
-
-
-
-    def ac_polymer_open_output(self, 
-                               polymer_l2_output_nc_file: Path = None, 
+    def ac_polymer_open_output(self,
+                               polymer_l2_output_nc_file: Path = None,
                                input_product_level="l1c",
-                               version = "v1" 
-                               #coeff_type: str = None
+                               version = "v1"
                                ):
-        
-        #if coeff_type is not None:
-        #    coeff_type_str = "-" + str(coeff_type).lower()
-        #else:
-        #    coeff_type_str = ""
-
-        if polymer_l2_output_nc_file is not None:
-            polymer_l2_output_nc_file = Path(polymer_l2_output_nc_file)
-        else:
-            match input_product_level.lower():
-
-                case "l1c":
-                    print("[INFO] Reading Polymer L2 NetCDF output file generated using L1c product.")
-                    # parent_dir/polymer/, not parent_dir directly - see
-                    # ac_polymer_run_correction's matching change.
-                    polymer_l2_output_nc_file = Path(self.parent_dir, "polymer", str(self.l1c_name)+ ".polymer.nc") #frohavet_2025-05-22T11-20-44Z-l1c.nc.polymer.nc
-
-                case "l1d":
-                    print("[INFO] Reading Polymer L2 NetCDF output file generated using L1d product.")
-                    polymer_l2_output_nc_file = Path(self.parent_dir, "polymer", str(self.l1d_name) + ".polymer.nc") #frohavet_2025-05-22T11-20-44Z-l1d.nc.polymer.nc
-            
-
-        polymer_l2_output_nc_file = polymer_l2_output_nc_file.absolute()
-        
-
-        if polymer_l2_output_nc_file.is_file():
-
-            if version == "v1":
-                polymer_datasets = load_polymer_l2_v1_nc(polymer_l2_output_nc_file)
-
-                try:
-                    key = "rho_w"
-                    inferred_wavelengths = polymer_datasets['bands'].data
-
-                    # Map inferred Polymer wavelengths to HYPSO wavelengths
-                    wl_band_map = self._get_inferred_wavelength_band_map(inferred_wavelengths=inferred_wavelengths)
-
-                    # Create empty cube with standard HYPSO cube dims
-                    shape = (self.spatial_dimensions[0], self.spatial_dimensions[1], self.bands)
-                    cube = np.full(shape=shape, fill_value=np.nan)
-                    cube[:,:,wl_band_map] = polymer_datasets[key]
-
-                    self.l2a_cube["polymer"] = cube
-                    self.l2a_cube["polymer"].attrs['l2_variable_name'] = key
-
-                except Exception as ex:
-                    print("[ERROR] Unable to load Polymer output dataset.") 
-
-            elif version == "v2":
-
-                polymer_datasets = load_polymer_l2_v2_nc(polymer_l2_output_nc_file)
-            
-                try:
-                    key = "rho_w"
-                    inferred_wavelengths = polymer_datasets['bands'].data
-
-                    # Map inferred Polymer wavelengths to HYPSO wavelengths
-                    wl_band_map = self._get_inferred_wavelength_band_map(inferred_wavelengths=inferred_wavelengths)
-
-                    # Create empty cube with standard HYPSO cube dims
-                    shape = (self.spatial_dimensions[0], self.spatial_dimensions[1], self.bands)
-                    cube = np.full(shape=shape, fill_value=np.nan)
-                    cube[:,:,wl_band_map] = polymer_datasets[key]
-
-                    self.l2a_cube["polymer"] = cube
-                    self.l2a_cube["polymer"].attrs['l2_variable_name'] = key
-
-                except Exception as ex:
-                    print("[ERROR] Unable to load Polymer output dataset.")
-
-        else:
-            print("[ERROR] Polymer L2 NetCDF output file " + str(polymer_l2_output_nc_file) + " does not exist.")
-            polymer_datasets = None
-
-        
-        return polymer_datasets
-
-
-
-
-
-
-
-
-
-
-    def _get_inferred_wavelength_band_map(self, inferred_wavelengths):
-
-        # Map inferred wavelengths to HYPSO wavelengths
-        A = np.array(inferred_wavelengths, dtype=float)
-        B = np.array(self.wavelengths, dtype=float)
-
-        index_map = {}
-        indices_unique = []
-
-        for a in A:
-            ix = np.argmin(np.abs(B - a))
-            if ix not in index_map: # ensure uniqueness
-                index_map[ix] = a
-                indices_unique.append(ix)
-            else:
-                print("[WARNING] Duplicate prevented:", a, "mapped to", ix)
-
-        wl_band_map = np.array(indices_unique, dtype=int)
-
-
-        return wl_band_map
+        return self.ac.polymer.open_output(self,
+                                           polymer_l2_output_nc_file=polymer_l2_output_nc_file,
+                                           input_product_level=input_product_level,
+                                           version=version)
 
 
     def _get_fwhm(self) -> None:
