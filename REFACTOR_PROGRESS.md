@@ -372,16 +372,27 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
    l1d_cube()`~~ — done, committed (`d09c272e`).
 6c. ~~Register a real Satpy reader plugin (`hypso_l1c`/`hypso_l1d`)~~ — separate plan-mode task, not part of the
    original plan below but done and committed (`3c3354e7`) at the user's request; see the status entry above.
-7. `self.io`/`self.geo` composition on `HypsoBase` — **not started**. The `self.label` uninitialized-attribute
-   trap is **already fixed** (sensor_profile wiring, `884b8d5f`). ~~Consolidate `run_georeferencing`/
-   `_run_custom_georeferencing`~~ — done, committed: `_run_custom_georeferencing` deleted outright (confirmed
-   dead code, zero callers anywhere - see status entry above), `run_georeferencing`'s existing optional
-   `latitudes=None, longitudes=None` signature already covers what a merge would have produced.
-8. Extract `hypso/ac/` adapters (`self.ac`), moving `ac_*` method bodies verbatim. **Not started.**
-9. ~~Cleanup: delete `.bak` files, delete `ac_6sv1_luts_OLD.py`/`_deepthought.py`~~ — done (see status entry
+7. `self.io`/`self.geo` composition on `HypsoBase`:
+   - ~~Extract georeferencing orchestration into `hypso/geo.py`~~ — done, committed (`29df4546`).
+     `run_direct_georeferencing()`/`run_georeferencing()` stay as thin delegating wrapper methods on
+     `HypsoBase` (external callers depend on them); the private `_run_*` helpers moved outright.
+   - `self.io` (wrapping `_load_capture_file`'s dispatch through `hypso.io.reader`/`hypso.io.writer`) —
+     **not started**.
+   - `self.calibration` (wrapping `_run_calibration`/`_load_calibration_coeff_files`) — **not started**.
+   - The `self.label` uninitialized-attribute trap is **already fixed** (sensor_profile wiring, `884b8d5f`).
+   - ~~Consolidate `run_georeferencing`/`_run_custom_georeferencing`~~ — done, committed: `_run_custom_
+     georeferencing` deleted outright (confirmed dead code, zero callers anywhere - see status entry above),
+     `run_georeferencing`'s existing optional `latitudes=None, longitudes=None` signature already covers what
+     a merge would have produced.
+8. Extract `hypso/ac/` adapters (`self.ac`), moving `ac_*` method bodies verbatim. **Not started** - this is the
+   largest remaining piece: many methods, each wrapping a real external tool (Polymer/ACOLITE/OC-SMART)
+   via subprocess/sys.path manipulation - needs careful, well-scoped handling, not a quick pass.
+9. ~~Cleanup: delete `.bak` files, delete `ac_6sv1_luts_OLD.py`/`_deepthought.py`~~ — done (see status entries
    above for what was deleted and, just as importantly, what was deliberately left alone and why -
    `geometry_definition/` has a real external consumer, `geometry`/`geometry_definition`/`georeferencing` were
-   not renamed despite similar names).
+   not renamed despite similar names). Also removed the orphaned `hypso/aeronet_oc/` submodule and
+   `write/aeronet_oc_writer.py` (`50217513`) after confirming with the user that its only real consumer,
+   `hypso-ac-processing`, is superseded by `hypso-processing-pipeline`.
 10. Build `tests/` (golden-file regression + CF/format assertions + unit tests, per plan §Verification). **Not
     started** - `tests/baseline/` (golden-file real-data regression) exists and has been the verification method
     used throughout, but the formal pytest suite (CF/format assertions, sensor/schema/adapter unit tests) is not
