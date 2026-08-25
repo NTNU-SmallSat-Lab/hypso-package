@@ -113,20 +113,25 @@ combined by ``_unified_mask()`` - nothing else needs to change to pick up a
 newly-registered mask. ``set_custom_mask(name, None)`` or
 ``clear_custom_masks()`` removes them.
 
-Freeing cube memory (``discard_cube``)
------------------------------------------
+Cube memory: one object per capture, not one per level
+-----------------------------------------------------------
 
 A capture's cubes (``l1a_cube``/``l1b_cube``/``l1d_cube``/``l2a_cube[correction]``)
-can each be large, and a single ``Hypso1``/``Hypso2`` object holds them all for as
-long as they're referenced - generating several levels in sequence for a workflow
-that only needs the last one leaves the earlier ones resident until you release
-them. This is a deliberate design choice, not an oversight: one object per *capture*
-(not one per *level*) is kept because the levels share state that isn't level-
-specific (geometry, calibration coefficients, capture metadata) - splitting into
-separate per-level objects would mean either duplicating that shared state or each
-object holding a reference back to something shared anyway, which just becomes an
-orchestrating container by another name. The tradeoff is made explicit instead, with
-a way to opt out of it::
+can each be large, and a single ``Hypso1``/``Hypso2`` object can end up holding
+several of them at once if you generate multiple levels in sequence. ``HypsoBase``
+stays one object per *capture* rather than splitting into one class per *level*:
+the levels share state that isn't level-specific (geometry, calibration
+coefficients, capture metadata, sensor identity - all of which already round-trip
+through a level's NetCDF file, see the next section), so a per-level split would
+either duplicate that shared state or have each level object hold a reference back
+to something shared anyway - which just becomes an orchestrating container by
+another name, for comparatively little benefit. Two ways to opt out of holding
+onto cubes you no longer need, depending on your style:
+
+**Mutate in place, discard explicitly** - matches how
+``generate_l1b_cube()``/``generate_l1c_cube()``/``generate_l1d_cube()`` already
+work (in place, no return value - this is what `hypso-processing-pipeline` uses
+today, unchanged)::
 
     satobj.generate_l1b_cube(coeff_type="moved")
     # ... use satobj.l1b_cube ...
@@ -142,6 +147,30 @@ independent storage, it's a georeferenced view over the L1B data (see its proper
 getter). For L2A, pass ``correction=`` to discard one AC tool's result
 (``discard_cube("l2a", correction="polymer")``) or omit it to discard every
 registered correction at once.
+
+**One object per cube, produced fresh each time** - ``to_l1b()``/``to_l1c()``/
+``to_l1d()`` are the non-mutating counterparts to ``generate_l1b_cube()``/etc.:
+each always returns a *new* object holding only that level's cube (plus the small
+shared state - calibration coefficients, geometry, capture metadata - carried over
+cheaply, not duplicated), and leaves the object you called it on completely
+untouched::
+
+    satobj.run_georeferencing(latitudes=lats, longitudes=lons)
+    l1b_obj = satobj.to_l1b(coeff_type="moved")
+    # satobj.l1a_cube is still there; l1b_obj.l1a_cube is None (cleared once
+    # l1b_cube exists), l1b_obj.l1b_cube is populated.
+    l1d_obj = l1b_obj.to_l1d()
+    # l1b_obj.l1b_cube is still there; l1d_obj holds only l1d_cube.
+    del l1b_obj  # or just let it go out of scope
+
+This is a deliberately unconditional rule - call ``to_l1b()``, always get a new
+object back - rather than e.g. a `mutate-vs-return` flag on ``generate_l1b_cube()``
+itself: a flag would make the call site ambiguous about which behavior you're
+getting without checking it or the docs, whereas a distinctly-named method makes it
+obvious. ``generate_l1b_cube()``/``generate_l1c_cube()``/``generate_l1d_cube()`` are
+unchanged and not being replaced - existing callers (``hypso-processing-pipeline``)
+need no changes; migrating to the ``to_l1*()`` family is optional and can happen
+later, at whatever pace makes sense for code that's live in production.
 
 NetCDF I/O (``hypso.io``)
 ---------------------------

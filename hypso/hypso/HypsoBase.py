@@ -1570,6 +1570,71 @@ class HypsoBase:
         return None
 
 
+    def _spawn_next_level(self) -> "HypsoBase":
+        """Shallow-copy this object into a new instance for the to_l1b/to_l1c/
+        to_l1d family (see those methods) - self is left untouched, including
+        its own cubes. A shallow copy.copy() is enough for the big-array
+        attributes (cubes, latitudes/longitudes, calibration coefficient
+        matrices): those are only ever read, never mutated in place, anywhere
+        in this class, so aliasing the same array object between self and the
+        new instance is safe and avoids duplicating potentially large data.
+
+        Mutable *container* attributes are different - copy.copy() would alias
+        the same dict/DataArrayDict object between self and the new instance,
+        so a later mutation on one (e.g. new_obj.set_custom_mask(...)) would
+        silently also change the other. Those are re-copied one level deep
+        (the dict itself, not what's inside it) so self and the new object
+        can diverge independently after this point.
+        """
+        new_obj = copy.copy(self)
+        new_obj._custom_masks = dict(self._custom_masks)
+        new_obj._l2a_cubes = copy.copy(self._l2a_cubes)
+        return new_obj
+
+
+    def to_l1b(self, coeff_type: str = None, **kwargs) -> "HypsoBase":
+        """Like generate_l1b_cube(), but returns a NEW object instead of
+        mutating self - self (including its own l1a_cube) is left completely
+        untouched. The new object's l1a_cube is cleared once l1b_cube is
+        generated, so it holds only the one cube its name promises - see
+        docs/architecture.rst's "Producing a new object per level" section for
+        why this exists alongside generate_l1b_cube() (kept unchanged - and
+        this method does not replace it - for hypso-processing-pipeline's
+        existing in-place, mutating usage).
+        """
+        new_obj = self._spawn_next_level()
+        new_obj.generate_l1b_cube(coeff_type=coeff_type, **kwargs)
+        new_obj._l1a_cube = None
+        return new_obj
+
+
+    def to_l1c(self, coeff_type: str = None, **kwargs) -> "HypsoBase":
+        """Like generate_l1c_cube(), but returns a NEW object instead of
+        mutating self. See to_l1b()'s docstring for the general pattern. l1c
+        has no independent cube storage (see l1c_cube's property getter) so
+        there is nothing extra to clear beyond what generate_l1c_cube() itself
+        populates.
+        """
+        new_obj = self._spawn_next_level()
+        new_obj.generate_l1c_cube(coeff_type=coeff_type, **kwargs)
+        new_obj._l1a_cube = None
+        return new_obj
+
+
+    def to_l1d(self, use_direct_georef=False, use_thuillier=False, use_unbinned=True,
+               generate_figures=False) -> "HypsoBase":
+        """Like generate_l1d_cube(), but returns a NEW object instead of
+        mutating self. See to_l1b()'s docstring for the general pattern. The
+        new object's l1a_cube/l1b_cube are cleared once l1d_cube is generated,
+        so it holds only l1d_cube.
+        """
+        new_obj = self._spawn_next_level()
+        new_obj.generate_l1d_cube(use_direct_georef=use_direct_georef, use_thuillier=use_thuillier,
+                                  use_unbinned=use_unbinned, generate_figures=generate_figures)
+        new_obj._l1a_cube = None
+        new_obj._l1b_cube = None
+        return new_obj
+
 
 
 

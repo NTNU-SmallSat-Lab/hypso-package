@@ -51,6 +51,30 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-25 (continued further, ×4):** Continuation of the "separate objects per level" discussion below -
+  user kept pushing on it across several turns (memory concern, then "is `discard_cube` intuitive - shouldn't 1
+  object = 1 cube be simpler/more transparent?", then confirmed the operational `hypso-processing-pipeline`
+  should NOT need to change now, migration can happen later). Landed on: add `to_l1b()`/`to_l1c()`/`to_l1d()` as
+  new, *unconditionally non-mutating* counterparts to `generate_l1b_cube()`/`generate_l1c_cube()`/
+  `generate_l1d_cube()` - always return a new `Hypso1`/`Hypso2` instance holding only that level's cube (clearing
+  the levels it superseded on the new object - e.g. `to_l1b()`'s result has `l1a_cube=None`), leaving the object
+  called on completely untouched. Deliberately a distinctly-named method rather than a `mutate-vs-return` flag on
+  the existing methods (a flag makes the call site ambiguous; a new name doesn't). `generate_*_cube()` are
+  UNCHANGED - not replaced - so `hypso-processing-pipeline` needs zero changes; migrating to `to_l1*()` is
+  optional, later, at the user's pace.
+
+  Implementation: `_spawn_next_level()` does `copy.copy(self)` (cheap - cube/geometry/calibration-coefficient
+  arrays are only ever read, never mutated in place, anywhere in this class, so aliasing them between self and
+  the new object is safe) then re-copies the *mutable container* attributes one level deep
+  (`_custom_masks` dict, `_l2a_cubes` DataArrayDict) so a later mutation on one object's masks/l2a-corrections
+  can't silently bleed into the other's. Verified against the real capture:
+  `satobj.to_l1b(coeff_type='moved')` leaves `satobj.l1a_cube` populated and gives back a new object with
+  `l1a_cube=None`/`l1b_cube` matching the baseline mean exactly; `l1b_obj.to_l1d()` same pattern one level
+  further; `l1b_obj.set_custom_mask(...)` and `l1b_obj.l2a_cube['fake']=...` do NOT leak into `satobj` (confirms
+  the container re-copy is doing its job); `tests/baseline/compare_to_baseline.py` still passes. Documented in
+  `docs/architecture.rst` (rewrote the "Freeing cube memory" section to present both `discard_cube()`/`del` and
+  `to_l1*()` as the two opt-outs, explaining when each applies). **Not yet committed** — do this first on
+  resume.
 - **2026-08-25 (continued further, ×3):** User asked (across a few turns) whether product levels should live in
   separate objects (L1a object produces an L1b object, discard the old one) given real memory concern - large
   datacubes, several potentially resident at once. Discussed prior art (Satpy's one-Scene-per-capture model with
@@ -178,8 +202,9 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 5. ~~Build `hypso/io/reader.py`, wire `hypso/load/__init__.py`, fix the band-sort bug~~ — done, committed
    (`43183e49`). `_load_capture_file` needed no code change (already imports load_l1b_nc/etc. from `hypso.load`,
    which now transparently resolves to the new reader).
-6. ~~Add `HypsoBase.discard_cube(level)` / cube property deleters~~ — done, verified against real data. Commit
-   this (this session's uncommitted work — do this first on resume).
+6. ~~Add `HypsoBase.discard_cube(level)` / cube property deleters~~ — done, committed (`0f79edf5`).
+6b. ~~Add `to_l1b()`/`to_l1c()`/`to_l1d()` (non-mutating, always-return-new-object counterparts)~~ — done,
+   verified against real data. Commit this (this session's uncommitted work — do this first on resume).
 7. Update `HypsoBase`: `self.io`/`self.geo` composition, fix the `self.label` uninitialized-attribute trap
    (**already fixed** as part of the sensor_profile wiring, `884b8d5f`), consolidate
    `run_georeferencing`/`_run_custom_georeferencing`.
