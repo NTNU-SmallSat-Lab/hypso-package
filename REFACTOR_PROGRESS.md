@@ -279,6 +279,69 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
   `check_capture_type`'s classification against a fake capture (all four outcomes), and a regression test
   confirming `hypso1_calibration`'s `"moon"` case now returns real (non-`None`) calibration files.
 
+- **2026-08-26 (×32): eoread/ACOLITE/OC-SMART reader coordination — the deferred format-migration TODO
+  acted on.** User set up sibling checkouts of Polymer/eoread/eotools/core, ACOLITE, and an OC-SMART
+  installation zip under `/home/camerop/hypso-package-refactor/` (all confirmed already on a `refactor`
+  branch/tag where applicable) and asked for the three readers' HYPSO-specific code to transparently support
+  both this package's current flat NetCDF layout (products/geometry at file root, since the ×20-era CF/SNAP
+  refactor) and the original grouped layout (`products`/`geometry` HDF5 groups) — `hypso-processing-pipeline`
+  hasn't migrated onto the new writer yet, so both are genuinely live (confirmed: a real pipeline output
+  dated 2026-08-25 is still grouped-layout).
+
+  Generated real reference files first (`hypso/io/writer.py`'s `write_level_nc`/`write_l2a_nc` against the
+  same reference capture the test suite uses, both `datacube=False` — the actual pipeline default — and
+  `datacube=True`) and inspected them with `h5py`/`xarray` directly, exactly as each external reader does,
+  rather than reasoning about netCDF4/HDF5 attribute serialization from writer-side code alone. Caught two
+  things this way that pure code-reading would have missed: scalar attributes round-trip through h5py as
+  1-element arrays in *both* layouts (so `att['wavelength'][0]`-style indexing in existing reader code needed
+  no change), and `xarray.open_dataset` auto-promotes `latitude`/`longitude` to coordinate variables once
+  they're resolvable in the same (root) group as the `coordinates=` attribute referencing them — new in the
+  flat layout, and the direct cause of a `MergeError` hit and fixed below.
+
+  - **`eoread/hypso.py`** (`Level1_HYPSO`): added `_hypso_format()` (cheap `h5py` open, checks for a
+    top-level `products` group) and `_read_hypso_l1c_products_and_geometry()`, which returns
+    `(ds_root, ds_nav, ltoa, wave_names, wavelengths)` for either layout — the only extraction step that
+    actually differs; F0/Rtoa computation and attribute assembly downstream are completely unchanged, since
+    they only depend on this unified result. Also handles a single stacked `(lines,samples,bands)` `Lt`
+    datacube variable (only possible in the flat layout, `write_level_nc(datacube=True)`), and sorts band
+    variables by each one's own `band` attribute rather than name/insertion order (matches the same
+    band-order-bug-avoidance convention this package's own reader already uses). Removed the speculative
+    `Level1_HYPSO_future` (targeted a `navigation`-group + stacked-`Lt` layout that never materialized — the
+    real new layout is flat-root, now handled by `Level1_HYPSO` directly, so keeping it would misrepresent
+    what layouts actually exist). Fixed a real bug found while verifying: reading `latitude`/`longitude` off
+    the flat root dataset raised `MergeError` (xarray couldn't tell if the assignment target should be a
+    coordinate) — `reset_coords()` demotes them back to plain data variables first. Verified end-to-end
+    (not just import) against three real files: the 2026-08-25 grouped-layout pipeline output, and both
+    per-band/datacube variants of a freshly-generated flat-layout file — sensible `Ltoa`/`Rtoa` values in all
+    three, non-zero away from a genuinely-low-response band confirmed identical in the real production file
+    too. Added `tests/test_hypso.py` coverage (skipped if the grouped-layout sample path isn't present).
+  - **`acolite/hypso/l1_convert.py`**: added `_hypso_products_and_geometry_groups(f)`, returning
+    `(products, geometry)` h5py group-like objects pointing at the real groups (old layout) or the file root
+    itself (new layout). Every `f['/products']`/`f['/geometry/']` reference replaced with these — the rest of
+    the function (band info, geolocation, the actual radiance→reflectance conversion, the per-band write
+    loop) is untouched. Also made per-band ordering explicit (sorted by each variable's `band` attribute,
+    same reasoning as eoread) instead of relying on h5py's iteration order happening to match — needed one
+    numpy-version fix along the way (`int()` on a genuinely 1-element array raises on this numpy; unwrap via
+    `.reshape(-1)[0]` first). Verified with real `l1_convert()` runs (not just import) against all three file
+    shapes for both L1C and L1D — real ACOLITE output files with sensible `rhot_*` reflectance values.
+  - **OC-SMART** (`OCSMART_Linux_v2.6.3/src/L1B.py`, not a git repo — edited in place, no commit possible):
+    found this file already had a `_2025`/`_2026`-dated fallback chain for HYPSO geometry lookups
+    (`/navigation/*_indirect` → `/navigation/*` → `/geometry/*`, with "keep these options here for backwards
+    compatibility" comments) — evidently NTNU's own prior attempt at exactly this kind of format-migration
+    resilience, just not yet extended to the flat layout. Added one more fallback tier (`latitude`/
+    `longitude`/`solar_zenith`/`solar_azimuth`/`sensor_zenith`/`sensor_azimuth` directly at file root) to each
+    of the six lookups, following the file's own established style. Also fixed the `rhot_<wavelength>`
+    product-variable lookup (`readl1b`'s HYPSO_HSI branch): was `np.array(f['/products'])`, unconditionally
+    assuming a `/products` group; now checks for it and falls back to filtering root keys by `rhot_` prefix
+    (the flat layout's root holds many other unrelated names a raw `/products` group never did). Since
+    OC-SMART needs its own pinned conda environment (basemap/GDAL/etc., confirmed incompatible with this
+    session's environment per the adapter's own docstring) full end-to-end execution wasn't feasible here —
+    verified by reproducing the exact modified lookup logic standalone (h5py/numpy/re only, no OC-SMART
+    class instantiation needed) against real old- and new-layout L1D files, confirming correct geometry
+    shapes and sensible reflectance-input values in both.
+
+  hypso-package itself: no changes — all edits landed in the three sibling tool checkouts.
+
 - **2026-08-26 (×25): type-per-level capture objects.** Follow-on from ×24. User asked: "1 HypsoCapture = 1
   cube, so why level-specific cube/mask accessor names, and why no validation preventing e.g. AC from L1B or
   jumping L1A→L1D directly? Some way of tracking the processing level represented by the object?" First
