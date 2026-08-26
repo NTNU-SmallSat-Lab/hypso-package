@@ -9,19 +9,28 @@ from typing import Optional
 CONVENTIONS = "CF-1.10"
 
 
+REFERENCES = "https://hypso.space"
+
+
 def global_attrs(processing_level: str, title: str) -> dict:
     """Global attributes CF recommends and that were confirmed absent from
     every level's output before this refactor (no `Conventions` attribute
     anywhere meant CF-aware tooling had no signal to even attempt CF-aware
-    parsing)."""
+    parsing).
+
+    "history" is deliberately NOT included here - unlike the other globals,
+    CF wants it to be an append-only provenance trail (one line per
+    processing step, not a value that gets overwritten each time a new
+    level is written), which needs the *existing* value from whatever was
+    already on the source capture - see io/writer.py's _write_level_nc,
+    which builds it from satobj.metadata.global_attrs and appends this
+    write's own entry before writing it."""
     return {
         "Conventions": CONVENTIONS,
         "title": title,
         "source": "HYPSO Hyperspectral Imager",
         "processing_level": processing_level,
-        # "history"/"references" are appended-to/filled in by the caller
-        # (write_level_nc), which knows the actual source file and package
-        # version - not fixed values this module can supply.
+        "references": REFERENCES,
     }
 
 
