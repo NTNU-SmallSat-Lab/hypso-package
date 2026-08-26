@@ -110,6 +110,45 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-26 (×24, in progress): HypsoCapture rearchitecture.** User: "too many [attributes], really
+  chaotic," questioned the `api`/`_impl` split, asked to simplify AC interfaces and rename `HypsoBase`. Plan
+  drafted via Plan Mode and saved to `/home/camerop/.claude/plans/flickering-jumping-chipmunk.md` (durable copy
+  in case of disconnect, per user request), then expanded conversationally with several follow-on findings.
+  Done so far (`30f286e6`): renamed `HypsoBase` → `HypsoCapture` (zero external references, clean rename);
+  removed 5 zero-external-caller AC wrapper methods (`ac_ocsmart_run_correction` + its only caller, a
+  permanently-dead `TOGGLE_OCSMART=False` branch; the 4 `ac_polymer_get_*` accessors, superseded by
+  `PolymerAdapter`/`SpectralResponse`); fixed a real bug where `l2a_cube` (singular property) returned the
+  multi-correction `DatasetDict` while `io/dispatch.py` already referenced the nonexistent plural
+  `l2a_cubes` — renamed the property, kept `l2a_cube` as a deprecated alias (confirmed external readers in
+  the pipeline's `extraction.py`/`2d_hypso_noise_snr.py`). 104 tests pass. Remaining: metadata consolidation,
+  georeferencing angle/track consolidation, masking extraction into its own submodule, additive
+  `to_l2a(correction=...)` spawn method (deprecating the mutate-in-place `ac_*_open_output` pattern, mirroring
+  `to_l1b`/`to_l1c`/`to_l1d`), and the `resample/datacube_resamplers.py` indirect-georef bug fix — see the plan
+  file for full detail on each.
+
+  **New TODO (user request): `compute_csiro_srfs` and `ac_dark_pixel_subtraction` — why do we have them, are
+  they used?** Both are free functions bound onto `HypsoCapture` via `from X import fn; fn = fn` inside the
+  class body (attaches a function defined elsewhere as a method without a wrapper — legal Python, but an
+  obscure pattern compared to the adapter-style `self.ac.<tool>` composition used for Polymer/ACOLITE/OC-SMART).
+  - `ac_dark_pixel_subtraction`: **actively used** — `hypso-processing-pipeline/stage2_ac/process_capture.py:421`
+    calls `satobj.ac_dark_pixel_subtraction()`, and `ac_runners_pace.py` separately imports the underlying
+    `dark_pixel_subtraction_per_band` function directly from `hypso.ac.ac_dark_pixel_subtraction`. Not dead, not
+    removable — but its packaging (bound directly onto `HypsoCapture`, unlike the other three AC tools which
+    went through the full adapter/subprocess-isolation treatment this session) is inconsistent. TODO: consider
+    whether this belongs in the pipeline's own `ac_runners_hypso.py` instead (it's a lightweight in-process
+    computation, not an external-tool adapter, so the adapter pattern doesn't obviously apply — worth a design
+    pass rather than a mechanical move).
+  - `compute_csiro_srfs`: **already deprecated**, and now **zero external callers** — its own docstring said
+    "removal is planned once the pipeline drops its call," and the pipeline's `process_capture.py:193` comment
+    confirms that call was removed on 2026-08-25 (likely by the concurrent Claude session working in that repo),
+    with an explicit note to keep it deprecated rather than delete it "in case something outside this pipeline
+    still calls it." TODO: per user request, merge its still-useful capability (the uniform-grid SRF/SSI/ESUN
+    computation) fully into `hypso.reflectance.compute_spectral_response(grid="uniform-1000")` — which already
+    contains the same body verbatim — and drop the vestigial `compute_csiro_srfs` wrapper + `csiro_*` attribute
+    family once nothing depends on it. Not done now: no way to verify "nothing outside this pipeline calls it"
+    from here, so removal stays a follow-up, not an immediate action.
+
+
 - **2026-08-25 (continued further, ×23): srf_getter maintainability fix + a future Polymer-side wishlist.**
   User asked for a plain-language explanation of the `srf_getter` dotted-string mechanism and why
   `ac_polymer.py` sits outside `adapters/`. Investigated precisely (read `eotools/srf.py`'s actual
