@@ -110,7 +110,58 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
-- **2026-08-26 (×24, in progress): HypsoCapture rearchitecture.** User: "too many [attributes], really
+- **2026-08-26 (×25): type-per-level capture objects.** Follow-on from ×24. User asked: "1 HypsoCapture = 1
+  cube, so why level-specific cube/mask accessor names, and why no validation preventing e.g. AC from L1B or
+  jumping L1A→L1D directly? Some way of tracking the processing level represented by the object?" First
+  drafted (in Plan Mode) as an incremental fix - make `product_level`/`product_symbol`/`cube_name` authoritative
+  via `_advance_product_level`/`_reset_product_level` helpers - but the user pushed back, asking whether that
+  was coherent given hypso-package's goal of being the foundation for `hypso-pipeline` (orchestrating AC +
+  downstream products, retrospective and possibly NRT). Correct answer: no - a driftable runtime string kept
+  in sync by convention is the same fragile pattern that produced the bugs being patched. Replanned as a real
+  architectural change instead: **type-per-level objects** (`hypso/capture_types.py`, new module) -
+  `L1BCapture`/`L1CCapture`/`L1DCapture`/`L2ACapture`, entered only via `to_l1b()`/`to_l1c()`/`to_l1d()`/
+  `to_l2a()` (added earlier this session, zero external callers before this - safe to change what they
+  return). "What level is this" becomes a fact of the object's *type* - an `L1BCapture` has no `l1a_cube`
+  attribute at all, `AttributeError` on wrong-level access instead of a silent stale `None`.
+
+  Deliberately does **not** touch `HypsoCapture`'s deprecated in-place `generate_l1b_cube()`/
+  `generate_l1c_cube()`/`generate_l1d_cube()` family (still what `hypso-processing-pipeline` calls today) -
+  fundamentally incompatible with strict type-per-level, since it mutates `self` and lets one object hold
+  `l1a_cube`/`l1b_cube`/`l1d_cube` simultaneously. Migrating the pipeline onto the typed family is a separate,
+  future effort (recorded in the plan file, not attempted - that repo is off-limits right now).
+
+  Technical wrinkles solved during implementation (both flagged in the plan up front, not discovered by
+  surprise): `copy.copy` can't change an object's type, so `_spawn_next_level` (removed - dead code once
+  nothing called it) is replaced by `capture_types.spawn_as` (`object.__new__` + `__dict__` update - the
+  standard mechanism, same aliasing semantics); and business logic reading a hardcoded old-class attribute
+  name (`calibration_pipeline.run_calibration`'s `satobj.l1a_cube`) needed a temporary plain-attribute alias
+  during the one call that needs it, removed immediately after, to keep the "no l1a_cube attribute afterward"
+  guarantee real.
+
+  **Two real bugs found and fixed only because the real-capture test suite caught them** (both would have
+  shipped silently otherwise): `_spawn_l1d` set `.cube` from `compute_reflectance`'s raw return value without
+  wrapping it through `_format_cube_dataarray` (the original `l1d_cube` property setter did this implicitly) -
+  `.cube` was a bare `numpy.ndarray`, not an `xr.DataArray`, until a test calling `.to_numpy()` on it caught
+  the `AttributeError`. `to_l2a`'s "did this succeed" gate checked "is `l2a_cubes` non-empty" instead of "did
+  THIS call add something new" - misfired (incorrectly cleared L1D-derived state on an actual no-op) whenever
+  a capture already had an unrelated correction registered from elsewhere - caught by a test exercising a
+  shared session-scoped fixture that legitimately has other tests' corrections already on it
+  (`conftest.py`'s `written_nc_files` fixture adds its own "testac" directly onto the shared `satobj`).
+
+  Also found and fixed: `masks.pipeline.format_mask_dataarray` called `satobj._update_dataarray_attrs(...)` -
+  a `HypsoCapture`-only method that doesn't exist on the new classes, which would have made `land_mask`/
+  `cloud_mask`/`.masked_cube` unusable on them. Inlined (the logic never needed `satobj` in the first place).
+
+  `docs/architecture.rst`'s "Cube memory" section explicitly revisited and reconciled, not silently
+  contradicted - added a new "Tracking which level an object represents" subsection explaining why the
+  original per-level-split rejection doesn't apply once spawning is by-value.
+
+  129 tests pass (full suite, including new `tests/test_capture_types.py`). Commits `f631a42a` (implementation),
+  `f1c741be` (unrelated: recorded a user-supplied ESA SNAP compatibility note in `ARCHITECTURE_PROPOSAL.md`
+  while working - `radiation_wavelength`/`radiation_wavelength_unit` must be kept for SNAP's Spectral Viewer,
+  not dropped as originally proposed there).
+
+- **2026-08-26 (×24): HypsoCapture rearchitecture.** User: "too many [attributes], really
   chaotic," questioned the `api`/`_impl` split, asked to simplify AC interfaces and rename `HypsoBase`. Plan
   drafted via Plan Mode and saved to `/home/camerop/.claude/plans/flickering-jumping-chipmunk.md` (durable copy
   in case of disconnect, per user request), then expanded conversationally with several follow-on findings.
@@ -143,9 +194,22 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
     registry). `ac_polymer_open_output`/`ac_acolite_open_output`/`ac_ocsmart_open_output` are now deprecated
     in favor of it (warn + delegate to a non-deprecated `_impl` sibling, matching `generate_l1b_cube`/`to_l1b`'s
     existing pattern) - kept working unchanged for the pipeline's current in-place callers. 112 tests pass.
+  - `42532bcf`: **fixed** the `masked_l1c_cube` bug flagged above — `get_masked_cube(satobj, "l1c")` now mirrors
+    `l1c_cube`'s own getter (deepcopy of `_l1b_cube`, relabeled) instead of reading the never-populated
+    `_l1c_cube`, with a new regression test (`tests/test_masking.py`). Also consolidated the 23 scattered
+    `nc_*` attributes (`nc_adcs_vars`, `nc_capture_config_attrs`, ... `nc_dimensions`, `nc_attrs`,
+    `nc_cube_attrs`) into one `satobj.metadata: CaptureMetadata` instance (`hypso/io/metadata.py`, new) built
+    once during load — confirmed zero external readers of any of the 23 names, so no compatibility properties
+    needed; every internal reader updated (`calibration/pipeline.py`, `georeferencing/geo.py`, three
+    `write/*.py` files, `io/writer.py`, and `io/dispatch.py`'s own `set_hypso_attributes`/`check_capture_type`,
+    the bulk of the migration). 121 tests pass (golden-file regression against the pre-refactor baseline
+    included — the strongest signal this didn't change any numeric output).
 
-  Remaining: metadata consolidation, georeferencing angle/track consolidation (including the `bbox`/`gsd`/
-  `framepose` attributes moving into a `TrackGeometry` dataclass) — see the plan file for full detail on each.
+  Remaining: georeferencing angle/track consolidation (`GeoAngles`/`TrackGeometry` dataclasses, the `bbox`/
+  `gsd`/`framepose` attributes, `io/writer.py`/`write/geometry_group_writer.py`'s angle lookup rewrite) — see
+  the plan file's step 4 for full detail. Paused for a check-in before starting (largest/riskiest remaining
+  step) — the user instead moved on to the type-per-level question, see ×25 above; this piece is still
+  pending, not abandoned.
 
   **New TODO (user request): `compute_csiro_srfs` and `ac_dark_pixel_subtraction` — why do we have them, are
   they used?** Both are free functions bound onto `HypsoCapture` via `from X import fn; fn = fn` inside the

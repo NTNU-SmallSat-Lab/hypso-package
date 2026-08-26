@@ -160,10 +160,13 @@ untouched::
 
     satobj.run_georeferencing(latitudes=lats, longitudes=lons)
     l1b_obj = satobj.to_l1b(coeff_type="moved")
-    # satobj.l1a_cube is still there; l1b_obj.l1a_cube is None (cleared once
-    # l1b_cube exists), l1b_obj.l1b_cube is populated.
+    # satobj.l1a_cube is still there; l1b_obj is a DIFFERENT TYPE
+    # (L1BCapture, see below) that has no l1a_cube attribute at all -
+    # l1b_obj.l1a_cube raises AttributeError, not None. l1b_obj.cube is
+    # populated (the uniform accessor - see below).
     l1d_obj = l1b_obj.to_l1d()
-    # l1b_obj.l1b_cube is still there; l1d_obj holds only l1d_cube.
+    # l1b_obj.cube is still there (an L1BCapture); l1d_obj (an L1DCapture)
+    # holds only l1d-level data.
     del l1b_obj  # or just let it go out of scope
 
 This is a deliberately unconditional rule - call ``to_l1b()``, always get a new
@@ -174,6 +177,50 @@ obvious. ``generate_l1b_cube()``/``generate_l1c_cube()``/``generate_l1d_cube()``
 unchanged and not being replaced - existing callers (``hypso-processing-pipeline``)
 need no changes; migrating to the ``to_l1*()`` family is optional and can happen
 later, at whatever pace makes sense for code that's live in production.
+
+Tracking which level an object represents: type, not a string
+----------------------------------------------------------------
+
+The section above described ``to_l1b()``/``to_l1c()``/``to_l1d()``/``to_l2a()``
+returning "a new object." Since this was written, what they return changed: each
+now returns an instance of a level-specific class (``hypso.capture_types``:
+``L1BCapture``, ``L1CCapture``, ``L1DCapture``, ``L2ACapture``) instead of another
+``HypsoCapture``. This directly revisits this file's own reasoning above - the
+original argument against a per-level split was that shared state (geometry,
+calibration coefficients, metadata) would either be duplicated or force each
+level-object to hold a live back-reference to something shared, "an orchestrating
+container by another name." That reasoning assumed shared state has to be accessed
+*through a reference*. It doesn't: ``to_l1b()``/etc. already prove shared state can
+be copied *by value* cheaply (aliasing big arrays, not duplicating them) with no
+live back-reference needed - ``capture_types.spawn_as`` is the general form of that
+same mechanism, extended to also change the object's class, not just get a fresh
+copy of the same one.
+
+Why this matters: before this change, "what level is this object" was tracked by
+convention (whichever of ``l1a_cube``/``l1b_cube``/``l1d_cube`` happened to be
+non-``None``), which is exactly the kind of state that can drift - a real bug
+surfaced during this change was ``to_l2a()`` itself failing to clear superseded
+cubes the way its siblings did, silently breaking the "one object, one cube"
+invariant it claimed in its own docstring. With a level-specific *type*, that bug
+class is structurally impossible for new code built on this API: an ``L1BCapture``
+simply has no ``l1a_cube`` attribute - accessing it raises ``AttributeError``, not a
+stale ``None``.
+
+This is deliberately additive and does **not** touch ``HypsoCapture``'s own
+deprecated in-place ``generate_l1b_cube()``/``generate_l1c_cube()``/
+``generate_l1d_cube()`` family, which is fundamentally incompatible with strict
+type-per-level: it mutates ``self`` and never clears earlier levels' cubes, so one
+object can legitimately hold ``l1a_cube`` *and* ``l1b_cube`` *and* ``l1d_cube``
+simultaneously (``hypso-processing-pipeline``'s actual usage today). Migrating that
+usage onto the typed spawn family is a separate, larger effort (touches an external
+repo) - not attempted here.
+
+Additive convenience accessors, ``.cube``/``.masked_cube``, are available on every
+``capture_types`` class (dispatching to whichever storage that level actually uses -
+a single array for L1B/L1C/L1D, the correction dict for L2A) for code that doesn't
+need to know the level-specific name. They are not a replacement for
+``l1a_cube``/``l1b_cube``/etc. on ``HypsoCapture`` itself, which remain necessary
+for as long as the in-place family above is in use.
 
 ``HypsoCapture`` composition: where the god-object methods went
 ----------------------------------------------------------------
