@@ -30,8 +30,8 @@ dataclass registered once, at import time, in ``hypso.sensors.hypso1`` /
     profile.calibration_files(capture_type, coeff_type="moved")  # -> dict of paths
 
 ``Hypso1``/``Hypso2`` are still the documented entry points (``Hypso1(path=...)``)
-and stay as thin subclasses over ``HypsoBase`` for ``isinstance()`` compatibility -
-they just pass their profile to ``HypsoBase.__init__`` instead of setting instrument
+and stay as thin subclasses over ``HypsoCapture`` for ``isinstance()`` compatibility -
+they just pass their profile to ``HypsoCapture.__init__`` instead of setting instrument
 constants by hand.
 
 **Adding a future sensor** means adding one new profile module (following
@@ -121,7 +121,7 @@ Cube memory: one object per capture, not one per level
 
 A capture's cubes (``l1a_cube``/``l1b_cube``/``l1d_cube``/``l2a_cube[correction]``)
 can each be large, and a single ``Hypso1``/``Hypso2`` object can end up holding
-several of them at once if you generate multiple levels in sequence. ``HypsoBase``
+several of them at once if you generate multiple levels in sequence. ``HypsoCapture``
 stays one object per *capture* rather than splitting into one class per *level*:
 the levels share state that isn't level-specific (geometry, calibration
 coefficients, capture metadata, sensor identity - all of which already round-trip
@@ -175,10 +175,10 @@ unchanged and not being replaced - existing callers (``hypso-processing-pipeline
 need no changes; migrating to the ``to_l1*()`` family is optional and can happen
 later, at whatever pace makes sense for code that's live in production.
 
-``HypsoBase`` composition: where the god-object methods went
+``HypsoCapture`` composition: where the god-object methods went
 ----------------------------------------------------------------
 
-``HypsoBase`` started this refactor at 2,113 lines / 64 methods spanning five
+``HypsoCapture`` started this refactor at 2,113 lines / 64 methods spanning five
 unrelated concerns. It is now a coordinator of about 1,000 lines; each coherent
 slice of what it used to implement inline lives in its own module, as free
 functions or adapter methods taking the capture object (``satobj``) as an explicit
@@ -205,7 +205,7 @@ beats either duplicating that state or holding a back-reference):
 The rule of thumb applied throughout: a name moves *without* a wrapper only if it
 was private and a search over this repo and ``hypso-processing-pipeline`` (the
 known external consumer) found zero callers; anything public keeps its exact
-name/signature on ``HypsoBase`` as a one-line delegation.
+name/signature on ``HypsoCapture`` as a one-line delegation.
 
 Atmospheric-correction adapters (``hypso.ac.adapters``)
 -----------------------------------------------------------
@@ -220,17 +220,17 @@ per-tool extras (Polymer's SRF/SSI/ESUN NetCDF generators, OC-SMART's
 underlying call every ``satobj.ac_polymer_*``-style wrapper method makes).
 
 This pass is **organizational, not a rewrite**: each adapter method body is the
-corresponding old ``HypsoBase`` method body relocated verbatim - the same
+corresponding old ``HypsoCapture`` method body relocated verbatim - the same
 subprocess/``sys.path``/external-tool-parsing logic, including its ``print``-based
 logging. The point is the seam: a future rewrite of, say, the Polymer integration
 now has one isolated file to work in (``adapters/polymer.py``) that touches neither
-the other tools nor ``HypsoBase``, and a new AC tool means one new adapter module
+the other tools nor ``HypsoCapture``, and a new AC tool means one new adapter module
 plus a registry entry rather than another batch of methods on the coordinator.
 
 Two things deliberately *not* adapters: dark-pixel subtraction (no external tool to
 run or output file to open - it computes in-memory from the L1D cube; it was
 already a free function in ``hypso/ac/ac_dark_pixel_subtraction.py``, still bound
-as ``HypsoBase.ac_dark_pixel_subtraction``), and
+as ``HypsoCapture.ac_dark_pixel_subtraction``), and
 ``hypso.ac.ac_polymer_srf_getter`` (resolved *by dotted-string name* inside
 Polymer itself via the ``srf_getter=`` argument, so its import path is frozen
 regardless of how the adapters are organized).
@@ -343,7 +343,7 @@ chla-vs-logchl version-handling into the Polymer adapter.
 Keyed cube/mask containers (``hypso.containers.DatasetDict``)
 -----------------------------------------------------------------
 
-``HypsoBase._l2a_cubes`` (one entry per AC correction), ``._custom_masks``,
+``HypsoCapture._l2a_cubes`` (one entry per AC correction), ``._custom_masks``,
 and ``._products`` are all held in a ``DatasetDict``: dict-style access
 backed by a real ``xarray.Dataset``. It supersedes the hand-rolled
 ``DataArrayDict`` (deleted), which had three defects: validation printed
@@ -364,7 +364,7 @@ surface rather than dead infrastructure - ``hypso-processing-pipeline``'s
 Polymer stage does ``satobj.products['chla'] = ...`` and persists it via
 ``write_products_nc_file`` on every Polymer run. ``as_dataarray()``
 (``hypso.containers``) is the single-array normalizer both ``DatasetDict``
-and ``HypsoBase``'s cube/mask formatters (``_format_cube_dataarray``/
+and ``HypsoCapture``'s cube/mask formatters (``_format_cube_dataarray``/
 ``_format_mask_dataarray``, themselves collapsed from four near-identical
 per-level methods into one) now share, replacing the deleted
 ``DataArrayValidator`` - one implementation of "is this the right shape/

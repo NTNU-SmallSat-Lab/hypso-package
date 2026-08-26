@@ -105,7 +105,7 @@ def test_2d_mask_container():
 
 
 # --- as_dataarray: the standalone single-array normalizer DatasetDict and
-# HypsoBase's cube/mask formatters (_format_cube_dataarray/
+# HypsoCapture's cube/mask formatters (_format_cube_dataarray/
 # _format_mask_dataarray) both call, replacing the deleted DataArrayValidator ---
 
 def test_as_dataarray_wraps_ndarray():

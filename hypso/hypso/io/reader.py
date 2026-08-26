@@ -91,8 +91,8 @@ def _load_geometry_root(nc_file_path: Path, has_geometry: bool) -> Tuple[dict, d
     geometry data at all - returns empty dicts, matching load/l1b_nc_loader.py's
     behavior, rather than erroring on a group that was never written.
 
-    geometry_attrs is returned empty: HypsoBase only ever reads geometry_vars
-    (see HypsoBase._set_hypso_attributes's "Geometry attributes" loop) - the
+    geometry_attrs is returned empty: HypsoCapture only ever reads geometry_vars
+    (see HypsoCapture._set_hypso_attributes's "Geometry attributes" loop) - the
     original loader's geometry_attrs (the /geometry group's own global attrs)
     was already unused downstream.
     """
@@ -232,7 +232,7 @@ def _load_cube_attrs(nc_file_path: Path, product_prefix_hint: str) -> dict:
 def load_level_nc(nc_file_path: Path, level: str, load_cube: bool = True):
     """Generic reader for L1B/L1C/L1D/L2A files written by io/writer.py's
     write_level_nc/write_l2a_nc. Returns the same 9-tuple contract
-    HypsoBase._load_capture_file expects from the per-level load_* functions
+    HypsoCapture._load_capture_file expects from the per-level load_* functions
     this replaces: (metadata_vars, metadata_attrs, geometry_vars,
     geometry_attrs, gcp_vars, gcp_attrs, global_metadata, cube_attrs, cube).
     """

@@ -8,10 +8,10 @@ import pytest
 
 def test_top_level_exports():
     from hypso import Hypso, Hypso1, Hypso2  # noqa: F401
-    from hypso.HypsoBase import HypsoBase
+    from hypso.HypsoCapture import HypsoCapture
 
-    assert issubclass(Hypso1, HypsoBase)
-    assert issubclass(Hypso2, HypsoBase)
+    assert issubclass(Hypso1, HypsoCapture)
+    assert issubclass(Hypso2, HypsoCapture)
 
 
 def test_confirmed_external_writer_names():
@@ -42,7 +42,7 @@ def test_load_names():
 
 
 def test_composition_modules_import():
-    # The extracted HypsoBase slices (self.geo / self.calibration / self.io /
+    # The extracted HypsoCapture slices (self.geo / self.calibration / self.io /
     # self.ac composition) - each must import standalone.
     for mod in ("hypso.georeferencing.geo", "hypso.calibration.pipeline", "hypso.io.dispatch",
                 "hypso.ac.adapters"):
@@ -80,29 +80,38 @@ def test_polymer_srf_getter_hook_path():
 
 def test_hypso_base_ac_wrapper_surface():
     # Every public ac_* method name confirmed used by hypso-processing-pipeline
-    # must still exist on HypsoBase (as delegating wrappers post-extraction).
-    # Exception: ac_ocsmart_run_correction (pipeline confirmed NOT to call
-    # it or its old stage_input sibling - it replaced both with its own
-    # ac_runners_hypso.run_ocsmart_correction) - kept in this list anyway as
-    # the still-public, still-supported API surface for any other caller.
-    from hypso.HypsoBase import HypsoBase
+    # must still exist on HypsoCapture (as delegating wrappers post-extraction).
+    # ac_ocsmart_run_correction was removed (HypsoCapture cleanup): pipeline
+    # confirmed NOT to call it or its old stage_input sibling - it replaced
+    # both with its own ac_runners_hypso.run_ocsmart_correction - and its only
+    # other caller was a permanently-dead branch in ac/loading_acolite_output.py
+    # (TOGGLE_OCSMART = False), removed alongside it. Also removed:
+    # ac_polymer_get_id_sensor/get_srf_nc_path/get_ssi_nc_path/get_esun_nc_path
+    # (zero external callers; superseded by hypso.ac.adapters.PolymerAdapter +
+    # SpectralResponse) - never part of this expected list.
+    from hypso.HypsoCapture import HypsoCapture
 
     expected = [
-        "ac_ocsmart_run_correction", "ac_ocsmart_open_output",
+        "ac_ocsmart_open_output",
         "ac_acolite_run_correction", "ac_acolite_open_output",
         "ac_polymer_run_correction", "ac_polymer_open_output",
         "ac_polymer_generate_srf_nc", "ac_polymer_generate_ssi_nc", "ac_polymer_generate_esun_nc",
         "ac_dark_pixel_subtraction",
     ]
     for name in expected:
-        assert callable(getattr(HypsoBase, name)), name
+        assert callable(getattr(HypsoCapture, name)), name
+
+    for removed in ("ac_ocsmart_run_correction", "ac_polymer_get_id_sensor",
+                    "ac_polymer_get_srf_nc_path", "ac_polymer_get_ssi_nc_path",
+                    "ac_polymer_get_esun_nc_path"):
+        assert not hasattr(HypsoCapture, removed), removed
 
 
 def test_hypso_base_geo_wrapper_surface():
     # run_georeferencing (hypso-processing-pipeline) and
     # run_direct_georeferencing (hypso/ac/loading_acolite_output.py) stayed as
     # methods when their bodies moved to hypso.geo.
-    from hypso.HypsoBase import HypsoBase
+    from hypso.HypsoCapture import HypsoCapture
 
-    assert callable(HypsoBase.run_georeferencing)
-    assert callable(HypsoBase.run_direct_georeferencing)
+    assert callable(HypsoCapture.run_georeferencing)
+    assert callable(HypsoCapture.run_direct_georeferencing)

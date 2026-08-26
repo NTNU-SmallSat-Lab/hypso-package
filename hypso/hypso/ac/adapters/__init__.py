@@ -1,21 +1,21 @@
 """Atmospheric-correction adapter registry (self.ac composition - part of the
-HypsoBase breakup called for in the approved refactor plan, see
+HypsoCapture breakup called for in the approved refactor plan, see
 REFACTOR_PROGRESS.md).
 
 One adapter class per external AC tool (Polymer/ACOLITE/OC-SMART), behind the
 shared ACAdapter run_correction/open_output interface (base.py), registered the
 same way sensors are (hypso.sensors). This pass is organizational, not a
-rewrite: every method body is the corresponding HypsoBase ac_* method body
-relocated verbatim, and HypsoBase keeps every public ac_* name as a thin
+rewrite: every method body is the corresponding HypsoCapture ac_* method body
+relocated verbatim, and HypsoCapture keeps every public ac_* name as a thin
 delegating wrapper (e.g. ac_polymer_run_correction ->
 self.ac.polymer.run_correction(self, ...)), so nothing external changes.
 The seam this buys: a future rewrite of one tool's internals now has an
-isolated target that touches neither the other tools nor HypsoBase.
+isolated target that touches neither the other tools nor HypsoCapture.
 
 Dark-pixel subtraction is not an adapter: it has no external tool to run or
 output file to open (it computes in-memory from the L1D cube directly) and was
 already extracted - see hypso/ac/ac_dark_pixel_subtraction.py, still bound as
-HypsoBase.ac_dark_pixel_subtraction.
+HypsoCapture.ac_dark_pixel_subtraction.
 
 Adding a future AC tool means adding one adapter module here and registering
 its instance below.
@@ -38,7 +38,7 @@ _REGISTRY: dict[str, ACAdapter] = {
     for adapter in (POLYMER_ADAPTER, ACOLITE_ADAPTER, OCSMART_ADAPTER)
 }
 
-# What HypsoBase exposes as self.ac: attribute access per tool
+# What HypsoCapture exposes as self.ac: attribute access per tool
 # (satobj.ac.polymer.run_correction(satobj, ...)).
 AC_ADAPTERS = SimpleNamespace(**_REGISTRY)
 

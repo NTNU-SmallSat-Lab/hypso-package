@@ -59,7 +59,7 @@ L1C_SCHEMA = LevelSchema(
     product_prefix="Lt",
     product_units="W m-2 um-1 sr-1",
     product_long_name="Top-of-Atmosphere Radiance",
-    source_cube_attr="l1b_cube",  # L1c is L1b data + georeferencing, see HypsoBase.l1c_cube's docstring
+    source_cube_attr="l1b_cube",  # L1c is L1b data + georeferencing, see HypsoCapture.l1c_cube's docstring
     has_geometry=True,
     title="HYPSO Level 1C Top-of-Atmosphere Radiance (georeferenced)",
 )

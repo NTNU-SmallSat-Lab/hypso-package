@@ -3,7 +3,7 @@ _polymer_driver.py's module docstring for the concrete, demonstrated reason:
 v1/v2 builds' same-named-package incompatibility makes in-process switching
 unsafe within one long-lived process) - path resolution and output-file
 renaming happen here in the parent; everything past "import Polymer itself"
-happens in _polymer_driver.py. Every other method is HypsoBase's corresponding
+happens in _polymer_driver.py. Every other method is HypsoCapture's corresponding
 ac_polymer_* method body relocated verbatim (see base.py's ACAdapter docstring).
 HYPSO's spectral response is passed to Polymer through a generated per-capture
 SRF NetCDF (generate_srf_nc) and the hypso.ac.ac_polymer.SRF_GETTER_PATH hook -

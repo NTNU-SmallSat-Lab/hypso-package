@@ -45,9 +45,9 @@ def test_unknown_tool_raises_keyerror_listing_known():
 
 
 def test_hypso_base_delegates_through_registry():
-    from hypso.HypsoBase import HypsoBase
+    from hypso.HypsoCapture import HypsoCapture
 
-    assert HypsoBase.ac is AC_ADAPTERS
+    assert HypsoCapture.ac is AC_ADAPTERS
 
 
 def test_polymer_extras():

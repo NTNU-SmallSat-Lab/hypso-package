@@ -1,12 +1,12 @@
-"""Per-capture load dispatch, extracted from HypsoBase (self.io composition - part
-of the HypsoBase breakup called for in the approved refactor plan, see
-REFACTOR_PROGRESS.md). Bodies are moved verbatim from HypsoBase.py, not rewritten -
+"""Per-capture load dispatch, extracted from HypsoCapture (self.io composition - part
+of the HypsoCapture breakup called for in the approved refactor plan, see
+REFACTOR_PROGRESS.md). Bodies are moved verbatim from HypsoCapture.py, not rewritten -
 same behavior, just relocated - each function takes `satobj` explicitly (matching
 the pattern already used by hypso.georeferencing.geo and hypso.calibration.pipeline).
 
-HypsoBase's private _load_capture_file/_set_hypso_attributes/_check_capture_type/
+HypsoCapture's private _load_capture_file/_set_hypso_attributes/_check_capture_type/
 _parse_filename/_compose_capture_name had no external callers (confirmed by grep
-before moving), so they moved here outright with no wrapper kept on HypsoBase.
+before moving), so they moved here outright with no wrapper kept on HypsoCapture.
 """
 import logging
 import re
@@ -333,7 +333,7 @@ def set_hypso_attributes(satobj) -> None:
             satobj.esun_wl = satobj.nc_srf_vars['esun_wavelengths']
 
 
-    # Fixed a missing comma (inherited verbatim from the old HypsoBase): the
+    # Fixed a missing comma (inherited verbatim from the old HypsoCapture): the
     # implicit string concatenation "csiro_binned_srfs" "csiro_effective_fwhm"
     # produced one bogus name, so neither attribute was ever restored when
     # loading an L1D file.

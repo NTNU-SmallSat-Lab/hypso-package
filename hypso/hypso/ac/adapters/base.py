@@ -2,8 +2,8 @@
 subpackage's __init__.py docstring). Also holds get_inferred_wavelength_band_map,
 the wavelength-matching helper every adapter's open_output path uses to map a
 tool's output bands back onto HYPSO band indices - previously
-HypsoBase._get_inferred_wavelength_band_map (zero external callers, confirmed by
-grep, so it moved here outright with no wrapper kept on HypsoBase).
+HypsoCapture._get_inferred_wavelength_band_map (zero external callers, confirmed by
+grep, so it moved here outright with no wrapper kept on HypsoCapture).
 
 Also holds the subprocess-isolation helper (ACRunError, run_subprocess_driver)
 used by adapters that need to run their external tool in a fresh process rather
@@ -110,10 +110,10 @@ class ACAdapter:
     """One adapter per external atmospheric-correction tool, behind a shared
     run_correction/open_output interface. This pass is *organizational* (the
     approved plan's "prepare the AC functions to be refactored"): every method
-    body is today's HypsoBase method body relocated verbatim - same subprocess/
+    body is today's HypsoCapture method body relocated verbatim - same subprocess/
     sys.path/external-tool-parsing logic, not rewritten - so a future rewrite of
     one tool's internals has a clean, isolated target that doesn't touch the
-    other tools or HypsoBase.
+    other tools or HypsoCapture.
 
     Adapters are stateless (all per-capture state lives on the satobj passed to
     every call), so the module-level instances in this subpackage are shared

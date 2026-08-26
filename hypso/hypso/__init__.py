@@ -23,7 +23,7 @@ __author__ = "Cameron Penne <cameron.l.penne@ntnu.no>, Alvaro Flores <alvaro.f.r
 __credits__ = "Norwegian University of Science and Technology"
 
 from .Hypso import Hypso
-#from .HypsoBase import HypsoBase
+#from .HypsoCapture import HypsoCapture
 from .hypso1 import Hypso1, get_hypso1_wavelengths
 from .hypso2 import Hypso2, get_hypso2_wavelengths
 

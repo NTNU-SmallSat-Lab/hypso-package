@@ -1,18 +1,18 @@
-"""Georeferencing orchestration, extracted from HypsoBase (self.geo composition -
-part of the HypsoBase breakup called for in the approved refactor plan, see
-REFACTOR_PROGRESS.md). Bodies are moved verbatim from HypsoBase.py, not rewritten -
+"""Georeferencing orchestration, extracted from HypsoCapture (self.geo composition -
+part of the HypsoCapture breakup called for in the approved refactor plan, see
+REFACTOR_PROGRESS.md). Bodies are moved verbatim from HypsoCapture.py, not rewritten -
 same math, same behavior, just relocated - each function takes `satobj` explicitly
 (matching the pattern already used by hypso.ac's free functions) rather than being
-methods on a stored back-reference, since these read many HypsoBase attributes
+methods on a stored back-reference, since these read many HypsoCapture attributes
 (image_height, spatial_dimensions, framepose, nc_*_vars, VERBOSE, ...) and taking
 satobj as a parameter avoids either duplicating all of that state or coupling this
-module tightly to HypsoBase's internals via a stored reference.
+module tightly to HypsoCapture's internals via a stored reference.
 
-HypsoBase.run_georeferencing()/run_direct_georeferencing() are thin delegating
+HypsoCapture.run_georeferencing()/run_direct_georeferencing() are thin delegating
 wrappers over this module's functions - kept as methods (not moved) since
 run_direct_georeferencing() is called externally (hypso/ac/loading_acolite_output.py)
 and run_georeferencing() by hypso-processing-pipeline. The private _run_* helpers
-were only ever called from within HypsoBase.py itself, so they moved here outright
+were only ever called from within HypsoCapture.py itself, so they moved here outright
 with no wrapper needed.
 """
 import logging

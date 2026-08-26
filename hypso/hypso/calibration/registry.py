@@ -5,7 +5,7 @@ files without editing the bundled hypso1_calibration/hypso2_calibration packages
 (see hypso.sensors.hypso1._calibration_files / hypso.sensors.hypso2._calibration_files,
 which wrap those bundled resolvers). Register once, then pass coeff_type=<name>
 anywhere a built-in coeff_type ("moved"/"adjusted"/"original") is accepted today
-- HypsoBase._set_calibration_coeff_files checks this registry before falling
+- HypsoCapture._set_calibration_coeff_files checks this registry before falling
 back to the sensor's built-in presets. For a true one-off set (no reuse), pass
 coeff_files=... directly to generate_l1b_cube/_set_calibration_coeff_files
 instead of registering anything.

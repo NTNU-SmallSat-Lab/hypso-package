@@ -29,9 +29,9 @@ import netCDF4 as nc
 
 
 # Per-level attrs stamped onto l1a_cube/l1b_cube/l1c_cube/l1d_cube by
-# HypsoBase._format_cube_dataarray. L1b/L1c share the same units/description
+# HypsoCapture._format_cube_dataarray. L1b/L1c share the same units/description
 # (L1c is L1b data + georeferencing, no new physical quantity - see
-# HypsoBase.l1c_cube's own docstring).
+# HypsoCapture.l1c_cube's own docstring).
 _CUBE_DATAARRAY_ATTRS = {
     "l1a": {'level': "L1a", 'units': "counts", 'description': "Digital Number (DN)"},
     "l1b": {'level': "L1b", 'units': r'$mW\cdot  (m^{-2}  \cdot sr^{-1} nm^{-1})$',
@@ -43,7 +43,7 @@ _CUBE_DATAARRAY_ATTRS = {
 }
 
 
-class HypsoBase:
+class HypsoCapture:
 
     # Atmospheric-correction adapters (self.ac.polymer/.acolite/.ocsmart - see
     # hypso.ac.adapters). Class-level because the adapters are stateless
@@ -61,12 +61,12 @@ class HypsoBase:
         :param sensor_profile: SensorProfile (see hypso.sensors) describing the sensor this
             capture is from - platform/sensor/sat_id names, fwhm/fwhm_lookup_wl/fwhm_lookup_fwhm arrays, and
             the calibration-coefficient-file resolver. Previously each sensor required its own
-            HypsoBase subclass (Hypso1/Hypso2) to hardcode these; now any sensor with a
-            registered SensorProfile works via HypsoBase directly - see hypso.hypso1/hypso.hypso2
+            HypsoCapture subclass (Hypso1/Hypso2) to hardcode these; now any sensor with a
+            registered SensorProfile works via HypsoCapture directly - see hypso.hypso1/hypso.hypso2
             for the (now ~10-line) subclasses kept for named-class/isinstance() compatibility.
         :param label: Capture processing label (e.g. "moved", "moved_unmasked") - see
             hypso.io.dispatch's load_capture_file/parse_filename. Previously left unset by
-            HypsoBase.__init__ (only subclasses set it), which meant a subclass forgetting to set
+            HypsoCapture.__init__ (only subclasses set it), which meant a subclass forgetting to set
             self.label before calling load_capture_file would hit an unexplained AttributeError;
             always set here instead.
         :param load_cube: Whether to load the capture's data cube immediately. Forwarded to
@@ -179,7 +179,7 @@ class HypsoBase:
 
         self._l2a_cubes = DatasetDict(attributes=l2_attributes, num_dims=3, key_attribute='correction')
 
-        # Only load here when constructed with a sensor_profile - this is what lets HypsoBase be
+        # Only load here when constructed with a sensor_profile - this is what lets HypsoCapture be
         # used directly (no per-sensor subclass required) for any sensor with a registered
         # profile. A subclass that omits sensor_profile keeps the old contract: it's responsible
         # for setting whatever it needs (platform/sensor/sat_id/fwhm/etc.) and calling
@@ -189,7 +189,11 @@ class HypsoBase:
 
 
     @property
-    def l2a_cube(self):
+    def l2a_cubes(self):
+        """Every currently-populated L2A correction, keyed by tool name
+        ("polymer"/"acolite_l2r"/...) - a DatasetDict, not a single cube,
+        since one capture can hold multiple independent AC results at once.
+        See l2a_cube for the deprecated singular-named alias."""
 
         self._l2a_cubes.dim_shape = tuple(self.spatial_dimensions)
         self._l2a_cubes.dim_names = tuple(self.dim_names_3d)
@@ -197,8 +201,29 @@ class HypsoBase:
 
         return self._l2a_cubes
 
-    @l2a_cube.setter
+    @l2a_cubes.setter
     def l2a_cubes(self, value):
+        raise AttributeError("[ERROR] Use \"l2a_cubes[key] = value\" to set items.")
+
+    @property
+    def l2a_cube(self):
+        """Deprecated alias for l2a_cubes - the singular name for what's
+        actually a multi-entry container caused a real bug (a stray
+        satobj.l2a_cubes[...] reference in io/dispatch.py silently had no
+        matching property until this rename). Kept, unchanged, for existing
+        callers (e.g. hypso-processing-pipeline's extraction.py/
+        2d_hypso_noise_snr.py) - not removed until those have migrated."""
+        warnings.warn(
+            "l2a_cube is deprecated - use l2a_cubes (same object; the name "
+            "now matches what it actually returns, a multi-correction "
+            "container, not a single cube).",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.l2a_cubes
+
+    @l2a_cube.setter
+    def l2a_cube(self, value):
         raise AttributeError("[ERROR] Use \"l2a_cubes[key] = value\" to set items.")
 
     def l2a_name(self, label: str = None, atmospheric_correction: str = None):
@@ -598,14 +623,14 @@ class HypsoBase:
 
     # Load dispatch (_load_capture_file/_set_hypso_attributes/_check_capture_type/
     # _parse_filename/_compose_capture_name) was extracted verbatim into
-    # hypso.io.dispatch - part of the HypsoBase breakup called for in the approved
+    # hypso.io.dispatch - part of the HypsoCapture breakup called for in the approved
     # refactor plan (self.io composition). No wrapper methods kept here: confirmed
-    # via grep these five had zero external callers. HypsoBase.__init__ now calls
+    # via grep these five had zero external callers. HypsoCapture.__init__ now calls
     # io_dispatch.load_capture_file(self, ...) directly.
 
     # Calibration orchestration (_set_calibration_coeff_files/_run_calibration/
     # _load_calibration_coeff_files) was extracted verbatim into
-    # hypso.calibration.pipeline - part of the HypsoBase breakup called for in the
+    # hypso.calibration.pipeline - part of the HypsoCapture breakup called for in the
     # approved refactor plan (self.calibration composition). No wrapper methods kept
     # here: confirmed via grep these three had zero external callers, unlike
     # hypso.georeferencing.geo's run_georeferencing()/run_direct_georeferencing(), which stayed as
@@ -616,7 +641,7 @@ class HypsoBase:
 
     # Georeferencing orchestration (run_direct_georeferencing/run_georeferencing and
     # their private _run_* helpers) was extracted verbatim into hypso.georeferencing.geo - part of
-    # the HypsoBase breakup called for in the approved refactor plan (self.geo
+    # the HypsoCapture breakup called for in the approved refactor plan (self.geo
     # composition). These stay as thin delegating wrappers, not moved themselves,
     # because run_direct_georeferencing() is called externally
     # (hypso/ac/loading_acolite_output.py) and run_georeferencing() by
@@ -832,7 +857,7 @@ class HypsoBase:
         return None
 
 
-    def _spawn_next_level(self) -> "HypsoBase":
+    def _spawn_next_level(self) -> "HypsoCapture":
         """Shallow-copy this object into a new instance for the to_l1b/to_l1c/
         to_l1d family (see those methods) - self is left untouched, including
         its own cubes. A shallow copy.copy() is enough for the big-array
@@ -855,7 +880,7 @@ class HypsoBase:
         return new_obj
 
 
-    def to_l1b(self, coeff_type: str = None, **kwargs) -> "HypsoBase":
+    def to_l1b(self, coeff_type: str = None, **kwargs) -> "HypsoCapture":
         """Like generate_l1b_cube(), but returns a NEW object instead of
         mutating self - self (including its own l1a_cube) is left completely
         untouched. The new object's l1a_cube is cleared once l1b_cube is
@@ -871,7 +896,7 @@ class HypsoBase:
         return new_obj
 
 
-    def to_l1c(self, coeff_type: str = None, **kwargs) -> "HypsoBase":
+    def to_l1c(self, coeff_type: str = None, **kwargs) -> "HypsoCapture":
         """Like generate_l1c_cube(), but returns a NEW object instead of
         mutating self. See to_l1b()'s docstring for the general pattern. l1c
         has no independent cube storage (see l1c_cube's property getter) so
@@ -885,7 +910,7 @@ class HypsoBase:
 
 
     def to_l1d(self, use_direct_georef=False, use_thuillier=False, use_unbinned=True,
-               generate_figures=False) -> "HypsoBase":
+               generate_figures=False) -> "HypsoCapture":
         """Like generate_l1d_cube(), but returns a NEW object instead of
         mutating self. See to_l1b()'s docstring for the general pattern. The
         new object's l1a_cube/l1b_cube are cleared once l1d_cube is generated,
@@ -909,21 +934,14 @@ class HypsoBase:
     # refactored" step - organizational only, bodies not rewritten). Unlike the
     # calibration/load-dispatch extractions, every public ac_* name below stays
     # as a thin delegating wrapper: these are confirmed external API
-    # (hypso-processing-pipeline calls them as satobj methods). Only the private
+    # (hypso-processing-pipeline calls them as satobj methods). The private
     # _get_inferred_wavelength_band_map moved without a wrapper (zero external
-    # callers; it now lives in hypso.ac.adapters.base).
-
-    def ac_ocsmart_run_correction(self,
-                                  l2_prod: str = "Lt,Lr,Lrc,rrs,chl,tg_sol,tg_sen,Lwp",
-                                  solz_limit: float = 70.0, senz_limit: float = 70.0,
-                                  skip_existing: bool = True,
-                                  python_path: str = None):
-        return self.ac.ocsmart.run_correction(self, l2_prod=l2_prod,
-                                              solz_limit=solz_limit,
-                                              senz_limit=senz_limit,
-                                              skip_existing=skip_existing,
-                                              python_path=python_path)
-
+    # callers; it now lives in hypso.ac.adapters.base), as did five other
+    # zero-external-caller wrappers removed in the HypsoCapture cleanup:
+    # ac_ocsmart_run_correction (only caller was a permanently-dead branch in
+    # ac/loading_acolite_output.py, removed alongside it) and
+    # ac_polymer_get_id_sensor/get_srf_nc_path/get_ssi_nc_path/get_esun_nc_path
+    # (superseded by hypso.ac.adapters.PolymerAdapter + SpectralResponse).
 
     def ac_ocsmart_open_output(self, h5_file_path: Path = None):
         return self.ac.ocsmart.open_output(self, h5_file_path=h5_file_path)
@@ -946,22 +964,6 @@ class HypsoBase:
         return self.ac.acolite.open_output(self,
                                            acolite_l2r_output_nc_file=acolite_l2r_output_nc_file,
                                            acolite_l2w_output_nc_file=acolite_l2w_output_nc_file)
-
-
-    def ac_polymer_get_id_sensor(self):
-        return self.ac.polymer.get_id_sensor(self)
-
-
-    def ac_polymer_get_srf_nc_path(self):
-        return self.ac.polymer.get_srf_nc_path(self)
-
-
-    def ac_polymer_get_ssi_nc_path(self):
-        return self.ac.polymer.get_ssi_nc_path(self)
-
-
-    def ac_polymer_get_esun_nc_path(self):
-        return self.ac.polymer.get_esun_nc_path(self)
 
 
     def ac_polymer_generate_srf_nc(self):

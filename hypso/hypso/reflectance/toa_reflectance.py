@@ -123,7 +123,7 @@ def compute_reflectance(toa_radiance: np.ndarray, sr, iso_time,
 
 
 def compute_csiro_srfs(self, generate_figures: bool = False) -> xr.DataArray:
-    """DEPRECATED legacy wrapper (bound as a HypsoBase method), superseded by
+    """DEPRECATED legacy wrapper (bound as a HypsoCapture method), superseded by
     hypso.reflectance.spectral_response's compute_spectral_response(grid=
     "uniform-1000") - the CSIRO-variant computation body moved there verbatim.
 

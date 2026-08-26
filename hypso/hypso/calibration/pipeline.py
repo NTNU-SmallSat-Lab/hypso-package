@@ -1,16 +1,16 @@
-"""Per-capture calibration orchestration, extracted from HypsoBase
-(self.calibration composition - part of the HypsoBase breakup called for in the
+"""Per-capture calibration orchestration, extracted from HypsoCapture
+(self.calibration composition - part of the HypsoCapture breakup called for in the
 approved refactor plan, see REFACTOR_PROGRESS.md). Bodies are moved verbatim from
-HypsoBase.py, not rewritten - same math, same behavior, just relocated - each
+HypsoCapture.py, not rewritten - same math, same behavior, just relocated - each
 function takes `satobj` explicitly (matching the pattern already used by hypso.ac's
 free functions and hypso.georeferencing.geo, see geo.py's module docstring for why: these read
-many HypsoBase attributes, so taking satobj as a parameter avoids either
-duplicating that state or coupling this module tightly to HypsoBase's internals via
+many HypsoCapture attributes, so taking satobj as a parameter avoids either
+duplicating that state or coupling this module tightly to HypsoCapture's internals via
 a stored reference).
 
-HypsoBase's private _set_calibration_coeff_files/_run_calibration/
+HypsoCapture's private _set_calibration_coeff_files/_run_calibration/
 _load_calibration_coeff_files had no external callers (confirmed by grep before
-moving), so they moved here outright with no wrapper kept on HypsoBase - unlike
+moving), so they moved here outright with no wrapper kept on HypsoCapture - unlike
 hypso.georeferencing.geo's run_georeferencing()/run_direct_georeferencing(), which stayed as
 methods because those specific names are called externally.
 """

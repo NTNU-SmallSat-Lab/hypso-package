@@ -6,7 +6,7 @@ paths and scattered the results across two differently-named attribute
 families on the capture object:
 
 - ``compute_toa_reflectance`` built SRFs on the (truncated) native SSI grid
-  and HypsoBase stored them as ``srf``/``srf_ssi``/``srf_ssi_wl``/``esun``/
+  and HypsoCapture stored them as ``srf``/``srf_ssi``/``srf_ssi_wl``/``esun``/
   ``esun_wl``/``effective_fwhm`` - names that hid what things were: ``srf``
   was the *binned* SRF matrix, and ``esun_wl`` was *binned band centers*, not
   an SSI wavelength grid (despite the name symmetry with ``srf_ssi_wl``).
@@ -25,7 +25,7 @@ verified against reference outputs captured from the pre-refactor code).
 
 The old entry points and attribute families still work - ``compute_toa_
 reflectance`` and ``compute_csiro_srfs`` are now thin wrappers over this
-module, and HypsoBase keeps populating the legacy attributes - because the
+module, and HypsoCapture keeps populating the legacy attributes - because the
 Polymer connector (hypso.ac.adapters.polymer's generate_srf_nc/ssi/esun) and
 the L1D metadata writer still read them, and per the current plan the AC
 connectors get migrated to read ``satobj.spectral_response`` directly in a

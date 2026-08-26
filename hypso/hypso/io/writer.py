@@ -111,7 +111,7 @@ def _write_metadata_common(satobj, netfile: nc.Dataset) -> None:
     # changing the written values - same dimension, same size, just reused instead
     # of re-declared.
     # Written as f8, not the f4 the original used: these are the band-center
-    # wavelengths the lazy SpectralResponse rebuild (HypsoBase.spectral_response)
+    # wavelengths the lazy SpectralResponse rebuild (HypsoCapture.spectral_response)
     # regenerates SRFs from after loading a file - f4's ~3e-5 nm rounding was
     # enough to shift a few Gaussian grid-snap indices, making the rebuilt SRF
     # differ from the in-session one. Full precision makes the round trip exact.

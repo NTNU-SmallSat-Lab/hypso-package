@@ -32,7 +32,7 @@ def test_registered_sensors_deduplicated():
 def test_profile_field_completeness(key):
     p = get_sensor_profile(key)
     assert isinstance(p, SensorProfile)
-    # every field HypsoBase reads off the profile must be populated
+    # every field HypsoCapture reads off the profile must be populated
     for field in ("key", "sat_id", "sensor", "platform"):
         assert isinstance(getattr(p, field), str) and getattr(p, field), field
     for field in ("fwhm", "fwhm_lookup_wl", "fwhm_lookup_fwhm"):

@@ -119,21 +119,12 @@ def main(l1a_nc_path, lats_path=None, lons_path=None):
 
     # Atmospheric correction
 
-    TOGGLE_OCSMART = False
     TOGGLE_ACOLITE = False
     TOGGLE_POLYMER = True
 
 
     TOGGLE_RUN_AC = True
     TOGGLE_READ_AC = True
-
-    if TOGGLE_OCSMART:
-        satobj.ocsmart_dir = "/home/_shared/ARIEL/atmospheric_correction/OC-SMART/OC-SMART_with_HYPSO_9-29-25_release/"
-        if TOGGLE_RUN_AC:
-            satobj.ac_ocsmart_run_correction()
-        if TOGGLE_READ_AC:
-            satobj.ac_ocsmart_open_output()
-            write_l2a_nc_file(satobj=satobj, correction="ocsmart", overwrite=True, datacube=False)
 
     if TOGGLE_ACOLITE:
         satobj.acolite_dir = "/home/_shared/ARIEL/atmospheric_correction/acolite/"

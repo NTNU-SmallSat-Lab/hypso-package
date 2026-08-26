@@ -1,7 +1,7 @@
 """Dataset-backed keyed cube/mask containers.
 
 DatasetDict supersedes the old hand-rolled DataArrayDict (now deleted) for
-every keyed-collection use in this package - HypsoBase._l2a_cubes,
+every keyed-collection use in this package - HypsoCapture._l2a_cubes,
 ._custom_masks, and ._products (products was migrated last, once confirmed
 to be a real, actively-used surface - hypso-processing-pipeline's Polymer
 stage writes satobj.products['chla'] and persists it via
@@ -31,7 +31,7 @@ ordinary DataArray attrs, and the whole collection serializes with
 operation - none of which the hand-rolled dict could do.
 
 as_dataarray() (below) is shared by DatasetDict._as_dataarray and
-HypsoBase's single-array cube/mask formatters (_format_cube_dataarray/
+HypsoCapture's single-array cube/mask formatters (_format_cube_dataarray/
 _format_mask_dataarray) - one implementation of "is this the right shape/
 dims, and if it's a bare ndarray, wrap it" instead of two.
 """
@@ -173,7 +173,7 @@ class DatasetDict(MutableMapping):
         """Container-level copy: the new DatasetDict has an independent entry
         registry and independent per-entry attrs, while the underlying data
         arrays are shared (never mutated in place anywhere in this package -
-        same aliasing rationale as HypsoBase._spawn_next_level)."""
+        same aliasing rationale as HypsoCapture._spawn_next_level)."""
         new = type(self)(attributes=self.attributes,
                          dim_shape=self.dim_shape,
                          dim_names=self.dim_names,

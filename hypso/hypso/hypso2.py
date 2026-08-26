@@ -1,12 +1,12 @@
 from pathlib import Path
 from typing import Union
 
-from .HypsoBase import HypsoBase
+from .HypsoCapture import HypsoCapture
 from .sensors.hypso2 import HYPSO2_PROFILE, get_hypso2_wavelengths  # noqa: F401 (re-exported)
 
 
-class Hypso2(HypsoBase):
-    """HYPSO-2 capture. Thin subclass over HypsoBase + HYPSO2_PROFILE (see
+class Hypso2(HypsoCapture):
+    """HYPSO-2 capture. Thin subclass over HypsoCapture + HYPSO2_PROFILE (see
     hypso.sensors) - kept for named-class/isinstance() compatibility and as
     the documented entry point for HYPSO-2 captures; all the sensor-specific
     data (fwhm, fwhm_lookup_wl/fwhm_lookup_fwhm, calibration-file resolver) that used to live

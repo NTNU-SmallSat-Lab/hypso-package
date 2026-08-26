@@ -4,7 +4,7 @@ and parallelism, plus consistency with Polymer's isolation, though ACOLITE has
 no demonstrated version-conflict bug the way Polymer's v1/v2 split does) -
 path/settings resolution stays here in the parent; everything past "import
 ACOLITE itself" happens in _acolite_driver.py. Every other method is
-HypsoBase's corresponding ac_acolite_* method body relocated verbatim (see
+HypsoCapture's corresponding ac_acolite_* method body relocated verbatim (see
 base.py's ACAdapter docstring)."""
 import sys
 from pathlib import Path
