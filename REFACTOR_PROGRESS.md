@@ -114,17 +114,38 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
   chaotic," questioned the `api`/`_impl` split, asked to simplify AC interfaces and rename `HypsoBase`. Plan
   drafted via Plan Mode and saved to `/home/camerop/.claude/plans/flickering-jumping-chipmunk.md` (durable copy
   in case of disconnect, per user request), then expanded conversationally with several follow-on findings.
-  Done so far (`30f286e6`): renamed `HypsoBase` → `HypsoCapture` (zero external references, clean rename);
-  removed 5 zero-external-caller AC wrapper methods (`ac_ocsmart_run_correction` + its only caller, a
-  permanently-dead `TOGGLE_OCSMART=False` branch; the 4 `ac_polymer_get_*` accessors, superseded by
-  `PolymerAdapter`/`SpectralResponse`); fixed a real bug where `l2a_cube` (singular property) returned the
-  multi-correction `DatasetDict` while `io/dispatch.py` already referenced the nonexistent plural
-  `l2a_cubes` — renamed the property, kept `l2a_cube` as a deprecated alias (confirmed external readers in
-  the pipeline's `extraction.py`/`2d_hypso_noise_snr.py`). 104 tests pass. Remaining: metadata consolidation,
-  georeferencing angle/track consolidation, masking extraction into its own submodule, additive
-  `to_l2a(correction=...)` spawn method (deprecating the mutate-in-place `ac_*_open_output` pattern, mirroring
-  `to_l1b`/`to_l1c`/`to_l1d`), and the `resample/datacube_resamplers.py` indirect-georef bug fix — see the plan
-  file for full detail on each.
+  Done so far:
+  - `30f286e6`: renamed `HypsoBase` → `HypsoCapture` (zero external references, clean rename); removed 5
+    zero-external-caller AC wrapper methods (`ac_ocsmart_run_correction` + its only caller, a permanently-dead
+    `TOGGLE_OCSMART=False` branch; the 4 `ac_polymer_get_*` accessors, superseded by
+    `PolymerAdapter`/`SpectralResponse`); fixed a real bug where `l2a_cube` (singular property) returned the
+    multi-correction `DatasetDict` while `io/dispatch.py` already referenced the nonexistent plural
+    `l2a_cubes` — renamed the property, kept `l2a_cube` as a deprecated alias (confirmed external readers in
+    the pipeline's `extraction.py`/`2d_hypso_noise_snr.py`). 104 tests pass.
+  - `afd6df3c`: extracted masking (`land_mask`/`cloud_mask`/`custom_masks` state, the formatters,
+    `set_custom_mask`/`clear_custom_masks`/`load_mask_from_file`, `unified_mask`, and the four
+    `masked_l1x_cube` properties, collapsed into one `get_masked_cube`) into `hypso/masks/pipeline.py`,
+    alongside the existing `jon_cnn_classifier.py`/`jonas_svm_classifier.py` (the actual mask *algorithms* -
+    this new module is the *container* that applies masks regardless of which algorithm produced them, not a
+    duplicate of the already-removed dead `hypso/mask/` directory). **Found while generalizing the four
+    `masked_l1x_cube` bodies, preserved as-is rather than silently fixed**: `masked_l1c_cube` reads
+    `self._l1c_cube`, which is never actually populated — `_generate_l1c_cube_impl` never sets it; the
+    `l1c_cube` *property* instead returns a deepcopy of `_l1b_cube` relabeled. So `masked_l1c_cube` always
+    silently returns `None` today (or crashes if a mask is set). Needs a decision: should
+    `get_masked_cube(satobj, "l1c")` instead mirror `l1c_cube`'s own getter (read `_l1b_cube`)? Also fixed
+    `resample_cube(use_indirect_georef=True)` (read nonexistent `satobj.latitudes_indirect`/etc. - now reads
+    the same `satobj.latitudes`/`longitudes`/`resolution` the default path uses; a real, separately-flagged
+    finding is that the *default* `False` path might itself be semantically inverted - see the plan file's
+    step 5 note, not yet acted on). Added `to_l2a(correction, **kwargs)`: mirrors `to_l1b`/`to_l1c`/`to_l1d`'s
+    spawn-a-new-object pattern (cheap - same shallow-copy `_spawn_next_level` mechanism, no cube duplication),
+    dispatching through the existing `hypso.ac.adapters.get_ac_adapter` registry rather than a hardcoded
+    per-tool if/elif (caught by user review - the first draft hardcoded tool names redundantly with the
+    registry). `ac_polymer_open_output`/`ac_acolite_open_output`/`ac_ocsmart_open_output` are now deprecated
+    in favor of it (warn + delegate to a non-deprecated `_impl` sibling, matching `generate_l1b_cube`/`to_l1b`'s
+    existing pattern) - kept working unchanged for the pipeline's current in-place callers. 112 tests pass.
+
+  Remaining: metadata consolidation, georeferencing angle/track consolidation (including the `bbox`/`gsd`/
+  `framepose` attributes moving into a `TrackGeometry` dataclass) — see the plan file for full detail on each.
 
   **New TODO (user request): `compute_csiro_srfs` and `ac_dark_pixel_subtraction` — why do we have them, are
   they used?** Both are free functions bound onto `HypsoCapture` via `from X import fn; fn = fn` inside the
