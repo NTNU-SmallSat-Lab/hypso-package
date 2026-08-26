@@ -12,6 +12,8 @@ logger = logging.getLogger(__name__)
 
 from hypso.calibration import pipeline as calibration_pipeline
 
+from hypso.masks import pipeline as masking_pipeline
+
 from hypso.georeferencing import geo
 
 from hypso.io import dispatch as io_dispatch
@@ -273,30 +275,6 @@ class HypsoCapture:
         return data
 
 
-    def _format_mask_dataarray(self, data: Union[np.ndarray, xr.DataArray], description: str) -> xr.DataArray:
-        """Validate/wrap a 2D (lines, samples) boolean-ish mask array. Shared by
-        land_mask/cloud_mask and set_custom_mask - a mask is a mask regardless of
-        what it represents, so there's one validation path, not one per name."""
-        attributes = {
-                      'description': description,
-                      'method': None
-                     }
-
-        data = as_dataarray(data, tuple(self.dim_names_2d), num_dims=2,
-                            dim_shape=tuple(self.spatial_dimensions))
-        data = self._update_dataarray_attrs(data, attributes)
-
-        return data
-
-
-    def _format_land_mask_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
-        return self._format_mask_dataarray(data, "Land mask")
-
-
-    def _format_cloud_mask_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
-        return self._format_mask_dataarray(data, "Cloud mask")
-
-
     @property
     def l1a_cube(self):
         return self._l1a_cube
@@ -363,169 +341,78 @@ class HypsoCapture:
         self._l1d_cube = None
 
 
+    # Mask orchestration (formatters, land_mask/cloud_mask/custom_masks state,
+    # set_custom_mask/clear_custom_masks/load_mask_from_file, unified_mask, and
+    # the four masked_l1x_cube bodies - collapsed into one get_masked_cube) was
+    # extracted verbatim into hypso.masks.pipeline - part of the HypsoCapture
+    # breakup called for in the approved refactor plan. land_mask/cloud_mask
+    # stay as thin delegating properties because they're called externally
+    # (hypso-processing-pipeline sets satobj.land_mask/cloud_mask directly);
+    # everything else here (custom_masks, set_custom_mask, clear_custom_masks,
+    # load_mask_from_file, masked_l1x_cube) has zero confirmed external callers
+    # but is public, documented API, so it's kept as thin wrappers rather than
+    # moved without one - same treatment as the ac_polymer_*/ac_acolite_*
+    # wrappers above.
+
     @property
     def land_mask(self):
-        return self._land_mask 
+        return self._land_mask
 
     @land_mask.setter
     def land_mask(self, value):
-        if value is not None:
-            self._land_mask = self._format_land_mask_dataarray(value)
-        else:
-            self._land_mask = None
+        self._land_mask = masking_pipeline.format_land_mask_dataarray(self, value) if value is not None else None
 
 
     @property
     def cloud_mask(self):
-        return self._cloud_mask   
+        return self._cloud_mask
 
     @cloud_mask.setter
     def cloud_mask(self, value):
-        if value is not None:
-            self._cloud_mask = self._format_cloud_mask_dataarray(value)
-        else:
-            self._cloud_mask = None
+        self._cloud_mask = masking_pipeline.format_cloud_mask_dataarray(self, value) if value is not None else None
 
 
     @property
     def custom_masks(self) -> dict:
         """Read-only view of every mask registered via set_custom_mask, keyed by
         name (e.g. "sea_land_cloud"). Combined into masked_l1a/b/c/d_cube the same
-        way land_mask/cloud_mask are - see _unified_mask."""
+        way land_mask/cloud_mask are - see hypso.masks.pipeline.unified_mask."""
         return dict(self._custom_masks)
 
 
     def set_custom_mask(self, name: str, value: Union[np.ndarray, xr.DataArray, None],
                         description: str = None) -> None:
-        """Register (or clear, if value is None) a named custom mask - e.g. an
-        externally-produced sea/land/cloud classification, not just the built-in
-        land_mask/cloud_mask slots. Any number of custom masks may be registered
-        at once; all of them (plus land_mask/cloud_mask, if set) are OR'd
-        together by _unified_mask and applied by masked_l1a/b/c/d_cube - no
-        further wiring needed once registered.
-
-        :param name: key this mask is stored/removed under (also used in
-            load_mask_from_file's `name=` argument).
-        :param value: 2D (lines, samples) boolean-ish array/DataArray, True where
-            a pixel should be masked out. None removes this mask.
-        :param description: optional human-readable note, stored on the
-            DataArray's `description` attribute (defaults to `name`).
-        """
-        if value is None:
-            self._custom_masks.pop(name, None)
-            return None
-
-        self._custom_masks[name] = self._format_mask_dataarray(value, description or name)
-        return None
+        return masking_pipeline.set_custom_mask(self, name, value, description)
 
 
     def clear_custom_masks(self) -> None:
-        """Remove every registered custom mask (land_mask/cloud_mask are unaffected)."""
-        self._custom_masks = DatasetDict(dim_names=('y', 'x'), num_dims=2)
-        return None
+        return masking_pipeline.clear_custom_masks(self)
 
 
     def load_mask_from_file(self, path: Union[str, Path], name: str = None, variable: str = None,
                             dtype=np.bool_, invert: bool = False) -> xr.DataArray:
-        """Load a 2D (lines, samples) mask from disk and, if `name` is given,
-        register it via set_custom_mask in the same call.
-
-        Supported formats, dispatched by file extension:
-          - .nc: reads `variable` (required) from the file's root group via
-            netCDF4 - for a mask produced by another tool (e.g. a sea/land/cloud
-            classification saved as its own NetCDF product).
-          - .npy: numpy .npy array.
-          - .dat/.bin: raw binary, reshaped to self.spatial_dimensions using
-            `dtype` (matches the convention HYPSO's own indirect-georeferencing
-            lat/lon files use).
-
-        :param path: path to the mask file.
-        :param name: if given, also calls set_custom_mask(name, data) - the mask
-            is registered and immediately reflected in masked_l1a/b/c/d_cube.
-        :param variable: required for .nc input - the variable name to read.
-        :param dtype: numpy dtype to interpret raw binary (.dat/.bin) data as.
-        :param invert: if True, flip the mask (use when the source file marks
-            *valid* pixels with True rather than masked-out pixels).
-        :return: the loaded mask as a validated xr.DataArray (same object stored
-            under `name`, if `name` was given).
-        """
-        path = Path(path)
-        suffix = path.suffix.lower()
-
-        if suffix == '.nc':
-            if variable is None:
-                raise ValueError("load_mask_from_file requires variable=... for a .nc source file")
-            with nc.Dataset(path, format="NETCDF4") as f:
-                data = np.array(f.variables[variable][:])
-        elif suffix == '.npy':
-            data = np.load(path)
-        elif suffix in ('.dat', '.bin'):
-            data = np.fromfile(path, dtype=dtype).reshape(self.spatial_dimensions)
-        else:
-            raise ValueError(f"load_mask_from_file: unsupported file extension {suffix!r} "
-                             f"(expected .nc, .npy, .dat, or .bin)")
-
-        data = data.astype(bool)
-        if invert:
-            data = ~data
-
-        if name is not None:
-            self.set_custom_mask(name, data)
-            return self._custom_masks[name]
-
-        return self._format_mask_dataarray(data, path.name)
+        return masking_pipeline.load_mask_from_file(self, path, name=name, variable=variable,
+                                                     dtype=dtype, invert=invert)
 
 
     @property
     def masked_l1a_cube(self) -> xr.DataArray:
+        return masking_pipeline.get_masked_cube(self, "l1a")
 
-        unified_mask = self._unified_mask()
-
-        if unified_mask is not None:
-
-            return self._l1a_cube.where(~unified_mask, other=np.nan)
-
-        else:
-            return self._l1a_cube   
-        
 
     @property
     def masked_l1b_cube(self) -> xr.DataArray:
-
-        unified_mask = self._unified_mask()
-
-        if unified_mask is not None:
-
-            return self._l1b_cube.where(~unified_mask, other=np.nan)
-
-        else:
-            return self._l1b_cube   
+        return masking_pipeline.get_masked_cube(self, "l1b")
 
 
     @property
     def masked_l1c_cube(self) -> xr.DataArray:
-
-        unified_mask = self._unified_mask()
-
-        if unified_mask is not None:
-
-            return self._l1c_cube.where(~unified_mask, other=np.nan)
-
-        else:
-            return self._l1c_cube   
+        return masking_pipeline.get_masked_cube(self, "l1c")
 
 
     @property
     def masked_l1d_cube(self) -> xr.DataArray:
-
-        unified_mask = self._unified_mask()
-
-        if unified_mask is not None:
-
-            return self._l1d_cube.where(~unified_mask, other=np.nan)
-
-        else:
-            return self._l1d_cube
+        return masking_pipeline.get_masked_cube(self, "l1d")
 
 
     def discard_cube(self, level: str, correction: str = None) -> None:
@@ -566,23 +453,6 @@ class HypsoCapture:
                              f"'l1a', 'l1b', 'l1c', 'l1d', 'l2a'")
 
         return None
-
-
-    def _unified_mask(self) -> xr.DataArray:
-        """OR land_mask, cloud_mask, and every registered custom mask (see
-        set_custom_mask/load_mask_from_file) together - masked_l1a/b/c/d_cube all
-        apply whatever this returns, so a custom mask needs no changes there."""
-        masks = [m for m in (self._land_mask, self._cloud_mask) if m is not None]
-        masks.extend(self._custom_masks.values())
-
-        if not masks:
-            return None
-
-        unified_mask = masks[0]
-        for mask in masks[1:]:
-            unified_mask = unified_mask | mask
-
-        return unified_mask
 
 
     @property
@@ -924,6 +794,40 @@ class HypsoCapture:
         return new_obj
 
 
+    def to_l2a(self, correction: str, **kwargs) -> "HypsoCapture":
+        """Like to_l1b()/to_l1c()/to_l1d(): returns a NEW object holding this
+        AC correction's L2A cube(s), instead of mutating self's shared
+        l2a_cubes container the way ac_polymer_open_output()/
+        ac_acolite_open_output()/ac_ocsmart_open_output() do. self is left
+        completely untouched, including its own l2a_cubes entries. Cheap for
+        the same reason to_l1b()/to_l1c()/to_l1d() are - see
+        _spawn_next_level()'s docstring: big arrays (including the L1D cube
+        this is built from) are aliased, not duplicated.
+
+        Dispatches through the same hypso.ac.adapters registry self.ac uses
+        (get_ac_adapter) rather than a hardcoded per-tool if/elif - any AC
+        tool registered there (see hypso/ac/adapters/__init__.py) works here
+        with no changes needed.
+
+        :param correction: which AC tool's output to open - one of
+            get_ac_adapter's registered keys ("polymer"/"acolite"/"ocsmart").
+            ACOLITE's own open_output opens acolite_l2r and/or acolite_l2w
+            together depending on which of the
+            acolite_l2r_output_nc_file/acolite_l2w_output_nc_file kwargs (or
+            satobj.acolite_l2r_output_nc_file/acolite_l2w_output_nc_file
+            attrs) resolve to an existing file - pass "acolite" for either or
+            both; check the returned object's l2a_cubes keys for what
+            actually landed.
+        :param kwargs: forwarded to the matching adapter's open_output.
+        """
+        from hypso.ac.adapters import get_ac_adapter
+
+        adapter = get_ac_adapter(correction)
+        new_obj = self._spawn_next_level()
+        adapter.open_output(new_obj, **kwargs)
+        return new_obj
+
+
 
 
     # Atmospheric-correction orchestration (every ac_polymer_*/ac_acolite_*/
@@ -944,6 +848,25 @@ class HypsoCapture:
     # (superseded by hypso.ac.adapters.PolymerAdapter + SpectralResponse).
 
     def ac_ocsmart_open_output(self, h5_file_path: Path = None):
+        """Mutates this object in place (populates self.l2a_cubes["ocsmart"]).
+        Deprecated in favor of to_l2a(correction="ocsmart", ...), which returns
+        a new object instead - see docs/architecture.rst's "Cube memory"
+        section for why. Kept, unchanged, for existing in-place callers (e.g.
+        hypso-processing-pipeline) - not removed until those have migrated."""
+        warnings.warn(
+            "ac_ocsmart_open_output() mutates this object's shared l2a_cubes "
+            "in place and is deprecated in favor of "
+            "to_l2a(correction='ocsmart', ...), which returns a new object "
+            "instead of mutating this one - see docs/architecture.rst's "
+            "'Cube memory' section. ac_ocsmart_open_output() is not being "
+            "removed yet.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self._ac_ocsmart_open_output_impl(h5_file_path=h5_file_path)
+
+
+    def _ac_ocsmart_open_output_impl(self, h5_file_path: Path = None):
         return self.ac.ocsmart.open_output(self, h5_file_path=h5_file_path)
 
 
@@ -961,6 +884,28 @@ class HypsoCapture:
 
 
     def ac_acolite_open_output(self, acolite_l2r_output_nc_file: Path = None, acolite_l2w_output_nc_file: Path = None):
+        """Mutates this object in place (populates self.l2a_cubes["acolite_l2r"]
+        and/or ["acolite_l2w"]). Deprecated in favor of
+        to_l2a(correction="acolite", ...), which returns a new object instead
+        - see docs/architecture.rst's "Cube memory" section for why. Kept,
+        unchanged, for existing in-place callers (e.g.
+        hypso-processing-pipeline) - not removed until those have migrated."""
+        warnings.warn(
+            "ac_acolite_open_output() mutates this object's shared l2a_cubes "
+            "in place and is deprecated in favor of "
+            "to_l2a(correction='acolite', ...), which returns a new object "
+            "instead of mutating this one - see docs/architecture.rst's "
+            "'Cube memory' section. ac_acolite_open_output() is not being "
+            "removed yet.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self._ac_acolite_open_output_impl(
+            acolite_l2r_output_nc_file=acolite_l2r_output_nc_file,
+            acolite_l2w_output_nc_file=acolite_l2w_output_nc_file)
+
+
+    def _ac_acolite_open_output_impl(self, acolite_l2r_output_nc_file: Path = None, acolite_l2w_output_nc_file: Path = None):
         return self.ac.acolite.open_output(self,
                                            acolite_l2r_output_nc_file=acolite_l2r_output_nc_file,
                                            acolite_l2w_output_nc_file=acolite_l2w_output_nc_file)
@@ -1007,6 +952,33 @@ class HypsoCapture:
                                input_product_level="l1c",
                                version = "v1"
                                ):
+        """Mutates this object in place (populates self.l2a_cubes["polymer"]).
+        Deprecated in favor of to_l2a(correction="polymer", ...), which
+        returns a new object instead - see docs/architecture.rst's "Cube
+        memory" section for why. Kept, unchanged, for existing in-place
+        callers (e.g. hypso-processing-pipeline) - not removed until those
+        have migrated."""
+        warnings.warn(
+            "ac_polymer_open_output() mutates this object's shared l2a_cubes "
+            "in place and is deprecated in favor of "
+            "to_l2a(correction='polymer', ...), which returns a new object "
+            "instead of mutating this one - see docs/architecture.rst's "
+            "'Cube memory' section. ac_polymer_open_output() is not being "
+            "removed yet.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self._ac_polymer_open_output_impl(
+            polymer_l2_output_nc_file=polymer_l2_output_nc_file,
+            input_product_level=input_product_level,
+            version=version)
+
+
+    def _ac_polymer_open_output_impl(self,
+                                     polymer_l2_output_nc_file: Path = None,
+                                     input_product_level="l1c",
+                                     version = "v1"
+                                     ):
         return self.ac.polymer.open_output(self,
                                            polymer_l2_output_nc_file=polymer_l2_output_nc_file,
                                            input_product_level=input_product_level,

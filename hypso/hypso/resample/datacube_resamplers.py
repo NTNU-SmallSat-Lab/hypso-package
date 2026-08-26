@@ -33,9 +33,14 @@ def resample_cube(cube: xr.DataArray, satobj: Union[Hypso1, Hypso2],
     :return: (resampled_data, resampled_latitudes, resampled_longitudes)
     """
     if use_indirect_georef:
-        latitudes = satobj.latitudes_indirect
-        longitudes = satobj.longitudes_indirect
-        resolution = satobj.resolution_indirect
+        # FIXED (was satobj.latitudes_indirect/longitudes_indirect/
+        # resolution_indirect - names never set anywhere; only _direct-suffixed
+        # names exist for the OTHER georeferencing method. run_georeferencing
+        # (hypso.georeferencing.geo) is what populates these plain names -
+        # that's the "indirect" (externally-supplied lat/lon) path.
+        latitudes = satobj.latitudes
+        longitudes = satobj.longitudes
+        resolution = satobj.resolution
     else:
         latitudes = satobj.latitudes
         longitudes = satobj.longitudes

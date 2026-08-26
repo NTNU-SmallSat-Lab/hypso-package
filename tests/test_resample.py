@@ -50,6 +50,24 @@ def test_resample_level_wrappers_share_one_implementation(satobj, area_def, leve
     assert np.isfinite(resampled_data.values).any()
 
 
+def test_resample_cube_use_indirect_georef_does_not_crash(satobj, area_def):
+    # Regression test: use_indirect_georef=True used to read
+    # satobj.latitudes_indirect/longitudes_indirect/resolution_indirect -
+    # names never set anywhere (only _direct-suffixed names exist for the
+    # OTHER georeferencing method) - so this raised AttributeError. Fixed to
+    # read the same satobj.latitudes/longitudes/resolution the default path
+    # uses (run_georeferencing is what actually populates those - the
+    # "indirect", externally-supplied-lat/lon path).
+    from hypso.resample import resample_cube
+
+    resampled_data, resampled_lat, resampled_lon = resample_cube(
+        satobj.l1a_cube, satobj, area_def, use_indirect_georef=True)
+
+    assert resampled_data.shape[:2] == (30, 40)
+    assert resampled_lat.shape == (30, 40)
+    assert resampled_lon.shape == (30, 40)
+
+
 def test_resample_cube_is_the_shared_implementation(satobj, area_def):
     from hypso.resample import resample_cube, resample_l1a_cube
 

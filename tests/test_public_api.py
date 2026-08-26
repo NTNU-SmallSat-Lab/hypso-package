@@ -115,3 +115,62 @@ def test_hypso_base_geo_wrapper_surface():
 
     assert callable(HypsoCapture.run_georeferencing)
     assert callable(HypsoCapture.run_direct_georeferencing)
+
+
+def _bare_capture():
+    """A HypsoCapture instance with no real capture data loaded - enough for
+    _spawn_next_level() (needs _custom_masks/_l2a_cubes) and the AC
+    open_output _impl dispatch (mocked below, never actually touches file
+    I/O), without needing the real reference capture fixture."""
+    from hypso.HypsoCapture import HypsoCapture
+    from hypso.containers import DatasetDict
+
+    obj = object.__new__(HypsoCapture)
+    obj._custom_masks = DatasetDict(dim_names=('y', 'x'), num_dims=2)
+    obj._l2a_cubes = DatasetDict(num_dims=3, key_attribute='correction')
+    return obj
+
+
+@pytest.mark.parametrize("correction", ["polymer", "acolite", "ocsmart"])
+def test_to_l2a_spawns_new_object_and_dispatches_through_adapter_registry(monkeypatch, correction):
+    # to_l2a() must leave self untouched (mirrors to_l1b/to_l1c/to_l1d) and
+    # dispatch through the same hypso.ac.adapters registry self.ac uses
+    # (get_ac_adapter), not a hardcoded per-tool if/elif.
+    from hypso.ac.adapters import get_ac_adapter
+
+    satobj = _bare_capture()
+    calls = []
+    monkeypatch.setattr(type(get_ac_adapter(correction)), "open_output",
+                        lambda self, satobj, **kwargs: calls.append((satobj, kwargs)))
+
+    new_obj = satobj.to_l2a(correction, some_kwarg="x")
+
+    assert new_obj is not satobj
+    assert len(calls) == 1
+    called_satobj, called_kwargs = calls[0]
+    assert called_satobj is new_obj
+    assert called_kwargs == {"some_kwarg": "x"}
+
+
+def test_to_l2a_unknown_correction_raises():
+    satobj = _bare_capture()
+    with pytest.raises(KeyError, match="No AC adapter registered"):
+        satobj.to_l2a("6sv1")
+
+
+@pytest.mark.parametrize("public_name,impl_name", [
+    ("ac_polymer_open_output", "_ac_polymer_open_output_impl"),
+    ("ac_acolite_open_output", "_ac_acolite_open_output_impl"),
+    ("ac_ocsmart_open_output", "_ac_ocsmart_open_output_impl"),
+])
+def test_deprecated_open_output_wrappers_warn_and_delegate(monkeypatch, public_name, impl_name):
+    satobj = _bare_capture()
+    calls = []
+    monkeypatch.setattr(type(satobj), impl_name,
+                        lambda self, **kwargs: calls.append(kwargs) or "result")
+
+    with pytest.warns(DeprecationWarning, match="to_l2a"):
+        result = getattr(satobj, public_name)()
+
+    assert result == "result"
+    assert len(calls) == 1
