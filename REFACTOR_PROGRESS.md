@@ -183,6 +183,43 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
   its own, ideally after the eoread/ACOLITE NetCDF coordination below has landed, and only once there's a
   concrete driving use case (vs. speculative future-proofing).
 
+- **2026-08-26 (×30): `compute_csiro_srfs`/`ac_dark_pixel_subtraction` cleanup — the ×24 TODO acted on.**
+  Before removing anything, widened the "zero external callers" check beyond `hypso-processing-pipeline` (the
+  only repo the ×24 TODO had actually verified) — found `compute_csiro_srfs()` still had a real, live caller:
+  `/home/camerop/AC/hypso-ac-processing/csiro.py`, `2b_process_capture.py`, and `aoc_pipeline/03_process_capture.py`
+  all called `satobj.compute_csiro_srfs()` and read the `csiro_*` attributes directly, and that repo had commits
+  as recent as 2026-08-02 — not obviously dead. Checked in with the user before removing anything (its own
+  `config.py` docstring says `hypso-processing-pipeline` "consolidates" `hypso-ac-processing`'s config system,
+  suggesting predecessor/superseded, but that alone wasn't proof it had actually stopped being run). **User
+  confirmed `hypso-ac-processing` is fully superseded** — with that, `compute_csiro_srfs` genuinely has zero
+  remaining callers anywhere.
+
+  Removed outright (not just re-deprecated): `compute_csiro_srfs()` itself (`reflectance/toa_reflectance.py`),
+  its export from `reflectance/__init__.py`, its `HypsoCapture` binding, the `csiro_*` attribute-restore loop in
+  `io/dispatch.py`'s `set_hypso_attributes` (the "missing comma" one — see the ×17 entry below for that bug's
+  history), and the five `csiro_*` NetCDF-variable write blocks in `write/metadata_srf_group_writer.py`.
+  `compute_spectral_response(grid="uniform-1000")` (already existed, verified equivalent) is the direct
+  replacement for anyone who still needs that exact grid/SSI combination. `spectral_response.py`'s module
+  docstring updated to stop claiming `compute_csiro_srfs` is "still a thin wrapper" (no longer true) and record
+  the removal + its replacement.
+
+  `ac_dark_pixel_subtraction`: still actively used (`hypso-processing-pipeline/stage2_ac/process_capture.py:421`,
+  `ac_runners_pace.py`'s direct import of `dark_pixel_subtraction_per_band`) — not removable, and the *move*
+  question (does it belong in the pipeline's own `ac_runners_hypso.py` instead) needs `hypso-processing-pipeline`
+  edits, off-limits right now. Did the packaging-consistency piece that's actionable within this repo alone:
+  `hypso/ac/adapters/__init__.py`'s `AC_ADAPTERS` namespace now also exposes `dark_pixel_subtraction` (a bare
+  function, not an `ACAdapter` instance — its own docstring already explained why DPS doesn't fit
+  run_correction/open_output: no external tool, no output file, pure in-memory computation from the L1D cube —
+  that reasoning stands, not overridden), so `self.ac.dark_pixel_subtraction(satobj, ...)` now reads consistently
+  alongside `self.ac.polymer/.acolite/.ocsmart`. `HypsoCapture.ac_dark_pixel_subtraction` changed from the
+  obscure `from X import fn; fn = fn` class-body binding to a real thin delegating method
+  (`return self.ac.dark_pixel_subtraction(self, ...)`), matching the `ac_polymer_run_correction ->
+  self.ac.polymer.run_correction(self, ...)` pattern already used for the three real adapters. Zero external
+  contract change — `satobj.ac_dark_pixel_subtraction()` still works exactly as before (confirmed by
+  `tests/test_public_api.py`'s existing callable-surface check, which already expected this exact name).
+
+  Full suite run after both changes to confirm no regressions.
+
 - **New TODO (user request, flagged during ×25/×26 work, not yet acted on): HYPSO capture dimensions may
   change for future sensors/imaging modes.** `spatial_dimensions`, `frame_count`/`row_count`/`column_count`,
   `io/dispatch.py`'s `check_capture_type` "nominal"/"moon"/"wide" classification (hardcoded against `956`/
@@ -291,27 +328,7 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
   step) — the user instead moved on to the type-per-level question, see ×25 above; this piece is still
   pending, not abandoned.
 
-  **New TODO (user request): `compute_csiro_srfs` and `ac_dark_pixel_subtraction` — why do we have them, are
-  they used?** Both are free functions bound onto `HypsoCapture` via `from X import fn; fn = fn` inside the
-  class body (attaches a function defined elsewhere as a method without a wrapper — legal Python, but an
-  obscure pattern compared to the adapter-style `self.ac.<tool>` composition used for Polymer/ACOLITE/OC-SMART).
-  - `ac_dark_pixel_subtraction`: **actively used** — `hypso-processing-pipeline/stage2_ac/process_capture.py:421`
-    calls `satobj.ac_dark_pixel_subtraction()`, and `ac_runners_pace.py` separately imports the underlying
-    `dark_pixel_subtraction_per_band` function directly from `hypso.ac.ac_dark_pixel_subtraction`. Not dead, not
-    removable — but its packaging (bound directly onto `HypsoCapture`, unlike the other three AC tools which
-    went through the full adapter/subprocess-isolation treatment this session) is inconsistent. TODO: consider
-    whether this belongs in the pipeline's own `ac_runners_hypso.py` instead (it's a lightweight in-process
-    computation, not an external-tool adapter, so the adapter pattern doesn't obviously apply — worth a design
-    pass rather than a mechanical move).
-  - `compute_csiro_srfs`: **already deprecated**, and now **zero external callers** — its own docstring said
-    "removal is planned once the pipeline drops its call," and the pipeline's `process_capture.py:193` comment
-    confirms that call was removed on 2026-08-25 (likely by the concurrent Claude session working in that repo),
-    with an explicit note to keep it deprecated rather than delete it "in case something outside this pipeline
-    still calls it." TODO: per user request, merge its still-useful capability (the uniform-grid SRF/SSI/ESUN
-    computation) fully into `hypso.reflectance.compute_spectral_response(grid="uniform-1000")` — which already
-    contains the same body verbatim — and drop the vestigial `compute_csiro_srfs` wrapper + `csiro_*` attribute
-    family once nothing depends on it. Not done now: no way to verify "nothing outside this pipeline calls it"
-    from here, so removal stays a follow-up, not an immediate action.
+  **`compute_csiro_srfs`/`ac_dark_pixel_subtraction` cleanup — resolved, see ×30 below.**
 
 
 - **2026-08-25 (continued further, ×23): srf_getter maintainability fix + a future Polymer-side wishlist.**

@@ -125,59 +125,6 @@ def compute_reflectance(toa_radiance: np.ndarray, sr, iso_time,
     return toa_reflectance
 
 
-def compute_csiro_srfs(self, generate_figures: bool = False) -> xr.DataArray:
-    """DEPRECATED legacy wrapper (bound as a HypsoCapture method), superseded by
-    hypso.reflectance.spectral_response's compute_spectral_response(grid=
-    "uniform-1000") - the CSIRO-variant computation body moved there verbatim.
-
-    Deprecated because the whole csiro path is computed but consumed by
-    nothing: its only caller is hypso-processing-pipeline's
-    stage2_ac/process_capture.py (which invokes it before the Polymer
-    generate_srf_nc/ssi/esun calls - but those read the OTHER attribute
-    family, self.srf/srf_ssi/esun), and while the csiro_* attributes are
-    persisted into L1D files by write/metadata_srf_group_writer.py, no code
-    anywhere reads them back for any computation. Removal is planned once the
-    pipeline drops its call (the later AC-connector pass); until then this
-    keeps working exactly as before, populating the csiro_* attribute family
-    and self.spectral_response_csiro.
-    """
-    warnings.warn(
-        "compute_csiro_srfs() is deprecated: its results (the csiro_* "
-        "attributes, persisted into L1D metadata/srf) are not consumed by any "
-        "known code - the Polymer SRF/SSI/ESUN files are generated from the "
-        "spectral_response/native-truncated path instead. It will be removed "
-        "once hypso-processing-pipeline drops its call. Use "
-        "hypso.reflectance.compute_spectral_response(grid='uniform-1000') "
-        "directly if the uniform-grid variant is actually needed.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-
-    from .spectral_response import compute_spectral_response  # deferred, see above
-
-    self._get_fwhm_unbinned()
-
-    sr = compute_spectral_response(
-        band_centers_unbinned=self.wavelengths_unbinned,
-        fwhm_unbinned=self.fwhm_unbinned,
-        bin_factor=self.bin_factor,
-        ssi_source="tsis",
-        grid="uniform-1000",
-        generate_figures=generate_figures,
-    )
-
-    self.spectral_response_csiro = sr
-
-    self.csiro_srfs_csr = sr.srf_unbinned
-    self.csiro_ssi = sr.ssi
-    self.csiro_solar_wavelengths = sr.grid_wl
-    self.csiro_binned_srfs = sr.srf.toarray()
-    self.csiro_effective_fwhm = sr.effective_fwhm
-    self.csiro_esun = sr.esun
-
-    return
-
-
 def compute_srf(ssi,
                 solar_wavelengths,
                 sensor_wavelengths,

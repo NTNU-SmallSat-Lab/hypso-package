@@ -10,8 +10,11 @@ families on the capture object:
   ``esun_wl``/``effective_fwhm`` - names that hid what things were: ``srf``
   was the *binned* SRF matrix, and ``esun_wl`` was *binned band centers*, not
   an SSI wavelength grid (despite the name symmetry with ``srf_ssi_wl``).
-- ``compute_csiro_srfs`` (the CSIRO-collaboration variant) rebuilt ~the same
-  thing on a fixed 1000-point 350-850 nm grid and stored it as
+- ``compute_csiro_srfs`` (the uniform-grid convolution variant - both this and
+  the path above convolve a Gaussian SRF against solar irradiance; what
+  differs is the wavelength grid the convolution runs on, not the operation
+  itself) rebuilt ~the same thing on a fixed 1000-point 350-850 nm grid and
+  stored it as
   ``csiro_srfs_csr`` (*unbinned*, sparse)/``csiro_binned_srfs`` (binned,
   *dense*)/``csiro_ssi``/``csiro_solar_wavelengths``/``csiro_effective_fwhm``/
   ``csiro_esun``.
@@ -23,17 +26,25 @@ response(grid="native-truncated")`` reproduces the first path exactly;
 ``grid="uniform-1000"`` reproduces the CSIRO path exactly (same math, moved -
 verified against reference outputs captured from the pre-refactor code).
 
-The old entry points and attribute families still work - ``compute_toa_
-reflectance`` and ``compute_csiro_srfs`` are now thin wrappers over this
-module, and HypsoCapture keeps populating the legacy attributes - because the
-Polymer connector (hypso.ac.adapters.polymer's generate_srf_nc/ssi/esun) and
-the L1D metadata writer still read them, and per the current plan the AC
-connectors get migrated to read ``satobj.spectral_response`` directly in a
-later, separate pass (together with the eoread/ACOLITE reader updates). The
-generated SRF NetCDF format is FROZEN either way: Polymer resolves and reads
-it through eotools' get_SRF (Band_<n> variables on wav_Band_<n> coords), so
-nothing about that file may change until Polymer-side code is updated in that
-later pass.
+The old ``compute_toa_reflectance`` entry point still works - it's now a thin
+wrapper over this module, and HypsoCapture keeps populating its legacy
+attributes - because the Polymer connector
+(hypso.ac.adapters.polymer's generate_srf_nc/ssi/esun) and the L1D metadata
+writer still read them, and per the current plan the AC connectors get
+migrated to read ``satobj.spectral_response`` directly in a later, separate
+pass (together with the eoread/ACOLITE reader updates). The generated SRF
+NetCDF format is FROZEN either way: Polymer resolves and reads it through
+eotools' get_SRF (Band_<n> variables on wav_Band_<n> coords), so nothing
+about that file may change until Polymer-side code is updated in that later
+pass.
+
+``compute_csiro_srfs`` itself (the uniform-grid convolution entry point that
+used to populate the ``csiro_*`` attribute family) has been removed outright -
+confirmed zero remaining callers after hypso-processing-pipeline dropped its
+call (2026-08-25) and hypso-ac-processing (its only other caller) was
+confirmed fully superseded (2026-08-26). ``compute_spectral_response(
+grid="uniform-1000")`` below is its direct replacement for anyone who still
+needs that exact grid/SSI combination.
 """
 from dataclasses import dataclass, field
 
@@ -84,7 +95,7 @@ class SpectralResponse:
     ssi_source: str
     #: Which grid: "native-truncated" (SSI's own grid, truncated to the sensor
     #: range +/- 3 sigma) or "uniform-1000" (1000 points over 350-850 nm, the
-    #: CSIRO-variant convention).
+    #: uniform-grid convolution convention).
     grid: str
 
 
@@ -97,9 +108,9 @@ def compute_spectral_response(band_centers_unbinned,
     """Build a SpectralResponse from unbinned band centers + FWHM.
 
     grid="native-truncated" reproduces exactly what compute_toa_reflectance's
-    inline SRF block computed; grid="uniform-1000" reproduces exactly what
-    compute_csiro_srfs computed (which always used the TSIS SSI). Same code,
-    same call order - relocated, not rewritten.
+    inline SRF block computed; grid="uniform-1000" reproduces exactly what the
+    old compute_csiro_srfs computed (which always used the TSIS SSI). Same
+    code, same call order - relocated, not rewritten.
     """
     if ssi_source == "thuillier":
         ssi, solar_wavelengths = load_thuillier_ssi()
@@ -117,9 +128,9 @@ def compute_spectral_response(band_centers_unbinned,
         )
 
     elif grid == "uniform-1000":
-        # The CSIRO-variant grid: SSI interpolated onto 1000 uniform points
-        # over 350-850 nm, SRFs built on that full grid with no truncation.
-        # Body relocated verbatim from the old compute_csiro_srfs.
+        # The uniform-grid convolution variant: SSI interpolated onto 1000
+        # uniform points over 350-850 nm, SRFs built on that full grid with no
+        # truncation. Body relocated verbatim from the old compute_csiro_srfs.
         grid_wl = np.linspace(350, 850, 1000)
         grid_ssi = np.interp(grid_wl, solar_wavelengths, ssi)
 

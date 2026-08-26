@@ -1053,10 +1053,5 @@ class HypsoCapture:
         return None
 
 
-    from hypso.reflectance import compute_csiro_srfs
-
-    compute_csiro_srfs = compute_csiro_srfs
-
-    from hypso.ac import ac_dark_pixel_subtraction
-
-    ac_dark_pixel_subtraction = ac_dark_pixel_subtraction
+    def ac_dark_pixel_subtraction(self, method='min', VERBOSE=True):
+        return self.ac.dark_pixel_subtraction(self, method=method, VERBOSE=VERBOSE)

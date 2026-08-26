@@ -318,19 +318,6 @@ def set_hypso_attributes(satobj) -> None:
             satobj.esun_wl = satobj.metadata.srf.vars['esun_wavelengths']
 
 
-    # Fixed a missing comma (inherited verbatim from the old HypsoCapture): the
-    # implicit string concatenation "csiro_binned_srfs" "csiro_effective_fwhm"
-    # produced one bogus name, so neither attribute was ever restored when
-    # loading an L1D file.
-    csiro_list = ["csiro_ssi", "csiro_solar_wavelengths", "csiro_binned_srfs",
-                  "csiro_effective_fwhm", "csiro_esun"]
-
-    for csiro_key in csiro_list:
-        if not hasattr(satobj, csiro_key):
-            if csiro_key in satobj.metadata.srf.vars.keys():
-                setattr(satobj, csiro_key, satobj.metadata.srf.vars[csiro_key])
-
-
     # Geometry atrributes. The 5 angle quantities (sensor/solar zenith/azimuth,
     # relative azimuth) are accumulated into plain dicts and built into
     # GeoAngles instances once after the loop, rather than setattr'd

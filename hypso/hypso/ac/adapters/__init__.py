@@ -12,10 +12,15 @@ self.ac.polymer.run_correction(self, ...)), so nothing external changes.
 The seam this buys: a future rewrite of one tool's internals now has an
 isolated target that touches neither the other tools nor HypsoCapture.
 
-Dark-pixel subtraction is not an adapter: it has no external tool to run or
-output file to open (it computes in-memory from the L1D cube directly) and was
-already extracted - see hypso/ac/ac_dark_pixel_subtraction.py, still bound as
-HypsoCapture.ac_dark_pixel_subtraction.
+Dark-pixel subtraction is not an ACAdapter: it has no external tool to run or
+output file to open (it computes in-memory from the L1D cube directly), so it
+doesn't implement run_correction/open_output and isn't in _REGISTRY below -
+see hypso/ac/ac_dark_pixel_subtraction.py. It's still exposed on the same
+self.ac namespace as a bare function (self.ac.dark_pixel_subtraction(satobj,
+...)) purely for call-site naming consistency with self.ac.polymer/.acolite/
+.ocsmart - HypsoCapture.ac_dark_pixel_subtraction is a thin delegating
+wrapper over it, matching the ac_polymer_run_correction -> self.ac.polymer.
+run_correction(self, ...) pattern used for the real adapters.
 
 Adding a future AC tool means adding one adapter module here and registering
 its instance below.
@@ -26,6 +31,7 @@ from .base import ACAdapter, ACRunError, get_inferred_wavelength_band_map, run_s
 from .polymer import PolymerAdapter
 from .acolite import ACOLITEAdapter
 from .ocsmart import OCSMARTAdapter
+from ..ac_dark_pixel_subtraction import ac_dark_pixel_subtraction
 
 # Stateless singletons (all per-capture state lives on the satobj passed to
 # every call), shared safely between captures - see ACAdapter's docstring.
@@ -39,8 +45,9 @@ _REGISTRY: dict[str, ACAdapter] = {
 }
 
 # What HypsoCapture exposes as self.ac: attribute access per tool
-# (satobj.ac.polymer.run_correction(satobj, ...)).
-AC_ADAPTERS = SimpleNamespace(**_REGISTRY)
+# (satobj.ac.polymer.run_correction(satobj, ...)), plus dark_pixel_subtraction
+# as a bare function (see module docstring for why it's not in _REGISTRY).
+AC_ADAPTERS = SimpleNamespace(dark_pixel_subtraction=ac_dark_pixel_subtraction, **_REGISTRY)
 
 
 def get_ac_adapter(key: str) -> ACAdapter:
