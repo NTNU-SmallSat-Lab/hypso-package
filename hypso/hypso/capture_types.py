@@ -226,6 +226,7 @@ def _spawn_l1d(source, use_direct_georef=False, use_thuillier=False, use_unbinne
     new_obj.esun = sr.esun
     new_obj.esun_wl = sr.band_centers
     new_obj.effective_fwhm = sr.effective_fwhm
+    new_obj.effective_fwhm_unbinned = sr.effective_fwhm_unbinned
 
     return new_obj
 

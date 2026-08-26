@@ -76,6 +76,22 @@ def metadata_srf_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib',
         except Exception:
             logger.exception("Failed to write SRF metadata variable.")
 
+    if (hasattr(satobj, 'effective_fwhm_unbinned') and satobj.effective_fwhm_unbinned is not None):
+
+        try:
+            effective_fwhm_unbinned = satobj.effective_fwhm_unbinned
+            length = len(satobj.effective_fwhm_unbinned)
+            netfile.createDimension('effective_fwhm_unbinned', length)
+            effective_fwhm_unbinned_var = netfile.createVariable(
+                'metadata/srf/effective_fwhm_unbinned', 'f8',
+                ('effective_fwhm_unbinned',),
+                compression=COMP_SCHEME,
+                complevel=COMP_LEVEL,
+                shuffle=COMP_SHUFFLE)
+            effective_fwhm_unbinned_var[:] = effective_fwhm_unbinned
+        except Exception:
+            logger.exception("Failed to write SRF metadata variable.")
+
 
 
     return None

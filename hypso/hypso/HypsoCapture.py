@@ -678,19 +678,20 @@ class HypsoCapture:
 
         Set by L1D generation; for a capture LOADED from a file it is rebuilt
         lazily on first access - the SRF matrix itself is not persisted in the
-        NetCDF files (only esun/effective_fwhm reach metadata/srf), and the
-        builder is deterministic given wavelengths_unbinned/fwhm_unbinned/
-        bin_factor, which the file does carry. The rebuild assumes the default
-        L1D configuration (TSIS SSI, unbinned inputs, native-truncated grid) -
-        a capture originally processed with use_thuillier=True or
-        use_unbinned=False would need compute_spectral_response called
-        explicitly with those settings instead.
+        NetCDF files (only esun/effective_fwhm/effective_fwhm_unbinned reach
+        metadata/srf), and the builder is deterministic given
+        wavelengths_unbinned/fwhm_unbinned/bin_factor, which the file does
+        carry. The rebuild assumes the default L1D configuration (TSIS SSI,
+        unbinned inputs, native-truncated grid) - a capture originally
+        processed with use_thuillier=True or use_unbinned=False would need
+        compute_spectral_response called explicitly with those settings
+        instead.
 
         The rebuild also backfills any *missing* legacy SRF attributes
-        (srf/srf_ssi/srf_ssi_wl, plus esun/esun_wl/effective_fwhm when the
-        file lacked them) so the Polymer connector's generate_srf_nc/ssi/esun
-        work on a file-loaded capture; values already loaded from the file are
-        left untouched.
+        (srf/srf_ssi/srf_ssi_wl, plus esun/esun_wl/effective_fwhm/
+        effective_fwhm_unbinned when the file lacked them) so the Polymer
+        connector's generate_srf_nc/ssi/esun work on a file-loaded capture;
+        values already loaded from the file are left untouched.
         """
         if self._spectral_response is None:
             if not hasattr(self, "fwhm_unbinned"):
@@ -716,7 +717,8 @@ class HypsoCapture:
                                 ("srf_ssi_wl", sr.grid_wl),
                                 ("esun", sr.esun),
                                 ("esun_wl", sr.band_centers),
-                                ("effective_fwhm", sr.effective_fwhm)):
+                                ("effective_fwhm", sr.effective_fwhm),
+                                ("effective_fwhm_unbinned", sr.effective_fwhm_unbinned)):
                 if getattr(self, attr, None) is None:
                     setattr(self, attr, value)
 
@@ -794,6 +796,7 @@ class HypsoCapture:
         self.esun = sr.esun
         self.esun_wl = sr.band_centers
         self.effective_fwhm = sr.effective_fwhm
+        self.effective_fwhm_unbinned = sr.effective_fwhm_unbinned
 
         return None
 

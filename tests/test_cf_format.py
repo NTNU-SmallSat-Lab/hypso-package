@@ -127,6 +127,36 @@ def test_band_variables_sorted_by_band_attr(written_nc_files, open_nc):
     assert indices == list(range(len(indices)))
 
 
+def test_effective_fwhm_unbinned_persisted(written_nc_files, open_nc, satobj):
+    # effective_fwhm (metadata/srf) is measured from the *binned* SRF -
+    # effective_fwhm_unbinned is the same measurement against the unbinned
+    # SRF, added because effective_fwhm alone can't tell you the per-
+    # original-detector-band bandwidth, only the post-binning one.
+    ds = open_nc(written_nc_files["l1d"])
+    srf = ds.groups["metadata"].groups["srf"]
+    assert "effective_fwhm" in srf.variables
+    assert "effective_fwhm_unbinned" in srf.variables
+
+    effective_fwhm = np.asarray(srf.variables["effective_fwhm"][:])
+    effective_fwhm_unbinned = np.asarray(srf.variables["effective_fwhm_unbinned"][:])
+
+    # unbinned has one entry per pre-binning band, binned has fewer (grouped
+    # by bin_factor)
+    assert effective_fwhm_unbinned.shape[0] == np.asarray(satobj.fwhm_unbinned).shape[0]
+    assert effective_fwhm.shape[0] < effective_fwhm_unbinned.shape[0]
+
+    # unbinned effective FWHM should closely recover the nominal FWHM the
+    # unbinned Gaussian SRFs were built from (small discretization error,
+    # not an exact match)
+    nominal_unbinned = np.asarray(satobj.fwhm_unbinned)
+    assert np.allclose(effective_fwhm_unbinned, nominal_unbinned, atol=0.05)
+
+    # binning combines neighboring bands' SRFs, which widens the combined
+    # response - so binned effective FWHM should be larger on average than
+    # the unbinned per-band value
+    assert effective_fwhm.mean() > effective_fwhm_unbinned.mean()
+
+
 def test_l2a_dynamic_product_name(written_nc_files, open_nc):
     # The fabricated correction's l2_variable_name is "chla" - the writer must
     # use it (the old writer hardcoded per-level prefixes; the old loader only

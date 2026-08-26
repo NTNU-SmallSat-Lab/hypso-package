@@ -89,6 +89,13 @@ class SpectralResponse:
     esun: np.ndarray
     #: Per-band effective FWHM computed from the binned SRFs - (n_bands,).
     effective_fwhm: np.ndarray
+    #: Per-unbinned-band effective FWHM, computed the same way as
+    #: effective_fwhm but from srf_unbinned instead of srf - (n_unbinned,).
+    #: Not the same thing as the `fwhm` field above: `fwhm` is the nominal
+    #: value used as an *input* to build each unbinned Gaussian SRF;
+    #: this is measured empirically from that SRF's own half-max width,
+    #: the same way effective_fwhm is measured from the binned one.
+    effective_fwhm_unbinned: np.ndarray
     #: Spectral binning factor the srf/esun/effective_fwhm reflect.
     bin_factor: int
     #: Which SSI: "tsis" (TSIS-1 HSRS) or "thuillier" (Thuillier 2002).
@@ -165,6 +172,7 @@ def compute_spectral_response(band_centers_unbinned,
     binned_srfs_csr = bin_srf(srfs_csr, bin_factor, grid_wl, generate_figures)
     esun = np.array(compute_esun(srfs_csr=binned_srfs_csr, ssi=grid_ssi, method="sparse"))
     effective_fwhm = compute_effective_fwhm(srfs_csr=binned_srfs_csr, solar_wavelengths=grid_wl)
+    effective_fwhm_unbinned = compute_effective_fwhm(srfs_csr=srfs_csr, solar_wavelengths=grid_wl)
 
     return SpectralResponse(
         band_centers=np.asarray(binned_band_centers),
@@ -175,6 +183,7 @@ def compute_spectral_response(band_centers_unbinned,
         ssi=np.asarray(grid_ssi),
         esun=esun,
         effective_fwhm=np.asarray(effective_fwhm),
+        effective_fwhm_unbinned=np.asarray(effective_fwhm_unbinned),
         bin_factor=bin_factor,
         ssi_source=ssi_source,
         grid=grid,

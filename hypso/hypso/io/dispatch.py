@@ -309,6 +309,10 @@ def set_hypso_attributes(satobj) -> None:
         if 'effective_fwhm' in satobj.metadata.srf.vars.keys():
             satobj.effective_fwhm = satobj.metadata.srf.vars['effective_fwhm']
 
+    if not hasattr(satobj, 'effective_fwhm_unbinned'):
+        if 'effective_fwhm_unbinned' in satobj.metadata.srf.vars.keys():
+            satobj.effective_fwhm_unbinned = satobj.metadata.srf.vars['effective_fwhm_unbinned']
+
     if not hasattr(satobj, 'esun'):
         if 'esun' in satobj.metadata.srf.vars.keys():
             satobj.esun = satobj.metadata.srf.vars['esun']

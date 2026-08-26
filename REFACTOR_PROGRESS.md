@@ -375,6 +375,36 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
   in *my own test script*, not a bug in hypso-package's actual writer (verified directly: the real file's
   `long_name` etc. round-trip as clean Python `str` via both `netCDF4` and raw `h5py`).
 
+- **2026-08-26 (×34): added `effective_fwhm_unbinned`.** User asked to confirm `metadata/srf/effective_fwhm`
+  is post-binning FWHM (yes — confirmed from source: `spectral_response.py` computes it via
+  `compute_effective_fwhm(srfs_csr=binned_srfs_csr, ...)`, an empirical half-max-width measurement on the
+  *binned* SRF, distinct from the plain per-band `fwhm` product attribute, which is just the nominal
+  lookup-table value at binned band centers). User then asked whether "effective_fwhm" is a good name
+  (yes — it's standard hyperspectral-calibration terminology for "measured from the actual SRF," as opposed
+  to a nominal spec value) and pointed out there should be a pre-binning counterpart too — correct: no
+  unbinned effective FWHM existed anywhere; `fwhm_unbinned` was only ever the *nominal* value fed in to build
+  the unbinned Gaussian SRFs, never something empirically measured back out of them.
+
+  Added `SpectralResponse.effective_fwhm_unbinned` (`reflectance/spectral_response.py`) — the same
+  `compute_effective_fwhm` function, called against the pre-binning `srfs_csr` instead of `binned_srfs_csr`
+  (already in scope right before `bin_srf` runs, one extra line). Threaded through everywhere
+  `sr.effective_fwhm` already flowed: `HypsoCapture.spectral_response`'s lazy rebuild-from-file path,
+  `_generate_l1d_cube_impl`, and `capture_types._spawn_l1d`. Persisted to
+  `metadata/srf/effective_fwhm_unbinned` (`write/metadata_srf_group_writer.py`, mirrors the existing
+  `effective_fwhm` block exactly) and restored on load (`io/dispatch.py`, mirrors the existing
+  `effective_fwhm` restore exactly) — matches this codebase's established `_unbinned`-suffix convention
+  (`wavelengths`/`wavelengths_unbinned`, `spec_coeffs`/`spec_coeffs_unbinned`). Deliberately did NOT touch
+  `compute_toa_reflectance`'s legacy 7-tuple return (its docstring explicitly commits to "unchanged" for
+  existing callers) or `ac/adapters/polymer.py`'s per-band `effective_fwhm` lookup (no identified need for an
+  unbinned variant there).
+
+  Verified against real capture data, not just unit-level: `effective_fwhm_unbinned` (~5.46 nm) closely
+  recovers the nominal `fwhm_unbinned` value the Gaussian SRFs were built from (small discretization error,
+  as expected), while `effective_fwhm` (binned, ~6.0 nm) is measurably larger — correct physics, since binning
+  sums neighboring bands' SRFs together and widens the combined response. Confirmed the full write→read round
+  trip on a real L1D file. New test `test_effective_fwhm_unbinned_persisted` in `tests/test_cf_format.py`
+  asserts both the persistence and this binned-vs-unbinned relationship. Full suite re-run, no regressions.
+
 - **2026-08-26 (×25): type-per-level capture objects.** Follow-on from ×24. User asked: "1 HypsoCapture = 1
   cube, so why level-specific cube/mask accessor names, and why no validation preventing e.g. AC from L1B or
   jumping L1A→L1D directly? Some way of tracking the processing level represented by the object?" First
