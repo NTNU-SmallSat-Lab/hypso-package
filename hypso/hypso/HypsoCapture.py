@@ -798,6 +798,18 @@ class HypsoCapture:
         return None
 
 
+    def to_l1a(self) -> "capture_types.L1ACapture":
+        """Returns a new L1ACapture (see hypso.capture_types) - self is left
+        completely untouched. Hypso(path) (this class's own load entry
+        point, unchanged) still returns a plain HypsoCapture/Hypso1/Hypso2;
+        calling .to_l1a() on that result is how to opt into the typed
+        to_l1x() chain from the very start instead of only from to_l1b()
+        onward. No generation step - L1A data is already fully loaded by
+        the time this is called, this just retypes the object.
+        """
+        return capture_types.spawn_l1a(self)
+
+
     def to_l1b(self, coeff_type: str = None, **kwargs) -> "capture_types.L1BCapture":
         """Returns a new L1BCapture (see hypso.capture_types) - self
         (including its own l1a_cube) is left completely untouched. Unlike

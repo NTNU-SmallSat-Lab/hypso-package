@@ -1,18 +1,23 @@
-"""Type-per-level capture objects - L1BCapture/L1CCapture/L1DCapture/
-L2ACapture. Entered only via the to_l1b()/to_l1c()/to_l1d()/to_l2a() spawn
-family (HypsoCapture.py) - "what level is this object" is a fact of its
-TYPE (an L1BCapture simply has no l1a_cube attribute at all - AttributeError
-on wrong-level access, not a silent None), not a runtime string that has to
-be kept in sync by every method that changes level. See
-docs/architecture.rst's "Cube memory" section for the two coexisting APIs
-this deliberately does NOT touch: HypsoCapture's deprecated in-place
-generate_l1b_cube()/generate_l1c_cube()/generate_l1d_cube() family (still
-externally used by hypso-processing-pipeline) is completely unchanged -
-these classes are reached only through the non-mutating to_l1x()/to_l2a()
-methods, which had zero external callers before this change and still do.
+"""Type-per-level capture objects - L1ACapture/L1BCapture/L1CCapture/
+L1DCapture/L2ACapture. Entered only via HypsoCapture.to_l1a()/to_l1b()/
+to_l1c()/to_l1d()/to_l2a() (or another capture_types class's own to_l1x()
+method) - "what level is this object" is a fact of its TYPE (an L1BCapture
+simply has no l1a_cube attribute at all - AttributeError on wrong-level
+access, not a silent None), not a runtime string that has to be kept in
+sync by every method that changes level. See docs/architecture.rst's "Cube
+memory" section for the two coexisting APIs this deliberately does NOT
+touch: HypsoCapture's deprecated in-place generate_l1b_cube()/
+generate_l1c_cube()/generate_l1d_cube() family (still externally used by
+hypso-processing-pipeline) is completely unchanged - these classes are
+reached only through the non-mutating to_l1x()/to_l2a() methods, which had
+zero external callers before this change and still do.
 
-Deliberately excludes an L1A type: HypsoCapture/Hypso1/Hypso2 remain the
-load-from-file entry point, unchanged.
+HypsoCapture/Hypso1/Hypso2 remain the load-from-file entry point,
+unchanged - Hypso(path) still returns one of those; L1ACapture is reached
+by calling .to_l1a() on the result, not by a new loader (see spawn_l1a: no
+generation step, L1A data is already fully loaded by the time this exists,
+just a retype + cube-storage rename from _l1a_cube to the uniform _cube
+every class other than L2ACapture uses).
 
 Zero business logic is duplicated here - calibration_pipeline/geo/
 AC_ADAPTERS/masking_pipeline/compute_reflectance/compute_spectral_response
@@ -222,6 +227,31 @@ def _spawn_l1d(source, use_direct_georef=False, use_thuillier=False, use_unbinne
     return new_obj
 
 
+class L1ACapture(_CaptureCommon):
+    """Reached via HypsoCapture.to_l1a() - retypes an already-loaded
+    HypsoCapture/Hypso1/Hypso2 (Hypso(path) is unchanged, still the load
+    entry point) into the typed hierarchy from the start, rather than only
+    from to_l1b() onward. No generation step of its own - L1A data is
+    already fully loaded by the time this exists (see spawn_l1a)."""
+
+    LEVEL = "l1a"
+
+    def to_l1b(self, coeff_type: str = None, **kwargs) -> "L1BCapture":
+        return spawn_l1b(self, coeff_type=coeff_type, **kwargs)
+
+    def to_l1c(self, coeff_type: str = None, **kwargs) -> "L1CCapture":
+        """Convenience one-hop, mirroring HypsoCapture.to_l1c() - equivalent
+        to self.to_l1b(coeff_type=coeff_type, **kwargs).to_l1c()."""
+        return self.to_l1b(coeff_type=coeff_type, **kwargs).to_l1c()
+
+    def to_l1d(self, use_direct_georef=False, use_thuillier=False, use_unbinned=True,
+               generate_figures=False) -> "L1DCapture":
+        """Convenience one-hop, mirroring HypsoCapture.to_l1d() - equivalent
+        to self.to_l1b().to_l1d(...)."""
+        return self.to_l1b().to_l1d(use_direct_georef=use_direct_georef, use_thuillier=use_thuillier,
+                                    use_unbinned=use_unbinned, generate_figures=generate_figures)
+
+
 class L1BCapture(_CaptureCommon):
     LEVEL = "l1b"
 
@@ -288,11 +318,42 @@ class L2ACapture(_CaptureCommon):
         )
 
 
+def spawn_l1a(source) -> "L1ACapture":
+    """Shared body for HypsoCapture.to_l1a(). Unlike spawn_l1b/_spawn_l1d/
+    spawn_l2a, there's no computation here - L1A data is already fully
+    loaded onto source by Hypso(path)/io.dispatch.load_capture_file; this
+    just retypes the object and renames its cube storage from the OLD
+    class's l1a_cube-specific slot to the uniform ._cube every
+    capture_types class (other than L2ACapture) uses."""
+    if getattr(source, "_l1a_cube", None) is None:
+        raise ValueError(
+            "Cannot spawn L1ACapture: this capture's l1a_cube is not "
+            f"populated (current type={type(source).__name__})."
+        )
+
+    new_obj = spawn_as(source, L1ACapture)
+    new_obj._cube = new_obj._l1a_cube
+    del new_obj._l1a_cube
+    for stale in ("_l1b_cube", "_l1c_cube", "_l1d_cube"):
+        if hasattr(new_obj, stale):
+            delattr(new_obj, stale)
+
+    return new_obj
+
+
 def spawn_l1b(source, coeff_type: str = None, **kwargs) -> "L1BCapture":
-    """Shared body for HypsoCapture.to_l1b()."""
+    """Shared body for HypsoCapture.to_l1a().to_l1b()-or-direct-to_l1b() and
+    L1ACapture.to_l1b() - source may be either shape: an old-style
+    HypsoCapture (l1a data under ._l1a_cube) or a new-style L1ACapture (l1a
+    data under the uniform ._cube) - both are confirmed real entry points
+    now that L1ACapture exists as an alternative to HypsoCapture.to_l1b()
+    being the only way in."""
     from hypso.calibration import pipeline as calibration_pipeline
 
-    if getattr(source, "_l1a_cube", None) is None:
+    l1a_data = getattr(source, "_cube", None)
+    if l1a_data is None:
+        l1a_data = getattr(source, "_l1a_cube", None)
+    if l1a_data is None:
         raise ValueError(
             "Cannot generate L1b: this capture's l1a_cube is not populated "
             f"(current type={type(source).__name__}). L1b can only be "
@@ -306,12 +367,13 @@ def spawn_l1b(source, coeff_type: str = None, **kwargs) -> "L1BCapture":
     # cube isn't L1a data), so alias it as a plain attribute on the COPY
     # just for this one call (source must stay untouched), then remove it
     # once calibration has read it - this is what gives to_l1b()'s promise
-    # that the returned object genuinely has no l1a_cube afterward.
-    new_obj.l1a_cube = new_obj._l1a_cube
+    # that the returned object genuinely has no l1a_cube afterward. Reading
+    # l1a_data captured above (not new_obj._l1a_cube) works whichever
+    # storage name source used.
+    new_obj.l1a_cube = l1a_data
     calibrated = calibration_pipeline.run_calibration(new_obj, coeff_type=coeff_type, **kwargs)
     del new_obj.l1a_cube
-    del new_obj._l1a_cube
-    for stale in ("_l1c_cube", "_l1d_cube"):
+    for stale in ("_l1a_cube", "_cube", "_l1c_cube", "_l1d_cube"):
         if hasattr(new_obj, stale):
             delattr(new_obj, stale)
 
