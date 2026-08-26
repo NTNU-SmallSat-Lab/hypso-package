@@ -69,33 +69,33 @@ def _write_metadata_common(satobj, netfile: nc.Dataset) -> None:
     netfile.createGroup('metadata')
 
     meta_capcon = netfile.createGroup('metadata/capture_config')
-    for md, val in satobj.nc_capture_config_attrs.items():
+    for md, val in satobj.metadata.capture_config.attrs.items():
         set_or_create_attr(meta_capcon, md, val)
 
     meta_timing = netfile.createGroup('metadata/timing')
-    for md, val in satobj.nc_timing_attrs.items():
+    for md, val in satobj.metadata.timing.attrs.items():
         set_or_create_attr(meta_timing, md, val)
 
     meta_adcs = netfile.createGroup('metadata/adcs')
-    for md, val in satobj.nc_adcs_attrs.items():
+    for md, val in satobj.metadata.adcs.attrs.items():
         set_or_create_attr(meta_adcs, md, val)
 
     meta_corrections = netfile.createGroup('metadata/corrections')
-    for md, val in satobj.nc_corrections_attrs.items():
+    for md, val in satobj.metadata.corrections.attrs.items():
         set_or_create_attr(meta_corrections, md, val)
 
     # ADCS sample variables - one shared code path instead of 13 duplicated blocks.
-    len_timestamps = satobj.nc_dimensions["adcssamples"]
+    len_timestamps = satobj.metadata.dimensions["adcssamples"]
     netfile.createDimension('adcssamples', len_timestamps)
 
     ts_var = netfile.createVariable('metadata/adcs/timestamps', 'f8', ('adcssamples',),
                                      compression=COMP_SCHEME, complevel=COMP_LEVEL, shuffle=COMP_SHUFFLE)
-    ts_var[:] = satobj.nc_adcs_vars["timestamps"][:]
+    ts_var[:] = satobj.metadata.adcs.vars["timestamps"][:]
 
     for field in _ADCS_FIELDS:
         var = netfile.createVariable(f'metadata/adcs/{field}', 'f8', ('adcssamples',),
                                       compression=COMP_SCHEME, complevel=COMP_LEVEL, shuffle=COMP_SHUFFLE)
-        var[:] = satobj.nc_adcs_vars[field][:]
+        var[:] = satobj.metadata.adcs.vars[field][:]
 
     # Rad calibration matrix.
     len_radrows, len_radcols = satobj.rad_coeffs.shape
@@ -131,7 +131,7 @@ def _write_metadata_common(satobj, netfile: nc.Dataset) -> None:
     # Timestamps - uncompressed in the original (no compression params were ever
     # passed for this one variable); kept as-is, not a confirmed bug.
     timestamps_var = netfile.createVariable('metadata/timing/timestamps', 'f8', ('lines',))
-    timestamps_var[:] = satobj.nc_timing_vars["timestamps"][:]
+    timestamps_var[:] = satobj.metadata.timing.vars["timestamps"][:]
 
 
 def _write_var(netfile, name, data, attrs, dtype='f4', dims=('lines', 'samples')):
@@ -282,11 +282,11 @@ def _write_level_nc(satobj, schema: LevelSchema, dst_nc: str, cube: np.ndarray,
     from hypso.write.metadata_srf_group_writer import metadata_srf_group_writer
 
     with nc.Dataset(dst_nc, 'w', format='NETCDF4') as netfile:
-        lines = satobj.nc_capture_config_attrs["frame_count"]
+        lines = satobj.metadata.capture_config.attrs["frame_count"]
         samples = satobj.image_height
         bands = cube.shape[-1]
 
-        for md, val in satobj.nc_attrs.items():
+        for md, val in satobj.metadata.global_attrs.items():
             set_or_create_attr(netfile, md, val)
         for k, v in cf.global_attrs(schema.processing_level, schema.title).items():
             set_or_create_attr(netfile, k, v)

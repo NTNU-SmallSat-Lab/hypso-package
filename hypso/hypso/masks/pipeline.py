@@ -31,16 +31,6 @@ from hypso.containers import as_dataarray, DatasetDict
 _LEVEL_TO_CUBE_ATTR = {
     "l1a": "_l1a_cube",
     "l1b": "_l1b_cube",
-    # PRESERVED PRE-EXISTING BUG, not introduced by this extraction: the
-    # l1c_cube *property* returns a deepcopy of _l1b_cube (relabeled) since
-    # l1c has no independent storage (see its getter) - but _generate_l1c_cube_impl
-    # never populates _l1c_cube either, so this always reads None. The
-    # original masked_l1c_cube had this exact behavior (self._l1c_cube.where(...)
-    # / return self._l1c_cube) before this move - kept identical here rather
-    # than silently fixed as a side effect of relocating it. Flagged in
-    # REFACTOR_PROGRESS.md for a decision (should probably read _l1b_cube
-    # like l1c_cube's own getter does).
-    "l1c": "_l1c_cube",
     "l1d": "_l1d_cube",
 }
 
@@ -170,8 +160,19 @@ def unified_mask(satobj) -> xr.DataArray:
 def get_masked_cube(satobj, level: str) -> xr.DataArray:
     """masked_l1a_cube/masked_l1b_cube/masked_l1c_cube/masked_l1d_cube's
     shared body - see _LEVEL_TO_CUBE_ATTR for which underlying cube attribute
-    each level reads."""
-    cube = getattr(satobj, _LEVEL_TO_CUBE_ATTR[level])
+    each level reads.
+
+    l1c is special-cased to satobj.l1c_cube (the public property, a deepcopy
+    of _l1b_cube relabeled - see its own getter) rather than a private
+    _l1c_cube attribute: FIXED bug (was self._l1c_cube.where(...) before this
+    extraction) - _l1c_cube is never actually populated anywhere
+    (_generate_l1c_cube_impl never sets it), so masked_l1c_cube always
+    silently returned None. Now mirrors l1c_cube's own getter instead.
+    """
+    if level == "l1c":
+        cube = satobj.l1c_cube
+    else:
+        cube = getattr(satobj, _LEVEL_TO_CUBE_ATTR[level])
     mask = unified_mask(satobj)
 
     if mask is not None:

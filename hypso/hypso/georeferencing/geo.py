@@ -33,14 +33,14 @@ logger = logging.getLogger(__name__)
 
 def run_frame_interpolation(satobj) -> None:
     try:
-        timing = satobj.nc_timing_vars['timestamps_srv']
+        timing = satobj.metadata.timing.vars['timestamps_srv']
     except Exception:
-        timing = satobj.nc_timing_vars['timestamps']
+        timing = satobj.metadata.timing.vars['timestamps']
 
-    framepose_data = interpolate_at_frame_nc(adcs=satobj.nc_adcs_vars,
+    framepose_data = interpolate_at_frame_nc(adcs=satobj.metadata.adcs.vars,
                                           lines_timestamps=timing,
-                                          framerate=satobj.nc_capture_config_attrs['framerate'],
-                                          exposure=satobj.nc_capture_config_attrs['exposure'],
+                                          framerate=satobj.metadata.capture_config.attrs['framerate'],
+                                          exposure=satobj.metadata.capture_config.attrs['exposure'],
                                           verbose=satobj.VERBOSE
                                           )
 

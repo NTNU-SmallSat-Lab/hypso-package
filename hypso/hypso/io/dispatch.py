@@ -22,6 +22,8 @@ from hypso.load import load_l1a_nc, \
                         load_l1d_nc, \
                         load_l2a_nc
 
+from .metadata import CaptureMetadata
+
 logger = logging.getLogger(__name__)
 
 
@@ -175,34 +177,16 @@ def load_capture_file(satobj, path: Path, load_cube: bool = True) -> None:
     nc_cube_attrs, \
     nc_cube = load_func(nc_file_path=path, load_cube=load_cube)
 
-    setattr(satobj, "nc_adcs_vars", nc_metadata_vars["adcs"])
-    setattr(satobj, "nc_capture_config_vars", nc_metadata_vars["capture_config"])
-    setattr(satobj, "nc_corrections_vars", nc_metadata_vars["corrections"])
-    setattr(satobj, "nc_database_vars", nc_metadata_vars["database"])
-    setattr(satobj, "nc_logfiles_vars", nc_metadata_vars["logfiles"])
-    setattr(satobj, "nc_temperature_vars", nc_metadata_vars["temperature"])
-    setattr(satobj, "nc_timing_vars", nc_metadata_vars["timing"])
-    setattr(satobj, "nc_srf_vars", nc_metadata_vars["srf"])
-
-    setattr(satobj, "nc_adcs_attrs", nc_metadata_attrs["adcs"])
-    setattr(satobj, "nc_capture_config_attrs", nc_metadata_attrs["capture_config"])
-    setattr(satobj, "nc_corrections_attrs", nc_metadata_attrs["corrections"])
-    setattr(satobj, "nc_database_attrs", nc_metadata_attrs["database"])
-    setattr(satobj, "nc_logfiles_attrs", nc_metadata_attrs["logfiles"])
-    setattr(satobj, "nc_temperature_attrs", nc_metadata_attrs["temperature"])
-    setattr(satobj, "nc_timing_attrs", nc_metadata_attrs["timing"])
-    setattr(satobj, "nc_srf_attrs", nc_metadata_attrs["srf"])
-
-    setattr(satobj, "nc_geometry_vars", nc_geometry_vars)
-    setattr(satobj, "nc_geometry_attrs", nc_geometry_attrs)
-
-    setattr(satobj, "nc_gcp_vars", nc_gcp_vars)
-    setattr(satobj, "nc_gcp_attrs", nc_gcp_attrs)
-
-    setattr(satobj, "nc_dimensions", nc_global_metadata["dimensions"])
-    setattr(satobj, "nc_attrs", nc_global_metadata["ncattrs"])
-
-    setattr(satobj, "nc_cube_attrs", nc_cube_attrs)
+    satobj.metadata = CaptureMetadata.from_load_result(
+        nc_metadata_vars=nc_metadata_vars,
+        nc_metadata_attrs=nc_metadata_attrs,
+        nc_geometry_vars=nc_geometry_vars,
+        nc_geometry_attrs=nc_geometry_attrs,
+        nc_gcp_vars=nc_gcp_vars,
+        nc_gcp_attrs=nc_gcp_attrs,
+        nc_global_metadata=nc_global_metadata,
+        nc_cube_attrs=nc_cube_attrs,
+    )
 
     # TODO: pass the dicts returned by load_func to set_hypso_attributes()
     # Note: this MUST be run before writing datacubes in order to pass correct dimensions to as_dataarray()
@@ -255,82 +239,82 @@ def load_capture_file(satobj, path: Path, load_cube: bool = True) -> None:
 def set_hypso_attributes(satobj) -> None:
 
     # Capture config related attributes
-    for attr in satobj.nc_capture_config_attrs.keys():
-        setattr(satobj, attr, satobj.nc_capture_config_attrs[attr])
+    for attr in satobj.metadata.capture_config.attrs.keys():
+        setattr(satobj, attr, satobj.metadata.capture_config.attrs[attr])
     # FPS has been renamed to framerate. Need to support both since old .nc files may still use FPS
     try:
-        satobj.nc_capture_config_attrs['fps'] = satobj.nc_capture_config_attrs['framerate']
+        satobj.metadata.capture_config.attrs['fps'] = satobj.metadata.capture_config.attrs['framerate']
     except:
-        satobj.nc_capture_config_attrs['framerate'] = satobj.nc_capture_config_attrs['fps']
+        satobj.metadata.capture_config.attrs['framerate'] = satobj.metadata.capture_config.attrs['fps']
 
-    satobj.background_value = 8 * satobj.nc_capture_config_attrs["bin_factor"]
-    satobj.exposure = satobj.nc_capture_config_attrs["exposure"] / 1000  # in seconds
+    satobj.background_value = 8 * satobj.metadata.capture_config.attrs["bin_factor"]
+    satobj.exposure = satobj.metadata.capture_config.attrs["exposure"] / 1000  # in seconds
 
 
     # Capture dimensions attributes
-    satobj.x_start = satobj.nc_capture_config_attrs["aoi_x"]
-    satobj.x_stop = satobj.nc_capture_config_attrs["aoi_x"] + satobj.nc_capture_config_attrs["column_count"]
-    satobj.y_start = satobj.nc_capture_config_attrs["aoi_y"]
-    satobj.y_stop = satobj.nc_capture_config_attrs["aoi_y"] + satobj.nc_capture_config_attrs["row_count"]
-    satobj.bin_factor = satobj.nc_capture_config_attrs["bin_factor"]
+    satobj.x_start = satobj.metadata.capture_config.attrs["aoi_x"]
+    satobj.x_stop = satobj.metadata.capture_config.attrs["aoi_x"] + satobj.metadata.capture_config.attrs["column_count"]
+    satobj.y_start = satobj.metadata.capture_config.attrs["aoi_y"]
+    satobj.y_stop = satobj.metadata.capture_config.attrs["aoi_y"] + satobj.metadata.capture_config.attrs["row_count"]
+    satobj.bin_factor = satobj.metadata.capture_config.attrs["bin_factor"]
     # Try/except here since not all captures have sample_div
     try:
-        satobj.sample_div = satobj.nc_capture_config_attrs['sample_div']
+        satobj.sample_div = satobj.metadata.capture_config.attrs['sample_div']
     except:
         satobj.sample_div = 1
-    satobj.row_count = satobj.nc_capture_config_attrs["row_count"]
-    satobj.frame_count = satobj.nc_capture_config_attrs["frame_count"]
-    satobj.column_count = satobj.nc_capture_config_attrs["column_count"]
-    satobj.image_height = int(satobj.nc_capture_config_attrs["row_count"] / satobj.sample_div)
-    satobj.image_width = int(satobj.nc_capture_config_attrs["column_count"] / satobj.nc_capture_config_attrs["bin_factor"])
+    satobj.row_count = satobj.metadata.capture_config.attrs["row_count"]
+    satobj.frame_count = satobj.metadata.capture_config.attrs["frame_count"]
+    satobj.column_count = satobj.metadata.capture_config.attrs["column_count"]
+    satobj.image_height = int(satobj.metadata.capture_config.attrs["row_count"] / satobj.sample_div)
+    satobj.image_width = int(satobj.metadata.capture_config.attrs["column_count"] / satobj.metadata.capture_config.attrs["bin_factor"])
     satobj.im_size = satobj.image_height * satobj.image_width
     satobj.bands = satobj.image_width
-    satobj.lines = satobj.nc_capture_config_attrs["frame_count"]  # AKA Frames AKA Rows
+    satobj.lines = satobj.metadata.capture_config.attrs["frame_count"]  # AKA Frames AKA Rows
     satobj.samples = satobj.image_height  # AKA Cols
-    satobj.spatial_dimensions = (satobj.nc_capture_config_attrs["frame_count"], satobj.image_height)
+    satobj.spatial_dimensions = (satobj.metadata.capture_config.attrs["frame_count"], satobj.image_height)
     if satobj.VERBOSE:
         print(f"[INFO] Capture spatial dimensions: {satobj.spatial_dimensions}")
 
 
     # Calibration related atrributes
-    satobj.rad_coeffs = satobj.nc_corrections_vars['rad_matrix']
+    satobj.rad_coeffs = satobj.metadata.corrections.vars['rad_matrix']
 
     try:
-        satobj.spectral_coeffs = satobj.nc_corrections_vars['spec_coeffs']
+        satobj.spectral_coeffs = satobj.metadata.corrections.vars['spec_coeffs']
     except KeyError:
-        satobj.spectral_coeffs = satobj.nc_corrections_vars['wavelengths']
+        satobj.spectral_coeffs = satobj.metadata.corrections.vars['wavelengths']
 
     if not hasattr(satobj, 'wavelengths'):
-        if ('wavelengths' in satobj.nc_cube_attrs.keys()):
-            satobj.wavelengths = satobj.nc_cube_attrs['wavelengths']
+        if ('wavelengths' in satobj.metadata.cube_attrs.keys()):
+            satobj.wavelengths = satobj.metadata.cube_attrs['wavelengths']
         else:
             satobj.wavelengths = np.array(range(0, satobj.image_width))
 
     if not hasattr(satobj, 'wavelengths_unbinned'):
-        if ('wavelengths_unbinned' in satobj.nc_corrections_vars.keys()):
-            satobj.wavelengths_unbinned = satobj.nc_corrections_vars['wavelengths_unbinned']
+        if ('wavelengths_unbinned' in satobj.metadata.corrections.vars.keys()):
+            satobj.wavelengths_unbinned = satobj.metadata.corrections.vars['wavelengths_unbinned']
         else:
             satobj.wavelengths_unbinned = np.array(range(0, satobj.image_width))
 
     if not hasattr(satobj, 'fwhm'):
-        if 'fwhm' in satobj.nc_cube_attrs.keys():
-            satobj.fwhm = satobj.nc_cube_attrs['fwhm']
+        if 'fwhm' in satobj.metadata.cube_attrs.keys():
+            satobj.fwhm = satobj.metadata.cube_attrs['fwhm']
         else:
             #satobj.fwhm = [satobj.AVERAGE_FWHM] * satobj.bands
             satobj.fwhm = [satobj.AVERAGE_FWHM] * satobj.UNBINNED_BAND_COUNT
 
 
     if not hasattr(satobj, 'effective_fwhm'):
-        if 'effective_fwhm' in satobj.nc_srf_vars.keys():
-            satobj.effective_fwhm = satobj.nc_srf_vars['effective_fwhm']
+        if 'effective_fwhm' in satobj.metadata.srf.vars.keys():
+            satobj.effective_fwhm = satobj.metadata.srf.vars['effective_fwhm']
 
     if not hasattr(satobj, 'esun'):
-        if 'esun' in satobj.nc_srf_vars.keys():
-            satobj.esun = satobj.nc_srf_vars['esun']
+        if 'esun' in satobj.metadata.srf.vars.keys():
+            satobj.esun = satobj.metadata.srf.vars['esun']
 
     if not hasattr(satobj, 'esun_wl'):
-        if 'esun_wavelengths' in satobj.nc_srf_vars.keys():
-            satobj.esun_wl = satobj.nc_srf_vars['esun_wavelengths']
+        if 'esun_wavelengths' in satobj.metadata.srf.vars.keys():
+            satobj.esun_wl = satobj.metadata.srf.vars['esun_wavelengths']
 
 
     # Fixed a missing comma (inherited verbatim from the old HypsoCapture): the
@@ -342,12 +326,12 @@ def set_hypso_attributes(satobj) -> None:
 
     for csiro_key in csiro_list:
         if not hasattr(satobj, csiro_key):
-            if csiro_key in satobj.nc_srf_vars.keys():
-                setattr(satobj, csiro_key, satobj.nc_srf_vars[csiro_key])
+            if csiro_key in satobj.metadata.srf.vars.keys():
+                setattr(satobj, csiro_key, satobj.metadata.srf.vars[csiro_key])
 
 
     # Geometry atrributes
-    for key, value in satobj.nc_geometry_vars.items():
+    for key, value in satobj.metadata.geometry.vars.items():
         if key == 'unixtime':
             continue
         elif key == 'latitude':
@@ -408,9 +392,9 @@ def set_hypso_attributes(satobj) -> None:
         satobj.start_timestamp_capture = int(satobj.timing['capture_start_unix']) + satobj.UNIX_TIME_OFFSET
     except:
         try:
-            datestring = satobj.nc_attrs['date_aquired']
+            datestring = satobj.metadata.global_attrs['date_aquired']
         except:
-            datestring = satobj.nc_attrs['timestamp_acquired']
+            datestring = satobj.metadata.global_attrs['timestamp_acquired']
 
 
         try:
@@ -420,17 +404,17 @@ def set_hypso_attributes(satobj) -> None:
 
         satobj.start_timestamp_capture = dt.timestamp()
 
-    #satobj.start_timestamp_capture = int(satobj.nc_timing_attrs['capture_start_unix']) + satobj.UNIX_TIME_OFFSET
+    #satobj.start_timestamp_capture = int(satobj.metadata.timing.attrs['capture_start_unix']) + satobj.UNIX_TIME_OFFSET
 
     # Get END_TIMESTAMP_CAPTURE
     # can't compute end timestamp using frame count and frame rate
     # assuming some default value if framerate and exposure not available
     try:
-        satobj.end_timestamp_capture = satobj.start_timestamp_capture + satobj.nc_capture_config_attrs["frame_count"] / satobj.nc_capture_config_attrs["framerate"] + satobj.nc_capture_config_attrs["exposure"] / 1000.0
+        satobj.end_timestamp_capture = satobj.start_timestamp_capture + satobj.metadata.capture_config.attrs["frame_count"] / satobj.metadata.capture_config.attrs["framerate"] + satobj.metadata.capture_config.attrs["exposure"] / 1000.0
     except:
         if satobj.VERBOSE:
             print("[WARNING] Framerate or exposure values not found. Assuming 20.0 for each.")
-        satobj.end_timestamp_capture = satobj.start_timestamp_capture + satobj.nc_capture_config_attrs["frame_count"] / 20.0 + 20.0 / 1000.0
+        satobj.end_timestamp_capture = satobj.start_timestamp_capture + satobj.metadata.capture_config.attrs["frame_count"] / 20.0 + 20.0 / 1000.0
 
     # using 'awk' for floating point arithmetic ('expr' only support integer arithmetic): {printf \"%.2f\n\", 100/3}"
     time_margin_start = 641.0  # 70.0
@@ -453,10 +437,10 @@ def check_capture_type(satobj) -> None:
     #    "wide": 1092  # Along image_height (row_count)
     #}
 
-    if satobj.nc_capture_config_attrs["frame_count"] == 956:
-    #if satobj.nc_capture_config_attrs["frame_count"] == satobj.standard_dimensions["nominal"]:
+    if satobj.metadata.capture_config.attrs["frame_count"] == 956:
+    #if satobj.metadata.capture_config.attrs["frame_count"] == satobj.standard_dimensions["nominal"]:
         satobj.capture_type = "nominal"
-    elif satobj.nc_capture_config_attrs["frame_count"] == 106:
+    elif satobj.metadata.capture_config.attrs["frame_count"] == 106:
                 satobj.capture_type = "moon"
     elif satobj.image_height == 1092:
     #elif satobj.image_height == satobj.standard_dimensions["wide"]:

@@ -131,11 +131,11 @@ def run_calibration(satobj,
 
     if coeff_type is None:
         try:
-            coeff_type = satobj.nc_corrections_attrs['radiometric_coefficients_version']
+            coeff_type = satobj.metadata.corrections.attrs['radiometric_coefficients_version']
         except Exception:
             pass
     else:
-        satobj.nc_corrections_attrs['radiometric_coefficients_version'] = str(coeff_type).lower()
+        satobj.metadata.corrections.attrs['radiometric_coefficients_version'] = str(coeff_type).lower()
 
     if set_coeffs:
         set_calibration_coeff_files(satobj, coeff_type=coeff_type, **kwargs)

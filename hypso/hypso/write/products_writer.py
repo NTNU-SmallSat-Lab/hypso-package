@@ -35,14 +35,14 @@ def products_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
     # Create a new NetCDF file
     with (nc.Dataset(dst_nc, 'w', format='NETCDF4') as netfile):
         bands = satobj.image_width
-        lines = satobj.nc_capture_config_attrs["frame_count"]  # AKA Frames AKA Rows
+        lines = satobj.metadata.capture_config.attrs["frame_count"]  # AKA Frames AKA Rows
         samples = satobj.image_height  # AKA Cols
 
         # Set top level attributes -------------------------------------------------
-        for md in satobj.nc_attrs:
+        for md in satobj.metadata.global_attrs:
             set_or_create_attr(netfile,
                                 md,
-                                satobj.nc_attrs[md])
+                                satobj.metadata.global_attrs[md])
 
         #set_or_create_attr(netfile, attr_name="processing_level", attr_value="L1D")
 
