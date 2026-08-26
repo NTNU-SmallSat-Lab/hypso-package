@@ -342,6 +342,39 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
   hypso-package itself: no changes — all edits landed in the three sibling tool checkouts.
 
+- **2026-08-26 (×33): fixed a real bug found opening hypso-package's own output in ESA SNAP — `metadata/
+  gcp/latitude`/`longitude` name-collided with the real per-pixel geolocation.** User reported SNAP couldn't
+  open a current-format L1D file and shared its log — `java.lang.ArrayIndexOutOfBoundsException: Index 321589
+  out of bounds for length 29` inside `org.esa.snap.core.dataio.geocoding.util.RasterUtils.
+  computeResolutionInKm`, called from `CfGeocodingPart.readPixelBasedGeoCoding`.
+
+  Diagnosed by elimination with real files rather than guessing: generated a minimal reproducer (just
+  `latitude`/`longitude` + one dummy CF-referencing band, real lat/lon values copied from an actual capture,
+  no groups/metadata at all) — opened fine, ruling out the earlier ×32-era worry that SNAP's CF reader
+  rejects netCDF4 group structure outright. Added back all 120 real bands with real per-band attributes —
+  still opened fine, ruling out band count. Then added just the `metadata/gcp` group (ground-control-point
+  tie points from HYPSO's raw georeferencing, carried through from L1A) — **crashed identically**. Its
+  `latitude`/`longitude` variables are exactly length 29 — the same 29 from the stack trace. Root cause:
+  those two variables carry no `standard_name`/`units` of their own to distinguish them from real coordinate
+  variables, so SNAP's CF/geocoding scanner finds them by bare name alone, treats them as a second candidate
+  geolocation source alongside the real per-pixel root `latitude`/`longitude` (598×1092 = 653,016 pixels),
+  and ends up indexing the 29-element GCP array with a full-raster pixel offset.
+
+  Confirmed zero consumers of the exact netCDF variable names anywhere — `load_gcp_from_nc_file` (load/
+  utils.py) reads whatever keys exist under `metadata/gcp` generically (`for key in group.variables.keys()`),
+  no code anywhere reads `satobj.metadata.gcp.vars["latitude"]` by that literal key, and grepping
+  `hypso-processing-pipeline`/eoread/ACOLITE/OC-SMART turned up nothing either. Fix: `write/
+  metadata_gcp_group_writer.py` now writes `metadata/gcp/gcp_<key>` instead of `metadata/gcp/<key>`
+  (`gcp_latitude`/`gcp_longitude`/`gcp_sourceX`/`gcp_sourceY`) — a one-line rename, no reader-side change
+  needed. Verified end-to-end, not just reasoned about: user confirmed a freshly-generated real L1D file (full
+  `metadata` group, `esun`/`effective_fwhm`, everything - not a stripped reproducer) now opens in their SNAP
+  install. Full test suite re-run after the change, no regressions.
+
+  Also corrected an unrelated false alarm from the same investigation: a reproducer script of mine displayed
+  string attributes as literal `b'...'` text in SNAP - that was `str()` called on a raw `numpy.bytes_` value
+  in *my own test script*, not a bug in hypso-package's actual writer (verified directly: the real file's
+  `long_name` etc. round-trip as clean Python `str` via both `netCDF4` and raw `h5py`).
+
 - **2026-08-26 (×25): type-per-level capture objects.** Follow-on from ×24. User asked: "1 HypsoCapture = 1
   cube, so why level-specific cube/mask accessor names, and why no validation preventing e.g. AC from L1B or
   jumping L1A→L1D directly? Some way of tracking the processing level represented by the object?" First
