@@ -48,6 +48,23 @@ def get_hypso1_calibration_files(capture_type="custom", coeff_type='moved') -> N
             npz_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.npz"
             npz_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.npz"
 
+        case "moon":
+            # Previously unhandled - fell through to case _ below, silently
+            # zeroing out ALL FOUR coefficient files (radiometric included)
+            # for every moon capture. radiometric_calibration_matrix_HYPSO-1_
+            # moon.npz already shipped in data/ unused, which is what
+            # surfaced this - a moon case was clearly intended but never
+            # wired up here. No moon-specific smile/destriping matrix exists
+            # (moon captures don't share nominal/wide's frame geometry), so
+            # smile falls back to the same full-frame matrix "custom" uses
+            # below (read_coeffs_from_file crops it to this capture's actual
+            # AOI/bin_factor - see calibration/correction.py's 'smile' case,
+            # which only skips that crop for a path containing 'wide' or
+            # 'nominal'), and destriping is skipped, exactly like "custom".
+            npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_moon.npz"
+            npz_file_smile = "spectral_calibration_matrix_HYPSO-1_full_v1.npz"
+            npz_file_destriping = None
+
         case _:
             npz_file_radiometric = None
             npz_file_smile = None

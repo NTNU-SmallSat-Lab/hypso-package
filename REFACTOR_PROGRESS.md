@@ -220,12 +220,64 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
   Full suite run after both changes to confirm no regressions.
 
-- **New TODO (user request, flagged during ×25/×26 work, not yet acted on): HYPSO capture dimensions may
-  change for future sensors/imaging modes.** `spatial_dimensions`, `frame_count`/`row_count`/`column_count`,
-  `io/dispatch.py`'s `check_capture_type` "nominal"/"moon"/"wide" classification (hardcoded against `956`/
-  `106`/`1092`), `bin_factor`, etc. are all currently treated as fixed/known assumptions throughout
-  `hypso-package`. User asked for this to be flagged as a separate area to audit once the current refactor
-  work lands — not folded into any refactor pass, a genuinely separate investigation.
+- **2026-08-26 (×31): capture-dimensions audit — the ×25/×26 TODO acted on, uncovered a live calibration
+  bug.** Audited every hardcoded dimension/capture-type assumption in `hypso-package`
+  (`spatial_dimensions`/`frame_count`/`row_count`/`column_count`/`bin_factor`/`check_capture_type`). Most of
+  these (`spatial_dimensions` etc.) are correctly *derived per-capture* from the loaded file's own metadata,
+  not hardcoded — not fragile. The one genuinely hardcoded, sensor-agnostic piece: `io/dispatch.py`'s
+  `check_capture_type()` classified every capture into `"nominal"`/`"moon"`/`"wide"`/`"custom"` via one flat
+  `if/elif` chain (`frame_count == 956`/`== 106`, `image_height == 1092`) with **no reference to
+  `satobj.sensor_profile`** — a design gap against `hypso/sensors/`'s own registry (built earlier this
+  session specifically so per-sensor differences don't need central dispatch code).
+
+  **Confirmed live bug, not just future-sensor risk**: `capture_type` feeds `sensor_profile.calibration_files(
+  capture_type, ...)`, which delegates to the installed `hypso1_calibration`/`hypso2_calibration` packages.
+  Reading their source: `hypso1_calibration.get_hypso1_calibration_files`'s `match capture_type:` had cases
+  for `"custom"`/`"nominal"`/`"wide"` but **none for `"moon"`** — fell through to the catch-all, returning
+  radiometric/smile/destriping/spectral coefficient files all as `None`. `calibration/pipeline.py`'s
+  `load_calibration_coeff_files` wraps each load in a bare `try/except: satobj.X = None`, and `run_calibration`
+  gates each step on `if satobj.X_coeffs is not None`, so **any HYPSO-1 capture with `frame_count == 106`
+  silently skipped all four calibration steps** — no error, no warning, uncalibrated L1B data. Found
+  `radiometric_calibration_matrix_HYPSO-1_moon.npz` already shipped, unused, in `hypso1_calibration`'s
+  `data/` — strong evidence a "moon" case was intended but never wired up.
+  (`hypso2_calibration.get_hypso2_calibration_files` has the opposite problem — it ignores `capture_type`
+  entirely, so the classification has zero effect on HYPSO-2's calibration file selection either way; left
+  as-is, no evidence this is wrong for HYPSO-2 specifically.)
+
+  Grepped `hypso-processing-pipeline`/`hypso-ac-processing` for "moon" — no hits, so this may be latent (moon/
+  lunar-calibration captures possibly processed out-of-band) rather than actively firing today; couldn't
+  confirm from code alone.
+
+  User directed both fixes:
+  1. **`hypso/sensors.SensorProfile`** gained a new `capture_type_thresholds: tuple[tuple[str, str, int], ...]`
+     field — ordered `(capture_type, satobj_attr, expected_value)` rules, first match wins, no match →
+     `"custom"`. `hypso1.py`/`hypso2.py` each now declare their own (currently identical — no evidence HYPSO-2's
+     frame geometry differs, so this preserves today's actual behavior exactly) `CAPTURE_TYPE_THRESHOLDS`.
+     `check_capture_type()` rewritten to iterate `satobj.sensor_profile.capture_type_thresholds` generically
+     instead of hardcoding — a future sensor with different dimensions now just declares its own thresholds at
+     registration, no central-dispatch-code change needed, matching the registry's existing design intent.
+  2. **`hypso1_calibration/hypso1_calibration/main.py`** (confirmed part of this same editable git clone,
+     `hypso-package-refactor/hypso-package/hypso1_calibration/` — not an external/off-limits package) gained a
+     `case "moon":` branch: radiometric uses the pre-existing unused moon file; smile falls back to the same
+     full-frame matrix the `"custom"` case already uses (`read_coeffs_from_file`'s `'smile'` branch in
+     `calibration/correction.py` crops full-frame matrices to the capture's actual AOI/bin_factor unless the
+     path contains `'wide'`/`'nominal'` — the existing, designed fallback path for non-standard geometries, not
+     a new mechanism); destriping skipped, same as `"custom"`. This is an inference by analogy to how `"custom"`
+     already handles unrecognized geometries, not verified against calibration domain documentation — flagged
+     to the user as a judgment call, not asserted as definitively correct science.
+
+  Found and worked around a real environment gotcha while verifying: `pip install -e .` for
+  `hypso1_calibration` switched it to setuptools' PEP 660 finder-based editable install, which broke resolution
+  when Python is invoked from `hypso-package`'s own repo root — that directory contains a bare
+  `hypso1_calibration/` subdirectory (the calibration package's own project root), which `PathFinder` resolves
+  as an empty namespace package *before* the custom editable finder (appended later in `sys.meta_path`) ever
+  gets consulted, since the prior real install (a plain, non-editable site-packages copy) no longer exists to
+  short-circuit that. Reverted to a normal non-editable reinstall (`pip install <path>`, no `-e`) to restore
+  the working configuration while keeping the fix.
+
+  New tests in `tests/test_sensors.py`: `capture_type_thresholds` well-formedness for both profiles,
+  `check_capture_type`'s classification against a fake capture (all four outcomes), and a regression test
+  confirming `hypso1_calibration`'s `"moon"` case now returns real (non-`None`) calibration files.
 
 - **2026-08-26 (×25): type-per-level capture objects.** Follow-on from ×24. User asked: "1 HypsoCapture = 1
   cube, so why level-specific cube/mask accessor names, and why no validation preventing e.g. AC from L1B or

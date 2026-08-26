@@ -48,3 +48,55 @@ def test_profiles_are_frozen():
     p = get_sensor_profile("hypso1")
     with pytest.raises(Exception):
         p.sat_id = "changed"
+
+
+@pytest.mark.parametrize("key", ["hypso1", "hypso2"])
+def test_capture_type_thresholds_well_formed(key):
+    # capture-dimensions audit (REFACTOR_PROGRESS.md): check_capture_type
+    # used to be one hardcoded chain shared by every sensor - each profile
+    # now declares its own (capture_type, attr, expected_value) rules.
+    p = get_sensor_profile(key)
+    assert p.capture_type_thresholds
+    for capture_type, attr, expected_value in p.capture_type_thresholds:
+        assert isinstance(capture_type, str) and capture_type
+        assert attr in ("frame_count", "image_height")
+        assert isinstance(expected_value, int)
+
+
+class _FakeCapture:
+    VERBOSE = False
+
+    def __init__(self, sensor_profile, frame_count, image_height):
+        self.sensor_profile = sensor_profile
+        self.frame_count = frame_count
+        self.image_height = image_height
+
+
+@pytest.mark.parametrize("frame_count,image_height,expected", [
+    (956, 684, "nominal"),
+    (106, 684, "moon"),
+    (500, 1092, "wide"),
+    (12345, 12345, "custom"),
+])
+def test_check_capture_type_classifies_from_sensor_profile(frame_count, image_height, expected):
+    from hypso.io.dispatch import check_capture_type
+
+    satobj = _FakeCapture(get_sensor_profile("hypso1"), frame_count, image_height)
+    check_capture_type(satobj)
+    assert satobj.capture_type == expected
+
+
+def test_hypso1_moon_capture_type_gets_real_calibration_files():
+    # Regression test for a confirmed live bug: hypso1_calibration's
+    # get_hypso1_calibration_files() had no "moon" case in its match
+    # statement, so it fell through to the catch-all and returned every
+    # coefficient file as None - which calibration/pipeline.py's
+    # load_calibration_coeff_files silently swallows (bare try/except),
+    # so a moon capture (frame_count==106) got NO calibration at all with
+    # no error. radiometric_calibration_matrix_HYPSO-1_moon.npz already
+    # shipped in hypso1_calibration's data/ unused before this fix.
+    p = get_sensor_profile("hypso1")
+    files = p.calibration_files("moon", coeff_type="moved")
+    assert files["radiometric"] is not None
+    assert "moon" in str(files["radiometric"])
+    assert files["spectral"] is not None

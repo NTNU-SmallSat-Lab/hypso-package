@@ -27,6 +27,20 @@ def _calibration_files(capture_type: str, coeff_type: str = "moved") -> dict:
     return get_hypso2_calibration_files(capture_type, coeff_type=coeff_type)
 
 
+# Same values as HYPSO-1's (see hypso1.py) - no evidence HYPSO-2's frame
+# geometry differs, so this preserves today's actual behavior exactly.
+# Unlike HYPSO-1, hypso2_calibration.get_hypso2_calibration_files() ignores
+# capture_type entirely (confirmed by reading its source - one smile file
+# regardless of nominal/wide/moon/custom), so today these thresholds only
+# affect the satobj.capture_type value itself (read elsewhere, e.g.
+# logging), not which calibration files get selected for HYPSO-2.
+CAPTURE_TYPE_THRESHOLDS = (
+    ("nominal", "frame_count", 956),
+    ("moon", "frame_count", 106),
+    ("wide", "image_height", 1092),
+)
+
+
 HYPSO2_PROFILE = SensorProfile(
     key="hypso2",
     sat_id="HYPSO-2",
@@ -36,6 +50,7 @@ HYPSO2_PROFILE = SensorProfile(
     fwhm_lookup_wl=FWHM_LOOKUP_WL,
     fwhm_lookup_fwhm=FWHM_LOOKUP_FWHM,
     calibration_files=_calibration_files,
+    capture_type_thresholds=CAPTURE_TYPE_THRESHOLDS,
 )
 
 register_sensor(HYPSO2_PROFILE)

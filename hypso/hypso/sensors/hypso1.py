@@ -26,6 +26,17 @@ def _calibration_files(capture_type: str, coeff_type: str = "moved") -> dict:
     return get_hypso1_calibration_files(capture_type, coeff_type=coeff_type)
 
 
+# Moved here verbatim from io/dispatch.py's check_capture_type (see
+# REFACTOR_PROGRESS.md's capture-dimensions audit) - same three values,
+# now declared per-sensor instead of one hardcoded chain shared (and
+# unverified) across every registered sensor.
+CAPTURE_TYPE_THRESHOLDS = (
+    ("nominal", "frame_count", 956),
+    ("moon", "frame_count", 106),
+    ("wide", "image_height", 1092),
+)
+
+
 HYPSO1_PROFILE = SensorProfile(
     key="hypso1",
     sat_id="HYPSO-1",
@@ -35,6 +46,7 @@ HYPSO1_PROFILE = SensorProfile(
     fwhm_lookup_wl=FWHM_LOOKUP_WL,
     fwhm_lookup_fwhm=FWHM_LOOKUP_FWHM,
     calibration_files=_calibration_files,
+    capture_type_thresholds=CAPTURE_TYPE_THRESHOLDS,
 )
 
 register_sensor(HYPSO1_PROFILE)

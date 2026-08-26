@@ -435,21 +435,15 @@ def set_hypso_attributes(satobj) -> None:
 
 
 def check_capture_type(satobj) -> None:
+    """Classify satobj.capture_type using its sensor_profile's own
+    capture_type_thresholds (see hypso.sensors.SensorProfile) instead of one
+    hardcoded chain shared by every sensor - see REFACTOR_PROGRESS.md's
+    capture-dimensions audit for why this changed and what it fixed."""
 
-    #satobj.spatial_dimensions = (956, 684)  # 1092 x variable
-    #satobj.standard_dimensions = {
-    #    "nominal": 956,  # Along frame_count
-    #    "wide": 1092  # Along image_height (row_count)
-    #}
-
-    if satobj.metadata.capture_config.attrs["frame_count"] == 956:
-    #if satobj.metadata.capture_config.attrs["frame_count"] == satobj.standard_dimensions["nominal"]:
-        satobj.capture_type = "nominal"
-    elif satobj.metadata.capture_config.attrs["frame_count"] == 106:
-                satobj.capture_type = "moon"
-    elif satobj.image_height == 1092:
-    #elif satobj.image_height == satobj.standard_dimensions["wide"]:
-        satobj.capture_type = "wide"
+    for capture_type, attr, expected_value in satobj.sensor_profile.capture_type_thresholds:
+        if getattr(satobj, attr) == expected_value:
+            satobj.capture_type = capture_type
+            break
     else:
         # EXPERIMENTAL_FEATURES
         if satobj.VERBOSE:
