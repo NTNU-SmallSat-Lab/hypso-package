@@ -3,14 +3,19 @@ extracted from HypsoCapture (land_mask/cloud_mask/custom_masks state,
 set_custom_mask/clear_custom_masks/load_mask_from_file, unified_mask, and
 the four masked_l1x_cube properties).
 
-Uses satobj._spawn_next_level() to get an isolated capture per test - the
-real satobj fixture is session-scoped and shared across the whole suite, so
-mutating its masks directly here would leak into other tests. See
-_spawn_next_level's own docstring for why this is a cheap, safe copy."""
+Uses capture_types.spawn_as(satobj, type(satobj)) to get an isolated
+same-type capture per test - the real satobj fixture is session-scoped and
+shared across the whole suite, so mutating its masks directly here would
+leak into other tests. spawn_as is the general-purpose successor to
+HypsoCapture's old _spawn_next_level (removed - superseded once to_l1b()/
+to_l1c()/to_l1d()/to_l2a() moved onto it for cross-type spawning); calling
+it with the same class as source and target reproduces the exact same
+same-type copy semantics _spawn_next_level had."""
 import numpy as np
 import pytest
 
 from conftest import requires_real_capture
+from hypso import capture_types
 
 pytestmark = requires_real_capture
 
@@ -19,7 +24,7 @@ pytestmark = requires_real_capture
 def isolated(satobj):
     """A capture that can have its masks mutated without affecting the
     shared session-scoped satobj fixture used elsewhere in the suite."""
-    return satobj._spawn_next_level()
+    return capture_types.spawn_as(satobj, type(satobj))
 
 
 def test_land_mask_cloud_mask_roundtrip(isolated):

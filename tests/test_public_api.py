@@ -119,7 +119,7 @@ def test_hypso_base_geo_wrapper_surface():
 
 def _bare_capture():
     """A HypsoCapture instance with no real capture data loaded - enough for
-    _spawn_next_level() (needs _custom_masks/_l2a_cubes) and the AC
+    capture_types.spawn_as() (needs _custom_masks/_l2a_cubes) and the AC
     open_output _impl dispatch (mocked below, never actually touches file
     I/O), without needing the real reference capture fixture."""
     from hypso.HypsoCapture import HypsoCapture

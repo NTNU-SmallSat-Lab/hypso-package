@@ -46,7 +46,14 @@ def format_mask_dataarray(satobj, data: Union[np.ndarray, xr.DataArray], descrip
 
     data = as_dataarray(data, tuple(satobj.dim_names_2d), num_dims=2,
                         dim_shape=tuple(satobj.spatial_dimensions))
-    data = satobj._update_dataarray_attrs(data, attributes)
+
+    # Inlined rather than satobj._update_dataarray_attrs(data, attributes) -
+    # that method only exists on HypsoCapture, not the newer
+    # hypso.capture_types classes (L1BCapture/etc.), and this logic never
+    # actually needed satobj in the first place.
+    for key, value in attributes.items():
+        if key not in data.attrs:
+            data.attrs[key] = value
 
     return data
 
@@ -173,6 +180,22 @@ def get_masked_cube(satobj, level: str) -> xr.DataArray:
         cube = satobj.l1c_cube
     else:
         cube = getattr(satobj, _LEVEL_TO_CUBE_ATTR[level])
+    mask = unified_mask(satobj)
+
+    if mask is not None:
+        return cube.where(~mask, other=np.nan)
+
+    return cube
+
+
+def get_masked_cube_uniform(satobj) -> xr.DataArray:
+    """Like get_masked_cube, but for a hypso.capture_types._CaptureCommon
+    subclass (L1BCapture/L1CCapture/L1DCapture) whose current cube lives
+    under one uniform ._cube attribute rather than a level-specific name -
+    unified_mask itself needs no change, it only ever reads
+    _land_mask/_cloud_mask/_custom_masks, all present on any capture
+    regardless of which class it is."""
+    cube = satobj._cube
     mask = unified_mask(satobj)
 
     if mask is not None:

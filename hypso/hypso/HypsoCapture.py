@@ -14,6 +14,8 @@ from hypso.calibration import pipeline as calibration_pipeline
 
 from hypso.masks import pipeline as masking_pipeline
 
+from hypso import capture_types
+
 from hypso.georeferencing import geo
 
 from hypso.io import dispatch as io_dispatch
@@ -727,82 +729,44 @@ class HypsoCapture:
         return None
 
 
-    def _spawn_next_level(self) -> "HypsoCapture":
-        """Shallow-copy this object into a new instance for the to_l1b/to_l1c/
-        to_l1d family (see those methods) - self is left untouched, including
-        its own cubes. A shallow copy.copy() is enough for the big-array
-        attributes (cubes, latitudes/longitudes, calibration coefficient
-        matrices): those are only ever read, never mutated in place, anywhere
-        in this class, so aliasing the same array object between self and the
-        new instance is safe and avoids duplicating potentially large data.
-
-        Mutable *container* attributes are different - copy.copy() would alias
-        the same DatasetDict object between self and the new instance, so a
-        later mutation on one (e.g. new_obj.set_custom_mask(...)) would
-        silently also change the other. Those are container-copied
-        (DatasetDict.copy(): independent entry registry and per-entry attrs,
-        shared underlying arrays) so self and the new object can diverge
-        independently after this point.
+    def to_l1b(self, coeff_type: str = None, **kwargs) -> "capture_types.L1BCapture":
+        """Returns a new L1BCapture (see hypso.capture_types) - self
+        (including its own l1a_cube) is left completely untouched. Unlike
+        generate_l1b_cube() (kept unchanged - this method does not replace
+        it - for hypso-processing-pipeline's existing in-place, mutating
+        usage), the returned object's TYPE says it's at L1B: it has no
+        l1a_cube attribute at all, not just a cleared one - see
+        docs/architecture.rst's "Cube memory" section.
         """
-        new_obj = copy.copy(self)
-        new_obj._custom_masks = self._custom_masks.copy()
-        new_obj._l2a_cubes = self._l2a_cubes.copy()
-        return new_obj
+        return capture_types.spawn_l1b(self, coeff_type=coeff_type, **kwargs)
 
 
-    def to_l1b(self, coeff_type: str = None, **kwargs) -> "HypsoCapture":
-        """Like generate_l1b_cube(), but returns a NEW object instead of
-        mutating self - self (including its own l1a_cube) is left completely
-        untouched. The new object's l1a_cube is cleared once l1b_cube is
-        generated, so it holds only the one cube its name promises - see
-        docs/architecture.rst's "Producing a new object per level" section for
-        why this exists alongside generate_l1b_cube() (kept unchanged - and
-        this method does not replace it - for hypso-processing-pipeline's
-        existing in-place, mutating usage).
-        """
-        new_obj = self._spawn_next_level()
-        new_obj._generate_l1b_cube_impl(coeff_type=coeff_type, **kwargs)
-        new_obj._l1a_cube = None
-        return new_obj
-
-
-    def to_l1c(self, coeff_type: str = None, **kwargs) -> "HypsoCapture":
-        """Like generate_l1c_cube(), but returns a NEW object instead of
-        mutating self. See to_l1b()'s docstring for the general pattern. l1c
-        has no independent cube storage (see l1c_cube's property getter) so
-        there is nothing extra to clear beyond what generate_l1c_cube() itself
-        populates.
-        """
-        new_obj = self._spawn_next_level()
-        new_obj._generate_l1c_cube_impl(coeff_type=coeff_type, **kwargs)
-        new_obj._l1a_cube = None
-        return new_obj
+    def to_l1c(self, coeff_type: str = None, **kwargs) -> "capture_types.L1CCapture":
+        """Convenience one-hop from L1A straight to L1C - equivalent to
+        self.to_l1b(coeff_type=coeff_type, **kwargs).to_l1c(). See
+        to_l1b()'s docstring for why this returns a typed object instead of
+        another HypsoCapture."""
+        return self.to_l1b(coeff_type=coeff_type, **kwargs).to_l1c()
 
 
     def to_l1d(self, use_direct_georef=False, use_thuillier=False, use_unbinned=True,
-               generate_figures=False) -> "HypsoCapture":
-        """Like generate_l1d_cube(), but returns a NEW object instead of
-        mutating self. See to_l1b()'s docstring for the general pattern. The
-        new object's l1a_cube/l1b_cube are cleared once l1d_cube is generated,
-        so it holds only l1d_cube.
-        """
-        new_obj = self._spawn_next_level()
-        new_obj._generate_l1d_cube_impl(use_direct_georef=use_direct_georef, use_thuillier=use_thuillier,
-                                        use_unbinned=use_unbinned, generate_figures=generate_figures)
-        new_obj._l1a_cube = None
-        new_obj._l1b_cube = None
-        return new_obj
+               generate_figures=False) -> "capture_types.L1DCapture":
+        """Convenience one-hop from L1A straight to L1D - equivalent to
+        self.to_l1b().to_l1d(...). See to_l1b()'s docstring for why this
+        returns a typed object instead of another HypsoCapture."""
+        return self.to_l1b().to_l1d(use_direct_georef=use_direct_georef, use_thuillier=use_thuillier,
+                                    use_unbinned=use_unbinned, generate_figures=generate_figures)
 
 
-    def to_l2a(self, correction: str, **kwargs) -> "HypsoCapture":
-        """Like to_l1b()/to_l1c()/to_l1d(): returns a NEW object holding this
-        AC correction's L2A cube(s), instead of mutating self's shared
+    def to_l2a(self, correction: str, **kwargs) -> "capture_types.L2ACapture":
+        """Returns a new L2ACapture (see hypso.capture_types) holding this AC
+        correction's L2A cube(s), instead of mutating self's shared
         l2a_cubes container the way ac_polymer_open_output()/
         ac_acolite_open_output()/ac_ocsmart_open_output() do. self is left
         completely untouched, including its own l2a_cubes entries. Cheap for
         the same reason to_l1b()/to_l1c()/to_l1d() are - see
-        _spawn_next_level()'s docstring: big arrays (including the L1D cube
-        this is built from) are aliased, not duplicated.
+        capture_types.spawn_as's docstring: big arrays (including the L1D
+        cube this is built from) are aliased, not duplicated.
 
         Dispatches through the same hypso.ac.adapters registry self.ac uses
         (get_ac_adapter) rather than a hardcoded per-tool if/elif - any AC
@@ -820,12 +784,7 @@ class HypsoCapture:
             actually landed.
         :param kwargs: forwarded to the matching adapter's open_output.
         """
-        from hypso.ac.adapters import get_ac_adapter
-
-        adapter = get_ac_adapter(correction)
-        new_obj = self._spawn_next_level()
-        adapter.open_output(new_obj, **kwargs)
-        return new_obj
+        return capture_types.spawn_l2a(self, correction, **kwargs)
 
 
 
