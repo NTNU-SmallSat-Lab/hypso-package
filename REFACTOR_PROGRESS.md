@@ -110,6 +110,28 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-26 (×28): print() → logging conversion.** User request, independent of the HypsoCapture
+  rearchitecture. 174 live `print()` calls across 20 files converted to `logger.info`/`warning`/`error`/
+  `exception` (commit `03b604be`) - each file gets its own `logger = logging.getLogger(__name__)`, matching
+  the pattern already established in `HypsoCapture.py`/`io/dispatch.py`/`georeferencing/geo.py`.
+
+  Deliberately left as `print()`, not missed: `ac/adapters/ocsmart.py`'s `print(line, end="")` relays an
+  external subprocess's raw stdout back through `sys.stdout` in real time (documented in the surrounding
+  comment) - a logger call would add timestamp/formatting noise to output meant to pass through verbatim.
+  Also excluded: `reflectance/write_ssi_npz.py` and `utils/ncdebug.py` (developer scripts/inspection tools
+  whose whole purpose is direct console output) and `ac/loading_acolite_output.py` (a standalone personal
+  dev script, zero importers).
+
+  Small adjacent fixes made while touching this code (not a separate pass): several bare/unused-variable
+  `except:` narrowed to `except Exception:`; one re-raise in `calibration/correction.py` now chains with
+  `from ex`; a mismatched-variable bug in `load/ocsmart_h5_loader.py`'s error message (reported the wrong
+  loop variable) fixed; five `ac_*_open_output` call sites across the AC adapters switched from the
+  deprecated `l2a_cube` alias to `l2a_cubes`, avoiding a spurious `DeprecationWarning` on every AC correction
+  load.
+
+  138 tests pass (full suite, unchanged - no new tests needed, this is a pure diagnostics-output change with
+  no behavior difference for anything the test suite observes).
+
 - **2026-08-26 (×27): L1ACapture — the typed hierarchy now spans L1A through L2A.** User asked when
   `HypsoCapture` splitting into per-level classes could begin; answered directly that additive `L1ACapture`
   (mirroring `L1BCapture`/etc.) had no blocker and could start now, while retiring `HypsoCapture` itself needs
