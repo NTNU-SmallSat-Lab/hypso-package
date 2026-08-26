@@ -110,6 +110,33 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-26 (×26): georeferencing angle/track consolidation — the "HypsoBase → HypsoCapture" plan's last
+  remaining piece, closed out.** Re-scoped fresh (Explore + Plan agent, re-verified rather than executing the
+  stale original plan) since `capture_types.py` (×25) didn't exist when this was first drafted and turned out
+  to duplicate one of the two bugs fixed here.
+
+  New `hypso/georeferencing/geo_state.py`: `GeoAngles` (5 fields)/`TrackGeometry` (3 fields), frozen
+  dataclasses, held as `self.angles`/`angles_direct`/`track`/`track_direct` — frozen because
+  `capture_types.spawn_as`'s shallow `__dict__` copy would otherwise let a mutable instance's in-place field
+  mutation silently corrupt both the spawned object and its source. `framepose` (no direct variant) stays a
+  flat attribute, untouched. `HypsoCapture` gets 10 read-only compatibility properties (all 10 angle names,
+  not just the 3 confirmed externally-load-bearing ones) — the reason `io/writer.py`'s existing lookup table
+  and `write/geometry_group_writer.py`'s hardcoded reads needed **zero changes**, honoring the earlier
+  instruction to leave that specific writer alone. `georeferencing/geo.py`'s two writers and
+  `io/dispatch.py`'s load-path writer (`set_hypso_attributes`) updated to construct whole instances instead of
+  17 individual `setattr`s.
+
+  **Two real, independently-duplicated bugs fixed**: `HypsoCapture._generate_l1d_cube_impl` and
+  `capture_types._spawn_l1d` both had `hasattr(satobj, 'solar_zenith_angles_direct')` checks that would have
+  silently and permanently broken (always `True`) once that name became a property — fixed to
+  `angles_direct.solar_zenith is not None`. The `capture_types.py` copy was also a latent, already-real crash:
+  `L1BCapture` never had that property/attribute at all, so `use_direct_georef=True` would have raised
+  `AttributeError` the first time anyone exercised it (untested until this pass added coverage).
+
+  129 existing + 6 new tests (`tests/test_geo_state.py`) pass, verified in two separate runs. Commit
+  `bfc0d722`. This closes out the entire "HypsoBase → HypsoCapture" plan from ×24/×25 — nothing left pending
+  from it except Phase C/D (pipeline migration, blocked - see ×25's entry).
+
 - **New TODO (user request, flagged during ×25/×26 work, not yet acted on): HYPSO capture dimensions may
   change for future sensors/imaging modes.** `spatial_dimensions`, `frame_count`/`row_count`/`column_count`,
   `io/dispatch.py`'s `check_capture_type` "nominal"/"moon"/"wide" classification (hardcoded against `956`/
