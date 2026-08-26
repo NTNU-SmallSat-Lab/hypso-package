@@ -17,12 +17,15 @@ unsafe if a long-lived process (e.g. hypso-processing-pipeline) ever runs a v1
 correction and a v2 correction without restarting. A fresh subprocess per run
 sidesteps this entirely."""
 import json
+import logging
 import os
 import subprocess
 import tempfile
 from pathlib import Path
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 class ACRunError(RuntimeError):
@@ -147,7 +150,7 @@ def get_inferred_wavelength_band_map(satobj, inferred_wavelengths):
             index_map[ix] = a
             indices_unique.append(ix)
         else:
-            print("[WARNING] Duplicate prevented:", a, "mapped to", ix)
+            logger.warning("Duplicate prevented: %s mapped to %s", a, ix)
 
     wl_band_map = np.array(indices_unique, dtype=int)
 

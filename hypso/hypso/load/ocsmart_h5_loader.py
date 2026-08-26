@@ -1,8 +1,11 @@
+import logging
 import numpy as np
 from pathlib import Path
 import h5py
 import xarray as xr
 import re
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -38,19 +41,19 @@ def load_ocsmart_h5(h5_file_path: Path) -> dict:
 
     with h5py.File(h5_file_path, "r") as f:
         
-        print("[INFO] Opening OC-SMART HDF5 file " + str(h5_file_path))
+        logger.info("Opening OC-SMART HDF5 file %s", h5_file_path)
 
         if False:
             for name, obj in f.items():
                 if isinstance(obj, h5py.Group):
-                    print(name, "→ subgroup")
+                    logger.debug("%s -> subgroup", name)
                 elif isinstance(obj, h5py.Dataset):
-                    print(name, "→ variable (dataset)")
+                    logger.debug("%s -> variable (dataset)", name)
 
 
         for ocsmart_dataset in ocsmart_datasets:
 
-            print("[INFO] Loading " + str(ocsmart_dataset))
+            logger.info("Loading %s", ocsmart_dataset)
 
             try:
                 data = f[ocsmart_dataset][:]
@@ -69,8 +72,8 @@ def load_ocsmart_h5(h5_file_path: Path) -> dict:
                 datasets[ocsmart_dataset] = data
 
 
-            except:
-                print("[WARNING] Unable to load " + str(ocsmart_dataset))
+            except Exception:
+                logger.warning("Unable to load %s", ocsmart_dataset)
 
 
 
@@ -80,7 +83,7 @@ def load_ocsmart_h5(h5_file_path: Path) -> dict:
             ocsmart_subgroup_datasets = list(f[ocsmart_subgroup].keys())
 
 
-            print("[INFO] Accessing subgroup " + str(ocsmart_subgroup) + " (" + str(len(ocsmart_subgroup_datasets)) + " bands)")
+            logger.info("Accessing subgroup %s (%d bands)", ocsmart_subgroup, len(ocsmart_subgroup_datasets))
 
             height, width = np.array(f[ocsmart_subgroup][ocsmart_subgroup_datasets[0]][:], dtype='double').shape
             depth = len(list(f[ocsmart_subgroup].keys()))
@@ -96,9 +99,11 @@ def load_ocsmart_h5(h5_file_path: Path) -> dict:
 
                 try:
                     band = np.array(f[ocsmart_subgroup][ocsmart_subgroup_dataset][:], dtype='double')
-                    
-                except:
-                    print("[WARNING] Unable to load " + str(ocsmart_dataset))
+
+                except Exception:
+                    # was str(ocsmart_dataset) - a leftover outer-loop variable
+                    # name, not the dataset actually being loaded here
+                    logger.warning("Unable to load %s", ocsmart_subgroup_dataset)
                     break
 
                 data[:,:,idx] = band

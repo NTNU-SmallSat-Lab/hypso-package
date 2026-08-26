@@ -1,7 +1,11 @@
+import logging
+
 import numpy as np
 from scipy import interpolate
 from pathlib import Path
 import copy
+
+logger = logging.getLogger(__name__)
 
 def crop_and_bin_matrix(matrix, x_start, x_stop, y_start, y_stop, bin_x=1, bin_y=1) -> np.ndarray:
     """ Crops matrix to AOI. Bins matrix so that the average value in the bin_x
@@ -88,9 +92,9 @@ def read_coeffs_from_file(coeff_path: str, coeff_type: str, x_start: int=None,  
                 coefficients = None
 
     except BaseException as ex:
-        print(ex)
+        logger.exception("Could not read coefficients file.")
         coefficients = None
-        raise ValueError("[ERROR] Could not read coefficients file.")
+        raise ValueError("Could not read coefficients file.") from ex
 
     return coefficients
 

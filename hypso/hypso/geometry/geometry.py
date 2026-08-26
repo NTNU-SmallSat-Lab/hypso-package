@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import math as m
 import pandas as pd
@@ -18,6 +20,8 @@ from .utils import mat_from_quat, \
 
 from .time import get_julian_day_number, \
                   get_greenwich_mean_sidereal_time_seconds
+
+logger = logging.getLogger(__name__)
 
 # PARAMETERS ----------------------------------------------------------------------
 
@@ -88,16 +92,16 @@ def interpolate_at_frame(adcs_timestamps: np.ndarray, position: np.ndarray,
     """
 
     if adcs_timestamps.shape[0] != position.shape[0]:
-        print('ERROR: ADCS timestamps size does not match ADCS positions size')
+        logger.error("ADCS timestamps size does not match ADCS positions size")
         return -1
     if adcs_timestamps.shape[0] != quaternion.shape[0]:
-        print('ERROR: ADCS timestamps size does not match ADCS quaternions size')
+        logger.error("ADCS timestamps size does not match ADCS quaternions size")
         return -1
 
     frame_count = lines_timestamps.shape[0]
 
     if verbose:
-        print('[INFO] ADCS samples:', adcs_timestamps.shape[0])
+        logger.info("ADCS samples: %d", adcs_timestamps.shape[0])
 
     # Workaround for making proper timestamps based on framerate and exposure time
     if framerate > 0.0:
@@ -117,23 +121,23 @@ def interpolate_at_frame(adcs_timestamps: np.ndarray, position: np.ndarray,
     frame_ts_end = lines_timestamps[-1]
 
     if verbose:
-        print(f'[INFO] ADCS time range: {adcs_ts_start:17.6f} to {adcs_ts_end:17.6f}')
-        print(f'[INFO] Frame time range: {frame_ts_start:17.6f} to {frame_ts_end:17.6f}')
+        logger.info("ADCS time range: %17.6f to %17.6f", adcs_ts_start, adcs_ts_end)
+        logger.info("Frame time range: %17.6f to %17.6f", frame_ts_start, frame_ts_end)
 
     # The ADCS time range needs to completely include the frames/lines time range
     if frame_ts_start < adcs_ts_start:
-        print('[ERROR] Frame timestamps begin earlier than ADCS data!')
+        logger.error("Frame timestamps begin earlier than ADCS data!")
         return -1
     if frame_ts_end > adcs_ts_end:
-        print('[ERROR] Frame timestamps end later than ADCS data!')
+        logger.error("Frame timestamps end later than ADCS data!")
         return -1
 
     if verbose:
         # Printing how many samples there are in the hyperspectral data time range
         a = adcs_timestamps[:] > lines_timestamps[0]
         b = adcs_timestamps[:] < lines_timestamps[-1]
-        print(f'[INFO] {np.sum(a & b)} sample(s) inside frame time range')
-        print(f'[INFO] Interpolating {frame_count:d} frames')
+        logger.info("%d sample(s) inside frame time range", np.sum(a & b))
+        logger.info("Interpolating %d frames", frame_count)
 
     interpolation_method = 'linear'  # 'cubic' causes errors sometimes: "ValueError: Expect x to not have duplicates"
 
@@ -225,7 +229,7 @@ def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_o
     body_z_itrs = np.zeros([frame_count, 3])
 
     if verbose:
-        print('[INFO] Computing pixel latitude and longitude coordinates ...')  # computing pixel lat,lon's
+        logger.info("Computing pixel latitude and longitude coordinates ...")  # computing pixel lat,lon's
 
     # computing lat,lons using astropy
     pointing_off_earth_indicator = 0
@@ -336,7 +340,7 @@ def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_o
             pointing_off_earth_indicator += 1
 
     if pointing_off_earth_indicator != frame_count:
-        print('[ERROR] At least one pixel was pointing beyond the earth\'s horizon!')
+        logger.error("At least one pixel was pointing beyond the earth's horizon!")
         return -1, -1, -1
 
     # COMPUTING SATELLITE TRACK TODO
@@ -351,7 +355,7 @@ def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_o
     '''
 
     if verbose:
-        print('[INFO] Interpolating pixel coordinate gaps...')
+        logger.info("Interpolating pixel coordinate gaps...")
 
     pixels_lat = np.zeros([frame_count, image_height])
     pixels_lon = np.zeros([frame_count, image_height])
@@ -372,7 +376,7 @@ def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_o
         pixels_pathlength[i, :] = si.griddata(subsample_pixels_indices, pathlengths, all_pixels_indices, method=interpolation_method)
 
     if verbose:
-        print('[INFO] Direct georeferencing done')
+        logger.info("Direct georeferencing done")
 
     return pixels_lat, pixels_lon, [campos_itrs, body_x_itrs, body_z_itrs, pixels_pathlength]
 
@@ -395,17 +399,17 @@ def compute_local_angles(framepose_data: np.ndarray,
     :return: Returns array of local angles, and a list of numpy arrays of the satellite and sun zenith and azimuth pos
     """
     if verbose:
-        print('[INFO] Computing local angles (sun and satellite azimuth and zenith angles) ...')
+        logger.info("Computing local angles (sun and satellite azimuth and zenith angles) ...")
 
     times = framepose_data[:,0]
     pos_teme = framepose_data[:,2:5]
 
     if times.shape[0] != lats.shape[0]:
-        print(f'[ERROR] Size of time array not the same as size of latlons!: {times.shape[0]} != {lats.shape[0]}')
+        logger.error("Size of time array not the same as size of latlons!: %d != %d", times.shape[0], lats.shape[0])
         return None
 
     if lats.shape != lons.shape:
-        print(f'[ERROR] Size of latitudes and longitudes array do not match!: {lats.shape} != {lons.shape}')
+        logger.error("Size of latitudes and longitudes array do not match!: %s != %s", lats.shape, lons.shape)
         return None
 
     frame_count = times.shape[0]
@@ -419,7 +423,7 @@ def compute_local_angles(framepose_data: np.ndarray,
     poses_astropy_teme = astropy.coordinates.TEME(astropy.coordinates.CartesianRepresentation(pos_teme.transpose(1, 0) * astropy.units.m), obstime=times_astropy)
 
     if verbose:
-        print('[INFO] Using astropy on a subsampling of pixels ... (TODO skyfield may be faster)')
+        logger.info("Using astropy on a subsampling of pixels ... (TODO skyfield may be faster)")
 
     for i in range(frame_count):
         sun_pos = astropy.coordinates.get_sun(times_astropy[i])
@@ -445,7 +449,7 @@ def compute_local_angles(framepose_data: np.ndarray,
     sat_zen_full = np.zeros([frame_count, image_height])
 
     if verbose:
-        print('[INFO] Interpolating the rest of the pixels ...')
+        logger.info("Interpolating the rest of the pixels ...")
 
     interpolation_method = 'cubic'
 
@@ -458,7 +462,7 @@ def compute_local_angles(framepose_data: np.ndarray,
         sat_zen_full[i,:] = si.griddata(subsample_pixels_indices, sat_zen_samples[i,:], all_pixels_indices, method=interpolation_method)
 
     if verbose:
-        print('[INFO] Computing local angles done')
+        logger.info("Computing local angles done")
 
     return sun_azi_full, sun_zen_full, sat_azi_full, sat_zen_full
 

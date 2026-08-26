@@ -1,3 +1,5 @@
+import logging
+
 from .utils import set_or_create_attr
 from pathlib import Path
 import netCDF4 as nc
@@ -7,6 +9,8 @@ from .calibration_filenames_writer import calibration_filenames_writer
 
 from matplotlib import pyplot as plt
 
+logger = logging.getLogger(__name__)
+
 def write_products_nc_file(satobj, file_name: Path, overwrite: bool = False, **kwargs) -> None:
     
     path = Path(file_name)
@@ -14,7 +18,7 @@ def write_products_nc_file(satobj, file_name: Path, overwrite: bool = False, **k
     if Path(file_name).is_file() and not overwrite:
 
         if satobj.VERBOSE:
-            print("[INFO] NetCDF file already exists.")
+            logger.info("NetCDF file already exists.")
 
         return None
 
@@ -65,7 +69,7 @@ def products_nc_writer(satobj, dst_nc: str, datacube: str = True) -> None:
 
         for name, product in satobj.products.items():
 
-            print('Writing ' + str(name))
+            logger.info("Writing %s", name)
 
             #coords = list(product.coords)
 

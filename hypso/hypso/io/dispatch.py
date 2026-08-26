@@ -111,7 +111,7 @@ def load_capture_file(satobj, path: Path, load_cube: bool = True) -> None:
 
     match product_level:
         case "l1a":
-            if satobj.VERBOSE: print('[INFO] Loading L1a capture ' + satobj.capture_name)
+            if satobj.VERBOSE: logger.info("Loading L1a capture %s", satobj.capture_name)
 
             load_func = load_l1a_nc
             cube_name = "l1a_cube"
@@ -120,7 +120,7 @@ def load_capture_file(satobj, path: Path, load_cube: bool = True) -> None:
             setattr(satobj, "product_symbol", "DN")
 
         case "l1b":
-            if satobj.VERBOSE: print('[INFO] Loading L1b capture ' + satobj.capture_name)
+            if satobj.VERBOSE: logger.info("Loading L1b capture %s", satobj.capture_name)
 
             load_func = load_l1b_nc
             cube_name = "l1b_cube"
@@ -129,7 +129,7 @@ def load_capture_file(satobj, path: Path, load_cube: bool = True) -> None:
             setattr(satobj, "product_symbol", "Lt")
 
         case "l1c":
-            if satobj.VERBOSE: print('[INFO] Loading L1c capture ' + satobj.capture_name)
+            if satobj.VERBOSE: logger.info("Loading L1c capture %s", satobj.capture_name)
 
             load_func = load_l1c_nc
             cube_name = "l1b_cube"  # L1c cube is the same as the L1b cube
@@ -138,7 +138,7 @@ def load_capture_file(satobj, path: Path, load_cube: bool = True) -> None:
             setattr(satobj, "product_symbol", "lt")
 
         case "l1d":
-            if satobj.VERBOSE: print('[INFO] Loading L1d capture ' + satobj.capture_name)
+            if satobj.VERBOSE: logger.info("Loading L1d capture %s", satobj.capture_name)
 
             load_func = load_l1d_nc
             cube_name = "l1d_cube"
@@ -147,14 +147,14 @@ def load_capture_file(satobj, path: Path, load_cube: bool = True) -> None:
             setattr(satobj, "product_symbol", "rhot")
 
         case "l2a":
-            if satobj.VERBOSE: print('[INFO] Loading L2a capture ' + satobj.capture_name)
+            if satobj.VERBOSE: logger.info("Loading L2a capture %s", satobj.capture_name)
 
             ac = getattr(satobj, 'atmospheric_correction', None)
 
             if ac is not None:
-                print("[INFO] L2a Detected atmospheric correction: " + str(ac))
+                logger.info("L2a Detected atmospheric correction: %s", ac)
             else:
-                print("[WARNING] No L2a atmospheric correction detected.")
+                logger.warning("No L2a atmospheric correction detected.")
                 setattr(satobj, "atmospheric_correction", "default")
 
             load_func = load_l2a_nc
@@ -164,8 +164,7 @@ def load_capture_file(satobj, path: Path, load_cube: bool = True) -> None:
             setattr(satobj, "product_symbol", "Rrs")  # TODO: polymer and dps is rho_w
 
         case _:
-            print("[ERROR] Unsupported product level:")
-            print(product_level)
+            logger.error("Unsupported product level: %s", product_level)
             return None
 
     # TODO: find a better method to pass all of this information
@@ -202,7 +201,7 @@ def load_capture_file(satobj, path: Path, load_cube: bool = True) -> None:
             setattr(satobj, cube_name, nc_cube)
 
     else:
-        print("[WARNING] Datacube is not loaded!")
+        logger.warning("Datacube is not loaded!")
 
 
     # OC-SMART's own staged-input/output naming (and its output directory)
@@ -275,7 +274,7 @@ def set_hypso_attributes(satobj) -> None:
     satobj.samples = satobj.image_height  # AKA Cols
     satobj.spatial_dimensions = (satobj.metadata.capture_config.attrs["frame_count"], satobj.image_height)
     if satobj.VERBOSE:
-        print(f"[INFO] Capture spatial dimensions: {satobj.spatial_dimensions}")
+        logger.info("Capture spatial dimensions: %s", satobj.spatial_dimensions)
 
 
     # Calibration related atrributes
@@ -430,9 +429,9 @@ def set_hypso_attributes(satobj) -> None:
     # assuming some default value if framerate and exposure not available
     try:
         satobj.end_timestamp_capture = satobj.start_timestamp_capture + satobj.metadata.capture_config.attrs["frame_count"] / satobj.metadata.capture_config.attrs["framerate"] + satobj.metadata.capture_config.attrs["exposure"] / 1000.0
-    except:
+    except Exception:
         if satobj.VERBOSE:
-            print("[WARNING] Framerate or exposure values not found. Assuming 20.0 for each.")
+            logger.warning("Framerate or exposure values not found. Assuming 20.0 for each.")
         satobj.end_timestamp_capture = satobj.start_timestamp_capture + satobj.metadata.capture_config.attrs["frame_count"] / 20.0 + 20.0 / 1000.0
 
     # using 'awk' for floating point arithmetic ('expr' only support integer arithmetic): {printf \"%.2f\n\", 100/3}"
@@ -467,8 +466,8 @@ def check_capture_type(satobj) -> None:
     else:
         # EXPERIMENTAL_FEATURES
         if satobj.VERBOSE:
-            print("[WARNING] Number of Rows (AKA frame_count) Is Not Standard.")
+            logger.warning("Number of Rows (AKA frame_count) Is Not Standard.")
         satobj.capture_type = "custom"
 
     if satobj.VERBOSE:
-        print(f"[INFO] Capture capture type: {satobj.capture_type}")
+        logger.info("Capture capture type: %s", satobj.capture_type)

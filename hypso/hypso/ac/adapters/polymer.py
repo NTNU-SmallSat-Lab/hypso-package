@@ -11,6 +11,7 @@ that dotted name is resolved *by string* inside Polymer (see ac_polymer.py's
 own docstring for the mechanism and why SRF_GETTER_PATH is derived rather than
 hand-typed), and the interpreter running Polymer's subprocess must have
 `hypso` importable for that resolution to succeed."""
+import logging
 import sys
 from pathlib import Path
 
@@ -20,6 +21,8 @@ import xarray as xr
 from hypso.load import load_polymer_l2_v1_nc, load_polymer_l2_v2_nc
 
 from .base import ACAdapter, get_inferred_wavelength_band_map, run_subprocess_driver
+
+logger = logging.getLogger(__name__)
 
 
 class PolymerAdapter(ACAdapter):
@@ -278,10 +281,10 @@ class PolymerAdapter(ACAdapter):
         try:
             polymer_l2_output_nc_file = Path(output_file).rename(polymer_l2_output_nc_file)
         except FileNotFoundError:
-            print("[WARNING] Polymer L2 NetCDF output file has already been renamed.")
+            logger.warning("Polymer L2 NetCDF output file has already been renamed.")
 
-        print(output_file)
-        print(polymer_l2_output_nc_file)
+        logger.debug("Polymer subprocess output_file: %s", output_file)
+        logger.debug("Polymer L2 NetCDF output file: %s", polymer_l2_output_nc_file)
 
         return Path(polymer_l2_output_nc_file)
 
@@ -303,13 +306,13 @@ class PolymerAdapter(ACAdapter):
             match input_product_level.lower():
 
                 case "l1c":
-                    print("[INFO] Reading Polymer L2 NetCDF output file generated using L1c product.")
+                    logger.info("Reading Polymer L2 NetCDF output file generated using L1c product.")
                     # parent_dir/polymer/, not parent_dir directly - see
                     # run_correction's matching change.
                     polymer_l2_output_nc_file = Path(satobj.parent_dir, "polymer", str(satobj.l1c_name)+ ".polymer.nc") #frohavet_2025-05-22T11-20-44Z-l1c.nc.polymer.nc
 
                 case "l1d":
-                    print("[INFO] Reading Polymer L2 NetCDF output file generated using L1d product.")
+                    logger.info("Reading Polymer L2 NetCDF output file generated using L1d product.")
                     polymer_l2_output_nc_file = Path(satobj.parent_dir, "polymer", str(satobj.l1d_name) + ".polymer.nc") #frohavet_2025-05-22T11-20-44Z-l1d.nc.polymer.nc
 
                 case _:
@@ -343,11 +346,11 @@ class PolymerAdapter(ACAdapter):
                     cube = np.full(shape=shape, fill_value=np.nan)
                     cube[:,:,wl_band_map] = polymer_datasets[key]
 
-                    satobj.l2a_cube["polymer"] = cube
-                    satobj.l2a_cube["polymer"].attrs['l2_variable_name'] = key
+                    satobj.l2a_cubes["polymer"] = cube
+                    satobj.l2a_cubes["polymer"].attrs['l2_variable_name'] = key
 
-                except Exception as ex:
-                    print("[ERROR] Unable to load Polymer output dataset.")
+                except Exception:
+                    logger.exception("Unable to load Polymer output dataset.")
 
             elif version == "v2":
 
@@ -365,14 +368,14 @@ class PolymerAdapter(ACAdapter):
                     cube = np.full(shape=shape, fill_value=np.nan)
                     cube[:,:,wl_band_map] = polymer_datasets[key]
 
-                    satobj.l2a_cube["polymer"] = cube
-                    satobj.l2a_cube["polymer"].attrs['l2_variable_name'] = key
+                    satobj.l2a_cubes["polymer"] = cube
+                    satobj.l2a_cubes["polymer"].attrs['l2_variable_name'] = key
 
-                except Exception as ex:
-                    print("[ERROR] Unable to load Polymer output dataset.")
+                except Exception:
+                    logger.exception("Unable to load Polymer output dataset.")
 
         else:
-            print("[ERROR] Polymer L2 NetCDF output file " + str(polymer_l2_output_nc_file) + " does not exist.")
+            logger.error("Polymer L2 NetCDF output file %s does not exist.", polymer_l2_output_nc_file)
             polymer_datasets = None
 
 

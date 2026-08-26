@@ -1,9 +1,13 @@
+import logging
+
 import numpy as np
 import netCDF4 as nc
 from pathlib import Path
 from typing import Tuple
 import xarray as xr
 import re
+
+logger = logging.getLogger(__name__)
 
 
 # For NetCDF output from Feb 2026 version of Polymer
@@ -30,10 +34,10 @@ def load_polymer_l2_v2_nc(nc_file_path: Path) -> dict:
 
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
 
-        print("[INFO] Opening Polymer L2 NetCDF output file " + str(nc_file_path))
+        logger.info("Opening Polymer L2 NetCDF output file %s", nc_file_path)
 
 
-        varnames = list(f.variables) 
+        varnames = list(f.variables)
 
         #print(varnames)
 
@@ -41,7 +45,7 @@ def load_polymer_l2_v2_nc(nc_file_path: Path) -> dict:
 
         for polymer_dataset in polymer_datasets:
 
-            print("[INFO] Loading " + str(polymer_dataset))
+            logger.info("Loading %s", polymer_dataset)
 
             try:
                 data = f[polymer_dataset][:]
@@ -57,8 +61,8 @@ def load_polymer_l2_v2_nc(nc_file_path: Path) -> dict:
                 datasets[polymer_dataset] = data
 
 
-            except:
-                print("[WARNING] Unable to load " + str(polymer_dataset))
+            except Exception:
+                logger.warning("Unable to load %s", polymer_dataset)
 
 
 
@@ -104,16 +108,16 @@ def load_polymer_l2_v1_nc(nc_file_path: Path) -> dict:
 
     with nc.Dataset(nc_file_path, format="NETCDF4") as f:
 
-        print("[INFO] Opening Polymer L2 NetCDF output file " + str(nc_file_path))
+        logger.info("Opening Polymer L2 NetCDF output file %s", nc_file_path)
 
 
-        varnames = list(f.variables) 
+        varnames = list(f.variables)
 
         rho_w_varnames = sorted([var for var in varnames if var.startswith('rho_w_')])
 
         for polymer_dataset in polymer_datasets:
 
-            print("[INFO] Loading " + str(polymer_dataset))
+            logger.info("Loading %s", polymer_dataset)
 
             try:
                 data = f[polymer_dataset][:]
@@ -129,11 +133,11 @@ def load_polymer_l2_v1_nc(nc_file_path: Path) -> dict:
                 datasets[polymer_dataset] = data
 
 
-            except:
-                print("[WARNING] Unable to load " + str(polymer_dataset))
+            except Exception:
+                logger.warning("Unable to load %s", polymer_dataset)
 
 
-        print("[INFO] Accessing rho_w reflectances (" + str(len(rho_w_varnames)) + " bands)")
+        logger.info("Accessing rho_w reflectances (%d bands)", len(rho_w_varnames))
 
         data = _load_reflectances_cube_v1(f, rho_w_varnames, datasets['bands'], dim_names_3d)
 
@@ -147,12 +151,11 @@ def load_polymer_l2_v1_nc(nc_file_path: Path) -> dict:
 
 
 
-
 def _load_reflectances_cube_v2(f, refl_vars, dim_names_3d):
 
 
     if len(refl_vars) == 0:
-        print("[ERROR] No datasets found!")
+        logger.error("No datasets found!")
         return None
 
     height, width = np.array(f[refl_vars[0]][:], dtype='double').shape
@@ -167,11 +170,11 @@ def _load_reflectances_cube_v2(f, refl_vars, dim_names_3d):
 
         try:
             band = np.array(f[refl_var][:], dtype='double')
-            
+
             attrs = {a: getattr(f[refl_var], a) for a in f[refl_var].ncattrs()}
 
-        except:
-            print("[WARNING] Unable to load " + str(refl_var))
+        except Exception:
+            logger.warning("Unable to load %s", refl_var)
             break
 
         data[:,:,idx] = band
@@ -194,7 +197,7 @@ def _load_reflectances_cube_v1(f, refl_vars, wavelengths, dim_names_3d):
 
 
     if len(refl_vars) == 0:
-        print("[ERROR] No datasets found!")
+        logger.error("No datasets found!")
         return None
 
     height, width = np.array(f[refl_vars[0]][:], dtype='double').shape
@@ -209,11 +212,11 @@ def _load_reflectances_cube_v1(f, refl_vars, wavelengths, dim_names_3d):
 
         try:
             band = np.array(f[refl_var][:], dtype='double')
-            
+
             attrs = {a: getattr(f[refl_var], a) for a in f[refl_var].ncattrs()}
 
-        except:
-            print("[WARNING] Unable to load " + str(refl_var))
+        except Exception:
+            logger.warning("Unable to load %s", refl_var)
             break
 
         data[:,:,idx] = band

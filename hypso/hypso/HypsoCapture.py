@@ -619,7 +619,7 @@ class HypsoCapture:
 
     def _generate_l1b_cube_impl(self, coeff_type: str = None, **kwargs) -> None:
 
-        print("[INFO] Generating L1b cube")
+        logger.info("Generating L1b cube")
         if self.l1a_cube is None:
             return None
 
@@ -646,7 +646,7 @@ class HypsoCapture:
 
     def _generate_l1c_cube_impl(self, coeff_type: str = None, **kwargs) -> None:
 
-        print("[INFO] Generating L1c cube")
+        logger.info("Generating L1c cube")
         if self.l1b_cube is None:
             self._generate_l1b_cube_impl(coeff_type=coeff_type, **kwargs)
 
@@ -729,7 +729,7 @@ class HypsoCapture:
 
     def _generate_l1d_cube_impl(self, use_direct_georef=False, use_thuillier=False, use_unbinned=True, generate_figures=False) -> None:
 
-        print("[INFO] Generating L1d cube")
+        logger.info("Generating L1d cube")
         self._get_fwhm()
         self._get_fwhm_unbinned()
 
@@ -745,7 +745,7 @@ class HypsoCapture:
         if use_direct_georef and self.angles_direct.solar_zenith is not None:
 
             if self.VERBOSE:
-                print('[WARNING] Computing TOA reflectance using DIRECT georeferencing geometry.')
+                logger.warning("Computing TOA reflectance using DIRECT georeferencing geometry.")
 
             solar_zenith_angles=self.solar_zenith_angles_direct
         else:

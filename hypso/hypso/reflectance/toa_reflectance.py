@@ -1,4 +1,5 @@
 
+import logging
 import warnings
 from importlib.resources import files
 from dateutil import parser
@@ -9,6 +10,8 @@ from scipy.interpolate import CubicSpline
 import matplotlib.pyplot as plt
 from scipy.sparse import lil_matrix, csr_matrix, vstack, csr_matrix
 from tqdm import tqdm
+
+logger = logging.getLogger(__name__)
 
 
 def compute_toa_reflectance(sensor_wavelengths,
@@ -280,13 +283,13 @@ def bin_srf(srfs_csr, bin_factor, solar_wavelengths=None, generate_figures=False
     # Calculate number of bins
     n_bins = n_bands // bin_factor
     if n_bands % bin_factor != 0:
-        print(f"[WARNING] {n_bands} bands not evenly divisible by bin_factor {bin_factor}")
-        print(f"[WARNING] Truncating to {n_bins * bin_factor} bands")
+        logger.warning("%d bands not evenly divisible by bin_factor %d", n_bands, bin_factor)
+        logger.warning("Truncating to %d bands", n_bins * bin_factor)
         # Truncate to make evenly divisible
         srfs_csr = srfs_csr[:n_bins * bin_factor, :]
         n_bands = n_bins * bin_factor
     
-    print(f"[INFO] Binning {n_bands} bands into {n_bins} bins (factor={bin_factor})")
+    logger.info("Binning %d bands into %d bins (factor=%d)", n_bands, n_bins, bin_factor)
     
     # Initialize list to store binned SRFs
     binned_rows = []
@@ -320,7 +323,7 @@ def bin_srf(srfs_csr, bin_factor, solar_wavelengths=None, generate_figures=False
     # Stack all binned rows into a single CSR matrix
     binned_srfs_csr = vstack(binned_rows, format='csr')
     
-    print(f"[INFO] Binned SRF matrix shape: {binned_srfs_csr.shape}")
+    logger.info("Binned SRF matrix shape: %s", binned_srfs_csr.shape)
     #print(f"Non-zero elements: {binned_srfs_csr.nnz}")
     #print(f"Average non-zero per binned band: {binned_srfs_csr.nnz / n_bins:.1f}")
     
@@ -522,7 +525,7 @@ def load_ssi():
 
 def load_thuillier_ssi():
 
-    print("[WARNING] Using Thuillier SSI reference spectrum for ToA reflectance processing!")
+    logger.warning("Using Thuillier SSI reference spectrum for ToA reflectance processing!")
     solar_data_path = str(files('hypso.reflectance').joinpath("Solar_irradiance_Thuillier_2002.csv"))
     solar_df = pd.read_csv(solar_data_path)
     ssi = np.array(solar_df['mW/m2/nm'])

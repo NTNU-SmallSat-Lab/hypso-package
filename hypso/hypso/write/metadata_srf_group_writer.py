@@ -1,7 +1,11 @@
+import logging
+
 from .utils import set_or_create_attr
 from pathlib import Path
 import netCDF4 as nc
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 def metadata_srf_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', COMP_LEVEL = 4, COMP_SHUFFLE = True) -> None:
     """
@@ -35,8 +39,8 @@ def metadata_srf_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib',
                 complevel=COMP_LEVEL,
                 shuffle=COMP_SHUFFLE)
             esun_var[:] = esun
-        except Exception as ex:
-            print(ex)
+        except Exception:
+            logger.exception("Failed to write SRF metadata variable.")
         
 
     if (hasattr(satobj, 'esun_wl') and satobj.esun_wl is not None):
@@ -52,8 +56,8 @@ def metadata_srf_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib',
                 complevel=COMP_LEVEL,
                 shuffle=COMP_SHUFFLE)
             esun_wl_var[:] = esun_wl
-        except Exception as ex:
-            print(ex)
+        except Exception:
+            logger.exception("Failed to write SRF metadata variable.")
 
 
     if (hasattr(satobj, 'effective_fwhm') and satobj.effective_fwhm is not None):
@@ -69,8 +73,8 @@ def metadata_srf_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib',
                 complevel=COMP_LEVEL,
                 shuffle=COMP_SHUFFLE)
             effective_fwhm_var[:] = effective_fwhm
-        except Exception as ex:
-            print(ex)
+        except Exception:
+            logger.exception("Failed to write SRF metadata variable.")
 
 
 
@@ -89,8 +93,8 @@ def metadata_srf_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib',
                 complevel=COMP_LEVEL,
                 shuffle=COMP_SHUFFLE)
             csiro_ssi_var[:] = csiro_ssi
-        except Exception as ex:
-            print(ex)
+        except Exception:
+            logger.exception("Failed to write SRF metadata variable.")
 
 
     if (hasattr(satobj, 'csiro_solar_wavelengths') and satobj.csiro_solar_wavelengths is not None):
@@ -106,8 +110,8 @@ def metadata_srf_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib',
                 complevel=COMP_LEVEL,
                 shuffle=COMP_SHUFFLE)
             csiro_solar_wavelengths_var[:] = csiro_solar_wavelengths
-        except Exception as ex:
-            print(ex)
+        except Exception:
+            logger.exception("Failed to write SRF metadata variable.")
 
     if (hasattr(satobj, 'csiro_binned_srfs') and satobj.csiro_binned_srfs is not None):
 
@@ -125,8 +129,8 @@ def metadata_srf_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib',
                 complevel=COMP_LEVEL,
                 shuffle=COMP_SHUFFLE)
             csiro_binned_srfs_var[:] = csiro_binned_srfs
-        except Exception as ex:
-            print(ex)
+        except Exception:
+            logger.exception("Failed to write SRF metadata variable.")
 
     if (hasattr(satobj, 'csiro_effective_fwhm') and satobj.csiro_effective_fwhm is not None):
 
@@ -141,8 +145,8 @@ def metadata_srf_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib',
                 complevel=COMP_LEVEL,
                 shuffle=COMP_SHUFFLE)
             csiro_effective_fwhm_var[:] = csiro_effective_fwhm
-        except Exception as ex:
-            print(ex)
+        except Exception:
+            logger.exception("Failed to write SRF metadata variable.")
 
 
     if (hasattr(satobj, 'csiro_esun') and satobj.csiro_esun is not None):
@@ -158,8 +162,8 @@ def metadata_srf_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib',
                 complevel=COMP_LEVEL,
                 shuffle=COMP_SHUFFLE)
             csiro_esun_var[:] = csiro_esun
-        except Exception as ex:
-            print(ex)
+        except Exception:
+            logger.exception("Failed to write SRF metadata variable.")
 
 
     return None

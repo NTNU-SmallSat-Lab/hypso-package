@@ -27,6 +27,7 @@ checks anywhere - they work unmodified against any object shaped like a
 capture, which is what makes this additive rather than a rewrite.
 """
 import copy
+import logging
 from typing import ClassVar, Union
 
 import numpy as np
@@ -34,6 +35,8 @@ import xarray as xr
 
 from hypso.containers import as_dataarray
 from hypso.masks import pipeline as masking_pipeline
+
+logger = logging.getLogger(__name__)
 
 # Per-level attrs stamped onto the uniform ._cube attribute - same table
 # HypsoCapture.py uses for its own l1a_cube/l1b_cube/l1c_cube/l1d_cube
@@ -185,7 +188,7 @@ def _spawn_l1d(source, use_direct_georef=False, use_thuillier=False, use_unbinne
     # untested until now.
     if use_direct_georef and new_obj.angles_direct.solar_zenith is not None:
         if new_obj.VERBOSE:
-            print('[WARNING] Computing TOA reflectance using DIRECT georeferencing geometry.')
+            logger.warning("Computing TOA reflectance using DIRECT georeferencing geometry.")
         solar_zenith_angles = new_obj.angles_direct.solar_zenith
     else:
         solar_zenith_angles = new_obj.angles.solar_zenith

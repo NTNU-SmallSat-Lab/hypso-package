@@ -6,6 +6,7 @@ path/settings resolution stays here in the parent; everything past "import
 ACOLITE itself" happens in _acolite_driver.py. Every other method is
 HypsoCapture's corresponding ac_acolite_* method body relocated verbatim (see
 base.py's ACAdapter docstring)."""
+import logging
 import sys
 from pathlib import Path
 
@@ -14,6 +15,8 @@ import numpy as np
 from hypso.load import load_acolite_l2r_nc, load_acolite_l2w_nc
 
 from .base import ACAdapter, get_inferred_wavelength_band_map, run_subprocess_driver
+
+logger = logging.getLogger(__name__)
 
 
 class ACOLITEAdapter(ACAdapter):
@@ -43,7 +46,7 @@ class ACOLITEAdapter(ACAdapter):
         """
         acolite_path = Path(satobj.acolite_dir).absolute()
 
-        print("[INFO] Running ACOLITE atmospheric correction installed in " + str(acolite_path))
+        logger.info("Running ACOLITE atmospheric correction installed in %s", acolite_path)
 
         # load() only applies a sensor's own config/defaults/<name>.txt (e.g.
         # HYPSO2.txt's dsf_wave_range=450,750) when explicitly given that
@@ -55,10 +58,10 @@ class ACOLITEAdapter(ACAdapter):
         settings_arg = str(settings_file) if settings_file is not None else satobj.platform.upper()
 
         if input_product_level.upper() == 'L1D':
-            print("[INFO] Using L1d NetCDF as ACOLITE input.")
+            logger.info("Using L1d NetCDF as ACOLITE input.")
             inputfile = str(satobj.l1d_nc_file)  # L1d reflectance
         else:
-            print("[INFO] Using L1c NetCDF as ACOLITE input.")
+            logger.info("Using L1c NetCDF as ACOLITE input.")
             inputfile = str(satobj.l1c_nc_file)  # default L1c (radiance)
 
         # capture_dir/acolite/, not capture_dir directly (2026-08-05) - see
@@ -67,7 +70,7 @@ class ACOLITEAdapter(ACAdapter):
         # per-run log/settings .txt files out of the capture directory root).
         acolite_output_dir = Path(satobj.capture_dir, "acolite")
         acolite_output_dir.mkdir(parents=True, exist_ok=True)
-        print("[INFO] Writing ACOLITE output to " + str(acolite_output_dir))
+        logger.info("Writing ACOLITE output to %s", acolite_output_dir)
 
         settings_overrides = {
             "inputfile": inputfile,
@@ -105,7 +108,7 @@ class ACOLITEAdapter(ACAdapter):
             extra_env=extra_env,
         )
 
-        print("[INFO] ACOLITE atmospheric correction complete.")
+        logger.info("ACOLITE atmospheric correction complete.")
 
         return None
 
@@ -135,7 +138,7 @@ class ACOLITEAdapter(ACAdapter):
 
 
         if acolite_l2r_output_nc_file.is_file():
-            print("[INFO] Opening ACOLITE L2R NetCDF output file " + str(acolite_l2r_output_nc_file))
+            logger.info("Opening ACOLITE L2R NetCDF output file %s", acolite_l2r_output_nc_file)
             l2r_datasets = load_acolite_l2r_nc(acolite_l2r_output_nc_file)
 
             try:
@@ -150,20 +153,20 @@ class ACOLITEAdapter(ACAdapter):
                 cube = np.full(shape=shape, fill_value=np.nan)
                 cube[:,:,wl_band_map] = l2r_datasets[key]
 
-                satobj.l2a_cube["acolite_l2r"] = cube
-                satobj.l2a_cube["acolite_l2r"].attrs['l2_variable_name'] = key
+                satobj.l2a_cubes["acolite_l2r"] = cube
+                satobj.l2a_cubes["acolite_l2r"].attrs['l2_variable_name'] = key
 
-            except Exception as ex:
-                print("[ERROR] Unable to load ACOLITE L2R dataset.")
+            except Exception:
+                logger.exception("Unable to load ACOLITE L2R dataset.")
                 l2r_datasets = None
 
         else:
-            print("[ERROR] ACOLITE L2R NetCDF output file " + str(acolite_l2r_output_nc_file) + " does not exist.")
+            logger.error("ACOLITE L2R NetCDF output file %s does not exist.", acolite_l2r_output_nc_file)
             l2r_datasets = None
 
 
         if acolite_l2w_output_nc_file.is_file():
-            print("[INFO] Opening ACOLITE L2W NetCDF output file " + str(acolite_l2w_output_nc_file))
+            logger.info("Opening ACOLITE L2W NetCDF output file %s", acolite_l2w_output_nc_file)
             l2w_datasets = load_acolite_l2w_nc(acolite_l2w_output_nc_file)
 
             try:
@@ -178,15 +181,15 @@ class ACOLITEAdapter(ACAdapter):
                 cube = np.full(shape=shape, fill_value=np.nan)
                 cube[:,:,wl_band_map] = l2w_datasets[key]
 
-                satobj.l2a_cube["acolite_l2w"] = cube
-                satobj.l2a_cube["acolite_l2w"].attrs['l2_variable_name'] = key
+                satobj.l2a_cubes["acolite_l2w"] = cube
+                satobj.l2a_cubes["acolite_l2w"].attrs['l2_variable_name'] = key
 
-            except Exception as ex:
-                print("[ERROR] Unable to load ACOLITE L2W dataset.")
+            except Exception:
+                logger.exception("Unable to load ACOLITE L2W dataset.")
                 l2w_datasets = None
 
         else:
-            print("[ERROR] ACOLITE L2W NetCDF output file " + str(acolite_l2w_output_nc_file) + " does not exist.")
+            logger.error("ACOLITE L2W NetCDF output file %s does not exist.", acolite_l2w_output_nc_file)
             l2w_datasets = None
 
 

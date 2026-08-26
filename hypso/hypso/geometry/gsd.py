@@ -1,8 +1,12 @@
 
+import logging
+
 import numpy as np
 import pyproj as prj
 
 from .bbox import compute_bbox
+
+logger = logging.getLogger(__name__)
 
 def compute_gsd(frame_count, 
                 image_height, 
@@ -47,7 +51,7 @@ def compute_gsd(frame_count,
     #                                            )
     
     if verbose:
-        print(f'[INFO] Using UTM map: ' + utm_crs_list[0].name, 'EPSG:', utm_crs_list[0].code)
+        logger.info("Using UTM map: %s EPSG:%s", utm_crs_list[0].name, utm_crs_list[0].code)
 
     # crs_25832 = prj.CRS.from_epsg(25832) # UTM32N
     # crs_32717 = prj.CRS.from_epsg(32717) # UTM17S

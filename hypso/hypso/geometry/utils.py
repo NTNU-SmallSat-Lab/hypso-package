@@ -1,3 +1,4 @@
+import logging
 import math as m
 import numpy as np
 import scipy.spatial as ss
@@ -8,6 +9,8 @@ import datetime
 
 
 from .time import get_greenwich_mean_sidereal_time_seconds
+
+logger = logging.getLogger(__name__)
 
 def minimum_bounding_rectangle(points) -> np.ndarray:
     """
@@ -199,10 +202,10 @@ def ecef_to_lat_lon_alt(pos) -> np.ndarray:
     """
 
     if len(pos.shape) != 2:
-        print('Error, wrong shape 1', pos.shape)
+        logger.error("Wrong shape 1: %s", pos.shape)
         return []
     if pos.shape[1] != 3:
-        print('Error, wrong shape 2', pos.shape)
+        logger.error("Wrong shape 2: %s", pos.shape)
         return []
 
     output_lat_lon_alt = np.zeros(pos.shape)

@@ -1,7 +1,11 @@
+import logging
+
 from .utils import set_or_create_attr
 from pathlib import Path
 import netCDF4 as nc
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 def geometry_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', COMP_LEVEL = 4, COMP_SHUFFLE = True) -> None:
     """
@@ -54,9 +58,9 @@ def geometry_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', COM
             longitude.valid_min = -180
             longitude.valid_max = 180
 
-        except Exception as ex:
-            print("[ERROR] Unable to write direct latitude and longitude information to NetCDF file. The file may be incomplete. Please run direct or indirect georeferencing.")
-            print("[ERROR] Encountered exception: " + str(ex))
+        except Exception:
+            logger.exception("Unable to write direct latitude and longitude information to NetCDF "
+                             "file. The file may be incomplete. Please run direct or indirect georeferencing.")
 
 
     # Direct Georeferencing Latitudes and Longitudes
@@ -92,9 +96,9 @@ def geometry_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', COM
             longitude_direct.valid_min = -180
             longitude_direct.valid_max = 180
 
-        except Exception as ex:
-            print("[ERROR] Unable to write indirect latitude and longitude information to NetCDF file. The file may be incomplete. Please run direct or indirect georeferencing.")
-            print("[ERROR] Encountered exception: " + str(ex))
+        except Exception:
+            logger.exception("Unable to write indirect latitude and longitude information to NetCDF "
+                             "file. The file may be incomplete. Please run direct or indirect georeferencing.")
 
 
     # Direct Georeferenicng Solar and Satellite Angles

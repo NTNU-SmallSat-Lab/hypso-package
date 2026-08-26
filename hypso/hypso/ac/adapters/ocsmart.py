@@ -19,6 +19,7 @@ independent steps: the OCSMART_Input.txt save/restore has to wrap staging and
 the subprocess call together to correctly restore on any failure in between.
 Confirmed zero external callers of the old two-call split anywhere (this
 repo, hypso-processing-pipeline, the original hypso-package) before merging."""
+import logging
 import shutil
 import subprocess
 from pathlib import Path
@@ -28,6 +29,8 @@ import numpy as np
 from hypso.load import load_ocsmart_h5
 
 from .base import ACAdapter, ACRunError, get_inferred_wavelength_band_map
+
+logger = logging.getLogger(__name__)
 
 
 class OCSMARTAdapter(ACAdapter):
@@ -102,7 +105,7 @@ class OCSMARTAdapter(ACAdapter):
         dest_file = self.output_path(satobj)
 
         if skip_existing and dest_file.is_file():
-            print(f"[INFO] OC-SMART output already exists at {dest_file}. Skipping.")
+            logger.info("OC-SMART output already exists at %s. Skipping.", dest_file)
             return dest_file
 
         staged_name = f"{self.HYPSO_PREFIX}_{satobj.capture_name}-l1d.nc"
@@ -112,7 +115,7 @@ class OCSMARTAdapter(ACAdapter):
 
         staged_file = l1b_staging_dir / staged_name
         shutil.copy2(satobj.l1d_nc_file, staged_file)
-        print(f"[INFO] Staged OC-SMART input file to {staged_file}")
+        logger.info("Staged OC-SMART input file to %s", staged_file)
 
         input_txt_path = ocsmart_dir / "OCSMART_Input.txt"
         original_input_txt = input_txt_path.read_text() if input_txt_path.is_file() else None
@@ -131,7 +134,7 @@ class OCSMARTAdapter(ACAdapter):
         )
 
         interpreter = str(python_path) if python_path else "python3"
-        print(f"[INFO] Running OC-SMART atmospheric correction as a subprocess (interpreter: {interpreter})")
+        logger.info("Running OC-SMART atmospheric correction as a subprocess (interpreter: %s)", interpreter)
 
         stdout_lines = []
         try:
@@ -179,7 +182,7 @@ class OCSMARTAdapter(ACAdapter):
                         f"filename; check the console output above."),
             )
 
-        print(f"[INFO] OC-SMART atmospheric correction complete: {dest_file}")
+        logger.info("OC-SMART atmospheric correction complete: %s", dest_file)
         return dest_file
 
     def open_output(self, satobj, h5_file_path: Path = None):
@@ -197,11 +200,11 @@ class OCSMARTAdapter(ACAdapter):
             h5_file_path = self.output_path(satobj)
 
         if h5_file_path.is_file():
-            print("[INFO] Opening OC-SMART output file " + str(h5_file_path))
+            logger.info("Opening OC-SMART output file %s", h5_file_path)
             datasets = load_ocsmart_h5(h5_file_path = h5_file_path)
 
         else:
-            print("[ERROR] OC-SMART output file " + str(h5_file_path) + " does not exist.")
+            logger.error("OC-SMART output file %s does not exist.", h5_file_path)
             return None
 
         try:
@@ -216,10 +219,10 @@ class OCSMARTAdapter(ACAdapter):
             cube = np.full(shape=shape, fill_value=np.nan)
             cube[:,:,wl_band_map] = datasets[key]
 
-            satobj.l2a_cube["ocsmart"] = cube
-            satobj.l2a_cube["ocsmart"].attrs['l2_variable_name'] = key
+            satobj.l2a_cubes["ocsmart"] = cube
+            satobj.l2a_cubes["ocsmart"].attrs['l2_variable_name'] = key
 
-        except Exception as ex:
-            print("[ERROR] Unable to load OC-SMART L2 Rrs dataset.")
+        except Exception:
+            logger.exception("Unable to load OC-SMART L2 Rrs dataset.")
 
         return datasets
