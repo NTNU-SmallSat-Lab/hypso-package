@@ -110,6 +110,13 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **New TODO (user request, flagged during ×25/×26 work, not yet acted on): HYPSO capture dimensions may
+  change for future sensors/imaging modes.** `spatial_dimensions`, `frame_count`/`row_count`/`column_count`,
+  `io/dispatch.py`'s `check_capture_type` "nominal"/"moon"/"wide" classification (hardcoded against `956`/
+  `106`/`1092`), `bin_factor`, etc. are all currently treated as fixed/known assumptions throughout
+  `hypso-package`. User asked for this to be flagged as a separate area to audit once the current refactor
+  work lands — not folded into any refactor pass, a genuinely separate investigation.
+
 - **2026-08-26 (×25): type-per-level capture objects.** Follow-on from ×24. User asked: "1 HypsoCapture = 1
   cube, so why level-specific cube/mask accessor names, and why no validation preventing e.g. AC from L1B or
   jumping L1A→L1D directly? Some way of tracking the processing level represented by the object?" First
