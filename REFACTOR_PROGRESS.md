@@ -110,6 +110,21 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-08-26 (×27): L1ACapture — the typed hierarchy now spans L1A through L2A.** User asked when
+  `HypsoCapture` splitting into per-level classes could begin; answered directly that additive `L1ACapture`
+  (mirroring `L1BCapture`/etc.) had no blocker and could start now, while retiring `HypsoCapture` itself needs
+  Phase C (pipeline migration, still blocked) first. User chose to add `L1ACapture` now (commit `db30f2c3`).
+
+  Reached via new `HypsoCapture.to_l1a()` — `Hypso(path)` is completely unchanged, still the load entry point;
+  `.to_l1a()` retypes an already-loaded object rather than adding a second loader. No generation step —
+  `spawn_l1a` just renames cube storage from the old class's `_l1a_cube` to the uniform `_cube` every class
+  other than `L2ACapture` uses. `spawn_l1b` generalized to accept either source shape (`_l1a_cube` from
+  `HypsoCapture`, or `_cube` from a new `L1ACapture`), since both are now real entry points into `to_l1b()`.
+  `L1ACapture` also gets `to_l1c()`/`to_l1d()` convenience one-hops, matching `HypsoCapture`'s own ergonomics.
+
+  138 tests pass (full suite; 3 new in `tests/test_capture_types.py`). `docs/architecture.rst`'s "Tracking
+  which level an object represents" section updated to mention `L1ACapture`.
+
 - **2026-08-26 (×26): georeferencing angle/track consolidation — the "HypsoBase → HypsoCapture" plan's last
   remaining piece, closed out.** Re-scoped fresh (Explore + Plan agent, re-verified rather than executing the
   stale original plan) since `capture_types.py` (×25) didn't exist when this was first drafted and turned out

@@ -184,8 +184,13 @@ Tracking which level an object represents: type, not a string
 The section above described ``to_l1b()``/``to_l1c()``/``to_l1d()``/``to_l2a()``
 returning "a new object." Since this was written, what they return changed: each
 now returns an instance of a level-specific class (``hypso.capture_types``:
-``L1BCapture``, ``L1CCapture``, ``L1DCapture``, ``L2ACapture``) instead of another
-``HypsoCapture``. This directly revisits this file's own reasoning above - the
+``L1ACapture``, ``L1BCapture``, ``L1CCapture``, ``L1DCapture``, ``L2ACapture``)
+instead of another ``HypsoCapture``. ``L1ACapture`` is reached via a new
+``HypsoCapture.to_l1a()`` - ``Hypso(path)`` is unchanged and still returns a plain
+``HypsoCapture``/``Hypso1``/``Hypso2``; calling ``.to_l1a()`` on that result opts
+into the typed chain from the very start rather than only from ``to_l1b()`` onward
+(there's no generation step - L1A data is already loaded, ``to_l1a()`` just retypes
+the object). This directly revisits this file's own reasoning above - the
 original argument against a per-level split was that shared state (geometry,
 calibration coefficients, metadata) would either be duplicated or force each
 level-object to hold a live back-reference to something shared, "an orchestrating
