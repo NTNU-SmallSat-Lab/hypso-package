@@ -231,6 +231,23 @@ precision `radiation_wavelength` carries is meaningful (it looks like a per-dete
 the nominal band-center `wavelength`), keep it under a clearly-distinct name and document which one is nominal vs
 measured — but don't carry three names for what consumers currently treat as one number.
 
+**User correction (recorded before this was implemented): `radiation_wavelength` must be kept, not dropped —
+it's required for ESA SNAP compatibility.** Confirmed authoritative requirement: SNAP's Spectral Viewer only
+auto-recognizes per-band wavelengths from two specific attributes — `radiation_wavelength` (the central
+wavelength value) and `radiation_wavelength_unit` (typically `"nm"`) — not from `wavelength` or `wave`. Example
+from a real ACOLITE L2W output already in this convention (`/home/camerop/HYPSO_DATA_BALTICALGAE/
+balticAlgae_2026-08-24T10-43-52Z/balticAlgae_2026-08-24T10-43-52Z-moved-l2a-acolite_l2w.nc`, `rho_w_378`
+variable): `radiation_wavelength = 378.5`, `radiation_wavelength_unit = "nm"`, alongside `wavelength = 378.5`
+and `wave = 378.5` (redundant duplicates of the same value under different names). Whoever picks up this
+cleanup should: keep `wavelength` (what downstream Python consumers read) AND `radiation_wavelength` +
+`radiation_wavelength_unit` (required by SNAP, not optional/nice-to-have) on every per-band variable; `wave`/
+`wave_name` are the ones confirmed safe to drop as pure duplication. More broadly for SNAP's generic
+CF-compliant NetCDF reader (not just the spectral viewer): standard_name/units on lat/lon
+(`"latitude"`/`"degrees_north"`, `"longitude"`/`"degrees_east"`), UDUNITS-compatible `units` strings and a
+`long_name`/`standard_name` on every data variable, and a consistent `_FillValue`/`missing_value` on all of
+them — this section's existing recommendations already cover those; the wavelength-attribute point above was
+the one gap.
+
 | Attribute | L1B/L1C (`Lt_<wave>`) | L1D (`rhot_<wave>`) |
 |---|---|---|
 | `units` | `"W m-2 um-1 sr-1"` (already present, keep) | `"1"` (dimensionless reflectance — CF convention for unitless) |
