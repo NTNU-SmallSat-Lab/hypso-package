@@ -24,6 +24,8 @@ from hypso.load import load_l1a_nc, \
 
 from .metadata import CaptureMetadata
 
+from hypso.georeferencing import GeoAngles
+
 logger = logging.getLogger(__name__)
 
 
@@ -330,7 +332,21 @@ def set_hypso_attributes(satobj) -> None:
                 setattr(satobj, csiro_key, satobj.metadata.srf.vars[csiro_key])
 
 
-    # Geometry atrributes
+    # Geometry atrributes. The 5 angle quantities (sensor/solar zenith/azimuth,
+    # relative azimuth) are accumulated into plain dicts and built into
+    # GeoAngles instances once after the loop, rather than setattr'd
+    # incrementally - sat_zenith_angles/etc. are now read-only properties over
+    # satobj.angles/angles_direct (see HypsoCapture.py), so the old
+    # incremental setattr(satobj, 'sat_zenith_angles', value) calls would
+    # raise. Order-independent: a later-processed non-direct key
+    # unconditionally overwrites the dict entry (matching the original
+    # setattr's unconditional overwrite), and a direct key only backfills the
+    # non-direct dict entry if nothing's there yet (matching the original
+    # getattr(satobj, name, None) is None check) - correct regardless of
+    # which order the two keys appear in this dict.
+    angle_kwargs = {}
+    direct_angle_kwargs = {}
+
     for key, value in satobj.metadata.geometry.vars.items():
         if key == 'unixtime':
             continue
@@ -346,45 +362,48 @@ def set_hypso_attributes(satobj) -> None:
 
 
         elif key == 'sensor_zenith':
-            setattr(satobj, 'sat_zenith_angles', value)
+            angle_kwargs['sensor_zenith'] = value
         elif key == 'sensor_azimuth':
-            setattr(satobj, 'sat_azimuth_angles', value)
+            angle_kwargs['sensor_azimuth'] = value
 
         elif key == 'sensor_zenith_direct':
-            setattr(satobj, 'sat_zenith_angles_direct', value)
-            if getattr(satobj, 'sat_zenith_angles', None) is None:
-                setattr(satobj, 'sat_zenith_angles', value)
+            direct_angle_kwargs['sensor_zenith'] = value
+            if angle_kwargs.get('sensor_zenith') is None:
+                angle_kwargs['sensor_zenith'] = value
 
         elif key == 'sensor_azimuth_direct':
-            setattr(satobj, 'sat_azimuth_angles_direct', value)
-            if getattr(satobj, 'sat_azimuth_angles', None) is None:
-                setattr(satobj, 'sat_azimuth_angles', value)
+            direct_angle_kwargs['sensor_azimuth'] = value
+            if angle_kwargs.get('sensor_azimuth') is None:
+                angle_kwargs['sensor_azimuth'] = value
 
         elif key == 'solar_zenith':
-            setattr(satobj, 'solar_zenith_angles', value)
+            angle_kwargs['solar_zenith'] = value
         elif key == 'solar_azimuth':
-            setattr(satobj, 'solar_azimuth_angles', value)
+            angle_kwargs['solar_azimuth'] = value
 
         elif key == 'solar_zenith_direct':
-            setattr(satobj, 'solar_zenith_angles_direct', value)
-            if getattr(satobj, 'solar_zenith_angles', None) is None:
-                setattr(satobj, 'solar_zenith_angles', value)
+            direct_angle_kwargs['solar_zenith'] = value
+            if angle_kwargs.get('solar_zenith') is None:
+                angle_kwargs['solar_zenith'] = value
 
         elif key == 'solar_azimuth_direct':
-            setattr(satobj, 'solar_azimuth_angles_direct', value)
-            if getattr(satobj, 'solar_azimuth_angles', None) is None:
-                setattr(satobj, 'solar_azimuth_angles', value)
+            direct_angle_kwargs['solar_azimuth'] = value
+            if angle_kwargs.get('solar_azimuth') is None:
+                angle_kwargs['solar_azimuth'] = value
 
         elif key == 'relative_azimuth':
-            setattr(satobj, 'relative_azimuth_angles', value)
+            angle_kwargs['relative_azimuth'] = value
 
         elif key == 'relative_azimuth_direct':
-            setattr(satobj, 'relative_azimuth_angles_direct', value)
-            if getattr(satobj, 'relative_azimuth_angles', None) is None:
-                setattr(satobj, 'relative_azimuth_angles', value)
+            direct_angle_kwargs['relative_azimuth'] = value
+            if angle_kwargs.get('relative_azimuth') is None:
+                angle_kwargs['relative_azimuth'] = value
 
         else:
             setattr(satobj, key, value)
+
+    satobj.angles = GeoAngles(**angle_kwargs)
+    satobj.angles_direct = GeoAngles(**direct_angle_kwargs)
 
 
     # Capture timing attributes

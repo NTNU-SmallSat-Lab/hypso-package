@@ -168,12 +168,22 @@ def _spawn_l1d(source, use_direct_georef=False, use_thuillier=False, use_unbinne
     new_obj.fwhm = _get_fwhm(new_obj)
     new_obj.fwhm_unbinned = _get_fwhm_unbinned(new_obj)
 
-    if use_direct_georef and hasattr(new_obj, 'solar_zenith_angles_direct'):
+    # Reads new_obj.angles/.angles_direct directly (the GeoAngles dataclass
+    # instances - see hypso.georeferencing.geo_state) rather than
+    # HypsoCapture's flat-name compatibility properties, which L1BCapture/
+    # L1CCapture/L1DCapture don't have (and don't need - see spawn_as's
+    # __dict__ update, which carries .angles/.angles_direct over as plain
+    # attributes regardless of class). Also fixes a latent bug: the old
+    # hasattr(new_obj, 'solar_zenith_angles_direct') check would have raised
+    # AttributeError here (no such attribute/property ever existed on these
+    # classes) the first time use_direct_georef=True was actually exercised -
+    # untested until now.
+    if use_direct_georef and new_obj.angles_direct.solar_zenith is not None:
         if new_obj.VERBOSE:
             print('[WARNING] Computing TOA reflectance using DIRECT georeferencing geometry.')
-        solar_zenith_angles = new_obj.solar_zenith_angles_direct
+        solar_zenith_angles = new_obj.angles_direct.solar_zenith
     else:
-        solar_zenith_angles = new_obj.solar_zenith_angles
+        solar_zenith_angles = new_obj.angles.solar_zenith
 
     if use_unbinned:
         sensor_wavelengths = new_obj.wavelengths_unbinned

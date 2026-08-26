@@ -28,6 +28,8 @@ from hypso.geometry import (
     compute_resolution,
 )
 
+from .geo_state import GeoAngles, TrackGeometry
+
 logger = logging.getLogger(__name__)
 
 
@@ -139,9 +141,8 @@ def run_direct_georeferencing(satobj) -> None:
     across_track_gsd = run_track_geometry(satobj, latitudes=satobj.latitudes_direct,
                                           longitudes=satobj.longitudes_direct)
 
-    satobj.bbox_direct = bbox
-    satobj.along_track_gsd_direct = along_track_gsd
-    satobj.across_track_gsd_direct = across_track_gsd
+    satobj.track_direct = TrackGeometry(bbox=bbox, along_track_gsd=along_track_gsd,
+                                        across_track_gsd=across_track_gsd)
     satobj.resolution_direct = resolution
 
     solar_zenith_angles_direct, \
@@ -151,11 +152,11 @@ def run_direct_georeferencing(satobj) -> None:
     relative_azimuth_angles_direct = run_angles_geometry(satobj, latitudes=satobj.latitudes_direct,
                                                     longitudes=satobj.longitudes_direct)
 
-    satobj.solar_zenith_angles_direct = solar_zenith_angles_direct
-    satobj.solar_azimuth_angles_direct = solar_azimuth_angles_direct
-    satobj.sat_zenith_angles_direct = sat_zenith_angles_direct
-    satobj.sat_azimuth_angles_direct = sat_azimuth_angles_direct
-    satobj.relative_azimuth_angles_direct = relative_azimuth_angles_direct
+    satobj.angles_direct = GeoAngles(sensor_zenith=sat_zenith_angles_direct,
+                                     sensor_azimuth=sat_azimuth_angles_direct,
+                                     solar_zenith=solar_zenith_angles_direct,
+                                     solar_azimuth=solar_azimuth_angles_direct,
+                                     relative_azimuth=relative_azimuth_angles_direct)
 
     return None
 
@@ -174,9 +175,8 @@ def run_georeferencing(satobj, latitudes: np.ndarray = None, longitudes: np.ndar
     across_track_gsd = run_track_geometry(satobj, latitudes=satobj.latitudes,
                                           longitudes=satobj.longitudes)
 
-    satobj.bbox = bbox
-    satobj.along_track_gsd = along_track_gsd
-    satobj.across_track_gsd = across_track_gsd
+    satobj.track = TrackGeometry(bbox=bbox, along_track_gsd=along_track_gsd,
+                                 across_track_gsd=across_track_gsd)
     satobj.resolution = resolution
 
     solar_zenith_angles, \
@@ -186,10 +186,8 @@ def run_georeferencing(satobj, latitudes: np.ndarray = None, longitudes: np.ndar
     relative_azimuth_angles = run_angles_geometry(satobj, latitudes=satobj.latitudes,
                                                     longitudes=satobj.longitudes)
 
-    satobj.solar_zenith_angles = solar_zenith_angles
-    satobj.solar_azimuth_angles = solar_azimuth_angles
-    satobj.sat_zenith_angles = sat_zenith_angles
-    satobj.sat_azimuth_angles = sat_azimuth_angles
-    satobj.relative_azimuth_angles = relative_azimuth_angles
+    satobj.angles = GeoAngles(sensor_zenith=sat_zenith_angles, sensor_azimuth=sat_azimuth_angles,
+                              solar_zenith=solar_zenith_angles, solar_azimuth=solar_azimuth_angles,
+                              relative_azimuth=relative_azimuth_angles)
 
     return None

@@ -23,7 +23,8 @@ from hypso.io import dispatch as io_dispatch
 from hypso.ac.adapters import AC_ADAPTERS
 
 from hypso.georeferencing import Georeferencer, \
-                                check_star_tracker_orientation
+                                check_star_tracker_orientation, \
+                                GeoAngles, TrackGeometry
 
 from hypso.reflectance import compute_reflectance, compute_spectral_response
 
@@ -145,6 +146,19 @@ class HypsoCapture:
         self.longitudes = None
         self.latitudes_direct = None
         self.longitudes_direct = None
+
+        # Georeferencing angles/track geometry (see hypso.georeferencing.geo_state)
+        # - populated by geo.run_georeferencing/run_direct_georeferencing, or
+        # (angles only) by io.dispatch.set_hypso_attributes when loading an
+        # existing NC file. Deliberately NOT including framepose here - see
+        # geo_state.py's module docstring for why it stays a separate flat
+        # attribute, never initialized in __init__ (see run_direct_georeferencing's
+        # existence-probe callers in geo.py, which rely on it being genuinely
+        # absent until computed).
+        self.angles = GeoAngles()
+        self.angles_direct = GeoAngles()
+        self.track = TrackGeometry()
+        self.track_direct = TrackGeometry()
 
         # Other
         self.dim_names_3d = ["y", "x", "band"]
@@ -341,6 +355,61 @@ class HypsoCapture:
     @l1d_cube.deleter
     def l1d_cube(self):
         self._l1d_cube = None
+
+
+    # Read-only compatibility properties over self.angles/self.angles_direct
+    # (hypso.georeferencing.geo_state.GeoAngles) - the 10 flat names these
+    # replace are set by geo.run_georeferencing/run_direct_georeferencing and
+    # io.dispatch.set_hypso_attributes, and read by io/writer.py's
+    # _INDIRECT_ANGLE_FIELDS/_DIRECT_ANGLE_FIELDS table and
+    # write/geometry_group_writer.py's hardcoded blocks - both keep working
+    # unmodified as long as these resolve via plain getattr()/attribute
+    # access, which properties do. No setters (truly read-only - self.angles/
+    # self.angles_direct are what's actually written to) and no
+    # DeprecationWarning: unlike l2a_cube's deprecated alias, these aren't
+    # being phased out - solar_zenith_angles/sat_zenith_angles/
+    # relative_azimuth_angles are still directly read by
+    # hypso-processing-pipeline, and all 10 are read on every L1B/L1C/L1D/L2A
+    # write, so warning on every read would be pure noise.
+    @property
+    def sat_zenith_angles(self):
+        return self.angles.sensor_zenith
+
+    @property
+    def sat_azimuth_angles(self):
+        return self.angles.sensor_azimuth
+
+    @property
+    def solar_zenith_angles(self):
+        return self.angles.solar_zenith
+
+    @property
+    def solar_azimuth_angles(self):
+        return self.angles.solar_azimuth
+
+    @property
+    def relative_azimuth_angles(self):
+        return self.angles.relative_azimuth
+
+    @property
+    def sat_zenith_angles_direct(self):
+        return self.angles_direct.sensor_zenith
+
+    @property
+    def sat_azimuth_angles_direct(self):
+        return self.angles_direct.sensor_azimuth
+
+    @property
+    def solar_zenith_angles_direct(self):
+        return self.angles_direct.solar_zenith
+
+    @property
+    def solar_azimuth_angles_direct(self):
+        return self.angles_direct.solar_azimuth
+
+    @property
+    def relative_azimuth_angles_direct(self):
+        return self.angles_direct.relative_azimuth
 
 
     # Mask orchestration (formatters, land_mask/cloud_mask/custom_masks state,
@@ -673,7 +742,7 @@ class HypsoCapture:
             self._generate_l1b_cube_impl()
             toa_radiance = self.l1b_cube
 
-        if use_direct_georef and hasattr(self, 'solar_zenith_angles_direct'):
+        if use_direct_georef and self.angles_direct.solar_zenith is not None:
 
             if self.VERBOSE:
                 print('[WARNING] Computing TOA reflectance using DIRECT georeferencing geometry.')
