@@ -174,6 +174,15 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
   `bfc0d722`. This closes out the entire "HypsoBase → HypsoCapture" plan from ×24/×25 — nothing left pending
   from it except Phase C/D (pipeline migration, blocked - see ×25's entry).
 
+- **New TODO (user request, ×29): Zarr support.** Not scoped or implemented - recorded with full architectural
+  thoughts in `ARCHITECTURE_PROPOSAL.md`'s new section 7. Short version: bigger than "add another writer" -
+  the current writer is netCDF4-API-native (not xarray-native), Zarr stores are directories not files (touches
+  every `*_nc_file`/`Path`/`.is_file()` assumption), the per-band-named-variable layout was chosen specifically
+  for SNAP (which doesn't read Zarr at all), and it would be additive alongside NetCDF, never a replacement
+  (SNAP/Polymer/ACOLITE only read NetCDF). Recommendation: don't take this on opportunistically - scope it on
+  its own, ideally after the eoread/ACOLITE NetCDF coordination below has landed, and only once there's a
+  concrete driving use case (vs. speculative future-proofing).
+
 - **New TODO (user request, flagged during ×25/×26 work, not yet acted on): HYPSO capture dimensions may
   change for future sensors/imaging modes.** `spatial_dimensions`, `frame_count`/`row_count`/`column_count`,
   `io/dispatch.py`'s `check_capture_type` "nominal"/"moon"/"wide" classification (hardcoded against `956`/

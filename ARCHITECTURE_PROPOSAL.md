@@ -299,3 +299,46 @@ If any of section 4's format changes ship, these need coordinated updates in the
    4.2 safe to change in one place instead of five.
 5. Coordinate the eoread/ACOLITE reader updates (section 5) in the same change as any group-path change, not
    after.
+
+## 7. TODO: Zarr support (user request - not scoped/implemented, thoughts recorded below)
+
+**Status as of 2026-08-26: sections 1-6 above are now almost entirely implemented** (`io/schema.py`, `io/cf.py`,
+`io/writer.py`'s flat-root layout, the golden-file test suite - see `REFACTOR_PROGRESS.md`'s later status
+entries). This section is a fresh, forward-looking addition, not part of the original research pass.
+
+**Why this is a bigger fork than "add another writer", and why it interacts directly with the CF/SNAP work above**:
+
+1. **The current writer is netCDF4-API-native, not xarray-native.** `io/writer.py` calls `netfile.createGroup`/
+   `createVariable`/`createDimension` directly against a `netCDF4.Dataset` - it never builds an `xr.Dataset`
+   in memory first. Zarr support via `xarray`'s own `Dataset.to_zarr()` needs exactly that in-memory `xr.Dataset`
+   as its input. The clean way to add Zarr without duplicating `LevelSchema`'s logic a second time: refactor the
+   writer to build one `xr.Dataset` from the schema + arrays + attrs, then serialize via `.to_netcdf()` *or*
+   `.to_zarr()` as a final, pluggable step - not two independent writer implementations. That's a real rewrite of
+   the writer's internals, not an additive change alongside it.
+2. **Zarr stores are directories, not files** (a tree of chunk files + `.zarray`/`.zgroup`/`.zattrs` metadata).
+   Essentially everything in this codebase assumes a single-file `Path` - `satobj.l1a_nc_file`/`l1b_nc_file`/etc.,
+   every `nc.Dataset(path)` call, every `dest_file.is_file()` check in the AC adapters (would need `.exists()`
+   for a directory store instead). Supporting Zarr means introducing a "store" concept that's sometimes a file,
+   sometimes a directory, threaded through load/write/AC-adapter code that currently only knows "file path."
+3. **Per-band named variables (`Lt_378`, `Lt_382`, ...) were deliberately kept, not stacked into one
+   `(band,y,x)` array, specifically for SNAP/BEAM compatibility** (section 4.2's own decision). SNAP doesn't
+   read Zarr at all, so that constraint doesn't apply there - a stacked array with a `wavelength` coordinate is
+   the more natural, more chunking-efficient Zarr layout. If one schema needs to describe both output shapes,
+   that's more design surface, not just a second backend for the same shape.
+4. **Zarr would be additive, not a replacement.** SNAP, Polymer's `eoread/hypso.py`, and ACOLITE's
+   `l1_convert.py` all only read NetCDF - none of that goes away if Zarr support is added, so this is a genuinely
+   new export path alongside NetCDF, not a migration off it.
+5. **Where Zarr's actual strengths line up with a real need**: cloud-native storage (S3/GCS-backed stores) and
+   chunked/parallel access for large capture archives - it pairs naturally with dask, already used elsewhere in
+   this codebase (`resample/resamplers.py`'s `KDTreeNearestXarrayResampler`). This reads more like a
+   bulk-archival/cloud-pipeline concern than a per-capture, SNAP-viewing one - worth asking whether it belongs in
+   `hypso-package` itself at all, versus a post-hoc archival step in `hypso-processing-pipeline` that consumes
+   already-written NetCDF files and re-packs them into Zarr for cold storage/cloud analysis, leaving
+   `hypso-package`'s own writer untouched.
+
+**Recommendation, not a decision**: don't take this on opportunistically alongside other work. It's a genuinely
+separate fork (schema-to-multiple-backends) best scoped on its own, and ideally after the eoread/ACOLITE
+NetCDF-format coordination (section 5/6) has landed - running two format transitions at once multiplies risk for
+comparatively little shared benefit. Also worth settling first: is there a concrete driving use case (a specific
+cloud/archival need) or is this speculative future-proofing? That answer changes whether the right shape is "a
+second writer backend in hypso-package" versus "a separate archival tool downstream of it."
