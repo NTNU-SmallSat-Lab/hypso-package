@@ -553,6 +553,29 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
   directly rather than only by SatPy internals; genuinely new for `hypso1_calibration`, which previously
   depended on `numpy` only).
 
+- **New TODO (user request): update README and other user-facing docs.** Checked before recording:
+  top-level `README.md` (5 lines, last touched 2025-10-10) and `hypso/README.md` (70 lines, last touched
+  2025-10-22) both predate this entire refactor (which started 2026-08-25) — neither has been touched by
+  any of it. Concretely stale: `hypso/README.md` describes only L1A-L1D output ("The HYPSO package can
+  process the following data products... L1a/L1b/L1c/L1d") with no mention of L2A (AC-correction output -
+  `write_l2a_nc`, `capture_types.L2ACapture`, extensively supported); says nothing about the new flat
+  NetCDF layout (products/geometry at file root instead of `/products`/`/geometry` groups - a real
+  external-facing format change anyone reading these files with SNAP or writing their own reader needs to
+  know about, see ×32/×33) or the CF/SNAP compliance work generally; says nothing about the new
+  `capture_types.py` type-per-level architecture (`to_l1b()`/`to_l1d()`/etc.) added alongside the older
+  in-place `generate_l1b_cube()` family; says nothing about the YAML-based imaging-mode schema (×36) or
+  where `hypso1_calibration`/`hypso2_calibration`'s own capture-mode files now live. The "Important
+  Considerations" section's own file-loading example (`files('hypso.calibration').joinpath(...)`) may
+  also no longer reflect current patterns after the `io/`/`sensors/` schema work - not independently
+  re-verified line-by-line, flagged as likely stale too given how much moved.
+  **Not stale**: `docs/architecture.rst` (569 lines) - actively maintained throughout this entire refactor
+  (confirmed via git log, most recently touched alongside the ×27 L1ACapture entry), the actual technical
+  documentation of the current architecture. `docs/index.rst` is a thin Sphinx toctree wrapper around
+  `architecture.rst`, nothing to update there directly. Not scoped or started - a real pass would need to
+  decide whether the two `README.md`s should summarize architecture.rst's content or just point to it,
+  and whether the "out of date" hosted docs link (`hypso/README.md` line 13) should be addressed as part
+  of the same pass.
+
 - **2026-08-26 (×25): type-per-level capture objects.** Follow-on from ×24. User asked: "1 HypsoCapture = 1
   cube, so why level-specific cube/mask accessor names, and why no validation preventing e.g. AC from L1B or
   jumping L1A→L1D directly? Some way of tracking the processing level represented by the object?" First
