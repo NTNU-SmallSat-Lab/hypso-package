@@ -23,6 +23,7 @@ from .radiometric import run_radiometric_calibration
 from .smile import run_smile_correction
 from .destriping import run_destriping_correction
 from .registry import get_custom_calibration_coeffs
+from hypso.capture_types import _get_fwhm, _get_fwhm_unbinned
 
 logger = logging.getLogger(__name__)
 
@@ -181,6 +182,15 @@ def run_calibration(satobj,
                 logger.info("Running spectral correction (binned)...")
 
             satobj.wavelengths = satobj.spectral_coeffs
+            # fwhm is derived from wavelengths via the sensor's lookup table
+            # (see io/dispatch.py's set_hypso_attributes) - resync it here too,
+            # or it stays stale (computed from the pre-calibration wavelengths
+            # set at load time) for the rest of this capture's life. Confirmed
+            # via a real written L1B file before this fix: bands whose
+            # spectral-calibration-refined wavelength crossed a fwhm_lookup_wl
+            # boundary kept the load-time fwhm value instead of the correct one.
+            if hasattr(satobj, 'fwhm_lookup_wl') and hasattr(satobj, 'fwhm_lookup_fwhm'):
+                satobj.fwhm = _get_fwhm(satobj)
 
     if satobj.spectral_coeffs_unbinned is not None:
         if spectral:
@@ -188,5 +198,7 @@ def run_calibration(satobj,
                 logger.info("Running spectral correction (unbinned)...")
 
             satobj.wavelengths_unbinned = satobj.spectral_coeffs_unbinned
+            if hasattr(satobj, 'fwhm_lookup_wl') and hasattr(satobj, 'fwhm_lookup_fwhm'):
+                satobj.fwhm_unbinned = _get_fwhm_unbinned(satobj)
 
     return calibrated_cube

@@ -405,6 +405,90 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
   trip on a real L1D file. New test `test_effective_fwhm_unbinned_persisted` in `tests/test_cf_format.py`
   asserts both the persistence and this binned-vs-unbinned relationship. Full suite re-run, no regressions.
 
+- **2026-08-27 (×35): capture-dimensions plan Fix 1 implemented + a second fwhm-staleness bug found while
+  verifying it; two review flags recorded.** Implemented the approved plan's Fix 1 (`HypsoCapture.__init__`
+  no longer pre-seeds `self.fwhm` from the fixed-length sensor-profile default; `io/dispatch.py`'s
+  `set_hypso_attributes` now unconditionally derives `fwhm`/`fwhm_unbinned` from this capture's own
+  wavelengths via `capture_types._get_fwhm`/`_get_fwhm_unbinned`, replacing the dead `UNBINNED_BAND_COUNT`
+  fallback). Verified against real capture data (not just unit-level): confirmed 88 of 120 bands genuinely
+  differ from the old sensor-default values (not a coincidental no-op) immediately after load.
+
+  **Writing a real L1B file to disk as part of that verification caught a second, related bug the plan
+  hadn't anticipated**: `calibration/pipeline.py`'s `run_calibration` has a "spectral correction" step
+  (lines ~178-190) that overwrites `satobj.wavelengths`/`wavelengths_unbinned` with calibration-refined
+  values — but nothing resynced `fwhm`/`fwhm_unbinned` afterward, so bands whose refined wavelength crossed
+  a `fwhm_lookup_wl` boundary kept the *load-time* fwhm value in the written L1B file (confirmed directly:
+  bands 60/100 wrote `5.46` instead of the correct `3.34`/`3.42`, while bands 0/32 happened to still match).
+  Same root cause as Fix 1 (fwhm going stale relative to wavelengths), different trigger. Fixed the same way:
+  both spectral-correction branches now call `_get_fwhm`/`_get_fwhm_unbinned` again immediately after
+  updating wavelengths. Re-verified: all four checked bands now write correctly. No circular-import issue
+  from adding `from hypso.capture_types import _get_fwhm, _get_fwhm_unbinned` to `calibration/pipeline.py`
+  (checked: `capture_types.py` only imports `calibration.pipeline` deferred, inside a function body).
+
+  **Four review flags recorded per user request, not acted on yet**:
+  - `hypso.containers`'s `DatasetDict`/`as_dataarray` (the ×21-era replacement for the deleted
+    `DataArrayDict`/`DataArrayValidator`) — user wants to review whether a less-custom (e.g. more directly
+    xarray-native) solution exists, despite this already being described as "the standard/generalizable
+    choice" in its own docstring. Not investigated yet - flagged for a future pass.
+  - `hypso/georeferencing/georeferencing.py` (593 lines: `GCPList`, `GCP`, `PointsCSV`, `Georeferencer`) —
+    user's instinct: should only need simplified code for applying GCPs. Checked before recording: **zero
+    callers found anywhere** for any of its four classes - not in this package (`geo.py`, the module that
+    actually does georeferencing work, never references them), not in `hypso-processing-pipeline`
+    (read-only grep). `GCP`/`GCPList`/`Georeferencer` (not `PointsCSV`) are re-exported as public API from
+    `georeferencing/__init__.py` despite this. Strong candidate for simplification or removal, but not
+    deleted - only public-API classes, and grep can't rule out external notebook/script usage outside this
+    workspace. Flagged for a future pass, not acted on yet.
+  - Combining `hypso/io/` and `hypso/load/` into one submodule — user noticed the overlap. Checked before
+    recording: `io/` (this session's schema-driven `dispatch.py`/`reader.py`/`writer.py`/`cf.py`/`schema.py`)
+    already reaches INTO `load/` today (`io/dispatch.py` imports `load_l1a_nc`/etc. from `hypso.load`;
+    `io/reader.py` imports from `hypso.load.utils`) and `io/writer.py` similarly reaches into a THIRD
+    directory, `hypso/write/` (`calibration_filenames_writer`/`metadata_gcp_group_writer`/
+    `metadata_srf_group_writer`). So the real shape is `io/` orchestrating two older, still-load-bearing
+    per-format/per-group helper directories (`load/`, `write/`), not two independent, equally-scoped
+    modules that happen to overlap - a genuine merge would need to reconcile three directories, not two,
+    and `load/`'s AC-tool-specific loaders (`acolite_l2_nc_loader.py`/`ocsmart_h5_loader.py`/
+    `polymer_l2_nc_loader.py`) look like a different concern (parsing OUTPUT from external AC tools) than
+    `io/`'s own per-level NetCDF schema. Flagged for a future architecture pass to actually decide the right
+    shape, not acted on yet.
+  - Removing `hypso/classification/` — user's instinct, checked before recording: this is already an
+    explicit, documented compatibility shim (`from hypso.masks import *`, one line), not accidentally-still-
+    there dead code - its own docstring says the real code moved to `hypso.masks`, kept solely because
+    `hypso-processing-pipeline/hypso_pipeline/stage2_ac/process_capture.py` still does `from hypso.
+    classification import decode_jon_cnn_*` (confirmed the only caller anywhere, read-only grep). Removing
+    it outright would break that import - needs either confirming the pipeline has migrated to `hypso.masks`
+    first, or a deprecation-warning period, before this repo can safely delete it. Flagged, not acted on yet.
+  - Integrating `hypso/resample/` more closely into `hypso-package` - user's instinct. Checked before
+    recording: `resample_cube`/`resample_products` (`datacube_resamplers.py`/`resamplers.py`, generalized
+    and real-data-tested in the ×21 pass) have **zero callers anywhere** - not re-exported from `hypso/
+    __init__.py`, no `HypsoCapture` method/property delegates to them (unlike calibration/georeferencing/
+    masks/AC, all composed onto the capture object as `self.X`), and zero external callers in
+    `hypso-processing-pipeline` either. Working, tested code that exists as orphaned free functions rather
+    than a first-class capability of the capture object. Flagged for a future pass to wire in properly
+    (e.g. a `satobj.resample.cube(...)`-style composition, matching the pattern already used elsewhere in
+    this package), not acted on yet.
+  - Two possibly-missing SNAP-specific NetCDF attributes for reflectance products - user's instinct.
+    Checked before recording: `units="1"` for L1D `rhot_<wave>` variables is already a deliberate, correct
+    CF choice (dimensionless ratio - `L1D_SCHEMA.product_units` in `io/schema.py`), not a gap. But the
+    reflectance variable's `standard_name` was flagged in this session's original SNAP research
+    (`ARCHITECTURE_PROPOSAL.md` §4.4) as "candidate: `toa_bidirectional_reflectance` - verify" and never
+    actually resolved - `cf.band_attrs()` still sets no `standard_name` on any band variable today. Separately,
+    no attribute for spectral bandwidth *distinct from* the already-written `fwhm` has ever been investigated -
+    worth checking given the precedent already found this session: SNAP's Spectral Viewer specifically needed
+    `radiation_wavelength`/`radiation_wavelength_unit` (not the generic `wavelength`) to auto-recognize
+    per-band wavelengths, confirmed against a real ACOLITE output file - a parallel SNAP-specific bandwidth
+    attribute name (distinct from CF's own `fwhm` convention) is plausible but unverified. Both need a real
+    SNAP install to check (same caveat the original research already carried), not something to guess at
+    from documentation alone. Flagged, not acted on yet.
+
+  **New TODO (user request): complete documentation/docstrings/comments across the package.** Quantified
+  before recording, not just asserted: of 85 `.py` files under `hypso/hypso/`, 54 have no module-level
+  docstring at all; of 373 functions/methods, 226 have no docstring (measured via a one-off `ast`-based
+  scan, not a permanent tool in this repo). This session's own new/heavily-touched modules (`capture_types.py`,
+  `io/`, `georeferencing/geo_state.py`, `containers.py`, etc.) are generally well-documented as part of the
+  work that created/modified them; the gap is concentrated in older, untouched parts of the package. Not
+  scoped or started - a real pass would need to decide priority (public API surface first vs. blanket
+  coverage) rather than mechanically stub docstrings everywhere.
+
 - **2026-08-26 (×25): type-per-level capture objects.** Follow-on from ×24. User asked: "1 HypsoCapture = 1
   cube, so why level-specific cube/mask accessor names, and why no validation preventing e.g. AC from L1B or
   jumping L1A→L1D directly? Some way of tracking the processing level represented by the object?" First

@@ -89,9 +89,18 @@ class HypsoCapture:
             self.platform = sensor_profile.platform
             self.sensor = sensor_profile.sensor
             self.sat_id = sensor_profile.sat_id
-            self.fwhm = sensor_profile.fwhm.copy()
             self.fwhm_lookup_wl = sensor_profile.fwhm_lookup_wl
             self.fwhm_lookup_fwhm = sensor_profile.fwhm_lookup_fwhm
+            # self.fwhm/fwhm_unbinned are deliberately NOT set here - they need
+            # this capture's own wavelengths (not known yet at this point in
+            # __init__), and are established once, unconditionally, in
+            # io/dispatch.py's set_hypso_attributes (right after wavelengths/
+            # wavelengths_unbinned are). Previously this eagerly copied
+            # sensor_profile.fwhm (a fixed-length array sized for one specific
+            # bin_factor/AOI) - correct only by coincidence for a "standard"
+            # capture, and never resynced to the real per-capture wavelengths
+            # for any L1A/L1B/L1C-only workflow (see REFACTOR_PROGRESS.md's
+            # capture-dimensions plan, Bug A).
         else:
             # No profile given (e.g. a subclass that still wants to set these fields itself) -
             # match the previous defaults so downstream code that checks hasattr(self, 'fwhm')

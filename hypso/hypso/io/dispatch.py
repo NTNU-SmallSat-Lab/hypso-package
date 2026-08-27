@@ -24,6 +24,7 @@ from hypso.load import load_l1a_nc, \
 
 from .metadata import CaptureMetadata
 
+from hypso.capture_types import _get_fwhm, _get_fwhm_unbinned
 from hypso.georeferencing import GeoAngles
 
 logger = logging.getLogger(__name__)
@@ -297,12 +298,27 @@ def set_hypso_attributes(satobj) -> None:
         else:
             satobj.wavelengths_unbinned = np.array(range(0, satobj.image_width))
 
-    if not hasattr(satobj, 'fwhm'):
-        if 'fwhm' in satobj.metadata.cube_attrs.keys():
-            satobj.fwhm = satobj.metadata.cube_attrs['fwhm']
-        else:
-            #satobj.fwhm = [satobj.AVERAGE_FWHM] * satobj.bands
-            satobj.fwhm = [satobj.AVERAGE_FWHM] * satobj.UNBINNED_BAND_COUNT
+    # Always recompute fwhm/fwhm_unbinned from this capture's own wavelengths
+    # via the sensor's nearest-wavelength lookup table, rather than trusting
+    # a stored 'fwhm' cube attribute - every L1A/L1B/L1C file written before
+    # this fix carries HypsoCapture.__init__'s old fixed-length sensor-
+    # default fwhm array (wrong values, not just wrong length for a capture
+    # with a non-standard band count - see REFACTOR_PROGRESS.md's capture-
+    # dimensions plan, Bug A), and recomputing reproduces the identical
+    # value for correctly L1D/L2A-generated files, so nothing is lost either
+    # way. Same reasoning HypsoCapture.spectral_response's docstring already
+    # gives for its own lazy rebuild - this makes it run unconditionally on
+    # load instead of only lazily on the L1D path.
+    if hasattr(satobj, 'fwhm_lookup_wl') and hasattr(satobj, 'fwhm_lookup_fwhm'):
+        satobj.fwhm = _get_fwhm(satobj)
+        satobj.fwhm_unbinned = _get_fwhm_unbinned(satobj)
+    else:
+        # No sensor lookup table (e.g. a subclass built without a
+        # SensorProfile) - flat per-band average, sized to THIS capture's
+        # actual wavelengths (established just above), not a hardcoded
+        # constant.
+        satobj.fwhm = [satobj.AVERAGE_FWHM] * len(satobj.wavelengths)
+        satobj.fwhm_unbinned = [satobj.AVERAGE_FWHM] * len(satobj.wavelengths_unbinned)
 
 
     if not hasattr(satobj, 'effective_fwhm'):
