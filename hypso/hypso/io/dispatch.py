@@ -289,6 +289,20 @@ def set_hypso_attributes(satobj) -> None:
     if not hasattr(satobj, 'wavelengths'):
         if ('wavelengths' in satobj.metadata.cube_attrs.keys()):
             satobj.wavelengths = satobj.metadata.cube_attrs['wavelengths']
+        elif ('wavelengths' in satobj.metadata.corrections.vars.keys()):
+            # cube_attrs is always empty for L1A (hypso.load.l1a_nc_loader
+            # hardcodes nc_cube_attrs = {} - L1A's raw dn cube has no per-band
+            # variables to read a wavelengths array back from, unlike L1B/L1C/
+            # L1D/L2A, which set satobj.wavelengths directly via io/reader.py
+            # before this function ever runs). The real per-capture binned
+            # wavelengths still exist in the file, in metadata/corrections -
+            # same source the wavelengths_unbinned fallback below already
+            # reads from for its own array. Without this, an L1A-only
+            # workflow silently got a synthetic 0..119 index instead of real
+            # wavelengths, discovered while fixing satpy.py's L1A scene
+            # builder to actually read satobj.wavelengths instead of a
+            # hardcoded band count.
+            satobj.wavelengths = satobj.metadata.corrections.vars['wavelengths']
         else:
             satobj.wavelengths = np.array(range(0, satobj.image_width))
 

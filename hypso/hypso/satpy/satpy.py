@@ -22,7 +22,7 @@ def get_l1a_satpy_scene(satobj: Union[Hypso1, Hypso2],
                         ) -> Scene:
 
     datacube = satobj.l1a_cube
-    wavelengths = range(0,120)
+    wavelengths = satobj.wavelengths
 
     standard_name = datacube.attrs['description']
     units = datacube.attrs['units']
