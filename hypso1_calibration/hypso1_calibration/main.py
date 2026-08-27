@@ -1,5 +1,16 @@
 from importlib.resources import files
 
+import yaml
+
+# capture_type -> which calibration files this mode uses, declared in YAML
+# instead of Python so a future imaging mode needs only a data change here
+# (plus the actual new .npz file(s) in data/), not a code change - see
+# data/capture_modes.yaml for the full schema documentation. Loaded once at
+# import time, not per-call.
+_CAPTURE_TYPE_FILES = yaml.safe_load(
+    files('hypso1_calibration').joinpath('data/capture_modes.yaml').read_text())
+
+
 def get_hypso1_calibration_files(capture_type="custom", coeff_type='moved') -> None:
     """
     Get the absolute path for the calibration coefficients included in the package. This includes radiometric,
@@ -34,42 +45,21 @@ def get_hypso1_calibration_files(capture_type="custom", coeff_type='moved') -> N
     else: 
         raise ValueError(f"Invalid coeff_type: {coeff_type}. Must be 'moved', 'adjusted', or 'original.'")
 
-    match capture_type:
-
-        case "custom":
-            npz_file_smile = "spectral_calibration_matrix_HYPSO-1_full_v1.npz"  
-            npz_file_destriping = None
-
-        case "nominal":
-            npz_file_smile = "smile_correction_matrix_HYPSO-1_nominal_v1.npz"
-            npz_file_destriping = "destriping_matrix_HYPSO-1_nominal_v1.npz"
-
-        case "wide":
-            npz_file_smile = "smile_correction_matrix_HYPSO-1_wide_v1.npz"
-            npz_file_destriping = "destriping_matrix_HYPSO-1_wide_v1.npz"
-
-        case "moon":
-            # Previously unhandled - fell through to case _ below, silently
-            # zeroing out ALL FOUR coefficient files (radiometric included)
-            # for every moon capture. radiometric_calibration_matrix_HYPSO-1_
-            # moon.npz already shipped in data/ unused, which is what
-            # surfaced this - a moon case was clearly intended but never
-            # wired up here. No moon-specific smile/destriping matrix exists
-            # (moon captures don't share nominal/wide's frame geometry), so
-            # smile falls back to the same full-frame matrix "custom" uses
-            # below (read_coeffs_from_file crops it to this capture's actual
-            # AOI/bin_factor - see calibration/correction.py's 'smile' case,
-            # which only skips that crop for a path containing 'wide' or
-            # 'nominal'), and destriping is skipped, exactly like "custom".
-            npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_moon.npz"
-            npz_file_smile = "spectral_calibration_matrix_HYPSO-1_full_v1.npz"
-            npz_file_destriping = None
-
-        case _:
-            npz_file_radiometric = None
-            npz_file_smile = None
-            npz_file_destriping = None
-            npz_file_spectral = None
+    mode_files = _CAPTURE_TYPE_FILES.get(capture_type)
+    if mode_files is None:
+        # Unknown capture_type - matches the historical behavior of this
+        # function's old case _: branch.
+        npz_file_radiometric = None
+        npz_file_smile = None
+        npz_file_destriping = None
+        npz_file_spectral = None
+    else:
+        # radiometric/spectral default to the coeff_type-driven selection
+        # above unless this mode's own entry overrides them (only "moon"
+        # does, for radiometric - see capture_modes.yaml).
+        npz_file_radiometric = mode_files.get('radiometric', npz_file_radiometric)
+        npz_file_smile = mode_files.get('smile')
+        npz_file_destriping = mode_files.get('destriping')
 
     npz_file_spectral_full_frame = "spectral_array_calibrated_poly_full.npz"
 

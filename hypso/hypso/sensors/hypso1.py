@@ -1,7 +1,10 @@
 """HYPSO-1 sensor profile. fwhm/fwhm_lookup_wl/fwhm_lookup_fwhm values moved verbatim from
 the old hypso.hypso1.Hypso1.__init__ (unchanged - this is a relocation, not
 a recalibration)."""
+from importlib.resources import files
+
 import numpy as np
+import yaml
 
 from hypso1_calibration import get_hypso1_calibration_files
 
@@ -26,15 +29,16 @@ def _calibration_files(capture_type: str, coeff_type: str = "moved") -> dict:
     return get_hypso1_calibration_files(capture_type, coeff_type=coeff_type)
 
 
-# Moved here verbatim from io/dispatch.py's check_capture_type (see
-# REFACTOR_PROGRESS.md's capture-dimensions audit) - same three values,
-# now declared per-sensor instead of one hardcoded chain shared (and
-# unverified) across every registered sensor.
-CAPTURE_TYPE_THRESHOLDS = (
-    ("nominal", "frame_count", 956),
-    ("moon", "frame_count", 106),
-    ("wide", "image_height", 1092),
+# Classification thresholds and calibration crop strategy per imaging mode -
+# declared in YAML (hypso1_modes.yaml, next to this module), not Python, so
+# a future imaging mode needs only a data change there, not a code change
+# here. See that file for the full schema documentation.
+_MODES = yaml.safe_load(files(__package__).joinpath("hypso1_modes.yaml").read_text())
+
+CAPTURE_TYPE_THRESHOLDS = tuple(
+    (name, cfg["classify_attr"], cfg["classify_value"]) for name, cfg in _MODES.items()
 )
+CAPTURE_MODE_CROP_MODES = {name: cfg.get("crop_modes", {}) for name, cfg in _MODES.items()}
 
 
 HYPSO1_PROFILE = SensorProfile(
@@ -47,6 +51,7 @@ HYPSO1_PROFILE = SensorProfile(
     fwhm_lookup_fwhm=FWHM_LOOKUP_FWHM,
     calibration_files=_calibration_files,
     capture_type_thresholds=CAPTURE_TYPE_THRESHOLDS,
+    capture_mode_crop_modes=CAPTURE_MODE_CROP_MODES,
 )
 
 register_sensor(HYPSO1_PROFILE)

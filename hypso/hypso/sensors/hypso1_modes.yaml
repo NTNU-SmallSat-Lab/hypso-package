@@ -1,0 +1,47 @@
+# HYPSO-1 imaging modes: classification rule + calibration crop strategy.
+#
+# classify_attr/classify_value: how io/dispatch.py's check_capture_type
+# recognizes this mode from a loaded capture's own frame_count/image_height
+# (see hypso.sensors.SensorProfile.capture_type_thresholds).
+#
+# crop_modes: per coefficient type ("smile"/"destriping"), whether this
+# mode's calibration file is "as_is" (pre-baked for one specific bin_factor/
+# AOI - use unmodified) or "crop_and_bin" (the default if the coeff_type is
+# omitted here - crop to this capture's own AOI, average bin_factor columns
+# together). See calibration/correction.py's read_coeffs_from_file for how
+# this gets consumed, and hypso1_calibration/data/capture_modes.yaml for the
+# sibling schema deciding *which* file each mode uses in the first place.
+#
+# "custom" is the un-listed fallback for any capture that matches none of
+# these thresholds - not a YAML entry, see io/dispatch.py's check_capture_type.
+#
+# Adding a future imaging mode: add an entry here (and, if it has its own
+# pre-baked calibration files, a matching entry in hypso1_calibration's
+# capture_modes.yaml) - no Python code changes needed for either.
+#
+# ORDER MATTERS: check_capture_type checks these in file order, first match
+# wins. Different modes check different attrs (frame_count vs image_height),
+# so a hypothetical capture could in principle satisfy two rules at once -
+# this order (nominal, moon, wide) matches the original hardcoded chain's
+# own order exactly, preserved here rather than re-derived, so no such edge
+# case silently changes outcome by being re-sorted alphabetically or by
+# whim later.
+
+nominal:
+  classify_attr: frame_count
+  classify_value: 956
+  crop_modes:
+    smile: as_is
+    destriping: as_is
+
+moon:
+  classify_attr: frame_count
+  classify_value: 106
+  # crop_modes omitted -> every coeff_type defaults to crop_and_bin
+
+wide:
+  classify_attr: image_height
+  classify_value: 1092
+  crop_modes:
+    smile: as_is
+    destriping: as_is

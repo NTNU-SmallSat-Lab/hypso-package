@@ -53,6 +53,16 @@ class SensorProfile:
     #: different frame/image dimensions declares its own thresholds instead
     #: of silently matching (or failing to match) another sensor's.
     capture_type_thresholds: tuple[tuple[str, str, int], ...]
+    #: Per capture_type, which coefficient types use their file "as_is" (no
+    #: crop/bin - the file is already baked for one specific bin_factor/AOI)
+    #: vs "crop_and_bin" (the default if a coeff_type is omitted for a given
+    #: capture_type - crop to this capture's own AOI, average bin_factor
+    #: columns together). This is what read_coeffs_from_file (calibration/
+    #: correction.py) uses instead of inferring pre-baked-ness from a
+    #: filename substring - adding a future imaging mode with its own
+    #: pre-baked files means adding one entry here (in this sensor's own
+    #: <sensor>_modes.yaml), not new code.
+    capture_mode_crop_modes: dict[str, dict[str, str]]
 
 
 _REGISTRY: dict[str, SensorProfile] = {}

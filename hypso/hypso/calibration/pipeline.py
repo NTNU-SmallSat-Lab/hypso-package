@@ -18,7 +18,7 @@ import logging
 
 import numpy as np
 
-from .correction import read_coeffs_from_file
+from .correction import read_coeffs_from_file, CalibrationShapeMismatchError
 from .radiometric import run_radiometric_calibration
 from .smile import run_smile_correction
 from .destriping import run_destriping_correction
@@ -74,6 +74,17 @@ def set_calibration_coeff_files(satobj, coeff_type: str = 'moved', coeff_files: 
     satobj.destriping_coeff_file = calibration_files['destriping']
     satobj.spectral_coeff_file = calibration_files['spectral']
 
+    # Per-capture_type crop strategy for smile/destriping (see
+    # SensorProfile.capture_mode_crop_modes and calibration/correction.py's
+    # read_coeffs_from_file) - defaults to "crop_and_bin" for any
+    # capture_type/coeff_type not explicitly declared "as_is", which is also
+    # the correct behavior for coeff_files=/registered custom sets (neither
+    # has ever supported "as_is" pre-baked files, so this preserves their
+    # existing behavior unchanged).
+    crop_modes = satobj.sensor_profile.capture_mode_crop_modes.get(capture_type, {})
+    satobj.smile_coeff_crop_mode = crop_modes.get('smile', 'crop_and_bin')
+    satobj.destriping_coeff_crop_mode = crop_modes.get('destriping', 'crop_and_bin')
+
     return None
 
 
@@ -89,13 +100,24 @@ def load_calibration_coeff_files(satobj) -> None:
     except Exception:
         satobj.rad_coeffs = None
 
+    # getattr defaults, not a plain attribute read: run_calibration(set_coeffs=
+    # False) skips set_calibration_coeff_files (the only place these get set)
+    # but still calls this function unconditionally - crop_mode may genuinely
+    # not exist yet the first time that happens.
+    smile_crop_mode = getattr(satobj, 'smile_coeff_crop_mode', 'crop_and_bin')
+    destriping_crop_mode = getattr(satobj, 'destriping_coeff_crop_mode', 'crop_and_bin')
+
     try:
-        satobj.smile_coeffs = read_coeffs_from_file(satobj.smile_coeff_file, 'smile', satobj.x_start, satobj.x_stop, satobj.y_start, satobj.y_stop, satobj.bin_factor)
+        satobj.smile_coeffs = read_coeffs_from_file(satobj.smile_coeff_file, 'smile', satobj.x_start, satobj.x_stop, satobj.y_start, satobj.y_stop, satobj.bin_factor, crop_mode=smile_crop_mode)
+    except CalibrationShapeMismatchError:
+        raise
     except Exception:
         satobj.smile_coeffs = None
 
     try:
-        satobj.destriping_coeffs = read_coeffs_from_file(satobj.destriping_coeff_file, 'destriping', satobj.x_start, satobj.x_stop, satobj.y_start, satobj.y_stop, satobj.bin_factor)
+        satobj.destriping_coeffs = read_coeffs_from_file(satobj.destriping_coeff_file, 'destriping', satobj.x_start, satobj.x_stop, satobj.y_start, satobj.y_stop, satobj.bin_factor, crop_mode=destriping_crop_mode)
+    except CalibrationShapeMismatchError:
+        raise
     except Exception:
         satobj.destriping_coeffs = None
 

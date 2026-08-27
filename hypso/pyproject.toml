@@ -69,7 +69,8 @@ dependencies=[
   "h5py",
   "pvlib",
   "earthaccess",
-  "seaborn"
+  "seaborn",
+  "pyyaml"
 
 ]
 

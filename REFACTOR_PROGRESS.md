@@ -489,6 +489,70 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
   scoped or started - a real pass would need to decide priority (public API surface first vs. blanket
   coverage) rather than mechanically stub docstrings everywhere.
 
+- **2026-08-27 (×36): capture-dimensions plan Fix 3 implemented — imaging-mode calibration schema, in
+  YAML, replacing filename-substring inference.** During Plan Mode review, user pushed back twice on the
+  originally-scoped Fix 3 (a bolted-on shape guard inferring "is this file pre-baked" from a `'wide' in
+  str(coeff_path)` filename check): first, that "nominal"/"wide"/"moon"/"custom" are HYPSO *imaging modes*
+  that the satellite may grow more of, so adding one should mean adding config/data, not new code branches;
+  second, that this schema should live outside `.py` files entirely if possible. Both landed: the plan's
+  Fix 3 became a declarative YAML schema, not a Python-dict one.
+
+  **`hypso/hypso/sensors/hypso1_modes.yaml`/`hypso2_modes.yaml`** (new, package data): per capture_type,
+  the classification rule (same `classify_attr`/`classify_value` `SensorProfile.capture_type_thresholds`
+  already used, now sourced from YAML) plus `crop_modes` (per coefficient type, `"as_is"` pre-baked vs the
+  default `"crop_and_bin"`). Loaded once at import time in `sensors/hypso1.py`/`hypso2.py` via
+  `importlib.resources` — the same mechanism this codebase already uses for SatPy's own reader/composite
+  YAML configs (`hypso/satpy/etc/*.yaml`), so this isn't a new pattern for the package. `SensorProfile`
+  gained the new frozen field `capture_mode_crop_modes: dict[str, dict[str, str]]`.
+  **Caught and fixed my own mistake before it shipped**: initially wrote `hypso2_modes.yaml` as an empty
+  document (matching HYPSO-2 having no crop-mode variation), which would have silently dropped HYPSO-2's
+  classification thresholds entirely (every capture reclassified as "custom") - fixed to carry the same
+  `nominal`/`moon`/`wide` thresholds HYPSO-1 has, just with empty `crop_modes`. Also preserved the exact
+  original threshold *order* (`nominal, moon, wide`) rather than the alphabetical order first written,
+  since first-match-wins ordering could matter for a hypothetical capture satisfying two rules from
+  different attrs (`frame_count` vs `image_height`) at once - documented inline in both YAML files so a
+  future edit doesn't silently reorder it.
+
+  **`hypso1_calibration/hypso1_calibration/data/capture_modes.yaml`** (new, co-located with the `.npz`
+  files it describes): per capture_type, which coefficient files this mode uses - replaces the `match
+  capture_type:` block in `hypso1_calibration/main.py` (including the `"moon"` case added earlier this
+  session) with a YAML lookup. Verified mechanical: captured golden filename selections for every
+  capture_type from the pre-refactor code, confirmed the YAML-driven version matches exactly (by filename -
+  absolute paths differ because the package physically reinstalls to a different location, expected).
+  `hypso2_calibration` left untouched (no per-capture_type file variation exists there to schema-ify).
+
+  **`calibration/correction.py`**: new `CalibrationShapeMismatchError`; `read_coeffs_from_file` gained an
+  explicit `crop_mode` parameter, replacing the filename-substring check entirely (`destriping` also wired
+  through symmetrically with `smile`, though no file shipped today exercises its `"crop_and_bin"` branch -
+  future-proofing, not new active behavior). Both `"as_is"` branches now check the loaded array's shape
+  against what this capture's own AOI/bin_factor implies, raising the new exception on mismatch.
+  **Found a real bug in the plan itself while re-verifying this pass**: `read_coeffs_from_file`'s own outer
+  `except BaseException: raise ValueError(...)` would have silently converted the new exception into a
+  generic `ValueError` *inside this function*, before it ever reached `pipeline.py`'s carve-out - needed a
+  `except CalibrationShapeMismatchError: raise` here too, not just at the caller.
+
+  **`calibration/pipeline.py`**: `set_calibration_coeff_files` resolves `smile_coeff_crop_mode`/
+  `destriping_coeff_crop_mode` from the new schema (defaulting to `"crop_and_bin"` for `coeff_files=`/
+  registered custom sets, preserving their existing behavior exactly - neither ever supported `"as_is"`).
+  `load_calibration_coeff_files` passes `crop_mode` through and re-raises the new exception past its bare
+  `except Exception` for smile/destriping only. **Found another real edge case while implementing**:
+  `run_calibration(set_coeffs=False)` skips `set_calibration_coeff_files` (the only place crop_mode gets
+  set) but still calls `load_calibration_coeff_files` unconditionally - used `getattr(..., 'crop_and_bin')`
+  defaults rather than a plain attribute read, so a second calibration call reusing previously-set file
+  paths doesn't `AttributeError`.
+
+  Verified end-to-end: a deliberately-mismatched fake capture (nominal's real row_count is 684, tested
+  against 500) raises `CalibrationShapeMismatchError` correctly; the matching case still succeeds with the
+  correct `(684, 120)` shape and no exception. New tests in `tests/test_sensors.py`: crop-mode structure
+  well-formedness for both profiles, the exact expected HYPSO-1 crop-mode values, the golden-filename
+  regression for `hypso1_calibration`'s YAML migration, and both the mismatch-raises and matching-succeeds
+  cases. 152 tests pass (full suite).
+
+  Packaging: both `MANIFEST.in`s gained `global-include *.yaml`; both `pyproject.toml`s gained an explicit
+  `pyyaml` dependency (already present transitively via `satpy` for hypso-package itself, but now imported
+  directly rather than only by SatPy internals; genuinely new for `hypso1_calibration`, which previously
+  depended on `numpy` only).
+
 - **2026-08-26 (×25): type-per-level capture objects.** Follow-on from ×24. User asked: "1 HypsoCapture = 1
   cube, so why level-specific cube/mask accessor names, and why no validation preventing e.g. AC from L1B or
   jumping L1A→L1D directly? Some way of tracking the processing level represented by the object?" First

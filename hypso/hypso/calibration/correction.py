@@ -7,6 +7,16 @@ import copy
 
 logger = logging.getLogger(__name__)
 
+
+class CalibrationShapeMismatchError(ValueError):
+    """Raised when a calibration coefficient file declared "as_is" (pre-baked
+    for one specific bin_factor/AOI - see SensorProfile.capture_mode_
+    crop_modes) doesn't actually match the shape this capture's own AOI/
+    bin_factor implies. Means this capture's geometry doesn't really match
+    the standard configuration its capture_type's pre-baked file was built
+    for - see REFACTOR_PROGRESS.md's capture-dimensions plan (Limit D)."""
+
+
 def crop_and_bin_matrix(matrix, x_start, x_stop, y_start, y_stop, bin_x=1, bin_y=1) -> np.ndarray:
     """ Crops matrix to AOI. Bins matrix so that the average value in the bin_x
     number of pixels is stored.
@@ -50,11 +60,25 @@ def crop_and_bin_matrix(matrix, x_start, x_stop, y_start, y_stop, bin_x=1, bin_y
 
     return new_matrix
 
-def read_coeffs_from_file(coeff_path: str, coeff_type: str, x_start: int=None,  x_stop: int=None, y_start: int=None, y_stop: int=None, bin_factor: int=None) -> np.ndarray:
+def read_coeffs_from_file(coeff_path: str, coeff_type: str, x_start: int=None,  x_stop: int=None,
+                          y_start: int=None, y_stop: int=None, bin_factor: int=None,
+                          crop_mode: str = "crop_and_bin") -> np.ndarray:
     """
     Read correction coefficients from file
 
     :param coeff_path: Coefficient path to read (.csv or .npz)
+    :param crop_mode: only meaningful for coeff_type in ("smile", "destriping").
+        "crop_and_bin" (default) crops the loaded array to [y_start:y_stop,
+        x_start:x_stop] and bins bin_factor columns together - the file is
+        assumed to cover the sensor's full native resolution. "as_is" skips
+        that entirely and uses the file exactly as loaded, since it's
+        already pre-baked for one specific bin_factor/AOI (e.g. HYPSO-1's
+        nominal/wide smile/destriping files) - in that case the loaded
+        shape is checked against what this capture's own AOI/bin_factor
+        would imply, raising CalibrationShapeMismatchError on a mismatch
+        rather than silently using a wrong-shaped array. Comes from
+        SensorProfile.capture_mode_crop_modes (see calibration/pipeline.py's
+        set_calibration_coeff_files), not inferred from the filename.
 
     :return: 2D array of coefficients
     """
@@ -63,34 +87,60 @@ def read_coeffs_from_file(coeff_path: str, coeff_type: str, x_start: int=None,  
         if coeff_path is None:
             coefficients = None
         else:
-        
+
             # Processing should be Float 32
             if coeff_path.suffix == ".npz":
                 coefficients = np.load(coeff_path)
                 key = list(coefficients.keys())[0]
-                match coeff_type: 
+                match coeff_type:
                     # TODO smile and destriping is not defined for HYPSO-2 yet, which is why we can keep the simple definitions
                     # later this needs to be updated
 
                     case 'radiometric':
                         coefficients = coefficients[key][y_start:y_stop, x_start: x_stop].reshape(y_stop-y_start, -1, bin_factor).mean(axis=2).reshape(y_stop-y_start, -1) # reshape full coeff matrix based on values in config
-                    case 'spectral': 
+                    case 'spectral':
                         coefficients = coefficients[key][x_start:x_stop].reshape(-1, bin_factor).mean(axis=1).reshape(-1)
-                    case 'smile': 
-                        if 'wide' in str(coeff_path) or 'nominal' in str(coeff_path): # TODO check if this is correct, and possibly write in a better way (not sure if the HYPSO-1 full smile coeffs are correct, otherwise we could use them every time)
+                    case 'smile':
+                        if crop_mode == "as_is":
                             coefficients = coefficients[key]
+                            expected_shape = (y_stop - y_start, (x_stop - x_start) // bin_factor)
+                            if coefficients.shape != expected_shape:
+                                raise CalibrationShapeMismatchError(
+                                    f"smile calibration file {coeff_path} is pre-baked for shape "
+                                    f"{coefficients.shape}, but this capture's AOI/bin_factor implies "
+                                    f"{expected_shape}."
+                                )
                         else:
                             coefficients = coefficients[key][y_start:y_stop, x_start: x_stop].reshape(y_stop-y_start, -1, bin_factor).mean(axis=2).reshape(y_stop-y_start, -1)
                     case 'destriping':
-                        coefficients = coefficients[key]
+                        if crop_mode == "as_is":
+                            coefficients = coefficients[key]
+                            expected_shape = (y_stop - y_start, (x_stop - x_start) // bin_factor)
+                            if coefficients.shape != expected_shape:
+                                raise CalibrationShapeMismatchError(
+                                    f"destriping calibration file {coeff_path} is pre-baked for shape "
+                                    f"{coefficients.shape}, but this capture's AOI/bin_factor implies "
+                                    f"{expected_shape}."
+                                )
+                        else:
+                            # Not exercised by any file shipped today (every
+                            # destriping file hypso1_calibration provides is
+                            # "as_is"), but wired through symmetrically with
+                            # smile so a future imaging mode with a raw,
+                            # croppable destriping matrix needs only a schema
+                            # entry (SensorProfile.capture_mode_crop_modes),
+                            # not new code here.
+                            coefficients = coefficients[key][y_start:y_stop, x_start: x_stop].reshape(y_stop-y_start, -1, bin_factor).mean(axis=2).reshape(y_stop-y_start, -1)
                     case _:
                         raise ValueError('Coefficient type ' + coeff_type + ' does not exist.')
 
-            elif coeff_path.suffix == ".csv": # TODO do we ever use this? should I account for it? 
+            elif coeff_path.suffix == ".csv": # TODO do we ever use this? should I account for it?
                 coefficients = np.genfromtxt(coeff_path, delimiter=',', dtype="float64")
             else:
                 coefficients = None
 
+    except CalibrationShapeMismatchError:
+        raise
     except BaseException as ex:
         logger.exception("Could not read coefficients file.")
         coefficients = None
