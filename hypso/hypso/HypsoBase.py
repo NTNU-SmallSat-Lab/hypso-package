@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from trollsift import Parser
 import sys
 import re
+import importlib.util
 
 
 from hypso.calibration import read_coeffs_from_file, \
@@ -1228,6 +1229,21 @@ class HypsoBase:
         sat_zenith_angles = sat_zenith.reshape(self.spatial_dimensions)
         sat_azimuth_angles = sat_azimuth.reshape(self.spatial_dimensions)
 
+        # 70 deg matches OC-SMART's own default solz_limit
+        # (ac_runners_hypso.run_ocsmart_correction) - a capture whose solar
+        # zenith never drops below that anywhere in the scene (high
+        # latitude + low-sun season) will have zero valid geometry pixels
+        # for OC-SMART's mask_valid_geo, which crashes deep inside its gas
+        # correction with a bare `assert(l1_data.cos_solar_zenith.size !=
+        # 0)` - a real physical limitation of standard AC algorithms at
+        # extreme solar zenith, not a bug, but worth surfacing here rather
+        # than only discovering it from that unhelpful assertion later.
+        if np.nanmin(solar_zenith_angles) >= 70.0:
+            print(f"[WARNING] Solar zenith angle is >= 70 deg across the entire scene "
+                  f"(min: {np.nanmin(solar_zenith_angles):.1f} deg) - standard atmospheric "
+                  f"correction methods (e.g. OC-SMART, default solz_limit=70) may find no "
+                  f"valid pixels for this capture.")
+
         relative_azimuth_angles = abs(sat_azimuth_angles - solar_azimuth_angles)
 
         relative_azimuth_angles = np.where(relative_azimuth_angles > 180, 
@@ -1864,7 +1880,52 @@ class HypsoBase:
 
         sys.path.insert(0, polymer_base_path)
 
+        # importlib.invalidate_caches() alone (tried 2026-08-30) did not
+        # fix this - kept for correctness (it's a no-op cost-wise and is
+        # still the right thing to do after mutating sys.path) but the
+        # real fix is the manual preload loop just below.
+        importlib.invalidate_caches()
 
+        # PathFinder's sys.path scan unreliably resolves these top-level
+        # packages here even though each is genuinely on sys.path (just
+        # inserted above) and each __init__.py genuinely exists on disk -
+        # reproduced 2026-08-30 on every real capture run (100% of the
+        # time), for more than one of these names ('eoread' first, then
+        # 'eotools' - imported from inside eoread/hypso.py - once eoread's
+        # own failure was worked around), so this isn't specific to one
+        # package. Not reproducible in a simplified standalone script
+        # doing the same sys.path.insert() + import - something about
+        # this real pipeline's process/environment (possibly related to
+        # /home being NFS-mounted) makes PathFinder unreliable for
+        # freshly-inserted directories here. Bypass sys.path/PathFinder
+        # entirely for all four: load each directly from its known file
+        # location and register it in sys.modules by hand, unconditionally
+        # (not just as an exception fallback) so submodule imports below
+        # (eoread.hypso, eotools.solar_irradiance, etc.) resolve via the
+        # parent package's own __path__ instead of ever going through
+        # sys.path again.
+        # polymer_path (e.g. ".../polymer-master-v5") is a container
+        # directory, not the "polymer" package itself - real package names
+        # can't contain a hyphen, so the actual polymer/__init__.py lives
+        # one level deeper, at polymer_path/polymer/. eotools_path/
+        # eoread_path/core_path, by contrast, each point directly at their
+        # package's own directory (confirmed: __init__.py exists directly
+        # under each).
+        for _pkg_name, _pkg_dir in (
+            ("polymer", Path(polymer_path) / "polymer" if polymer_path else None),
+            ("eotools", eotools_path), ("eoread", eoread_path), ("core", core_path),
+        ):
+            if _pkg_dir is None or _pkg_name in sys.modules:
+                continue
+            _init_path = Path(_pkg_dir) / "__init__.py"
+            if not _init_path.is_file():
+                continue
+            _spec = importlib.util.spec_from_file_location(
+                _pkg_name, _init_path, submodule_search_locations=[str(_init_path.parent)]
+            )
+            _module = importlib.util.module_from_spec(_spec)
+            sys.modules[_pkg_name] = _module
+            _spec.loader.exec_module(_module)
 
         # TODO
         srf_nc_path, srf_nc_path = self.ac_polymer_get_srf_nc_path()
