@@ -1846,7 +1846,9 @@ class HypsoBase:
                                   #coeff_type: str = None,
                                   optional_output_datasets: list = ["SPM"],
                                   if_exists: str = "overwrite",
-                                  polymer_version: str = "v1"):
+                                  polymer_version: str = "v1",
+                                  ancillary_source: str = "nasa",
+                                  era5_allow_preliminary: bool = True):
         """
         polymer_version: which Polymer build polymer_path (etc.) point at -
             mirrors ac_polymer_open_output's version parameter.
@@ -1858,6 +1860,16 @@ class HypsoBase:
               it lands in **kwargs and is never used for selection), so
               output selection is driven by outputs_names instead; the
               solver only exposes log-scale "logchl"/"logfb", not "chla"/"fb".
+        ancillary_source: meteorological ancillary provider for Polymer -
+            "nasa" (default) leaves Polymer's own default (GMAO/NCEP) in
+            place, "era5" passes an explicit polymer.ancillary_era5.
+            Ancillary_ERA5 instance instead (requires a ~/.cdsapirc CDS
+            API key). See ac_runners_pace.run_polymer_correction for the
+            same option on the PACE side.
+        era5_allow_preliminary: only used when ancillary_source == "era5".
+            Whether to accept CDS's preliminary "ERA5T" data for recent
+            dates where final ERA5 isn't published yet, or raise instead -
+            see Ancillary_ERA5's own allow_preliminary argument.
         """
 
         #polymer_path = Path(self.polymer_dir).absolute()
@@ -1992,6 +2004,14 @@ class HypsoBase:
             case _:
                 raise ValueError(f"Unknown polymer_version: {polymer_version!r}")
 
+        ancillary_kwargs = {}
+        if ancillary_source == "era5":
+            from polymer.ancillary_era5 import Ancillary_ERA5
+            ancillary_kwargs["ancillary"] = Ancillary_ERA5(
+                allow_preliminary=era5_allow_preliminary)
+        elif ancillary_source != "nasa":
+            raise ValueError(f'Unknown ancillary_source "{ancillary_source}"; expected "nasa" or "era5"')
+
         # Run Polymer
         if True:
             output_file = run_polymer(
@@ -2001,6 +2021,7 @@ class HypsoBase:
                 srf_getter = "hypso.ac.ac_polymer_srf_getter",
                 srf_getter_arg = srf_nc_path,
                 **output_selection_kwargs,
+                **ancillary_kwargs,
 
             )
 
