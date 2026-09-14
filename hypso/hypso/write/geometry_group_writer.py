@@ -2,6 +2,7 @@ from .utils import set_or_create_attr
 from pathlib import Path
 import netCDF4 as nc
 import numpy as np
+import logging
 
 def geometry_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', COMP_LEVEL = 4, COMP_SHUFFLE = True) -> None:
     """
@@ -111,7 +112,7 @@ def geometry_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', COM
             crs_var.inverse_flattening = 298.257223563
             crs_var.geographic_crs_name = 'WGS84'
         except Exception as ex:
-            pass
+            logging.warning(f"[geometry_group_writer] Unable to write crs_wgs84: {ex!r}")
 
         try:
             # Sensor Zenith --------------------------
@@ -128,7 +129,7 @@ def geometry_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', COM
             sensor_z.valid_min = -180
             sensor_z.valid_max = 180
         except Exception as ex:
-            pass
+            logging.warning(f"[geometry_group_writer] Unable to write geometry/sensor_zenith from satobj.sat_zenith_angles: {ex!r}")
 
         try:
             # Sensor Azimuth ---------------------------
@@ -145,7 +146,7 @@ def geometry_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', COM
             sensor_a.valid_min = -180
             sensor_a.valid_max = 180
         except Exception as ex:
-            pass
+            logging.warning(f"[geometry_group_writer] Unable to write geometry/sensor_azimuth from satobj.sat_azimuth_angles: {ex!r}")
 
         try:
             # Solar Zenith ----------------------------------------
@@ -162,7 +163,7 @@ def geometry_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', COM
             solar_z.valid_min = -180
             solar_z.valid_max = 180
         except Exception as ex:
-            pass
+            logging.warning(f"[geometry_group_writer] Unable to write geometry/solar_zenith from satobj.solar_zenith_angles: {ex!r}")
 
         try:
             # Solar Azimuth ---------------------------------------
@@ -179,7 +180,7 @@ def geometry_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', COM
             solar_a.valid_min = -180
             solar_a.valid_max = 180
         except Exception as ex:
-            pass
+            logging.warning(f"[geometry_group_writer] Unable to write geometry/solar_azimuth from satobj.solar_azimuth_angles: {ex!r}")
 
         try:
             # Relative Azimuth ---------------------------------------
@@ -196,7 +197,7 @@ def geometry_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', COM
             relative_a.valid_min = -180
             relative_a.valid_max = 180
         except Exception as ex:
-            pass
+            logging.warning(f"[geometry_group_writer] Unable to write geometry/relative_azimuth from satobj.relative_azimuth_angles: {ex!r}")
 
 
 
@@ -220,7 +221,7 @@ def geometry_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', COM
             sensor_z_direct.valid_max = 180
 
         except Exception as ex:
-            pass
+            logging.warning(f"[geometry_group_writer] Unable to write geometry/sensor_zenith_direct from satobj.sat_zenith_angles_direct: {ex!r}")
 
         try:
             # Sensor Azimuth (Indirect) ---------------------------
@@ -237,7 +238,7 @@ def geometry_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', COM
             sensor_a_direct.valid_min = -180
             sensor_a_direct.valid_max = 180
         except Exception as ex:
-            pass
+            logging.warning(f"[geometry_group_writer] Unable to write geometry/sensor_azimuth_direct from satobj.sat_azimuth_angles_direct: {ex!r}")
 
         try:
             # Solar Zenith (Indirect) ----------------------------------------
@@ -254,7 +255,7 @@ def geometry_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', COM
             solar_z_direct.valid_min = -180
             solar_z_direct.valid_max = 180
         except Exception as ex:
-            pass
+            logging.warning(f"[geometry_group_writer] Unable to write geometry/solar_zenith_direct from satobj.solar_zenith_angles_direct: {ex!r}")
 
         try:
             # Solar Azimuth (Indirect) ---------------------------------------
@@ -271,7 +272,7 @@ def geometry_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', COM
             solar_a_direct.valid_min = -180
             solar_a_direct.valid_max = 180
         except Exception as ex:
-            pass
+            logging.warning(f"[geometry_group_writer] Unable to write geometry/solar_azimuth_direct from satobj.solar_azimuth_angles_direct: {ex!r}")
 
         try:
             # Relative Azimuth (Indirect) ---------------------------------------
@@ -288,6 +289,6 @@ def geometry_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib', COM
             relative_a_direct.valid_min = -180
             relative_a_direct.valid_max = 180
         except Exception as ex:
-            pass
+            logging.warning(f"[geometry_group_writer] Unable to write geometry/relative_azimuth_direct from satobj.relative_azimuth_angles_direct: {ex!r}")
 
     return None
