@@ -1648,11 +1648,27 @@ class HypsoBase:
 
     def ac_polymer_get_id_sensor(self):
 
-        sensor_version = "_" + str(self.coeff_type)
+        # self.coeff_type is just the radiometric coefficient set (e.g.
+        # "moved") when set directly from config during fresh L1D
+        # generation, but the whole processing label (e.g.
+        # "moved_unmasked") when parsed back out of an already-generated
+        # L1D file's own filename by _parse_filename - these agree except
+        # for the mask-state suffix on the mask-off path (see
+        # ProcessingConfig.label: "moved" if apply_masks else
+        # "moved_unmasked"). SRF/SSI/ESUN depend only on sensor +
+        # coefficient set, never on masking, so strip that suffix here
+        # rather than have callers generate/look up mismatched filenames
+        # depending on whether L1D was just generated or loaded from disk
+        # (confirmed 2026-09-15: POLYMER failed with a SRF file "not
+        # found" on every run loading an existing apply_masks=False L1D
+        # file, even though the file existed under the coefficient-only
+        # name).
+        coeff_type = re.sub(r'_unmasked$', '', str(self.coeff_type))
+        sensor_version = "_" + coeff_type
 
         # combine sensor name ("HYPSO-1" or "HYPSO-2") with coefficients version
         # Polymer expects format like "HYPSO-2_moved"
-        id_sensor = str(self.sat_id) + sensor_version 
+        id_sensor = str(self.sat_id) + sensor_version
 
         return id_sensor
 
@@ -2006,8 +2022,16 @@ class HypsoBase:
 
         ancillary_kwargs = {}
         if ancillary_source == "era5":
-            from polymer.ancillary_era5 import Ancillary_ERA5
-            ancillary_kwargs["ancillary"] = Ancillary_ERA5(
+            # main_v5's pipeline (ApplyAncillary) expects a provider with a
+            # single get(dt) -> Dataset interface (matching eoread.
+            # ancillary_nasa.Ancillary_NASA, main_v5's own default) - NOT
+            # polymer.ancillary_era5.Ancillary_ERA5's get(param, date) -> LUT
+            # interface, which belongs to the older main.py/level1_*.py
+            # pipeline. eoread.era5.ERA5 is the one that's actually
+            # compatible here (see ac_runners_pace.run_polymer_correction's
+            # matching comment - PACE side hit the same thing).
+            from eoread.era5 import ERA5
+            ancillary_kwargs["ancillary"] = ERA5(
                 allow_preliminary=era5_allow_preliminary)
         elif ancillary_source != "nasa":
             raise ValueError(f'Unknown ancillary_source "{ancillary_source}"; expected "nasa" or "era5"')
