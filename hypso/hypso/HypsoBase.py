@@ -1490,9 +1490,9 @@ class HypsoBase:
         #print(sys.path)
 
         import acolite as ac
-        from acolite.acolite.settings import load
+        from acolite.acolite.settings import load, read
         from acolite.acolite import acolite_run
-        
+
         # optional file with processing settings
         # if set to None defaults will be used
 
@@ -1500,12 +1500,17 @@ class HypsoBase:
         #settings = ac.acolite.settings.load(settings_file)
         # load() only applies a sensor's own config/defaults/<name>.txt (e.g.
         # HYPSO2.txt's dsf_wave_range=450,750) when explicitly given that
-        # name - it does not auto-detect sensor from the input file. Passing
-        # None (as this always did before) silently fell back to ACOLITE's
-        # fully generic defaults.txt (dsf_wave_range=400,2500) instead,
-        # mirroring the fix ac_runners.py's PACE runner already has via its
-        # explicit load("PACE_OCI") call.
-        settings = load(settings_file if settings_file is not None else self.platform.upper())
+        # name - it does not auto-detect sensor from the input file. Always
+        # load the sensor defaults first, then layer settings_file's own
+        # overrides on top with a plain read() (not load(settings_file),
+        # which would replace the sensor defaults with only ACOLITE's
+        # generic config/defaults.txt for anything settings_file doesn't
+        # itself repeat - e.g. HYPSO2.txt's dsf_aot_estimate=tiled would
+        # silently revert). Mirrors ac_runners_pace.py's own PACE_OCI
+        # runner, which layers settings_file the same way over load("PACE_OCI").
+        settings = load(self.platform.upper())
+        if settings_file is not None:
+            settings.update(read(settings_file))
 
         if EARTHDATA_u is not None and EARTHDATA_p is not None:
             settings['EARTHDATA_u'] = EARTHDATA_u
@@ -1864,8 +1869,20 @@ class HypsoBase:
                                   if_exists: str = "overwrite",
                                   polymer_version: str = "v1",
                                   ancillary_source: str = "nasa",
-                                  era5_allow_preliminary: bool = True):
+                                  era5_allow_preliminary: bool = True,
+                                  polymer_settings: dict = None):
         """
+        polymer_settings: optional dict of extra Params overrides, forwarded
+            as **kwargs straight through run_polymer(**kwargs) ->
+            Params(sensor, **kwargs) - Params.__init__ applies sensor
+            defaults (sensor_specific -> defaults_hypso2 in polymer/params.py)
+            first, then self.update(**kwargs) layers these on top, so any
+            attribute defaults_hypso2 sets (band_cloudmask, bands_corr,
+            bands_rw, bands_oc, ...) can be overridden here without editing
+            Polymer's own params.py. Verified directly against a live
+            Params('HYPSO-2_moved', band_cloudmask=667, bands_corr=[...])
+            call - the override takes effect and unrelated attributes are
+            untouched. None (default) - no overrides, unchanged behavior.
         polymer_version: which Polymer build polymer_path (etc.) point at -
             mirrors ac_polymer_open_output's version parameter.
             - "v1": Polymer_HYPSO_SRF_Oct_2025 - run_polymer's output
@@ -2046,6 +2063,7 @@ class HypsoBase:
                 srf_getter_arg = srf_nc_path,
                 **output_selection_kwargs,
                 **ancillary_kwargs,
+                **(polymer_settings or {}),
 
             )
 
