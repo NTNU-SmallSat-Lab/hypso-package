@@ -31,8 +31,17 @@ def get_hypso1_calibration_files(capture_type, coeff_type=None) -> None:
         print("[INFO] - Using original calibration coefficients for HYPSO-1.")
         npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1.npz"
         npz_file_spectral = "spectral_calibration_wavelengths_center_row_HYPSO-1.npz"
+    elif coeff_type == 'v3':
+        # in-orbit calibration chain (h2-onboard-calibration): smile (Sobel) -> spectral (moon/LIME) -> SRF -> radiometric (moon/LIME)
+        print("[INFO] - Using v3 (in-orbit) calibration coefficients for HYPSO-1.")
+        if capture_type == "wide":
+            # derived from binned wide data (aoi_x=428, aoi_y=62, bin 9), used as is
+            npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_wide_v3.npz"
+        else:
+            npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v3.npz"
+        npz_file_spectral = "spectral_array_calibrated_poly_full_v3.npz"
     else: 
-        raise ValueError(f"Invalid coeff_type: {coeff_type}. Must be 'moved', 'adjusted', or 'original.'")
+        raise ValueError(f"Invalid coeff_type: {coeff_type}. Must be 'moved', 'adjusted', 'original' or 'v3'.")
 
     match capture_type:
 
@@ -50,6 +59,10 @@ def get_hypso1_calibration_files(capture_type, coeff_type=None) -> None:
             npz_file_smile = None
             npz_file_destriping = None
             npz_file_spectral = None
+
+    if coeff_type == 'v3' and npz_file_smile:
+        # full-frame smile matrix (Sobel), cropped and binned to the capture AOI when read
+        npz_file_smile = "smile_correction_matrix_HYPSO-1_full_sobel.npz"
 
     if npz_file_radiometric:
         rad_coeff_file = files('hypso1_calibration').joinpath(f'data/{npz_file_radiometric}')

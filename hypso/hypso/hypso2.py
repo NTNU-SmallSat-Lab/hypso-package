@@ -75,6 +75,9 @@ class Hypso2(HypsoBase):
 
         :return: None.
         """
+
+        capture_type = self.capture_type
+
         coeff_type = kwargs.get(
             "coeff_type", "original"
         )  # Default to 'original' if not provided
@@ -82,8 +85,8 @@ class Hypso2(HypsoBase):
             f"[INFO] - Setting calibration coefficient files with coeff_type: {coeff_type}"
         )
         calibration_files = get_hypso2_calibration_files(
-            coeff_type=coeff_type
-        )  # 'moved', 'adjusted', or 'original.'
+            capture_type=capture_type, coeff_type=coeff_type
+        )  # 'moved', 'adjusted', 'original' or 'v3'
 
         self.rad_coeff_file = calibration_files["radiometric"]
         self.smile_coeff_file = calibration_files["smile"]

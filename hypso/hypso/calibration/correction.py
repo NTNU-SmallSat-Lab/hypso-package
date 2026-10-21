@@ -61,16 +61,19 @@ def read_coeffs_from_file(coeff_path: str, coeff_type: str, x_start: int,  x_sto
         if coeff_path.suffix == ".npz":
             coefficients = np.load(coeff_path)
             key = list(coefficients.keys())[0]
-            match coeff_type: 
+            match coeff_type:
                  # TODO smile and destriping is not defined for HYPSO-2 yet, which is why we can keep the simple definitions
                  # later this needs to be updated
 
                 case 'radiometric':
-                    coefficients = coefficients[key][y_start:y_stop, x_start: x_stop].reshape(y_stop-y_start, -1, bin_factor).mean(axis=2).reshape(y_stop-y_start, -1) # reshape full coeff matrix based on values in config
-                case 'spectral': 
+                    if 'wide' in coeff_path.name: # wide coefficients are derived from binned data, and are used as is
+                        coefficients = coefficients[key]
+                    else:
+                        coefficients = coefficients[key][y_start:y_stop, x_start: x_stop].reshape(y_stop-y_start, -1, bin_factor).mean(axis=2).reshape(y_stop-y_start, -1) # reshape full coeff matrix based on values in config
+                case 'spectral':
                     coefficients = coefficients[key][x_start:x_stop].reshape(-1, bin_factor).mean(axis=1).reshape(-1)
-                case 'smile': 
-                    if 'wide' in coeff_path or 'nominal' in coeff_path: # TODO check if this is correct, and possibly write in a better way (not sure if the HYPSO-1 full smile coeffs are correct, otherwise we could use them every time)
+                case 'smile':
+                    if 'wide' in coeff_path.name or 'nominal' in coeff_path.name:
                         coefficients = coefficients[key]
                     else:
                         coefficients = coefficients[key][y_start:y_stop, x_start: x_stop].reshape(y_stop-y_start, -1, bin_factor).mean(axis=2).reshape(y_stop-y_start, -1)
@@ -79,7 +82,7 @@ def read_coeffs_from_file(coeff_path: str, coeff_type: str, x_start: int,  x_sto
                 case _:
                     raise ValueError('Coefficient type ' + coeff_type + ' does not exist.')
 
-        elif coeff_path.suffix == ".csv": # TODO do we ever use this? should I account for it? 
+        elif coeff_path.suffix == ".csv": # TODO do we ever use this? should I account for it?
             coefficients = np.genfromtxt(coeff_path, delimiter=',', dtype="float64")
         else:
             coefficients = None
@@ -92,12 +95,12 @@ def read_coeffs_from_file(coeff_path: str, coeff_type: str, x_start: int,  x_sto
 
 
 def make_overexposed_mask(cube, over_exposed_lim=4094):
-    ''' Makes mask for spatial image, so that all good values (not masked) are 
-    not overexposed for all wavelengths. 
-    
+    ''' Makes mask for spatial image, so that all good values (not masked) are
+    not overexposed for all wavelengths.
+
     1 in mask = good pixel
     0 in mask = bad pixel (overexposed)
-    
+
     To apply the mask, just multiply each spatial frame with the mask.
     '''
     num_frames, image_height, image_width = cube.shape
@@ -113,7 +116,7 @@ def make_mask(cube, sat_val_scale=0.25, plot=False):
     ''' Mask values based on all values in cube. Used with destriping.
 
     For water mask: sat_val_scale=0.25
-    For overexposed mask: sat_val_scale=0.9 
+    For overexposed mask: sat_val_scale=0.9
     '''
     cube_sum = np.sum(cube, axis=2)#/num_frames
     sat_value = cube_sum.max()*sat_val_scale

@@ -1,6 +1,6 @@
 from importlib.resources import files
 
-def get_hypso2_calibration_files(coeff_type=None) -> None:
+def get_hypso2_calibration_files(capture_type=None, coeff_type=None) -> None:
     """
     Get the absolute path for the calibration coefficients included in the package. This includes radiometric,
     smile and destriping correction.
@@ -39,9 +39,25 @@ def get_hypso2_calibration_files(coeff_type=None) -> None:
         print("[INFO] - Using original calibration coefficients for HYPSO-2.")
         npz_file_radiometric = "h2_radiometric_calibration_matrix_full.npz"
         npz_file_spectral = "h2_spectral_calibration_wavelengths_center_row.npz"
+    elif coeff_type == 'v3':
+        # in-orbit calibration chain (h2-onboard-calibration): smile (Sobel) -> spectral (moon/LIME) -> SRF -> radiometric (moon/LIME)
+        print("[INFO] - Using v3 (in-orbit) calibration coefficients for HYPSO-2.")
+        if capture_type == "wide":
+            # derived from binned wide data (aoi_x=428, aoi_y=62, bin 9), used as is
+            npz_file_radiometric = "h2_radiometric_calibration_matrix_wide_v3.npz"
+        else:
+            npz_file_radiometric = "h2_radiometric_calibration_matrix_full_v3.npz"
+        npz_file_spectral = "spectral_array_calibrated_poly_full_v3.npz"
     else: 
-        raise ValueError(f"Invalid coeff_type: {coeff_type}. Must be 'moved', 'adjusted', or 'original'.")
-    npz_file_smile = "smile_correction_matrix_HYPSO-2_full.npz"
+        raise ValueError(f"Invalid coeff_type: {coeff_type}. Must be 'moved', 'adjusted', 'original' or 'v3'.")
+
+    if coeff_type == 'v3':
+        # full-frame smile matrix (Sobel), cropped and binned to the capture AOI when read
+        npz_file_smile = "smile_correction_matrix_HYPSO-2_full_sobel.npz"
+    else:
+        # smile_correction_matrix_HYPSO-2_full.npz is spatially flipped, and was never applied
+        # (the smile file failed to load), so it is kept off for the older coefficient types
+        npz_file_smile = None
     npz_file_destriping = None
 
     if npz_file_radiometric:
