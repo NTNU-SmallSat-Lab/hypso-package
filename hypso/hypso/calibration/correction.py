@@ -66,7 +66,7 @@ def read_coeffs_from_file(coeff_path: str, coeff_type: str, x_start: int,  x_sto
                  # later this needs to be updated
 
                 case 'radiometric':
-                    if 'wide' in coeff_path.name: # wide coefficients are derived from binned data, and are used as is
+                    if 'wide' in coeff_path.name and 'moved' not in coeff_path.name: # wide coefficients are derived from binned data, and are used as is
                         coefficients = coefficients[key]
                     else:
                         coefficients = coefficients[key][y_start:y_stop, x_start: x_stop].reshape(y_stop-y_start, -1, bin_factor).mean(axis=2).reshape(y_stop-y_start, -1) # reshape full coeff matrix based on values in config

@@ -108,7 +108,7 @@ class HypsoBase:
         # DEBUG
         self.DEBUG = False
         self.VERBOSE = False
-    
+
 
     def _update_dataarray_attrs(self, data: xr.DataArray, attrs: dict) -> xr.DataArray:
 
@@ -131,7 +131,7 @@ class HypsoBase:
         data = self._update_dataarray_attrs(data, attributes)
 
         return data
-    
+
     def _format_l1b_dataarray(self, data: Union[np.ndarray, xr.DataArray]) -> xr.DataArray:
 
         attributes = {'level': "L1b",
@@ -208,7 +208,7 @@ class HypsoBase:
 
     @property
     def l1a_cube(self):
-        return self._l1a_cube   
+        return self._l1a_cube
 
 
     @l1a_cube.setter
@@ -218,7 +218,7 @@ class HypsoBase:
 
     @property
     def l1b_cube(self):
-        return self._l1b_cube   
+        return self._l1b_cube
 
 
     @l1b_cube.setter
@@ -231,7 +231,7 @@ class HypsoBase:
         # Return l1b cube since it is the same as the l1c cube
         cube = copy.deepcopy(self._l1b_cube)
         cube.attrs['level'] = 'L1c'
-        return cube 
+        return cube
 
 
     @l1c_cube.setter
@@ -241,7 +241,7 @@ class HypsoBase:
 
     @property
     def l1d_cube(self):
-        return self._l1d_cube   
+        return self._l1d_cube
 
     @l1d_cube.setter
     def l1d_cube(self, value):
@@ -250,7 +250,7 @@ class HypsoBase:
 
     @property
     def land_mask(self):
-        return self._land_mask 
+        return self._land_mask
 
     @land_mask.setter
     def land_mask(self, value):
@@ -262,7 +262,7 @@ class HypsoBase:
 
     @property
     def cloud_mask(self):
-        return self._cloud_mask   
+        return self._cloud_mask
 
     @cloud_mask.setter
     def cloud_mask(self, value):
@@ -282,8 +282,8 @@ class HypsoBase:
             return self._l1a_cube.where(~unified_mask, other=np.nan)
 
         else:
-            return self._l1a_cube   
-        
+            return self._l1a_cube
+
 
     @property
     def masked_l1b_cube(self) -> xr.DataArray:
@@ -295,7 +295,7 @@ class HypsoBase:
             return self._l1b_cube.where(~unified_mask, other=np.nan)
 
         else:
-            return self._l1b_cube   
+            return self._l1b_cube
 
 
     @property
@@ -308,7 +308,7 @@ class HypsoBase:
             return self._l1c_cube.where(~unified_mask, other=np.nan)
 
         else:
-            return self._l1c_cube   
+            return self._l1c_cube
 
 
     @property
@@ -321,7 +321,7 @@ class HypsoBase:
             return self._l1d_cube.where(~unified_mask, other=np.nan)
 
         else:
-            return self._l1d_cube           
+            return self._l1d_cube
 
 
     def _unified_mask(self) -> xr.DataArray:
@@ -333,7 +333,7 @@ class HypsoBase:
             unified_mask = self._cloud_mask
         else:
             return None
-        
+
         return unified_mask
 
 
@@ -344,7 +344,7 @@ class HypsoBase:
         self._products.dim_names = self.dim_names_2d
         self._products.num_dims = 2
 
-        return self._products   
+        return self._products
 
     @products.setter
     def products(self, value):
@@ -380,7 +380,7 @@ class HypsoBase:
             setattr(self, '_use_old_filename_format', True)
             p = Parser("{capture_target}_{capture_datetime:%Y-%m-%d_%H%MZ}-{product_level:3s}{atmospheric_correction:->}.{file_type}")
             fields = p.parse(str(path.name))
-        
+
         return fields
 
 
@@ -410,7 +410,7 @@ class HypsoBase:
                 if self.VERBOSE: print('[INFO] Loading L1a capture ' + self.capture_name)
                 load_func = load_l1a_nc
                 cube_name = "l1a_cube"
-                
+
             case "l1b":
                 if self.VERBOSE: print('[INFO] Loading L1b capture ' + self.capture_name)
 
@@ -457,7 +457,7 @@ class HypsoBase:
         setattr(self, "nc_logfiles_attrs", nc_metadata_attrs["logfiles"])
         setattr(self, "nc_temperature_attrs", nc_metadata_attrs["temperature"])
         setattr(self, "nc_timing_attrs", nc_metadata_attrs["timing"])
- 
+
         setattr(self, "nc_navigation_vars", nc_navigation_vars)
         setattr(self, "nc_navigation_attrs", nc_navigation_attrs)
 
@@ -472,7 +472,7 @@ class HypsoBase:
         self._check_capture_type()
 
         setattr(self, cube_name, nc_cube)
-        
+
 
         return None
 
@@ -488,7 +488,7 @@ class HypsoBase:
             self.nc_capture_config_attrs['fps'] = self.nc_capture_config_attrs['framerate']
         except:
             self.nc_capture_config_attrs['framerate'] = self.nc_capture_config_attrs['fps']
-            
+
         self.background_value = 8 * self.nc_capture_config_attrs["bin_factor"]
         self.exposure = self.nc_capture_config_attrs["exposure"] / 1000  # in seconds
 
@@ -622,7 +622,7 @@ class HypsoBase:
             print(f"[INFO] Capture capture type: {self.capture_type}")
 
 
-    def _run_calibration(self, 
+    def _run_calibration(self,
                          radiometric: bool = True,
                          smile: bool = True,
                          destripe: bool = True,
@@ -654,7 +654,7 @@ class HypsoBase:
                 if self.VERBOSE:
                     print("[INFO] Running radiometric calibration...")
 
-                calibrated_cube = run_radiometric_calibration(cube=calibrated_cube, 
+                calibrated_cube = run_radiometric_calibration(cube=calibrated_cube,
                                                 background_value=self.background_value,
                                                 exp=self.exposure,
                                                 image_height=self.image_height,
@@ -670,7 +670,7 @@ class HypsoBase:
                 if self.VERBOSE:
                     print("[INFO] Running smile correction...")
 
-                calibrated_cube = run_smile_correction(cube=calibrated_cube, 
+                calibrated_cube = run_smile_correction(cube=calibrated_cube,
                                                 smile_coeffs=self.smile_coeffs)
 
         if self.destriping_coeffs is not None:
@@ -679,7 +679,7 @@ class HypsoBase:
                 if self.VERBOSE:
                     print("[INFO] Running destriping correction...")
 
-                calibrated_cube = run_destriping_correction(cube=calibrated_cube, 
+                calibrated_cube = run_destriping_correction(cube=calibrated_cube,
                                                     destriping_coeffs=self.destriping_coeffs)
 
         if self.spectral_coeffs is not None:
@@ -721,7 +721,7 @@ class HypsoBase:
             self.spectral_coeffs = None
 
         return None
-    
+
 
     def _run_toa_reflectance(self, use_indirect_georef=False) -> np.ndarray:
 
@@ -733,7 +733,7 @@ class HypsoBase:
             self.generate_l1b_cube()
             toa_radiance = self.l1b_cube
 
-        
+
         if use_indirect_georef and hasattr(self, 'solar_zenith_angles_indirect'):
 
             if self.VERBOSE:
@@ -758,7 +758,7 @@ class HypsoBase:
 
         return toa_reflectance, srf, esun
 
-    def run_direct_georeferencing(self) -> None: 
+    def run_direct_georeferencing(self) -> None:
 
         if self.VERBOSE:
             print("[INFO] Running direct georeferencing...")
@@ -773,7 +773,7 @@ class HypsoBase:
                                                         aoi_offset=self.y_start,
                                                         verbose=self.VERBOSE
                                                         )
-        
+
         if type(pixels_lat) == int and type(pixels_lon) == int:
             if self.VERBOSE:
                 print('[INFO] according to ADCS telemetry, parts or all of the image is pointing')
@@ -810,23 +810,23 @@ class HypsoBase:
         return None
 
 
-    def run_indirect_georeferencing(self, 
-                          points_file_path: Union[str, Path] = None, 
+    def run_indirect_georeferencing(self,
+                          points_file_path: Union[str, Path] = None,
                           latitudes: np.ndarray = None,
                           longitudes: np.ndarray = None,
-                          image_mode: str = None, 
+                          image_mode: str = None,
                           origin_mode: str = 'cube',
                           flip: bool = False,
                           ) -> None:
-        
+
 
         if self.VERBOSE:
             print('[INFO] Running indirect georeferencing...')
-        
+
 
         if latitudes is not None and longitudes is not None:
             self.latitudes_indirect = latitudes
-            self.longitudes_indirect = longitudes    
+            self.longitudes_indirect = longitudes
 
         else:
             points_file_path = Path(points_file_path).absolute()
@@ -852,7 +852,7 @@ class HypsoBase:
             else:
                 self.latitudes_indirect = gr.latitudes[:,:]
                 self.longitudes_indirect = gr.longitudes[:,:]
-    
+
         # Check if direct and indirect georeferencing have the same lat/lon orientations
         if (self.latitudes_indirect[-1,-1] - self.latitudes_indirect[-1,0]) * (self.latitudes[-1,-1] - self.latitudes[-1,0]) < 0:
             raise ValueError("Latitude of indirect georeferencing is flipped with respect to direct georeferencing. Check if flip paramater is set correctly")
@@ -860,7 +860,7 @@ class HypsoBase:
             raise ValueError("Longitude of indirect georeferencing is flipped with respect to direct georeferencing. Check if flip paramater is set correctly")
 
 
-    
+
         bbox, \
         resolution, \
         along_track_gsd, \
@@ -886,24 +886,24 @@ class HypsoBase:
         setattr(self, 'relative_azimuth_angles_indirect', relative_azimuth_angles)
 
         return None
-    
 
 
 
 
 
-    def _run_custom_georeferencing(self, 
+
+    def _run_custom_georeferencing(self,
                           latitudes: np.ndarray,
                           longitudes: np.ndarray
                           ) -> None:
-        
+
         if self.VERBOSE:
             print('[INFO] Running custom georeferencing...')
-        
+
 
         self.latitudes = latitudes
         self.longitudes = longitudes
-    
+
 
         bbox, \
         resolution, \
@@ -942,21 +942,21 @@ class HypsoBase:
             timing = self.nc_timing_vars['timestamps_srv']
         except:
             timing = self.nc_timing_vars['timestamps']
-        
+
         framepose_data = interpolate_at_frame_nc(adcs=self.nc_adcs_vars,
                                               lines_timestamps=timing,
                                               framerate=self.nc_capture_config_attrs['framerate'],
                                               exposure=self.nc_capture_config_attrs['exposure'],
                                               verbose=self.VERBOSE
                                               )
-        
+
         setattr(self, "framepose", framepose_data)
 
 
         return None
 
 
-    def _run_track_geometry(self, latitudes: np.ndarray, longitudes: np.ndarray) -> None: 
+    def _run_track_geometry(self, latitudes: np.ndarray, longitudes: np.ndarray) -> None:
 
         print("[INFO] Running track geometry computations...")
 
@@ -967,13 +967,13 @@ class HypsoBase:
 
         bbox = compute_bbox(latitudes=latitudes, longitudes=longitudes)
 
-        along_track_gsd, across_track_gsd = compute_gsd(frame_count=self.frame_count, 
-                                                                  image_height=self.image_height, 
-                                                                  latitudes=latitudes, 
+        along_track_gsd, across_track_gsd = compute_gsd(frame_count=self.frame_count,
+                                                                  image_height=self.image_height,
+                                                                  latitudes=latitudes,
                                                                   longitudes=longitudes,
                                                                   verbose=self.VERBOSE)
 
-        resolution = compute_resolution(along_track_gsd=along_track_gsd, 
+        resolution = compute_resolution(along_track_gsd=along_track_gsd,
                                              across_track_gsd=across_track_gsd)
 
 
@@ -983,7 +983,7 @@ class HypsoBase:
         return bbox, resolution, along_track_gsd, across_track_gsd
 
 
-    def _run_angles_geometry(self,  latitudes: np.ndarray, longitudes: np.ndarray) -> None: 
+    def _run_angles_geometry(self,  latitudes: np.ndarray, longitudes: np.ndarray) -> None:
 
         print("[INFO] Running angles geometry computations...")
 
@@ -996,11 +996,11 @@ class HypsoBase:
 
         sun_azimuth, sun_zenith, \
         sat_azimuth, sat_zenith = compute_local_angles(framepose_data=self.framepose,
-                                                       lats=latitudes, 
+                                                       lats=latitudes,
                                                        lons=longitudes,
                                                        indices=indices,
                                                        verbose=self.VERBOSE)
-        
+
         solar_zenith_angles = sun_zenith.reshape(self.spatial_dimensions)
         solar_azimuth_angles = sun_azimuth.reshape(self.spatial_dimensions)
         sat_zenith_angles = sat_zenith.reshape(self.spatial_dimensions)
@@ -1008,8 +1008,8 @@ class HypsoBase:
 
         relative_azimuth_angles = abs(sat_azimuth_angles - solar_azimuth_angles)
 
-        relative_azimuth_angles = np.where(relative_azimuth_angles > 180, 
-                                           360 - relative_azimuth_angles, 
+        relative_azimuth_angles = np.where(relative_azimuth_angles > 180,
+                                           360 - relative_azimuth_angles,
                                            relative_azimuth_angles)
 
         if self.VERBOSE:
@@ -1018,49 +1018,48 @@ class HypsoBase:
         return solar_zenith_angles, solar_azimuth_angles, sat_zenith_angles, sat_azimuth_angles, relative_azimuth_angles
 
 
-    def generate_l1b_cube(self, **kwargs) -> None:
+    def generate_l1b_cube(self, coeff_type: str = None, **kwargs) -> None:
 
+        print("[INFO] Generating L1b cube")
         if self.l1a_cube is None:
             return None
 
-        self.l1b_cube = self._run_calibration(**kwargs)
+        self.l1b_cube = self._run_calibration(coeff_type=coeff_type, **kwargs)
 
         return None
 
 
+    def generate_l1c_cube(self, coeff_type: str = None, use_direct_georef=False,**kwargs) -> None:
 
-    def generate_l1c_cube(self) -> None:
-        
-        if self.l1b_cube is None:
-            self.generate_l1b_cube()
-        
-        self.run_direct_georeferencing()
-        
-        return None
+            print("[INFO] Generating L1c cube")
+            if self.l1b_cube is None:
+                self.generate_l1b_cube(coeff_type=coeff_type, **kwargs)
+
+            self.run_direct_georeferencing() # in this version of the package run_direct_georeferencing() needs to be called after generating the l1c cube
+
+            return None
 
 
-
-    def generate_l1d_cube(self, use_indirect_georef=False) -> None:
+    def generate_l1d_cube(self, coeff_type: str = None, use_direct_georef=False) -> None:
 
         try:
             self._get_fwhm()
-            self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_indirect_georef=use_indirect_georef)
+            self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_indirect_georef=not use_direct_georef)
 
         except:
-            self.generate_l1c_cube()
-            self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_indirect_georef=use_indirect_georef)
+            self.generate_l1c_cube(coeff_type=coeff_type, use_direct_georef=use_direct_georef)
+            self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_indirect_georef=not use_direct_georef)
 
         return None
 
 
     def _get_fwhm(self) -> None:
-        
+
         fwhm_per_band = []
-        for band in self.wavelengths: 
+        for band in self.wavelengths:
             idx = np.argmin(np.abs(band - self.srf_wl))
             fwhm_per_band.append(self.srf_fwhm[idx])
 
         self.fwhm = fwhm_per_band
 
         return None
-
