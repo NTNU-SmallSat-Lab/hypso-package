@@ -38,7 +38,7 @@ from hypso.load import load_l1a_nc, \
                         load_polymer_l2_v1_nc, \
                         load_polymer_l2_v2_nc
 
-from hypso.reflectance import compute_toa_reflectance
+from hypso.reflectance import compute_toa_reflectance, earth_sun_distance
 
 from hypso.utils import find_file
 
@@ -1338,6 +1338,10 @@ class HypsoBase:
         self.esun = esun
         self.esun_wl = esun_wl
         self.effective_fwhm = effective_fwhm
+        # Same value compute_toa_reflectance used; written to the L1C/L1D
+        # metadata/srf group so readers (e.g. Polymer's HYPSO reader) can
+        # apply F0 / d^2 without recomputing it.
+        self.earth_sun_distance = earth_sun_distance(self.iso_time)
 
         return None
 
@@ -2055,12 +2059,15 @@ class HypsoBase:
 
         # Run Polymer
         if True:
+            # SRFs from the L1 input file's own metadata/srf group
+            # (2026-10-23); falls back to the <sensor>_srf.nc sibling for
+            # files written before the group held SRFs.
             output_file = run_polymer(
                 Level1_HYPSO(polymer_l1_input_nc_file),
                 dir_out=str(polymer_output_dir),
                 if_exists = if_exists,
-                srf_getter = "hypso.ac.ac_polymer_srf_getter",
-                srf_getter_arg = srf_nc_path,
+                srf_getter = "hypso.ac.ac_polymer_srf_getter_from_l1",
+                srf_getter_arg = str(polymer_l1_input_nc_file),
                 **output_selection_kwargs,
                 **ancillary_kwargs,
                 **(polymer_settings or {}),

@@ -56,19 +56,12 @@ def compute_toa_reflectance(sensor_wavelengths,
 
     effective_fwhm = compute_effective_fwhm(srfs_csr=binned_srfs_csr, solar_wavelengths=truncated_solar_wavelengths)
 
-    scene_date = parser.isoparse(iso_time)
-    julian_day = scene_date.timetuple().tm_yday
+    sun_distance_scaler = earth_sun_distance(iso_time)
 
 
     toa_reflectance = np.empty_like(toa_radiance)
 
     for band, esun in enumerate(esun_list):
-
-        # Earth-Sun distance scaler (from day of year) using julian date
-        # (R/R_0) earth-sun distance divided by average earth-sun distance
-        # http://physics.stackexchange.com/questions/177949/earth-sun-distance-on-a-given-day-of-the-year
-        # 4 is when earth reaches perihelion, day 4 for 2025
-        sun_distance_scaler = 1 - 0.01672 * np.cos(0.9856 * (julian_day - 4))  
 
         # Get toa_reflectance
         # equation for "Normalized reflectances" found here:
@@ -120,6 +113,20 @@ def compute_toa_reflectance(sensor_wavelengths,
     esun = np.array(esun_list)
 
     return toa_reflectance, effective_fwhm, binned_srfs_csr, truncated_ssi, truncated_solar_wavelengths, esun, binned_sensor_wavelengths
+
+
+
+def earth_sun_distance(iso_time) -> float:
+    """
+    Earth-Sun distance in AU (R/R_0, distance over mean distance) for the
+    acquisition date, from the day of year.
+    http://physics.stackexchange.com/questions/177949/earth-sun-distance-on-a-given-day-of-the-year
+    0.9856 deg/day is the mean orbital motion; day 4 is perihelion. The
+    cosine argument is in degrees (until 2026-10-23 it was passed to np.cos
+    as radians, giving a date-dependent TOA reflectance error of up to ~6%).
+    """
+    julian_day = parser.isoparse(iso_time).timetuple().tm_yday
+    return float(1 - 0.01672 * np.cos(np.radians(0.9856 * (julian_day - 4))))
 
 
 

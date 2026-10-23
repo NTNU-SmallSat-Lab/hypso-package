@@ -35,6 +35,9 @@ def metadata_srf_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib',
                 complevel=COMP_LEVEL,
                 shuffle=COMP_SHUFFLE)
             esun_var[:] = esun
+            esun_var.units = "mW m-2 nm-1"
+            esun_var.description = ("Band-averaged (SRF-weighted) solar irradiance F0 at 1 AU, from the "
+                                    "TSIS-1 HSRS v2 (2022-11-30); the F0 used for this file's TOA reflectance")
         except Exception as ex:
             print(ex)
         
@@ -158,6 +161,49 @@ def metadata_srf_group_writer(satobj, netfile: nc.Dataset, COMP_SCHEME = 'zlib',
                 complevel=COMP_LEVEL,
                 shuffle=COMP_SHUFFLE)
             csiro_esun_var[:] = csiro_esun
+        except Exception as ex:
+            print(ex)
+
+
+    # Earth-Sun distance used for this file's TOA reflectance (L1D) and to be
+    # applied by readers that compute their own (rho = pi L d^2 / (F0 cos sza)).
+    if (hasattr(satobj, 'earth_sun_distance') and satobj.earth_sun_distance is not None):
+        srf_group.earth_sun_distance_au = float(satobj.earth_sun_distance)
+
+    # Per-band SRFs at full resolution, one Band_<i> variable with its own
+    # wav_Band_<i> coordinate (non-zero part only), identical in content to
+    # the <sensor>_srf.nc file HypsoBase.ac_polymer_generate_srf_nc writes,
+    # so Polymer can read its SRFs from the L1 file itself
+    # (hypso.ac.ac_polymer_srf_getter_from_l1).
+    if (getattr(satobj, 'srf', None) is not None and getattr(satobj, 'srf_ssi_wl', None) is not None):
+
+        try:
+            srf_wavelengths = np.asarray(satobj.srf_ssi_wl)
+            for idx, wl in enumerate(satobj.wavelengths):
+                bid = "Band_" + str(idx)
+                srf = satobj.srf[idx, :].toarray().flatten()
+                nonzero_mask = srf > 0
+                if np.any(nonzero_mask):
+                    srf_values, srf_wl = srf[nonzero_mask], srf_wavelengths[nonzero_mask]
+                else:
+                    srf_values, srf_wl = srf, srf_wavelengths
+
+                dim = f"wav_{bid}"
+                srf_group.createDimension(dim, len(srf_wl))
+                wav_var = srf_group.createVariable(dim, srf_wl.dtype, (dim,),
+                                                   compression=COMP_SCHEME, complevel=COMP_LEVEL,
+                                                   shuffle=COMP_SHUFFLE)
+                wav_var[:] = srf_wl
+                wav_var.units = "nm"
+                band_var = srf_group.createVariable(bid, srf_values.dtype, (dim,),
+                                                    compression=COMP_SCHEME, complevel=COMP_LEVEL,
+                                                    shuffle=COMP_SHUFFLE)
+                band_var[:] = srf_values
+                band_var.band_info = bid
+                band_var.band_wavelength = float(wl)
+                band_var.index = idx
+                band_var.effective_fwhm = float(satobj.effective_fwhm[idx])
+                band_var.center_fwhm = float(satobj.fwhm[idx])
         except Exception as ex:
             print(ex)
 

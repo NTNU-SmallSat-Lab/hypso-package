@@ -5,6 +5,7 @@ import numpy as np
 from .geometry_group_writer import geometry_group_writer
 from .calibration_filenames_writer import calibration_filenames_writer
 from .metadata_gcp_group_writer import metadata_gcp_group_writer
+from .metadata_srf_group_writer import metadata_srf_group_writer
 
 def write_l1c_nc_file(satobj, overwrite: bool = False, masked: bool = False, **kwargs) -> None:
 
@@ -472,5 +473,10 @@ def l1c_nc_writer(satobj, dst_nc: str, datacube: bool = True, masked: bool = Fal
         geometry_group_writer(satobj=satobj, netfile=netfile, COMP_SCHEME=COMP_SCHEME, COMP_LEVEL=COMP_LEVEL, COMP_SHUFFLE=COMP_SHUFFLE)
 
         metadata_gcp_group_writer(satobj, netfile, COMP_SCHEME=COMP_SCHEME, COMP_LEVEL=COMP_LEVEL, COMP_SHUFFLE=COMP_SHUFFLE)
-    
+
+        # SRFs, F0 and Earth-Sun distance (same group as L1D) so L1C is
+        # self-describing for readers that convert radiance themselves
+        # (Polymer). Written only if L1D's SRF/F0 step has already run.
+        metadata_srf_group_writer(satobj, netfile, COMP_SCHEME=COMP_SCHEME, COMP_LEVEL=COMP_LEVEL, COMP_SHUFFLE=COMP_SHUFFLE)
+
     return None
