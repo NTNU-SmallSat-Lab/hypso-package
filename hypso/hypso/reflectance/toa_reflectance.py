@@ -24,8 +24,8 @@ def compute_toa_reflectance(sensor_wavelengths,
                                          solar_wavelengths=solar_wavelengths,
                                          sensor_wavelengths=sensor_wavelengths,
                                          sensor_fwhm=sensor_fwhm)
-    
-    esun_list = compute_esun(srf_list=srf_list, 
+
+    esun_list = compute_esun(srf_list=srf_list,
                              srf_ssi_list=srf_ssi_list)
 
     scene_date = parser.isoparse(iso_time)
@@ -40,14 +40,14 @@ def compute_toa_reflectance(sensor_wavelengths,
         # (R/R_0) earth-sun distance divided by average earth-sun distance
         # http://physics.stackexchange.com/questions/177949/earth-sun-distance-on-a-given-day-of-the-year
         # 4 is when earth reaches perihelion, day 4 for 2025
-        sun_distance_scaler = 1 - 0.01672 * np.cos(0.9856 * (julian_day - 4))  
+        sun_distance_scaler = 1 - 0.01672 * np.cos(np.radians(0.9856 * (julian_day - 4)))
 
         # Get toa_reflectance
         # equation for "Normalized reflectances" found here:
-        # https://oceanopticsbook.info/view/atmospheric-correction/normalized-reflectances 
+        # https://oceanopticsbook.info/view/atmospheric-correction/normalized-reflectances
         solar_angle_correction = np.cos(np.radians(solar_zenith_angles))
         multiplier = (esun * solar_angle_correction) / (np.pi * sun_distance_scaler ** 2)
-        
+
         toa_reflectance[:, :, band] = toa_radiance[:, :, band] / multiplier
 
 
@@ -97,12 +97,12 @@ def compute_srf(ssi,
     fwhm_nm = sensor_fwhm
     sigma_nm = fwhm_nm / (2 * np.sqrt(2 * np.log(2)))
 
-    
+
     sensor_band_indices = [np.abs(solar_wavelengths - w).argmin() for w in sensor_wavelengths]
 
     srf_list = []
     srf_ssi_list = []
-    
+
     for i, sensor_band_index in enumerate(sensor_band_indices):
 
         center_lambda_nm = solar_wavelengths[sensor_band_index]
@@ -116,7 +116,7 @@ def compute_srf(ssi,
         upper_wl = []
 
         # get the elements in the wavelength array that are 3Sigma above and below center_w
-        # if the center_w is closer to one end than 3Sigma then one of the arrays will be shorter 
+        # if the center_w is closer to one end than 3Sigma then one of the arrays will be shorter
         # than the other. This needs to be corrected for so that the center is still kept
         # when making the gaussian, therefore len_diff is found.
 
@@ -147,7 +147,7 @@ def compute_srf(ssi,
         while len(upper_wl) > len(lower_wl):
             upper_wl.pop(-1)
         len_diff = 0
-            
+
         srf_wl = lower_wl + srf_wl + upper_wl
 
 
@@ -209,7 +209,7 @@ def load_ssi():
     #solar_y = ds["SSI"].values * 1000 # convert to milliwatts
     #ds.close()
 
-    # Load .npz file containing the pre-processed solar spectrum irradiance (SSI). It is generating using the 'write_ssi_npz.py' script. 
+    # Load .npz file containing the pre-processed solar spectrum irradiance (SSI). It is generating using the 'write_ssi_npz.py' script.
     # The SSI is truncated to the visible spectrum range covering the HYPSO-1 & -2 bands
     # The SSI is from the TSIS-1 SSI v2 file 'hybrid_reference_spectrum_p005nm_resolution_c2022-11-30_with_unc.nc'. A copy is in the Git repository.
     # Source & download: https://lasp.colorado.edu/lisird/data/tsis1_hsrs_p1nm
@@ -275,7 +275,7 @@ def compute_toa_reflectance_interpolation(srf,
     toa_reflectance = np.empty_like(toa_radiance)
 
     ESUN_hypso = []
-    
+
     for i in range(len(srf)):
 
         print(i)
@@ -285,26 +285,26 @@ def compute_toa_reflectance_interpolation(srf,
 
         # check if the srf goes outside the wavelength range of hypso, if so
         # extend the wavelength range with a cubic spline
-        if (len(single_srf) // 2 > i): 
+        if (len(single_srf) // 2 > i):
             # check if srf wants to fetch values lower than the lowest wavelength of hypso
             x_orig = np.arange(0, len(wavelengths))
-            interpolator = CubicSpline(x_orig, wavelengths, extrapolate=True)        
+            interpolator = CubicSpline(x_orig, wavelengths, extrapolate=True)
             x_new = np.arange(-np.abs(i - len(single_srf) // 2), len(wavelengths))
             single_wl = interpolator(x_new)
         elif (i + (len(single_srf)//2) >= len(wavelengths)):
             # check if srf wants to fetch values higher than the highest wavelength of hypso
             x_orig = np.arange(0, len(wavelengths))
-            interpolator = CubicSpline(x_orig, wavelengths, extrapolate=True)        
+            interpolator = CubicSpline(x_orig, wavelengths, extrapolate=True)
             x_new = np.arange(0, i + (len(single_srf)//2) + 1)
             single_wl = interpolator(x_new)
         # put the srf funciton on the wavelength axis, assuming srf function is symmetric
-        k = 0 
+        k = 0
         single_srf_on_wl_axis = np.zeros_like(single_wl)
         for j in range(-(len(single_srf)//2), len(single_srf)//2+1):
             center_idx = np.argwhere(single_wl == wavelengths[i])
             single_srf_on_wl_axis[center_idx + j] = single_srf[k]
             k += 1
-        
+
         print(single_srf_on_wl_axis.shape)
         print(single_srf_on_wl_axis)
 
@@ -322,11 +322,11 @@ def compute_toa_reflectance_interpolation(srf,
         # (R/R_0) earth-sun distance divided by average earth-sun distance
         # http://physics.stackexchange.com/questions/177949/earth-sun-distance-on-a-given-day-of-the-year
         sun_distance_scaler = 1 - 0.01672 * np.cos(0.9856 * (
-                julian_day - 4)) # 4 is when earth reaches perihelion, day 4 for 2025 
+                julian_day - 4)) # 4 is when earth reaches perihelion, day 4 for 2025
 
         # Get toa_reflectance
         # equation for "Normalized reflectances" found here:
-        # https://oceanopticsbook.info/view/atmospheric-correction/normalized-reflectances 
+        # https://oceanopticsbook.info/view/atmospheric-correction/normalized-reflectances
         solar_angle_correction = np.cos(np.radians(solar_zenith_angles))
         multiplier = (ESUN * solar_angle_correction) / (np.pi * sun_distance_scaler ** 2)
         toa_reflectance[:, :, band_number] = toa_radiance[:, :, band_number] / multiplier
@@ -375,7 +375,7 @@ def compute_toa_reflectance_thuillier_2002(srf,
                             solar_zenith_angles,
                             ) -> xr.DataArray:
 
-    
+
     # Get Local variables
     #srf = self.srf
     #toa_radiance = self.l1b_cube.to_numpy()
@@ -469,7 +469,7 @@ def get_spectral_response_function(wavelengths, fwhm: np.array) -> None:
 
 
         # get the elements in the wavelength array that are 3Sigma above and below center_w
-        # if the center_w is closer to one end than 3Sigma then one of the arrays will be shorter 
+        # if the center_w is closer to one end than 3Sigma then one of the arrays will be shorter
         # than the other. This needs to be corrected for so that the center is still kept
         # when making the gaussian, therefore len_diff is found.
         for ele in wavelengths:
@@ -480,12 +480,12 @@ def get_spectral_response_function(wavelengths, fwhm: np.array) -> None:
 
         # Make symmetric
         if (len(wavelengths) - i) <= len(lower_wl):
-            # Close to highest wavelength, find how many wavelengths missed because 
-            # 3 Sigma is out of wavelength bounds, skip symmetry 
+            # Close to highest wavelength, find how many wavelengths missed because
+            # 3 Sigma is out of wavelength bounds, skip symmetry
             len_diff = len(lower_wl) - len(upper_wl)
         elif i < len(upper_wl):
-            # Close to lowest wavelength, find how many wavelengths missed because 
-            # 3 Sigma is out of wavelength bounds, skip symmetry 
+            # Close to lowest wavelength, find how many wavelengths missed because
+            # 3 Sigma is out of wavelength bounds, skip symmetry
             len_diff = len(upper_wl) - len(lower_wl)
         else:
             # Close to neither the highest nor lowest wavelength, enforce symmetry
@@ -565,13 +565,13 @@ def get_spectral_response_function_old(wavelengths, fwhm: np.array) -> None:
 
         # Make symmetric
         if (len(wavelengths) - i) <= len(lower_wl):
-            # Close to highest wavelength, skip symmetry 
+            # Close to highest wavelength, skip symmetry
             print(i)
             print("within upper limit")
             len_diff = len(lower_wl) - len(upper_wl)
             pass
         elif i < len(upper_wl):
-            # Close to lowest wavelength, skip symmetry 
+            # Close to lowest wavelength, skip symmetry
             print(i)
             print("within lower limit")
             len_diff = len(upper_wl) - len(lower_wl)
@@ -600,8 +600,8 @@ def get_spectral_response_function_old(wavelengths, fwhm: np.array) -> None:
         # Get final wavelength and SRF
         srf_wl_single = wavelengths
         srf_single = np.zeros_like(srf_wl_single)
-        
-        
+
+
         N = len(gaussian_srf)
         M = len(srf_single)
         half_N = N // 2
