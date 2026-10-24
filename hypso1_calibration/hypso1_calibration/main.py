@@ -37,7 +37,9 @@ def get_hypso1_calibration_files(capture_type, coeff_type=None) -> None:
         npz_file_radiometric = "h1_radiometric_calibration_matrix_full_moved_v3.npz"
         # Adjusted using polynomial fit, using whole spectrum, static offset
         npz_file_spectral = "spectral_array_calibrated_poly_full_v3.npz"
-    elif coeff_type == 'adjusted_v3':
+    elif coeff_type in ('adjusted_v3', 'abs_v3'):
+        # abs_v3: HYPSO-1 is the reference for the absolute level, so it uses the adjusted_v3 coefficients (only
+        # HYPSO-2 is scaled, see hypso2_calibration)
         # in-orbit calibration chain (h2-onboard-calibration): smile (Sobel) -> spectral (moon/LIME) -> SRF -> radiometric (moon/LIME)
         print("[INFO] - Using v3 (in-orbit) calibration coefficients for HYPSO-1.")
         if capture_type == "wide":
@@ -47,7 +49,7 @@ def get_hypso1_calibration_files(capture_type, coeff_type=None) -> None:
             npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v3.npz"
         npz_file_spectral = "spectral_array_calibrated_poly_full_v3.npz"
     else:
-        raise ValueError(f"Invalid coeff_type: {coeff_type}. Must be 'moved', 'adjusted', 'original', 'moved_v3', or 'adjusted_v3'.")
+        raise ValueError(f"Invalid coeff_type: {coeff_type}. Must be 'moved', 'adjusted', 'original', 'moved_v3', 'adjusted_v3', or 'abs_v3'.")
 
     match capture_type:
 

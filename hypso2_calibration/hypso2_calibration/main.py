@@ -55,8 +55,17 @@ def get_hypso2_calibration_files(capture_type=None, coeff_type=None) -> None:
         else:
             npz_file_radiometric = "h2_radiometric_calibration_matrix_full_v3.npz"
         npz_file_spectral = "spectral_array_calibrated_poly_full_v3.npz"
+    elif coeff_type == 'abs_v3':
+        # adjusted_v3 scaled to the absolute level of HYPSO-1 relative to PACE over Libya-4
+        # (h2-onboard-calibration/pace_hypso_rad_comparison/abs_radiometric_correction.py)
+        print("[INFO] - Using v3 (in-orbit) calibration coefficients for HYPSO-2, scaled to the level of HYPSO-1.")
+        if capture_type == "wide":
+            npz_file_radiometric = "h2_radiometric_calibration_matrix_wide_v3_abs.npz"
+        else:
+            npz_file_radiometric = "h2_radiometric_calibration_matrix_full_v3_abs.npz"
+        npz_file_spectral = "spectral_array_calibrated_poly_full_v3.npz"
     else:
-        raise ValueError(f"Invalid coeff_type: {coeff_type}. Must be 'moved', 'adjusted', 'original', 'moved_v3', or 'adjusted_v3.")
+        raise ValueError(f"Invalid coeff_type: {coeff_type}. Must be 'moved', 'adjusted', 'original', 'moved_v3', 'adjusted_v3', or 'abs_v3'.")
 
     if 'v3' in coeff_type:
         # full-frame smile matrix (Sobel), cropped and binned to the capture AOI when read
