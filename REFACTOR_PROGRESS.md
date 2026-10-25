@@ -127,15 +127,27 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
     `_polymer_driver.py`. Golden L1D baseline rescaled by the exact (d_correct/d_buggy)^2 = 0.98142 for DOY 63
     (recorded in baseline.json `l1d_cube_earth_sun_rescale`), not re-recorded. Verified on the venice fixture:
     implied d^2 from rhot/Lt/esun/cos(sza) equals 0.98243185 at three bands; getter returns Band_0..Band_119.
-  - Pending: `2efe4b35` (ACOLITE settings layering, polymer_settings), `16b6a476` (_unmasked strip),
-    `8ef0166c` (ERA5 ancillary), `89ac5e46` (OC-SMART loader h5py->netCDF4, geometry write warnings),
-    `2be4784e` (solz>=70 warning; Polymer import-preload hack probably moot under the subprocess driver -
-    verify on a real run).
+  - Then ported, one commit each: `2efe4b35` -> `d94c5a25` (ACOLITE driver: `load(sensor)` then
+    `read(settings_file)`; config key `settings_arg` split into `sensor` + `settings_file`; `polymer_settings`
+    through config.json to run_polymer), `16b6a476` -> `7cbcd6af` (`_unmasked` strip in
+    `PolymerAdapter.get_id_sensor`), `8ef0166c` -> `80c86dd9` (`ancillary_source`/`era5_allow_preliminary`;
+    `eoread.era5.ERA5` built inside the driver), `89ac5e46` -> `8a9b858f` (OC-SMART loader on netCDF4,
+    identical output to the h5py version on the venice .h5; geometry write failures now warnings in both
+    writers), `2be4784e` -> `5740cac8` (solz >= 70 warning in `georeferencing/geo.run_angles_geometry`).
+  - **Deliberately not ported**: `2be4784e`'s Polymer import-preload hack. It worked around an in-process
+    PathFinder failure; the refactor imports Polymer in a fresh subprocess. Verified against
+    `/home/camerop/AC/Polymer/Polymer` (current pipeline install): polymer/eoread/eotools/core import in the
+    driver subprocess; the run fails only at Level1_HYPSO's missing-file assert.
+  - Scope rule from the user (2026-10-25): changes go in hypso-package-refactor only; the AC processors
+    (eoread/ACOLITE/OC-SMART/Polymer checkouts) are updated separately.
   - **Not in this repo but needed for AC**: `hypso-package-refactor/POLYMER/eoread` (`refactor` branch) lacks
     the fork's `3609d25` (F0 from file esun / d^2); Polymer still uses point-sampled F0 with no distance term
     until that is merged onto the flat-layout reader.
-  - Pre-existing, unrelated: 3 `tests/test_ac_subprocess.py` failures (subprocess can't import `hypso.ac`),
-    identical with the port stashed and from a neutral cwd.
+  - Pre-existing, unrelated: 3 `tests/test_ac_subprocess.py` failures. Cause: `hypso` is not installed in
+    the `ac` env (conftest only adds it to the parent's sys.path), so driver subprocesses can't import it.
+    Also `test_real_polymer_imports_succeed_through_subprocess` silently skips: its fixture path
+    `Polymer_HYPSO_SRF_Oct_2025` was renamed `..._DO_NOT_USE`; the pipeline now uses `AC/Polymer/Polymer`
+    (different layout: no `polymer-master-v5` container).
 
 - **2026-08-26 (×28): print() → logging conversion.** User request, independent of the HypsoCapture
   rearchitecture. 174 live `print()` calls across 20 files converted to `logger.info`/`warning`/`error`/
