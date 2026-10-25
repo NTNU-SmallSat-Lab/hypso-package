@@ -2,22 +2,27 @@
 
 #https://packaging.python.org/en/latest/specifications/core-metadata/
 
-#[tool.setuptools_scm]
-#write_to = "hypso/_version.py"
-#fallback_version = "0.0.0"
+# Version from git tags (vYY.M.N, shared by hypso, hypso1_calibration and
+# hypso2_calibration - one tag versions all three). root is the repo root, one
+# level up from this file. Untagged commits get YY.M.(N+1).devD+g<sha>, and a
+# dirty tree adds .dYYYYMMDD. See docs/versioning.rst.
+[tool.setuptools_scm]
+root = ".."
+version_file = "hypso1_calibration/_version.py"
+fallback_version = "0.0.0+unknown"
 
 [build-system]
 requires=[
 #  "python >=3.10",
   "pip>=23.2.1",
   "setuptools>=69.2.0",
+  "setuptools_scm[toml]>=8.1.0",
   ]
   
 build-backend="setuptools.build_meta"
 
 [project]
 name="hypso1_calibration"
-version = "26.02.0"
 authors = [
   { name="Cameron Penne", email="cameron.l.penne@ntnu.no" },
 ]
@@ -43,9 +48,9 @@ dependencies=[
 ]
 
 # dynamic properties set by tools
-#dynamic = [
-#  "version",
-#]
+dynamic = [
+  "version",
+]
 
 [project.urls]
 "Homepage" = "https://github.com/NTNU-SmallSat-Lab/hypso-package"

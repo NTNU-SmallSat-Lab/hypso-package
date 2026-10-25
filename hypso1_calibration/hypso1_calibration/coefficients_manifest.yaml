@@ -1,0 +1,23 @@
+# SHA-256 of every file under data/, maintained by
+#   python -m hypso.calibration.manifest update hypso1_calibration
+# tests/test_versioning.py fails if a file changes without this manifest
+# changing too. Commit the updated manifest together with the coefficient
+# change, and tag that commit as a new release (vYY.M.N) - see
+# docs/versioning.rst.
+files:
+  data/capture_modes.yaml: 96243b119fc3eb39951be1bdc1c9fa60f83bba66a59f59a6e1b77c0f744e5f95
+  data/destriping_matrix_HYPSO-1_nominal_v1.npz: aed4c507788aff9e0145a9a22fd9d0ce4e7bdbbb9810d7cdd6ffdf1f78088ec4
+  data/destriping_matrix_HYPSO-1_wide_v1.npz: 81e7ca53aca4a87ae7114c5f111ed48a66140b76cdc852f3ef42e33e610aa29c
+  data/h1_radiometric_calibration_matrix_full_moved.npz: d13b0efe006bbeac13d92eee5ef4ea0bef682a0ef6fc93829e3de13ae3256363
+  data/radiometric_calibration_matrix_HYPSO-1_full_v1.npz: 99cb116341eb536e66336e5a9640679def792785815270cc7578485ed9e1d8c5
+  data/radiometric_calibration_matrix_HYPSO-1_full_v1_adjusted_v11.npz: 6e4cddd8a02c3f53016db9fb616fae2faf1ea0531c63fa817517a2a8933098a2
+  data/radiometric_calibration_matrix_HYPSO-1_moon.npz: f704630884885e67e6deeb3ff9694644384f8c9228a0dc315638c0239dbf274a
+  data/radiometric_calibration_matrix_HYPSO-1_nominal_v1.npz: d063d1b927a6fb07aebdb00faedb7ec1de7a029bc14106791a51702b2c937286
+  data/radiometric_calibration_matrix_HYPSO-1_wide_v1.npz: 6785d81109e6070f6682456c5173cf60f9ad2b91a1dd8260879a0fbcc42cb15d
+  data/smile_correction_matrix_HYPSO-1_nominal_v1.npz: 521ae30d382f3628dc5ecdf334c4e03c33de74b42dbf7cef81ad447071489b0c
+  data/smile_correction_matrix_HYPSO-1_wide_v1.npz: efc33a088923c380d285441e7ef2be28d610200b8efe12156067fdfb468bff33
+  data/spectral_array_calibrated_poly_full.npz: 2882cf7ab7ebffc6e19ae2419d8a1b2a6c6a187f7c6f7c7c7b26dbcf08a107c7
+  data/spectral_bands_HYPSO-1_v1.npz: 717103ccdfeb2b9117f42402e27a8fc7e21cec9f2e124356587ea19f7018480e
+  data/spectral_calibration_matrix_HYPSO-1_full_v1.npz: 169325f15354c1d0cc427fd518c4d3fbe3266e4a6bfd27dd97983b6a0f0a7067
+  data/spectral_calibration_wavelengths_center_row_HYPSO-1.npz: 51322e5664d455f7ad8531bff25d8cd32e8290a4727ac0eb3198e1050f75ff6f
+package: hypso1_calibration

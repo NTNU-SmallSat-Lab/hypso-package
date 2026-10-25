@@ -110,6 +110,26 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-10-25 (×40): version scheme implemented (prerequisite for ×39 provenance).** See docs/versioning.rst.
+  - One shared CalVer `YY.M.N` for hypso + both calibration packages, from git tags via setuptools_scm
+    (re-enabled in all three pyproject.toml, `root = ".."`, `version_file = <pkg>/_version.py`, git-ignored).
+    Verified by building wheels in a scratch clone/venv: all three get `26.2.1.dev169+gc3c7c8c64.d20261025`
+    from tag `v26.02.0`; wheels contain `_version.py`, all coefficient files and the manifests. setuptools_scm
+    is a build requirement only (pip build isolation); nothing was installed into the `ac` env.
+  - `hypso.versioning.package_info(name)`: git (commit, dirty, describe) when the package dir is in a git
+    checkout -> `_version.py` -> installed metadata only if it contains the imported module -> `0.0.0+unknown`.
+    The metadata check matters: the `ac` env has production's hypso1/2_calibration (26.2.0/26.5.1) installed
+    while tests import this checkout's copies. `hypso.__version__` is a lazy PEP 562 attribute over it (the old
+    `from ._version import __version__` silently failed, so it never existed). Calibration packages get a plain
+    build-time `__version__`.
+  - `hypso.calibration.manifest` + `coefficients_manifest.yaml` per calibration package (sha256 of every
+    data/ file; 15 for HYPSO-1, 16 for HYPSO-2; all 31 files confirmed identical to their git blobs before
+    hashing, given this workstation's bit-flip history). `tests/test_versioning.py` fails on any unrecorded
+    coefficient change. CLI: `python -m hypso.calibration.manifest check|update [pkg]`.
+  - Also fixed: hypso1_calibration/MANIFEST.in included `hypso/_version.py` (copy-paste of hypso's path).
+  - No release tag created: tagging is the user's call (next one would be e.g. `v26.10.0`).
+  - `product_format_version` (×39 item 5) is still to be added with the provenance work in the rewrite.
+
 - **2026-10-25 (×39): provenance design agreed (build in the Dataset rewrite, step 1; not in current code).**
   Purpose (user): compatible, ESA SNAP-compatible format with traceability of when/how each level was made.
   - Global `history`: one line per step: UTC time, level, input file, hypso-package version + git commit (and

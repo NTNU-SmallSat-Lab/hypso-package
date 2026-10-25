@@ -28,7 +28,11 @@ from .hypso1 import Hypso1, get_hypso1_wavelengths
 from .hypso2 import Hypso2, get_hypso2_wavelengths
 
 
-try:
-    from ._version import __version__  # noqa
-except:
-    pass
+def __getattr__(name):
+    # Resolved lazily (git is queried on first access, not at import) and
+    # from the code actually imported - see hypso.versioning for why the
+    # build-time _version.py / installed metadata alone can be wrong.
+    if name == "__version__":
+        from .versioning import package_info
+        return package_info("hypso")["version"]
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
