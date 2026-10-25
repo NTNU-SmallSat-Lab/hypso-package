@@ -110,6 +110,19 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-10-25 (×38): format verified against production output; ESA SNAP compatibility confirmed by the user.**
+  Diffed refactor-written L1B/L1C/L1D against HYPSO_DATA_AOC_REPROCESS_AULUS2/aeronetvenice_2025-06-12T09-58-02Z
+  (production code with the Earth-Sun fix). All values identical (Lt/rhot all bands, lat/lon, angles, in-file
+  SRFs, earth_sun_distance_au); differences are the intended CF changes. One unintended regression fixed
+  (`25f4c3bf`: per-band `parameter` was the wave label, restored to the variable name). User opened the
+  refactor L1D in ESA SNAP and confirmed it is compatible.
+  Open: pipeline's direct-georef fallback assigns satobj.solar_zenith_angles etc., read-only properties in the
+  refactor; the planned Hypso facade must accept these.
+  L1A in the new format: `write_level_nc(satobj, "L1A", ...)` works and is lossless (all 120 dn bands identical,
+  all metadata groups/variables kept), but cannot be read back (load/l1a_nc_loader.py expects /products/dn),
+  writes dn as float32 instead of uint16, and stamps calibration-file global attrs onto an uncalibrated product.
+  Pre-existing (production too): load/utils.py casts numeric group attrs to int (capture_config exposure 40.0 -> 40).
+
 - **2026-10-25 (×37): architecture decision + production back-port started.**
   Architecture review (user-requested) concluded: move to a **plain `xr.Dataset` core, no level classes**
   (user's explicit choice over thin typed wrappers). Target: `io/read` + `io/write` (one CF/SNAP encoder,
