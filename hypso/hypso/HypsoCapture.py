@@ -985,7 +985,8 @@ class HypsoCapture:
                                   optional_output_datasets: list = ["SPM"],
                                   if_exists: str = "overwrite",
                                   polymer_version: str = "v1",
-                                  python_path: str = None):
+                                  python_path: str = None,
+                                  polymer_settings: dict = None):
         return self.ac.polymer.run_correction(self,
                                               polymer_base_path=polymer_base_path,
                                               polymer_path=polymer_path,
@@ -996,7 +997,8 @@ class HypsoCapture:
                                               optional_output_datasets=optional_output_datasets,
                                               if_exists=if_exists,
                                               polymer_version=polymer_version,
-                                              python_path=python_path)
+                                              python_path=python_path,
+                                              polymer_settings=polymer_settings)
 
 
     def ac_polymer_open_output(self,

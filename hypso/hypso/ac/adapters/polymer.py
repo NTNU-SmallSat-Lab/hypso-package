@@ -205,7 +205,8 @@ class PolymerAdapter(ACAdapter):
                        optional_output_datasets: list = ["SPM"],
                        if_exists: str = "overwrite",
                        polymer_version: str = "v1",
-                       python_path: str = None):
+                       python_path: str = None,
+                       polymer_settings: dict = None):
         """
         Runs Polymer in an ISOLATED SUBPROCESS - see _polymer_driver.py's
         module docstring for why (v1/v2 builds' same-named-package
@@ -222,6 +223,16 @@ class PolymerAdapter(ACAdapter):
               it lands in **kwargs and is never used for selection), so
               output selection is driven by outputs_names instead; the
               solver only exposes log-scale "logchl"/"logfb", not "chla"/"fb".
+        polymer_settings: optional dict of extra Params overrides, forwarded
+            as **kwargs straight through run_polymer(**kwargs) ->
+            Params(sensor, **kwargs) - Params.__init__ applies sensor
+            defaults (sensor_specific -> defaults_hypso2 in polymer/params.py)
+            first, then self.update(**kwargs) layers these on top, so any
+            attribute defaults_hypso2 sets (band_cloudmask, bands_corr,
+            bands_rw, bands_oc, ...) can be overridden here without editing
+            Polymer's own params.py. Must be JSON-serializable (it crosses
+            the subprocess boundary in config.json). None (default) - no
+            overrides, unchanged behavior.
         python_path: interpreter to run Polymer's subprocess under. Defaults
             to sys.executable (this same process's interpreter) - confirmed
             sufficient for Polymer's own imports (the environment.yml some
@@ -267,6 +278,7 @@ class PolymerAdapter(ACAdapter):
             "srf_nc_path": str(srf_nc_path),
             "polymer_version": polymer_version,
             "optional_output_datasets": optional_output_datasets,
+            "polymer_settings": polymer_settings or {},
         }
 
         result = run_subprocess_driver(

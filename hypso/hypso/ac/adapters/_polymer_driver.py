@@ -27,6 +27,8 @@ config.json keys (all written by PolymerAdapter.run_correction):
         globbing next to the L1 file, not read from this key).
     polymer_version: "v1" or "v2" - selects output_datasets vs outputs_names.
     optional_output_datasets: appended to either selection list.
+    polymer_settings: dict of Params overrides, passed to run_polymer as
+        **kwargs (optional, default none).
 
 result.json: {"status": "ok", "output_file": "..."} or
 {"status": "error", "error_type": ..., "message": ..., "traceback": ...}.
@@ -82,6 +84,7 @@ def main(config_path: str, result_path: str) -> int:
             srf_getter=SRF_GETTER_FROM_L1_PATH,
             srf_getter_arg=config["polymer_l1_input_nc_file"],
             **output_selection_kwargs,
+            **(config.get("polymer_settings") or {}),
         )
 
         Path(result_path).write_text(json.dumps({

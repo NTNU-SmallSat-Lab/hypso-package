@@ -48,14 +48,9 @@ class ACOLITEAdapter(ACAdapter):
 
         logger.info("Running ACOLITE atmospheric correction installed in %s", acolite_path)
 
-        # load() only applies a sensor's own config/defaults/<name>.txt (e.g.
-        # HYPSO2.txt's dsf_wave_range=450,750) when explicitly given that
-        # name - it does not auto-detect sensor from the input file. Passing
-        # None would silently fall back to ACOLITE's fully generic
-        # defaults.txt (dsf_wave_range=400,2500) instead, mirroring the fix
-        # ac_runners.py's PACE runner already has via its explicit
-        # load("PACE_OCI") call.
-        settings_arg = str(settings_file) if settings_file is not None else satobj.platform.upper()
+        # The driver loads the sensor defaults (e.g. HYPSO2.txt's
+        # dsf_wave_range=450,750) by platform name and layers settings_file
+        # on top - see _acolite_driver.main.
 
         if input_product_level.upper() == 'L1D':
             logger.info("Using L1d NetCDF as ACOLITE input.")
@@ -89,7 +84,8 @@ class ACOLITEAdapter(ACAdapter):
 
         config = {
             "acolite_path": str(acolite_path),
-            "settings_arg": settings_arg,
+            "sensor": satobj.platform.upper(),
+            "settings_file": str(settings_file) if settings_file is not None else None,
             "settings_overrides": settings_overrides,
         }
 

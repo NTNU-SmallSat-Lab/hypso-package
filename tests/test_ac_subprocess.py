@@ -163,6 +163,7 @@ def test_driver_success_path_with_stubbed_polymer(tmp_path, monkeypatch):
         "srf_nc_path": "srf.nc",
         "polymer_version": "v1",
         "optional_output_datasets": ["SPM"],
+        "polymer_settings": {"band_cloudmask": 667, "bands_corr": [448, 660]},
     }
     config_path = tmp_path / "config.json"
     result_path = tmp_path / "result.json"
@@ -186,6 +187,9 @@ def test_driver_success_path_with_stubbed_polymer(tmp_path, monkeypatch):
     assert captured_kwargs["srf_getter"] == SRF_GETTER_FROM_L1_PATH
     assert captured_kwargs["srf_getter_arg"] == "input.nc"
     assert captured_kwargs["output_datasets"] == ["logchl", "logfb", "SPM"]
+    # polymer_settings forwarded as Params overrides
+    assert captured_kwargs["band_cloudmask"] == 667
+    assert captured_kwargs["bands_corr"] == [448, 660]
 
 
 def test_srf_getter_path_actually_resolves():
@@ -308,7 +312,7 @@ def test_real_polymer_imports_succeed_through_subprocess(tmp_path):
 def test_acolite_driver_reports_import_error_as_structured_result(tmp_path):
     config = {
         "acolite_path": str(tmp_path / "does_not_exist"),
-        "settings_arg": "HYPSO2",
+        "sensor": "HYPSO2",
         "settings_overrides": {"inputfile": "irrelevant.nc", "output": str(tmp_path)},
     }
     config_path = tmp_path / "config.json"
@@ -337,6 +341,7 @@ def test_acolite_driver_success_path_with_stubbed_acolite(tmp_path, monkeypatch)
 
     fake_settings_module = types.ModuleType("acolite.acolite.settings")
     fake_settings_module.load = lambda arg: FakeSettings(_loaded_from=arg)
+    fake_settings_module.read = lambda path: {"_read_from": path}
 
     def fake_acolite_run(settings):
         captured["settings"] = dict(settings)
@@ -357,7 +362,7 @@ def test_acolite_driver_success_path_with_stubbed_acolite(tmp_path, monkeypatch)
 
     config = {
         "acolite_path": "/unused",
-        "settings_arg": "HYPSO2",
+        "sensor": "HYPSO2",
         "settings_overrides": {"inputfile": "input.nc", "output": str(tmp_path),
                                "l2w_parameters": ["Rrs_*"]},
     }
@@ -372,6 +377,7 @@ def test_acolite_driver_success_path_with_stubbed_acolite(tmp_path, monkeypatch)
     assert result["status"] == "ok"
     settings = captured["settings"]
     assert settings["_loaded_from"] == "HYPSO2"
+    assert "_read_from" not in settings  # no settings_file given
     assert settings["inputfile"] == "input.nc"
     assert settings["l2w_parameters"] == ["Rrs_*"]
     # EARTHDATA credentials picked up from env, not from config.json
@@ -380,12 +386,50 @@ def test_acolite_driver_success_path_with_stubbed_acolite(tmp_path, monkeypatch)
     assert settings["ancillary_data"] is True
 
 
+def test_acolite_driver_layers_settings_file_over_sensor_defaults(tmp_path, monkeypatch):
+    # settings_file is read() over load(sensor), not load(settings_file):
+    # sensor defaults it doesn't repeat must survive.
+    import types
+
+    captured = {}
+    fake_settings_module = types.ModuleType("acolite.acolite.settings")
+    fake_settings_module.load = lambda arg: {"_loaded_from": arg, "dsf_aot_estimate": "tiled",
+                                             "dsf_wave_range": "450,750"}
+    fake_settings_module.read = lambda path: {"dsf_wave_range": "450,800"}
+    fake_acolite_acolite = types.ModuleType("acolite.acolite")
+    fake_acolite_acolite.acolite_run = lambda settings: captured.update(settings=dict(settings))
+    fake_acolite_acolite.settings = fake_settings_module
+    fake_acolite = types.ModuleType("acolite")
+    fake_acolite.acolite = fake_acolite_acolite
+    monkeypatch.setitem(sys.modules, "acolite", fake_acolite)
+    monkeypatch.setitem(sys.modules, "acolite.acolite", fake_acolite_acolite)
+    monkeypatch.setitem(sys.modules, "acolite.acolite.settings", fake_settings_module)
+    monkeypatch.delenv("HYPSO_ACOLITE_EARTHDATA_USERNAME", raising=False)
+    monkeypatch.delenv("HYPSO_ACOLITE_EARTHDATA_PASSWORD", raising=False)
+
+    config = {
+        "acolite_path": "/unused",
+        "sensor": "HYPSO2",
+        "settings_file": str(tmp_path / "user_settings.txt"),
+        "settings_overrides": {"inputfile": "input.nc", "output": str(tmp_path)},
+    }
+    config_path = tmp_path / "config.json"
+    result_path = tmp_path / "result.json"
+    config_path.write_text(json.dumps(config))
+
+    assert _acolite_driver.main(str(config_path), str(result_path)) == 0
+    settings = captured["settings"]
+    assert settings["_loaded_from"] == "HYPSO2"
+    assert settings["dsf_aot_estimate"] == "tiled"
+    assert settings["dsf_wave_range"] == "450,800"
+
+
 def test_acolite_driver_earthdata_env_not_in_config_file(tmp_path):
     # Confirms the actual secret-handling contract: credentials never appear
     # in the JSON config file ACOLITEAdapter.run_correction writes to disk.
     config = {
         "acolite_path": "/unused",
-        "settings_arg": "HYPSO2",
+        "sensor": "HYPSO2",
         "settings_overrides": {"inputfile": "input.nc", "output": str(tmp_path)},
     }
     config_path = tmp_path / "config.json"
@@ -398,7 +442,7 @@ def test_acolite_driver_earthdata_env_not_in_config_file(tmp_path):
 def test_acolite_run_subprocess_driver_raises_ac_run_error_on_bad_config(tmp_path):
     config = {
         "acolite_path": str(tmp_path / "does_not_exist"),
-        "settings_arg": "HYPSO2",
+        "sensor": "HYPSO2",
         "settings_overrides": {"inputfile": "irrelevant.nc", "output": str(tmp_path)},
     }
 
@@ -455,7 +499,7 @@ def test_real_acolite_imports_and_runs_through_subprocess(tmp_path):
     # is itself the proof that real ACOLITE code executed, not a lack of one.
     config = {
         "acolite_path": str(REAL_ACOLITE_PATH),
-        "settings_arg": "HYPSO2",
+        "sensor": "HYPSO2",
         "settings_overrides": {
             "inputfile": str(tmp_path / "does_not_exist-l1c.nc"),
             "output": str(tmp_path),

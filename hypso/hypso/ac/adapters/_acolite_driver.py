@@ -25,12 +25,12 @@ environment (run_subprocess_driver's extra_env).
 
 config.json keys (all written by ACOLITEAdapter.run_correction):
     acolite_path: sys.path entry for the ACOLITE installation.
-    settings_arg: positional arg to acolite.acolite.settings.load() - either
-        a settings file path or a platform name string (e.g. "HYPSO2") - see
-        run_correction's docstring for why passing the platform name
-        explicitly matters (load() only applies a sensor's own
+    sensor: platform name passed to acolite.acolite.settings.load() (e.g.
+        "HYPSO2") - load() only applies a sensor's own
         config/defaults/<name>.txt when given that name; it does not
-        auto-detect the sensor from the input file).
+        auto-detect the sensor from the input file.
+    settings_file: optional user settings file, layered over the sensor
+        defaults with read() (see main()).
     settings_overrides: dict merged into the loaded settings object
         (input/output paths, l2w product list, etc) via settings[key] = value.
 
@@ -50,10 +50,18 @@ def main(config_path: str, result_path: str) -> int:
     try:
         sys.path.append(config["acolite_path"])
 
-        from acolite.acolite.settings import load
+        from acolite.acolite.settings import load, read
         from acolite.acolite import acolite_run
 
-        settings = load(config["settings_arg"])
+        # Always load the sensor defaults first, then layer settings_file's
+        # own overrides on top with a plain read() (not load(settings_file),
+        # which would replace the sensor defaults with only ACOLITE's generic
+        # config/defaults.txt for anything settings_file doesn't itself
+        # repeat - e.g. HYPSO2.txt's dsf_aot_estimate=tiled would silently
+        # revert). Mirrors ac_runners_pace.py's PACE_OCI runner.
+        settings = load(config["sensor"])
+        if config.get("settings_file"):
+            settings.update(read(config["settings_file"]))
 
         for key, value in config["settings_overrides"].items():
             settings[key] = value
