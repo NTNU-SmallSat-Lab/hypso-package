@@ -208,21 +208,21 @@ def _write_geometry_root(satobj, netfile: nc.Dataset, schema: LevelSchema) -> No
             crs_var = netfile.createVariable('crs_wgs84', 'i4', ())
             for k, v in cf.crs_wgs84_attrs().items():
                 setattr(crs_var, k, v)
-        except Exception:
-            logger.debug("Skipping crs_wgs84 variable", exc_info=True)
+        except Exception as ex:
+            logger.warning("Unable to write crs_wgs84: %r", ex)
 
         for name, source_attr, builder, long_name in _INDIRECT_ANGLE_FIELDS:
             try:
                 _write_var(netfile, name, getattr(satobj, source_attr), builder(long_name), dims=schema.spatial_dims)
-            except Exception:
-                logger.debug("Skipping optional geometry variable %s", name, exc_info=True)
+            except Exception as ex:
+                logger.warning("Unable to write %s from satobj.%s: %r", name, source_attr, ex)
 
     if has_direct:
         for name, source_attr, builder, long_name in _DIRECT_ANGLE_FIELDS:
             try:
                 _write_var(netfile, name, getattr(satobj, source_attr), builder(long_name), dims=schema.spatial_dims)
-            except Exception:
-                logger.debug("Skipping optional geometry variable %s", name, exc_info=True)
+            except Exception as ex:
+                logger.warning("Unable to write %s from satobj.%s: %r", name, source_attr, ex)
 
 
 def _write_products(satobj, netfile: nc.Dataset, schema: LevelSchema, cube: np.ndarray,
