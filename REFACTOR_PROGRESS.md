@@ -21,8 +21,9 @@ permission to modify — unlike `/home/camerop/AC/hypso-package`, which is **rea
    reflectance); whether the result is a new level (L3) or a gridded variant of L1D/L2A; how the grid is
    named in the file name (io/naming.py); CF output layout (1D lat/lon coordinates or projected x/y with
    `grid_mapping`, which SNAP reads natively).
-3. **Rest of step 1b**: CF flag variable for land/cloud/custom masks (×42); build the tree from a capture
-   object so `write_l1x_nc_file` writes through `write_product`. Then steps 2-4 of ×37.
+3. **Rest of step 1b**: build the tree from a capture object so `write_l1x_nc_file` writes through
+   `write_product` (the CF flag variable is done - ×44). Then steps 2-4 of ×37. SNAP check pending for the
+   ×41 dimension change and the ×44 flag variable.
 4. **Hypso facade (step 3) must accept** the pipeline's direct-georef fallback, which assigns
    `satobj.solar_zenith_angles` etc. (read-only properties in the refactor) - ×38.
 5. **Release tag** (user's call): products currently get versions counted from `v26.02.0` - ×40.
@@ -147,6 +148,17 @@ Full unabridged plan text: see the "Approved Plan" section pasted at the bottom 
 duplicated per update — if it's missing, check `/home/camerop/.claude/plans/rosy-frolicking-summit.md` instead).
 
 ## Status (update this section as work progresses — most recent at top)
+
+- **2026-10-26 (×44): masks as one CF flag variable (`hypso/masks/flags.py`).** `encode_flags` /
+  `decode_flags` / `apply_flags`: land(1), cloud(2), then custom masks as bits of `pixel_flags` (lines,
+  samples); `flag_masks` has the variable's dtype (CF), `flag_meanings` space-separated, uint8 widening to
+  uint16+ past 8 masks; optional `comment` with mask descriptions. read_product/write_product pass flag
+  variables through (detected by `flag_meanings`; coordinates/grid_mapping added when georeferenced). Real
+  check: CNN sea-land-cloud labels of aeronetvenice_2025-06-12T09-58-02Z (62% land, 26% cloud) encoded into
+  the refactor L1D, written as `HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.nc`, decode back identically.
+  (Its geospatial_lat range 42.9-47.7 looked large but is real: latitude is smooth, ~0.0077 deg/line over
+  598 lines, no outliers.) Not yet: producing flags from a capture's land_mask/cloud_mask/custom masks
+  (facade step) and applying them at AC staging (AC step).
 
 - **2026-10-26 (×43): step 1b (part 1) - provenance + format-2 file attributes + conversion.**
   - `hypso/io/provenance.py`: `add_step(tree, step, input_file, parameters, calibration, ac)` writes
