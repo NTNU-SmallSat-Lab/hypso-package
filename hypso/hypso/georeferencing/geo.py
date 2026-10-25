@@ -99,6 +99,20 @@ def run_angles_geometry(satobj, latitudes: np.ndarray, longitudes: np.ndarray):
     sat_zenith_angles = sat_zenith.reshape(satobj.spatial_dimensions)
     sat_azimuth_angles = sat_azimuth.reshape(satobj.spatial_dimensions)
 
+    # 70 deg matches OC-SMART's own default solz_limit - a capture whose
+    # solar zenith never drops below that anywhere in the scene (high
+    # latitude + low-sun season) has zero valid geometry pixels for
+    # OC-SMART's mask_valid_geo, which crashes deep inside its gas
+    # correction with a bare `assert(l1_data.cos_solar_zenith.size != 0)`.
+    # A physical limitation of standard AC algorithms at extreme solar
+    # zenith, not a bug, but worth surfacing here rather than only from
+    # that assertion later (production 2be4784e).
+    if np.nanmin(solar_zenith_angles) >= 70.0:
+        logger.warning("Solar zenith angle is >= 70 deg across the entire scene (min: %.1f deg) - "
+                       "standard atmospheric correction methods (e.g. OC-SMART, default "
+                       "solz_limit=70) may find no valid pixels for this capture.",
+                       np.nanmin(solar_zenith_angles))
+
     relative_azimuth_angles = abs(sat_azimuth_angles - solar_azimuth_angles)
 
     relative_azimuth_angles = np.where(relative_azimuth_angles > 180,
