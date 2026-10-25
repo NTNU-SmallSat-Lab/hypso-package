@@ -110,6 +110,22 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-10-26 (×43): step 1b (part 1) - provenance + format-2 file attributes + conversion.**
+  - `hypso/io/provenance.py`: `add_step(tree, step, input_file, parameters, calibration, ac)` writes
+    `metadata/processing/<step>` (date, hypso-package version/commit/dirty, input file, parameters; optional
+    calibration package version/commit + `<kind>_file`/`<kind>_sha256`; optional AC tool/version/commit/path +
+    `settings_effective`/`settings_user` JSON, credential keys removed and listed in `settings_redacted_keys`)
+    and appends one `history` line. Nodes survive later read+write, so files carry their lineage.
+  - `write_product` adds `product_format_version` "2.0", `date_created`, `Conventions` "CF-1.10, ACDD-1.3",
+    ACDD `geospatial_lat/lon_min/max` (+units) when georeferenced, and writes L2A as `processing_level` "L2A";
+    the reader maps format-1 "L2" to "L2A". Writing alone adds no history line (not a processing step).
+  - `convert_product(src, out_dir)`: any supported layout -> current format, NASA-style name (io/naming.py),
+    "convert" step recorded with `source_layout`; source untouched.
+  - read_product verified on every production product of aeronetvenice_2025-06-12T09-58-02Z (reprocess
+    dataset): ground-station L1A, legacy L1B/L1C/L1D, and L2A from acolite_l2r/acolite_l2w/dps/ocsmart/polymer.
+  - Still in 1b: CF flag variable for land/cloud/custom masks (unmasked product + flags), then building the
+    tree from a capture object so write_l1x_nc_file routes through write_product.
+
 - **2026-10-26 (×42): file naming + masking decisions (user).** Built in step 1b.
   - Names, NASA OB.DAAC style (satellite first - the user's primary sort; time second, as PACE granules):
     `{SAT}_HSI.{YYYYMMDDTHHMMSS}.{target}.{LEVEL}[.{ac}][.{label}].nc`, e.g.

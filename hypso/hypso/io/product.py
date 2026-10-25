@@ -28,12 +28,14 @@ original file stays the source of truth.
 """
 import logging
 import re
-from datetime import datetime, timezone
+from pathlib import Path
 
 import numpy as np
 import xarray as xr
 
 from . import cf
+from .naming import parse_product_name, product_name as make_product_name
+from .provenance import PRODUCT_FORMAT_VERSION, add_step, utc_now
 from .schema import get_schema
 
 logger = logging.getLogger(__name__)
@@ -128,6 +130,16 @@ def _product_from_cube(name: str, var: xr.DataArray, wavelengths, sat_id: str):
     return name, xr.DataArray(var.values, dims=PRODUCT_DIMS, coords=coords)
 
 
+def source_layout(path) -> str:
+    """"current" (flat), "legacy" (/products + /geometry groups) or
+    "ground_station_l1a" (one 3D /products/dn cube)."""
+    import netCDF4
+    with netCDF4.Dataset(path) as f:
+        if "products" not in f.groups:
+            return "current"
+        return "ground_station_l1a" if "dn" in f["products"].variables else "legacy"
+
+
 def read_product(path) -> xr.DataTree:
     """Read any supported HYPSO product file into the in-memory model (see
     module docstring). Raises ValueError if no product cube is found."""
@@ -158,7 +170,7 @@ def read_product(path) -> xr.DataTree:
         if level is None:
             raise ValueError(f"{path}: no processing_level attribute")
 
-        out = xr.Dataset({prefix: cube}, attrs={**root.attrs, "processing_level": level})
+        out = xr.Dataset({prefix: cube}, attrs={**root.attrs, "processing_level": _level_key(level)})
         for name in _GEOMETRY_ATTRS:
             if name in geometry.data_vars:
                 out[name] = (SPATIAL_DIMS, geometry[name].values)
@@ -246,12 +258,20 @@ def _root_dataset(tree: xr.DataTree, datacube: bool):
         out["crs_wgs84"] = xr.Variable((), value, cf.crs_wgs84_attrs())
         encoding["crs_wgs84"] = _encoding(out["crs_wgs84"], "i4")
 
+    # Writing is not a processing step: history lines come from
+    # provenance.add_step, not from here.
+    level = _level_key(schema.processing_level)
     attrs = dict(ds.attrs)
-    attrs.update(cf.global_attrs(schema.processing_level, schema.title))
-    attrs["processing_level"] = schema.processing_level
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    entry = f"{timestamp}: {schema.processing_level} product written by hypso-package"
-    attrs["history"] = f"{ds.attrs['history']}\n{entry}" if ds.attrs.get("history") else entry
+    attrs.update(cf.global_attrs(level, schema.title))
+    attrs["Conventions"] = f"{cf.CONVENTIONS}, ACDD-1.3"
+    attrs["processing_level"] = level   # "L2A", not the format-1 "L2"
+    attrs["product_format_version"] = PRODUCT_FORMAT_VERSION
+    attrs["date_created"] = utc_now()
+    if has_geometry:
+        lat, lon = ds["latitude"].values, ds["longitude"].values
+        attrs.update(geospatial_lat_min=float(np.nanmin(lat)), geospatial_lat_max=float(np.nanmax(lat)),
+                     geospatial_lon_min=float(np.nanmin(lon)), geospatial_lon_max=float(np.nanmax(lon)),
+                     geospatial_lat_units="degrees_north", geospatial_lon_units="degrees_east")
     return xr.Dataset(out, attrs=attrs), encoding
 
 
@@ -267,3 +287,23 @@ def write_product(tree: xr.DataTree, path, datacube: bool = False) -> None:
         nodes[node.path] = ds
         encoding[node.path] = {name: _encoding(var) for name, var in ds.variables.items()}
     xr.DataTree.from_dict(nodes).to_netcdf(path, engine="netcdf4", encoding=encoding)
+
+
+def convert_product(src, out_dir=None) -> Path:
+    """Write `src` (any supported layout) as a current-format product named
+    by io/naming.py, next to `src` unless `out_dir` is given; records a
+    "convert" step. The source file is left untouched."""
+    src = Path(src)
+    tree = read_product(src)
+    attrs = tree.attrs
+    level = _level_key(attrs["processing_level"])
+    sat_id = attrs.get("sat_id") or attrs.get("instrument")
+    name = parse_product_name(src)
+    ac = name.ac if level == "L2A" else None
+    dst = Path(out_dir or src.parent) / make_product_name(sat_id, name.time, name.target, level,
+                                                          ac=ac, label=name.label).filename()
+    if dst.resolve() == src.resolve():
+        raise ValueError(f"{src} is already a current-format product name")
+    add_step(tree, "convert", input_file=src, parameters={"source_layout": source_layout(src)})
+    write_product(tree, dst)
+    return dst

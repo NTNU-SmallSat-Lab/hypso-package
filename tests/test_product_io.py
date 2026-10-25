@@ -5,7 +5,8 @@ import pytest
 import xarray as xr
 
 from conftest import requires_real_capture
-from hypso.io.product import PRODUCT_DIMS, read_product, write_product
+from hypso.io import provenance
+from hypso.io.product import PRODUCT_DIMS, convert_product, read_product, write_product
 
 LINES, SAMPLES, BANDS = 4, 3, 5
 WAVELENGTHS = np.array([400.04, 450.12, 500.27, 550.33, 600.49])
@@ -29,7 +30,17 @@ def _same(a, b):
     return np.array_equal(np.asarray(a), np.asarray(b))
 
 
-def assert_same_file(path_a, path_b, ignore_attrs=("history",)):
+# Set fresh on every write.
+WRITE_TIME_ATTRS = ("date_created",)
+# Format-2 global attributes write_product adds or updates on files from the
+# current io/writer.py (checked separately in test_format_2_global_attrs).
+FORMAT_2_ATTRS = WRITE_TIME_ATTRS + (
+    "Conventions", "processing_level", "product_format_version", "history",
+    "geospatial_lat_min", "geospatial_lat_max", "geospatial_lon_min", "geospatial_lon_max",
+    "geospatial_lat_units", "geospatial_lon_units")
+
+
+def assert_same_file(path_a, path_b, ignore_attrs=WRITE_TIME_ATTRS):
     """Same variables (values, dtype, dims, attrs) and group/global attrs."""
     with nc.Dataset(path_a) as a, nc.Dataset(path_b) as b:
         va, vb = _walk(a), _walk(b)
@@ -45,9 +56,10 @@ def assert_same_file(path_a, path_b, ignore_attrs=("history",)):
             assert all(_same(ax[k], ay[k]) for k in ax), name
         ga, gb = _group_attrs(a), _group_attrs(b)
         assert sorted(ga) == sorted(gb)
+        ga["/"] = {k: v for k, v in ga["/"].items() if k not in ignore_attrs}
+        gb["/"] = {k: v for k, v in gb["/"].items() if k not in ignore_attrs}
         for g in ga:
-            x = {k: v for k, v in ga[g].items() if k not in ignore_attrs}
-            y = {k: v for k, v in gb[g].items() if k not in ignore_attrs}
+            x, y = ga[g], gb[g]
             assert sorted(x) == sorted(y), g
             assert all(_same(x[k], y[k]) for k in x), (g, [k for k in x if not _same(x[k], y[k])])
 
@@ -160,6 +172,14 @@ def test_legacy_grouped_file_is_normalised(tmp_path):
         assert set(f["metadata/gcp"].variables) == {"gcp_latitude"}
 
 
+def test_format_1_l2_level_is_read_as_l2a(tmp_path):
+    path = tmp_path / "a.nc"
+    write_product(_tree(level="L2A", prefix="Rrs"), path)
+    with nc.Dataset(path, "a") as f:
+        f.processing_level = "L2"   # what format-1 (production) L2A files carry
+    assert read_product(path).attrs["processing_level"] == "L2A"
+
+
 def test_ground_station_l1a(tmp_path):
     source, out = tmp_path / "l1a.nc", tmp_path / "out.nc"
     _write_legacy(source, ground_station_l1a=True)
@@ -175,6 +195,71 @@ def test_ground_station_l1a(tmp_path):
         assert not [k for k in b.ncattrs() if k.endswith("_file")]
 
 
+def test_format_2_global_attrs(tmp_path):
+    path = tmp_path / "a.nc"
+    write_product(_tree(level="L2A", prefix="Rrs"), path)
+    with nc.Dataset(path) as f:
+        assert f.product_format_version == provenance.PRODUCT_FORMAT_VERSION
+        assert f.processing_level == "L2A"
+        assert f.Conventions == "CF-1.10, ACDD-1.3"
+        assert 45 <= f.geospatial_lat_min <= f.geospatial_lat_max <= 46
+        assert f.geospatial_lon_units == "degrees_east"
+        assert "history" not in f.ncattrs()   # writing is not a processing step
+    path = tmp_path / "b.nc"
+    write_product(_tree(level="L1B", geometry=False), path)
+    with nc.Dataset(path) as f:
+        assert not [k for k in f.ncattrs() if k.startswith("geospatial")]
+
+
+def test_add_step_records_lineage(tmp_path):
+    tree = _tree()
+    provenance.add_step(tree, "l1b", input_file="/data/x.L1A.nc", parameters={"coeff_type": "moved",
+                                                                              "masks": ["land"], "binned": True})
+    provenance.add_step(tree, "l2a_acolite", input_file="x.L1C.nc",
+                        ac=provenance.ac_attrs("acolite", "20250114.0",
+                                               settings_effective={"dsf_wave_range": "450,800",
+                                                                   "EARTHDATA_u": "me", "EARTHDATA_p": "secret"},
+                                               settings_user={"dsf_wave_range": "450,800"}))
+    first, second = tmp_path / "a.nc", tmp_path / "b.nc"
+    write_product(tree, first)
+    write_product(read_product(first), second)   # lineage survives a further read/write
+    with nc.Dataset(second) as f:
+        step = f["metadata/processing/l1b"]
+        assert step.input_file == "x.L1A.nc" and step.coeff_type == "moved"
+        assert step.masks == '["land"]' and step.binned == "true"
+        assert step.software == "hypso-package" and step.software_version
+        ac = f["metadata/processing/l2a_acolite"]
+        assert ac.ac_tool == "acolite" and "secret" not in ac.settings_effective
+        assert ac.settings_redacted_keys == "EARTHDATA_p, EARTHDATA_u"
+        lines = f.history.splitlines()
+        assert len(lines) == 2 and lines[0].split(": ", 1)[1].startswith("l1b from x.L1A.nc, hypso-package ")
+        assert lines[1].endswith("acolite 20250114.0")
+
+
+def test_calibration_attrs_checksums():
+    from hypso.calibration.manifest import load
+    from importlib.resources import files
+    listed = load("hypso2_calibration")
+    name = "data/h2_radiometric_calibration_matrix_full_moved.npz"
+    attrs = provenance.calibration_attrs("hypso2_calibration",
+                                         {"radiometric": files("hypso2_calibration").joinpath(name), "smile": None})
+    assert attrs["radiometric_sha256"] == listed[name]
+    assert attrs["radiometric_file"] == name.split("/")[-1] and "smile_file" not in attrs
+    assert attrs["calibration_package"] == "hypso2_calibration" and attrs["calibration_package_version"]
+
+
+def test_convert_product_names_and_records(tmp_path):
+    source = tmp_path / "aeronetvenice_2025-06-12T09-58-02Z-l1a.nc"
+    _write_legacy(source, ground_station_l1a=True)
+    dst = convert_product(source)
+    assert dst.name == "HYPSO2_HSI.20250612T095802.aeronetvenice.L1A.nc"
+    assert source.exists()
+    with nc.Dataset(dst) as f:
+        assert f["metadata/processing/convert"].source_layout == "ground_station_l1a"
+        assert f["metadata/processing/convert"].input_file == source.name
+        assert "convert from aeronetvenice_2025-06-12T09-58-02Z-l1a.nc" in f.history
+
+
 # --- real capture: the current writer's files survive read + write unchanged ---
 
 @requires_real_capture
@@ -182,4 +267,7 @@ def test_ground_station_l1a(tmp_path):
 def test_real_files_round_trip(written_nc_files, tmp_path, level):
     out = tmp_path / f"rt-{level}.nc"
     write_product(read_product(written_nc_files[level]), out)
-    assert_same_file(written_nc_files[level], out)
+    assert_same_file(written_nc_files[level], out, ignore_attrs=FORMAT_2_ATTRS)
+    again = tmp_path / f"rt2-{level}.nc"
+    write_product(read_product(out), again)
+    assert_same_file(out, again)
