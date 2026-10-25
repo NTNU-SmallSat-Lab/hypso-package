@@ -182,9 +182,9 @@ def test_driver_success_path_with_stubbed_polymer(tmp_path, monkeypatch):
     # never legitimately drift from ac_polymer_srf_getter's real location,
     # so a test asserting a separately-typed literal would just be a second
     # place that same drift could go unnoticed.
-    from hypso.ac.ac_polymer import SRF_GETTER_PATH
-    assert captured_kwargs["srf_getter"] == SRF_GETTER_PATH
-    assert captured_kwargs["srf_getter_arg"] == "srf.nc"
+    from hypso.ac.ac_polymer import SRF_GETTER_FROM_L1_PATH
+    assert captured_kwargs["srf_getter"] == SRF_GETTER_FROM_L1_PATH
+    assert captured_kwargs["srf_getter_arg"] == "input.nc"
     assert captured_kwargs["output_datasets"] == ["logchl", "logfb", "SPM"]
 
 
@@ -204,6 +204,17 @@ def test_srf_getter_path_actually_resolves():
     resolved = getattr(mod, attr_name)
 
     assert resolved is ac_polymer_srf_getter
+
+
+def test_srf_getter_from_l1_path_actually_resolves():
+    # Same check for the getter the driver actually passes (2026-10-23).
+    import importlib
+    from hypso.ac.ac_polymer import SRF_GETTER_FROM_L1_PATH, ac_polymer_srf_getter_from_l1
+
+    module_path, attr_name = SRF_GETTER_FROM_L1_PATH.rsplit(".", 1)
+    mod = importlib.import_module(module_path)
+
+    assert getattr(mod, attr_name) is ac_polymer_srf_getter_from_l1
 
 
 # --- tier 2: real subprocess spawn, no Polymer needed (paths don't exist) ---

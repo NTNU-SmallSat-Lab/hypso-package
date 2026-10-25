@@ -338,9 +338,12 @@ def write_level_nc(satobj, level: str, dst_nc: str, datacube: bool = False, mask
     AC tool produced it, not a single fixed satobj attribute."""
     schema = get_schema(level)
     cube_obj = getattr(satobj, f"masked_{schema.source_cube_attr}") if masked else getattr(satobj, schema.source_cube_attr)
+    # L1C gets the metadata/srf group too (SRFs, F0, Earth-Sun distance) so
+    # it is self-describing for readers that convert radiance themselves
+    # (Polymer). Only written if the L1D SRF/F0 step has already run.
     _write_level_nc(satobj, schema, dst_nc, cube=cube_obj.to_numpy(),
                      wavelengths=satobj.wavelengths, fwhm=satobj.fwhm, datacube=datacube,
-                     write_srf=(level.upper() == "L1D"))
+                     write_srf=(level.upper() in ("L1C", "L1D")))
 
 
 def _write_level_nc_file(satobj, level: str, file_attr: str, overwrite: bool, masked: bool,

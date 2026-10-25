@@ -110,6 +110,33 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-10-25 (×37): architecture decision + production back-port started.**
+  Architecture review (user-requested) concluded: move to a **plain `xr.Dataset` core, no level classes**
+  (user's explicit choice over thin typed wrappers). Target: `io/read` + `io/write` (one CF/SNAP encoder,
+  in-memory `(band,y,x)` split to per-band `Lt_<wave>` on disk), processing as pure Dataset->Dataset functions,
+  AC tools as `run`/`read` + YAML config, and a `Hypso(path)` compatibility facade for
+  hypso-processing-pipeline. Replaces HypsoCapture + capture_types + io/dispatch + load/ + write/ + containers.
+  Rollout: (1) Dataset read/write matching golden files, (2) processing functions, (3) facade, (4) delete old.
+
+  Before that: port the 6 production `polymer`-branch commits made since the fork point `5a249e29`
+  (none cherry-pick, all hand-ported). Status:
+  - `99172075` Earth-Sun distance + in-file SRFs: **ported**. `reflectance.earth_sun_distance()` (degrees);
+    `metadata/srf` on L1C and L1D gets `Band_<i>`/`wav_Band_<i>` SRFs, `esun` units/description,
+    `earth_sun_distance_au` (computed in the writer from `iso_time`, not stored on satobj, so it doesn't need
+    setting in both capture trees); `ac_polymer_srf_getter_from_l1` + `SRF_GETTER_FROM_L1_PATH`, wired into
+    `_polymer_driver.py`. Golden L1D baseline rescaled by the exact (d_correct/d_buggy)^2 = 0.98142 for DOY 63
+    (recorded in baseline.json `l1d_cube_earth_sun_rescale`), not re-recorded. Verified on the venice fixture:
+    implied d^2 from rhot/Lt/esun/cos(sza) equals 0.98243185 at three bands; getter returns Band_0..Band_119.
+  - Pending: `2efe4b35` (ACOLITE settings layering, polymer_settings), `16b6a476` (_unmasked strip),
+    `8ef0166c` (ERA5 ancillary), `89ac5e46` (OC-SMART loader h5py->netCDF4, geometry write warnings),
+    `2be4784e` (solz>=70 warning; Polymer import-preload hack probably moot under the subprocess driver -
+    verify on a real run).
+  - **Not in this repo but needed for AC**: `hypso-package-refactor/POLYMER/eoread` (`refactor` branch) lacks
+    the fork's `3609d25` (F0 from file esun / d^2); Polymer still uses point-sampled F0 with no distance term
+    until that is merged onto the flat-layout reader.
+  - Pre-existing, unrelated: 3 `tests/test_ac_subprocess.py` failures (subprocess can't import `hypso.ac`),
+    identical with the port stashed and from a neutral cwd.
+
 - **2026-08-26 (×28): print() → logging conversion.** User request, independent of the HypsoCapture
   rearchitecture. 174 live `print()` calls across 20 files converted to `logger.info`/`warning`/`error`/
   `exception` (commit `03b604be`) - each file gets its own `logger = logging.getLogger(__name__)`, matching

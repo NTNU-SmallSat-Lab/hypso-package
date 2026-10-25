@@ -19,8 +19,12 @@ config.json keys (all written by PolymerAdapter.run_correction):
         sys.path entries (base_path inserted last, so it wins on name clashes -
         matches the original in-process code's insertion order). Any may be
         null/omitted.
-    polymer_l1_input_nc_file, polymer_output_dir, if_exists, srf_nc_path:
-        passed straight through to run_polymer.
+    polymer_l1_input_nc_file, polymer_output_dir, if_exists:
+        passed straight through to run_polymer. polymer_l1_input_nc_file is
+        also the srf_getter argument (SRFs read from its metadata/srf group).
+    srf_nc_path: the <sensor>_srf.nc PolymerAdapter still generates, used
+        only as the srf_getter's fallback for older L1 files (found by
+        globbing next to the L1 file, not read from this key).
     polymer_version: "v1" or "v2" - selects output_datasets vs outputs_names.
     optional_output_datasets: appended to either selection list.
 
@@ -32,7 +36,7 @@ import sys
 import traceback
 from pathlib import Path
 
-from hypso.ac.ac_polymer import SRF_GETTER_PATH
+from hypso.ac.ac_polymer import SRF_GETTER_FROM_L1_PATH
 
 
 def main(config_path: str, result_path: str) -> int:
@@ -71,8 +75,12 @@ def main(config_path: str, result_path: str) -> int:
             Level1_HYPSO(config["polymer_l1_input_nc_file"]),
             dir_out=config["polymer_output_dir"],
             if_exists=config["if_exists"],
-            srf_getter=SRF_GETTER_PATH,
-            srf_getter_arg=config["srf_nc_path"],
+            # SRFs from the L1 input file's own metadata/srf group
+            # (2026-10-23); ac_polymer_srf_getter_from_l1 falls back to the
+            # <sensor>_srf.nc sibling (srf_nc_path) for files written before
+            # the group held SRFs.
+            srf_getter=SRF_GETTER_FROM_L1_PATH,
+            srf_getter_arg=config["polymer_l1_input_nc_file"],
             **output_selection_kwargs,
         )
 

@@ -1,2 +1,2 @@
-from .toa_reflectance import compute_toa_reflectance, compute_reflectance
+from .toa_reflectance import compute_toa_reflectance, compute_reflectance, earth_sun_distance
 from .spectral_response import SpectralResponse, compute_spectral_response
