@@ -58,6 +58,17 @@ def test_polymer_extras():
         assert callable(getattr(polymer, name)), name
 
 
+def test_polymer_id_sensor_ignores_unmasked_label_suffix():
+    # Production 16b6a476: coeff_type is "moved" for a fresh L1D but
+    # "moved_unmasked" when parsed from a loaded L1D's filename; the SRF/SSI/
+    # ESUN files are keyed on the coefficient set only.
+    from types import SimpleNamespace
+    polymer = get_ac_adapter("polymer")
+    for coeff_type in ("moved", "moved_unmasked"):
+        satobj = SimpleNamespace(sat_id="HYPSO-2", coeff_type=coeff_type)
+        assert polymer.get_id_sensor(satobj) == "HYPSO-2_moved"
+
+
 def test_ocsmart_extras():
     # stage_input/run_correction were merged into one run_correction
     # (confirmed zero external callers of the old two-call split) - see

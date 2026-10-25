@@ -12,6 +12,7 @@ own docstring for the mechanism and why SRF_GETTER_PATH is derived rather than
 hand-typed), and the interpreter running Polymer's subprocess must have
 `hypso` importable for that resolution to succeed."""
 import logging
+import re
 import sys
 from pathlib import Path
 
@@ -31,7 +32,15 @@ class PolymerAdapter(ACAdapter):
 
     def get_id_sensor(self, satobj):
 
-        sensor_version = "_" + str(satobj.coeff_type)
+        # satobj.coeff_type is just the radiometric coefficient set (e.g.
+        # "moved") when set directly during fresh L1D generation, but the
+        # whole processing label (e.g. "moved_unmasked") when parsed back out
+        # of an already-generated L1D file's own filename. SRF/SSI/ESUN
+        # depend only on sensor + coefficient set, never on masking, so strip
+        # that suffix here (production 16b6a476: POLYMER failed with SRF
+        # "not found" on every run loading an existing unmasked L1D file).
+        coeff_type = re.sub(r'_unmasked$', '', str(satobj.coeff_type))
+        sensor_version = "_" + coeff_type
 
         # combine sensor name ("HYPSO-1" or "HYPSO-2") with coefficients version
         # Polymer expects format like "HYPSO-2_moved"
