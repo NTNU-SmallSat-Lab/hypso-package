@@ -11,6 +11,8 @@ In-memory model (what read_product returns and write_product takes):
         radiation_wavelength  coord (bands): precise as-calibrated centre
         fwhm              coord (bands)
         latitude, longitude, crs_wgs84, <angles>   only when georeferenced
+        pixel_flags       optional CF flag variable (land/cloud/custom masks,
+                          hypso.masks.flags); the product itself is unmasked
         attrs             global attributes; processing_level is required
     /metadata/<group>     one child node per metadata group, passed through
 
@@ -97,6 +99,12 @@ def _band_variables(ds: xr.Dataset) -> list:
     return sorted(names, key=lambda n: int(ds[n].attrs["band"]))
 
 
+def _flag_variables(ds: xr.Dataset) -> list:
+    """CF flag variables (masks, see hypso.masks.flags), by their
+    flag_meanings attribute."""
+    return [n for n, v in ds.data_vars.items() if v.dims == SPATIAL_DIMS and "flag_meanings" in v.attrs]
+
+
 def _fwhm_from_profile(sat_id: str, wavelengths: np.ndarray) -> np.ndarray:
     # Same nearest-neighbour lookup as capture_types._get_fwhm, for files that
     # store no per-band fwhm (ground-station L1A).
@@ -176,6 +184,8 @@ def read_product(path) -> xr.DataTree:
                 out[name] = (SPATIAL_DIMS, geometry[name].values)
         if "latitude" in out and "crs_wgs84" in geometry.data_vars:
             out["crs_wgs84"] = ((), geometry["crs_wgs84"].values)
+        for name in _flag_variables(products):
+            out[name] = (SPATIAL_DIMS, products[name].values, dict(products[name].attrs))
 
         tree = xr.DataTree(out)
         if "metadata" in raw.children:
@@ -251,6 +261,12 @@ def _root_dataset(tree: xr.DataTree, datacube: bool):
         if name in ds.data_vars:
             out[name] = xr.Variable(SPATIAL_DIMS, ds[name].values, builder())
             encoding[name] = _encoding(out[name], "f4")
+    for name in _flag_variables(ds):
+        flag_attrs = {k: v for k, v in ds[name].attrs.items() if k not in ("coordinates", "grid_mapping")}
+        if has_geometry:
+            flag_attrs.update(cf.geolocation_ref_attrs())
+        out[name] = xr.Variable(SPATIAL_DIMS, ds[name].values, flag_attrs)
+        encoding[name] = _encoding(out[name])
     if has_geometry:
         # The grid-mapping variable's value carries no meaning (CF reads only
         # its attrs); keep the source file's, else 0.
