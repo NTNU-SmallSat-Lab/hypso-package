@@ -110,6 +110,23 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-10-26 (×42): file naming + masking decisions (user).** Built in step 1b.
+  - Names, NASA OB.DAAC style (satellite first - the user's primary sort; time second, as PACE granules):
+    `{SAT}_HSI.{YYYYMMDDTHHMMSS}.{target}.{LEVEL}[.{ac}][.{label}].nc`, e.g.
+    `HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.nc`, `...aeronetvenice.L2A.polymer.nc`. `.` separates
+    fields only. L2A always carries the AC field; the optional free-text label (experiments only, e.g.
+    `adjusted`) is always last. Calibration set and masking state are NOT in the name - recorded in-file
+    (provenance). Capture directories keep `{target}_{YYYY-MM-DDTHH-MM-SSZ}`; the parser keeps reading legacy
+    names. Converted L1A can no longer collide with the ground-station `...-l1a.nc`.
+  - Masking: one UNMASKED product per level plus CF flag variable(s) (flag_masks/flag_meanings; SNAP turns
+    these into masks) instead of separate NaN-masked copies. AC runs that want masked input apply the flags
+    at staging time (AC step, later).
+  - Also for 1b: ACDD `geospatial_lat/lon_min/max` global attrs (location filtering is in-file, not in the
+    name); L2A `processing_level` "L2" -> "L2A" with the next product_format_version.
+  - hypso-processing-pipeline builds legacy paths (stage 3, collect_files.py, colocation) and needs updating
+    separately; AC processors do not read file names (ACOLITE: instrument attr; eoread: layout; OC-SMART's
+    HYPSO_HSI_ prefix is applied by the adapter when staging).
+
 - **2026-10-25 (×41): Dataset rewrite step 1a - `hypso/io/product.py` (read_product / write_product).**
   In-memory model is an `xr.DataTree`: root holds the product cube `(lines, samples, bands)` with
   `wavelength`/`radiation_wavelength`/`fwhm` band coords, geometry, global attrs; `metadata/*` are child nodes.
