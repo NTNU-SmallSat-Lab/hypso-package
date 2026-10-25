@@ -110,6 +110,25 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-10-25 (×41): Dataset rewrite step 1a - `hypso/io/product.py` (read_product / write_product).**
+  In-memory model is an `xr.DataTree`: root holds the product cube `(lines, samples, bands)` with
+  `wavelength`/`radiation_wavelength`/`fwhm` band coords, geometry, global attrs; `metadata/*` are child nodes.
+  Reader accepts current flat files, legacy grouped files (/products + /geometry, pre-refactor and production;
+  gcp latitude/longitude/sourceX/sourceY renamed gcp_*), and ground-station L1A (3D uint16 /products/dn; fwhm
+  from the sensor profile). The writer is the single encoder: per-band SNAP layout via cf.band_attrs, CF
+  geometry attrs by variable name, zlib4+shuffle, whole-array chunks, no _FillValue, dn as uint16.
+  Verified on HYPSO_DATA_AOC_REPROCESS_AULUS2/aeronetvenice_2025-06-12T09-58-02Z:
+  - refactor-written L1D -> read -> write: all 396 variables identical (values, dtypes, attrs), all group and
+    global attrs identical except the new history line;
+  - production grouped L1D -> read -> write == refactor-writer format (only differences are 2 variables
+    production never wrote and 6 metadata arrays production stored as float32);
+  - ground-station L1A -> converted: dn identical in all 120 bands, uint16, no calibration-file attrs, reads
+    back and round-trips (107 MB vs 104.7 MB original; the satobj writer gave 119 MB).
+  Layout change to confirm in SNAP: dimensions used only by metadata groups (esun, radrows, bands_unbinned,
+  ...) are now defined in those groups, so the root has only lines/samples. tests/test_product_io.py: 6
+  synthetic + 4 real-data (L1B/L1C/L1D/L2A from the current writer survive read+write unchanged).
+  Not yet: provenance (×39) and product_format_version; building the tree from a capture object (facade step).
+
 - **2026-10-25 (×40): version scheme implemented (prerequisite for ×39 provenance).** See docs/versioning.rst.
   - One shared CalVer `YY.M.N` for hypso + both calibration packages, from git tags via setuptools_scm
     (re-enabled in all three pyproject.toml, `root = ".."`, `version_file = <pkg>/_version.py`, git-ignored).
