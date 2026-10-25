@@ -107,7 +107,8 @@ def geolocation_ref_attrs() -> dict:
 
 
 def band_attrs(long_name: str, units: str, wavelength_nm: float, radiation_wavelength_nm: float,
-                fwhm: float, wave_name: str, band_index: int, include_geolocation: bool) -> dict:
+                fwhm: float, wave_name: str, band_index: int, include_geolocation: bool,
+                *, var_name: str) -> dict:
     """Per-band product variable attrs (e.g. for Lt_378 or rhot_378).
 
     wavelength vs. radiation_wavelength: kept as two distinct attributes,
@@ -124,6 +125,10 @@ def band_attrs(long_name: str, units: str, wavelength_nm: float, radiation_wavel
     REFACTOR_PROGRESS.md's "Research: SNAP/CF wavelength convention"
     section) - left unset rather than guessed. `wave` (a third,
     truly-redundant duplicate of `wavelength`) is dropped.
+
+    var_name is the variable's own name (e.g. "Lt_378"), written as
+    `parameter` as the pre-refactor writers did; wave_name is the bare
+    wavelength label (e.g. "378").
     """
     attrs = {
         "long_name": long_name,
@@ -133,7 +138,7 @@ def band_attrs(long_name: str, units: str, wavelength_nm: float, radiation_wavel
         "radiation_wavelength": float(radiation_wavelength_nm),
         "radiation_wavelength_unit": "nm",
         "fwhm": float(fwhm),
-        "parameter": f"{wave_name}",
+        "parameter": var_name,
         "wave_name": wave_name,
         "band": band_index,
     }

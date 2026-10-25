@@ -84,8 +84,8 @@ def test_band_attrs_wavelengths():
                           units="W m-2 um-1 sr-1",
                           wavelength_nm=378.5,
                           radiation_wavelength_nm=378.54673723,
-                          fwhm=3.33, wave_name="Lt_378", band_index=0,
-                          include_geolocation=True)
+                          fwhm=3.33, wave_name="378", band_index=0,
+                          include_geolocation=True, var_name="Lt_378")
     assert np.ndim(attrs["radiation_wavelength"]) == 0
     assert isinstance(attrs["radiation_wavelength"], float)
     assert "wave" not in attrs
@@ -94,15 +94,19 @@ def test_band_attrs_wavelengths():
     assert attrs["wavelength"] == 378.5
     assert attrs["radiation_wavelength"] == 378.54673723
     assert attrs["band"] == 0
+    # parameter is the variable name, as the pre-refactor writers wrote it
+    # (production files: Lt_378.parameter == "Lt_378"); wave_name is bare.
+    assert attrs["parameter"] == "Lt_378"
+    assert attrs["wave_name"] == "378"
 
 
 def test_band_attrs_geolocation_toggle():
     # include_geolocation=False is the L1B path: no coordinates/grid_mapping
     # reference may be present (nothing to dangle).
-    with_geo = cf.band_attrs("x", "1", 500.0, 500.0, 3.3, "rhot_500", 1,
-                             include_geolocation=True)
-    without_geo = cf.band_attrs("x", "1", 500.0, 500.0, 3.3, "rhot_500", 1,
-                                include_geolocation=False)
+    with_geo = cf.band_attrs("x", "1", 500.0, 500.0, 3.3, "500", 1,
+                             include_geolocation=True, var_name="rhot_500")
+    without_geo = cf.band_attrs("x", "1", 500.0, 500.0, 3.3, "500", 1,
+                                include_geolocation=False, var_name="rhot_500")
     assert with_geo["coordinates"] == "latitude longitude"
     assert with_geo["grid_mapping"] == "crs_wgs84"
     assert "coordinates" not in without_geo

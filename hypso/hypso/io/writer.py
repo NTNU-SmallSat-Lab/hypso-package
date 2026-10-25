@@ -262,6 +262,7 @@ def _write_products(satobj, netfile: nc.Dataset, schema: LevelSchema, cube: np.n
             wave_name=wave_name,
             band_index=band,
             include_geolocation=schema.has_geometry,
+            var_name=name,
         )
         var = netfile.createVariable(
             name, 'f4', schema.spatial_dims,
