@@ -110,6 +110,25 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-10-25 (×39): provenance design agreed (build in the Dataset rewrite, step 1; not in current code).**
+  Purpose (user): compatible, ESA SNAP-compatible format with traceability of when/how each level was made.
+  - Global `history`: one line per step: UTC time, level, input file, hypso-package version + git commit (and
+    AC tool + version for L2A). CF-standard; SNAP shows global attributes.
+  - `metadata/processing/<step>` subgroups (l1a, l1b, l1c, l1d, l2a_<tool>), carried forward so each file holds
+    its full lineage: software, version, git_commit, git_dirty, date_utc, input_file, step parameters
+    (coeff_type; georeferencing indirect/direct-fallback; ssi_source, use_unbinned, masks_applied,
+    earth_sun_distance_au).
+  - **Calibration packages (user requirement)**: hypsoN_calibration name + version + git commit, AND sha256 of
+    every coefficient file actually loaded (radiometric/smile/destriping/spectral). Versions alone are not
+    enough: both packages are stuck at 26.02.0 and `04cd011f` replaced the HYPSO-2 smile matrix without a bump.
+  - AC (L2A): tool, version (Polymer polymer_version + checkout git commit; ACOLITE own version string or git
+    commit; OC-SMART install name), install path, input file/level, `settings_effective` (full JSON, ACOLITE
+    after layering) and `settings_user` (only user-set keys). Always written, no toggle (~10-20 KB). Credential
+    keys (EARTHDATA_u/p etc.) redacted. Recorded from hypso-package only; AC processors are not modified.
+  - Needs a real version scheme: hypso-package and both calibration packages are fixed at 26.02.0.
+  - Same step also adds the L1A fixes from ×38: flat-L1A reader, dn as uint16, no calibration-file attrs on L1A,
+    write_l1a_nc_file wrapper. Ground-station L1A stays the source of truth; new-format L1A is derived.
+
 - **2026-10-25 (×38): format verified against production output; ESA SNAP compatibility confirmed by the user.**
   Diffed refactor-written L1B/L1C/L1D against HYPSO_DATA_AOC_REPROCESS_AULUS2/aeronetvenice_2025-06-12T09-58-02Z
   (production code with the Earth-Sun fix). All values identical (Lt/rhot all bands, lat/lon, angles, in-file
