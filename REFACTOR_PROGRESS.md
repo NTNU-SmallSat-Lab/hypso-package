@@ -6,6 +6,44 @@ restart, this file is the durable copy) and `ARCHITECTURE_PROPOSAL.md` (the orig
 implements). This workspace (`~/hypso-package-refactor/hypso-package`) is a git clone the user gave explicit
 permission to modify — unlike `/home/camerop/AC/hypso-package`, which is **read-only**, do not touch it.
 
+## TODO (open items, newest first - one consolidated list; details live in the referenced entries)
+
+1. **Review TODO** (user, 2026-10-26). Go through this list, including the older items below, and confirm
+   each is still open. Several predate the plain-Dataset rewrite (×37) and may be superseded or reshaped by
+   it. Close, re-scope or re-prioritise each one.
+2. **Regridding / reprojection of L1D and L2A** (user, 2026-10-26). Resample swath products onto a common
+   grid, or onto another sensor's grid for comparison/matchups (PACE OCI, Sentinel-2/3, ...). Context to start
+   from: `hypso/resample/` already has pyresample nearest (KD-tree) and bilinear resampling onto an
+   `AreaDefinition`/`SwathDefinition`, but it has zero callers (flagged in the review notes near ×24);
+   `LevelSchema.spatial_dims` anticipates gridded `("lat", "lon")` products. In the Dataset design this is a
+   Dataset -> Dataset function. Open questions: target grid definitions (regular lat/lon, UTM/EPSG, another
+   sensor's swath or grid); method per variable (nearest for flags and masks, bilinear or area-weighted for
+   reflectance); whether the result is a new level (L3) or a gridded variant of L1D/L2A; how the grid is
+   named in the file name (io/naming.py); CF output layout (1D lat/lon coordinates or projected x/y with
+   `grid_mapping`, which SNAP reads natively).
+3. **Rest of step 1b**: CF flag variable for land/cloud/custom masks (×42); build the tree from a capture
+   object so `write_l1x_nc_file` writes through `write_product`. Then steps 2-4 of ×37.
+4. **Hypso facade (step 3) must accept** the pipeline's direct-georef fallback, which assigns
+   `satobj.solar_zenith_angles` etc. (read-only properties in the refactor) - ×38.
+5. **Release tag** (user's call): products currently get versions counted from `v26.02.0` - ×40.
+6. **Test environment**: 3 `test_ac_subprocess.py` failures (`hypso` not importable in driver subprocesses);
+   `test_real_polymer_imports_succeed_through_subprocess` silently skips (fixture path renamed
+   `..._DO_NOT_USE`; pipeline now uses `AC/Polymer/Polymer`) - ×37.
+7. **Outside this repo, handled separately by the user**: eoread fork commit `3609d25` (F0 / d^2) on the
+   flat-layout reader (×37); hypso-processing-pipeline paths for the new file names (×42).
+
+Older open items (recorded earlier; status to confirm in item 1):
+- Zarr support - ×29 / ARCHITECTURE_PROPOSAL.md section 7.
+- Complete docstrings/comments across the package; update README and user-facing docs - ×25-era entries.
+- Variable capture dimensions/bands/sizes - ×20 (partly addressed by the ×31 capture-dimensions audit).
+- HYPSO-2 RGB camera support - ×14.
+- AC connectors: per-tool config (now planned as YAML, ×37), uniform run/open return shape, fold the
+  pipeline's Polymer chla/logchl handling into the adapter - AC-connector notes below and ×20.
+- Review flags near ×24: `hypso.containers.DatasetDict` vs plain xarray; unused `georeferencing.py` classes
+  (GCPList/GCP/PointsCSV/Georeferencer); merging `io/`, `load/`, `write/` (largely superseded by ×41);
+  `hypso.classification` shim removal; wiring in `hypso/resample/` (see item 2); band `standard_name` and a
+  possible SNAP bandwidth attribute.
+
 ## AC-connector pass — design notes (2026-08-25, not yet implemented)
 
 User asked how the AC connectors could be improved. Grounded in reading the adapters + how
