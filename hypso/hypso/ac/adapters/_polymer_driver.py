@@ -29,6 +29,8 @@ config.json keys (all written by PolymerAdapter.run_correction):
     optional_output_datasets: appended to either selection list.
     polymer_settings: dict of Params overrides, passed to run_polymer as
         **kwargs (optional, default none).
+    ancillary_source: "nasa" (default, Polymer's own provider) or "era5".
+    era5_allow_preliminary: passed to eoread.era5.ERA5 when "era5".
 
 result.json: {"status": "ok", "output_file": "..."} or
 {"status": "error", "error_type": ..., "message": ..., "traceback": ...}.
@@ -73,6 +75,21 @@ def main(config_path: str, result_path: str) -> int:
             case other:
                 raise ValueError(f"Unknown polymer_version: {other!r}")
 
+        ancillary_kwargs = {}
+        ancillary_source = config.get("ancillary_source", "nasa")
+        if ancillary_source == "era5":
+            # main_v5's pipeline (ApplyAncillary) expects a provider with a
+            # single get(dt) -> Dataset interface (matching eoread.
+            # ancillary_nasa.Ancillary_NASA, main_v5's own default) - NOT
+            # polymer.ancillary_era5.Ancillary_ERA5's get(param, date) -> LUT
+            # interface, which belongs to the older main.py/level1_*.py
+            # pipeline. eoread.era5.ERA5 is the compatible one.
+            from eoread.era5 import ERA5
+            ancillary_kwargs["ancillary"] = ERA5(
+                allow_preliminary=config.get("era5_allow_preliminary", True))
+        elif ancillary_source != "nasa":
+            raise ValueError(f'Unknown ancillary_source "{ancillary_source}"; expected "nasa" or "era5"')
+
         output_file = run_polymer(
             Level1_HYPSO(config["polymer_l1_input_nc_file"]),
             dir_out=config["polymer_output_dir"],
@@ -84,6 +101,7 @@ def main(config_path: str, result_path: str) -> int:
             srf_getter=SRF_GETTER_FROM_L1_PATH,
             srf_getter_arg=config["polymer_l1_input_nc_file"],
             **output_selection_kwargs,
+            **ancillary_kwargs,
             **(config.get("polymer_settings") or {}),
         )
 

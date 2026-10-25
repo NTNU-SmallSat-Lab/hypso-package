@@ -215,7 +215,9 @@ class PolymerAdapter(ACAdapter):
                        if_exists: str = "overwrite",
                        polymer_version: str = "v1",
                        python_path: str = None,
-                       polymer_settings: dict = None):
+                       polymer_settings: dict = None,
+                       ancillary_source: str = "nasa",
+                       era5_allow_preliminary: bool = True):
         """
         Runs Polymer in an ISOLATED SUBPROCESS - see _polymer_driver.py's
         module docstring for why (v1/v2 builds' same-named-package
@@ -242,6 +244,15 @@ class PolymerAdapter(ACAdapter):
             Polymer's own params.py. Must be JSON-serializable (it crosses
             the subprocess boundary in config.json). None (default) - no
             overrides, unchanged behavior.
+        ancillary_source: meteorological ancillary provider for Polymer -
+            "nasa" (default) leaves Polymer's own default (GMAO/NCEP) in
+            place, "era5" makes the driver pass an eoread.era5.ERA5 instance
+            instead (requires a ~/.cdsapirc CDS API key). See
+            ac_runners_pace.run_polymer_correction for the same option on
+            the PACE side.
+        era5_allow_preliminary: only used when ancillary_source == "era5".
+            Whether to accept CDS's preliminary "ERA5T" data for recent
+            dates where final ERA5 isn't published yet, or raise instead.
         python_path: interpreter to run Polymer's subprocess under. Defaults
             to sys.executable (this same process's interpreter) - confirmed
             sufficient for Polymer's own imports (the environment.yml some
@@ -255,6 +266,9 @@ class PolymerAdapter(ACAdapter):
         subprocess's stdout/stderr and, if available, Polymer's own
         exception type/message/traceback).
         """
+        if ancillary_source not in ("nasa", "era5"):
+            raise ValueError(f'Unknown ancillary_source "{ancillary_source}"; expected "nasa" or "era5"')
+
         _, srf_nc_path = self.get_srf_nc_path(satobj)
 
         # Output (not input) moved into a parent_dir/polymer/ subfolder
@@ -288,6 +302,8 @@ class PolymerAdapter(ACAdapter):
             "polymer_version": polymer_version,
             "optional_output_datasets": optional_output_datasets,
             "polymer_settings": polymer_settings or {},
+            "ancillary_source": ancillary_source,
+            "era5_allow_preliminary": era5_allow_preliminary,
         }
 
         result = run_subprocess_driver(

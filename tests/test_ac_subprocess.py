@@ -187,9 +187,56 @@ def test_driver_success_path_with_stubbed_polymer(tmp_path, monkeypatch):
     assert captured_kwargs["srf_getter"] == SRF_GETTER_FROM_L1_PATH
     assert captured_kwargs["srf_getter_arg"] == "input.nc"
     assert captured_kwargs["output_datasets"] == ["logchl", "logfb", "SPM"]
+    # default ancillary_source ("nasa") passes no ancillary kwarg
+    assert "ancillary" not in captured_kwargs
     # polymer_settings forwarded as Params overrides
     assert captured_kwargs["band_cloudmask"] == 667
     assert captured_kwargs["bands_corr"] == [448, 660]
+
+
+def test_driver_era5_ancillary_with_stubbed_polymer(tmp_path, monkeypatch):
+    # Production 8ef0166c: ancillary_source="era5" builds eoread.era5.ERA5
+    # inside the driver (it can't cross the JSON config boundary).
+    import types
+
+    captured_kwargs = {}
+
+    class FakeERA5:
+        def __init__(self, allow_preliminary):
+            self.allow_preliminary = allow_preliminary
+
+    fake_eoread = types.ModuleType("eoread")
+    fake_eoread_hypso = types.ModuleType("eoread.hypso")
+    fake_eoread_hypso.Level1_HYPSO = lambda path: ("L1", path)
+    fake_eoread_era5 = types.ModuleType("eoread.era5")
+    fake_eoread_era5.ERA5 = FakeERA5
+    fake_polymer = types.ModuleType("polymer")
+    fake_polymer_main = types.ModuleType("polymer.main_v5")
+    fake_polymer_main.run_polymer = lambda level1, **kw: (captured_kwargs.update(kw),
+                                                          str(tmp_path / "out.nc"))[1]
+    fake_polymer_main.default_output_datasets = []
+
+    monkeypatch.setitem(sys.modules, "eoread", fake_eoread)
+    monkeypatch.setitem(sys.modules, "eoread.hypso", fake_eoread_hypso)
+    monkeypatch.setitem(sys.modules, "eoread.era5", fake_eoread_era5)
+    monkeypatch.setitem(sys.modules, "polymer", fake_polymer)
+    monkeypatch.setitem(sys.modules, "polymer.main_v5", fake_polymer_main)
+
+    config = {
+        "polymer_base_path": None, "polymer_path": None, "eoread_path": None,
+        "eotools_path": None, "core_path": None,
+        "polymer_l1_input_nc_file": "input.nc", "polymer_output_dir": str(tmp_path),
+        "if_exists": "skip", "srf_nc_path": "srf.nc", "polymer_version": "v1",
+        "optional_output_datasets": [],
+        "ancillary_source": "era5", "era5_allow_preliminary": False,
+    }
+    config_path = tmp_path / "config.json"
+    result_path = tmp_path / "result.json"
+    config_path.write_text(json.dumps(config))
+
+    assert _polymer_driver.main(str(config_path), str(result_path)) == 0
+    assert isinstance(captured_kwargs["ancillary"], FakeERA5)
+    assert captured_kwargs["ancillary"].allow_preliminary is False
 
 
 def test_srf_getter_path_actually_resolves():
