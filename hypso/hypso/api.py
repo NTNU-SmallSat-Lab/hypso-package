@@ -138,6 +138,17 @@ class Product:
         return Product(l1c_to_l1d(self._tree, use_direct_georef=use_direct_georef, ssi_source=ssi_source,
                                   use_unbinned=use_unbinned))
 
+    def correct_atmosphere(self, method: str, masked: bool = False, mask_flags=None, **options) -> "Product":
+        """L1C/L1D -> L2A with `method` ("dps" so far). masked=True gives the
+        method NaN where pixel_flags are set (all, or `mask_flags`)."""
+        from hypso.processing import correct_atmosphere
+        return Product(correct_atmosphere(self._tree, method, masked=masked, mask_flags=mask_flags, **options))
+
+    @property
+    def atmospheric_correction(self):
+        """The L2A method, e.g. "polymer" (None below L2A)."""
+        return self._tree.attrs.get("atmospheric_correction")
+
     def to(self, level: str, calibrate: dict = None, georeference: dict = None,
            toa_reflectance: dict = None) -> "Product":
         """Run the steps from this level up to `level`, each with its own
@@ -161,6 +172,8 @@ class Product:
         from hypso.processing.capture import acquisition_time
         from datetime import datetime
         time = datetime.fromisoformat(acquisition_time(self._tree.attrs))
+        if ac is None and self.level == "L2A":
+            ac = self.atmospheric_correction
         return product_name(self.sat_id, time, self.target, self.level, ac=ac, label=label).filename()
 
     def write(self, path=None, out_dir=None, label: str = None, datacube: bool = False) -> Path:

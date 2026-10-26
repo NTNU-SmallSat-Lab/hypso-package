@@ -75,3 +75,40 @@ def test_write_names_and_round_trips(l1d, tmp_path):
     np.testing.assert_array_equal(reopened.cube.values, l1d.cube.values.astype(np.float32))
     assert [s["step"] for s in reopened.provenance] == ["l1b", "l1c", "l1d"]
     assert path.with_name(l1d.filename(label="test")).name.endswith(".L1D.test.nc")
+
+
+def test_dps_matches_old_function(l1d):
+    from hypso.ac.ac_dark_pixel_subtraction import dark_pixel_subtraction_per_band
+    l2a = l1d.correct_atmosphere("dps")
+    expected, dark = dark_pixel_subtraction_per_band(l1d.cube.values)
+    np.testing.assert_array_equal(l2a.cube.values, expected)
+    assert l2a.level == "L2A" and l2a.cube.name == "Rrs" and l2a.atmospheric_correction == "dps"
+    assert l2a.filename() == "HYPSO2_HSI.20250304T103805.aeronetvenice.L2A.dps.nc"
+    assert [s["step"] for s in l2a.provenance][-1] == "l2a_dps"
+    assert "latitude" in l2a.geometry
+
+
+def test_dps_masked_ignores_flagged_pixels(l1d):
+    import xarray as xr
+    from hypso.masks.flags import FLAGS_NAME, encode_flags
+    land = np.zeros(l1d.cube.shape[:2], bool)
+    land[:100] = True
+    tree = l1d.tree
+    root = tree.to_dataset(inherit=False)
+    root[FLAGS_NAME] = encode_flags({"land": land})
+    tree.dataset = root
+    flagged = hypso.Product(tree)
+    l2a = flagged.correct_atmosphere("dps", masked=True)
+    assert np.isnan(l2a.cube.values[:100]).all()
+    assert not np.isnan(l2a.cube.values[100:]).any()
+    dark = np.nanmin(np.where(land[..., None], np.nan, l1d.cube.values), axis=(0, 1))
+    np.testing.assert_allclose(l2a.cube.values[100:], np.clip(l1d.cube.values[100:] - dark, 0, None))
+    with pytest.raises(ValueError, match="pixel_flags"):
+        l1d.correct_atmosphere("dps", masked=True)
+
+
+def test_correct_atmosphere_level_and_method_errors(l1a, l1d):
+    with pytest.raises(ValueError, match="needs an L1D"):
+        l1a.correct_atmosphere("dps")
+    with pytest.raises(ValueError, match="unknown method"):
+        l1d.correct_atmosphere("magic")

@@ -6,3 +6,4 @@ from .capture import CaptureParams, capture_params
 from .calibrate import l1a_to_l1b
 from .georeference import l1b_to_l1c
 from .toa import l1c_to_l1d, srf_dataset
+from .atmospheric import correct_atmosphere
