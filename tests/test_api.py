@@ -337,3 +337,10 @@ def test_resample_and_satpy(l1d, tmp_path):
     # the Satpy reader plugin reads current-format file names
     scene = Scene(filenames=[str(l1d.write(out_dir=tmp_path))], reader="hypso_l1d")
     assert "rhot_413" in scene.available_dataset_names()
+
+
+def test_hsi2rgb_on_l1d(l1d):
+    from hypso.rgb import HSI2RGB
+    rgb = HSI2RGB(l1d.wavelengths, l1d.cube.values)
+    assert rgb.shape == l1d.cube.shape[:2] + (3,)
+    assert np.isfinite(rgb).all() and 0 <= rgb.min() and rgb.max() <= 1

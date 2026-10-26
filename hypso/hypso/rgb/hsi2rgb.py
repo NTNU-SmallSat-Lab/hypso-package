@@ -1,12 +1,12 @@
 """HSI-cube-to-RGB rendering via CIE color matching functions (Magnusson et
-al., IGARSS 2020 - see the docstring's citation). Moved here from the old
-utils/utils_file.py grab-bag: rendering a color-accurate RGB from spectra is
-spectral analysis, not file utilities. Currently has no in-package callers -
-kept (rather than deleted with the rest of the grab-bag) because it is the
-natural comparison tool for the planned HYPSO-2 RGB camera support
-(REFACTOR_PROGRESS.md TODO): a rendered-from-HSI RGB to hold up against the
-real RGB camera image. The D_illuminants.mat data file lives in this
-package's data/ directory."""
+al., IGARSS 2020 - see the docstring's citation). No in-package callers yet;
+kept as the comparison for the planned HYPSO-2 RGB camera support
+(REFACTOR_PROGRESS.md TODO): an RGB rendered from the HSI cube to hold up
+against the RGB camera image. The D_illuminants.mat data file is in this
+package's data/ directory.
+
+    from hypso.rgb import HSI2RGB
+    rgb = HSI2RGB(product.wavelengths, product.cube.values)"""
 from bisect import bisect
 from importlib.resources import files
 from typing import Literal
@@ -34,7 +34,7 @@ def HSI2RGB(wY, HSI, d: Literal[50, 55, 65, 75] = 65, threshold=0.002) -> np.nda
     https://www.researchgate.net/profile/Jakob_Sigurdsson
 
     :param wY: Wavelengths in nm
-    :param HSI: Hyperspectral Image as a (#pixels x #bands) matrix,
+    :param HSI: Hyperspectral image, a (lines, samples, bands) array
     :param d: Determines the illuminant used, if in doubt use d65. Values of  50, 55, 65, 75
     :param threshold: True if RGB thesholding should be done to increase contrast
 
@@ -45,7 +45,7 @@ def HSI2RGB(wY, HSI, d: Literal[50, 55, 65, 75] = 65, threshold=0.002) -> np.nda
     HSI = np.reshape(HSI, [-1, zdim]) / np.nanmax(HSI)
 
     # Load reference illuminant
-    illuminant_path = files('hypso.spectral_analysis').joinpath('data/D_illuminants.mat')
+    illuminant_path = files('hypso.rgb').joinpath('data/D_illuminants.mat')
     D = spio.loadmat(str(illuminant_path))
     w = D['wxyz'][:, 0]
     x = D['wxyz'][:, 1]

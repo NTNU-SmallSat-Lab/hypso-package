@@ -9,7 +9,7 @@ include hypso/_version.py
 include ./README.md
 
 recursive-include hypso/calibration/data/ *
-recursive-include hypso/spectral_analysis/data/ *
+recursive-include hypso/rgb/data/ *
 recursive-include hypso/satpy/etc/ *
 
 recursive-exclude ./coefficients *

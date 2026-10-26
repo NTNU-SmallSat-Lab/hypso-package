@@ -173,6 +173,15 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-10-26 (×54): removed `hypso.classification` and `hypso.spectral_analysis`; HSI2RGB -> `hypso.rgb`.**
+  classification was a one-line alias for hypso.masks kept for hypso-processing-pipeline's
+  `from hypso.classification import decode_jon_cnn_*` (process_capture.py, bin/select_snr_rois.py); the
+  pipeline runs on production hypso-package, so it goes - when the pipeline moves to the refactor those imports
+  become `hypso.masks`. spectral_analysis's get/plot_spectrum and get_closest_wavelength_index duplicated
+  Product.spectrum/.wavelengths and were removed; HSI2RGB (Magnusson et al. 2020 colour-matching RGB; kept for
+  the HYPSO-2 RGB camera TODO) moved with its D_illuminants.mat to `hypso/rgb/` (MANIFEST.in updated). Test:
+  HSI2RGB on the fixture L1D gives a finite (lines, samples, 3) image in [0, 1].
+
 - **2026-10-26 (×53): the capture-object API is deleted.** Stage 1 (`183a6f63`) ported the surviving
   satobj consumers to `hypso.Product`: `with_masks` (pixel_flags; replaces land_mask/cloud_mask/custom masks),
   `with_variables`/`variables` (derived per-pixel products, passed through by read/write - replaces the

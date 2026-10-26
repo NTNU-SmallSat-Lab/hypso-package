@@ -34,6 +34,10 @@ def test_masks_and_ac():
     from hypso.ac.config import load_ac_config, tool_config  # noqa: F401
 
 
+def test_rgb():
+    from hypso.rgb import HSI2RGB  # noqa: F401
+
+
 def test_polymer_srf_getter_hook_paths():
     # Polymer resolves these by dotted name (srf_getter=<path>) inside its own
     # process, so they must resolve exactly as written.
@@ -52,7 +56,8 @@ def test_capture_object_api_removed(name):
 
 @pytest.mark.parametrize("module", ["hypso.HypsoCapture", "hypso.capture_types", "hypso.containers",
                                     "hypso.io.dispatch", "hypso.io.reader", "hypso.io.writer", "hypso.load",
-                                    "hypso.write", "hypso.calibration.pipeline", "hypso.ac.adapters.polymer"])
+                                    "hypso.write", "hypso.calibration.pipeline", "hypso.ac.adapters.polymer",
+                                    "hypso.classification", "hypso.spectral_analysis"])
 def test_old_modules_removed(module):
     with pytest.raises(ModuleNotFoundError):
         importlib.import_module(module)
