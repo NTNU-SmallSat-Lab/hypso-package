@@ -36,12 +36,13 @@ permission to modify — unlike `/home/camerop/AC/hypso-package`, which is **rea
    Best done after the Dataset rewrite (steps 2-4) settles the public API, so the reference isn't written
    twice.
 4. **Step 1 is complete (×45).** Next: steps 2-4 of ×37 (processing as Dataset -> Dataset functions, Hypso
-   facade, delete old code). SNAP check pending for the ×41 dimension change and the ×44 flag variable.
+   facade, delete old code). SNAP confirmed by the user (×46).
    `masked=True` in the write wrappers still writes the NaN-masked cube; switch to flags-only once AC
    staging applies pixel_flags (AC step).
 5. **Hypso facade (step 3) must accept** the pipeline's direct-georef fallback, which assigns
    `satobj.solar_zenith_angles` etc. (read-only properties in the refactor) - ×38.
-6. **Release tag** (user's call): products currently get versions counted from `v26.02.0` - ×40.
+6. **Release tags**: refactor branch tagged `v26.10.0a1` (×46). Next alphas as milestones land; final
+   `vYY.M.0` on the merge to main once the pipeline uses the refactor. Tags are local until pushed.
 7. **Test environment**: 3 `test_ac_subprocess.py` failures (`hypso` not importable in driver subprocesses);
    `test_real_polymer_imports_succeed_through_subprocess` silently skips (fixture path renamed
    `..._DO_NOT_USE`; pipeline now uses `AC/Polymer/Polymer`) - ×37.
@@ -163,6 +164,15 @@ Full unabridged plan text: see the "Approved Plan" section pasted at the bottom 
 duplicated per update — if it's missing, check `/home/camerop/.claude/plans/rosy-frolicking-summit.md` instead).
 
 ## Status (update this section as work progresses — most recent at top)
+
+- **2026-10-26 (×46): ESA SNAP confirmed; first refactor tag `v26.10.0a1`.** User confirmed SNAP opens the
+  step-1 output (metadata dimensions inside their groups, pixel_flags as masks, NASA-style name). User
+  delegated the tag choice: `v26.10.0a1` (alpha) on the step-1-complete commit, because the format and API
+  can still change in steps 2-4 and the pipeline does not use the refactor yet; a plain `v26.10.0` would claim
+  a finished release in the tag namespace shared with production on origin. Annotated, local only (not
+  pushed). versioning.version_from_describe now handles pre-release tags as setuptools_scm does (bumps the
+  pre-release number: 26.10.0a2.dev2+g<sha>) and uses 9-character short hashes; both verified against wheels
+  built from a scratch clone tagged v26.10.0a1.
 
 - **2026-10-26 (×45): step 1 done - captures write through write_product.** `hypso/io/capture_tree.py`
   `capture_to_tree(satobj, level, correction, masked)` mirrors io/writer.py group by group and adds

@@ -58,7 +58,14 @@ def version_from_describe(describe: str, dirty: bool, date: str = None) -> str:
         version = str(base)
         local = []
     else:
-        version = f"{base.major}.{base.minor}.{base.micro + 1}.dev{distance}"
+        # Past a pre-release tag setuptools_scm bumps the pre-release number
+        # (v26.10.0a1 + 2 commits -> 26.10.0a2.dev2), otherwise the micro.
+        if base.pre:
+            kind, number = base.pre
+            next_version = f"{base.base_version}{kind}{number + 1}"
+        else:
+            next_version = f"{base.major}.{base.minor}.{base.micro + 1}"
+        version = f"{next_version}.dev{distance}"
         local = [sha]
     if dirty:
         local.append(f"d{date}" if date else "dirty")
@@ -72,7 +79,8 @@ def _git_identity(package_dir: Path):
     commit = _git(["rev-parse", "HEAD"], package_dir)
     status = _git(["status", "--porcelain", "--untracked-files=no"], package_dir)
     dirty = bool(status)
-    describe = _git(["describe", "--tags", "--long", "--match", "v[0-9]*"], package_dir)
+    # --abbrev=9: the short-hash length setuptools_scm's versions show.
+    describe = _git(["describe", "--tags", "--long", "--abbrev=9", "--match", "v[0-9]*"], package_dir)
     version = UNKNOWN_VERSION
     if describe:
         try:

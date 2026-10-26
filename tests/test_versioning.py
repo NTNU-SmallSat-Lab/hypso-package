@@ -39,6 +39,11 @@ def test_manifest_check_detects_changed_file(monkeypatch):
     ("v26.02.0-169-gc3c7c8c6", False, None, "26.2.1.dev169+gc3c7c8c6"),
     ("v26.02.0-169-gc3c7c8c6", True, "20261025", "26.2.1.dev169+gc3c7c8c6.d20261025"),
     ("v26.10.2-3-gabcdef12", True, None, "26.10.3.dev3+gabcdef12.dirty"),
+    # Pre-release tags: values observed from setuptools_scm (wheels built from
+    # a scratch clone tagged v26.10.0a1).
+    ("v26.10.0a1-0-gca576f5a", False, None, "26.10.0a1"),
+    ("v26.10.0a1-2-gca576f5a", False, None, "26.10.0a2.dev2+gca576f5a"),
+    ("v26.10.0rc1-1-gca576f5a", True, "20261026", "26.10.0rc2.dev1+gca576f5a.d20261026"),
 ])
 def test_version_from_describe(describe, dirty, date, expected):
     assert version_from_describe(describe, dirty, date) == expected

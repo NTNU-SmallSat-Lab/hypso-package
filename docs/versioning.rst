@@ -23,6 +23,12 @@ On tag ``v26.10.0``                       ``26.10.0``
 Same, with uncommitted changes            ``26.10.1.dev3+g25f4c3bf.d20261025``
 ========================================  ====================================
 
+Pre-releases use PEP 440 suffixes: ``v26.10.0a1`` (alpha), ``v26.10.0b1``
+(beta), ``v26.10.0rc1`` (release candidate). Commits after a pre-release
+tag count towards the next pre-release (``26.10.0a2.dev3+g<sha>``). The
+refactor branch is tagged as alphas until it is merged and the pipeline uses
+it; the final ``vYY.M.0`` goes on that merge commit.
+
 Making a release
 ----------------
 
