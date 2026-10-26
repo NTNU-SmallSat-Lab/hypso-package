@@ -51,6 +51,21 @@ class ACRunError(RuntimeError):
         )
 
 
+def _package_roots() -> list:
+    """Directories containing the imported hypso / hypsoN_calibration
+    packages, for a driver subprocess's PYTHONPATH."""
+    import importlib
+    roots = []
+    for name in ("hypso", "hypso1_calibration", "hypso2_calibration"):
+        try:
+            root = str(Path(importlib.import_module(name).__file__).resolve().parent.parent)
+        except Exception:
+            continue
+        if root not in roots:
+            roots.append(root)
+    return roots
+
+
 def run_subprocess_driver(python_path: str, driver_module: str, config: dict, tool_name: str,
                           extra_env: dict = None) -> dict:
     """Run `driver_module` (a hypso.ac.adapters._*_driver module with a
@@ -83,12 +98,18 @@ def run_subprocess_driver(python_path: str, driver_module: str, config: dict, to
         config_path.write_text(json.dumps(config, default=str))
 
         env = os.environ.copy()
+        # The driver imports hypso: make this process's hypso and calibration
+        # packages importable in the child even when they are not installed
+        # (a checkout on sys.path), and run it in `tmp` - `python -m` puts the
+        # working directory first on sys.path, and from a repo root the bare
+        # hypso/ project directory would shadow the package.
+        env["PYTHONPATH"] = os.pathsep.join(_package_roots() + [p for p in env.get("PYTHONPATH", "").split(os.pathsep) if p])
         if extra_env:
             env.update(extra_env)
 
         proc = subprocess.run(
             [python_path, "-m", driver_module, str(config_path), str(result_path)],
-            capture_output=True, text=True, env=env,
+            capture_output=True, text=True, env=env, cwd=tmp,
         )
 
         result = None
