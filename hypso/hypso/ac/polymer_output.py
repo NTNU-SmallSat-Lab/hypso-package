@@ -230,3 +230,31 @@ def _load_reflectances_cube_v1(f, refl_vars, wavelengths, dim_names_3d):
     data.attrs['per_band'] = per_band_attrs
 
     return data
+
+
+def read_polymer_reflectance(nc_file_path) -> tuple:
+    """(rho_w as a (y, x, bands) float array, band wavelengths in nm) from a
+    Polymer output file, whichever way the build stores it: one 3D `rho_w`
+    variable, or one `rho_w_<nm>` variable per band (what the v2 build
+    writes for HYPSO - load_polymer_l2_v2_nc misses these). Bands are ordered
+    by wavelength; wavelengths come from the file's `bands` variable when it
+    matches the per-band names, else from the names."""
+    with nc.Dataset(nc_file_path) as f:
+        bands_var = np.asarray(f["bands"][:], dtype=float) if "bands" in f.variables else None
+        if "rho_w" in f.variables and f["rho_w"].ndim == 3:
+            cube = np.ma.filled(np.ma.asarray(f["rho_w"][:], dtype=float), np.nan)
+            if f["rho_w"].dimensions[0] == "bands" or (bands_var is not None and cube.shape[0] == bands_var.size
+                                                         and cube.shape[-1] != bands_var.size):
+                cube = np.moveaxis(cube, 0, -1)
+            return cube, bands_var
+        names = [n for n in f.variables if re.fullmatch(r"rho_w_\d+", n)]
+        if not names:
+            raise ValueError(f"{nc_file_path}: no rho_w variable(s) in Polymer output")
+        names.sort(key=lambda n: int(n.rsplit("_", 1)[1]))
+        suffixes = np.array([int(n.rsplit("_", 1)[1]) for n in names], dtype=float)
+        if bands_var is not None and bands_var.size == len(names) and np.array_equal(np.rint(np.sort(bands_var)), suffixes):
+            wavelengths = np.sort(bands_var)
+        else:
+            wavelengths = suffixes
+        cube = np.stack([np.ma.filled(np.ma.asarray(f[n][:], dtype=float), np.nan) for n in names], axis=-1)
+        return cube, wavelengths

@@ -28,6 +28,31 @@ cube is on the input's bands; bands the method does not return are NaN. The
 method, its version, the installation's git commit and the settings used are
 recorded in ``metadata/processing/l2a_<method>``.
 
+Units: ``Rrs`` is in sr-1 (CF standard name
+``surface_ratio_of_upwelling_radiance_emerging_from_sea_water_to_downwelling_radiative_flux_in_air``);
+``rho_w`` (= pi Rrs) and ``rhos`` are dimensionless. ``dps`` subtracts each
+band's darkest value from the TOA reflectance and divides by pi.
+
+Each method's 2D outputs are kept as variables next to the cube (in
+``product.variables``), with the tool's own flags as an integer flag variable:
+
+==============  ==================================================================
+Method          Variables
+==============  ==================================================================
+``dps``         none
+``polymer``     ``chla`` (10**logchl, mg m-3), ``logfb``, ``SPM``, ``Rgli``,
+                ``Rnir``, ``polymer_flags`` (with Polymer's flag table)
+``acolite``     L2W: every 2D output except lat/lon/Rrs (what ``l2w_parameters``
+                asks for, e.g. ``chl_re_mishra``, ``SPM_Nechad2010_664``,
+                ``ndci``) and ``acolite_l2_flags``; L2R: none
+``ocsmart``     ``chlor_a_oci``, ``chlor_a_yoc``, ``tsm_yoc`` (when written) and
+                ``ocsmart_l2_flags``
+==============  ==================================================================
+
+Tool standard names that are not CF names are kept as ``source_standard_name``;
+ACOLITE's chlorophyll and SPM names are mapped to the CF ``..._in_sea_water``
+names.
+
 Masked input
 ------------
 

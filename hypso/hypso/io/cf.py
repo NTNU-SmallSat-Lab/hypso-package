@@ -145,3 +145,40 @@ def band_attrs(long_name: str, units: str, wavelength_nm: float, radiation_wavel
     if include_geolocation:
         attrs.update(geolocation_ref_attrs())
     return attrs
+
+
+# Standard names used in products, all checked against the CF standard name
+# table (v95, cfconventions.org).
+RRS_STANDARD_NAME = "surface_ratio_of_upwelling_radiance_emerging_from_sea_water_to_downwelling_radiative_flux_in_air"
+CHLA_STANDARD_NAME = "mass_concentration_of_chlorophyll_a_in_sea_water"
+SPM_STANDARD_NAME = "mass_concentration_of_suspended_matter_in_sea_water"
+
+# L2A product cube attributes by variable name (the product's quantity
+# depends on the atmospheric-correction method, so it is not a per-level
+# schema constant).
+L2A_PRODUCTS = {
+    "Rrs": {"units": "sr-1", "long_name": "Remote Sensing Reflectance", "standard_name": RRS_STANDARD_NAME},
+    "rho_w": {"units": "1", "long_name": "Water-Leaving Reflectance (pi Rrs)"},
+    "rhos": {"units": "1", "long_name": "Surface Reflectance"},
+}
+
+# AC tools write some standard_names that are not CF names; their CF
+# equivalents. Others not in CF are kept only as source_standard_name.
+TOOL_STANDARD_NAMES = {
+    "mass_concentration_of_chlorophyll_a_in_water": CHLA_STANDARD_NAME,
+    "concentration_of_suspended_matter_in_water": SPM_STANDARD_NAME,
+}
+CF_STANDARD_NAMES = {RRS_STANDARD_NAME, CHLA_STANDARD_NAME, SPM_STANDARD_NAME, "latitude", "longitude",
+                     "toa_outgoing_radiance_per_unit_wavelength", "toa_bidirectional_reflectance"}
+
+
+def tool_variable_attrs(attrs: dict) -> dict:
+    """An AC tool's variable attributes with its standard_name made CF-valid:
+    mapped to the CF equivalent, or moved to source_standard_name."""
+    attrs = {k: v for k, v in attrs.items() if k not in ("_FillValue", "coordinates", "grid_mapping")}
+    name = attrs.get("standard_name")
+    if name is not None and name not in CF_STANDARD_NAMES:
+        attrs["source_standard_name"] = attrs.pop("standard_name")
+        if name in TOOL_STANDARD_NAMES:
+            attrs["standard_name"] = TOOL_STANDARD_NAMES[name]
+    return attrs

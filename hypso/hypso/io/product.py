@@ -109,9 +109,11 @@ def _flag_variables(ds: xr.Dataset) -> list:
 
 
 def _extra_variables(ds: xr.Dataset, exclude) -> list:
-    """Other (lines, samples) variables (derived products), excluding band,
-    geometry, grid-mapping and flag variables."""
-    skip = set(exclude) | set(_GEOMETRY_ATTRS) | {"crs_wgs84"} | set(_flag_variables(ds))
+    """Other (lines, samples) variables - derived products, including an AC
+    tool's own flags - excluding band, geometry, grid-mapping and
+    pixel_flags variables."""
+    from hypso.masks.flags import FLAGS_NAME
+    skip = set(exclude) | set(_GEOMETRY_ATTRS) | {"crs_wgs84", FLAGS_NAME}
     return [n for n, v in ds.data_vars.items() if v.dims == SPATIAL_DIMS and n not in skip]
 
 
@@ -215,9 +217,7 @@ def read_product(path) -> xr.DataTree:
                 out[name] = (SPATIAL_DIMS, geometry[name].values)
         if "latitude" in out and "crs_wgs84" in geometry.data_vars:
             out["crs_wgs84"] = ((), geometry["crs_wgs84"].values)
-        for name in _flag_variables(products):
-            out[name] = (SPATIAL_DIMS, products[name].values, dict(products[name].attrs))
-        for name in _extra_variables(products, names):
+        for name in dict.fromkeys(_flag_variables(products) + _extra_variables(products, names)):
             attrs = {k: v for k, v in products[name].attrs.items() if k not in ("coordinates", "grid_mapping")}
             out[name] = (SPATIAL_DIMS, products[name].values, attrs)
 
@@ -264,12 +264,16 @@ def _root_dataset(tree: xr.DataTree, datacube: bool):
     has_geometry = "latitude" in ds.data_vars
     units = schema.product_units
     long_name = schema.product_long_name
+    standard_name = schema.product_standard_name
+    if schema.processing_level in ("L2", "L2A") and prefix in cf.L2A_PRODUCTS:
+        product = cf.L2A_PRODUCTS[prefix]
+        units, long_name, standard_name = product["units"], product["long_name"], product.get("standard_name")
     dtype = "u2" if prefix == "dn" else "f4"
 
     out, encoding = {}, {}
     if datacube:
         attrs = {"units": units, "long_name": long_name, "wavelength_units": "nanometers",
-                 **({"standard_name": schema.product_standard_name} if schema.product_standard_name else {}),
+                 **({"standard_name": standard_name} if standard_name else {}),
                  "fwhm": cube["fwhm"].values, "wavelengths": cube["wavelength"].values}
         if has_geometry:
             attrs.update(cf.geolocation_ref_attrs())
@@ -290,7 +294,7 @@ def _root_dataset(tree: xr.DataTree, datacube: bool):
                 band_index=band,
                 include_geolocation=has_geometry,
                 var_name=name,
-                standard_name=schema.product_standard_name,
+                standard_name=standard_name,
             )
             out[name] = xr.Variable(SPATIAL_DIMS, cube.values[:, :, band], attrs)
             encoding[name] = _encoding(out[name], dtype)
@@ -299,7 +303,7 @@ def _root_dataset(tree: xr.DataTree, datacube: bool):
         if name in ds.data_vars:
             out[name] = xr.Variable(SPATIAL_DIMS, ds[name].values, builder())
             encoding[name] = _encoding(out[name], "f4")
-    for name in _flag_variables(ds) + _extra_variables(ds, [prefix]):
+    for name in dict.fromkeys(_flag_variables(ds) + _extra_variables(ds, [prefix])):
         var_attrs = {k: v for k, v in ds[name].attrs.items() if k not in ("coordinates", "grid_mapping")}
         if has_geometry:
             var_attrs.update(cf.geolocation_ref_attrs())

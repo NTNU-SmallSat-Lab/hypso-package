@@ -41,7 +41,7 @@ import xarray as xr
 from hypso.ac.adapters.base import ACRunError, run_subprocess_driver
 from hypso.ac.config import tool_config
 
-from hypso.io.product import PRODUCT_DIMS, product_name, write_product
+from hypso.io.product import PRODUCT_DIMS, SPATIAL_DIMS, product_name, write_product
 from hypso.io.provenance import ac_attrs, add_step
 from hypso.masks.flags import FLAGS_NAME, apply_flags
 
@@ -60,12 +60,14 @@ def _input_cube(tree: xr.DataTree, masked: bool, mask_flags) -> xr.DataArray:
 
 
 def _l2a_tree(tree: xr.DataTree, method: str, variable: str, cube: np.ndarray, parameters: dict,
-              ac: dict) -> xr.DataTree:
+              ac: dict, variables: dict = None) -> xr.DataTree:
     root = tree.to_dataset(inherit=False)
     source = root[product_name(tree)]
     out = root.drop_vars([product_name(tree), "wavelength", "radiation_wavelength", "fwhm"])
     out[variable] = xr.DataArray(cube, dims=PRODUCT_DIMS, coords={
         name: ("bands", source[name].values) for name in ("wavelength", "radiation_wavelength", "fwhm")})
+    for name, (values, attrs) in (variables or {}).items():
+        out[name] = xr.Variable(SPATIAL_DIMS, values, attrs)
     out.attrs["processing_level"] = "L2A"
     out.attrs["atmospheric_correction"] = method
 
@@ -90,7 +92,11 @@ def _dps(tree, masked, mask_flags, statistic="min", percentile=None):
         dark_spectrum = np.nanpercentile(cube, percentile, axis=(0, 1))
     else:
         raise ValueError("statistic must be 'min' or 'percentile'")
-    corrected = np.clip(cube - dark_spectrum, 0, None)
+    # Dark-subtracted TOA reflectance is a water-leaving reflectance
+    # (dimensionless); divided by pi it is Rrs (sr-1), like ACOLITE L2W and
+    # OC-SMART (user decision 2026-10-26; before, the reflectance was stored
+    # under the name Rrs).
+    corrected = np.clip(cube - dark_spectrum, 0, None) / np.pi
     parameters = {"masked": masked, "mask_flags": list(mask_flags) if mask_flags else "all" if masked else "",
                   "statistic": statistic, "dark_spectrum": [float(v) for v in dark_spectrum]}
     if percentile is not None:
@@ -100,20 +106,59 @@ def _dps(tree, masked, mask_flags, statistic="min", percentile=None):
                                                                                   "percentile": percentile}))
 
 
-def _band_map(source_wavelengths, tool_wavelengths) -> np.ndarray:
-    """Index of the nearest source band for each tool band, unique (a tool
-    band whose nearest source band is already taken is dropped) - as
-    the removed capture-object adapters' get_inferred_wavelength_band_map."""
+def _band_map(source_wavelengths, tool_wavelengths) -> tuple:
+    """(source indices, tool indices): each tool band paired with the
+    nearest source band. A tool band whose nearest source band is already
+    taken is dropped. Returned as pairs so a dropped band cannot shift the
+    ones after it (the removed capture-object adapters assigned the first N
+    tool bands, misplacing every band after a dropped one)."""
     source = np.asarray(source_wavelengths, dtype=float)
-    seen, indices = set(), []
-    for wavelength in np.asarray(tool_wavelengths, dtype=float):
+    seen, source_idx, tool_idx = set(), [], []
+    for t, wavelength in enumerate(np.asarray(tool_wavelengths, dtype=float)):
         index = int(np.argmin(np.abs(source - wavelength)))
         if index in seen:
             logger.warning("Duplicate prevented: %s mapped to %s", wavelength, index)
             continue
         seen.add(index)
-        indices.append(index)
-    return np.array(indices, dtype=int)
+        source_idx.append(index)
+        tool_idx.append(t)
+    return np.array(source_idx, dtype=int), np.array(tool_idx, dtype=int)
+
+
+def _onto_bands(tree, tool_cube, tool_wavelengths) -> tuple:
+    """The tool's (y, x, n) cube on the input product's bands (NaN where it
+    has none), and how many bands it filled."""
+    source_idx, tool_idx = _band_map(tree.dataset["radiation_wavelength"].values, tool_wavelengths)
+    cube = np.full(tree.dataset[product_name(tree)].shape, np.nan)
+    cube[:, :, source_idx] = np.asarray(tool_cube)[:, :, tool_idx]
+    return cube, int(len(source_idx))
+
+
+def _tool_variables(path, keep, renames: dict = None, overrides: dict = None, shape=None) -> dict:
+    """{name: (2D array, attrs)} for an AC tool's 2D output variables for
+    which keep(name) is true, read with their own dtype (flags stay
+    integer; masked float values become NaN), renamed per `renames`, with
+    attributes made CF-valid (io.cf.tool_variable_attrs) and `overrides`
+    applied. Variables of another shape than `shape` are skipped."""
+    import netCDF4
+    from hypso.io import cf
+    out = {}
+    with netCDF4.Dataset(path) as f:
+        for name, var in f.variables.items():
+            if var.ndim != 2 or not keep(name):
+                continue
+            data = var[:]
+            data = (np.ma.filled(np.ma.asarray(data, dtype=np.float32), np.nan) if var.dtype.kind == "f"
+                    else np.ma.getdata(data))
+            if shape is not None and data.shape != tuple(shape):
+                logger.warning("Skipping %s from %s: shape %s, product is %s", name, Path(path).name, data.shape, shape)
+                continue
+            attrs = cf.tool_variable_attrs({k: var.getncattr(k) for k in var.ncattrs()})
+            attrs["source_variable"] = name
+            new_name = (renames or {}).get(name, name)
+            attrs.update((overrides or {}).get(new_name, {}))
+            out[new_name] = (data, attrs)
+    return out
 
 
 def _git_commit(path) -> str:
@@ -149,8 +194,44 @@ def _stage_input(tree: xr.DataTree, masked: bool, mask_flags, work_dir: Path, ad
     return path
 
 
+# Polymer's flag bits (polymer/common.py: L2FLAGS and L2FLAGS_POLYMER). Its
+# output's own flag_meanings attribute lists only the first three.
+POLYMER_FLAGS = {"LAND": 1, "CLOUD_BASE": 2, "L1_INVALID": 4, "OUT_OF_BOUNDS": 16, "EXCEPTION": 32,
+                 "THICK_AEROSOL": 64, "HIGH_AIR_MASS": 128, "EXTERNAL_MASK": 512, "CASE2": 1024,
+                 "INCONSISTENCY": 2048, "ANOMALY_RWMOD_BLUE": 4096}
+
+
+def _polymer_variables(path, shape) -> dict:
+    """Polymer's 2D outputs: chla (10**logchl, user decision 2026-10-26),
+    logfb, SPM, Rgli, Rnir and its flags (polymer_flags, with Polymer's full
+    flag table)."""
+    from hypso.io import cf
+    variables = _tool_variables(path, keep=lambda n: n not in ("latitude", "longitude") and not n.startswith("rho_w"),
+                                renames={"flags": "polymer_flags"}, shape=shape)
+    if "logchl" in variables:
+        logchl, attrs = variables.pop("logchl")
+        variables["chla"] = (np.power(10.0, logchl).astype(np.float32),
+                             {"units": "mg m-3", "long_name": "Chlorophyll-a concentration (Polymer, 10**logchl)",
+                              "standard_name": cf.CHLA_STANDARD_NAME, "source_variable": "logchl"})
+    descriptions = {"logfb": ("1", "log10 of the particle backscattering factor (Polymer)"),
+                    "SPM": (None, "Suspended particulate matter (Polymer)"),
+                    "Rgli": ("1", "Sun glint reflectance (Polymer)"),
+                    "Rnir": ("1", "Reflectance at the NIR band used for aerosol correction (Polymer)")}
+    for name, (units, long_name) in descriptions.items():
+        if name in variables:
+            data, attrs = variables[name]
+            attrs.setdefault("long_name", long_name)
+            if units:
+                attrs.setdefault("units", units)
+    if "polymer_flags" in variables:
+        data, attrs = variables["polymer_flags"]
+        attrs.update(long_name="Polymer flags", flag_masks=np.array(list(POLYMER_FLAGS.values()), dtype=data.dtype),
+                     flag_meanings=" ".join(POLYMER_FLAGS))
+    return variables
+
+
 def _polymer(tree, masked, mask_flags, work_dir, config=None, **options):
-    from hypso.ac import load_polymer_l2_v1_nc, load_polymer_l2_v2_nc
+    from hypso.ac.polymer_output import read_polymer_reflectance
 
     cfg = tool_config("polymer", config, options)
     version = cfg.get("version", "v2")
@@ -176,22 +257,20 @@ def _polymer(tree, masked, mask_flags, work_dir, config=None, **options):
     result = run_subprocess_driver(python_path=cfg.get("python") or sys.executable,
                                    driver_module="hypso.ac.adapters._polymer_driver",
                                    config=driver_config, tool_name="polymer")
-    output = (load_polymer_l2_v1_nc if version == "v1" else load_polymer_l2_v2_nc)(Path(result["output_file"]))
-    rho_w = output["rho_w"]
-    source_wavelengths = tree.dataset["radiation_wavelength"].values
-    # The loader returns `bands` (1D) as a plain masked array, not a DataArray.
-    index = _band_map(source_wavelengths, np.ma.getdata(np.asarray(output["bands"])))
-    cube = np.full(tree.dataset[product_name(tree)].shape, np.nan)
-    cube[:, :, index] = np.asarray(rho_w)[:, :, :len(index)]
+    output_file = Path(result["output_file"])
+    tool_cube, tool_wavelengths = read_polymer_reflectance(output_file)
+    cube, n_bands = _onto_bands(tree, tool_cube, tool_wavelengths)
+    variables = _polymer_variables(output_file, tree.dataset[product_name(tree)].shape[:2])
 
     settings = {k: driver_config[k] for k in ("polymer_version", "optional_output_datasets", "polymer_settings",
                                               "ancillary_source", "era5_allow_preliminary")}
     parameters = {"masked": masked, "mask_flags": list(mask_flags) if mask_flags else "all" if masked else "",
-                  "input_level": tree.attrs["processing_level"], "bands_returned": int(len(index))}
+                  "input_level": tree.attrs["processing_level"], "bands_returned": n_bands,
+                  "output_file": output_file.name}
     ac = ac_attrs("polymer", version=version, git_commit=_git_commit(cfg.get("polymer_path") or cfg.get("base_path")),
                   install_path=cfg.get("base_path"), settings_effective=settings,
                   settings_user={**(options.get("settings") or {}), **{k: v for k, v in options.items() if k != "settings"}})
-    return _l2a_tree(tree, "polymer", "rho_w", cube, parameters, ac)
+    return _l2a_tree(tree, "polymer", "rho_w", cube, parameters, ac, variables)
 
 
 # hypso.ac.adapters.acolite.ACOLITEAdapter's settings, applied over the
@@ -249,13 +328,19 @@ def _acolite(tree, masked, mask_flags, work_dir, config=None, output="l2w", reus
         raise RuntimeError(f"expected one ACOLITE *_{suffix}.nc in {output_dir}, found {len(existing)}")
 
     data = (load_acolite_l2w_nc if output == "l2w" else load_acolite_l2r_nc)(existing[0])[variable]
-    index = _band_map(tree.dataset["radiation_wavelength"].values, data["band"].values)
-    cube = np.full(tree.dataset[product_name(tree)].shape, np.nan)
-    cube[:, :, index] = data.values[:, :, :len(index)]
+    cube, n_bands = _onto_bands(tree, data.values, data["band"].values)
+    # L2W carries ACOLITE's water products (chlorophyll, SPM, NDCI, ... - the
+    # set depends on l2w_parameters) and l2_flags.
+    variables = {}
+    if output == "l2w":
+        variables = _tool_variables(existing[0], keep=lambda n: n not in ("lat", "lon") and not n.startswith("Rrs"),
+                                    renames={"l2_flags": "acolite_l2_flags"},
+                                    overrides={"acolite_l2_flags": {"long_name": "ACOLITE L2W flags (l2_flags)"}},
+                                    shape=tree.dataset[product_name(tree)].shape[:2])
 
     parameters = {"masked": masked, "mask_flags": list(mask_flags) if mask_flags else "all" if masked else "",
                   "input_level": tree.attrs["processing_level"], "output": output, "output_file": existing[0].name,
-                  "bands_returned": int(len(index)), "reused_output": bool(reuse_output and existing)}
+                  "bands_returned": n_bands, "reused_output": bool(reuse_output and existing)}
     settings_file = cfg.get("settings_file")
     ac = ac_attrs("acolite", version=_acolite_version(cfg.get("path")), git_commit=_git_commit(cfg.get("path")),
                   install_path=cfg.get("path"),
@@ -264,13 +349,17 @@ def _acolite(tree, masked, mask_flags, work_dir, config=None, output="l2w", reus
                    "note": "reused an earlier run's output; requested settings, not ACOLITE's report"},
                   settings_user={**(options.get("settings") or {}),
                                  **{k: v for k, v in options.items() if k != "settings"}})
-    return _l2a_tree(tree, f"acolite_{output}", variable, cube, parameters, ac)
+    return _l2a_tree(tree, f"acolite_{output}", variable, cube, parameters, ac, variables)
 
 
 # OC-SMART's sensor autodetection (src/sensorinfo.py) only recognises HYPSO
 # input files by this prefix (no satellite digit; HYPSO-1 and -2 share one
 # coefficient file) - hypso.ac.adapters.ocsmart.OCSMARTAdapter.HYPSO_PREFIX.
 OCSMART_PREFIX = "HYPSO_HSI"
+
+
+# OC-SMART output variables that repeat the input's geometry.
+_OCSMART_GEOMETRY = {"Latitude", "Longitude", "Relative_azimuth", "Sensor_zenith", "Solar_zenith"}
 
 
 def _ocsmart_version(install_dir) -> str:
@@ -340,16 +429,27 @@ def _ocsmart(tree, masked, mask_flags, work_dir, config=None, **options):
                                  f"recognise the sensor from the staged file name; see its output above")
 
     rrs = load_ocsmart_h5(output_file)["Rrs"]
-    index = _band_map(tree.dataset["radiation_wavelength"].values, rrs["band"].values)
-    cube = np.full(tree.dataset[product_name(tree)].shape, np.nan)
-    cube[:, :, index] = rrs.values[:, :, :len(index)]
+    cube, n_bands = _onto_bands(tree, rrs.values, rrs["band"].values)
+    # OC-SMART writes no attributes; units/names per its documentation.
+    from hypso.io import cf
+    chl = {"units": "mg m-3", "standard_name": cf.CHLA_STANDARD_NAME}
+    variables = _tool_variables(
+        output_file, keep=lambda n: n not in _OCSMART_GEOMETRY,
+        renames={"L2_flags": "ocsmart_l2_flags", "chlor_a(oci)": "chlor_a_oci", "chlor_a(yoc)": "chlor_a_yoc",
+                 "tsm(yoc)": "tsm_yoc"},
+        overrides={"ocsmart_l2_flags": {"long_name": "OC-SMART L2 flags (L2_flags)"},
+                   "chlor_a_oci": {**chl, "long_name": "Chlorophyll-a concentration, OCI algorithm (OC-SMART)"},
+                   "chlor_a_yoc": {**chl, "long_name": "Chlorophyll-a concentration, YOC algorithm (OC-SMART)"},
+                   "tsm_yoc": {"units": "g m-3", "standard_name": cf.SPM_STANDARD_NAME,
+                               "long_name": "Total suspended matter, YOC algorithm (OC-SMART)"}},
+        shape=tree.dataset[product_name(tree)].shape[:2])
 
     parameters = {"masked": masked, "mask_flags": list(mask_flags) if mask_flags else "all" if masked else "",
-                  "input_level": "L1D", "bands_returned": int(len(index)), "output_file": output_file.name}
+                  "input_level": "L1D", "bands_returned": n_bands, "output_file": output_file.name}
     settings = {"l2_prod": l2_prod, "solz_limit": solz_limit, "senz_limit": senz_limit}
     ac = ac_attrs("ocsmart", version=_ocsmart_version(install_dir), install_path=install_dir,
                   settings_effective=settings, settings_user=options)
-    return _l2a_tree(tree, "ocsmart", "Rrs", cube, parameters, ac)
+    return _l2a_tree(tree, "ocsmart", "Rrs", cube, parameters, ac, variables)
 
 
 def _capture_id(tree: xr.DataTree) -> str:

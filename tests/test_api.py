@@ -54,12 +54,32 @@ def test_write_names_and_round_trips(l1d, tmp_path):
     assert path.with_name(l1d.filename(label="test")).name.endswith(".L1D.test.nc")
 
 
+# Production outputs for the reference capture (HYPSO_DATA_AOC_REPROCESS_AULUS2):
+# the fake AC runners below return these real tool outputs, and the L2A
+# products are compared against the production L2A files made from them.
+REPROCESS_DIR = Path("/home/camerop/HYPSO_DATA_AOC_REPROCESS_AULUS2/aeronetvenice_2025-03-04T10-38-05Z")
+POLYMER_OUTPUT = REPROCESS_DIR / "polymer" / "aeronetvenice_2025-03-04T10-38-05Z-moved_unmasked-l1c.polymer.nc"
+ACOLITE_OUTPUTS = {s: REPROCESS_DIR / "acolite" / f"HYPSO2_2025_03_04_10_38_05_{s}.nc" for s in ("L2R", "L2W")}
+OCSMART_OUTPUT = REPROCESS_DIR / "HYPSO_HSI_aeronetvenice_2025-03-04T10-38-05Z-l1d_L2_OCSMART.h5"
+requires_ac_outputs = pytest.mark.skipif(not REPROCESS_DIR.is_dir(), reason=f"AC outputs not present at {REPROCESS_DIR}")
+
+
+def _production_l2a(method):
+    return hypso.open(REPROCESS_DIR / f"aeronetvenice_2025-03-04T10-38-05Z-moved_unmasked-l2a-{method}.nc")
+
+
+def _assert_same_cube(l2a, production):
+    np.testing.assert_array_equal(l2a.wavelengths, production.wavelengths)
+    np.testing.assert_allclose(l2a.cube.values, production.cube.values, rtol=1e-6, equal_nan=True)
+
+
 def test_dps(l1d):
-    # Dark pixel subtraction: per-band minimum subtracted, clipped at 0 (the
-    # removed ac_dark_pixel_subtraction's math; identical before its removal).
+    # Dark pixel subtraction: per-band minimum subtracted, clipped at 0, then
+    # divided by pi so the cube is Rrs (sr-1) like the other methods
+    # (2026-10-26; before, the reflectance difference itself was stored).
     l2a = l1d.correct_atmosphere("dps")
     cube = l1d.cube.values
-    np.testing.assert_array_equal(l2a.cube.values, np.clip(cube - cube.min(axis=(0, 1)), 0, None))
+    np.testing.assert_allclose(l2a.cube.values, np.clip(cube - cube.min(axis=(0, 1)), 0, None) / np.pi, rtol=1e-6)
     assert l2a.level == "L2A" and l2a.cube.name == "Rrs" and l2a.atmospheric_correction == "dps"
     assert l2a.filename() == "HYPSO2_HSI.20250304T103805.aeronetvenice.L2A.dps.nc"
     assert [s["step"] for s in l2a.provenance][-1] == "l2a_dps"
@@ -67,7 +87,6 @@ def test_dps(l1d):
 
 
 def test_dps_masked_ignores_flagged_pixels(l1d):
-    import xarray as xr
     from hypso.masks.flags import FLAGS_NAME, encode_flags
     land = np.zeros(l1d.cube.shape[:2], bool)
     land[:100] = True
@@ -80,9 +99,20 @@ def test_dps_masked_ignores_flagged_pixels(l1d):
     assert np.isnan(l2a.cube.values[:100]).all()
     assert not np.isnan(l2a.cube.values[100:]).any()
     dark = np.nanmin(np.where(land[..., None], np.nan, l1d.cube.values), axis=(0, 1))
-    np.testing.assert_allclose(l2a.cube.values[100:], np.clip(l1d.cube.values[100:] - dark, 0, None))
+    np.testing.assert_allclose(l2a.cube.values[100:], np.clip(l1d.cube.values[100:] - dark, 0, None) / np.pi,
+                               rtol=1e-6)
     with pytest.raises(ValueError, match="pixel_flags"):
         l1d.correct_atmosphere("dps", masked=True)
+
+
+def test_l2a_written_attributes(l1d, tmp_path):
+    import netCDF4 as nc
+    path = l1d.correct_atmosphere("dps").write(out_dir=tmp_path)
+    with nc.Dataset(path) as f:
+        band = f["Rrs_378"] if "Rrs_378" in f.variables else f[next(v for v in f.variables if v.startswith("Rrs_"))]
+        assert band.units == "sr-1" and band.long_name.startswith("Remote Sensing Reflectance")
+        assert band.standard_name == ("surface_ratio_of_upwelling_radiance_emerging_from_sea_water_"
+                                      "to_downwelling_radiative_flux_in_air")
 
 
 def test_correct_atmosphere_level_and_method_errors(l1a, l1d):
@@ -94,23 +124,15 @@ def test_correct_atmosphere_level_and_method_errors(l1a, l1d):
 
 def _fake_polymer(monkeypatch, calls):
     """Stands in for the Polymer subprocess: checks the staged input and
-    writes a v2-style output with 10 of the bands."""
-    import netCDF4 as nc
+    returns the real Polymer v2 output for this capture."""
+    import shutil
     import hypso.processing.atmospheric as atmospheric
 
     def run(python_path, driver_module, config, tool_name):
         assert driver_module == "hypso.ac.adapters._polymer_driver" and tool_name == "polymer"
-        staged = hypso.open(config["polymer_l1_input_nc_file"])
-        calls.append({"config": config, "staged": staged})
-        wavelengths = staged.wavelengths[::12][:10] + 0.2
-        values = np.random.default_rng(0).random(staged.cube.shape[:2] + (len(wavelengths),)).astype(np.float32)
+        calls.append({"config": config, "staged": hypso.open(config["polymer_l1_input_nc_file"])})
         out = Path(config["polymer_output_dir"]) / "raw.polymer.nc"
-        with nc.Dataset(out, "w") as f:
-            f.createDimension("y", values.shape[0]); f.createDimension("x", values.shape[1])
-            f.createDimension("band", values.shape[2])
-            f.createVariable("rho_w", "f4", ("y", "x", "band"))[:] = values
-            f.createVariable("bands", "f4", ("band",))[:] = wavelengths
-        calls[-1]["values"] = values
+        shutil.copy(POLYMER_OUTPUT, out)
         return {"status": "ok", "output_file": str(out)}
 
     monkeypatch.setattr(atmospheric, "run_subprocess_driver", run)
@@ -120,11 +142,14 @@ POLYMER_CONFIG = {"polymer": {"base_path": "/opt/polymer", "polymer_path": "/opt
                               "settings": {"band_cloudmask": 790}}}
 
 
+@requires_ac_outputs
 def test_polymer_mocked(l1c, monkeypatch, tmp_path):
+    import netCDF4 as nc
+    from hypso.processing.atmospheric import POLYMER_FLAGS
     calls = []
     _fake_polymer(monkeypatch, calls)
     l2a = l1c.correct_atmosphere("polymer", config=POLYMER_CONFIG, settings={"bands_corr": [448, 660]},
-                                         work_dir=tmp_path / "work")
+                                 work_dir=tmp_path / "work")
     staged = calls[0]["staged"]
     assert staged.level == "L1C"
     assert any(n.startswith("Band_") for n in staged.tree["metadata/srf"].dataset.data_vars)   # SRFs added
@@ -132,19 +157,35 @@ def test_polymer_mocked(l1c, monkeypatch, tmp_path):
     assert (tmp_path / "work").is_dir()                                                           # kept
 
     assert l2a.level == "L2A" and l2a.cube.name == "rho_w" and l2a.atmospheric_correction == "polymer"
-    mapped = list(range(0, 120, 12))[:10]
-    np.testing.assert_array_equal(l2a.cube.values[:, :, mapped], calls[0]["values"])
-    assert np.isnan(np.delete(l2a.cube.values, mapped, axis=2)).all()
+    _assert_same_cube(l2a, _production_l2a("polymer"))
     step = l2a.provenance[-1]
     assert step["step"] == "l2a_polymer" and step["ac_tool"] == "polymer" and step["ac_version"] == "v2"
     assert '"band_cloudmask": 790' in step["settings_effective"] and "bands_corr" in step["settings_user"]
-    assert step["input_level"] == "L1C" and step["bands_returned"] == 10
+    assert step["input_level"] == "L1C" and step["bands_returned"] == 113
     assert l2a.filename().endswith(".L2A.polymer.nc")
 
+    # 2D products: chla = 10**logchl (linear, mg m-3) and Polymer's own flags
+    variables = l2a.variables
+    assert {"chla", "logfb", "SPM", "Rgli", "Rnir", "polymer_flags"} <= set(variables)
+    with nc.Dataset(POLYMER_OUTPUT) as f:
+        logchl, flags = f["logchl"][:], f["flags"][:]
+    np.testing.assert_allclose(variables["chla"].values, np.ma.filled(10.0 ** logchl.astype(np.float64), np.nan),
+                               rtol=1e-5, equal_nan=True)
+    assert variables["chla"].attrs["units"] == "mg m-3"
+    np.testing.assert_array_equal(variables["polymer_flags"].values, flags)
+    assert variables["polymer_flags"].attrs["flag_meanings"].split() == list(POLYMER_FLAGS)
+    np.testing.assert_allclose(variables["chla"].values, _production_l2a("polymer").variables["chla"].values,
+                               rtol=1e-5, equal_nan=True)
 
+    # and they survive writing
+    reread = hypso.open(l2a.write(out_dir=tmp_path))
+    assert reread.variables["polymer_flags"].dtype == flags.dtype
+    assert reread.variables["polymer_flags"].attrs["flag_meanings"] == variables["polymer_flags"].attrs["flag_meanings"]
+    assert reread.variables["chla"].attrs["standard_name"] == "mass_concentration_of_chlorophyll_a_in_sea_water"
+
+
+@requires_ac_outputs
 def test_polymer_masked_input_and_temp_cleanup(l1d, monkeypatch):
-    import xarray as xr
-    from pathlib import Path
     from hypso.masks.flags import FLAGS_NAME, encode_flags
     calls = []
     _fake_polymer(monkeypatch, calls)
@@ -171,29 +212,17 @@ def test_polymer_needs_configuration(l1d, monkeypatch):
 
 
 def _fake_acolite(monkeypatch, calls):
-    """Stands in for the ACOLITE subprocess: writes L2R/L2W files with 8
-    bands named as ACOLITE does."""
-    import netCDF4 as nc
+    """Stands in for the ACOLITE subprocess: returns the real L2R/L2W
+    outputs for this capture."""
+    import shutil
     import hypso.processing.atmospheric as atmospheric
 
     def run(python_path, driver_module, config, tool_name):
         assert driver_module == "hypso.ac.adapters._acolite_driver" and tool_name == "acolite"
         overrides = config["settings_overrides"]
-        staged = hypso.open(overrides["inputfile"])
-        calls.append({"config": config, "staged": staged})
-        wavelengths = staged.wavelengths[5::15][:8] + 0.3
-        rng = np.random.default_rng(1)
-        values = {}
-        for suffix, prefix in (("L2R", "rhos"), ("L2W", "Rrs")):
-            data = rng.random(staged.cube.shape[:2] + (len(wavelengths),)).astype(np.float32)
-            values[suffix] = data
-            with nc.Dataset(Path(overrides["output"]) / f"HYPSO2_2025_03_04_10_38_05_{suffix}.nc", "w") as f:
-                f.createDimension("y", data.shape[0]); f.createDimension("x", data.shape[1])
-                for i, wl in enumerate(wavelengths):
-                    var = f.createVariable(f"{prefix}_{int(round(wl))}", "f4", ("y", "x"))
-                    var[:] = data[:, :, i]
-                    var.wavelength = float(wl)
-        calls[-1]["values"] = values
+        calls.append({"config": config, "staged": hypso.open(overrides["inputfile"])})
+        for path in ACOLITE_OUTPUTS.values():
+            shutil.copy(path, Path(overrides["output"]) / path.name)
         return {"status": "ok", "settings": {**overrides, "dsf_wave_range": "450,800", "sensor": config["sensor"]}}
 
     monkeypatch.setattr(atmospheric, "run_subprocess_driver", run)
@@ -202,7 +231,9 @@ def _fake_acolite(monkeypatch, calls):
 ACOLITE_CONFIG = {"acolite": {"path": "/opt/acolite", "settings": {"dsf_aot_estimate": "tiled"}}}
 
 
+@requires_ac_outputs
 def test_acolite_mocked(l1c, monkeypatch, tmp_path):
+    import netCDF4 as nc
     calls = []
     _fake_acolite(monkeypatch, calls)
     work = tmp_path / "work"
@@ -211,54 +242,55 @@ def test_acolite_mocked(l1c, monkeypatch, tmp_path):
     assert config["sensor"] == "HYPSO2" and calls[0]["staged"].level == "L1C"
     assert config["settings_overrides"]["dsf_aot_estimate"] == "tiled"        # config settings applied
     assert config["settings_overrides"]["l2w_parameters"][0] == "Rrs_*"       # adapter defaults kept
-    mapped = list(range(5, 120, 15))[:8]
     assert l2w.cube.name == "Rrs" and l2w.atmospheric_correction == "acolite_l2w"
-    np.testing.assert_array_equal(l2w.cube.values[:, :, mapped], calls[0]["values"]["L2W"])
-    assert np.isnan(np.delete(l2w.cube.values, mapped, axis=2)).all()
+    _assert_same_cube(l2w, _production_l2a("acolite_l2w"))
     step = l2w.provenance[-1]
     assert step["step"] == "l2a_acolite_l2w" and step["ac_tool"] == "acolite" and step["ac_version"] == "git checkout"
     assert '"dsf_wave_range": "450,800"' in step["settings_effective"]        # what ACOLITE reported
     assert l2w.filename().endswith(".L2A.acolite_l2w.nc")
 
-    # L2R from the same run: no second ACOLITE run
+    # L2W's 2D products and flags, with CF standard names where ACOLITE's aren't
+    variables = l2w.variables
+    assert {"acolite_l2_flags", "SPM_Nechad2010_664", "chl_re_mishra", "ndci"} <= set(variables)
+    with nc.Dataset(ACOLITE_OUTPUTS["L2W"]) as f:
+        np.testing.assert_array_equal(variables["acolite_l2_flags"].values, f["l2_flags"][:])
+    chl = variables["chl_re_mishra"].attrs
+    assert chl["standard_name"] == "mass_concentration_of_chlorophyll_a_in_sea_water"
+    assert chl["source_standard_name"] == "mass_concentration_of_chlorophyll_a_in_water"
+    assert "standard_name" not in variables["ndci"].attrs                       # not a CF name
+    np.testing.assert_allclose(variables["chl_re_mishra"].values,
+                               _production_l2a("acolite_l2w").variables["chl_re_mishra"].values,
+                               rtol=1e-6, equal_nan=True)
+
+    # L2R from the same run: no second ACOLITE run, no 2D products
     l2r = l1c.correct_atmosphere("acolite", output="l2r", config=ACOLITE_CONFIG, work_dir=work, reuse_output=True)
     assert len(calls) == 1
     assert l2r.cube.name == "rhos" and l2r.atmospheric_correction == "acolite_l2r"
-    np.testing.assert_array_equal(l2r.cube.values[:, :, mapped], calls[0]["values"]["L2R"])
+    _assert_same_cube(l2r, _production_l2a("acolite_l2r"))
     assert l2r.provenance[-1]["reused_output"] == "true"
     with pytest.raises(ValueError, match="output must be"):
         l1c.correct_atmosphere("acolite", output="l3", config=ACOLITE_CONFIG)
 
 
-FAKE_OCSMART = r'''
-import sys
+# Stands in for OCSMART.py: checks the staged input against the
+# OCSMART_Input.txt paths and copies the real OC-SMART output into l2_path.
+FAKE_OCSMART = r"""
+import shutil
 from pathlib import Path
-import numpy as np
-import netCDF4 as nc
 cfg = dict(line.split(" = ", 1) for line in Path("OCSMART_Input.txt").read_text().splitlines() if " = " in line)
 l1b, l2 = Path(cfg["l1b_path"].strip()), Path(cfg["l2_path"].strip())
 staged = sorted(l1b.glob("*.nc"))
 assert len(staged) == 1 and staged[0].name.startswith("HYPSO_HSI_"), staged
-with nc.Dataset(staged[0]) as f:
-    lines, samples = len(f.dimensions["lines"]), len(f.dimensions["samples"])
 print("fake OC-SMART processing", staged[0].name)
-out = l2 / staged[0].name.replace(".nc", "_L2_OCSMART.h5")
-rng = np.random.default_rng(2)
-with nc.Dataset(out, "w") as f:
-    f.createDimension("y", lines); f.createDimension("x", samples)
-    f.createVariable("Latitude", "f4", ("y", "x"))[:] = 45.0
-    for group in ("Lr", "Lrc", "Lt", "Rrs"):
-        g = f.createGroup(group)
-        for wl in (412, 443, 490, 555, 670):
-            g.createVariable(f"{group}_{wl}", "f4", ("y", "x"))[:] = rng.random((lines, samples))
-'''
+shutil.copy(REAL_OUTPUT, l2 / staged[0].name.replace(".nc", "_L2_OCSMART.h5"))
+"""
 
 
+@requires_ac_outputs
 def test_ocsmart_with_fake_installation(l1d, tmp_path):
-    import netCDF4 as nc
     install = tmp_path / "OCSMART_Linux_v2.6.3"
     install.mkdir()
-    (install / "OCSMART.py").write_text(FAKE_OCSMART)
+    (install / "OCSMART.py").write_text(f"REAL_OUTPUT = {str(OCSMART_OUTPUT)!r}\n" + FAKE_OCSMART)
     (install / "OCSMART_Input.txt").write_text("original contents\n")
     config = {"ocsmart": {"dir": str(install), "python": __import__("sys").executable}}
 
@@ -267,15 +299,21 @@ def test_ocsmart_with_fake_installation(l1d, tmp_path):
     assert (install / ".OCSMART_Input.lock").exists()                              # pipeline's lock file
     output = tmp_path / "work" / "ocsmart" / "HYPSO_HSI_aeronetvenice_2025-03-04T10-38-05Z-l1d_L2_OCSMART.h5"
     assert output.is_file()
-    with nc.Dataset(output) as f:
-        expected = np.stack([f["Rrs"][f"Rrs_{wl}"][:] for wl in (412, 443, 490, 555, 670)], axis=-1)
-    index = [int(np.argmin(np.abs(l1d.wavelengths - wl))) for wl in (412, 443, 490, 555, 670)]
-    np.testing.assert_array_equal(l2a.cube.values[:, :, index], expected)
-    assert np.isnan(np.delete(l2a.cube.values, index, axis=2)).all()
     assert l2a.cube.name == "Rrs" and l2a.atmospheric_correction == "ocsmart"
+    _assert_same_cube(l2a, _production_l2a("ocsmart"))
     step = l2a.provenance[-1]
-    assert step["ac_tool"] == "ocsmart" and step["ac_version"] == "v2.6.3" and step["bands_returned"] == 5
+    assert step["ac_tool"] == "ocsmart" and step["ac_version"] == "v2.6.3"
+    assert step["bands_returned"] == int((~np.isnan(l2a.cube.values).all(axis=(0, 1))).sum())
     assert l2a.filename().endswith(".L2A.ocsmart.nc")
+
+    variables = l2a.variables
+    assert {"chlor_a_oci", "chlor_a_yoc", "ocsmart_l2_flags"} <= set(variables)
+    assert not {"Latitude", "Solar_zenith"} & set(variables)
+    assert variables["chlor_a_oci"].attrs["units"] == "mg m-3"
+    assert variables["ocsmart_l2_flags"].dtype.kind == "i"
+    production = _production_l2a("ocsmart").variables
+    for name in ("chlor_a_oci", "chlor_a_yoc"):
+        np.testing.assert_allclose(variables[name].values, production[name].values, rtol=1e-6, equal_nan=True)
 
 
 def test_ocsmart_errors(l1d, tmp_path):

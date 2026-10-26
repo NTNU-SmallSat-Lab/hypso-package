@@ -39,12 +39,7 @@ permission to modify — unlike `/home/camerop/AC/hypso-package`, which is **rea
 5. **Verification with the real AC tools** (when aulus2 is free): Polymer, ACOLITE, OC-SMART through
    correct_atmosphere on one reprocess capture, compared with its L2A files; fix the silently-skipped
    real-Polymer test (stale path); a HYPSO-1 check (everything so far verified on HYPSO-2 only).
-6. **L2A outputs** (next, ×56): each method's L2A keeps only its reflectance cube - add Polymer logchl/logfb/
-   flags, ACOLITE L2W products, OC-SMART chl/TSM as variables (and drop the pipeline's own Polymer chla
-   reconstruction). Units: L2A writes every product with units "1"; ACOLITE L2W and OC-SMART Rrs are sr-1
-   (CF `surface_ratio_of_upwelling_radiance_emerging_from_sea_water_to_downwelling_radiative_flux_in_air`).
-   DPS and Polymer output dimensionless reflectance (the pipeline divides both by pi for Rrs,
-   stage3 pipeline_hypso_matchups.py:528) - but DPS is named "Rrs": decide rename vs. divide by pi.
+6. ~~**L2A outputs**~~ - done (×57).
 7. **Release tags**: `v26.10.0a1` (×46), `v26.10.0a2` (V3 coefficients, ×48), `v26.10.0a3` (wide V3 abs, ×52).
    Final `vYY.M.0` on the merge to main once the pipeline uses the refactor. Tags are local until pushed.
 8. **Outside this repo, handled separately by the user**: eoread fork commit `3609d25` (F0 / d^2) on the
@@ -166,6 +161,26 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-10-26 (×57): L2A outputs.** User decisions: DPS divides by pi and keeps the name Rrs; Polymer
+  chlorophyll as linear `chla` (10**logchl); every method's 2D products and flags kept as variables.
+  - Units/names: L2A cube attrs now come from `io.cf.L2A_PRODUCTS` - Rrs sr-1 with the CF Rrs standard
+    name, rho_w and rhos "1" (were all "1"). Tool variables pass through `cf.tool_variable_attrs`: ACOLITE's
+    non-CF chl/SPM standard names map to the CF `..._in_sea_water` names (originals kept as
+    `source_standard_name`), other non-CF names (e.g. ndci) move to `source_standard_name`.
+  - Polymer: `ac.polymer_output.read_polymer_reflectance` reads the per-band `rho_w_<nm>` that real v2
+    output uses (the old loader expected a 3D rho_w, hidden by a mock that wrote one). Variables: chla
+    (mg m-3, CF name), logfb, SPM (no unit: Polymer's source states none), Rgli, Rnir, polymer_flags with
+    Polymer's flag table as flag_masks/flag_meanings.
+  - ACOLITE L2W: all 2D outputs except lat/lon/Rrs_* (set depends on l2w_parameters), l2_flags ->
+    acolite_l2_flags. L2R: cube only.
+  - OC-SMART: chlor_a(oci)/chlor_a(yoc)/tsm(yoc) -> chlor_a_oci/chlor_a_yoc/tsm_yoc (mg m-3 / g m-3, CF
+    names), L2_flags -> ocsmart_l2_flags; geometry repeats dropped. Production also wrote the 3D Lr, Lrc,
+    Lt, Lwp, tg_sen, tg_sol - not kept (2D-only decision); add if wanted.
+  - Band mapping: `_band_map` returns (product, tool) index pairs - a dropped duplicate no longer shifts
+    later bands. Tool flags round-trip with their integer dtype (`_extra_variables` no longer drops them).
+  - Tests: the fake Polymer/ACOLITE/OC-SMART runners now return the real outputs from
+    HYPSO_DATA_AOC_REPROCESS_AULUS2/aeronetvenice_2025-03-04T10-38-05Z; cubes, chla and the chl products
+    match the production L2A files there (rtol 1e-6/1e-5).
 - **2026-10-26 (×56): small cleanups.** Removed `hypso.georeferencing` (GCPList/GCP/PointsCSV/Georeferencer
   and utils had zero callers anywhere, incl. hypso-processing-pipeline; its README was a title only - the
   georeferencing math lives in hypso.geometry). `hypso/README.md` (also the PyPI page) rewritten: product
