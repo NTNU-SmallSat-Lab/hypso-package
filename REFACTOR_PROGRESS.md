@@ -51,8 +51,8 @@ permission to modify — unlike `/home/camerop/AC/hypso-package`, which is **rea
    compatibility needed).
 7. **Release tags**: `v26.10.0a1` (×46), `v26.10.0a2` (V3 coefficients, ×48). Next alphas as milestones land; final
    `vYY.M.0` on the merge to main once the pipeline uses the refactor. Tags are local until pushed.
-8. **Test environment**: 3 `test_ac_subprocess.py` failures (`hypso` not importable in driver subprocesses);
-   `test_real_polymer_imports_succeed_through_subprocess` silently skips (fixture path renamed
+8. **Test environment**: ~~3 `test_ac_subprocess.py` failures~~ fixed (×51, `2810fa3c`);
+   `test_real_polymer_imports_succeed_through_subprocess` still silently skips (fixture path renamed
    `..._DO_NOT_USE`; pipeline now uses `AC/Polymer/Polymer`) - ×37.
 9. **Outside this repo, handled separately by the user**: eoread fork commit `3609d25` (F0 / d^2) on the
    flat-layout reader (×37); hypso-processing-pipeline paths for the new file names (×42).
@@ -172,6 +172,26 @@ Full unabridged plan text: see the "Approved Plan" section pasted at the bottom 
 duplicated per update — if it's missing, check `/home/camerop/.claude/plans/rosy-frolicking-summit.md` instead).
 
 ## Status (update this section as work progresses — most recent at top)
+
+- **2026-10-26 (×51): atmospheric correction as tree functions - DPS and Polymer done; ACOLITE, OC-SMART next.**
+  User decisions: AC tool locations are configuration only, no defaults; settings in a YAML file
+  (`hypso.ac.config`: `config=` path/dict or `HYPSO_AC_CONFIG`); no real AC runs on aulus2 for now (mocked
+  subprocesses only).
+  `hypso/processing/atmospheric.py` `correct_atmosphere(tree, method, masked, mask_flags, work_dir, config,
+  **options)` / `Product.correct_atmosphere(...)`: L2A tree with the method's cube on the input bands, input
+  geometry/flags/metadata, `atmospheric_correction` global attr (file name `...L2A.<method>.nc`),
+  `l2a_<method>` provenance (tool, version, install git commit, effective/user settings). `masked=True`
+  applies pixel_flags to the input (replaces NaN-masked product copies).
+  - DPS: NaN-aware statistics (old np.min made the whole spectrum NaN for masked input); identical to the old
+    function on unmasked input.
+  - Polymer: stages L1C/L1D into work_dir (temporary unless given), adds metadata/srf when missing (Polymer's
+    srf_getter reads Band_<i> from the input; an L1C straight from georeferencing has none), runs the existing
+    `_polymer_driver`, maps returned bands to the nearest input bands. Mocked tests only.
+  - Fixed: `run_subprocess_driver` now puts the hypso/calibration package roots on the child's PYTHONPATH and
+    runs it in its temp dir; this fixed the 3 long-failing test_ac_subprocess tests (repo-root namespace
+    collision, "No module named 'hypso.ac'").
+  - Note for real runs: OC-SMART's OCSMART.py mangles '.' in configured path values (see ocsmart adapter);
+    NASA-style staged file names contain dots - check when wiring OC-SMART.
 
 - **2026-10-26 (×50): public API = immutable `hypso.Product`; georeferencing as a tree function.**
   User chose (over plain functions / a stateful convenience object) an immutable product object with verb
