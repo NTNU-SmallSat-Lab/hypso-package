@@ -91,20 +91,12 @@ def HSI2RGB(wY, HSI, d: Literal[50, 55, 65, 75] = 65, threshold=0.002) -> np.nda
                   [0.0556434, -0.2040259, 1.0572252]])
     sRGB = M @ XYZ
 
-    # Gamma correction
-    """Convert sRGB values to physically linear ones. The transformation is
-           uniform in RGB, so *srgb* can be of any shape.
-
-           *srgb* values should range between 0 and 1, inclusively.
-
-        """
-    gamma = ((sRGB + 0.055) / 1.055) ** 2.4
-    scale = sRGB / 12.92
-    sRGB = np.where(sRGB > 0.04045, gamma, scale)
-
-    # gamma_map = sRGB > 0.0031308
-    # sRGB[gamma_map] = 1.055 * np.power(sRGB[gamma_map], (1. / 2.4)) - 0.055
-    # sRGB[np.invert(gamma_map)] = 12.92 * sRGB[np.invert(gamma_map)]
+    # Gamma correction: M @ XYZ is linear RGB; encode it with the sRGB transfer
+    # function for display, as the original (Magnusson et al.) code does. This
+    # previously applied the inverse (sRGB -> linear), which roughly squared
+    # the values and rendered images dark with a green cast.
+    sRGB = np.clip(sRGB, 0, None)
+    sRGB = np.where(sRGB > 0.0031308, 1.055 * np.power(sRGB, 1 / 2.4) - 0.055, 12.92 * sRGB)
 
     # Note: RL, GL or BL values less than 0 or greater than 1 are clipped to 0 and 1.
     sRGB[sRGB > 1] = 1

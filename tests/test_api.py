@@ -344,3 +344,9 @@ def test_hsi2rgb_on_l1d(l1d):
     rgb = HSI2RGB(l1d.wavelengths, l1d.cube.values)
     assert rgb.shape == l1d.cube.shape[:2] + (3,)
     assert np.isfinite(rgb).all() and 0 <= rgb.min() and rgb.max() <= 1
+    # Plausible brightness and colour balance. With the inverted sRGB gamma
+    # (fixed 2026-10-26) this scene rendered dark and green: mean 0.081,
+    # channel means R/G/B 0.065/0.107/0.071; correct: 0.244, 0.282/0.267/0.184.
+    red, green, blue = rgb.mean(axis=(0, 1))
+    assert 0.15 < rgb.mean() < 0.5
+    assert green <= red

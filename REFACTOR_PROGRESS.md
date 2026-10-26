@@ -181,6 +181,12 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
   Product.spectrum/.wavelengths and were removed; HSI2RGB (Magnusson et al. 2020 colour-matching RGB; kept for
   the HYPSO-2 RGB camera TODO) moved with its D_illuminants.mat to `hypso/rgb/` (MANIFEST.in updated). Test:
   HSI2RGB on the fixture L1D gives a finite (lines, samples, 3) image in [0, 1].
+  Then fixed a real bug in HSI2RGB (found by looking at the rendered image, user request): its "gamma
+  correction" applied the inverse sRGB transfer function (sRGB -> linear) to already-linear RGB, roughly
+  squaring the values - images came out dark with a green cast (fixture mean 0.081, G dominant). Now the
+  forward encoding, as in the original Magnusson et al. code (it was there, commented out): mean 0.244,
+  R >= G > B. The bug predates the move (it was in the copy the package started from). Test asserts
+  plausible brightness and that green does not dominate.
 
 - **2026-10-26 (×53): the capture-object API is deleted.** Stage 1 (`183a6f63`) ported the surviving
   satobj consumers to `hypso.Product`: `with_masks` (pixel_flags; replaces land_mask/cloud_mask/custom masks),
