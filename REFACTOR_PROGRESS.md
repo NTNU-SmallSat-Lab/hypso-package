@@ -36,32 +36,31 @@ permission to modify — unlike `/home/camerop/AC/hypso-package`, which is **rea
    Best done after the Dataset rewrite (steps 2-4) settles the public API, so the reference isn't written
    twice.
 4. ~~Clean up `reflectance/toa_reflectance.py`~~ - done (×55): `hypso.srf` + `processing/toa.py`.
-5. **Steps 1-3 complete; old capture code deleted (×53).** Next: real AC runs compared against the
-   reprocess dataset once aulus2 is free; docs/architecture.rst rewrite (part of TODO 3). Original note: steps 2-4 of ×37 (processing as Dataset -> Dataset functions, Hypso
-   facade, delete old code). SNAP confirmed by the user (×46).
-   `masked=True` in the write wrappers still writes the NaN-masked cube; switch to flags-only once AC
-   staging applies pixel_flags (AC step).
-6. ~~Hypso facade must accept the pipeline's direct-georef fallback~~ - obsolete (×49: no pipeline
-   compatibility needed).
-7. **Release tags**: `v26.10.0a1` (×46), `v26.10.0a2` (V3 coefficients, ×48), `v26.10.0a3` (wide V3 abs, ×52). Next alphas as milestones land; final
-   `vYY.M.0` on the merge to main once the pipeline uses the refactor. Tags are local until pushed.
-8. **Test environment**: ~~3 `test_ac_subprocess.py` failures~~ fixed (×51, `2810fa3c`);
-   `test_real_polymer_imports_succeed_through_subprocess` still silently skips (fixture path renamed
-   `..._DO_NOT_USE`; pipeline now uses `AC/Polymer/Polymer`) - ×37.
-9. **Outside this repo, handled separately by the user**: eoread fork commit `3609d25` (F0 / d^2) on the
-   flat-layout reader (×37); hypso-processing-pipeline paths for the new file names (×42).
+5. **Verification with the real AC tools** (when aulus2 is free): Polymer, ACOLITE, OC-SMART through
+   correct_atmosphere on one reprocess capture, compared with its L2A files; fix the silently-skipped
+   real-Polymer test (stale path); a HYPSO-1 check (everything so far verified on HYPSO-2 only).
+6. **L2A outputs** (next, ×56): each method's L2A keeps only its reflectance cube - add Polymer logchl/logfb/
+   flags, ACOLITE L2W products, OC-SMART chl/TSM as variables (and drop the pipeline's own Polymer chla
+   reconstruction). Units: L2A writes every product with units "1"; ACOLITE L2W and OC-SMART Rrs are sr-1
+   (CF `surface_ratio_of_upwelling_radiance_emerging_from_sea_water_to_downwelling_radiative_flux_in_air`).
+   DPS and Polymer output dimensionless reflectance (the pipeline divides both by pi for Rrs,
+   stage3 pipeline_hypso_matchups.py:528) - but DPS is named "Rrs": decide rename vs. divide by pi.
+7. **Release tags**: `v26.10.0a1` (×46), `v26.10.0a2` (V3 coefficients, ×48), `v26.10.0a3` (wide V3 abs, ×52).
+   Final `vYY.M.0` on the merge to main once the pipeline uses the refactor. Tags are local until pushed.
+8. **Outside this repo, handled separately by the user**: eoread fork commit `3609d25` (F0 / d^2) on the
+   flat-layout reader, and checking ACOLITE's/OC-SMART's readers on new files (×37); moving
+   hypso-processing-pipeline to hypso.open and the new file names (×42, ×49).
 
-Older open items (recorded earlier; status to confirm in item 1):
-- Zarr support - ×29 / ARCHITECTURE_PROPOSAL.md section 7.
-- (Merged into item 3) complete docstrings/comments; update README and user-facing docs - ×25-era entries.
-- Variable capture dimensions/bands/sizes - ×20 (partly addressed by the ×31 capture-dimensions audit).
-- HYPSO-2 RGB camera support - ×14.
-- AC connectors: per-tool config (now planned as YAML, ×37), uniform run/open return shape, fold the
-  pipeline's Polymer chla/logchl handling into the adapter - AC-connector notes below and ×20.
-- Review flags near ×24: `hypso.containers.DatasetDict` vs plain xarray; unused `georeferencing.py` classes
-  (GCPList/GCP/PointsCSV/Georeferencer); merging `io/`, `load/`, `write/` (largely superseded by ×41);
-  `hypso.classification` shim removal; wiring in `hypso/resample/` (see item 2); band `standard_name` and a
-  possible SNAP bandwidth attribute.
+Older open items:
+- Zarr support - ×29 / ARCHITECTURE_PROPOSAL.md section 7 (decide when there is a concrete need).
+- Variable capture dimensions/bands/sizes - ×20 (partly addressed by the ×31 audit; capture_params and the
+  coefficient catalog's per-capture-type files now carry most of this - recheck).
+- HYPSO-2 RGB camera support - ×14 (hypso.rgb.HSI2RGB is the comparison image).
+
+Closed by the rewrite (×41-×56): TOA cleanup; Hypso facade; test environment failures; per-tool AC config
+(YAML) and a uniform AC result (L2A Product); hypso.containers.DatasetDict; io/load/write merge;
+hypso.classification; resample wiring (Product.resample); unused georeferencing classes (package removed);
+band standard_name (L1B-L1D; L2A in item 6); the SNAP bandwidth attribute question (SNAP confirmed working).
 
 ## AC-connector pass — design notes (2026-08-25, not yet implemented)
 
@@ -166,6 +165,16 @@ Full unabridged plan text: see the "Approved Plan" section pasted at the bottom 
 duplicated per update — if it's missing, check `/home/camerop/.claude/plans/rosy-frolicking-summit.md` instead).
 
 ## Status (update this section as work progresses — most recent at top)
+
+- **2026-10-26 (×56): small cleanups.** Removed `hypso.georeferencing` (GCPList/GCP/PointsCSV/Georeferencer
+  and utils had zero callers anywhere, incl. hypso-processing-pipeline; its README was a title only - the
+  georeferencing math lives in hypso.geometry). `hypso/README.md` (also the PyPI page) rewritten: product
+  levels incl. L2A, quick start with hypso.open, git-tag versioning; root README typo; ARCHITECTURE_PROPOSAL.md
+  marked historical. CF standard names on bands, checked against the CF standard name table v95:
+  `toa_outgoing_radiance_per_unit_wavelength` (Lt), `toa_bidirectional_reflectance` (rhot) - new
+  LevelSchema.product_standard_name; dropped the stale LevelSchema.source_cube_attr (satobj attribute names).
+  Found while checking L2A names: Rrs is sr-1 but L2A writes "1", and DPS output (dimensionless, the pipeline
+  divides it by pi) is named "Rrs" - carried into TODO 6.
 
 - **2026-10-26 (×55): TOA reflectance / SRF code consolidated (TODO 4).** `hypso/reflectance/` (toa_reflectance.py,
   spectral_response.py, write_ssi_npz.py) replaced by `hypso/srf/`: `response.py` (SpectralResponse,

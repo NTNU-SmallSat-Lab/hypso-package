@@ -1,10 +1,9 @@
 """L1B -> L1C: georeferencing (pixel latitude/longitude) and viewing/solar
 angles.
 
-Same frame interpolation, direct georeferencing and angle computation as
-hypso.georeferencing.geo (run_frame_interpolation, run_direct_georeferencing,
-run_georeferencing, run_angles_geometry), taking and returning a product
-tree. Two sources of pixel coordinates:
+Frame interpolation, direct georeferencing and angle computation use
+hypso.geometry (the same math the removed capture-object georeferencing
+called), taking and returning a product tree. Two sources of pixel coordinates:
 
 - indirect: latitude/longitude arrays you supply (e.g. the GCP-corrected
   processing-temp/latitudes_indirectgeoref.dat files), written as

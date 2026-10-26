@@ -37,14 +37,12 @@ def test_spatial_dims_default():
         assert schema.spatial_dims == ("lines", "samples")
 
 
-def test_source_cube_attrs():
-    # L1C deliberately shares L1B's cube (georeferencing adds no new cube).
-    assert get_schema("L1C").source_cube_attr == "l1b_cube"
-    assert get_schema("L1B").source_cube_attr == "l1b_cube"
-    assert get_schema("L1D").source_cube_attr == "l1d_cube"
-
-
-# --- cf builders: one assertion per confirmed pre-refactor bug ---
+def test_product_standard_names():
+    # Checked against the CF standard name table v95 (cfconventions.org).
+    assert get_schema("L1B").product_standard_name == "toa_outgoing_radiance_per_unit_wavelength"
+    assert get_schema("L1C").product_standard_name == "toa_outgoing_radiance_per_unit_wavelength"
+    assert get_schema("L1D").product_standard_name == "toa_bidirectional_reflectance"
+    assert get_schema("L1A").product_standard_name is None
 
 def test_latitude_attrs_fixed():
     # Bug: units="degrees" and valid range [-180,180] copy-pasted from longitude.

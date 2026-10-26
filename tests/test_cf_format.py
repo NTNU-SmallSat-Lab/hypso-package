@@ -158,3 +158,13 @@ def test_l1a_is_uint16_without_calibration_attrs(written_nc_files, open_nc):
     bands = band_variables(ds, "dn")
     assert len(bands) == 120 and all(v.dtype == np.uint16 for v in bands.values())
     assert not [k for k in ds.ncattrs() if k.endswith("_file")]
+
+
+@pytest.mark.parametrize("level, prefix, name", [
+    ("l1b", "Lt", "toa_outgoing_radiance_per_unit_wavelength"),
+    ("l1c", "Lt", "toa_outgoing_radiance_per_unit_wavelength"),
+    ("l1d", "rhot", "toa_bidirectional_reflectance"),
+])
+def test_band_standard_names(written_nc_files, open_nc, level, prefix, name):
+    ds = open_nc(written_nc_files[level])
+    assert all(var.standard_name == name for var in band_variables(ds, prefix).values())

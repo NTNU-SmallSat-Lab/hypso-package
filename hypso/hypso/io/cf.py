@@ -108,7 +108,7 @@ def geolocation_ref_attrs() -> dict:
 
 def band_attrs(long_name: str, units: str, wavelength_nm: float, radiation_wavelength_nm: float,
                 fwhm: float, wave_name: str, band_index: int, include_geolocation: bool,
-                *, var_name: str) -> dict:
+                *, var_name: str, standard_name: Optional[str] = None) -> dict:
     """Per-band product variable attrs (e.g. for Lt_378 or rhot_378).
 
     wavelength vs. radiation_wavelength: kept as two distinct attributes,
@@ -119,11 +119,9 @@ def band_attrs(long_name: str, units: str, wavelength_nm: float, radiation_wavel
     name (maps to CF's "sensor_band_central_radiation_wavelength" concept,
     per Unidata's EC-netCDF-CF swath convention) - but standard_name is a
     property CF only defines for a *variable*, not for one attribute among
-    several on a variable, so it's not set here: this Lt_378/rhot_378
-    variable's own physical quantity is radiance/reflectance, not
-    wavelength, and no standard_name is confidently known for those (see
-    REFACTOR_PROGRESS.md's "Research: SNAP/CF wavelength convention"
-    section) - left unset rather than guessed. `wave` (a third,
+    several on a variable. The variable's own standard_name (its radiance or
+    reflectance quantity) comes from `standard_name`, set per level in
+    io/schema.py from the CF standard name table. `wave` (a third,
     truly-redundant duplicate of `wavelength`) is dropped.
 
     var_name is the variable's own name (e.g. "Lt_378"), written as
@@ -142,6 +140,8 @@ def band_attrs(long_name: str, units: str, wavelength_nm: float, radiation_wavel
         "wave_name": wave_name,
         "band": band_index,
     }
+    if standard_name:
+        attrs["standard_name"] = standard_name
     if include_geolocation:
         attrs.update(geolocation_ref_attrs())
     return attrs

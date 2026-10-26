@@ -21,9 +21,11 @@ class LevelSchema:
     product_prefix: str            # "Lt" (radiance) or "rhot" (reflectance)
     product_units: str             # CF units string, "" for dimensionless reflectance
     product_long_name: str         # e.g. "Top-of-Atmosphere Radiance"
-    source_cube_attr: str          # satobj attribute holding the source cube, e.g. "l1b_cube"
     has_geometry: bool             # whether this level's capture has been georeferenced yet
     title: str                     # used for the global `title` attribute
+    # CF standard name of the product variable, checked against the CF
+    # standard name table (v95); None where no name fits.
+    product_standard_name: str = None
     spatial_dims: tuple = ("lines", "samples")
     # Every level implemented so far is swath-shaped: (lines, samples) tied to the
     # capture's along-track/across-track geometry. This field exists so a future
@@ -39,37 +41,36 @@ L1A_SCHEMA = LevelSchema(
     product_prefix="dn",
     product_units="1",
     product_long_name="Raw Digital Numbers",
-    source_cube_attr="l1a_cube",
     has_geometry=False,
     title="HYPSO Level 1A Raw Digital Numbers",
 )
 
 L1B_SCHEMA = LevelSchema(
     processing_level="L1B",
+    product_standard_name="toa_outgoing_radiance_per_unit_wavelength",
     product_prefix="Lt",
     product_units="W m-2 um-1 sr-1",
     product_long_name="Top-of-Atmosphere Radiance",
-    source_cube_attr="l1b_cube",
     has_geometry=False,  # confirmed: L1B is pre-georeferencing - see the bug this fixes above
     title="HYPSO Level 1B Top-of-Atmosphere Radiance",
 )
 
 L1C_SCHEMA = LevelSchema(
     processing_level="L1C",
+    product_standard_name="toa_outgoing_radiance_per_unit_wavelength",
     product_prefix="Lt",
     product_units="W m-2 um-1 sr-1",
     product_long_name="Top-of-Atmosphere Radiance",
-    source_cube_attr="l1b_cube",  # L1c is L1b data + georeferencing, see HypsoCapture.l1c_cube's docstring
     has_geometry=True,
     title="HYPSO Level 1C Top-of-Atmosphere Radiance (georeferenced)",
 )
 
 L1D_SCHEMA = LevelSchema(
     processing_level="L1D",
+    product_standard_name="toa_bidirectional_reflectance",
     product_prefix="rhot",
     product_units="1",
     product_long_name="Top-of-Atmosphere Reflectance",
-    source_cube_attr="l1d_cube",
     has_geometry=True,
     title="HYPSO Level 1D Top-of-Atmosphere Reflectance",
 )
@@ -86,7 +87,6 @@ L2A_SCHEMA = LevelSchema(
     product_prefix="Rrs",
     product_units="1",
     product_long_name="Bottom-of-Atmosphere Reflectance",
-    source_cube_attr="l2a_cube",
     has_geometry=True,
     title="HYPSO Level 2 Bottom-of-Atmosphere Reflectance",
 )

@@ -1,3 +1,7 @@
+> **Historical document.** This is the August 2026 proposal that started the refactor. The design has
+> since moved on (plain xarray products, the capture-object classes removed - see `REFACTOR_PROGRESS.md`
+> ×37 onwards). For the current design read `docs/architecture.rst`.
+
 # hypso-package: Architecture & NetCDF Format Proposal
 
 **Status: proposal only — nothing in this repo has been changed to produce this document.** It exists to brief a

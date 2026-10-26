@@ -63,7 +63,8 @@ def test_capture_object_api_removed(name):
 @pytest.mark.parametrize("module", ["hypso.HypsoCapture", "hypso.capture_types", "hypso.containers",
                                     "hypso.io.dispatch", "hypso.io.reader", "hypso.io.writer", "hypso.load",
                                     "hypso.write", "hypso.calibration.pipeline", "hypso.ac.adapters.polymer",
-                                    "hypso.classification", "hypso.spectral_analysis", "hypso.reflectance"])
+                                    "hypso.classification", "hypso.spectral_analysis", "hypso.reflectance",
+                                    "hypso.georeferencing"])
 def test_old_modules_removed(module):
     with pytest.raises(ModuleNotFoundError):
         importlib.import_module(module)

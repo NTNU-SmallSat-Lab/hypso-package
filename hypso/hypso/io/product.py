@@ -269,6 +269,7 @@ def _root_dataset(tree: xr.DataTree, datacube: bool):
     out, encoding = {}, {}
     if datacube:
         attrs = {"units": units, "long_name": long_name, "wavelength_units": "nanometers",
+                 **({"standard_name": schema.product_standard_name} if schema.product_standard_name else {}),
                  "fwhm": cube["fwhm"].values, "wavelengths": cube["wavelength"].values}
         if has_geometry:
             attrs.update(cf.geolocation_ref_attrs())
@@ -289,6 +290,7 @@ def _root_dataset(tree: xr.DataTree, datacube: bool):
                 band_index=band,
                 include_geolocation=has_geometry,
                 var_name=name,
+                standard_name=schema.product_standard_name,
             )
             out[name] = xr.Variable(SPATIAL_DIMS, cube.values[:, :, band], attrs)
             encoding[name] = _encoding(out[name], dtype)
