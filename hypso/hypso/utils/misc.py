@@ -1,5 +1,4 @@
-"""Small general helpers with real callers (hypso.load.utils imports
-is_integer_num)."""
+"""Small general helpers."""
 
 
 def is_integer_num(n) -> bool:

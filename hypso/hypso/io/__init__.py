@@ -1,9 +1,7 @@
-"""Schema-driven NetCDF I/O, replacing the previous one-writer/one-loader-file-per-level
-design (see io/schema.py's module docstring and REFACTOR_PROGRESS.md for why)."""
-from .schema import LevelSchema, get_schema, SCHEMAS_BY_LEVEL
+"""Product file I/O: one reader and one writer for every level
+(io/product.py), file names (io/naming.py), provenance (io/provenance.py),
+and the CF attribute builders and per-level schema they use."""
 from . import cf
-from .writer import write_level_nc, write_l2a_nc
-from .reader import load_level_nc, load_l1b_nc, load_l1c_nc, load_l1d_nc, load_l2a_nc, \
-                     discover_product_variables, list_band_datasets
-from .dispatch import load_capture_file, set_hypso_attributes, check_capture_type, \
-                       parse_filename, compose_capture_name
+from .schema import LevelSchema, get_schema, SCHEMAS_BY_LEVEL
+from .product import read_product, write_product, convert_product, list_band_variables
+from .naming import parse_product_name, product_name

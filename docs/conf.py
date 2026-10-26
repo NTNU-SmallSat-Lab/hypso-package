@@ -8,7 +8,7 @@
 
 project = 'Hypso Package'
 copyright = 'Norwegian University of Science and Technology (NTNU)'
-author = 'Alvaro Flores-Romero'
+author = 'Cameron Penne'
 release = '1.9.1'
 
 # -- General configuration ---------------------------------------------------

@@ -268,10 +268,10 @@ def test_convert_product_names_and_records(tmp_path):
         assert "convert from aeronetvenice_2025-06-12T09-58-02Z-l1a.nc" in f.history
 
 
-# --- real capture: the current writer's files survive read + write unchanged ---
+# --- real capture: written products survive read + write unchanged ---
 
 @requires_real_capture
-@pytest.mark.parametrize("level", ["l1b", "l1c", "l1d", "l2a"])
+@pytest.mark.parametrize("level", ["l1a", "l1b", "l1c", "l1d", "l2a"])
 def test_real_files_round_trip(written_nc_files, tmp_path, level):
     out = tmp_path / f"rt-{level}.nc"
     write_product(read_product(written_nc_files[level]), out)

@@ -3,7 +3,6 @@ the values io/dispatch.py's set_hypso_attributes/check_capture_type put on a
 capture object, computed the same way."""
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from types import SimpleNamespace
 
 import numpy as np
 import xarray as xr
@@ -54,6 +53,14 @@ def acquisition_time(global_attrs: dict) -> str:
     return datetime.fromtimestamp(dt.timestamp(), tz=timezone.utc).isoformat()
 
 
+def classify_capture_type(profile: SensorProfile, values: dict) -> str:
+    """The imaging mode ("nominal", "wide", "moon", ...): the first of the
+    sensor's capture_type_thresholds whose attribute (frame_count,
+    image_height, ...) has its value in `values`; "custom" otherwise."""
+    return next((name for name, attr, expected in profile.capture_type_thresholds
+                 if values.get(attr) == expected), "custom")
+
+
 def capture_params(tree: xr.DataTree) -> CaptureParams:
     attrs = dict(tree["metadata/capture_config"].attrs)
     if "framerate" not in attrs and "fps" in attrs:   # older files call it fps
@@ -74,9 +81,6 @@ def capture_params(tree: xr.DataTree) -> CaptureParams:
         image_width=int(attrs["column_count"] / bin_factor),
     )
 
-    # check_capture_type: the first threshold whose attribute matches.
-    lookup = SimpleNamespace(**{**attrs, **values})
-    capture_type = next((name for name, attr, expected in profile.capture_type_thresholds
-                         if getattr(lookup, attr, None) == expected), "custom")
+    capture_type = classify_capture_type(profile, {**attrs, **values})
     return CaptureParams(sat_id=sat_id, sensor_profile=profile, capture_type=capture_type,
                          iso_time=acquisition_time(tree.attrs), capture_config=attrs, **values)

@@ -103,7 +103,7 @@ def _dps(tree, masked, mask_flags, statistic="min", percentile=None):
 def _band_map(source_wavelengths, tool_wavelengths) -> np.ndarray:
     """Index of the nearest source band for each tool band, unique (a tool
     band whose nearest source band is already taken is dropped) - as
-    hypso.ac.adapters.base.get_inferred_wavelength_band_map."""
+    the removed capture-object adapters' get_inferred_wavelength_band_map."""
     source = np.asarray(source_wavelengths, dtype=float)
     seen, indices = set(), []
     for wavelength in np.asarray(tool_wavelengths, dtype=float):
@@ -150,7 +150,7 @@ def _stage_input(tree: xr.DataTree, masked: bool, mask_flags, work_dir: Path, ad
 
 
 def _polymer(tree, masked, mask_flags, work_dir, config=None, **options):
-    from hypso.load import load_polymer_l2_v1_nc, load_polymer_l2_v2_nc
+    from hypso.ac import load_polymer_l2_v1_nc, load_polymer_l2_v2_nc
 
     cfg = tool_config("polymer", config, options)
     version = cfg.get("version", "v2")
@@ -219,7 +219,7 @@ def _acolite_version(path) -> str:
 
 
 def _acolite(tree, masked, mask_flags, work_dir, config=None, output="l2w", reuse_output=False, **options):
-    from hypso.load import load_acolite_l2r_nc, load_acolite_l2w_nc
+    from hypso.ac import load_acolite_l2r_nc, load_acolite_l2w_nc
 
     if output not in _ACOLITE_OUTPUTS:
         raise ValueError(f"output must be one of {sorted(_ACOLITE_OUTPUTS)}, got {output!r}")
@@ -297,7 +297,7 @@ def _ocsmart_lock(install_dir):
 
 def _ocsmart(tree, masked, mask_flags, work_dir, config=None, **options):
     from hypso.api import Product
-    from hypso.load import load_ocsmart_h5
+    from hypso.ac import load_ocsmart_h5
 
     cfg = tool_config("ocsmart", config, options)
     install_dir = Path(cfg["dir"]).absolute()

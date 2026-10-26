@@ -12,16 +12,16 @@ L2A product:
    l2a = l1d.correct_atmosphere("polymer", config="ac_tools.yaml")
    l2a.write()      # HYPSO2_HSI.<time>.<target>.L2A.polymer.nc
 
-==============  ===========  =======================  ==========================
-Method          Input        Product                  Runs
-==============  ===========  =======================  ==========================
-``dps``         L1D          ``Rrs``                  in this process
-``polymer``     L1C or L1D   ``rho_w``                Polymer, in a subprocess
-``acolite``     L1C or L1D   ``Rrs`` (``output="l2w"``,  ACOLITE, in a subprocess
+==============  ===========  ==============================  ============================
+Method          Input        Product                         Runs
+==============  ===========  ==============================  ============================
+``dps``         L1D          ``Rrs``                         in this process
+``polymer``     L1C or L1D   ``rho_w``                       Polymer, in a subprocess
+``acolite``     L1C or L1D   ``Rrs`` (``output="l2w"``,      ACOLITE, in a subprocess
                              default) or ``rhos``
                              (``output="l2r"``)
-``ocsmart``     L1D          ``Rrs``                  OC-SMART (``OCSMART.py``)
-==============  ===========  =======================  ==========================
+``ocsmart``     L1D          ``Rrs``                         OC-SMART (``OCSMART.py``)
+==============  ===========  ==============================  ============================
 
 The L2A product keeps the input's geometry, ``pixel_flags`` and metadata. Its
 cube is on the input's bands; bands the method does not return are NaN. The

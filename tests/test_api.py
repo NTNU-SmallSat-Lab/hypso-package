@@ -6,33 +6,9 @@ import numpy as np
 import pytest
 
 import hypso
-from conftest import BASELINE_PATH, COEFF_TYPE, COEFF_VERSION, L1A_PATH, LATS_PATH, LONS_PATH, requires_real_capture
-from test_regression_real_capture import assert_matches_signature
+from conftest import COEFF_TYPE, COEFF_VERSION, L1A_PATH, LATS_PATH, LONS_PATH, requires_real_capture
 
 pytestmark = requires_real_capture
-
-
-@pytest.fixture(scope="module")
-def l1a():
-    return hypso.open(L1A_PATH)
-
-
-@pytest.fixture(scope="module")
-def l1d(l1a):
-    return (l1a.calibrate(COEFF_TYPE, version=COEFF_VERSION)
-               .georeference(latitudes=LATS_PATH, longitudes=LONS_PATH, direct=False)
-               .toa_reflectance())
-
-
-def test_full_chain_matches_golden_baseline(l1a, l1d):
-    # The baseline was recorded from the pre-refactor package (tests/baseline).
-    baseline = json.loads(BASELINE_PATH.read_text())
-    l1b = l1a.calibrate(COEFF_TYPE, version=COEFF_VERSION)
-    assert_matches_signature("l1a_cube", l1a.cube.values, baseline["l1a_cube"])
-    assert_matches_signature("l1b_cube", l1b.cube.values, baseline["l1b_cube"])
-    assert_matches_signature("l1d_cube", l1d.cube.values, baseline["l1d_cube"])
-    assert_matches_signature("latitude", l1d.geometry["latitude"].values, baseline["latitude"])
-    assert np.allclose(l1d.wavelengths, baseline["wavelengths"])
 
 
 def test_product_is_immutable(l1a):
@@ -78,11 +54,12 @@ def test_write_names_and_round_trips(l1d, tmp_path):
     assert path.with_name(l1d.filename(label="test")).name.endswith(".L1D.test.nc")
 
 
-def test_dps_matches_old_function(l1d):
-    from hypso.ac.ac_dark_pixel_subtraction import dark_pixel_subtraction_per_band
+def test_dps(l1d):
+    # Dark pixel subtraction: per-band minimum subtracted, clipped at 0 (the
+    # removed ac_dark_pixel_subtraction's math; identical before its removal).
     l2a = l1d.correct_atmosphere("dps")
-    expected, dark = dark_pixel_subtraction_per_band(l1d.cube.values)
-    np.testing.assert_array_equal(l2a.cube.values, expected)
+    cube = l1d.cube.values
+    np.testing.assert_array_equal(l2a.cube.values, np.clip(cube - cube.min(axis=(0, 1)), 0, None))
     assert l2a.level == "L2A" and l2a.cube.name == "Rrs" and l2a.atmospheric_correction == "dps"
     assert l2a.filename() == "HYPSO2_HSI.20250304T103805.aeronetvenice.L2A.dps.nc"
     assert [s["step"] for s in l2a.provenance][-1] == "l2a_dps"
@@ -143,12 +120,10 @@ POLYMER_CONFIG = {"polymer": {"base_path": "/opt/polymer", "polymer_path": "/opt
                               "settings": {"band_cloudmask": 790}}}
 
 
-def test_polymer_mocked(l1d, monkeypatch, tmp_path):
+def test_polymer_mocked(l1c, monkeypatch, tmp_path):
     calls = []
     _fake_polymer(monkeypatch, calls)
-    l1c_product = hypso.open(L1A_PATH).calibrate(COEFF_TYPE, version=COEFF_VERSION).georeference(
-        latitudes=LATS_PATH, longitudes=LONS_PATH, direct=False)
-    l2a = l1c_product.correct_atmosphere("polymer", config=POLYMER_CONFIG, settings={"bands_corr": [448, 660]},
+    l2a = l1c.correct_atmosphere("polymer", config=POLYMER_CONFIG, settings={"bands_corr": [448, 660]},
                                          work_dir=tmp_path / "work")
     staged = calls[0]["staged"]
     assert staged.level == "L1C"
@@ -227,11 +202,9 @@ def _fake_acolite(monkeypatch, calls):
 ACOLITE_CONFIG = {"acolite": {"path": "/opt/acolite", "settings": {"dsf_aot_estimate": "tiled"}}}
 
 
-def test_acolite_mocked(monkeypatch, tmp_path):
+def test_acolite_mocked(l1c, monkeypatch, tmp_path):
     calls = []
     _fake_acolite(monkeypatch, calls)
-    l1c = hypso.open(L1A_PATH).calibrate(COEFF_TYPE, version=COEFF_VERSION).georeference(
-        latitudes=LATS_PATH, longitudes=LONS_PATH, direct=False)
     work = tmp_path / "work"
     l2w = l1c.correct_atmosphere("acolite", config=ACOLITE_CONFIG, work_dir=work)
     config = calls[0]["config"]

@@ -1,29 +1,20 @@
-"""Shared interface for atmospheric-correction tool adapters (see this
-subpackage's __init__.py docstring). Also holds get_inferred_wavelength_band_map,
-the wavelength-matching helper every adapter's open_output path uses to map a
-tool's output bands back onto HYPSO band indices - previously
-HypsoCapture._get_inferred_wavelength_band_map (zero external callers, confirmed by
-grep, so it moved here outright with no wrapper kept on HypsoCapture).
+"""Running an external atmospheric-correction tool in its own process
+(ACRunError, run_subprocess_driver), used by hypso.processing.atmospheric.
 
-Also holds the subprocess-isolation helper (ACRunError, run_subprocess_driver)
-used by adapters that need to run their external tool in a fresh process rather
-than in-process - see PolymerAdapter.run_correction / _polymer_driver.py for the
-concrete, demonstrated reason Polymer needs this: its v1 (HYPSO-SRF-patched) and
-v2 (stock) builds ship different, incompatible versions of the same-named
-top-level packages (confirmed live: v2's `core` needs core.process.blockwise,
-absent from v1's `core` checkout), and Python's sys.modules import cache pins
-whichever version is imported first for the rest of the process's lifetime -
-unsafe if a long-lived process (e.g. hypso-processing-pipeline) ever runs a v1
-correction and a v2 correction without restarting. A fresh subprocess per run
-sidesteps this entirely."""
+Why a subprocess: Polymer's v1 (HYPSO-SRF-patched) and v2 (stock) builds ship
+different, incompatible versions of the same-named top-level packages
+(confirmed live: v2's `core` needs core.process.blockwise, absent from v1's
+`core` checkout), and Python's sys.modules import cache pins whichever version
+is imported first for the rest of the process's lifetime - unsafe if a
+long-lived process ever runs a v1 correction and a v2 correction. A fresh
+subprocess per run sidesteps this, and contains crashes in the tools' native
+code."""
 import json
 import logging
 import os
 import subprocess
 import tempfile
 from pathlib import Path
-
-import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -128,52 +119,3 @@ def run_subprocess_driver(python_path: str, driver_module: str, config: dict, to
             )
 
         return result
-
-
-class ACAdapter:
-    """One adapter per external atmospheric-correction tool, behind a shared
-    run_correction/open_output interface. This pass is *organizational* (the
-    approved plan's "prepare the AC functions to be refactored"): every method
-    body is today's HypsoCapture method body relocated verbatim - same subprocess/
-    sys.path/external-tool-parsing logic, not rewritten - so a future rewrite of
-    one tool's internals has a clean, isolated target that doesn't touch the
-    other tools or HypsoCapture.
-
-    Adapters are stateless (all per-capture state lives on the satobj passed to
-    every call), so the module-level instances in this subpackage are shared
-    safely between captures.
-    """
-
-    #: Registry key, e.g. "polymer" - also the l2a_cube correction key convention.
-    key: str = None
-
-    def run_correction(self, satobj, **kwargs):
-        """Run the external AC tool on this capture's L1 product."""
-        raise NotImplementedError
-
-    def open_output(self, satobj, **kwargs):
-        """Read the tool's output file(s) into satobj.l2a_cube."""
-        raise NotImplementedError
-
-
-def get_inferred_wavelength_band_map(satobj, inferred_wavelengths):
-
-    # Map inferred wavelengths to HYPSO wavelengths
-    A = np.array(inferred_wavelengths, dtype=float)
-    B = np.array(satobj.wavelengths, dtype=float)
-
-    index_map = {}
-    indices_unique = []
-
-    for a in A:
-        ix = np.argmin(np.abs(B - a))
-        if ix not in index_map: # ensure uniqueness
-            index_map[ix] = a
-            indices_unique.append(ix)
-        else:
-            logger.warning("Duplicate prevented: %s mapped to %s", a, ix)
-
-    wl_band_map = np.array(indices_unique, dtype=int)
-
-
-    return wl_band_map

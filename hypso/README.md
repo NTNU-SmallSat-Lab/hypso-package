@@ -66,5 +66,4 @@ pip install hypso2-calibration
 - Maintainers: Cameron Penne (@CameronLP)
 - Calibration: Marie Henriksen, Joe Garett, Aria Alinejad
 - Georeferencing: Sivert Bakken, Dennis Langer
-- Package: Alvaro Romero
 

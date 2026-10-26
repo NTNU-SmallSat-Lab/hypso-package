@@ -42,8 +42,8 @@ permission to modify — unlike `/home/camerop/AC/hypso-package`, which is **rea
    Direction: one module for the reflectance step (with `earth_sun_distance`) and one `srf.py`-style module for
    SRFs/solar irradiance/effective FWHM; drop the legacy wrapper and the CSV/PNG figure side effects once
    HypsoCapture is gone (×49).
-5. **Steps 1-2 complete (×45, ×47, ×50, ×51).** Next: delete the old capture code (×49); real AC runs to
-   compare against the reprocess dataset once aulus2 is free. Original note: steps 2-4 of ×37 (processing as Dataset -> Dataset functions, Hypso
+5. **Steps 1-3 complete; old capture code deleted (×53).** Next: real AC runs compared against the
+   reprocess dataset once aulus2 is free; docs/architecture.rst rewrite (part of TODO 3). Original note: steps 2-4 of ×37 (processing as Dataset -> Dataset functions, Hypso
    facade, delete old code). SNAP confirmed by the user (×46).
    `masked=True` in the write wrappers still writes the NaN-masked cube; switch to flags-only once AC
    staging applies pixel_flags (AC step).
@@ -172,6 +172,26 @@ Full unabridged plan text: see the "Approved Plan" section pasted at the bottom 
 duplicated per update — if it's missing, check `/home/camerop/.claude/plans/rosy-frolicking-summit.md` instead).
 
 ## Status (update this section as work progresses — most recent at top)
+
+- **2026-10-26 (×53): the capture-object API is deleted.** Stage 1 (`183a6f63`) ported the surviving
+  satobj consumers to `hypso.Product`: `with_masks` (pixel_flags; replaces land_mask/cloud_mask/custom masks),
+  `with_variables`/`variables` (derived per-pixel products, passed through by read/write - replaces the
+  products/_products container the user wanted kept as infrastructure), `pixel`/`spectrum`, `resolution`
+  (same GSD computation; 876.38 m on the fixture, identical), `swath_definition`, `resample`, `to_satpy`;
+  spectral_analysis/geometry_definition/resample/satpy take a Product; the Satpy reader plugin uses
+  `io.product.list_band_variables` and its YAMLs also match NASA-style names. Stage 2 moved the tests to
+  session `products` fixtures built through the public API (same chain as the golden baseline); retired
+  test_capture_types/capture_tree/containers/geo_state/masking/metadata/ac_adapters/resample and the
+  capture-path parity tests (each step was verified identical before removal, ×47-×52); test_public_api
+  now pins the new surface and that the old names/modules are gone. Stage 3 deleted HypsoCapture,
+  Hypso/Hypso1/Hypso2, capture_types, containers, io/dispatch|reader|writer|metadata|capture_tree, load/
+  (AC output readers moved to hypso/ac/*_output.py), write/, calibration/pipeline, georeferencing/geo +
+  geo_state, masks/pipeline, the satobj AC adapter classes (drivers and run_subprocess_driver kept),
+  ac_dark_pixel_subtraction, ac/loading_acolite_output. ~8,100 lines removed; hypso/hypso is now ~7,900
+  lines. `processing.classify_capture_type` extracted for the sensor tests. Also removed Alvaro Flores-Romero
+  from __author__, docs/conf.py and the README authors list (user request).
+  Still stale (documentation TODO): docs/architecture.rst describes the old classes; reflectance/
+  toa_reflectance.py's legacy wrapper (TODO 4).
 
 - **2026-10-26 (×52): production 73eb6b8a wide-capture fix ported.** Production (`AC/hypso-package-polymer_v3`,
   commit 73eb6b8a "HYPSO-2 V3 radiometric calibration; calibration packages 26.10.0"): V3 abs uses

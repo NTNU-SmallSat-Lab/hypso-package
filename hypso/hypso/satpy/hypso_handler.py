@@ -1,5 +1,5 @@
 """Satpy FileHandler for HYPSO L1C/L1D NetCDF files (as written by
-hypso.io.writer.write_l1c_nc_file/write_l1d_nc_file - the flat root-group
+hypso.io.product.write_product (Product.write) - the flat root-group
 layout: per-band Lt_<wave>/rhot_<wave> variables and latitude/longitude/
 crs_wgs84 all as root-level siblings, see hypso.io.writer's module docstring).
 
@@ -25,8 +25,8 @@ from hypso.io.product import list_band_variables
 
 # file_type (from the matching reader YAML) -> product variable prefix. Both
 # levels currently write in per-band mode ("Lt_378" etc, not a single
-# datacube variable) when produced via write_l1c_nc_file/write_l1d_nc_file's
-# default datacube=False - see io/writer.py's write_level_nc.
+# datacube variable) with write_product's default datacube=False - see
+# hypso.io.product.
 _PRODUCT_PREFIX_BY_FILE_TYPE = {
     "hypso_l1c_nc": "Lt",
     "hypso_l1d_nc": "rhot",

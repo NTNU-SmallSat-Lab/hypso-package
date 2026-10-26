@@ -22,7 +22,7 @@ def global_attrs(processing_level: str, title: str) -> dict:
     CF wants it to be an append-only provenance trail (one line per
     processing step, not a value that gets overwritten each time a new
     level is written), which needs the *existing* value from whatever was
-    already on the source capture - see io/writer.py's _write_level_nc,
+    already on the source product - see hypso.io.provenance.add_step,
     which builds it from satobj.metadata.global_attrs and appends this
     write's own entry before writing it."""
     return {

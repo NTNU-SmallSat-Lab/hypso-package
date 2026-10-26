@@ -14,7 +14,6 @@ works both against an editable install (pip install -e hypso/) and a bare
 checkout with the hypsoN_calibration siblings checked out next to hypso/.
 """
 import sys
-import warnings
 from pathlib import Path
 
 import numpy as np
@@ -44,52 +43,48 @@ requires_real_capture = pytest.mark.skipif(
 
 
 @pytest.fixture(scope="session")
-def satobj():
-    """The reference capture processed L1A -> L1B -> L1D, exactly the pipeline
-    tests/baseline/capture_baseline.py ran to record baseline.json (same
-    coeff_type, same precomputed indirect-georeferencing lat/lon arrays), built
-    once per test session - it takes on the order of a minute."""
+def products():
+    """The reference capture through the public API, L1A -> L1D - the same
+    chain tests/baseline/capture_baseline.py recorded baseline.json with
+    (coeff_type moved / version V2 = the pre-V3 "moved" set, the same
+    precomputed indirect-georeferencing lat/lon files). Built once per
+    session (about a minute)."""
     if not L1A_PATH.is_file():
         pytest.skip(f"reference capture not present at {L1A_PATH}")
+    import hypso
 
-    from hypso import Hypso
-
-    obj = Hypso(path=L1A_PATH, load_cube=True, verbose=False)
-
-    lats = np.fromfile(LATS_PATH, dtype=np.float32).reshape(obj.spatial_dimensions)
-    lons = np.fromfile(LONS_PATH, dtype=np.float32).reshape(obj.spatial_dimensions)
-    obj.run_georeferencing(latitudes=lats, longitudes=lons)
-
-    # The deprecated in-place methods are deliberately used here: the baseline
-    # was recorded through them, and the regression test must exercise the same
-    # code path the production pipeline (hypso-processing-pipeline) still uses.
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", DeprecationWarning)
-        obj.generate_l1b_cube(coeff_type=COEFF_TYPE, version=COEFF_VERSION)
-        obj.generate_l1d_cube(use_direct_georef=False)
-
-    return obj
+    l1a = hypso.open(L1A_PATH)
+    l1b = l1a.calibrate(COEFF_TYPE, version=COEFF_VERSION)
+    l1c = l1b.georeference(latitudes=LATS_PATH, longitudes=LONS_PATH, direct=False)
+    l1d = l1c.toa_reflectance()
+    return {"l1a": l1a, "l1b": l1b, "l1c": l1c, "l1d": l1d}
 
 
 @pytest.fixture(scope="session")
-def written_nc_files(satobj, tmp_path_factory):
-    """One written NetCDF per level (plus an L2A with a fabricated correction
-    whose l2_variable_name is deliberately NOT the 'Rrs' fallback, to prove the
-    dynamic product naming works), for the CF/format assertions."""
-    from hypso.io.writer import write_level_nc, write_l2a_nc
+def l1a(products):
+    return products["l1a"]
 
+
+@pytest.fixture(scope="session")
+def l1b(products):
+    return products["l1b"]
+
+
+@pytest.fixture(scope="session")
+def l1c(products):
+    return products["l1c"]
+
+
+@pytest.fixture(scope="session")
+def l1d(products):
+    return products["l1d"]
+
+
+@pytest.fixture(scope="session")
+def written_nc_files(products, tmp_path_factory):
+    """One file per level written by Product.write (L1A converted from the
+    ground-station file, L1B-L1D, and a DPS L2A), for format assertions."""
     out_dir = tmp_path_factory.mktemp("nc_out")
-    files = {}
-
-    for level in ("l1b", "l1c", "l1d"):
-        dst = out_dir / f"test-{level}.nc"
-        write_level_nc(satobj, level=level, dst_nc=str(dst))
-        files[level] = dst
-
-    satobj.l2a_cube["testac"] = satobj.l1d_cube.to_numpy()
-    satobj.l2a_cube["testac"].attrs["l2_variable_name"] = "chla"
-    dst = out_dir / "test-l2a.nc"
-    write_l2a_nc(satobj, correction="testac", dst_nc=str(dst))
-    files["l2a"] = dst
-
+    files = {level: product.write(out_dir=out_dir) for level, product in products.items()}
+    files["l2a"] = products["l1d"].correct_atmosphere("dps").write(out_dir=out_dir)
     return files

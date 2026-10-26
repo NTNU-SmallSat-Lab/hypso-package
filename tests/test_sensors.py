@@ -32,7 +32,7 @@ def test_registered_sensors_deduplicated():
 def test_profile_field_completeness(key):
     p = get_sensor_profile(key)
     assert isinstance(p, SensorProfile)
-    # every field HypsoCapture reads off the profile must be populated
+    # every field the processing code reads off the profile must be populated
     for field in ("key", "sat_id", "sensor", "platform"):
         assert isinstance(getattr(p, field), str) and getattr(p, field), field
     for field in ("fwhm", "fwhm_lookup_wl", "fwhm_lookup_fwhm"):
@@ -63,27 +63,16 @@ def test_capture_type_thresholds_well_formed(key):
         assert isinstance(expected_value, int)
 
 
-class _FakeCapture:
-    VERBOSE = False
-
-    def __init__(self, sensor_profile, frame_count, image_height):
-        self.sensor_profile = sensor_profile
-        self.frame_count = frame_count
-        self.image_height = image_height
-
-
 @pytest.mark.parametrize("frame_count,image_height,expected", [
     (956, 684, "nominal"),
     (106, 684, "moon"),
     (500, 1092, "wide"),
     (12345, 12345, "custom"),
 ])
-def test_check_capture_type_classifies_from_sensor_profile(frame_count, image_height, expected):
-    from hypso.io.dispatch import check_capture_type
-
-    satobj = _FakeCapture(get_sensor_profile("hypso1"), frame_count, image_height)
-    check_capture_type(satobj)
-    assert satobj.capture_type == expected
+def test_capture_type_classified_from_sensor_profile(frame_count, image_height, expected):
+    from hypso.processing import classify_capture_type
+    profile = get_sensor_profile("hypso1")
+    assert classify_capture_type(profile, {"frame_count": frame_count, "image_height": image_height}) == expected
 
 
 def test_hypso1_moon_capture_type_gets_real_calibration_files():
@@ -161,48 +150,24 @@ def test_hypso1_get_calibration_files_matches_pre_yaml_golden_values():
             assert actual_name == expected_name, (capture_type, coeff_type)
 
 
-class _FakeCalibrationCapture:
-    VERBOSE = False
-
-    def __init__(self, sensor_profile, sat_id, capture_type, x_start, x_stop, y_start, y_stop, bin_factor):
-        self.sensor_profile = sensor_profile
-        self.sat_id = sat_id
-        self.capture_type = capture_type
-        self.x_start = x_start
-        self.x_stop = x_stop
-        self.y_start = y_start
-        self.y_stop = y_stop
-        self.bin_factor = bin_factor
+def _nominal_smile(y_stop):
+    from hypso.calibration.correction import read_coeffs_from_file
+    p = get_sensor_profile("hypso1")
+    files = p.calibration_files("nominal", coeff_type="moved")
+    crop_mode = p.capture_mode_crop_modes["nominal"]["smile"]
+    assert crop_mode == "as_is"
+    return read_coeffs_from_file(files["smile"], "smile", x_start=0, x_stop=1080, y_start=0, y_stop=y_stop,
+                                 bin_factor=9, crop_mode=crop_mode)
 
 
 def test_calibration_shape_mismatch_raises_not_silently_none():
-    # Regression test for Limit D (capture-dimensions plan): an "as_is"
-    # pre-baked file (HYPSO-1 nominal's smile/destriping) whose declared
-    # shape doesn't match what THIS capture's own AOI/bin_factor implies
-    # must fail loudly, not silently produce None (the bare except Exception
-    # in load_calibration_coeff_files would otherwise swallow it, the same
-    # footgun class test_hypso1_moon_capture_type_gets_real_calibration_files
-    # already guards against once).
-    from hypso.calibration.pipeline import set_calibration_coeff_files, load_calibration_coeff_files
+    # A pre-baked ("as_is") coefficient file whose shape doesn't match the
+    # capture's AOI/bin_factor must fail loudly, not silently skip the
+    # correction. nominal's real row_count is 684 - deliberately wrong here.
     from hypso.calibration.correction import CalibrationShapeMismatchError
-
-    p = get_sensor_profile("hypso1")
-    # nominal's real row_count is 684 - deliberately wrong here
-    mismatched = _FakeCalibrationCapture(p, "HYPSO-1", "nominal",
-                                         x_start=0, x_stop=1080, y_start=0, y_stop=500, bin_factor=9)
-    set_calibration_coeff_files(mismatched, coeff_type="moved")
-    assert mismatched.smile_coeff_crop_mode == "as_is"
     with pytest.raises(CalibrationShapeMismatchError):
-        load_calibration_coeff_files(mismatched)
+        _nominal_smile(y_stop=500)
 
 
 def test_calibration_matching_shape_does_not_raise():
-    # Regression-proofs the happy path isn't broken by the guard above.
-    from hypso.calibration.pipeline import set_calibration_coeff_files, load_calibration_coeff_files
-
-    p = get_sensor_profile("hypso1")
-    matching = _FakeCalibrationCapture(p, "HYPSO-1", "nominal",
-                                       x_start=0, x_stop=1080, y_start=0, y_stop=684, bin_factor=9)
-    set_calibration_coeff_files(matching, coeff_type="moved")
-    load_calibration_coeff_files(matching)
-    assert matching.smile_coeffs.shape == (684, 120)
+    assert _nominal_smile(y_stop=684).shape == (684, 120)

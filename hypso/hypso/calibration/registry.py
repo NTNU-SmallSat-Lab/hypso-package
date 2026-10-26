@@ -1,14 +1,11 @@
 """Registry for custom calibration coefficient sets, keyed by sensor + name.
 
 Lets a user plug in their own radiometric/smile/destriping/spectral coefficient
-files without editing the bundled hypso1_calibration/hypso2_calibration packages
-(see hypso.sensors.hypso1._calibration_files / hypso.sensors.hypso2._calibration_files,
-which wrap those bundled resolvers). Register once, then pass coeff_type=<name>
-anywhere a built-in coeff_type ("moved"/"adjusted"/"original") is accepted today
-- HypsoCapture._set_calibration_coeff_files checks this registry before falling
-back to the sensor's built-in presets. For a true one-off set (no reuse), pass
-coeff_files=... directly to generate_l1b_cube/_set_calibration_coeff_files
-instead of registering anything.
+files without editing the bundled hypso1_calibration/hypso2_calibration
+packages. Register once, then pass coeff_type=<name> to Product.calibrate (or
+hypso.processing.l1a_to_l1b) - the registry is checked before the sensor's
+built-in coefficients. For a one-off set, pass coeff_files={...} to
+calibrate() instead of registering anything.
 """
 import logging
 from typing import Optional
@@ -24,7 +21,7 @@ def register_calibration_coeffs(sat_id: str, name: str, files: dict) -> None:
     """Register a named, reusable set of calibration coefficient files for a sensor.
 
     :param sat_id: sensor identifier this set applies to, e.g. "HYPSO-1" (matches
-        satobj.sat_id / SensorProfile.sat_id).
+        the product's sat_id attribute / SensorProfile.sat_id).
     :param name: the coeff_type name this set will be selected under, e.g.
         "my_lab_calibration". Must not collide with a sensor's own built-in
         coeff_type names ("moved"/"adjusted"/"original") - those are resolved

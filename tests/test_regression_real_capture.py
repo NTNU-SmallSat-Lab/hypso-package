@@ -1,10 +1,10 @@
-"""Plan §Verification item 1: golden-file regression against the real reference
-capture. The baseline (tests/baseline/baseline.json) was recorded by
-tests/baseline/capture_baseline.py running the UNMODIFIED pre-refactor code;
-this test runs the current code through the identical pipeline and asserts the
-numbers match. Calibration/georeferencing math wasn't the target of this
-refactor, so these are strict signature checks (exact shapes, sampled values,
-means), not loose tolerances.
+"""Golden-file regression against the real reference capture. The baseline
+(tests/baseline/baseline.json) was recorded by tests/baseline/
+capture_baseline.py running the original, pre-refactor hypso-package; this
+runs the same chain through the public API (conftest's `products`:
+calibrate(moved, V2) -> georeference -> toa_reflectance) and checks the
+numbers match. The L1D signature was rescaled once for the Earth-Sun
+distance fix (baseline.json `l1d_cube_earth_sun_rescale`).
 
 Skipped automatically when the reference capture isn't present."""
 import json
@@ -35,22 +35,20 @@ def assert_matches_signature(name, arr, sig):
         f"{name}: mean {float(np.mean(finite))} != {sig['mean']}"
 
 
-def test_identity(satobj, baseline):
-    assert satobj.sat_id == baseline["sat_id"]
-    assert satobj.platform == baseline["platform"]
+def test_identity(l1a, baseline):
+    assert l1a.sat_id == baseline["sat_id"]
 
 
-def test_wavelengths(satobj, baseline):
-    wl = np.asarray(satobj.wavelengths, dtype=float).ravel()
-    assert np.allclose(wl, baseline["wavelengths"])
+def test_wavelengths(l1b, baseline):
+    assert np.allclose(l1b.wavelengths, baseline["wavelengths"])
 
 
-@pytest.mark.parametrize("name,getter", [
-    ("l1a_cube", lambda s: s.l1a_cube.to_numpy()),
-    ("l1b_cube", lambda s: s.l1b_cube.to_numpy()),
-    ("l1d_cube", lambda s: s.l1d_cube.to_numpy()),
-    ("latitude", lambda s: s.latitudes),
-    ("longitude", lambda s: s.longitudes),
+@pytest.mark.parametrize("name, level, getter", [
+    ("l1a_cube", "l1a", lambda p: p.cube.values),
+    ("l1b_cube", "l1b", lambda p: p.cube.values),
+    ("l1d_cube", "l1d", lambda p: p.cube.values),
+    ("latitude", "l1d", lambda p: p.geometry["latitude"].values),
+    ("longitude", "l1d", lambda p: p.geometry["longitude"].values),
 ])
-def test_array_matches_baseline(satobj, baseline, name, getter):
-    assert_matches_signature(name, getter(satobj), baseline[name])
+def test_array_matches_baseline(products, baseline, name, level, getter):
+    assert_matches_signature(name, getter(products[level]), baseline[name])
