@@ -8,9 +8,16 @@ permission to modify — unlike `/home/camerop/AC/hypso-package`, which is **rea
 
 ## TODO (open items, newest first - one consolidated list; details live in the referenced entries)
 
-1. **Review TODO** (user, 2026-10-26). Go through this list, including the older items below, and confirm
-   each is still open. Several predate the plain-Dataset rewrite (×37) and may be superseded or reshaped by
-   it. Close, re-scope or re-prioritise each one.
+1. **URGENT: clean up the architecture plan and the TODOs** (user, 2026-10-26; absorbs the earlier
+   "Review TODO" item). Do this first next session.
+   - TODOs: go through this list, including the older items below it, and confirm each is still open.
+     Several predate the plain-Dataset rewrite (×37) and may be superseded or reshaped by it. Close,
+     re-scope or re-prioritise each one, and keep this one list.
+   - Architecture plan: `ARCHITECTURE_PROPOSAL.md`, the numbered plan sections at the end of this file
+     ("### 1. NetCDF group structure" onwards) and the header's pointer to
+     `~/.claude/plans/rosy-frolicking-summit.md` describe the pre-rewrite design (capture objects, level
+     classes, io/writer.py). Bring them in line with what was built (`docs/architecture.rst` is current),
+     or retire them with a note pointing to it, so a cold reader isn't misled.
 2. ~~**Regridding / reprojection**~~ - done (×58, averaging ×59). Regridding onto a PACE swath stays
    resample() (bare Dataset, nearest/bilinear).
 3. **Documentation** - site done (×62); open: NumPy docstrings for the rest of the code (done: api, processing,
