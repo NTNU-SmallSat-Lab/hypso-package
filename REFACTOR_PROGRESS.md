@@ -18,6 +18,12 @@ permission to modify — unlike `/home/camerop/AC/hypso-package`, which is **rea
      `~/.claude/plans/rosy-frolicking-summit.md` describe the pre-rewrite design (capture objects, level
      classes, io/writer.py). Bring them in line with what was built (`docs/architecture.rst` is current),
      or retire them with a note pointing to it, so a cold reader isn't misled.
+1b. **URGENT: "HSI" in file names is the instrument name** (user, 2026-10-26). In
+   `{SAT}_HSI.{time}.{target}.{LEVEL}...` the `_HSI` part names the instrument (the hyperspectral imager),
+   following NASA OB.DAAC's `{MISSION}_{INSTRUMENT}` (e.g. `PACE_OCI`). Make that explicit wherever names are
+   described: `hypso.io.naming` (docstring, and treat it as an instrument field rather than a fixed
+   `_HSI` suffix in `platform_token`/`_PLATFORM`, so another instrument such as the planned RGB camera can
+   get its own token), `docs/products.rst`, `docs/architecture.rst` and the README.
 2. ~~**Regridding / reprojection**~~ - done (×58, averaging ×59). Regridding onto a PACE swath stays
    resample() (bare Dataset, nearest/bilinear).
 3. **Documentation** - site done (×62); open: NumPy docstrings for the rest of the code (done: api, processing,
