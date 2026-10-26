@@ -96,7 +96,8 @@ suggests ``.to(level)``, which runs only the missing steps.
 
 Besides the processing steps, ``Product`` offers ``.cube``, ``.geometry``,
 ``.flags``, ``.variables``, ``.provenance``, ``.spectrum()``, ``.pixel()``,
-``.resolution``, ``.swath_definition()``, ``.resample()``, ``.to_satpy()``,
+``.resolution``, ``.swath_definition()``, ``.resample()``, ``.regrid()``,
+``.area_definition()``, ``.grid``, ``.to_satpy()``,
 ``.with_masks()``, ``.with_variables()``, ``.filename()`` and ``.write()``.
 ``.tree`` returns a copy of the underlying tree for anything else.
 
@@ -290,14 +291,14 @@ current and older file names. They are registered through a ``satpy.readers``
 entry point, so the package must be installed (an editable install is
 enough).
 
-Resampling
-----------
+Resampling and regridding
+-------------------------
 
-``Product.resample(area_def)`` resamples the cube, derived variables and flags
-onto a pyresample area by nearest neighbour, within the product's ground
-resolution by default, and returns a Dataset on the target grid with its
-latitude and longitude. It is the starting point for regridding to common or
-other sensors' grids (planned).
+``hypso.grid`` holds everything spatial beyond the product's own
+geolocation: swath and grid definitions, ``resample_product`` and
+``regrid``. ``Product.resample(target)`` returns a bare Dataset on any
+pyresample target, including another sensor's swath; ``Product.regrid()``
+returns a product of the same level on a map grid. See :doc:`grid`.
 
 Extending the package
 ---------------------

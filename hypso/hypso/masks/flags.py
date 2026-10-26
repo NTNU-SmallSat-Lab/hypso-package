@@ -25,10 +25,11 @@ def _flag_dtype(count: int):
     raise ValueError(f"{count} masks do not fit in one flag variable (max 64)")
 
 
-def encode_flags(masks: dict, descriptions: dict = None) -> xr.DataArray:
+def encode_flags(masks: dict, descriptions: dict = None, dims=SPATIAL_DIMS) -> xr.DataArray:
     """`masks`: {name: 2D boolean array, True where flagged}, in bit order
     (land and cloud first by convention). Names become flag_meanings
-    words, so they may only contain letters, digits and '_'."""
+    words, so they may only contain letters, digits and '_'. `dims`:
+    (y, x) for a gridded product."""
     if not masks:
         raise ValueError("no masks to encode")
     names = list(masks)
@@ -49,13 +50,14 @@ def encode_flags(masks: dict, descriptions: dict = None) -> xr.DataArray:
              "flag_meanings": " ".join(names)}
     if descriptions:
         attrs["comment"] = "; ".join(f"{n}: {descriptions[n]}" for n in names if descriptions.get(n))
-    return xr.DataArray(flags, dims=SPATIAL_DIMS, attrs=attrs, name=FLAGS_NAME)
+    return xr.DataArray(flags, dims=tuple(dims), attrs=attrs, name=FLAGS_NAME)
 
 
 def decode_flags(flags: xr.DataArray) -> dict:
     """{name: 2D boolean DataArray} from a flag variable."""
     names = flags.attrs["flag_meanings"].split()
-    bits = np.asarray(flags.attrs["flag_masks"])
+    # atleast_1d: netCDF returns a one-flag variable's flag_masks as a scalar.
+    bits = np.atleast_1d(flags.attrs["flag_masks"])
     return {name: (flags & bit) != 0 for name, bit in zip(names, bits)}
 
 

@@ -7,7 +7,7 @@ hypso.srf."""
 import numpy as np
 import xarray as xr
 
-from hypso.io.product import PRODUCT_DIMS, product_name
+from hypso.io.product import product_name
 from hypso.io.provenance import add_step
 from hypso.srf import compute_spectral_response, earth_sun_distance, srf_dataset
 
@@ -72,7 +72,7 @@ def l1c_to_l1d(tree: xr.DataTree, use_direct_georef: bool = False, ssi_source: s
     reflectance = toa_reflectance(radiance.values, sr.esun, params.iso_time, root[zenith_name].values)
 
     out = root.drop_vars([product_name(tree), "wavelength", "radiation_wavelength", "fwhm"])
-    out["rhot"] = xr.DataArray(reflectance, dims=PRODUCT_DIMS, coords={
+    out["rhot"] = xr.DataArray(reflectance, dims=radiance.dims, coords={
         "wavelength": ("bands", np.around(wavelengths, 1)),
         "radiation_wavelength": ("bands", wavelengths),
         "fwhm": ("bands", fwhm)})

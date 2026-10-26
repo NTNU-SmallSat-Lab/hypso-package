@@ -485,6 +485,10 @@ def correct_atmosphere(tree: xr.DataTree, method: str, masked: bool = False, mas
     level = tree.attrs.get("processing_level")
     if level not in _INPUT_LEVELS[method]:
         raise ValueError(f"{method} needs an {' or '.join(_INPUT_LEVELS[method])} product, got {level}")
+    if tree.attrs.get("grid"):
+        # The AC tools read sensor geometry; correct first, then regrid.
+        raise ValueError(f"correct_atmosphere needs a product in sensor geometry, this one is on grid "
+                         f"{tree.attrs['grid']!r}: run it before regrid()")
     if method not in _EXTERNAL:
         return _METHODS[method](tree, masked, mask_flags, **options)
     keep = work_dir is not None

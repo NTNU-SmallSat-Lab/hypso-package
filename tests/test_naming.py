@@ -72,3 +72,22 @@ def test_unrelated_names_rejected():
     for name in ("HYPSO2_HSI.notatime.aeronetvenice.L1D.nc", "readme.txt", "HYPSO-2_moved_srf.nc"):
         with pytest.raises(ValueError):
             parse_product_name(name)
+
+
+@pytest.mark.parametrize("level, ac, grid, label, expected", [
+    ("L1D", None, "utm33n_876m", None, "HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.utm33n_876m.nc"),
+    ("L2A", "polymer", "epsg4326_0p0079deg", "test",
+     "HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.polymer.epsg4326_0p0079deg.test.nc"),
+    ("L1C", None, "custom_30x40m", None, "HYPSO2_HSI.20250612T095802.aeronetvenice.L1C.custom_30x40m.nc"),
+])
+def test_grid_field(level, ac, grid, label, expected):
+    name = product_name("HYPSO-2", T, "aeronetvenice", level, ac=ac, grid=grid, label=label)
+    assert name.filename() == expected
+    assert parse_product_name(expected) == name
+
+
+def test_grid_field_errors():
+    with pytest.raises(ValueError, match="invalid grid"):
+        product_name("HYPSO-2", T, "aeronetvenice", "L1D", grid="utm33n").filename()
+    with pytest.raises(ValueError, match="read back as a grid"):
+        product_name("HYPSO-2", T, "aeronetvenice", "L1D", label="utm33n_30m").filename()

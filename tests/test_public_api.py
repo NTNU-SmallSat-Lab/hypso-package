@@ -40,6 +40,11 @@ def test_srf():
     from hypso.processing import toa_reflectance  # noqa: F401
 
 
+def test_grid():
+    from hypso.grid import (area_definition, grid_area, regrid, resample_product, swath_definition,  # noqa: F401
+                            utm_crs)
+
+
 def test_rgb():
     from hypso.rgb import HSI2RGB  # noqa: F401
 
@@ -64,7 +69,7 @@ def test_capture_object_api_removed(name):
                                     "hypso.io.dispatch", "hypso.io.reader", "hypso.io.writer", "hypso.load",
                                     "hypso.write", "hypso.calibration.pipeline", "hypso.ac.adapters.polymer",
                                     "hypso.classification", "hypso.spectral_analysis", "hypso.reflectance",
-                                    "hypso.georeferencing"])
+                                    "hypso.georeferencing", "hypso.geometry_definition", "hypso.resample"])
 def test_old_modules_removed(module):
     with pytest.raises(ModuleNotFoundError):
         importlib.import_module(module)

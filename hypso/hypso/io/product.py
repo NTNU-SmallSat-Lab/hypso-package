@@ -4,7 +4,8 @@ xarray.DataTree (REFACTOR_PROGRESS.md x37 "plain Dataset core", step 1).
 In-memory model (what read_product returns and write_product takes):
 
     /                     root Dataset
-        <prefix>          product cube, dims (lines, samples, bands) -
+        <prefix>          product cube, dims (lines, samples, bands), or
+                          (y, x, bands) on a map grid (hypso.grid) -
                           prefix "dn" (L1A), "Lt" (L1B/L1C), "rhot" (L1D),
                           or the AC variable for L2A (e.g. "Rrs", "rhos")
         wavelength        coord (bands): nominal band centre, 0.1 nm rounded
@@ -16,6 +17,9 @@ In-memory model (what read_product returns and write_product takes):
         <other>           any other (lines, samples) variable - derived
                           products such as a chlorophyll map - passed through
                           with its attributes
+        x, y, crs         gridded products only: projection coordinates and
+                          the CF grid-mapping variable (latitude/longitude
+                          stay, as 2D auxiliary coordinates)
         attrs             global attributes; processing_level is required
     /metadata/<group>     one child node per metadata group, passed through
 
@@ -47,6 +51,19 @@ logger = logging.getLogger(__name__)
 
 PRODUCT_DIMS = ("lines", "samples", "bands")
 SPATIAL_DIMS = PRODUCT_DIMS[:2]
+# Gridded products (hypso.grid.regrid): CF projection dims, with x/y
+# coordinate variables and the `crs` grid-mapping variable.
+GRID_DIMS = ("y", "x")
+GRID_MAPPING = "crs"
+
+
+def spatial_dims(ds) -> tuple:
+    """(y, x) for a gridded product, else (lines, samples)."""
+    return GRID_DIMS if all(d in ds.dims for d in GRID_DIMS) else SPATIAL_DIMS
+
+
+def product_dims(ds) -> tuple:
+    return spatial_dims(ds) + ("bands",)
 BAND_COORDS = ("wavelength", "radiation_wavelength", "fwhm")
 
 ENCODING = {"zlib": True, "complevel": 4, "shuffle": True}
@@ -97,15 +114,16 @@ def _scalar(value) -> float:
 def _band_variables(ds: xr.Dataset) -> list:
     """Per-band 2D product variables (carry both `band` and `wavelength`
     attrs), sorted by their `band` index - never by name or file order."""
+    dims = spatial_dims(ds)
     names = [n for n, v in ds.data_vars.items()
-             if v.dims == SPATIAL_DIMS and "band" in v.attrs and "wavelength" in v.attrs]
+             if v.dims == dims and "band" in v.attrs and "wavelength" in v.attrs]
     return sorted(names, key=lambda n: int(ds[n].attrs["band"]))
 
 
 def _flag_variables(ds: xr.Dataset) -> list:
     """CF flag variables (masks, see hypso.masks.flags), by their
     flag_meanings attribute."""
-    return [n for n, v in ds.data_vars.items() if v.dims == SPATIAL_DIMS and "flag_meanings" in v.attrs]
+    return [n for n, v in ds.data_vars.items() if v.dims == spatial_dims(ds) and "flag_meanings" in v.attrs]
 
 
 def _extra_variables(ds: xr.Dataset, exclude) -> list:
@@ -113,8 +131,8 @@ def _extra_variables(ds: xr.Dataset, exclude) -> list:
     tool's own flags - excluding band, geometry, grid-mapping and
     pixel_flags variables."""
     from hypso.masks.flags import FLAGS_NAME
-    skip = set(exclude) | set(_GEOMETRY_ATTRS) | {"crs_wgs84", FLAGS_NAME}
-    return [n for n, v in ds.data_vars.items() if v.dims == SPATIAL_DIMS and n not in skip]
+    skip = set(exclude) | set(_GEOMETRY_ATTRS) | {"crs_wgs84", GRID_MAPPING, FLAGS_NAME}
+    return [n for n, v in ds.data_vars.items() if v.dims == spatial_dims(ds) and n not in skip]
 
 
 def list_band_variables(path) -> list:
@@ -126,7 +144,8 @@ def list_band_variables(path) -> list:
     with netCDF4.Dataset(path) as f:
         group = f["products"] if "products" in f.groups else f
         bands = [(n, v) for n, v in group.variables.items()
-                 if v.dimensions == SPATIAL_DIMS and "band" in v.ncattrs() and "wavelength" in v.ncattrs()]
+                 if v.dimensions in (SPATIAL_DIMS, GRID_DIMS) and "band" in v.ncattrs()
+                 and "wavelength" in v.ncattrs()]
         if not bands:
             cubes = [(n, v) for n, v in group.variables.items() if len(v.dimensions) == 3]
             return [{"name": n, "band": None, "wavelength": None, "radiation_wavelength": None, "fwhm": None,
@@ -156,7 +175,7 @@ def _product_from_bands(ds: xr.Dataset, names: list):
                                            for n in names]),
         "fwhm": ("bands", [float(ds[n].attrs["fwhm"]) for n in names]),
     }
-    return prefix, xr.DataArray(cube, dims=PRODUCT_DIMS, coords=coords)
+    return prefix, xr.DataArray(cube, dims=product_dims(ds), coords=coords)
 
 
 def _product_from_cube(name: str, var: xr.DataArray, wavelengths, sat_id: str):
@@ -168,7 +187,7 @@ def _product_from_cube(name: str, var: xr.DataArray, wavelengths, sat_id: str):
     coords = {"wavelength": ("bands", np.around(wavelengths, 1)),
               "radiation_wavelength": ("bands", wavelengths),
               "fwhm": ("bands", fwhm)}
-    return name, xr.DataArray(var.values, dims=PRODUCT_DIMS, coords=coords)
+    return name, xr.DataArray(var.values, dims=SPATIAL_DIMS + ("bands",), coords=coords)
 
 
 def source_layout(path) -> str:
@@ -211,15 +230,20 @@ def read_product(path) -> xr.DataTree:
         if level is None:
             raise ValueError(f"{path}: no processing_level attribute")
 
+        dims = spatial_dims(products)
         out = xr.Dataset({prefix: cube}, attrs={**root.attrs, "processing_level": _level_key(level)})
         for name in _GEOMETRY_ATTRS:
             if name in geometry.data_vars:
-                out[name] = (SPATIAL_DIMS, geometry[name].values)
-        if "latitude" in out and "crs_wgs84" in geometry.data_vars:
+                out[name] = (dims, geometry[name].values)
+        if dims == GRID_DIMS:
+            for name in GRID_DIMS:
+                out.coords[name] = (name, products[name].values, dict(products[name].attrs))
+            out[GRID_MAPPING] = ((), products[GRID_MAPPING].values, dict(products[GRID_MAPPING].attrs))
+        elif "latitude" in out and "crs_wgs84" in geometry.data_vars:
             out["crs_wgs84"] = ((), geometry["crs_wgs84"].values)
         for name in dict.fromkeys(_flag_variables(products) + _extra_variables(products, names)):
             attrs = {k: v for k, v in products[name].attrs.items() if k not in ("coordinates", "grid_mapping")}
-            out[name] = (SPATIAL_DIMS, products[name].values, attrs)
+            out[name] = (dims, products[name].values, attrs)
 
         tree = xr.DataTree(out)
         if "metadata" in raw.children:
@@ -240,9 +264,10 @@ def read_product(path) -> xr.DataTree:
 # --------------------------------------------------------------------------
 
 def product_name(tree: xr.DataTree) -> str:
-    cubes = [n for n, v in tree.dataset.data_vars.items() if v.dims == PRODUCT_DIMS]
+    dims = product_dims(tree.dataset)
+    cubes = [n for n, v in tree.dataset.data_vars.items() if v.dims == dims]
     if len(cubes) != 1:
-        raise ValueError(f"expected one {PRODUCT_DIMS} product cube at the root, found {cubes}")
+        raise ValueError(f"expected one {dims} product cube at the root, found {cubes}")
     return cubes[0]
 
 
@@ -262,6 +287,11 @@ def _root_dataset(tree: xr.DataTree, datacube: bool):
     schema = get_schema(_level_key(ds.attrs["processing_level"]))
     cube = ds[prefix]
     has_geometry = "latitude" in ds.data_vars
+    dims = spatial_dims(ds)
+    gridded = dims == GRID_DIMS
+    # Gridded: x/y + `crs` define the grid; latitude/longitude are auxiliary.
+    geolocation = ({**cf.geolocation_ref_attrs(), "grid_mapping": GRID_MAPPING} if gridded
+                   else cf.geolocation_ref_attrs())
     units = schema.product_units
     long_name = schema.product_long_name
     standard_name = schema.product_standard_name
@@ -276,8 +306,8 @@ def _root_dataset(tree: xr.DataTree, datacube: bool):
                  **({"standard_name": standard_name} if standard_name else {}),
                  "fwhm": cube["fwhm"].values, "wavelengths": cube["wavelength"].values}
         if has_geometry:
-            attrs.update(cf.geolocation_ref_attrs())
-        out[prefix] = xr.Variable(PRODUCT_DIMS, cube.values, attrs)
+            attrs.update(geolocation)
+        out[prefix] = xr.Variable(dims + ("bands",), cube.values, attrs)
         encoding[prefix] = _encoding(out[prefix], dtype)
     else:
         for band in range(cube.sizes["bands"]):
@@ -296,20 +326,28 @@ def _root_dataset(tree: xr.DataTree, datacube: bool):
                 var_name=name,
                 standard_name=standard_name,
             )
-            out[name] = xr.Variable(SPATIAL_DIMS, cube.values[:, :, band], attrs)
+            if has_geometry:
+                attrs.update(geolocation)
+            out[name] = xr.Variable(dims, cube.values[:, :, band], attrs)
             encoding[name] = _encoding(out[name], dtype)
 
     for name, builder in _GEOMETRY_ATTRS.items():
         if name in ds.data_vars:
-            out[name] = xr.Variable(SPATIAL_DIMS, ds[name].values, builder())
+            out[name] = xr.Variable(dims, ds[name].values, builder())
             encoding[name] = _encoding(out[name], "f4")
     for name in dict.fromkeys(_flag_variables(ds) + _extra_variables(ds, [prefix])):
         var_attrs = {k: v for k, v in ds[name].attrs.items() if k not in ("coordinates", "grid_mapping")}
         if has_geometry:
-            var_attrs.update(cf.geolocation_ref_attrs())
-        out[name] = xr.Variable(SPATIAL_DIMS, ds[name].values, var_attrs)
+            var_attrs.update(geolocation)
+        out[name] = xr.Variable(dims, ds[name].values, var_attrs)
         encoding[name] = _encoding(out[name])
-    if has_geometry:
+    if gridded:
+        for name in GRID_DIMS:
+            out[name] = xr.Variable((name,), ds[name].values, dict(ds[name].attrs))
+            encoding[name] = _encoding(out[name])
+        out[GRID_MAPPING] = xr.Variable((), ds[GRID_MAPPING].values, dict(ds[GRID_MAPPING].attrs))
+        encoding[GRID_MAPPING] = _encoding(out[GRID_MAPPING], "i4")
+    elif has_geometry:
         # The grid-mapping variable's value carries no meaning (CF reads only
         # its attrs); keep the source file's, else 0.
         value = ds["crs_wgs84"].values if "crs_wgs84" in ds.variables else np.int32(0)
@@ -359,7 +397,7 @@ def convert_product(src, out_dir=None) -> Path:
     name = parse_product_name(src)
     ac = name.ac if level == "L2A" else None
     dst = Path(out_dir or src.parent) / make_product_name(sat_id, name.time, name.target, level,
-                                                          ac=ac, label=name.label).filename()
+                                                          ac=ac, grid=name.grid, label=name.label).filename()
     if dst.resolve() == src.resolve():
         raise ValueError(f"{src} is already a current-format product name")
     add_step(tree, "convert", input_file=src, parameters={"source_layout": source_layout(src)})

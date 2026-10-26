@@ -72,7 +72,8 @@ class Product:
     @property
     def cube(self) -> xr.DataArray:
         """The product cube (dn, Lt, rhot, or the L2A variable), dims
-        (lines, samples, bands), with wavelength/fwhm band coordinates."""
+        (lines, samples, bands) - (y, x, bands) when gridded - with
+        wavelength/fwhm band coordinates."""
         return self._tree.dataset[cube_name(self._tree)]
 
     @property
@@ -103,6 +104,16 @@ class Product:
         return ds[_extra_variables(ds, [cube_name(self._tree)])]
 
     @property
+    def grid(self):
+        """The map grid's name (e.g. "utm33n_880m") for a regridded
+        product, None for one in sensor (swath) geometry."""
+        return self._tree.attrs.get("grid")
+
+    def _spatial_dims(self) -> tuple:
+        from hypso.io.product import spatial_dims
+        return spatial_dims(self._tree.dataset)
+
+    @property
     def provenance(self) -> list:
         """One dict per processing step, oldest first (from
         metadata/processing)."""
@@ -119,7 +130,8 @@ class Product:
     # -- pixels, spectra, geolocation --------------------------------------
 
     def pixel(self, latitude: float, longitude: float, direct: bool = False) -> tuple:
-        """(line, sample) of the pixel nearest to latitude/longitude."""
+        """(line, sample) of the pixel nearest to latitude/longitude ((y, x)
+        when gridded)."""
         from hypso.geometry.nearest import get_nearest_pixel
         geometry = self.geometry
         suffix = "_direct" if direct else ""
@@ -138,31 +150,50 @@ class Product:
             line, sample = self.pixel(latitude, longitude)
         elif line is None or sample is None:
             raise ValueError("give latitude and longitude, or line and sample")
-        return self.cube.isel(lines=line, samples=sample)
+        return self.cube.isel(dict(zip(self._spatial_dims(), (line, sample))))
 
     @property
     def resolution(self) -> float:
         """Ground sampling distance (m): the larger of the mean along- and
-        across-track GSD, as the capture-object API computed it."""
-        from hypso.geometry import compute_gsd, compute_resolution
-        geometry = self.geometry
-        if "latitude" not in geometry:
-            raise ValueError(f"{self.level} product has no geolocation")
-        lat, lon = geometry["latitude"].values, geometry["longitude"].values
-        along, across = compute_gsd(frame_count=lat.shape[0], image_height=lat.shape[1], latitudes=lat,
-                                    longitudes=lon)
-        return compute_resolution(along_track_gsd=along, across_track_gsd=across)
+        across-track GSD, as the capture-object API computed it. Gridded:
+        the grid's pixel size, in the grid CRS's units (m, or degrees)."""
+        if self.grid is not None:
+            return float(self._tree.attrs["grid_resolution"])
+        from hypso.grid import resolution
+        return resolution(self._tree)
 
     def swath_definition(self, direct: bool = False):
         """pyresample SwathDefinition of this product's geolocation."""
-        from hypso.geometry_definition import generate_hypso_swath_def
-        return generate_hypso_swath_def(self, use_direct_georef=direct)
+        from hypso.grid import swath_definition
+        return swath_definition(self._tree, direct=direct)
 
-    def resample(self, area_def, radius_of_influence: float = None) -> xr.Dataset:
-        """The cube, derived variables and flags resampled onto a pyresample
-        area (nearest neighbour), with the target grid's latitude/longitude."""
-        from hypso.resample import resample_product
-        return resample_product(self, area_def, radius_of_influence=radius_of_influence)
+    def area_definition(self):
+        """pyresample AreaDefinition of a gridded product's grid."""
+        from hypso.grid import area_definition
+        return area_definition(self._tree)
+
+    def resample(self, target, method: str = "nearest", radius_of_influence: float = None) -> xr.Dataset:
+        """The cube, derived variables and flags resampled onto `target` (a
+        pyresample AreaDefinition or SwathDefinition, e.g. another
+        sensor's swath for matchups), as a bare xr.Dataset with the
+        target's latitude/longitude. method: "nearest" or "bilinear"
+        (flags are always nearest)."""
+        from hypso.grid import resample_product
+        return resample_product(self._tree, target, method=method, radius_of_influence=radius_of_influence)
+
+    def regrid(self, target="utm", resolution: float = None, method: str = "nearest",
+               radius_of_influence: float = None, max_gb: float = 4.0) -> "Product":
+        """This product (same level) on a map grid - see hypso.grid.regrid.
+        target: "utm" (the capture's UTM zone), a CRS (e.g. "EPSG:3035"),
+        a pyresample AreaDefinition, or a gridded Product to share its
+        grid. resolution: pixel size in the CRS's units (default: this
+        product's resolution, i.e. no oversampling). method: "nearest"
+        (default: each pixel keeps one measured spectrum) or "bilinear"."""
+        from hypso.grid import regrid
+        if isinstance(target, Product):
+            target = target.area_definition()
+        return Product(regrid(self._tree, target, resolution=resolution, method=method,
+                              radius_of_influence=radius_of_influence, max_gb=max_gb))
 
     def to_satpy(self, direct: bool = False):
         """A satpy Scene with one dataset per band."""
@@ -185,7 +216,8 @@ class Product:
                 old_descriptions[name] = text
         tree = self._tree.copy()
         root = tree.to_dataset(inherit=False)
-        root[FLAGS_NAME] = encode_flags(merged, {**old_descriptions, **(descriptions or {})})
+        root[FLAGS_NAME] = encode_flags(merged, {**old_descriptions, **(descriptions or {})},
+                                        dims=self._spatial_dims())
         tree.dataset = root
         return Product(tree)
 
@@ -193,17 +225,17 @@ class Product:
         """A new Product with derived (lines, samples) variables added, e.g.
         with_variables(chla=DataArray(..., attrs={"units": "mg m-3"})). They
         are written with the product and read back by hypso.open."""
-        from hypso.io.product import SPATIAL_DIMS
+        dims = self._spatial_dims()
         tree = self._tree.copy()
         root = tree.to_dataset(inherit=False)
         reserved = set(root.variables)
         for name, value in variables.items():
             if name in reserved and name not in self.variables:
                 raise ValueError(f"{name!r} is already a product, geometry or flag variable")
-            data = value if isinstance(value, xr.DataArray) else xr.DataArray(np.asarray(value), dims=SPATIAL_DIMS)
+            data = value if isinstance(value, xr.DataArray) else xr.DataArray(np.asarray(value), dims=dims)
             if data.shape != self.cube.shape[:2]:
                 raise ValueError(f"{name!r} has shape {data.shape}, expected {self.cube.shape[:2]}")
-            root[name] = xr.Variable(SPATIAL_DIMS, data.values, dict(data.attrs))
+            root[name] = xr.Variable(dims, data.values, dict(data.attrs))
         tree.dataset = root
         return Product(tree)
 
@@ -278,7 +310,8 @@ class Product:
         time = datetime.fromisoformat(acquisition_time(self._tree.attrs))
         if ac is None and self.level == "L2A":
             ac = self.atmospheric_correction
-        return product_name(self.sat_id, time, self.target, self.level, ac=ac, label=label).filename()
+        return product_name(self.sat_id, time, self.target, self.level, ac=ac, grid=self.grid,
+                            label=label).filename()
 
     def write(self, path=None, out_dir=None, label: str = None, datacube: bool = False) -> Path:
         """Write in the current format. Without `path`, the file is named by

@@ -11,16 +11,8 @@ permission to modify — unlike `/home/camerop/AC/hypso-package`, which is **rea
 1. **Review TODO** (user, 2026-10-26). Go through this list, including the older items below, and confirm
    each is still open. Several predate the plain-Dataset rewrite (×37) and may be superseded or reshaped by
    it. Close, re-scope or re-prioritise each one.
-2. **Regridding / reprojection of L1D and L2A** (user, 2026-10-26). Resample swath products onto a common
-   grid, or onto another sensor's grid for comparison/matchups (PACE OCI, Sentinel-2/3, ...). Context to start
-   from: `hypso/resample/` already has pyresample nearest (KD-tree) and bilinear resampling onto an
-   `AreaDefinition`/`SwathDefinition`, but it has zero callers (flagged in the review notes near ×24);
-   `LevelSchema.spatial_dims` anticipates gridded `("lat", "lon")` products. In the Dataset design this is a
-   Dataset -> Dataset function. Open questions: target grid definitions (regular lat/lon, UTM/EPSG, another
-   sensor's swath or grid); method per variable (nearest for flags and masks, bilinear or area-weighted for
-   reflectance); whether the result is a new level (L3) or a gridded variant of L1D/L2A; how the grid is
-   named in the file name (io/naming.py); CF output layout (1D lat/lon coordinates or projected x/y with
-   `grid_mapping`, which SNAP reads natively).
+2. ~~**Regridding / reprojection**~~ - done (×58). Left open: area-weighted (bucket) averaging for
+   coarse targets such as PACE's 1 km grid; regridding an L2A onto a PACE swath stays resample() (bare Dataset).
 3. **Full documentation, in the code and as a generated website** (user, 2026-10-26; supersedes the older
    "complete docstrings" and "update README" items below). Goal: a documentation site like typical Python
    libraries (API reference generated from docstrings, plus user guides). Existing setup to build on, not
@@ -161,6 +153,22 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-10-26 (×58): map grids (`hypso.grid`, TODO 2).** `geometry_definition/` and `resample/` merged
+  into `hypso.grid` (areas, resample, regrid); the old `generate_area_def` (polar stereographic, Bessel, fixed
+  300 m) replaced by `grid_area` / `utm_crs`.
+  - `Product.regrid(target="utm", resolution=None, method="nearest", max_gb=4)`: same level, gridded. Targets:
+    "utm" (scene-centre zone), any CRS, an AreaDefinition, a gridded Product. Default resolution = the
+    product's (coarser GSD; this capture 876 m along x 108 m across), extents snapped to multiples of the
+    pixel size. Nearest by default (user: HSI spectra must not be interpolated by default); bilinear opt-in,
+    azimuths then via sin/cos. Flags/integers always nearest; pixel_flags gains `outside_swath`; *_direct
+    dropped. Provenance step `regrid`. AC refuses gridded input.
+  - Format: dims (y, x), x/y CF projection coordinates, `crs` grid mapping (pyproj to_cf), bands'
+    grid_mapping="crs"; io/product.py now layout-generic (`spatial_dims`); file name grid field
+    (`...L1D.utm33n_876m.nc`, io/naming.py GRID_TOKEN; labels may not look like grids).
+  - `Product.resample(target, method)` keeps returning a bare Dataset; now also bilinear and swath targets.
+  - Fixed on the way: `decode_flags` failed on a one-flag variable read from file (scalar flag_masks).
+  - Verified: figure (swath vs UTM grid, outside_swath, angles, AAOT spectrum) on the reprocess L1D; regrid
+    onto its own grid is identity; L1C.regrid().toa_reflectance() == L1D.regrid() (nearest).
 - **2026-10-26 (×57): L2A outputs.** User decisions: DPS divides by pi and keeps the name Rrs; Polymer
   chlorophyll as linear `chla` (10**logchl); every method's 2D products and flags kept as variables.
   - Units/names: L2A cube attrs now come from `io.cf.L2A_PRODUCTS` - Rrs sr-1 with the CF Rrs standard

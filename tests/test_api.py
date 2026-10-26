@@ -377,6 +377,84 @@ def test_resample_and_satpy(l1d, tmp_path):
     assert "rhot_413" in scene.available_dataset_names()
 
 
+def test_resample_bilinear_and_swath_target(l1d):
+    from pyresample.geometry import AreaDefinition
+    area = AreaDefinition("t", "t", "t", "EPSG:4326", 60, 40, (12.3, 45.2, 12.7, 45.45))
+    nearest, bilinear = l1d.resample(area), l1d.resample(area, method="bilinear")
+    assert bilinear.attrs["resample_method"] == "bilinear"
+    np.testing.assert_allclose(np.nanmean(bilinear["rhot"].values), np.nanmean(nearest["rhot"].values), rtol=0.02)
+    # onto a swath (e.g. another sensor's, for matchups): its own swath gives the product back
+    same = l1d.resample(l1d.swath_definition())
+    np.testing.assert_array_equal(same["rhot"].values, l1d.cube.values)
+
+
+def test_regrid_utm(l1d, tmp_path):
+    import netCDF4 as nc
+    from hypso.grid import OUTSIDE_FLAG
+    g = l1d.regrid()
+    # default: the capture's UTM zone at its own (coarser) resolution
+    assert g.level == "L1D" and g.grid == "utm33n_876m" and g.resolution == 876.0
+    assert g.cube.dims == ("y", "x", "bands") and g.cube.dtype == l1d.cube.dtype
+    np.testing.assert_array_equal(g.wavelengths, l1d.wavelengths)
+    assert g.filename() == "HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.utm33n_876m.nc"
+    outside = g.flags[OUTSIDE_FLAG].values
+    assert 0.3 < outside.mean() < 0.8                                  # tilted swath in a north-up box
+    assert np.isnan(g.cube.values[outside]).all() and np.isfinite(g.cube.values[~outside][:, 50]).all()
+    step = g.provenance[-1]
+    assert step["step"] == "regrid" and step["method"] == "nearest" and step["source_grid"] == "swath"
+    assert step["crs"] == "EPSG:32633"
+    # nearest neighbour: every grid spectrum is one measured spectrum, unmixed
+    site = (45.3139, 12.5083)
+    spectrum = g.spectrum(*site).values
+    swath = l1d.cube.values.reshape(-1, l1d.cube.shape[2])
+    assert (swath == spectrum).all(axis=1).any()
+    bilinear = l1d.regrid(method="bilinear")
+    np.testing.assert_allclose(bilinear.spectrum(*site).values[20:100], spectrum[20:100], rtol=0.05)
+
+    path = g.write(out_dir=tmp_path)
+    with nc.Dataset(path) as f:
+        band = f["rhot_500"] if "rhot_500" in f.variables else f[next(n for n in f.variables if n.startswith("rhot_"))]
+        assert band.dimensions == ("y", "x") and band.grid_mapping == "crs"
+        assert f["x"].standard_name == "projection_x_coordinate" and "crs_wkt" in f["crs"].ncattrs()
+        assert "crs_wgs84" not in f.variables
+    reread = hypso.open(path)
+    assert reread.grid == g.grid and reread.area_definition().shape == g.cube.shape[:2]
+    np.testing.assert_array_equal(reread.cube.values, g.cube.values.astype(np.float32))   # written as f4
+    np.testing.assert_array_equal(reread.flags[OUTSIDE_FLAG].values, outside)
+    # onto its own grid: unchanged
+    np.testing.assert_array_equal(reread.regrid(reread).cube.values, reread.cube.values)
+    with pytest.raises(ValueError, match="sensor geometry"):
+        g.correct_atmosphere("dps")
+
+
+def test_regrid_l1c_then_toa_matches_toa_then_regrid(l1c, l1d):
+    # nearest neighbour picks the same source pixel for radiance and solar
+    # zenith, so the per-pixel TOA step commutes with regridding
+    a = l1c.regrid().toa_reflectance()
+    b = l1d.regrid()
+    assert a.level == "L1D" and a.grid == b.grid
+    np.testing.assert_allclose(a.cube.values, b.cube.values, rtol=1e-6, equal_nan=True)
+
+
+def test_regrid_flags_variables_and_options(l1d):
+    land = np.zeros(l1d.cube.shape[:2], bool)
+    land[:100] = True
+    product = l1d.with_masks(land=land).with_variables(
+        counts=np.arange(land.size, dtype=np.int32).reshape(land.shape),
+        chla=np.full(land.shape, 2.0, dtype=np.float32))
+    g = product.regrid("EPSG:4326")
+    assert g.grid == "epsg4326_0p0079deg" and set(g.flags) == {"land", "outside_swath"}
+    assert g.variables["counts"].dtype == np.int32                    # integers: nearest, dtype kept
+    assert np.nanmax(np.abs(g.variables["chla"].values - 2.0)) < 1e-6
+    assert g.flags["land"].values.any() and not (g.flags["land"].values & g.flags["outside_swath"].values).any()
+    with pytest.raises(ValueError, match="GB cube"):
+        l1d.regrid(resolution=30)
+    with pytest.raises(ValueError, match="georeference"):
+        hypso.open(L1A_PATH).regrid()
+    with pytest.raises(ValueError, match="method"):
+        l1d.regrid(method="cubic")
+
+
 def test_hsi2rgb_on_l1d(l1d):
     from hypso.rgb import HSI2RGB
     rgb = HSI2RGB(l1d.wavelengths, l1d.cube.values)

@@ -3,15 +3,19 @@
 Current style, NASA OB.DAAC-like - satellite first, then time, so a plain
 listing groups by satellite and sorts by time:
 
-    {SAT}_HSI.{YYYYMMDDTHHMMSS}.{target}.{LEVEL}[.{ac}][.{label}].nc
+    {SAT}_HSI.{YYYYMMDDTHHMMSS}.{target}.{LEVEL}[.{ac}][.{grid}][.{label}].nc
 
     HYPSO2_HSI.20250612T095802.aeronetvenice.L1A.nc
     HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.nc
     HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.polymer.nc
     HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.adjusted.nc   (label: experiments)
+    HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.polymer.utm33n_880m.nc   (regridded)
 
 `.` separates fields and never appears inside one. L2A always carries the
-AC field; the optional free-text label is always last. Calibration set and
+AC field; a regridded product carries its grid (hypso.grid.grid_name:
+utm<zone><n|s> or epsg<code>, then the pixel size, e.g. utm33n_880m,
+epsg4326_0p01deg); the optional free-text label is always last and may
+not look like a grid. Calibration set and
 masking state are not part of the name - they are recorded in the file.
 Times are UTC.
 
@@ -29,6 +33,7 @@ from typing import Optional
 _TOKEN = re.compile(r"[A-Za-z0-9_-]+")
 _LEVEL = re.compile(r"L\d[A-Z]")
 _PLATFORM = re.compile(r"([A-Z]+)(\d+)_HSI")
+GRID_TOKEN = re.compile(r"(utm\d{1,2}[ns]|epsg\d+|custom)_\d+(p\d+)?(x\d+(p\d+)?)?(m|deg)")
 _TIME_FORMAT = "%Y%m%dT%H%M%S"
 _CAPTURE_ID_TIME_FORMAT = "%Y-%m-%dT%H-%M-%SZ"
 
@@ -75,6 +80,7 @@ class ProductName:
     target: str
     level: str                      # "L1A" ... "L1D", "L2A"
     ac: Optional[str] = None        # L2A only, e.g. "polymer", "acolite_l2r"
+    grid: Optional[str] = None      # regridded only, e.g. "utm33n_880m"
     label: Optional[str] = None     # experiments only
     legacy_label: Optional[str] = None  # legacy names: e.g. "moved_unmasked"
     extension: str = "nc"
@@ -98,20 +104,27 @@ class ProductName:
                   _check_token("target", self.target), self.level]
         if self.ac is not None:
             fields.append(_check_token("ac", self.ac))
+        if self.grid is not None:
+            if not GRID_TOKEN.fullmatch(self.grid):
+                raise ValueError(f"invalid grid {self.grid!r}")
+            fields.append(self.grid)
         if self.label is not None:
+            if GRID_TOKEN.fullmatch(self.label):
+                raise ValueError(f"label {self.label!r} would be read back as a grid")
             fields.append(_check_token("label", self.label))
         return ".".join(fields) + "." + self.extension
 
     def with_level(self, level: str, ac: Optional[str] = None) -> "ProductName":
-        """Same capture (and label), another level."""
+        """Same capture (label and grid), another level."""
         return replace(self, level=level, ac=ac, legacy_label=None, style="current")
 
 
 def product_name(sat_id: str, time: datetime, target: str, level: str,
-                 ac: str = None, label: str = None) -> ProductName:
+                 ac: str = None, label: str = None, grid: str = None) -> ProductName:
     if time.tzinfo is not None:
         time = time.astimezone(timezone.utc).replace(tzinfo=None)
-    return ProductName(sat_id=sat_id, time=time, target=target, level=level.upper(), ac=ac, label=label)
+    return ProductName(sat_id=sat_id, time=time, target=target, level=level.upper(), ac=ac, grid=grid,
+                       label=label)
 
 
 def _parse_current(name: str) -> Optional[ProductName]:
@@ -125,17 +138,19 @@ def _parse_current(name: str) -> Optional[ProductName]:
         time = datetime.strptime(time, _TIME_FORMAT)
     except ValueError:
         return None
-    ac = label = None
+    ac = grid = label = None
     if level == "L2A":
         if not rest:
             return None
         ac, *rest = rest
+    if rest and GRID_TOKEN.fullmatch(rest[0]):
+        grid, *rest = rest
     if len(rest) > 1 or not all(_TOKEN.fullmatch(f) for f in ([ac] if ac else []) + rest):
         return None
     if rest:
         label = rest[0]
     return ProductName(sat_id=sat_id_from_token(platform), time=time, target=target, level=level,
-                       ac=ac, label=label, extension=extension)
+                       ac=ac, grid=grid, label=label, extension=extension)
 
 
 def _parse_legacy(name: str) -> Optional[ProductName]:
