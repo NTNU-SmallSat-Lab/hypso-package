@@ -1,11 +1,12 @@
-"""L1C/L1D -> L2A: atmospheric correction.
+"""L1C or L1D to L2A: atmospheric correction.
 
-correct_atmosphere(tree, method, ...) returns an L2A tree: the method's
-product cube on the input's bands, the input's geometry, pixel_flags and
-metadata, an `atmospheric_correction` global attribute (used in file
-names), and an `l2a_<method>` provenance step.
+:func:`correct_atmosphere` returns an L2A tree: the method's product cube on
+the input's bands, its 2D products and flags, the input's geometry,
+``pixel_flags`` and metadata, an ``atmospheric_correction`` global attribute
+(used in file names), and an ``l2a_<method>`` provenance step.
 
 Methods:
+
 - "dps": dark pixel subtraction, in-process on the L1D cube.
 - "polymer": Polymer in a subprocess (hypso.ac.adapters._polymer_driver),
   from L1C (default) or L1D. Installation and settings come from the AC
@@ -467,18 +468,36 @@ _EXTERNAL = {"polymer", "acolite", "ocsmart"}
 
 def correct_atmosphere(tree: xr.DataTree, method: str, masked: bool = False, mask_flags=None,
                        work_dir=None, config=None, **options) -> xr.DataTree:
-    """Atmospheric correction of an L1C/L1D tree with `method`.
+    """Atmospheric correction of an L1C or L1D tree.
 
-    masked: give the method NaN where pixel_flags are set (all flags, or
-        only `mask_flags`, e.g. ["land", "cloud"]). The input product itself
-        stays unmasked.
-    work_dir: external tools only - where the staged input and the tool's
-        raw output go; default a temporary directory, removed afterwards.
-    config: external tools only - AC tool configuration (path or dict, see
-        hypso.ac.config); default the HYPSO_AC_CONFIG environment variable.
-    options: method-specific - dps: statistic ("min" | "percentile"),
-        percentile; polymer: any key of the configuration's polymer section
-        (e.g. version, settings={...}, ancillary_source), overriding it.
+    Parameters
+    ----------
+    tree : xarray.DataTree
+        L1C or L1D product tree in sensor geometry (not regridded).
+    method : {"dps", "polymer", "acolite", "ocsmart"}
+        See the module description.
+    masked : bool, default False
+        Give the method NaN where ``pixel_flags`` are set (all flags, or only
+        ``mask_flags``). The input product itself stays unmasked.
+    mask_flags : list of str, optional
+        Flags to mask with, e.g. ``["land", "cloud"]``.
+    work_dir : str or path, optional
+        External tools only: where the staged input and the tool's raw
+        output go (kept); default a temporary directory, removed afterwards.
+    config : str, path or dict, optional
+        External tools only: AC tool configuration (:mod:`hypso.ac.config`);
+        default the ``HYPSO_AC_CONFIG`` environment variable.
+    **options
+        Method-specific. dps: ``statistic`` (``"min"`` or
+        ``"percentile"``), ``percentile``. polymer, acolite, ocsmart: any key
+        of the tool's configuration section (e.g. ``settings={...}``),
+        overriding it; acolite also ``output`` (``"l2w"`` or ``"l2r"``) and
+        ``reuse_output``.
+
+    Returns
+    -------
+    xarray.DataTree
+        L2A tree.
     """
     if method not in _METHODS:
         raise ValueError(f"unknown method {method!r}; available: {sorted(_METHODS)}")

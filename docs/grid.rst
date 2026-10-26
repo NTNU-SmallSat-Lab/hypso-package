@@ -24,6 +24,7 @@ grid:
    l1d.regrid("EPSG:4326", resolution=0.005)
    other.regrid(g)                       # onto g's grid: pixel-by-pixel comparable
    l1d.regrid(area_def)                  # any pyresample AreaDefinition
+   l1d.regrid(resolution=3000, method="average")   # 3 km cell means
 
 Grids are snapped to whole multiples of the pixel size, so two captures
 regridded to the same CRS and resolution share pixel boundaries.
@@ -41,10 +42,17 @@ regridded to the same CRS and resolution share pixel boundaries.
 ``method``
    ``"nearest"`` (default): every grid pixel holds one measured spectrum,
    unmixed. ``"bilinear"`` blends neighbouring pixels' spectra, on request.
+   ``"average"``: for grids at least as coarse as the product, each cell is
+   the mean of the swath pixels whose centres fall in it (NaN ignored per
+   band), and a ``source_pixel_count`` variable says how many that was. It
+   is an unweighted approximation of area-weighted averaging, close when
+   the pixels are much smaller than the cells.
 
 Per variable: the product cube and float variables use ``method``; azimuth
-angles too, but bilinear works on their sine and cosine to avoid 0/360
-artefacts; flags and integer variables are always nearest neighbour.
+angles too, but bilinear and average work on their sine and cosine to avoid
+0/360 artefacts. Integer variables are nearest neighbour, except bit flags
+with ``"average"``, which are OR-ed over the cell: a cell is flagged land or
+cloud if any of its pixels is.
 ``pixel_flags`` gains an ``outside_swath`` flag for grid pixels the capture
 does not cover (their spectra are NaN). ``*_direct`` geolocation and angles
 are dropped. The method, CRS, resolution and coverage are recorded in
@@ -68,7 +76,8 @@ the file name, between the AC method and the label.
 Resampling to anything else
 ---------------------------
 
-``Product.resample(target, method="nearest")`` returns a bare
+``Product.resample(target, method="nearest")`` (or ``"bilinear"``, or
+``"average"`` onto a grid) returns a bare
 ``xr.Dataset`` on any pyresample target, including a ``SwathDefinition``
 such as another sensor's swath for matchups. It holds the cube, the derived
 variables, each flag as a boolean ``flag_<name>``, and the target's latitude

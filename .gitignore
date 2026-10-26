@@ -29,3 +29,6 @@ __pycache__/
 /hypso/hypso/_version.py
 /hypso1_calibration/hypso1_calibration/_version.py
 /hypso2_calibration/hypso2_calibration/_version.py
+
+# API pages sphinx-autoapi generates during the docs build
+/docs/api/

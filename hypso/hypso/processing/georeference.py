@@ -1,18 +1,16 @@
-"""L1B -> L1C: georeferencing (pixel latitude/longitude) and viewing/solar
-angles.
+"""L1B to L1C: pixel latitude and longitude, and sun and sensor angles.
 
-Frame interpolation, direct georeferencing and angle computation use
-hypso.geometry (the same math the removed capture-object georeferencing
-called), taking and returning a product tree. Two sources of pixel coordinates:
+Two sources of pixel coordinates:
 
-- indirect: latitude/longitude arrays you supply (e.g. the GCP-corrected
-  processing-temp/latitudes_indirectgeoref.dat files), written as
-  latitude/longitude;
-- direct: from ADCS attitude/position telemetry alone, written as
-  latitude_direct/longitude_direct.
+- indirect: latitude and longitude arrays you supply (e.g. the
+  GCP-corrected ``processing-temp/latitudes_indirectgeoref.dat`` files),
+  written as ``latitude``/``longitude``;
+- direct: from ADCS attitude and position telemetry alone, written as
+  ``latitude_direct``/``longitude_direct``.
 
-Without indirect coordinates, the direct ones become latitude/longitude
-too (the pipeline's fallback).
+Without indirect coordinates the direct ones become ``latitude`` and
+``longitude`` too. Frame interpolation, direct georeferencing and the angles
+use :mod:`hypso.geometry`.
 """
 import logging
 from pathlib import Path
@@ -70,14 +68,25 @@ def _read_coordinates(value, shape):
 
 
 def l1b_to_l1c(tree: xr.DataTree, latitudes=None, longitudes=None, direct: bool = True) -> xr.DataTree:
-    """Georeference an L1B tree.
+    """Georeference an L1B tree to L1C.
 
-    latitudes/longitudes: indirect pixel coordinates, (lines, samples) arrays
-        or paths to raw float32 files. Omit both to use direct
-        georeferencing as the main geometry.
-    direct: also compute direct georeferencing from ADCS telemetry
-        (latitude_direct, longitude_direct, <angle>_direct). Skipped with a
-        warning if the telemetry points off the Earth.
+    Parameters
+    ----------
+    tree : xarray.DataTree
+        L1B product tree.
+    latitudes, longitudes : array_like or path, optional
+        Indirect pixel coordinates, ``(lines, samples)`` arrays or paths to
+        raw float32 files. Omit both to use direct georeferencing as the
+        main geometry.
+    direct : bool, default True
+        Also compute direct georeferencing from the ADCS telemetry
+        (``latitude_direct``, ``longitude_direct``, ``<angle>_direct``).
+        Skipped with a warning if the telemetry points off the Earth.
+
+    Returns
+    -------
+    xarray.DataTree
+        L1C tree.
     """
     if tree.attrs.get("processing_level") != "L1B":
         raise ValueError(f"l1b_to_l1c needs an L1B tree, got {tree.attrs.get('processing_level')}")

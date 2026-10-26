@@ -8,14 +8,17 @@ coordinates. Per variable:
 
 - product cube and float variables: `method` - "nearest" by default, so
   every grid pixel holds one measured spectrum, unmixed; "bilinear" on
-  request (it blends neighbouring pixels' spectra);
-- azimuth angles: like the rest, but bilinear on their sine and cosine (no
-  0/360 wrap artefacts);
-- flags and other integer variables: nearest neighbour;
+  request (it blends neighbouring pixels' spectra); "average" for grids
+  coarser than the product (each cell the mean of the pixels whose centres
+  fall in it, plus a source_pixel_count variable);
+- azimuth angles: like the rest, but through their sine and cosine unless
+  nearest (no 0/360 wrap artefacts);
+- integer variables: nearest neighbour; bit flags with "average": OR-ed
+  over the cell (flagged if any of its pixels is);
 - pixel_flags gains an `outside_swath` flag for grid pixels the capture
   does not cover;
-- *_direct geolocation and angles are dropped (the grid's latitude/longitude
-  replace both georeferencings).
+- ``*_direct`` geolocation and angles are dropped (the grid's latitude and
+  longitude replace both georeferencings).
 """
 import logging
 
@@ -30,11 +33,12 @@ from hypso.masks.flags import FLAGS_NAME, decode_flags, encode_flags
 
 from .areas import (METRES_PER_DEGREE, coordinate_attrs, geolocation, grid_area, grid_name,
                     resolution as product_resolution, source_definition, utm_crs)
-from .resample import METHODS, Resampler, default_radius, target_resolution_metres
+from .resample import METHODS, GridOperators, is_flag_variable
 
 logger = logging.getLogger(__name__)
 
 OUTSIDE_FLAG = "outside_swath"
+COUNT_NAME = "source_pixel_count"
 _LEVELS = ("L1C", "L1D", "L2A")
 
 
@@ -63,20 +67,30 @@ def _flag_descriptions(flags: xr.DataArray) -> dict:
 
 def regrid(tree: xr.DataTree, target="utm", resolution: float = None, method: str = "nearest",
            radius_of_influence: float = None, max_gb: float = 4.0) -> xr.DataTree:
-    """The product tree on a map grid (same level).
+    """A product tree on a map grid, at the same level.
 
-    target: "utm" (WGS84 UTM zone of the scene centre), a CRS pyproj
-        accepts (e.g. "EPSG:3035", 4326), or a pyresample AreaDefinition
-        (e.g. another product's grid, Product.area_definition()).
-    resolution: pixel size in the CRS's units (m, or degrees for a
-        geographic CRS); default the product's resolution. Not with an
-        AreaDefinition.
-    method: "nearest" (default; spectra are not mixed) or "bilinear", for
-        the cube and float variables.
-    radius_of_influence: metres; default 1.5 times the coarser of source and
-        target pixel size.
-    max_gb: refuse grids whose cube would exceed this many GB (a fine grid
-        over a long capture gets large quickly).
+    Parameters
+    ----------
+    tree : xarray.DataTree
+        L1C, L1D or L2A product tree.
+    target : str, int, pyproj.CRS or pyresample.geometry.AreaDefinition, default "utm"
+        ``"utm"`` (WGS84 UTM zone of the scene centre), a CRS pyproj accepts
+        (e.g. ``"EPSG:3035"``, ``4326``), or an AreaDefinition (e.g. another
+        product's grid).
+    resolution : float, optional
+        Pixel size in the CRS's units (m, or degrees for a geographic CRS);
+        default the product's resolution. Not with an AreaDefinition.
+    method : {"nearest", "bilinear", "average"}, default "nearest"
+        See the module description.
+    radius_of_influence : float, optional
+        In m; default 1.5 times the coarser of source and target pixel size.
+    max_gb : float, default 4.0
+        Refuse grids whose cube would exceed this many GB (a fine grid over
+        a long capture gets large quickly).
+
+    Returns
+    -------
+    xarray.DataTree
     """
     level = tree.attrs.get("processing_level")
     if level not in _LEVELS:
@@ -93,15 +107,12 @@ def regrid(tree: xr.DataTree, target="utm", resolution: float = None, method: st
     if size_gb > max_gb:
         raise ValueError(f"the {area.shape[0]} x {area.shape[1]} grid would make a {size_gb:.1f} GB cube "
                          f"(max_gb={max_gb}); use a coarser resolution or raise max_gb")
-    source_metres = product_resolution(tree)
-    target_metres = target_resolution_metres(area)
-    radius = radius_of_influence or default_radius(source_metres, target_metres)
-    resampler = Resampler(source_definition(tree), area, radius, bilinear=method == "bilinear")
+    ops = GridOperators(tree, area, method, radius_of_influence)
     logger.info("Regridding %s %s onto %s (%d x %d, %s)", level, cube_name, area.crs.name, area.shape[0],
                 area.shape[1], method)
 
     out = xr.Dataset(attrs=dict(ds.attrs))
-    out[cube_name] = xr.DataArray(resampler(cube.values, method), dims=GRID_DIMS + ("bands",),
+    out[cube_name] = xr.DataArray(ops.floats(cube.values), dims=GRID_DIMS + ("bands",),
                                   coords={name: ("bands", cube[name].values)
                                           for name in ("wavelength", "radiation_wavelength", "fwhm")},
                                   attrs=dict(cube.attrs))
@@ -109,7 +120,7 @@ def regrid(tree: xr.DataTree, target="utm", resolution: float = None, method: st
     out["latitude"] = (GRID_DIMS, grid_lat)
     out["longitude"] = (GRID_DIMS, grid_lon)
 
-    skip = {cube_name, "latitude", "longitude", "crs_wgs84", GRID_MAPPING, FLAGS_NAME}
+    skip = {cube_name, "latitude", "longitude", "crs_wgs84", GRID_MAPPING, FLAGS_NAME, COUNT_NAME}
     dropped = []
     for name, var in ds.data_vars.items():
         if name in skip:
@@ -117,21 +128,17 @@ def regrid(tree: xr.DataTree, target="utm", resolution: float = None, method: st
         if name.endswith("_direct") or var.ndim != 2:
             dropped.append(name)
             continue
-        values = var.values
-        if values.dtype.kind in "iub":
-            data = resampler.nearest(values)
-        elif "azimuth" in name and method == "bilinear":
-            radians = np.deg2rad(values)
-            data = np.rad2deg(np.arctan2(resampler(np.sin(radians), method), resampler(np.cos(radians), method)))
-            data = np.mod(data, 360.0).astype(values.dtype)
-        else:
-            data = resampler(values, method)
-        out[name] = (GRID_DIMS, data, dict(var.attrs))
+        values = (ops.integers(var.values, is_flag_variable(name, var.attrs)) if var.dtype.kind in "iub"
+                  else ops.floats(var.values, name))
+        out[name] = (GRID_DIMS, values, dict(var.attrs))
+    if ops.averager is not None:
+        out[COUNT_NAME] = (GRID_DIMS, ops.averager.count.astype(np.int32),
+                           {"long_name": "Number of source pixels averaged into the grid cell", "units": "1"})
 
-    covered = resampler.coverage(method)
+    covered = ops.covered()
     masks, descriptions = {}, {}
     if FLAGS_NAME in ds:
-        flags = xr.DataArray(resampler.nearest(ds[FLAGS_NAME].values), dims=GRID_DIMS,
+        flags = xr.DataArray(ops.integers(ds[FLAGS_NAME].values, flags=True), dims=GRID_DIMS,
                              attrs=dict(ds[FLAGS_NAME].attrs))
         masks = {name: flag.values for name, flag in decode_flags(flags).items()}
         descriptions = _flag_descriptions(ds[FLAGS_NAME])
@@ -155,9 +162,7 @@ def regrid(tree: xr.DataTree, target="utm", resolution: float = None, method: st
     source = tree.encoding.get("source")
     result.encoding.pop("source", None)
     parameters = {"grid": name, "crs": crs.to_string(), "shape": f"{area.shape[0]} x {area.shape[1]}",
-                  "resolution_x": size_x, "resolution_y": size_y, "method": method,
-                  "flags_method": "nearest", "azimuth_method": "sin/cos " + method if method == "bilinear"
-                  else "nearest", "radius_of_influence_m": float(radius),
+                  "resolution_x": size_x, "resolution_y": size_y, **ops.parameters(),
                   "source_grid": tree.attrs.get("grid") or "swath",
                   "covered_fraction": float(covered.mean())}
     if dropped:

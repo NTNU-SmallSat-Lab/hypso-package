@@ -1,230 +1,262 @@
-# %% for dev, remove later
-# Development use only:
-import sys
-# sys.path.insert(0, '/home/cameron/Projects/hypso-package/hypso/')
-sys.path.insert(0, '/home/ariaa/smallSatLab/hypso-package-new/hypso/')
+# %% [markdown]
+# # HYPSO processing demo
+#
+# One capture from L1A to L1D, atmospheric correction, masks and derived
+# products, and map grids, with the `hypso.Product` API. Cells are
+# separated by `# %%`, so this file runs as a script or cell by cell in VS
+# Code / Jupyter; `demo_processing.ipynb` is generated from it
+# (`python make_notebook.py`).
+#
+# Set the paths below to a capture of your own. The reference capture used in
+# the package tests is a HYPSO-2 wide capture over Venice (2025-03-04).
 
-from hypso import Hypso1, Hypso2
-import os
+# %%
+import logging
+from pathlib import Path
+
 import matplotlib.pyplot as plt
+import numpy as np
 
-from hypso.write import write_l1b_nc_file, write_l1c_nc_file, write_l1d_nc_file
+import hypso
 
-# %% definitions
-# dir_path = '/home/cameron/Dokumenter/Data/'
-dir_path = '/home/ariaa/smallSatLab/data/'
+# Calibration and regridding log what they do (coefficients used, grid size).
+logging.basicConfig(level=logging.INFO, format="%(name)s: %(message)s")
 
-# HYPSO-1 Capture
-# h1_l1a_nc_file = os.path.join(dir_path, 'mvco_2025-01-13T14-57-34Z-l1a.nc')
-# h1_points_file = os.path.join(dir_path, 'mvco_2025-01-13T14-57-34Z-l1a.points')
-h1_core_path = os.path.join(dir_path, 'h1/lacrau_2024-12-26T10-24-27Z/lacrau_2024-12-26T10-24-27Z')
+CAPTURE_DIR = Path("/home/camerop/HYPSO_DATA_AOC/aeronetvenice_2025-03-04T10-38-05Z")
+L1A_FILE = CAPTURE_DIR / "aeronetvenice_2025-03-04T10-38-05Z-l1a.nc"
+# Indirect (GCP-corrected) pixel coordinates from the ground processing.
+LATITUDES = CAPTURE_DIR / "processing-temp" / "latitudes_indirectgeoref.dat"
+LONGITUDES = CAPTURE_DIR / "processing-temp" / "longitudes_indirectgeoref.dat"
+OUT_DIR = Path("demo_output")
+OUT_DIR.mkdir(exist_ok=True)
 
-# HYPSO-2 Capture
-h2_core_path = os.path.join(dir_path, 'h2/lacrau_2024-12-26T11-15-54Z/lacrau_2024-12-26T11-15-54Z')
+SITE = (45.3139, 12.5083)   # AAOT, the AERONET-OC platform off Venice
 
-level = 'l1d' # what processing level to start from
+# %% [markdown]
+# ## L1A to L1D
+#
+# Each step returns a new, immutable `Product`; the one it was called on is
+# unchanged. `hypso.open` reads any level and any supported file layout.
 
-# %% Load HYPSO-1 Capture
-# Load HYPSO-1 Capture
-if level == 'l1a':
-    # Generate L1b TOA radiance product
-    satobj_h1 = Hypso1(path=h1_core_path + '-l1a.nc', verbose=True)
-    satobj_h1.generate_l1b_cube()
-    write_l1b_nc_file(satobj=satobj_h1, overwrite=True)
-if level in ['l1a','l1b']:    
-    # Generate L1c geolocated TOA radiance product
-    satobj_h1 = Hypso1(path=h1_core_path + '-l1b.nc', verbose=True)
-    satobj_h1.generate_l1c_cube()
-    write_l1c_nc_file(satobj=satobj_h1, overwrite=True)
-if level in ['l1a', 'l1b', 'l1c']:
-    # Generate L1d TOA reflectance product
-    satobj_h1 = Hypso1(path=h1_core_path + '-l1c.nc', verbose=True)
-    satobj_h1.generate_l1d_cube()
-    write_l1d_nc_file(satobj=satobj_h1, overwrite=True)
-satobj_h1_original = Hypso1(path=h1_core_path + '-l1d_original.nc', verbose=True)
-satobj_h1 = Hypso1(path=h1_core_path + '-l1d.nc', verbose=True)
+# %%
+l1a = hypso.open(L1A_FILE)
+print(l1a)
 
+l1b = l1a.calibrate()                                   # radiometric "abs", V3 coefficients (defaults)
+l1c = l1b.georeference(latitudes=LATITUDES, longitudes=LONGITUDES)
+l1d = l1c.toa_reflectance()
+print(l1d)
 
-# %% Access datacubes
-# Access datacubes
-if level == 'l1a':
-    l1a_cube = satobj_h1.l1a_cube
-elif level in ['l1a', 'l1b']:
-    l1b_cube = satobj_h1.l1b_cube
-elif level in ['l1a', 'l1b', 'l1c']:
-    l1c_cube = satobj_h1.l1c_cube
-l1d_cube_original = satobj_h1_original.l1d_cube
-l1d_cube = satobj_h1.l1d_cube
+# The same in one call, running only the missing steps:
+# l1d = l1a.to("L1D", georeference={"latitudes": LATITUDES, "longitudes": LONGITUDES})
 
-# %% plot origianal vs new spectral compensation
-plt.figure()
-plt.plot(l1d_cube_original[500,600,:], label='Original reflectance')
-plt.plot(l1d_cube[500,600,:], label='New reflectance')
-plt.legend()
-plt.show()
+# Other calibration choices (docs/calibration.rst). V3 uses V2 spectral
+# coefficients by default, for OC-SMART; to use V3 spectral too:
+# l1b = l1a.calibrate(version={"spectral": "V3"})
+# The pre-V3 "moved" set:
+# l1b = l1a.calibrate("moved", version="V2")
 
-# %% plot
-band = 40
+# %% [markdown]
+# ## Writing, file names and provenance
+#
+# Files are named `{SAT}_HSI.{time}.{target}.{LEVEL}[.{ac}][.{grid}][.{label}].nc`.
+# How a product was made is recorded in the file (`metadata/processing`).
 
-# Create a figure and a 2x2 grid of subplots
-fig, axs = plt.subplots(2, 2)
+# %%
+path = l1d.write(out_dir=OUT_DIR)
+print(path.name)
+print(l1d.write(out_dir=OUT_DIR, label="test").name)    # experiments: an optional label
 
-# Plot data on each subplot
-if level == 'l1a':
-    axs[0, 0].imshow(l1a_cube[:,:,band])
-    axs[0, 0].set_title('L1a band ' + str(band))
-elif level in ['l1a', 'l1b']:
-    axs[0, 1].imshow(l1b_cube[:,:,band])
-    axs[0, 1].set_title('L1b band ' + str(band))
-elif level in ['l1a', 'l1b', 'l1c']:
-    axs[1, 0].imshow(l1c_cube[:,:,band])
-    axs[1, 0].set_title('L1c band ' + str(band))
+for step in l1d.provenance:
+    print(step["step"], step.get("software_version"), step.get("coefficient_release", ""))
 
-axs[1, 1].imshow(l1d_cube[:,:,band])
-axs[1, 1].set_title('L1d band ' + str(band))
+reread = hypso.open(path)
+assert np.array_equal(reread.cube.values, l1d.cube.values.astype(np.float32))
 
-# Adjust layout to prevent overlap
+# %% [markdown]
+# ## Contents: cube, wavelengths, geometry, spectra
+
+# %%
+print("cube", dict(l1d.cube.sizes), l1d.cube.dtype)
+print("wavelengths", l1d.wavelengths[:3], "...", l1d.wavelengths[-1])
+print("geometry", list(l1d.geometry.data_vars))
+print(f"resolution {l1d.resolution:.0f} m")
+
+line, sample = l1d.pixel(*SITE)
+spectrum = l1d.spectrum(*SITE)
+
+fig, axs = plt.subplots(1, 3, figsize=(15, 4))
+band = int(np.argmin(np.abs(l1d.wavelengths - 550)))
+axs[0].imshow(l1d.cube.values[:, :, band], cmap="gray")
+axs[0].plot(sample, line, "r+", ms=12, mew=2)
+axs[0].set_title(f"L1D rhot, {l1d.wavelengths[band]:.0f} nm")
+axs[1].imshow(l1d.geometry["solar_zenith"].values)
+axs[1].set_title("solar_zenith")
+axs[2].plot(spectrum["wavelength"], spectrum.values)
+axs[2].set(title=f"rhot at AAOT (pixel {line}, {sample})", xlabel="wavelength (nm)")
 plt.tight_layout()
-
-# Display the plot
 plt.show()
 
-
+# %% [markdown]
+# ## Matchup windows
+#
+# `window()` is `spectrum()` for matchups: the size x size pixels around the
+# site's nearest pixel and their per-band statistics (mean, median, std, CV =
+# std / median), as hypso-processing-pipeline computes them. Attributes hold
+# the centre pixel and its distance to the site, the valid pixel count,
+# cv_median over 405-570 nm and the window's mean angles.
 
 # %%
-# Access latitudes and longitudes
-latitudes = satobj_h1.latitudes
-longitudes = satobj_h1.longitudes
-latitudes_indirect = satobj_h1.latitudes_indirect
-longitudes_indirect = satobj_h1.longitudes_indirect
+w3 = l1d.window(*SITE, size=3)
+w5 = l1d.window(*SITE, size=5)
+print({k: w5.attrs[k] for k in ("box_size", "center_distance_m", "pixel_valid", "cv_median", "mean_solar_zenith")})
 
-# Create a figure and a 2x2 grid of subplots
-fig, axs = plt.subplots(2, 2)
+# Leave flagged pixels out: l1d.window(*SITE, size=5, exclude_flags=["land", "cloud"])
 
-# Plot data on each subplot
-axs[0, 0].imshow(latitudes)
-axs[0, 0].set_title('Latitudes (Direct)')
-
-axs[0, 1].imshow(longitudes)
-axs[0, 1].set_title('Longitudes (Direct)')
-
-axs[1, 0].imshow(latitudes_indirect)
-axs[1, 0].set_title('Latitudes (Indirect)')
-
-axs[1, 1].imshow(longitudes_indirect)
-axs[1, 1].set_title('Longitudes (Indirect)')
-
-# Adjust layout to prevent overlap
+fig, axs = plt.subplots(1, 2, figsize=(13, 4))
+zoom = 12
+red, green, blue = (int(np.argmin(np.abs(l1d.wavelengths - w))) for w in (640, 550, 460))
+crop = l1d.cube.values[line - zoom:line + zoom + 1, sample - zoom:sample + zoom + 1][:, :, [red, green, blue]]
+low, high = np.nanpercentile(crop, [2, 98], axis=(0, 1))
+crop = np.clip((crop - low) / (high - low), 0, 1)
+axs[0].imshow(crop, extent=[sample - zoom - 0.5, sample + zoom + 0.5, line + zoom + 0.5, line - zoom - 0.5],
+              aspect="auto")
+for w, colour in ((w3, "yellow"), (w5, "red")):
+    half = int(w.attrs["box_size"].split("x")[0]) / 2
+    axs[0].add_patch(plt.Rectangle((sample - half, line - half), 2 * half, 2 * half, fill=False, ec=colour,
+                                   lw=1.5, label=w.attrs["box_size"]))
+axs[0].plot(sample, line, "w+", ms=10)
+axs[0].legend()
+axs[0].set(title="windows around AAOT (pixels are ~876 x 108 m)", xlabel="sample", ylabel="line")
+for w, colour in ((w3, "orange"), (w5, "red")):
+    axs[1].plot(w["radiation_wavelength"], w["mean"], color=colour, label=f"{w.attrs['box_size']} mean")
+    axs[1].fill_between(w["radiation_wavelength"], w["mean"] - w["std"], w["mean"] + w["std"], color=colour,
+                        alpha=0.2)
+axs[1].plot(spectrum["wavelength"], spectrum.values, "k:", label="centre pixel")
+axs[1].set(title="rhot, window mean +/- std", xlabel="wavelength (nm)")
+axs[1].legend()
 plt.tight_layout()
-
-# Display the plot
 plt.show()
 
-# %%
-from hypso.spectral_analysis import get_closest_wavelength_index
-
-# Get wavelengths of capture
-satobj_h1.wavelengths
-
-# Get band index of wavelength
-red_wl = 630
-green_wl = 550
-blue_wl = 480
-
-print(get_closest_wavelength_index(satobj_h1, red_wl))
-print(get_closest_wavelength_index(satobj_h1, green_wl))
-print(get_closest_wavelength_index(satobj_h1, blue_wl))
+# %% [markdown]
+# ## RGB
+#
+# `HSI2RGB` renders the cube through the CIE colour matching functions.
 
 # %%
-# Get bounding box of capture
-satobj_h1.bbox
+from hypso.rgb import HSI2RGB
+
+rgb = HSI2RGB(l1d.wavelengths, l1d.cube.values)
+plt.figure(figsize=(6, 4))
+plt.imshow(rgb, aspect="auto")
+plt.title("L1D, HSI2RGB")
+plt.show()
+
+# %% [markdown]
+# ## Masks and derived products
+#
+# Products are written unmasked. Masks go into the CF flag variable
+# `pixel_flags` (ESA SNAP shows them as masks); derived 2D products are
+# written alongside the cube.
 
 # %%
-from hypso.geometry_definition import generate_area_def
+water = l1d.cube.values[:, :, int(np.argmin(np.abs(l1d.wavelengths - 800)))] < 0.05
+masked = l1d.with_masks(land=~water, descriptions={"land": "rhot(800 nm) >= 0.05"})
+ndvi_bands = [int(np.argmin(np.abs(l1d.wavelengths - w))) for w in (670, 800)]
+red, nir = (l1d.cube.values[:, :, i] for i in ndvi_bands)
+with_ndvi = masked.with_variables(ndvi=((nir - red) / (nir + red)).astype(np.float32))
+print(list(with_ndvi.flags), list(with_ndvi.variables.data_vars))
 
-new_bbox = (-71.5, 39.8, -69, 43.1)
-
-area_def = generate_area_def(area_id = 'New area',
-                            proj_id = 'id',
-                            description = 'new area',
-                            bbox = new_bbox,
-                            height = 512,
-                            width = 512
-                            )
-
-# Display area information
-area_def
+# %% [markdown]
+# ## Atmospheric correction
+#
+# `dps` (dark pixel subtraction) runs in this process. Polymer, ACOLITE and
+# OC-SMART run in their own installations, configured in a YAML file (see
+# docs/atmospheric_correction.rst); `masked=True` gives them NaN where the
+# flags are set.
 
 # %%
-from hypso.resample import resample_l1a_cube, \
-                            resample_l1b_cube, \
-                            resample_l1c_cube, \
-                            resample_l1d_cube
+l2a = with_ndvi.correct_atmosphere("dps", masked=True, mask_flags=["land"])
+print(l2a, l2a.filename())
 
-# Resample L1a cube
-resampled_l1a_cube, \
-resampled_latitudes, \
-resampled_longitudes = resample_l1a_cube(satobj = satobj_h1,
-                    area_def=area_def,
-                    use_indirect_georef=True)
+# l2a = l1d.correct_atmosphere("polymer", config="ac_tools.yaml")
+# l2a = l1c.correct_atmosphere("acolite", config="ac_tools.yaml", output="l2w")
+# l2a = l1d.correct_atmosphere("ocsmart", config="ac_tools.yaml")
+# l2a.variables    # the tool's 2D products and flags, e.g. chla, polymer_flags
 
-longitudes, latitudes = area_def.get_lonlats()
+plt.figure(figsize=(6, 4))
+plt.plot(l2a.wavelengths, l2a.spectrum(*SITE).values)
+plt.title("DPS Rrs at AAOT")
+plt.xlabel("wavelength (nm)")
+plt.ylabel("Rrs (sr-1)")
+plt.show()
 
-band = 40
+# %% [markdown]
+# ## Map grids
+#
+# `regrid()` puts a product (L1C, L1D or L2A) on a map grid as a product of
+# the same level: by default the capture's UTM zone at its own resolution,
+# nearest neighbour, so every pixel keeps one measured spectrum. Grid pixels
+# the capture does not cover are flagged `outside_swath`.
 
-# Create a figure and a 1x3 grid of subplots
-fig, axs = plt.subplots(1, 3)
+# %%
+grid = l1d.regrid()
+print(grid, grid.grid)
+print(grid.write(out_dir=OUT_DIR).name)
 
-# Plot data on each subplot
-axs[0].imshow(resampled_l1a_cube[:,:,band])
-axs[0].set_title('Resampled L1a band ' + str(band))
+fine = l1d.regrid(resolution=300)                       # finer UTM grid
+coarse = l1d.regrid(resolution=3000, method="average")  # 3 km cell means
+geographic = l1d.regrid("EPSG:4326", resolution=0.01)
 
-axs[1].imshow(resampled_latitudes)
-axs[1].set_title('Resampled latitudes')
+def quick_rgb(product, wavelengths=(640, 550, 460)):
+    """Three bands, each stretched between its 2nd and 98th percentile
+    (NaN, i.e. outside the capture, shown white)."""
+    bands = [int(np.argmin(np.abs(product.wavelengths - w))) for w in wavelengths]
+    image = product.cube.values[:, :, bands].astype(float)
+    low, high = np.nanpercentile(image, [2, 98], axis=(0, 1))
+    image = np.clip((image - low) / (high - low), 0, 1)
+    return np.where(np.isnan(image), 1.0, image)
 
-axs[2].imshow(resampled_longitudes)
-axs[2].set_title('Resampled longitudes')
 
-# Adjust layout to prevent overlap
+def extent_km(product):
+    x, y = product.area_definition().get_proj_vectors()
+    return [x[0] / 1e3, x[-1] / 1e3, y[-1] / 1e3, y[0] / 1e3]
+
+
+fig, axs = plt.subplots(1, 3, figsize=(15, 6))
+for ax, product, title in ((axs[0], fine, "nearest, 300 m"), (axs[1], coarse, "average, 3 km")):
+    ax.imshow(quick_rgb(product), extent=extent_km(product))
+    ax.set(title=f"{product.grid} ({title})", xlabel="easting (km)", ylabel="northing (km)")
+count = coarse.variables["source_pixel_count"].values.astype(float)
+count[count == 0] = np.nan
+plt.colorbar(axs[2].imshow(count, extent=extent_km(coarse)), ax=axs[2], shrink=0.7)
+axs[2].set(title="swath pixels per 3 km cell", xlabel="easting (km)")
 plt.tight_layout()
-
-# Display the plot
 plt.show()
 
-# %%
-from hypso.resample import resample_dataarray_bilinear, resample_dataarray_kd_tree_nearest
+# Another capture onto the same grid, for pixel-by-pixel comparison:
+# other_on_same_grid = other_l1d.regrid(grid)
 
-# Resampling functions can also be called directly. You can pass any data as an xarray to be resampled.
-
-# Kd tree nearest resampling (recommended for hyperspectral data)
-resampled_l1a_cube_kdtree = resample_dataarray_kd_tree_nearest(area_def = area_def, 
-                                        data = satobj_h1.l1a_cube,
-                                        latitudes = satobj_h1.latitudes,
-                                        longitudes = satobj_h1.longitudes,
-                                        radius_of_influence=satobj_h1.resolution)
-
-
-# Bilinear resampling
-resampled_l1a_cube_bilinear = output = resample_dataarray_bilinear(area_def = area_def, 
-                                        data = satobj_h1.l1a_cube,
-                                        latitudes = satobj_h1.latitudes,
-                                        longitudes = satobj_h1.longitudes,
-                                        )
-
-
+# %% [markdown]
+# ## Resampling onto anything else
+#
+# `resample()` returns a bare xarray Dataset on any pyresample target,
+# including another sensor's swath (e.g. for matchups).
 
 # %%
-from hypso.satpy import get_l1a_satpy_scene, \
-                        get_l1b_satpy_scene, \
-                        get_l1c_satpy_scene, \
-                        get_l1d_satpy_scene
+from pyresample.geometry import AreaDefinition
 
-# Export HYPSO capture as a SatPy scene
-scene = get_l1a_satpy_scene(satobj=satobj_h1, use_indirect_georef=False)
+area = AreaDefinition("aaot", "around AAOT", "aaot", "EPSG:4326", 80, 60,
+                      (SITE[1] - 0.2, SITE[0] - 0.15, SITE[1] + 0.2, SITE[0] + 0.15))
+around_site = l1d.resample(area)
+print(around_site)
 
-#scene.show('band_40')
+# %% [markdown]
+# ## Satpy
+#
+# `to_satpy()` gives a Satpy Scene; installed, the package also registers
+# Satpy readers for the product files (`hypso_l1a` ... `hypso_l1d`).
 
 # %%
-
-
-
+scene = l1d.to_satpy()
+print(len(scene.keys()), "bands")

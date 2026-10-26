@@ -362,6 +362,34 @@ def test_spectrum_pixel_resolution(l1d):
     assert abs(l1d.resolution - 876.3778) < 0.01
 
 
+def test_window(l1d):
+    site = (45.3139, 12.5083)
+    line, sample = l1d.pixel(*site)
+    w = l1d.window(*site, size=5)
+    box = l1d.cube.values[line - 2:line + 3, sample - 2:sample + 3]
+    assert w.attrs["box_size"] == "5x5" and w.attrs["box_pixel_count"] == 25
+    assert (w.attrs["center_line"], w.attrs["center_sample"]) == (line, sample) and w.attrs["center_distance_m"] < 500
+    np.testing.assert_allclose(w["mean"].values, box.mean(axis=(0, 1)))
+    np.testing.assert_allclose(w["cv"].values, box.std(axis=(0, 1)) / np.median(box, axis=(0, 1)))
+    in_range = (l1d.wavelengths >= 405) & (l1d.wavelengths <= 570)
+    assert np.isclose(w.attrs["cv_median"], np.median(w["cv"].values[in_range]))
+    assert w.attrs["pixel_valid"] == 25 and 0 < w.attrs["mean_solar_zenith"] < 90
+    # flagged pixels are left out
+    land = np.zeros(l1d.cube.shape[:2], bool)
+    land[line - 2] = True
+    masked = l1d.with_masks(land=land).window(*site, size=5, exclude_flags=["land"])
+    assert masked.attrs["pixel_valid"] == 20
+    np.testing.assert_allclose(masked["mean"].values, box[1:].mean(axis=(0, 1)))
+    # clipped at the image edge
+    corner = l1d.window(float(l1d.geometry["latitude"].values[0, 0]),
+                        float(l1d.geometry["longitude"].values[0, 0]), size=3)
+    assert corner.attrs["box_size"] == "2x2"
+    with pytest.raises(ValueError, match="odd"):
+        l1d.window(*site, size=4)
+    with pytest.raises(ValueError, match="unknown flags"):
+        l1d.with_masks(land=land).window(*site, exclude_flags=["cloud"])
+
+
 def test_resample_and_satpy(l1d, tmp_path):
     from pyresample.geometry import AreaDefinition
     from satpy import Scene
@@ -453,6 +481,33 @@ def test_regrid_flags_variables_and_options(l1d):
         hypso.open(L1A_PATH).regrid()
     with pytest.raises(ValueError, match="method"):
         l1d.regrid(method="cubic")
+
+
+def test_regrid_average(l1d):
+    land = np.zeros(l1d.cube.shape[:2], bool)
+    land[:100] = True
+    g = l1d.with_masks(land=land).regrid(resolution=3000, method="average")
+    count = g.variables["source_pixel_count"].values
+    assert count.sum() == land.size                                     # every pixel in exactly one cell
+    assert g.provenance[-1]["flags_method"] == "bitwise OR over the cell"
+    # a cell's spectrum is the mean of the swath pixels whose centres fall in it
+    area = g.area_definition()
+    cols, rows = area.get_array_indices_from_lonlat(l1d.geometry["longitude"].values,
+                                                    l1d.geometry["latitude"].values)
+    row, col = np.unravel_index(np.argmax(count), count.shape)
+    members = (np.ma.getdata(rows) == row) & (np.ma.getdata(cols) == col) & ~np.ma.getmaskarray(rows)
+    assert members.sum() == count[row, col]
+    np.testing.assert_allclose(g.cube.values[row, col], l1d.cube.values[members].mean(axis=0), rtol=1e-6)
+    # flags: a cell is land if any of its pixels is
+    cell_land = np.zeros(count.shape, bool)
+    np.logical_or.at(cell_land, (np.ma.getdata(rows)[land & ~np.ma.getmaskarray(rows)],
+                                 np.ma.getdata(cols)[land & ~np.ma.getmaskarray(rows)]), True)
+    np.testing.assert_array_equal(g.flags["land"].values, cell_land)
+    np.testing.assert_array_equal(g.flags["outside_swath"].values, count == 0)
+    with pytest.raises(ValueError, match="at least as coarse"):
+        l1d.regrid(resolution=300, method="average")
+    with pytest.raises(ValueError, match="AreaDefinition"):
+        l1d.resample(l1d.swath_definition(), method="average")
 
 
 def test_hsi2rgb_on_l1d(l1d):

@@ -1,9 +1,9 @@
-"""L1A -> L1B: radiometric, smile, destriping and spectral calibration.
+"""L1A to L1B: radiometric, smile, destriping and spectral calibration.
 
-Same coefficient selection and math as hypso.calibration.pipeline's
-set_calibration_coeff_files / load_calibration_coeff_files /
-run_calibration, which take a capture object; this takes and returns a
-product tree."""
+Coefficient files come from the sensor's calibration package
+(``hypso1_calibration``, ``hypso2_calibration``); see the calibration guide
+for the variants and releases.
+"""
 import logging
 from pathlib import Path
 
@@ -58,18 +58,32 @@ def _load(path, kind: str, params: CaptureParams, bin_factor: int = None, crop_m
 def l1a_to_l1b(tree: xr.DataTree, coeff_type: str = None, version=None, coeff_files: dict = None,
                radiometric: bool = True, smile: bool = True, destripe: bool = True,
                spectral: bool = True) -> xr.DataTree:
-    """Calibrate an L1A tree to L1B (TOA radiance `Lt`).
+    """Calibrate an L1A tree to L1B (top-of-atmosphere radiance ``Lt``).
 
-    coeff_type: radiometric variant - for HYPSO-2 "abs" (default), "moved",
-        "lab" - or a set registered with
-        hypso.calibration.register_calibration_coeffs. None uses the file's
-        metadata/corrections radiometric_coefficients_version if present,
-        else the sensor's default.
-    version: coefficient release ("V3" default, "V2", "V1"), or a
-        per-correction dict to mix versions, e.g. {"spectral": "V3"} (see
-        hypso2_calibration's data/coefficients.yaml).
-    coeff_files: explicit {kind: path} instead of coeff_type/version.
-    radiometric/smile/destripe/spectral: switch individual steps off.
+    Parameters
+    ----------
+    tree : xarray.DataTree
+        L1A product tree.
+    coeff_type : str, optional
+        Radiometric variant: for HYPSO-2 ``"abs"`` (default), ``"moved"`` or
+        ``"lab"``, or a set registered with
+        ``hypso.calibration.register_calibration_coeffs``. None uses the
+        file's ``radiometric_coefficients_version`` if present, else the
+        sensor's default.
+    version : str or dict, optional
+        Coefficient release, ``"V3"`` (default), ``"V2"`` or ``"V1"``, or
+        ``{correction: release}`` to mix them, e.g. ``{"spectral": "V3"}``
+        (``hypso2_calibration``'s ``data/coefficients.yaml``).
+    coeff_files : dict, optional
+        Explicit ``{kind: path}`` instead of ``coeff_type`` and ``version``.
+    radiometric, smile, destripe, spectral : bool, default True
+        False skips that correction.
+
+    Returns
+    -------
+    xarray.DataTree
+        L1B tree. The files used, their checksums and the package versions
+        are recorded in ``metadata/processing/l1b``, and a summary is logged.
     """
     if tree.attrs.get("processing_level") != "L1A":
         raise ValueError(f"l1a_to_l1b needs an L1A tree, got {tree.attrs.get('processing_level')}")

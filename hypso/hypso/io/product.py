@@ -1,39 +1,34 @@
-"""One reader and one writer for every HYPSO product level, built on
-xarray.DataTree (REFACTOR_PROGRESS.md x37 "plain Dataset core", step 1).
+"""One reader and one writer for every HYPSO product level, on
+:class:`xarray.DataTree`.
 
-In-memory model (what read_product returns and write_product takes):
+In-memory model (what :func:`read_product` returns and :func:`write_product`
+takes)::
 
     /                     root Dataset
         <prefix>          product cube, dims (lines, samples, bands), or
-                          (y, x, bands) on a map grid (hypso.grid) -
-                          prefix "dn" (L1A), "Lt" (L1B/L1C), "rhot" (L1D),
-                          or the AC variable for L2A (e.g. "Rrs", "rhos")
+                          (y, x, bands) on a map grid (hypso.grid): "dn"
+                          (L1A), "Lt" (L1B/L1C), "rhot" (L1D), or the AC
+                          variable for L2A (e.g. "Rrs", "rhos")
         wavelength        coord (bands): nominal band centre, 0.1 nm rounded
         radiation_wavelength  coord (bands): precise as-calibrated centre
         fwhm              coord (bands)
         latitude, longitude, crs_wgs84, <angles>   only when georeferenced
-        pixel_flags       optional CF flag variable (land/cloud/custom masks,
-                          hypso.masks.flags); the product itself is unmasked
-        <other>           any other (lines, samples) variable - derived
-                          products such as a chlorophyll map - passed through
-                          with its attributes
+        pixel_flags       optional CF flag variable (hypso.masks.flags);
+                          the product itself is unmasked
+        <other>           any other 2D variable - derived products such as
+                          a chlorophyll map - with its attributes
         x, y, crs         gridded products only: projection coordinates and
                           the CF grid-mapping variable (latitude/longitude
                           stay, as 2D auxiliary coordinates)
         attrs             global attributes; processing_level is required
-    /metadata/<group>     one child node per metadata group, passed through
+    /metadata/<group>     one child node per metadata group
 
-On disk (write_product): the product is split into one 2D variable per band
-(Lt_378, ...) - the per-band layout ESA SNAP reads - with geometry at the
-root and metadata/* nested. All CF attributes come from io/cf.py, so a file
-read in any supported layout is written back in the current one:
-
-- current flat files (this package's io/writer.py output),
-- legacy grouped files (/products + /geometry, pre-refactor and production),
-- ground-station L1A (/products/dn as one uint16 (lines, samples, bands) cube).
-
-Converting a ground-station L1A is read_product + write_product; the
-original file stays the source of truth.
+On disk the cube is one 2D variable per band (``Lt_378``, ...), the layout
+ESA SNAP reads, with geometry at the root and ``metadata/*`` nested. All CF
+attributes come from :mod:`hypso.io.cf`, so a file read in any supported
+layout is written back in the current one. Supported layouts: current flat
+files, older grouped files (``/products`` and ``/geometry``), and
+ground-station L1A files (one ``uint16`` ``/products/dn`` cube).
 """
 import logging
 import re
@@ -136,10 +131,15 @@ def _extra_variables(ds: xr.Dataset, exclude) -> list:
 
 
 def list_band_variables(path) -> list:
-    """Per-band metadata of a product file without reading pixel data:
-    [{"name", "band", "wavelength", "radiation_wavelength", "fwhm", "units",
-    "long_name"}] sorted by band index, or one entry with band None for a
-    single-cube (datacube) file. Used by the Satpy reader plugin."""
+    """Per-band metadata of a product file, without reading pixel data.
+
+    Returns
+    -------
+    list of dict
+        ``{"name", "band", "wavelength", "radiation_wavelength", "fwhm",
+        "units", "long_name"}`` sorted by band index, or one entry with band
+        None for a single-cube (datacube) file. Used by the Satpy readers.
+    """
     import netCDF4
     with netCDF4.Dataset(path) as f:
         group = f["products"] if "products" in f.groups else f
@@ -191,8 +191,7 @@ def _product_from_cube(name: str, var: xr.DataArray, wavelengths, sat_id: str):
 
 
 def source_layout(path) -> str:
-    """"current" (flat), "legacy" (/products + /geometry groups) or
-    "ground_station_l1a" (one 3D /products/dn cube)."""
+    """A product file's layout: ``"current"``, ``"legacy"`` (``/products`` and ``/geometry`` groups) or ``"ground_station_l1a"``."""
     import netCDF4
     with netCDF4.Dataset(path) as f:
         if "products" not in f.groups:
@@ -201,8 +200,23 @@ def source_layout(path) -> str:
 
 
 def read_product(path) -> xr.DataTree:
-    """Read any supported HYPSO product file into the in-memory model (see
-    module docstring). Raises ValueError if no product cube is found."""
+    """Read any supported HYPSO product file into the in-memory model.
+
+    Parameters
+    ----------
+    path : str or pathlib.Path
+
+    Returns
+    -------
+    xarray.DataTree
+        See the module description. ``tree.encoding["source"]`` holds the
+        path (not written back).
+
+    Raises
+    ------
+    ValueError
+        If no product cube or processing level is found.
+    """
     raw = xr.open_datatree(path, engine="netcdf4", mask_and_scale=False, decode_times=False,
                            decode_coords=False, decode_timedelta=False)
     try:
@@ -372,7 +386,16 @@ def _root_dataset(tree: xr.DataTree, datacube: bool):
 
 
 def write_product(tree: xr.DataTree, path, datacube: bool = False) -> None:
-    """Write the in-memory model to `path` in the current file format."""
+    """Write a product tree in the current file format.
+
+    Parameters
+    ----------
+    tree : xarray.DataTree
+        In-memory model (see the module description).
+    path : str or pathlib.Path
+    datacube : bool, default False
+        Write the cube as one 3D variable instead of one variable per band.
+    """
     root, root_encoding = _root_dataset(tree, datacube)
     nodes = {"/": root}
     encoding = {"/": root_encoding}
@@ -386,9 +409,20 @@ def write_product(tree: xr.DataTree, path, datacube: bool = False) -> None:
 
 
 def convert_product(src, out_dir=None) -> Path:
-    """Write `src` (any supported layout) as a current-format product named
-    by io/naming.py, next to `src` unless `out_dir` is given; records a
-    "convert" step. The source file is left untouched."""
+    """Convert a product file of any supported layout to the current format.
+
+    Parameters
+    ----------
+    src : str or pathlib.Path
+    out_dir : str or pathlib.Path, optional
+        Default: next to ``src``.
+
+    Returns
+    -------
+    pathlib.Path
+        The new file, named by :mod:`hypso.io.naming`. A ``convert`` step is
+        recorded; the source file is left untouched.
+    """
     src = Path(src)
     tree = read_product(src)
     attrs = tree.attrs

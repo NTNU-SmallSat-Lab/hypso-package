@@ -27,7 +27,7 @@ l2a.spectrum(latitude=45.314, longitude=12.508)                 # spectrum at a 
 Every step returns a new product and records itself in the file (`metadata/processing`, `history`).
 
 ## Links
-- Documentation: [https://ntnu-smallsat-lab.github.io/hypso-package/](https://ntnu-smallsat-lab.github.io/hypso-package/) (NB: out of date)
+- Documentation: [https://ntnu-smallsat-lab.github.io/hypso-package/](https://ntnu-smallsat-lab.github.io/hypso-package/)
 - Source Code: [https://github.com/NTNU-SmallSat-Lab/hypso-package](https://github.com/NTNU-SmallSat-Lab/hypso-package)
 - Issues: [https://github.com/NTNU-SmallSat-Lab/hypso-package/issues](https://github.com/NTNU-SmallSat-Lab/hypso-package/issues)
 - PyPI URL: [https://pypi.org/project/hypso/](https://pypi.org/project/hypso/)
@@ -57,6 +57,8 @@ as dependencies of `hypso`:
 - Versions come from git tags (calendar versioning, `vYY.M.N`; pre-releases `vYY.M.Na1`, `b1`, `rc1`),
   shared by `hypso`, `hypso1_calibration` and `hypso2_calibration`: tag the release commit, then build.
   See `docs/versioning.rst`.
+- Documentation: Sphinx in `docs/` (`pip install -r docs/requirements.txt`, then
+  `sphinx-build -W -b html docs docs/_build/html`); CI builds it on every push and publishes `main`.
 - Build the package with `python3 -m build`
 - Upload the newly built package to PyPI: `python3 -m twine upload --repository pypi dist/*`
 - View the project at [pypi.org/project/hypso/](https://pypi.org/project/hypso/)

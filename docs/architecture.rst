@@ -134,59 +134,16 @@ image size, capture type, acquisition time), the same way the old loader did.
 File format
 -----------
 
-``write_product`` is the only writer. ``read_product`` reads current files,
-older grouped files (``/products`` and ``/geometry`` groups, written by the
-pre-refactor package) and ground-station L1A files (one 3D ``/products/dn``
-array). Reading an old file and writing it again converts it;
-``convert_product(src)`` does that and also gives the file its current name.
-
-Layout
-   Product and geometry variables are at the **root** group; only
-   ``metadata/*`` is nested. CF's ``coordinates`` and ``grid_mapping``
-   references resolve by walking *up* to parent groups, never sideways between
-   sibling groups, so with ``products`` and ``geometry`` as siblings (the old
-   layout) a band's ``coordinates`` could never resolve. The flat layout also
-   suits ESA SNAP's NetCDF-CF reader, which dates back to NetCDF 3 and its lack
-   of groups. Metadata groups define the dimensions they use themselves.
-
-Bands
-   One 2D variable per band (``Lt_378``, ``rhot_378``, ...), the layout SNAP's
-   spectrum view expects. Each band carries ``wavelength``,
-   ``radiation_wavelength`` with ``radiation_wavelength_unit`` (what SNAP reads
-   as the band's wavelength), ``fwhm``, ``band`` (its index) and ``parameter``
-   (its own name). ``datacube=True`` writes a single 3D variable instead.
-
-Masks
-   Products are written unmasked. Land, cloud and custom masks are bits of one
-   ``pixel_flags`` variable with CF ``flag_masks`` and ``flag_meanings``, which
-   SNAP shows in its Mask Manager. ``hypso.masks.flags`` encodes and decodes
-   them; atmospheric correction applies them to its input when asked
-   (``masked=True``) instead of reading a separately written masked copy.
-
-Encoding
-   zlib level 4 with shuffle, each array in one chunk, no ``_FillValue``.
-   L1A counts stay ``uint16``.
-
-Global attributes
-   CF and ACDD (``Conventions = "CF-1.10, ACDD-1.3"``), ``title``,
-   ``processing_level``, ``product_format_version`` (``"2.0"``; files without
-   it are format 1), ``date_created``, ``geospatial_lat_min`` and the other
-   ACDD bounds, and ``history`` with one line per processing step.
-
-Provenance
-   ``hypso.io.provenance.add_step`` adds a ``metadata/processing/<step>`` group
-   for each step. Groups are kept when a product is read and written again, so
-   a file records its whole lineage. Software versions come from
-   ``hypso.versioning`` (:doc:`versioning`).
-
-File names
-   ``{SAT}_HSI.{YYYYMMDDTHHMMSS}.{target}.{LEVEL}[.{method}][.{label}].nc``,
-   for example ``HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.polymer.nc``
-   (``hypso.io.naming``). The satellite comes first, so a listing groups by
-   satellite and then sorts by time. ``.`` separates fields only, so fields can
-   contain ``_`` and ``-``. The calibration set and masking are not in the name;
-   they are recorded in the file. The optional label is for experiments. Older
-   names (``{target}_{time}-{label}-{level}.nc``) still parse.
+``write_product`` is the only writer and ``read_product`` the only reader; the
+format itself is described for users in :doc:`products`. Design choices
+behind it: product and geometry variables sit at the root group because CF's
+``coordinates`` and ``grid_mapping`` references resolve only upwards through
+parent groups, never sideways between siblings (with the old ``products`` and
+``geometry`` sibling groups a band's ``coordinates`` could never resolve), and
+because SNAP's NetCDF-CF reader dates from NetCDF 3 without groups. One 2D
+variable per band is the layout SNAP's spectrum view expects. All CF
+attributes come from ``hypso.io.cf``, so a file read in any supported layout
+is written back in the current one.
 
 Sensors and calibration
 -----------------------

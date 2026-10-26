@@ -62,6 +62,8 @@ def classify_capture_type(profile: SensorProfile, values: dict) -> str:
 
 
 def capture_params(tree: xr.DataTree) -> CaptureParams:
+    """Capture parameters (dimensions, binning, timing, sensor profile) from a
+    product tree's ``metadata/capture_config`` and global attributes."""
     attrs = dict(tree["metadata/capture_config"].attrs)
     if "framerate" not in attrs and "fps" in attrs:   # older files call it fps
         attrs["framerate"] = attrs["fps"]

@@ -45,6 +45,10 @@ def test_grid():
                             utm_crs)
 
 
+def test_window():
+    from hypso.window import window_statistics  # noqa: F401
+
+
 def test_rgb():
     from hypso.rgb import HSI2RGB  # noqa: F401
 

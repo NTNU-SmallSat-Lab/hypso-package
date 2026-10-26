@@ -15,17 +15,16 @@ arguments:
 
 .. code-block:: python
 
-   from hypso.io.product import read_product
-   from hypso.processing import l1a_to_l1b
+   import hypso
 
-   l1a = read_product("....L1A.nc")
+   l1a = hypso.open("....L1A.nc")
 
-   l1b = l1a_to_l1b(l1a)                                    # abs, V3
-   l1b = l1a_to_l1b(l1a, coeff_type="moved", version="V2")  # the pre-V3 "moved" set
-   l1b = l1a_to_l1b(l1a, version={"spectral": "V3"})        # V3, but V3 spectral too
+   l1b = l1a.calibrate()                                # abs, V3
+   l1b = l1a.calibrate("moved", version="V2")           # the pre-V3 "moved" set
+   l1b = l1a.calibrate(version={"spectral": "V3"})      # V3, but V3 spectral too
 
-The capture-object API takes the same arguments:
-``satobj.generate_l1b_cube(coeff_type="abs", version="V3")``.
+``hypso.processing.l1a_to_l1b(tree, ...)`` takes the same arguments for a
+product tree.
 
 Releases
 --------

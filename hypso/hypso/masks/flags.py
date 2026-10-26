@@ -26,10 +26,24 @@ def _flag_dtype(count: int):
 
 
 def encode_flags(masks: dict, descriptions: dict = None, dims=SPATIAL_DIMS) -> xr.DataArray:
-    """`masks`: {name: 2D boolean array, True where flagged}, in bit order
-    (land and cloud first by convention). Names become flag_meanings
-    words, so they may only contain letters, digits and '_'. `dims`:
-    (y, x) for a gridded product."""
+    """Encode boolean masks as one CF flag variable, ``pixel_flags``.
+
+    Parameters
+    ----------
+    masks : dict
+        ``{name: 2D boolean array}``, True where flagged, in bit order (land
+        and cloud first by convention). Names become ``flag_meanings``
+        words, so they may only contain letters, digits and ``_``.
+    descriptions : dict, optional
+        ``{name: text}``, written to the variable's ``comment``.
+    dims : tuple of str, default ("lines", "samples")
+        ``("y", "x")`` for a gridded product.
+
+    Returns
+    -------
+    xarray.DataArray
+        Unsigned integer flags with ``flag_masks`` and ``flag_meanings``.
+    """
     if not masks:
         raise ValueError("no masks to encode")
     names = list(masks)
@@ -54,7 +68,7 @@ def encode_flags(masks: dict, descriptions: dict = None, dims=SPATIAL_DIMS) -> x
 
 
 def decode_flags(flags: xr.DataArray) -> dict:
-    """{name: 2D boolean DataArray} from a flag variable."""
+    """Decode a CF flag variable into ``{name: 2D boolean DataArray}``."""
     names = flags.attrs["flag_meanings"].split()
     # atleast_1d: netCDF returns a one-flag variable's flag_masks as a scalar.
     bits = np.atleast_1d(flags.attrs["flag_masks"])
@@ -62,7 +76,22 @@ def decode_flags(flags: xr.DataArray) -> dict:
 
 
 def apply_flags(cube: xr.DataArray, flags: xr.DataArray, names=None) -> xr.DataArray:
-    """`cube` with NaN wherever any of `names` (default: all flags) is set."""
+    """``cube`` with NaN wherever any of the named flags is set.
+
+    Parameters
+    ----------
+    cube : xarray.DataArray
+        Data with the flags' spatial dimensions.
+    flags : xarray.DataArray
+        A flag variable (:func:`encode_flags`).
+    names : list of str, optional
+        Flags to apply; default all.
+
+    Raises
+    ------
+    KeyError
+        For a name that is not a flag.
+    """
     decoded = decode_flags(flags)
     names = list(decoded) if names is None else list(names)
     unknown = sorted(set(names) - set(decoded))
