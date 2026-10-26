@@ -40,10 +40,15 @@ FORMAT_2_ATTRS = WRITE_TIME_ATTRS + (
     "geospatial_lat_units", "geospatial_lon_units")
 
 
-def assert_same_file(path_a, path_b, ignore_attrs=WRITE_TIME_ATTRS):
-    """Same variables (values, dtype, dims, attrs) and group/global attrs."""
+def assert_same_file(path_a, path_b, ignore_attrs=WRITE_TIME_ATTRS, ignore_groups=()):
+    """Same variables (values, dtype, dims, attrs) and group/global attrs.
+    `ignore_groups`: group paths (and everything below them) to skip."""
+    def keep(path):
+        return not any(path == g or path.startswith(g + "/") for g in ignore_groups)
+
     with nc.Dataset(path_a) as a, nc.Dataset(path_b) as b:
-        va, vb = _walk(a), _walk(b)
+        va = {k: v for k, v in _walk(a).items() if keep(k.rsplit("/", 1)[0])}
+        vb = {k: v for k, v in _walk(b).items() if keep(k.rsplit("/", 1)[0])}
         assert sorted(va) == sorted(vb)
         for name in va:
             x, y = va[name], vb[name]
@@ -54,7 +59,8 @@ def assert_same_file(path_a, path_b, ignore_attrs=WRITE_TIME_ATTRS):
             ay = {k: y.getncattr(k) for k in y.ncattrs()}
             assert sorted(ax) == sorted(ay), name
             assert all(_same(ax[k], ay[k]) for k in ax), name
-        ga, gb = _group_attrs(a), _group_attrs(b)
+        ga = {k: v for k, v in _group_attrs(a).items() if keep(k)}
+        gb = {k: v for k, v in _group_attrs(b).items() if keep(k)}
         assert sorted(ga) == sorted(gb)
         ga["/"] = {k: v for k, v in ga["/"].items() if k not in ignore_attrs}
         gb["/"] = {k: v for k, v in gb["/"].items() if k not in ignore_attrs}
