@@ -138,11 +138,16 @@ class Product:
         return Product(l1c_to_l1d(self._tree, use_direct_georef=use_direct_georef, ssi_source=ssi_source,
                                   use_unbinned=use_unbinned))
 
-    def correct_atmosphere(self, method: str, masked: bool = False, mask_flags=None, **options) -> "Product":
-        """L1C/L1D -> L2A with `method` ("dps" so far). masked=True gives the
-        method NaN where pixel_flags are set (all, or `mask_flags`)."""
+    def correct_atmosphere(self, method: str, masked: bool = False, mask_flags=None, work_dir=None,
+                           config=None, **options) -> "Product":
+        """L1C/L1D -> L2A with `method` ("dps", "polymer"). masked=True gives
+        the method NaN where pixel_flags are set (all, or `mask_flags`).
+        External tools: `config` (AC tool configuration, see
+        hypso.ac.config; default HYPSO_AC_CONFIG), `work_dir` (kept if
+        given), and options overriding the tool's configuration."""
         from hypso.processing import correct_atmosphere
-        return Product(correct_atmosphere(self._tree, method, masked=masked, mask_flags=mask_flags, **options))
+        return Product(correct_atmosphere(self._tree, method, masked=masked, mask_flags=mask_flags,
+                                          work_dir=work_dir, config=config, **options))
 
     @property
     def atmospheric_correction(self):

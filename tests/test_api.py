@@ -1,5 +1,6 @@
 """hypso.open / hypso.Product - the public API (REFACTOR_PROGRESS.md ×50)."""
 import json
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -112,3 +113,83 @@ def test_correct_atmosphere_level_and_method_errors(l1a, l1d):
         l1a.correct_atmosphere("dps")
     with pytest.raises(ValueError, match="unknown method"):
         l1d.correct_atmosphere("magic")
+
+
+def _fake_polymer(monkeypatch, calls):
+    """Stands in for the Polymer subprocess: checks the staged input and
+    writes a v2-style output with 10 of the bands."""
+    import netCDF4 as nc
+    import hypso.processing.atmospheric as atmospheric
+
+    def run(python_path, driver_module, config, tool_name):
+        assert driver_module == "hypso.ac.adapters._polymer_driver" and tool_name == "polymer"
+        staged = hypso.open(config["polymer_l1_input_nc_file"])
+        calls.append({"config": config, "staged": staged})
+        wavelengths = staged.wavelengths[::12][:10] + 0.2
+        values = np.random.default_rng(0).random(staged.cube.shape[:2] + (len(wavelengths),)).astype(np.float32)
+        out = Path(config["polymer_output_dir"]) / "raw.polymer.nc"
+        with nc.Dataset(out, "w") as f:
+            f.createDimension("y", values.shape[0]); f.createDimension("x", values.shape[1])
+            f.createDimension("band", values.shape[2])
+            f.createVariable("rho_w", "f4", ("y", "x", "band"))[:] = values
+            f.createVariable("bands", "f4", ("band",))[:] = wavelengths
+        calls[-1]["values"] = values
+        return {"status": "ok", "output_file": str(out)}
+
+    monkeypatch.setattr(atmospheric, "run_subprocess_driver", run)
+
+
+POLYMER_CONFIG = {"polymer": {"base_path": "/opt/polymer", "polymer_path": "/opt/polymer/polymer", "version": "v2",
+                              "settings": {"band_cloudmask": 790}}}
+
+
+def test_polymer_mocked(l1d, monkeypatch, tmp_path):
+    calls = []
+    _fake_polymer(monkeypatch, calls)
+    l1c_product = hypso.open(L1A_PATH).calibrate(COEFF_TYPE, version=COEFF_VERSION).georeference(
+        latitudes=LATS_PATH, longitudes=LONS_PATH, direct=False)
+    l2a = l1c_product.correct_atmosphere("polymer", config=POLYMER_CONFIG, settings={"bands_corr": [448, 660]},
+                                         work_dir=tmp_path / "work")
+    staged = calls[0]["staged"]
+    assert staged.level == "L1C"
+    assert any(n.startswith("Band_") for n in staged.tree["metadata/srf"].dataset.data_vars)   # SRFs added
+    assert calls[0]["config"]["polymer_settings"] == {"band_cloudmask": 790, "bands_corr": [448, 660]}
+    assert (tmp_path / "work").is_dir()                                                           # kept
+
+    assert l2a.level == "L2A" and l2a.cube.name == "rho_w" and l2a.atmospheric_correction == "polymer"
+    mapped = list(range(0, 120, 12))[:10]
+    np.testing.assert_array_equal(l2a.cube.values[:, :, mapped], calls[0]["values"])
+    assert np.isnan(np.delete(l2a.cube.values, mapped, axis=2)).all()
+    step = l2a.provenance[-1]
+    assert step["step"] == "l2a_polymer" and step["ac_tool"] == "polymer" and step["ac_version"] == "v2"
+    assert '"band_cloudmask": 790' in step["settings_effective"] and "bands_corr" in step["settings_user"]
+    assert step["input_level"] == "L1C" and step["bands_returned"] == 10
+    assert l2a.filename().endswith(".L2A.polymer.nc")
+
+
+def test_polymer_masked_input_and_temp_cleanup(l1d, monkeypatch):
+    import xarray as xr
+    from pathlib import Path
+    from hypso.masks.flags import FLAGS_NAME, encode_flags
+    calls = []
+    _fake_polymer(monkeypatch, calls)
+    land = np.zeros(l1d.cube.shape[:2], bool)
+    land[:50] = True
+    tree = l1d.tree
+    root = tree.to_dataset(inherit=False)
+    root[FLAGS_NAME] = encode_flags({"land": land})
+    tree.dataset = root
+    l2a = hypso.Product(tree).correct_atmosphere("polymer", masked=True, config=POLYMER_CONFIG)
+    staged = calls[0]["staged"]
+    assert staged.level == "L1D"
+    assert np.isnan(staged.cube.values[:50]).all() and not np.isnan(staged.cube.values[50:]).any()
+    assert not Path(calls[0]["config"]["polymer_output_dir"]).exists()   # temporary work_dir removed
+    assert l2a.flags["land"].values[:50].all()
+
+
+def test_polymer_needs_configuration(l1d, monkeypatch):
+    monkeypatch.delenv("HYPSO_AC_CONFIG", raising=False)
+    with pytest.raises(ValueError, match="HYPSO_AC_CONFIG"):
+        l1d.correct_atmosphere("polymer")
+    with pytest.raises(ValueError, match="no 'polymer' section"):
+        l1d.correct_atmosphere("polymer", config={"acolite": {}})

@@ -50,6 +50,28 @@ def srf_dataset(sr, wavelengths, fwhm, iso_time=None) -> xr.Dataset:
     return xr.Dataset(data, attrs=attrs)
 
 
+def spectral_response(tree: xr.DataTree, ssi_source: str = "tsis", use_unbinned: bool = True):
+    """The SpectralResponse (SRFs, solar irradiance, effective FWHM) of a
+    calibrated tree's bands - what L1D reflectance and metadata/srf use."""
+    params = capture_params(tree)
+    if use_unbinned:
+        unbinned = tree["metadata/corrections"].to_dataset(inherit=False)["wavelengths_unbinned"].values
+        band_centers, band_fwhm, bin_factor = unbinned, params.fwhm(unbinned), params.bin_factor
+    else:
+        wavelengths = tree.dataset["radiation_wavelength"].values
+        band_centers, band_fwhm, bin_factor = wavelengths, params.fwhm(wavelengths), 1
+    return compute_spectral_response(band_centers_unbinned=band_centers, fwhm_unbinned=band_fwhm,
+                                     bin_factor=bin_factor, ssi_source=ssi_source, grid="native-truncated")
+
+
+def srf_node(tree: xr.DataTree, ssi_source: str = "tsis", use_unbinned: bool = True) -> xr.Dataset:
+    """metadata/srf for a calibrated tree (computed, not read from it)."""
+    wavelengths = tree.dataset["radiation_wavelength"].values
+    params = capture_params(tree)
+    return srf_dataset(spectral_response(tree, ssi_source, use_unbinned), wavelengths, params.fwhm(wavelengths),
+                       params.iso_time)
+
+
 def l1c_to_l1d(tree: xr.DataTree, use_direct_georef: bool = False, ssi_source: str = "tsis",
                use_unbinned: bool = True) -> xr.DataTree:
     """TOA reflectance `rhot` from an L1C tree.
@@ -69,14 +91,7 @@ def l1c_to_l1d(tree: xr.DataTree, use_direct_georef: bool = False, ssi_source: s
     fwhm = params.fwhm(wavelengths)
 
     zenith_name = "solar_zenith_direct" if use_direct_georef and "solar_zenith_direct" in root else "solar_zenith"
-    if use_unbinned:
-        unbinned = tree["metadata/corrections"].to_dataset(inherit=False)["wavelengths_unbinned"].values
-        band_centers, band_fwhm, bin_factor = unbinned, params.fwhm(unbinned), params.bin_factor
-    else:
-        band_centers, band_fwhm, bin_factor = wavelengths, fwhm, 1
-
-    sr = compute_spectral_response(band_centers_unbinned=band_centers, fwhm_unbinned=band_fwhm,
-                                   bin_factor=bin_factor, ssi_source=ssi_source, grid="native-truncated")
+    sr = spectral_response(tree, ssi_source=ssi_source, use_unbinned=use_unbinned)
     reflectance = compute_reflectance(toa_radiance=radiance.values, sr=sr, iso_time=params.iso_time,
                                       solar_zenith_angles=root[zenith_name].values)
 
