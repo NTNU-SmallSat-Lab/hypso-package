@@ -1,53 +1,30 @@
 """L1C -> L1D: TOA radiance to TOA reflectance.
 
-Same spectral response (SRFs, solar irradiance, effective FWHM) and
-reflectance math as HypsoCapture._generate_l1d_cube_impl, taking and
-returning a product tree. The L1D tree also carries metadata/srf (per-band
-SRFs, esun, Earth-Sun distance) for readers that convert radiance
-themselves, e.g. Polymer."""
+The L1D tree also carries metadata/srf (per-band SRFs, esun, Earth-Sun
+distance, hypso.srf.srf_dataset) for readers that convert radiance
+themselves, e.g. Polymer. The spectral response and solar spectra are in
+hypso.srf."""
 import numpy as np
 import xarray as xr
 
 from hypso.io.product import PRODUCT_DIMS, product_name
 from hypso.io.provenance import add_step
-from hypso.reflectance import compute_reflectance, compute_spectral_response, earth_sun_distance
+from hypso.srf import compute_spectral_response, earth_sun_distance, srf_dataset
 
 from .capture import capture_params
 
 
-def srf_dataset(sr, wavelengths, fwhm, iso_time=None) -> xr.Dataset:
-    """metadata/srf for a SpectralResponse `sr`: esun / esun_wavelengths /
-    effective_fwhm(_unbinned), the Earth-Sun distance, and one Band_<i>
-    variable per band (non-zero part of its binned SRF, on its own
-    wav_Band_<i> wavelength coordinate). Same content as
-    hypso.write.metadata_srf_group_writer."""
-    data, attrs = {}, {}
-    for name, value in (("esun", sr.esun), ("esun_wavelengths", sr.band_centers),
-                        ("effective_fwhm", sr.effective_fwhm),
-                        ("effective_fwhm_unbinned", sr.effective_fwhm_unbinned)):
-        if value is not None:
-            data[name] = xr.Variable((name,), np.asarray(value, dtype="f8"))
-    if "esun" in data:
-        data["esun"].attrs = {
-            "units": "mW m-2 nm-1",
-            "description": ("Band-averaged (SRF-weighted) solar irradiance F0 at 1 AU, from the "
-                            "TSIS-1 HSRS v2 (2022-11-30); the F0 used for this file's TOA reflectance")}
-        if iso_time is not None:
-            attrs["earth_sun_distance_au"] = earth_sun_distance(iso_time)
-
-    if sr.srf is not None and sr.grid_wl is not None:
-        grid = np.asarray(sr.grid_wl)
-        for index, wavelength in enumerate(wavelengths):
-            band = f"Band_{index}"
-            response = sr.srf[index, :].toarray().flatten()
-            nonzero = response > 0
-            values, wl = (response[nonzero], grid[nonzero]) if np.any(nonzero) else (response, grid)
-            dim = f"wav_{band}"
-            data[dim] = xr.Variable((dim,), wl, {"units": "nm"})
-            data[band] = xr.Variable((dim,), values, {
-                "band_info": band, "band_wavelength": float(wavelength), "index": index,
-                "effective_fwhm": float(sr.effective_fwhm[index]), "center_fwhm": float(fwhm[index])})
-    return xr.Dataset(data, attrs=attrs)
+def toa_reflectance(radiance: np.ndarray, esun, iso_time, solar_zenith) -> np.ndarray:
+    """TOA reflectance from TOA radiance (lines, samples, bands):
+    rho = pi L d^2 / (F0 cos(sza)), with F0 = esun per band (mW m-2 nm-1,
+    numerically equal to the radiance's W m-2 um-1), d the Earth-Sun
+    distance in AU and sza the solar zenith angle (degrees). "Normalized
+    reflectances": https://oceanopticsbook.info/view/atmospheric-correction/normalized-reflectances
+    """
+    distance = earth_sun_distance(iso_time)
+    multiplier = (np.asarray(esun)[None, None, :] * np.cos(np.radians(solar_zenith))[:, :, None]) \
+        / (np.pi * distance ** 2)
+    return (radiance / multiplier).astype(np.asarray(radiance).dtype)
 
 
 def spectral_response(tree: xr.DataTree, ssi_source: str = "tsis", use_unbinned: bool = True):
@@ -61,7 +38,7 @@ def spectral_response(tree: xr.DataTree, ssi_source: str = "tsis", use_unbinned:
         wavelengths = tree.dataset["radiation_wavelength"].values
         band_centers, band_fwhm, bin_factor = wavelengths, params.fwhm(wavelengths), 1
     return compute_spectral_response(band_centers_unbinned=band_centers, fwhm_unbinned=band_fwhm,
-                                     bin_factor=bin_factor, ssi_source=ssi_source, grid="native-truncated")
+                                     bin_factor=bin_factor, ssi_source=ssi_source)
 
 
 def srf_node(tree: xr.DataTree, ssi_source: str = "tsis", use_unbinned: bool = True) -> xr.Dataset:
@@ -92,8 +69,7 @@ def l1c_to_l1d(tree: xr.DataTree, use_direct_georef: bool = False, ssi_source: s
 
     zenith_name = "solar_zenith_direct" if use_direct_georef and "solar_zenith_direct" in root else "solar_zenith"
     sr = spectral_response(tree, ssi_source=ssi_source, use_unbinned=use_unbinned)
-    reflectance = compute_reflectance(toa_radiance=radiance.values, sr=sr, iso_time=params.iso_time,
-                                      solar_zenith_angles=root[zenith_name].values)
+    reflectance = toa_reflectance(radiance.values, sr.esun, params.iso_time, root[zenith_name].values)
 
     out = root.drop_vars([product_name(tree), "wavelength", "radiation_wavelength", "fwhm"])
     out["rhot"] = xr.DataArray(reflectance, dims=PRODUCT_DIMS, coords={

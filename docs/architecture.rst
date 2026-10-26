@@ -30,7 +30,7 @@ product and return the next level's product.
      cf.py, schema.py  CF attributes, per-level titles and units
         |
    building blocks
-     hypso.calibration, hypso.geometry, hypso.reflectance, hypso.masks,
+     hypso.calibration, hypso.geometry, hypso.srf, hypso.masks,
      hypso.ac (tool drivers, output readers, configuration),
      hypso.sensors, hypso1_calibration / hypso2_calibration
 
@@ -121,7 +121,7 @@ Function                  Levels             Records in ``metadata/processing``
 ========================  =================  =========================================
 
 The science code these steps call (``hypso.calibration``, ``hypso.geometry``,
-``hypso.reflectance``) is unchanged from the capture-object version. Each step
+``hypso.srf``) is unchanged from the capture-object version. Each step
 was checked to give identical output to the old path before that path was
 removed, and the whole chain reproduces a golden baseline recorded from the
 original package (``tests/test_regression_real_capture.py``).
@@ -227,19 +227,26 @@ Your own coefficient files
 Each calibration run logs a summary through Python's ``logging`` module, and
 records the same details in the product.
 
-Spectral response
------------------
+Spectral response and TOA reflectance
+-------------------------------------
 
-``hypso.reflectance.SpectralResponse`` holds everything derived from the
-bands' Gaussian response functions on a solar-irradiance grid: band centres,
-FWHM, binned and unbinned SRF matrices, the grid, the solar irradiance,
-per-band ``esun`` and effective FWHM. ``compute_spectral_response`` builds it;
-``hypso.processing.toa.spectral_response(tree)`` builds it for a product, and
-``srf_dataset`` turns it into the ``metadata/srf`` group: ``esun``, effective
-FWHM, ``earth_sun_distance_au``, and one ``Band_<i>`` variable per band on its
-own ``wav_Band_<i>`` grid. Polymer reads its SRFs from this group (its
+``hypso.srf`` holds the spectral response of the bands. ``gaussian_srfs`` builds
+one Gaussian SRF per unbinned band on the solar spectrum's wavelength grid
+(TSIS-1 HSRS, or Thuillier 2002, from ``srf/solar.py``); ``bin_srfs`` bins them
+like the image; ``band_irradiance`` gives each band's solar irradiance (F0,
+``esun``) and ``effective_fwhm`` its width. ``compute_spectral_response``
+returns all of it as one ``SpectralResponse``, and ``srf_dataset`` turns that
+into a product's ``metadata/srf`` group: ``esun``, effective FWHM,
+``earth_sun_distance_au``, and one ``Band_<i>`` variable per band on its own
+``wav_Band_<i>`` grid. Polymer reads its SRFs from this group (its
 ``srf_getter`` is ``hypso.ac.ac_polymer_srf_getter_from_l1``), and readers that
 convert radiance themselves can take F0 and the Earth-Sun distance from it.
+
+``hypso.processing.toa`` is the L1C -> L1D step: ``toa_reflectance`` computes
+``pi L d^2 / (F0 cos(sza))``, with the Earth-Sun distance ``d`` from
+``hypso.srf.earth_sun_distance``; ``spectral_response(tree)`` and
+``srf_node(tree)`` build the above for a product (atmospheric correction uses
+``srf_node`` to give Polymer SRFs for an L1C input).
 
 Atmospheric correction
 ----------------------

@@ -88,3 +88,21 @@ def test_as_is_radiometric_shape_mismatch_raises():
         # a nominal-sized AOI does not fit the pre-baked wide matrix
         read_coeffs_from_file(wide, "radiometric", x_start=428, x_stop=1508, y_start=0, y_stop=684,
                               bin_factor=9, crop_mode="as_is")
+
+
+def test_srf_metadata_names_the_solar_spectrum_used(l1c):
+    tsis = l1c_to_l1d(l1c.tree)["metadata/srf/esun"].attrs["description"]
+    thuillier = l1c_to_l1d(l1c.tree, ssi_source="thuillier")["metadata/srf/esun"].attrs["description"]
+    assert "TSIS-1" in tsis and "Thuillier" in thuillier and "TSIS" not in thuillier
+
+
+def test_toa_reflectance_formula():
+    from hypso.processing import toa_reflectance
+    from hypso.srf import earth_sun_distance
+    radiance = np.full((2, 3, 2), 100.0)
+    esun = np.array([1800.0, 1500.0])
+    sza = np.full((2, 3), 60.0)
+    d = earth_sun_distance("2025-07-04T00:00:00+00:00")
+    rho = toa_reflectance(radiance, esun, "2025-07-04T00:00:00+00:00", sza)
+    np.testing.assert_allclose(rho[0, 0], np.pi * 100.0 * d ** 2 / (esun * 0.5))
+    assert d > 1.016   # aphelion is in early July

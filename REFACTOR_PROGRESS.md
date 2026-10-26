@@ -35,13 +35,7 @@ permission to modify — unlike `/home/camerop/AC/hypso-package`, which is **rea
    warnings so docs can't go stale again; (e) decide where it is hosted (keep GitHub Pages, or Read the Docs).
    Best done after the Dataset rewrite (steps 2-4) settles the public API, so the reference isn't written
    twice.
-4. **Clean up `reflectance/toa_reflectance.py`** (user, 2026-10-26): consolidate the TOA/SRF code. Today it is
-   spread over `reflectance/toa_reflectance.py` (legacy `compute_toa_reflectance` wrapper, `compute_reflectance`,
-   `earth_sun_distance`, low-level SRF/SSI helpers, figure-writing code), `reflectance/spectral_response.py`
-   (`SpectralResponse`, `compute_spectral_response`) and `processing/toa.py` (`l1c_to_l1d`, `srf_dataset`).
-   Direction: one module for the reflectance step (with `earth_sun_distance`) and one `srf.py`-style module for
-   SRFs/solar irradiance/effective FWHM; drop the legacy wrapper and the CSV/PNG figure side effects once
-   HypsoCapture is gone (×49).
+4. ~~Clean up `reflectance/toa_reflectance.py`~~ - done (×55): `hypso.srf` + `processing/toa.py`.
 5. **Steps 1-3 complete; old capture code deleted (×53).** Next: real AC runs compared against the
    reprocess dataset once aulus2 is free; docs/architecture.rst rewrite (part of TODO 3). Original note: steps 2-4 of ×37 (processing as Dataset -> Dataset functions, Hypso
    facade, delete old code). SNAP confirmed by the user (×46).
@@ -172,6 +166,20 @@ Full unabridged plan text: see the "Approved Plan" section pasted at the bottom 
 duplicated per update — if it's missing, check `/home/camerop/.claude/plans/rosy-frolicking-summit.md` instead).
 
 ## Status (update this section as work progresses — most recent at top)
+
+- **2026-10-26 (×55): TOA reflectance / SRF code consolidated (TODO 4).** `hypso/reflectance/` (toa_reflectance.py,
+  spectral_response.py, write_ssi_npz.py) replaced by `hypso/srf/`: `response.py` (SpectralResponse,
+  compute_spectral_response, gaussian_srfs, bin_srfs, band_irradiance, effective_fwhm, srf_dataset - the
+  metadata/srf builder, moved from processing/toa.py) and `solar.py` (load_solar_irradiance("tsis"|"thuillier"),
+  earth_sun_distance), with the TSIS npz and Thuillier csv in `srf/data/`. `processing/toa.py` holds the whole
+  TOA step: `toa_reflectance(radiance, esun, iso_time, sza)` (vectorised, same per-pixel arithmetic, input
+  dtype kept), `spectral_response(tree)`, `srf_node(tree)`, `l1c_to_l1d`. Removed: the legacy
+  `compute_toa_reflectance` wrapper and its CSV/PNG side effects, `generate_figures`/`visualize_srf_binning`,
+  the CSIRO `uniform-1000` grid (unused since csiro dropped), compute_esun's dead `method` argument, the tqdm
+  progress bar in binning, and `write_ssi_npz.py` (a one-off conversion script that ran at import and read a
+  file not in the repo). Verified: L1D files written before and after (TSIS/unbinned and Thuillier/binned) are
+  identical in every variable and attribute incl. metadata/srf. Then fixed: the esun description always named
+  TSIS-1, also for Thuillier runs. Tests: solar spectrum named correctly; reflectance formula by hand.
 
 - **2026-10-26 (×54): removed `hypso.classification` and `hypso.spectral_analysis`; HSI2RGB -> `hypso.rgb`.**
   classification was a one-line alias for hypso.masks kept for hypso-processing-pipeline's
