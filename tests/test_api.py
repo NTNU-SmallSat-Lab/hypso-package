@@ -193,3 +193,65 @@ def test_polymer_needs_configuration(l1d, monkeypatch):
         l1d.correct_atmosphere("polymer")
     with pytest.raises(ValueError, match="no 'polymer' section"):
         l1d.correct_atmosphere("polymer", config={"acolite": {}})
+
+
+def _fake_acolite(monkeypatch, calls):
+    """Stands in for the ACOLITE subprocess: writes L2R/L2W files with 8
+    bands named as ACOLITE does."""
+    import netCDF4 as nc
+    import hypso.processing.atmospheric as atmospheric
+
+    def run(python_path, driver_module, config, tool_name):
+        assert driver_module == "hypso.ac.adapters._acolite_driver" and tool_name == "acolite"
+        overrides = config["settings_overrides"]
+        staged = hypso.open(overrides["inputfile"])
+        calls.append({"config": config, "staged": staged})
+        wavelengths = staged.wavelengths[5::15][:8] + 0.3
+        rng = np.random.default_rng(1)
+        values = {}
+        for suffix, prefix in (("L2R", "rhos"), ("L2W", "Rrs")):
+            data = rng.random(staged.cube.shape[:2] + (len(wavelengths),)).astype(np.float32)
+            values[suffix] = data
+            with nc.Dataset(Path(overrides["output"]) / f"HYPSO2_2025_03_04_10_38_05_{suffix}.nc", "w") as f:
+                f.createDimension("y", data.shape[0]); f.createDimension("x", data.shape[1])
+                for i, wl in enumerate(wavelengths):
+                    var = f.createVariable(f"{prefix}_{int(round(wl))}", "f4", ("y", "x"))
+                    var[:] = data[:, :, i]
+                    var.wavelength = float(wl)
+        calls[-1]["values"] = values
+        return {"status": "ok", "settings": {**overrides, "dsf_wave_range": "450,800", "sensor": config["sensor"]}}
+
+    monkeypatch.setattr(atmospheric, "run_subprocess_driver", run)
+
+
+ACOLITE_CONFIG = {"acolite": {"path": "/opt/acolite", "settings": {"dsf_aot_estimate": "tiled"}}}
+
+
+def test_acolite_mocked(monkeypatch, tmp_path):
+    calls = []
+    _fake_acolite(monkeypatch, calls)
+    l1c = hypso.open(L1A_PATH).calibrate(COEFF_TYPE, version=COEFF_VERSION).georeference(
+        latitudes=LATS_PATH, longitudes=LONS_PATH, direct=False)
+    work = tmp_path / "work"
+    l2w = l1c.correct_atmosphere("acolite", config=ACOLITE_CONFIG, work_dir=work)
+    config = calls[0]["config"]
+    assert config["sensor"] == "HYPSO2" and calls[0]["staged"].level == "L1C"
+    assert config["settings_overrides"]["dsf_aot_estimate"] == "tiled"        # config settings applied
+    assert config["settings_overrides"]["l2w_parameters"][0] == "Rrs_*"       # adapter defaults kept
+    mapped = list(range(5, 120, 15))[:8]
+    assert l2w.cube.name == "Rrs" and l2w.atmospheric_correction == "acolite_l2w"
+    np.testing.assert_array_equal(l2w.cube.values[:, :, mapped], calls[0]["values"]["L2W"])
+    assert np.isnan(np.delete(l2w.cube.values, mapped, axis=2)).all()
+    step = l2w.provenance[-1]
+    assert step["step"] == "l2a_acolite_l2w" and step["ac_tool"] == "acolite" and step["ac_version"] == "git checkout"
+    assert '"dsf_wave_range": "450,800"' in step["settings_effective"]        # what ACOLITE reported
+    assert l2w.filename().endswith(".L2A.acolite_l2w.nc")
+
+    # L2R from the same run: no second ACOLITE run
+    l2r = l1c.correct_atmosphere("acolite", output="l2r", config=ACOLITE_CONFIG, work_dir=work, reuse_output=True)
+    assert len(calls) == 1
+    assert l2r.cube.name == "rhos" and l2r.atmospheric_correction == "acolite_l2r"
+    np.testing.assert_array_equal(l2r.cube.values[:, :, mapped], calls[0]["values"]["L2R"])
+    assert l2r.provenance[-1]["reused_output"] == "true"
+    with pytest.raises(ValueError, match="output must be"):
+        l1c.correct_atmosphere("acolite", output="l3", config=ACOLITE_CONFIG)

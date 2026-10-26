@@ -34,7 +34,7 @@ config.json keys (all written by ACOLITEAdapter.run_correction):
     settings_overrides: dict merged into the loaded settings object
         (input/output paths, l2w product list, etc) via settings[key] = value.
 
-result.json: {"status": "ok"} or
+result.json: {"status": "ok", "settings": {...effective settings, credentials removed}} or
 {"status": "error", "error_type": ..., "message": ..., "traceback": ...}.
 """
 import json
@@ -75,7 +75,11 @@ def main(config_path: str, result_path: str) -> int:
 
         acolite_run(settings=settings)
 
-        Path(result_path).write_text(json.dumps({"status": "ok"}))
+        # The settings ACOLITE actually ran with (sensor defaults, then
+        # settings_file, then overrides), for provenance - credentials removed
+        # before anything is written.
+        effective = {k: v for k, v in dict(settings).items() if k not in ("EARTHDATA_u", "EARTHDATA_p")}
+        Path(result_path).write_text(json.dumps({"status": "ok", "settings": effective}, default=str))
         return 0
 
     except Exception as exc:

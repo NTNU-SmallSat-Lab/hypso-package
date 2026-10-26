@@ -10,7 +10,12 @@ Methods:
 - "polymer": Polymer in a subprocess (hypso.ac.adapters._polymer_driver),
   from L1C (default) or L1D. Installation and settings come from the AC
   tool configuration (hypso.ac.config).
-- ACOLITE, OC-SMART: to be added.
+- "acolite": ACOLITE in a subprocess (hypso.ac.adapters._acolite_driver),
+  from L1C (default) or L1D; output="l2w" (Rrs, default) or "l2r" (rhos).
+  EARTHDATA credentials (for ancillary data) are read from the
+  HYPSO_ACOLITE_EARTHDATA_USERNAME/_PASSWORD environment variables, never
+  from the configuration file.
+- OC-SMART: to be added.
 
 External tools read a file: the input is written (masked if requested,
 with metadata/srf added if missing) into `work_dir`, which is a temporary
@@ -35,7 +40,7 @@ from hypso.masks.flags import FLAGS_NAME, apply_flags
 
 logger = logging.getLogger(__name__)
 
-_INPUT_LEVELS = {"dps": ("L1D",), "polymer": ("L1C", "L1D")}
+_INPUT_LEVELS = {"dps": ("L1D",), "polymer": ("L1C", "L1D"), "acolite": ("L1C", "L1D")}
 
 
 def _input_cube(tree: xr.DataTree, masked: bool, mask_flags) -> xr.DataArray:
@@ -113,7 +118,7 @@ def _git_commit(path) -> str:
     return out.stdout.strip() if out.returncode == 0 else ""
 
 
-def _stage_input(tree: xr.DataTree, masked: bool, mask_flags, work_dir: Path) -> Path:
+def _stage_input(tree: xr.DataTree, masked: bool, mask_flags, work_dir: Path, add_srfs: bool = True) -> Path:
     """Write the tool's input file into work_dir."""
     from hypso.api import Product
     from hypso.processing.toa import srf_node
@@ -125,7 +130,7 @@ def _stage_input(tree: xr.DataTree, masked: bool, mask_flags, work_dir: Path) ->
         staged.dataset = root
     has_srfs = ("metadata" in staged.children and "srf" in staged["metadata"].children
                 and any(name.startswith("Band_") for name in staged["metadata/srf"].dataset.data_vars))
-    if not has_srfs:
+    if add_srfs and not has_srfs:
         # Polymer reads per-band SRFs from metadata/srf (its srf_getter); an
         # L1C straight from georeferencing has none yet.
         staged["metadata/srf"] = xr.DataTree(srf_node(staged))
@@ -179,8 +184,81 @@ def _polymer(tree, masked, mask_flags, work_dir, config=None, **options):
     return _l2a_tree(tree, "polymer", "rho_w", cube, parameters, ac)
 
 
-_METHODS = {"dps": _dps, "polymer": _polymer}
-_EXTERNAL = {"polymer"}
+# hypso.ac.adapters.acolite.ACOLITEAdapter's settings, applied over the
+# sensor defaults and the configuration's settings_file.
+ACOLITE_SETTINGS = {
+    "polygon": None, "rgb_rhot": True, "rgb_rhos": True,
+    "map_l2w": False,  # produces blank .pngs
+    "l2w_mask": False, "l2w_mask_threshold": 0.2,
+    "l2w_parameters": ["Rrs_*", "spm_nechad2010", "spm_nechad2016", "chl_re_mishra", "chl_oc2", "chl_oc3",
+                       "chl_re_moses3b", "chl_re_moses3b740", "fai", "fai_rhot", "fait", "ndci"],
+}
+_ACOLITE_OUTPUTS = {"l2w": ("L2W", "Rrs"), "l2r": ("L2R", "rhos")}
+
+
+def _acolite_version(path) -> str:
+    # ACOLITE's own rule (acolite/__init__.py): config/config.txt's
+    # `version`, otherwise it is a git clone.
+    config_txt = Path(path or "", "config", "config.txt")
+    if config_txt.is_file():
+        for line in config_txt.read_text().splitlines():
+            key, _, value = line.partition("=")
+            if key.strip() == "version" and value.strip():
+                return value.strip()
+    return "git checkout"
+
+
+def _acolite(tree, masked, mask_flags, work_dir, config=None, output="l2w", reuse_output=False, **options):
+    from hypso.load import load_acolite_l2r_nc, load_acolite_l2w_nc
+
+    if output not in _ACOLITE_OUTPUTS:
+        raise ValueError(f"output must be one of {sorted(_ACOLITE_OUTPUTS)}, got {output!r}")
+    suffix, variable = _ACOLITE_OUTPUTS[output]
+    cfg = tool_config("acolite", config, options)
+    output_dir = work_dir / "acolite"
+    existing = sorted(output_dir.glob(f"*_{suffix}.nc")) if output_dir.is_dir() else []
+    sensor = str(tree.attrs.get("sat_id", "")).replace("-", "").upper()     # HYPSO-2 -> HYPSO2
+    settings = {**ACOLITE_SETTINGS, **(cfg.get("settings") or {})}
+
+    effective = None   # the settings ACOLITE reports it used (None when reusing an earlier run)
+    if reuse_output and existing:
+        logger.info("Reusing ACOLITE output %s", existing[-1])
+    else:
+        input_file = _stage_input(tree, masked, mask_flags, work_dir, add_srfs=False)
+        if output_dir.is_dir():
+            shutil.rmtree(output_dir)
+        output_dir.mkdir(parents=True)
+        result = run_subprocess_driver(
+            python_path=cfg.get("python") or sys.executable, driver_module="hypso.ac.adapters._acolite_driver",
+            config={"acolite_path": cfg.get("path"), "sensor": sensor, "settings_file": cfg.get("settings_file"),
+                    "settings_overrides": {**settings, "inputfile": str(input_file), "output": str(output_dir)}},
+            tool_name="acolite")
+        existing = sorted(output_dir.glob(f"*_{suffix}.nc"))
+        effective = result.get("settings")
+    if len(existing) != 1:
+        raise RuntimeError(f"expected one ACOLITE *_{suffix}.nc in {output_dir}, found {len(existing)}")
+
+    data = (load_acolite_l2w_nc if output == "l2w" else load_acolite_l2r_nc)(existing[0])[variable]
+    index = _band_map(tree.dataset["radiation_wavelength"].values, data["band"].values)
+    cube = np.full(tree.dataset[product_name(tree)].shape, np.nan)
+    cube[:, :, index] = data.values[:, :, :len(index)]
+
+    parameters = {"masked": masked, "mask_flags": list(mask_flags) if mask_flags else "all" if masked else "",
+                  "input_level": tree.attrs["processing_level"], "output": output, "output_file": existing[0].name,
+                  "bands_returned": int(len(index)), "reused_output": bool(reuse_output and existing)}
+    settings_file = cfg.get("settings_file")
+    ac = ac_attrs("acolite", version=_acolite_version(cfg.get("path")), git_commit=_git_commit(cfg.get("path")),
+                  install_path=cfg.get("path"),
+                  settings_effective=effective if effective is not None else
+                  {"sensor": sensor, "settings_file": Path(settings_file).name if settings_file else "", **settings,
+                   "note": "reused an earlier run's output; requested settings, not ACOLITE's report"},
+                  settings_user={**(options.get("settings") or {}),
+                                 **{k: v for k, v in options.items() if k != "settings"}})
+    return _l2a_tree(tree, f"acolite_{output}", variable, cube, parameters, ac)
+
+
+_METHODS = {"dps": _dps, "polymer": _polymer, "acolite": _acolite}
+_EXTERNAL = {"polymer", "acolite"}
 
 
 def correct_atmosphere(tree: xr.DataTree, method: str, masked: bool = False, mask_flags=None,

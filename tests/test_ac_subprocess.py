@@ -431,6 +431,10 @@ def test_acolite_driver_success_path_with_stubbed_acolite(tmp_path, monkeypatch)
     assert settings["EARTHDATA_u"] == "someuser"
     assert settings["EARTHDATA_p"] == "somepass"
     assert settings["ancillary_data"] is True
+    # effective settings reported back for provenance, without credentials
+    reported = result["settings"]
+    assert reported["inputfile"] == "input.nc" and reported["_loaded_from"] == "HYPSO2"
+    assert "EARTHDATA_u" not in reported and "EARTHDATA_p" not in reported
 
 
 def test_acolite_driver_layers_settings_file_over_sensor_defaults(tmp_path, monkeypatch):
