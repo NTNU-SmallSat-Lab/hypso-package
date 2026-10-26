@@ -39,8 +39,8 @@ classifiers = [
 
 requires-python = ">=3.10"
 dependencies=[
-  "hypso1-calibration >= 26.2.0",
-  "hypso2-calibration >= 26.2.0",
+  "hypso1-calibration >= 26.10.0",
+  "hypso2-calibration >= 26.10.0",
   "numpy>=1.24",
   #"gdal >=3.4.1",
   "cartopy >=0.21.1",

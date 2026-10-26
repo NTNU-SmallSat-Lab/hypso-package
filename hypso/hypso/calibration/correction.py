@@ -69,11 +69,14 @@ def read_coeffs_from_file(coeff_path: str, coeff_type: str, x_start: int=None,  
                     # later this needs to be updated
 
                     case 'radiometric':
-                        coefficients = coefficients[key][y_start:y_stop, x_start: x_stop].reshape(y_stop-y_start, -1, bin_factor).mean(axis=2).reshape(y_stop-y_start, -1) # reshape full coeff matrix based on values in config
-                    case 'spectral': 
+                        if 'wide' in coeff_path.name and 'moved' not in coeff_path.name: # wide coefficients are derived from binned data, and are used as is
+                            coefficients = coefficients[key]
+                        else:
+                            coefficients = coefficients[key][y_start:y_stop, x_start: x_stop].reshape(y_stop-y_start, -1, bin_factor).mean(axis=2).reshape(y_stop-y_start, -1) # reshape full coeff matrix based on values in config
+                    case 'spectral':
                         coefficients = coefficients[key][x_start:x_stop].reshape(-1, bin_factor).mean(axis=1).reshape(-1)
-                    case 'smile': 
-                        if 'wide' in str(coeff_path) or 'nominal' in str(coeff_path): # TODO check if this is correct, and possibly write in a better way (not sure if the HYPSO-1 full smile coeffs are correct, otherwise we could use them every time)
+                    case 'smile':
+                        if 'wide' in coeff_path.name or 'nominal' in coeff_path.name: # TODO check if this is correct, and possibly write in a better way (not sure if the HYPSO-1 full smile coeffs are correct, otherwise we could use them every time)
                             coefficients = coefficients[key]
                         else:
                             coefficients = coefficients[key][y_start:y_stop, x_start: x_stop].reshape(y_stop-y_start, -1, bin_factor).mean(axis=2).reshape(y_stop-y_start, -1)

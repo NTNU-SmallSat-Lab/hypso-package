@@ -67,7 +67,7 @@ class Hypso2(HypsoBase):
 
         #self.coeff_type = kwargs.get('coeff_type', 'moved')  # Default to 'original' if not provided
         print(f"[INFO] Setting calibration coefficient files with coeff_type: {coeff_type}")
-        calibration_files = get_hypso2_calibration_files(capture_type, coeff_type=coeff_type) # 'moved', 'adjusted', or 'original.'
+        calibration_files = get_hypso2_calibration_files(capture_type, coeff_type=coeff_type) # 'moved' (default) or 'abs', both V3
 
         #calibration_files = get_hypso2_calibration_files(capture_type, **kwargs)
 
