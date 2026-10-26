@@ -18,6 +18,9 @@ file_types:
     file_patterns:
     - '{capture_target}_{start_time:%Y-%m-%dT%H-%M-%SZ}-l1d.nc'
     - '{capture_target}_{start_time:%Y-%m-%dT%H-%M-%SZ}-{label}-l1d.nc'
+    # current names (hypso.io.naming): {SAT}_HSI.{time}.{target}.L1D[.{label}].nc
+    - '{platform}_HSI.{start_time:%Y%m%dT%H%M%S}.{capture_target}.L1D.nc'
+    - '{platform}_HSI.{start_time:%Y%m%dT%H%M%S}.{capture_target}.L1D.{label}.nc'
 
 datasets:
   latitude:

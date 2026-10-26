@@ -95,6 +95,14 @@ class Product:
         return decode_flags(ds[FLAGS_NAME]) if FLAGS_NAME in ds else {}
 
     @property
+    def variables(self) -> xr.Dataset:
+        """Derived per-pixel products added with with_variables() (e.g. a
+        chlorophyll map), as a Dataset."""
+        from hypso.io.product import _extra_variables
+        ds = self._tree.dataset
+        return ds[_extra_variables(ds, [cube_name(self._tree)])]
+
+    @property
     def provenance(self) -> list:
         """One dict per processing step, oldest first (from
         metadata/processing)."""
@@ -107,6 +115,97 @@ class Product:
         cube = self.cube
         return (f"<hypso.Product {self.sat_id} {self.target} {self.level}: {cube.name} "
                 f"{dict(cube.sizes)}>")
+
+    # -- pixels, spectra, geolocation --------------------------------------
+
+    def pixel(self, latitude: float, longitude: float, direct: bool = False) -> tuple:
+        """(line, sample) of the pixel nearest to latitude/longitude."""
+        from hypso.geometry.nearest import get_nearest_pixel
+        geometry = self.geometry
+        suffix = "_direct" if direct else ""
+        if f"latitude{suffix}" not in geometry:
+            raise ValueError(f"{self.level} product has no {'direct ' if direct else ''}geolocation")
+        line, sample = get_nearest_pixel(target_latitude=latitude, target_longitude=longitude,
+                                         latitudes=geometry[f"latitude{suffix}"].values,
+                                         longitudes=geometry[f"longitude{suffix}"].values)
+        return int(line), int(sample)
+
+    def spectrum(self, latitude: float = None, longitude: float = None, line: int = None,
+                 sample: int = None) -> xr.DataArray:
+        """The cube's spectrum at the pixel nearest to latitude/longitude,
+        or at line/sample; a DataArray over bands with wavelength coords."""
+        if latitude is not None and longitude is not None:
+            line, sample = self.pixel(latitude, longitude)
+        elif line is None or sample is None:
+            raise ValueError("give latitude and longitude, or line and sample")
+        return self.cube.isel(lines=line, samples=sample)
+
+    @property
+    def resolution(self) -> float:
+        """Ground sampling distance (m): the larger of the mean along- and
+        across-track GSD, as the capture-object API computed it."""
+        from hypso.geometry import compute_gsd, compute_resolution
+        geometry = self.geometry
+        if "latitude" not in geometry:
+            raise ValueError(f"{self.level} product has no geolocation")
+        lat, lon = geometry["latitude"].values, geometry["longitude"].values
+        along, across = compute_gsd(frame_count=lat.shape[0], image_height=lat.shape[1], latitudes=lat,
+                                    longitudes=lon)
+        return compute_resolution(along_track_gsd=along, across_track_gsd=across)
+
+    def swath_definition(self, direct: bool = False):
+        """pyresample SwathDefinition of this product's geolocation."""
+        from hypso.geometry_definition import generate_hypso_swath_def
+        return generate_hypso_swath_def(self, use_direct_georef=direct)
+
+    def resample(self, area_def, radius_of_influence: float = None) -> xr.Dataset:
+        """The cube, derived variables and flags resampled onto a pyresample
+        area (nearest neighbour), with the target grid's latitude/longitude."""
+        from hypso.resample import resample_product
+        return resample_product(self, area_def, radius_of_influence=radius_of_influence)
+
+    def to_satpy(self, direct: bool = False):
+        """A satpy Scene with one dataset per band."""
+        from hypso.satpy.satpy import product_scene
+        return product_scene(self, use_direct_georef=direct)
+
+    # -- adding masks and derived products (each returns a new Product) -----
+
+    def with_masks(self, descriptions: dict = None, **masks) -> "Product":
+        """A new Product with these boolean (lines, samples) masks added to
+        pixel_flags, e.g. with_masks(land=land, cloud=cloud). Existing flags
+        are kept; a mask with an existing name replaces it."""
+        from hypso.masks.flags import encode_flags
+        merged = {name: flag.values for name, flag in self.flags.items()}
+        merged.update({name: np.asarray(mask, dtype=bool) for name, mask in masks.items()})
+        old_descriptions = {}
+        if FLAGS_NAME in self._tree.dataset and "comment" in self._tree.dataset[FLAGS_NAME].attrs:
+            for part in self._tree.dataset[FLAGS_NAME].attrs["comment"].split("; "):
+                name, _, text = part.partition(": ")
+                old_descriptions[name] = text
+        tree = self._tree.copy()
+        root = tree.to_dataset(inherit=False)
+        root[FLAGS_NAME] = encode_flags(merged, {**old_descriptions, **(descriptions or {})})
+        tree.dataset = root
+        return Product(tree)
+
+    def with_variables(self, **variables) -> "Product":
+        """A new Product with derived (lines, samples) variables added, e.g.
+        with_variables(chla=DataArray(..., attrs={"units": "mg m-3"})). They
+        are written with the product and read back by hypso.open."""
+        from hypso.io.product import SPATIAL_DIMS
+        tree = self._tree.copy()
+        root = tree.to_dataset(inherit=False)
+        reserved = set(root.variables)
+        for name, value in variables.items():
+            if name in reserved and name not in self.variables:
+                raise ValueError(f"{name!r} is already a product, geometry or flag variable")
+            data = value if isinstance(value, xr.DataArray) else xr.DataArray(np.asarray(value), dims=SPATIAL_DIMS)
+            if data.shape != self.cube.shape[:2]:
+                raise ValueError(f"{name!r} has shape {data.shape}, expected {self.cube.shape[:2]}")
+            root[name] = xr.Variable(SPATIAL_DIMS, data.values, dict(data.attrs))
+        tree.dataset = root
+        return Product(tree)
 
     # -- processing (each returns a new Product) ----------------------------
 

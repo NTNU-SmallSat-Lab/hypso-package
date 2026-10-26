@@ -21,7 +21,7 @@ import xarray as xr
 from satpy.readers.core.netcdf import NetCDF4FileHandler
 from satpy.dataset.dataid import WavelengthRange
 
-from hypso.io.reader import list_band_datasets
+from hypso.io.product import list_band_variables
 
 # file_type (from the matching reader YAML) -> product variable prefix. Both
 # levels currently write in per-band mode ("Lt_378" etc, not a single
@@ -65,7 +65,7 @@ class HypsoL1FileHandler(NetCDF4FileHandler):
     def available_datasets(self, configured_datasets=None):
         """Pass through the statically-configured lat/lon entries (from the
         reader YAML) unchanged, then dynamically yield one dataset per band
-        found in this file (see list_band_datasets - the exact band set
+        found in this file (see list_band_variables - the exact band set
         varies by binning/calibration config, so it can't be enumerated in
         the YAML ahead of time, unlike a fixed-band instrument)."""
         for is_avail, ds_info in (configured_datasets or []):
@@ -75,7 +75,7 @@ class HypsoL1FileHandler(NetCDF4FileHandler):
             yield self.file_type_matches(ds_info["file_type"]), ds_info
 
         file_type = self.filetype_info["file_type"]
-        for band in list_band_datasets(self.filename, self._product_prefix):
+        for band in list_band_variables(self.filename):
             if band["band"] is None:
                 # Single-datacube-mode file (datacube=True at write time) -
                 # not handled dynamically here; the whole cube would need a

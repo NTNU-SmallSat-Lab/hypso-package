@@ -13,6 +13,9 @@ In-memory model (what read_product returns and write_product takes):
         latitude, longitude, crs_wgs84, <angles>   only when georeferenced
         pixel_flags       optional CF flag variable (land/cloud/custom masks,
                           hypso.masks.flags); the product itself is unmasked
+        <other>           any other (lines, samples) variable - derived
+                          products such as a chlorophyll map - passed through
+                          with its attributes
         attrs             global attributes; processing_level is required
     /metadata/<group>     one child node per metadata group, passed through
 
@@ -105,6 +108,34 @@ def _flag_variables(ds: xr.Dataset) -> list:
     return [n for n, v in ds.data_vars.items() if v.dims == SPATIAL_DIMS and "flag_meanings" in v.attrs]
 
 
+def _extra_variables(ds: xr.Dataset, exclude) -> list:
+    """Other (lines, samples) variables (derived products), excluding band,
+    geometry, grid-mapping and flag variables."""
+    skip = set(exclude) | set(_GEOMETRY_ATTRS) | {"crs_wgs84"} | set(_flag_variables(ds))
+    return [n for n, v in ds.data_vars.items() if v.dims == SPATIAL_DIMS and n not in skip]
+
+
+def list_band_variables(path) -> list:
+    """Per-band metadata of a product file without reading pixel data:
+    [{"name", "band", "wavelength", "radiation_wavelength", "fwhm", "units",
+    "long_name"}] sorted by band index, or one entry with band None for a
+    single-cube (datacube) file. Used by the Satpy reader plugin."""
+    import netCDF4
+    with netCDF4.Dataset(path) as f:
+        group = f["products"] if "products" in f.groups else f
+        bands = [(n, v) for n, v in group.variables.items()
+                 if v.dimensions == SPATIAL_DIMS and "band" in v.ncattrs() and "wavelength" in v.ncattrs()]
+        if not bands:
+            cubes = [(n, v) for n, v in group.variables.items() if len(v.dimensions) == 3]
+            return [{"name": n, "band": None, "wavelength": None, "radiation_wavelength": None, "fwhm": None,
+                     "units": getattr(v, "units", ""), "long_name": getattr(v, "long_name", "")} for n, v in cubes]
+        bands.sort(key=lambda item: int(item[1].band))
+        return [{"name": n, "band": int(v.band), "wavelength": float(v.wavelength),
+                 "radiation_wavelength": _scalar(getattr(v, "radiation_wavelength", v.wavelength)),
+                 "fwhm": float(v.fwhm), "units": getattr(v, "units", ""), "long_name": getattr(v, "long_name", "")}
+                for n, v in bands]
+
+
 def _fwhm_from_profile(sat_id: str, wavelengths: np.ndarray) -> np.ndarray:
     # Same nearest-neighbour lookup as capture_types._get_fwhm, for files that
     # store no per-band fwhm (ground-station L1A).
@@ -186,6 +217,9 @@ def read_product(path) -> xr.DataTree:
             out["crs_wgs84"] = ((), geometry["crs_wgs84"].values)
         for name in _flag_variables(products):
             out[name] = (SPATIAL_DIMS, products[name].values, dict(products[name].attrs))
+        for name in _extra_variables(products, names):
+            attrs = {k: v for k, v in products[name].attrs.items() if k not in ("coordinates", "grid_mapping")}
+            out[name] = (SPATIAL_DIMS, products[name].values, attrs)
 
         tree = xr.DataTree(out)
         if "metadata" in raw.children:
@@ -263,11 +297,11 @@ def _root_dataset(tree: xr.DataTree, datacube: bool):
         if name in ds.data_vars:
             out[name] = xr.Variable(SPATIAL_DIMS, ds[name].values, builder())
             encoding[name] = _encoding(out[name], "f4")
-    for name in _flag_variables(ds):
-        flag_attrs = {k: v for k, v in ds[name].attrs.items() if k not in ("coordinates", "grid_mapping")}
+    for name in _flag_variables(ds) + _extra_variables(ds, [prefix]):
+        var_attrs = {k: v for k, v in ds[name].attrs.items() if k not in ("coordinates", "grid_mapping")}
         if has_geometry:
-            flag_attrs.update(cf.geolocation_ref_attrs())
-        out[name] = xr.Variable(SPATIAL_DIMS, ds[name].values, flag_attrs)
+            var_attrs.update(cf.geolocation_ref_attrs())
+        out[name] = xr.Variable(SPATIAL_DIMS, ds[name].values, var_attrs)
         encoding[name] = _encoding(out[name])
     if has_geometry:
         # The grid-mapping variable's value carries no meaning (CF reads only

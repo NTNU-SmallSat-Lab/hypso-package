@@ -55,31 +55,13 @@ def generate_swath_def(latitudes: np.ndarray,
 
 
 
-def generate_hypso_swath_def(satobj,
-                            use_direct_georef: bool = False
-                            ) -> SwathDefinition:
-
-    dims = satobj.dim_names_2d
-
-    if use_direct_georef:
-        latitudes = satobj.latitudes_direct
-        longitudes = satobj.longitudes_direct
-        resolution = satobj.resolution_direct
-    else:
-        latitudes = satobj.latitudes
-        longitudes = satobj.longitudes
-        resolution = satobj.resolution
-
-    attrs = {'resolution': resolution,
-             'sensor': satobj.sensor,
-             'name': 'swath'
-             }
-
-    latitudes_xr = xr.DataArray(latitudes, dims=dims, attrs=attrs)
-    longitudes_xr = xr.DataArray(longitudes, dims=dims, attrs=attrs)
-
-    swath_def = SwathDefinition(lons=longitudes_xr, lats=latitudes_xr)
-
-
-    return swath_def
-
+def generate_hypso_swath_def(product, use_direct_georef: bool = False) -> SwathDefinition:
+    """SwathDefinition of a hypso.Product's geolocation (direct or not)."""
+    suffix = "_direct" if use_direct_georef else ""
+    geometry = product.geometry
+    if f"latitude{suffix}" not in geometry:
+        raise ValueError(f"{product.level} product has no {'direct ' if use_direct_georef else ''}geolocation")
+    attrs = {"sensor": product.sat_id, "name": "swath"}
+    latitudes = xr.DataArray(geometry[f"latitude{suffix}"].values, dims=("y", "x"), attrs=attrs)
+    longitudes = xr.DataArray(geometry[f"longitude{suffix}"].values, dims=("y", "x"), attrs=attrs)
+    return SwathDefinition(lons=longitudes, lats=latitudes)

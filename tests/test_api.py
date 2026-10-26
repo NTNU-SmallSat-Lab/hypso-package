@@ -318,3 +318,49 @@ def test_ocsmart_errors(l1d, tmp_path):
     (install / "OCSMART.py").write_text("raise SystemExit(3)\n")
     with pytest.raises(ACRunError):
         l1d.correct_atmosphere("ocsmart", config=config, work_dir=tmp_path / "work2")
+
+
+def test_with_masks_and_variables_round_trip(l1d, tmp_path):
+    import xarray as xr
+    land = np.zeros(l1d.cube.shape[:2], bool)
+    land[:20] = True
+    cloud = np.zeros_like(land)
+    cloud[:, :30] = True
+    masked = l1d.with_masks(land=land, descriptions={"land": "test land"}).with_masks(cloud=cloud)
+    assert list(masked.flags) == ["land", "cloud"] and l1d.flags == {}
+    np.testing.assert_array_equal(masked.flags["land"].values, land)
+    with_var = masked.with_variables(ndwi=xr.DataArray(np.ones(land.shape, np.float32), dims=("lines", "samples"),
+                                                       attrs={"units": "1", "long_name": "test index"}))
+    back = hypso.open(with_var.write(out_dir=tmp_path))
+    assert list(back.variables.data_vars) == ["ndwi"] and back.variables["ndwi"].attrs["long_name"] == "test index"
+    assert list(back.flags) == ["land", "cloud"]
+    assert "test land" in back.tree.dataset["pixel_flags"].attrs["comment"]
+    with pytest.raises(ValueError, match="already"):
+        l1d.with_variables(latitude=np.zeros(land.shape))
+    with pytest.raises(ValueError, match="shape"):
+        l1d.with_variables(bad=np.zeros((2, 2)))
+
+
+def test_spectrum_pixel_resolution(l1d):
+    line, sample = l1d.pixel(45.314, 12.508)
+    spectrum = l1d.spectrum(45.314, 12.508)
+    assert spectrum.dims == ("bands",) and "radiation_wavelength" in spectrum.coords
+    np.testing.assert_array_equal(spectrum.values, l1d.cube.values[line, sample])
+    np.testing.assert_array_equal(l1d.spectrum(line=3, sample=4).values, l1d.cube.values[3, 4])
+    # same ground resolution the capture-object API computed (876.38 m on this capture)
+    assert abs(l1d.resolution - 876.3778) < 0.01
+
+
+def test_resample_and_satpy(l1d, tmp_path):
+    from pyresample.geometry import AreaDefinition
+    from satpy import Scene
+    area = AreaDefinition("t", "t", "t", "EPSG:4326", 60, 40, (12.3, 45.2, 12.7, 45.45))
+    land = np.zeros(l1d.cube.shape[:2], bool)
+    land[:20] = True
+    ds = l1d.with_masks(land=land).resample(area)
+    assert ds["rhot"].shape == (40, 60, 120) and ds["flag_land"].dtype == bool
+    assert np.isfinite(ds["rhot"].values[:, :, 50]).all()
+    assert len(l1d.to_satpy().keys()) == 120
+    # the Satpy reader plugin reads current-format file names
+    scene = Scene(filenames=[str(l1d.write(out_dir=tmp_path))], reader="hypso_l1d")
+    assert "rhot_413" in scene.available_dataset_names()
