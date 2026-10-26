@@ -347,34 +347,51 @@ def write_level_nc(satobj, level: str, dst_nc: str, datacube: bool = False, mask
                      write_srf=(level.upper() in ("L1C", "L1D")))
 
 
+def _write_product_from_capture(satobj, level: str, dst_nc, correction: str = None, masked: bool = False,
+                                 datacube: bool = False) -> None:
+    """The write_*_nc_file wrappers' implementation (×45): capture ->
+    product tree -> write_product, so files get provenance, pixel_flags and
+    the format-2 attributes. Output paths stay the legacy satobj.*_nc_file
+    names hypso-processing-pipeline builds. write_level_nc/write_l2a_nc
+    above keep the old implementation as the parity reference
+    (tests/test_capture_tree.py) until the old writer is removed."""
+    from .capture_tree import capture_to_tree
+    from .product import write_product
+    write_product(capture_to_tree(satobj, level, correction=correction, masked=masked), dst_nc,
+                  datacube=datacube)
+
+
 def _write_level_nc_file(satobj, level: str, file_attr: str, overwrite: bool, masked: bool,
-                          skip_message: str, **kwargs) -> None:
+                          skip_message: str, datacube: bool = False, **kwargs) -> None:
     dst_nc = getattr(satobj, file_attr)
     if Path(dst_nc).is_file() and not overwrite:
         if satobj.VERBOSE:
             logger.info(skip_message)
         return None
-    write_level_nc(satobj, level, dst_nc, masked=masked, **kwargs)
+    _write_product_from_capture(satobj, level, dst_nc, masked=masked, datacube=datacube)
     return None
 
 
 def write_l1b_nc_file(satobj, overwrite: bool = False, masked: bool = False, **kwargs) -> None:
-    """Thin backward-compat wrapper over write_level_nc - name/signature
-    confirmed imported directly by hypso-processing-pipeline, kept stable."""
+    """Backward-compat wrapper (writes through write_product, see
+    _write_product_from_capture) - name/signature confirmed imported
+    directly by hypso-processing-pipeline, kept stable."""
     return _write_level_nc_file(satobj, "L1B", "l1b_nc_file", overwrite, masked,
                                 "L1b NetCDF file has already been generated. Skipping.", **kwargs)
 
 
 def write_l1c_nc_file(satobj, overwrite: bool = False, masked: bool = False, **kwargs) -> None:
-    """Thin backward-compat wrapper over write_level_nc - name/signature
-    confirmed imported directly by hypso-processing-pipeline, kept stable."""
+    """Backward-compat wrapper (writes through write_product, see
+    _write_product_from_capture) - name/signature confirmed imported
+    directly by hypso-processing-pipeline, kept stable."""
     return _write_level_nc_file(satobj, "L1C", "l1c_nc_file", overwrite, masked,
                                 "L1c NetCDF file has already been generated. Skipping.", **kwargs)
 
 
 def write_l1d_nc_file(satobj, label: str = None, overwrite: bool = False, masked: bool = False, **kwargs) -> None:
-    """Thin backward-compat wrapper over write_level_nc - name/signature
-    confirmed imported directly by hypso-processing-pipeline, kept stable.
+    """Backward-compat wrapper (writes through write_product, see
+    _write_product_from_capture) - name/signature confirmed imported
+    directly by hypso-processing-pipeline, kept stable.
     `label` is accepted for signature compatibility but unused, matching the
     original write/l1d_nc_writer.py (it never used it to affect the output
     path either)."""
@@ -383,8 +400,9 @@ def write_l1d_nc_file(satobj, label: str = None, overwrite: bool = False, masked
 
 
 def write_l2a_nc_file(satobj, correction: str = None, overwrite: bool = False, **kwargs):
-    """Thin backward-compat wrapper over write_l2a_nc - name/signature confirmed
-    imported directly by hypso-processing-pipeline, kept stable. `correction=None`
+    """Backward-compat wrapper (writes through write_product, see
+    _write_product_from_capture) - name/signature confirmed imported
+    directly by hypso-processing-pipeline, kept stable. `correction=None`
     writes every currently-populated correction in satobj.l2a_cube, matching the
     original write/l2a_nc_writer.py."""
     corrections = [correction] if correction is not None else list(satobj.l2a_cube.keys())
@@ -398,7 +416,8 @@ def write_l2a_nc_file(satobj, correction: str = None, overwrite: bool = False, *
                 logger.info("L2 NetCDF file has already been generated. Skipping.")
             continue
 
-        write_l2a_nc(satobj, one_correction, str(l2a_nc_file), **kwargs)
+        _write_product_from_capture(satobj, "L2A", l2a_nc_file, correction=one_correction,
+                                    datacube=kwargs.get("datacube", False))
 
     return l2a_nc_file
 

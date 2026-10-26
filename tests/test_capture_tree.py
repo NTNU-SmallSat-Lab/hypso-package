@@ -55,3 +55,29 @@ def test_masks_become_flags(satobj, tmp_path):
             assert not np.isnan(f["rhot_378"][:10]).any()   # product unmasked
     finally:
         satobj.land_mask = None
+
+
+def test_public_writers_go_through_write_product(satobj, written_nc_files, tmp_path, monkeypatch):
+    # The pipeline-facing wrappers. Every output path is redirected to
+    # tmp_path: the fixture capture lives in a real data directory.
+    from hypso.write import write_l1b_nc_file, write_l1c_nc_file, write_l1d_nc_file, write_l2a_nc_file
+    from conftest import CAPTURE_DIR
+
+    before = {p.name for p in CAPTURE_DIR.iterdir()}
+    for level in ("l1b", "l1c", "l1d"):
+        monkeypatch.setattr(satobj, f"{level}_nc_file", tmp_path / f"{level}.nc")
+    monkeypatch.setattr(satobj, "parent_dir", tmp_path)
+
+    write_l1b_nc_file(satobj, overwrite=True)
+    write_l1c_nc_file(satobj, overwrite=True)
+    write_l1d_nc_file(satobj, overwrite=True, datacube=False)
+    l2a = write_l2a_nc_file(satobj, correction="testac", overwrite=True)
+
+    assert l2a.parent == tmp_path
+    for level, path in (("l1b", tmp_path / "l1b.nc"), ("l1c", tmp_path / "l1c.nc"),
+                        ("l1d", tmp_path / "l1d.nc"), ("l2a", l2a)):
+        with nc.Dataset(path) as f:
+            assert f.product_format_version == "2.0" and "processing" in f["metadata"].groups
+        assert_same_file(written_nc_files[level], path, ignore_attrs=FORMAT_2_ATTRS,
+                         ignore_groups=("/metadata/processing",))
+    assert {p.name for p in CAPTURE_DIR.iterdir()} == before

@@ -21,21 +21,36 @@ permission to modify — unlike `/home/camerop/AC/hypso-package`, which is **rea
    reflectance); whether the result is a new level (L3) or a gridded variant of L1D/L2A; how the grid is
    named in the file name (io/naming.py); CF output layout (1D lat/lon coordinates or projected x/y with
    `grid_mapping`, which SNAP reads natively).
-3. **Rest of step 1b**: build the tree from a capture object so `write_l1x_nc_file` writes through
-   `write_product` (the CF flag variable is done - ×44). Then steps 2-4 of ×37. SNAP check pending for the
-   ×41 dimension change and the ×44 flag variable.
-4. **Hypso facade (step 3) must accept** the pipeline's direct-georef fallback, which assigns
+3. **Full documentation, in the code and as a generated website** (user, 2026-10-26; supersedes the older
+   "complete docstrings" and "update README" items below). Goal: a documentation site like typical Python
+   libraries (API reference generated from docstrings, plus user guides). Existing setup to build on, not
+   replace: `docs/` is Sphinx with `sphinx-autoapi` (scans `../hypso`), `sphinx_rtd_theme`, `autodoc`/
+   `autosummary`; `.github/workflows/sphinx_docx_to_gh_pages.yaml` publishes to the `gh-pages` branch. The
+   published site is stale (built from an old `main`; documents modules that no longer exist, e.g.
+   `hypso.atmospheric.*`). Work: (a) docstrings for every public module/class/function in one consistent
+   style (pick NumPy or Google style and enable `sphinx.ext.napoleon`, which conf.py lacks), including what
+   each file format field means; (b) user guides: installation, reading/writing products, file format and
+   naming (×41-×44), processing L1A -> L2A, AC connectors, versioning/release (docs/versioning.rst exists),
+   SNAP usage; (c) fix `autoapi_template_dir = "_templates/autoapi"` (confirmed: `docs/_templates` does not exist); (d) build in CI and fail on
+   warnings so docs can't go stale again; (e) decide where it is hosted (keep GitHub Pages, or Read the Docs).
+   Best done after the Dataset rewrite (steps 2-4) settles the public API, so the reference isn't written
+   twice.
+4. **Step 1 is complete (×45).** Next: steps 2-4 of ×37 (processing as Dataset -> Dataset functions, Hypso
+   facade, delete old code). SNAP check pending for the ×41 dimension change and the ×44 flag variable.
+   `masked=True` in the write wrappers still writes the NaN-masked cube; switch to flags-only once AC
+   staging applies pixel_flags (AC step).
+5. **Hypso facade (step 3) must accept** the pipeline's direct-georef fallback, which assigns
    `satobj.solar_zenith_angles` etc. (read-only properties in the refactor) - ×38.
-5. **Release tag** (user's call): products currently get versions counted from `v26.02.0` - ×40.
-6. **Test environment**: 3 `test_ac_subprocess.py` failures (`hypso` not importable in driver subprocesses);
+6. **Release tag** (user's call): products currently get versions counted from `v26.02.0` - ×40.
+7. **Test environment**: 3 `test_ac_subprocess.py` failures (`hypso` not importable in driver subprocesses);
    `test_real_polymer_imports_succeed_through_subprocess` silently skips (fixture path renamed
    `..._DO_NOT_USE`; pipeline now uses `AC/Polymer/Polymer`) - ×37.
-7. **Outside this repo, handled separately by the user**: eoread fork commit `3609d25` (F0 / d^2) on the
+8. **Outside this repo, handled separately by the user**: eoread fork commit `3609d25` (F0 / d^2) on the
    flat-layout reader (×37); hypso-processing-pipeline paths for the new file names (×42).
 
 Older open items (recorded earlier; status to confirm in item 1):
 - Zarr support - ×29 / ARCHITECTURE_PROPOSAL.md section 7.
-- Complete docstrings/comments across the package; update README and user-facing docs - ×25-era entries.
+- (Merged into item 3) complete docstrings/comments; update README and user-facing docs - ×25-era entries.
 - Variable capture dimensions/bands/sizes - ×20 (partly addressed by the ×31 capture-dimensions audit).
 - HYPSO-2 RGB camera support - ×14.
 - AC connectors: per-tool config (now planned as YAML, ×37), uniform run/open return shape, fold the
@@ -148,6 +163,19 @@ Full unabridged plan text: see the "Approved Plan" section pasted at the bottom 
 duplicated per update — if it's missing, check `/home/camerop/.claude/plans/rosy-frolicking-summit.md` instead).
 
 ## Status (update this section as work progresses — most recent at top)
+
+- **2026-10-26 (×45): step 1 done - captures write through write_product.** `hypso/io/capture_tree.py`
+  `capture_to_tree(satobj, level, correction, masked)` mirrors io/writer.py group by group and adds
+  pixel_flags (land/cloud/custom masks) and a provenance step (input file, coeff_type, georeferencing,
+  ssi_source/srf_grid/bin_factor, calibration package + coefficient sha256; AC tool name for L2A). L1A gets no
+  calibration-file attrs. The pipeline-facing `write_l1b/l1c/l1d/l2a_nc_file` now write through it (same
+  signatures and legacy output paths; `masked=True` still writes the NaN-masked cube, flags added either
+  way). `write_level_nc`/`write_l2a_nc` keep the old implementation as the parity reference.
+  Verified on the real fixture capture (tests/test_capture_tree.py): L1B/L1C/L1D/L2A identical to the old
+  writer in every variable and attribute except the format-2 additions; wrappers tested with all outputs
+  redirected to tmp (asserts the capture's data directory is unchanged). Also checked read-only: the
+  refactor's POLYMER/eoread flat-layout reader opens a new-format L1C with pixel_flags (120 bands, Rtoa
+  plausible). ACOLITE's reader not checked.
 
 - **2026-10-26 (×44): masks as one CF flag variable (`hypso/masks/flags.py`).** `encode_flags` /
   `decode_flags` / `apply_flags`: land(1), cloud(2), then custom masks as bits of `pixel_flags` (lines,
