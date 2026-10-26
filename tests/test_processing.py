@@ -6,10 +6,10 @@ import netCDF4 as nc
 import numpy as np
 import pytest
 
-from conftest import COEFF_TYPE, COEFF_VERSION, L1A_PATH, requires_real_capture
+from conftest import COEFF_TYPE, COEFF_VERSION, L1A_PATH, LATS_PATH, LONS_PATH, requires_real_capture
 from hypso.io.capture_tree import capture_to_tree
 from hypso.io.product import read_product, write_product
-from hypso.processing import capture_params, l1a_to_l1b, l1c_to_l1d
+from hypso.processing import capture_params, l1a_to_l1b, l1b_to_l1c, l1c_to_l1d
 from test_capture_tree import assert_same_gcps
 from test_product_io import FORMAT_2_ATTRS, assert_same_file
 
@@ -96,3 +96,35 @@ def test_l1c_to_l1d_matches_capture_path(satobj, tmp_path):
         assert step.ssi_source == "tsis" and step.solar_zenith == "solar_zenith"
         assert np.isclose(step.earth_sun_distance_au, f["metadata/srf"].earth_sun_distance_au)
         assert "l1c" in f["metadata/processing"].groups   # lineage from the L1C tree
+
+
+def test_l1b_to_l1c_matches_capture_path(l1a_tree, old_l1b):
+    # old_l1b: a capture object with L1B; georeference it the old way, indirect and direct.
+    lats = np.fromfile(LATS_PATH, dtype=np.float32).reshape(old_l1b.spatial_dimensions)
+    lons = np.fromfile(LONS_PATH, dtype=np.float32).reshape(old_l1b.spatial_dimensions)
+    old_l1b.run_georeferencing(latitudes=lats, longitudes=lons)
+    old_l1b.run_direct_georeferencing()
+    l1b = l1a_to_l1b(l1a_tree, COEFF_TYPE, version=COEFF_VERSION)
+    ds = l1b_to_l1c(l1b, latitudes=LATS_PATH, longitudes=LONS_PATH).dataset
+    for name, ref in {"latitude": old_l1b.latitudes, "longitude": old_l1b.longitudes,
+                      "sensor_zenith": old_l1b.sat_zenith_angles, "sensor_azimuth": old_l1b.sat_azimuth_angles,
+                      "solar_zenith": old_l1b.solar_zenith_angles, "solar_azimuth": old_l1b.solar_azimuth_angles,
+                      "relative_azimuth": old_l1b.relative_azimuth_angles,
+                      "latitude_direct": old_l1b.latitudes_direct, "longitude_direct": old_l1b.longitudes_direct,
+                      "solar_zenith_direct": old_l1b.solar_zenith_angles_direct,
+                      "sensor_zenith_direct": old_l1b.sat_zenith_angles_direct}.items():
+        np.testing.assert_array_equal(ds[name].values, np.asarray(ref), err_msg=name)
+    assert ds.attrs["processing_level"] == "L1C"
+
+    # Without coordinates the direct georeferencing becomes the main geometry.
+    fallback = l1b_to_l1c(l1b).dataset
+    np.testing.assert_array_equal(fallback["latitude"].values, old_l1b.latitudes_direct)
+    np.testing.assert_array_equal(fallback["solar_zenith"].values, old_l1b.solar_zenith_angles_direct)
+
+
+def test_l1b_to_l1c_argument_errors(l1a_tree):
+    l1b = l1a_to_l1b(l1a_tree, COEFF_TYPE, version=COEFF_VERSION)
+    with pytest.raises(ValueError, match="both"):
+        l1b_to_l1c(l1b, latitudes=LATS_PATH)
+    with pytest.raises(ValueError, match="shape"):
+        l1b_to_l1c(l1b, latitudes=np.zeros((2, 2)), longitudes=np.zeros((2, 2)))

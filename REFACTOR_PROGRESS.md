@@ -42,7 +42,8 @@ permission to modify — unlike `/home/camerop/AC/hypso-package`, which is **rea
    Direction: one module for the reflectance step (with `earth_sun_distance`) and one `srf.py`-style module for
    SRFs/solar irradiance/effective FWHM; drop the legacy wrapper and the CSV/PNG figure side effects once
    HypsoCapture is gone (×49).
-5. **Step 1 is complete (×45).** Next: steps 2-4 of ×37 (processing as Dataset -> Dataset functions, Hypso
+5. **Steps 1-2 nearly complete (×45, ×47, ×50).** Left of step 2: AC -> L2A (`Product.correct_atmosphere`).
+   Then delete the old code (×49). Original note: steps 2-4 of ×37 (processing as Dataset -> Dataset functions, Hypso
    facade, delete old code). SNAP confirmed by the user (×46).
    `masked=True` in the write wrappers still writes the NaN-masked cube; switch to flags-only once AC
    staging applies pixel_flags (AC step).
@@ -171,6 +172,22 @@ Full unabridged plan text: see the "Approved Plan" section pasted at the bottom 
 duplicated per update — if it's missing, check `/home/camerop/.claude/plans/rosy-frolicking-summit.md` instead).
 
 ## Status (update this section as work progresses — most recent at top)
+
+- **2026-10-26 (×50): public API = immutable `hypso.Product`; georeferencing as a tree function.**
+  User chose (over plain functions / a stateful convenience object) an immutable product object with verb
+  methods, built on the tree functions: `hypso.open(path)` -> `Product`; `.calibrate(coeff_type, version)`,
+  `.georeference(latitudes, longitudes, direct)`, `.toa_reflectance(...)`, `.to(level, <step>={...})`,
+  `.write(path | out_dir, label)` (NASA-style name from sat_id/location_description/timestamp_acquired),
+  `.filename()`; contents `.level`, `.sat_id`, `.target`, `.cube`, `.wavelengths`, `.geometry`, `.flags`,
+  `.provenance`, `.tree` (a copy). Every method returns a new Product; setting attributes raises; wrong-level
+  calls explain and suggest `.to(...)`. Module `hypso/api.py`; exported from `hypso/__init__.py` with
+  `read_product`/`write_product`. AC (`.correct_atmosphere`) still to come.
+  `hypso/processing/georeference.py` `l1b_to_l1c(tree, latitudes, longitudes, direct=True)`: frame
+  interpolation + indirect coordinates (arrays or raw float32 .dat paths) and/or direct georeferencing; direct
+  becomes the main geometry when no coordinates are given. Identical to the capture path (latitude/longitude,
+  all angles, direct variants, fallback). End-to-end: the chain through hypso.open -> calibrate(moved, V2) ->
+  georeference -> toa_reflectance reproduces the golden baseline recorded from the pre-refactor package
+  (tests/test_api.py).
 
 - **2026-10-26 (×49): no pipeline compatibility required (user: "Pipeline is not using this refactor").**
   hypso-processing-pipeline keeps using production hypso-package and will be moved to the new API separately.

@@ -22,6 +22,12 @@ A python package form NTNU HYPSO Hyperspectral Image Processing
 __author__ = "Cameron Penne <cameron.l.penne@ntnu.no>, Alvaro Flores <alvaro.f.romero@ntnu.no>"
 __credits__ = "Norwegian University of Science and Technology"
 
+# Public API (REFACTOR_PROGRESS.md x50): hypso.open(path) -> immutable Product.
+from .api import Product, open  # noqa: A004
+from .io.product import read_product, write_product
+
+# Old capture-object API, removed once every processing step is a tree
+# function (x49).
 from .Hypso import Hypso
 #from .HypsoCapture import HypsoCapture
 from .hypso1 import Hypso1, get_hypso1_wavelengths
