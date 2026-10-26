@@ -12,6 +12,7 @@ Welcome to Hypso Package's documentation!
 
    architecture
    calibration
+   atmospheric_correction
    versioning
 
 

@@ -42,8 +42,8 @@ permission to modify — unlike `/home/camerop/AC/hypso-package`, which is **rea
    Direction: one module for the reflectance step (with `earth_sun_distance`) and one `srf.py`-style module for
    SRFs/solar irradiance/effective FWHM; drop the legacy wrapper and the CSV/PNG figure side effects once
    HypsoCapture is gone (×49).
-5. **Steps 1-2 nearly complete (×45, ×47, ×50).** Left of step 2: AC -> L2A (`Product.correct_atmosphere`).
-   Then delete the old code (×49). Original note: steps 2-4 of ×37 (processing as Dataset -> Dataset functions, Hypso
+5. **Steps 1-2 complete (×45, ×47, ×50, ×51).** Next: delete the old capture code (×49); real AC runs to
+   compare against the reprocess dataset once aulus2 is free. Original note: steps 2-4 of ×37 (processing as Dataset -> Dataset functions, Hypso
    facade, delete old code). SNAP confirmed by the user (×46).
    `masked=True` in the write wrappers still writes the NaN-masked cube; switch to flags-only once AC
    staging applies pixel_flags (AC step).
@@ -173,7 +173,7 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
-- **2026-10-26 (×51): atmospheric correction as tree functions - DPS and Polymer done; ACOLITE, OC-SMART next.**
+- **2026-10-26 (×51): atmospheric correction as tree functions - DPS, Polymer, ACOLITE, OC-SMART done.**
   User decisions: AC tool locations are configuration only, no defaults; settings in a YAML file
   (`hypso.ac.config`: `config=` path/dict or `HYPSO_AC_CONFIG`); no real AC runs on aulus2 for now (mocked
   subprocesses only).
@@ -190,8 +190,18 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
   - Fixed: `run_subprocess_driver` now puts the hypso/calibration package roots on the child's PYTHONPATH and
     runs it in its temp dir; this fixed the 3 long-failing test_ac_subprocess tests (repo-root namespace
     collision, "No module named 'hypso.ac'").
-  - Note for real runs: OC-SMART's OCSMART.py mangles '.' in configured path values (see ocsmart adapter);
-    NASA-style staged file names contain dots - check when wiring OC-SMART.
+  - ACOLITE: `output="l2w"` (Rrs, default) / `"l2r"` (rhos); finds ACOLITE's own *_L2W/*_L2R.nc; the driver
+    now reports the settings ACOLITE actually used (credentials removed before writing) for
+    settings_effective; ac_version per ACOLITE's own rule (config.txt version, else "git checkout" + commit);
+    `reuse_output=True` with a kept work_dir avoids a second run for L2R. EARTHDATA via env vars only.
+  - OC-SMART: L1D staged as HYPSO_HSI_<capture_id>-l1d.nc (prefix required by its sensor autodetection);
+    OCSMART_Input.txt written/restored under the pipeline's lock file (.OCSMART_Input.lock) so refactor and
+    pipeline runs on one install exclude each other; console output relayed via logging; work_dir paths with
+    '.' rejected (OCSMART.py rewrites dots in path values; the staged file name itself has none besides .nc);
+    version from the install dir name (OCSMART_Linux_v2.6.3 -> v2.6.3). Tested against a fake installation
+    (real subprocess, fake OCSMART.py).
+  - All four tested without the real tools (user: no real AC runs on aulus2 for now). Real-run comparison
+    against HYPSO_DATA_AOC_REPROCESS_AULUS2 L2A outputs is a follow-up. docs/atmospheric_correction.rst.
 
 - **2026-10-26 (×50): public API = immutable `hypso.Product`; georeferencing as a tree function.**
   User chose (over plain functions / a stateful convenience object) an immutable product object with verb

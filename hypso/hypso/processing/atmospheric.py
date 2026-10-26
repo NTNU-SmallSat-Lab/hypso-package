@@ -15,23 +15,30 @@ Methods:
   EARTHDATA credentials (for ancillary data) are read from the
   HYPSO_ACOLITE_EARTHDATA_USERNAME/_PASSWORD environment variables, never
   from the configuration file.
-- OC-SMART: to be added.
+- "ocsmart": OC-SMART (`python OCSMART.py` in its installation directory),
+  from L1D; Rrs. OC-SMART reads its paths from a shared OCSMART_Input.txt
+  in that directory: the file is written and restored under the same lock
+  hypso-processing-pipeline uses (.OCSMART_Input.lock), so concurrent runs
+  on one installation wait for each other.
 
 External tools read a file: the input is written (masked if requested,
 with metadata/srf added if missing) into `work_dir`, which is a temporary
 directory removed afterwards unless given.
 """
+import fcntl
 import logging
+import re
 import shutil
 import subprocess
 import sys
 import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 
 import numpy as np
 import xarray as xr
 
-from hypso.ac.adapters.base import run_subprocess_driver
+from hypso.ac.adapters.base import ACRunError, run_subprocess_driver
 from hypso.ac.config import tool_config
 
 from hypso.io.product import PRODUCT_DIMS, product_name, write_product
@@ -40,7 +47,7 @@ from hypso.masks.flags import FLAGS_NAME, apply_flags
 
 logger = logging.getLogger(__name__)
 
-_INPUT_LEVELS = {"dps": ("L1D",), "polymer": ("L1C", "L1D"), "acolite": ("L1C", "L1D")}
+_INPUT_LEVELS = {"dps": ("L1D",), "polymer": ("L1C", "L1D"), "acolite": ("L1C", "L1D"), "ocsmart": ("L1D",)}
 
 
 def _input_cube(tree: xr.DataTree, masked: bool, mask_flags) -> xr.DataArray:
@@ -118,8 +125,10 @@ def _git_commit(path) -> str:
     return out.stdout.strip() if out.returncode == 0 else ""
 
 
-def _stage_input(tree: xr.DataTree, masked: bool, mask_flags, work_dir: Path, add_srfs: bool = True) -> Path:
-    """Write the tool's input file into work_dir."""
+def _stage_input(tree: xr.DataTree, masked: bool, mask_flags, work_dir: Path, add_srfs: bool = True,
+                 name: str = None) -> Path:
+    """Write the tool's input file into work_dir (named `name`, default the
+    product's own file name)."""
     from hypso.api import Product
     from hypso.processing.toa import srf_node
 
@@ -134,7 +143,8 @@ def _stage_input(tree: xr.DataTree, masked: bool, mask_flags, work_dir: Path, ad
         # Polymer reads per-band SRFs from metadata/srf (its srf_getter); an
         # L1C straight from georeferencing has none yet.
         staged["metadata/srf"] = xr.DataTree(srf_node(staged))
-    path = work_dir / Product(staged).filename()
+    work_dir.mkdir(parents=True, exist_ok=True)
+    path = work_dir / (name or Product(staged).filename())
     write_product(staged, path)
     return path
 
@@ -257,8 +267,102 @@ def _acolite(tree, masked, mask_flags, work_dir, config=None, output="l2w", reus
     return _l2a_tree(tree, f"acolite_{output}", variable, cube, parameters, ac)
 
 
-_METHODS = {"dps": _dps, "polymer": _polymer, "acolite": _acolite}
-_EXTERNAL = {"polymer", "acolite"}
+# OC-SMART's sensor autodetection (src/sensorinfo.py) only recognises HYPSO
+# input files by this prefix (no satellite digit; HYPSO-1 and -2 share one
+# coefficient file) - hypso.ac.adapters.ocsmart.OCSMARTAdapter.HYPSO_PREFIX.
+OCSMART_PREFIX = "HYPSO_HSI"
+
+
+def _ocsmart_version(install_dir) -> str:
+    # Installations are named like OCSMART_Linux_v2.6.3.
+    match = re.search(r"v\d+(\.\d+)+", Path(install_dir).name)
+    return match.group(0) if match else "unknown"
+
+
+@contextmanager
+def _ocsmart_lock(install_dir):
+    # Same lock file as hypso-processing-pipeline's ocsmart_config_lock.
+    lock_path = Path(install_dir) / ".OCSMART_Input.lock"
+    with open(lock_path, "a") as lock_file:
+        try:
+            fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            logger.info("Waiting for another OC-SMART run to release %s", lock_path)
+            fcntl.flock(lock_file, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(lock_file, fcntl.LOCK_UN)
+
+
+def _ocsmart(tree, masked, mask_flags, work_dir, config=None, **options):
+    from hypso.api import Product
+    from hypso.load import load_ocsmart_h5
+
+    cfg = tool_config("ocsmart", config, options)
+    install_dir = Path(cfg["dir"]).absolute()
+    if "." in str(work_dir.absolute()):
+        # OCSMART.py replaces every "." in its configured path values with its
+        # own directory, so these paths must not contain one.
+        raise ValueError(f"OC-SMART cannot use a work_dir whose path contains '.': {work_dir.absolute()}")
+    l2_prod = cfg.get("l2_prod", "Lt,Lr,Lrc,rrs,chl,tg_sol,tg_sen,Lwp")
+    solz_limit, senz_limit = cfg.get("solz_limit", 70.0), cfg.get("senz_limit", 70.0)
+
+    capture_id = _capture_id(tree)
+    staging_dir = work_dir.absolute() / "ocsmart_staging" / "l1b"
+    output_dir = work_dir.absolute() / "ocsmart"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    _stage_input(tree, masked, mask_flags, staging_dir, add_srfs=False, name=f"{OCSMART_PREFIX}_{capture_id}-l1d.nc")
+    output_file = output_dir / f"{OCSMART_PREFIX}_{capture_id}-l1d_L2_OCSMART.h5"
+
+    input_txt = install_dir / "OCSMART_Input.txt"
+    lines = []
+    with _ocsmart_lock(install_dir):
+        original = input_txt.read_text() if input_txt.is_file() else None
+        try:
+            input_txt.write_text(f"l1b_path = {staging_dir}/\nl2_path = {output_dir}/\nl2_prod = {l2_prod}\n"
+                                 f"solz_limit = {solz_limit}\nsenz_limit = {senz_limit}\n")
+            process = subprocess.Popen([str(cfg.get("python") or "python3"), "OCSMART.py"], cwd=install_dir,
+                                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
+            for line in process.stdout:
+                logger.info("OC-SMART: %s", line.rstrip())
+                lines.append(line)
+            returncode = process.wait()
+        finally:
+            if original is not None:
+                input_txt.write_text(original)
+    if returncode != 0:
+        raise ACRunError(tool="ocsmart", returncode=returncode, stdout="".join(lines), stderr="")
+    if not output_file.is_file():
+        raise ACRunError(tool="ocsmart", returncode=0, stdout="".join(lines), stderr="",
+                         error_type="FileNotFoundError",
+                         message=f"no OC-SMART output at {output_file} after a zero-exit run - it likely did not "
+                                 f"recognise the sensor from the staged file name; see its output above")
+
+    rrs = load_ocsmart_h5(output_file)["Rrs"]
+    index = _band_map(tree.dataset["radiation_wavelength"].values, rrs["band"].values)
+    cube = np.full(tree.dataset[product_name(tree)].shape, np.nan)
+    cube[:, :, index] = rrs.values[:, :, :len(index)]
+
+    parameters = {"masked": masked, "mask_flags": list(mask_flags) if mask_flags else "all" if masked else "",
+                  "input_level": "L1D", "bands_returned": int(len(index)), "output_file": output_file.name}
+    settings = {"l2_prod": l2_prod, "solz_limit": solz_limit, "senz_limit": senz_limit}
+    ac = ac_attrs("ocsmart", version=_ocsmart_version(install_dir), install_path=install_dir,
+                  settings_effective=settings, settings_user=options)
+    return _l2a_tree(tree, "ocsmart", "Rrs", cube, parameters, ac)
+
+
+def _capture_id(tree: xr.DataTree) -> str:
+    """{target}_{YYYY-MM-DDTHH-MM-SSZ}, the capture directory name."""
+    from datetime import datetime
+    from hypso.io.naming import product_name as make_name
+    from .capture import acquisition_time
+    time = datetime.fromisoformat(acquisition_time(tree.attrs))
+    return make_name(tree.attrs.get("sat_id"), time, tree.attrs.get("location_description"), "L1D").capture_id
+
+
+_METHODS = {"dps": _dps, "polymer": _polymer, "acolite": _acolite, "ocsmart": _ocsmart}
+_EXTERNAL = {"polymer", "acolite", "ocsmart"}
 
 
 def correct_atmosphere(tree: xr.DataTree, method: str, masked: bool = False, mask_flags=None,

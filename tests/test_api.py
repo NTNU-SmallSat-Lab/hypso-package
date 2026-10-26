@@ -255,3 +255,66 @@ def test_acolite_mocked(monkeypatch, tmp_path):
     assert l2r.provenance[-1]["reused_output"] == "true"
     with pytest.raises(ValueError, match="output must be"):
         l1c.correct_atmosphere("acolite", output="l3", config=ACOLITE_CONFIG)
+
+
+FAKE_OCSMART = r'''
+import sys
+from pathlib import Path
+import numpy as np
+import netCDF4 as nc
+cfg = dict(line.split(" = ", 1) for line in Path("OCSMART_Input.txt").read_text().splitlines() if " = " in line)
+l1b, l2 = Path(cfg["l1b_path"].strip()), Path(cfg["l2_path"].strip())
+staged = sorted(l1b.glob("*.nc"))
+assert len(staged) == 1 and staged[0].name.startswith("HYPSO_HSI_"), staged
+with nc.Dataset(staged[0]) as f:
+    lines, samples = len(f.dimensions["lines"]), len(f.dimensions["samples"])
+print("fake OC-SMART processing", staged[0].name)
+out = l2 / staged[0].name.replace(".nc", "_L2_OCSMART.h5")
+rng = np.random.default_rng(2)
+with nc.Dataset(out, "w") as f:
+    f.createDimension("y", lines); f.createDimension("x", samples)
+    f.createVariable("Latitude", "f4", ("y", "x"))[:] = 45.0
+    for group in ("Lr", "Lrc", "Lt", "Rrs"):
+        g = f.createGroup(group)
+        for wl in (412, 443, 490, 555, 670):
+            g.createVariable(f"{group}_{wl}", "f4", ("y", "x"))[:] = rng.random((lines, samples))
+'''
+
+
+def test_ocsmart_with_fake_installation(l1d, tmp_path):
+    import netCDF4 as nc
+    install = tmp_path / "OCSMART_Linux_v2.6.3"
+    install.mkdir()
+    (install / "OCSMART.py").write_text(FAKE_OCSMART)
+    (install / "OCSMART_Input.txt").write_text("original contents\n")
+    config = {"ocsmart": {"dir": str(install), "python": __import__("sys").executable}}
+
+    l2a = l1d.correct_atmosphere("ocsmart", config=config, work_dir=tmp_path / "work")
+    assert (install / "OCSMART_Input.txt").read_text() == "original contents\n"     # restored
+    assert (install / ".OCSMART_Input.lock").exists()                              # pipeline's lock file
+    output = tmp_path / "work" / "ocsmart" / "HYPSO_HSI_aeronetvenice_2025-03-04T10-38-05Z-l1d_L2_OCSMART.h5"
+    assert output.is_file()
+    with nc.Dataset(output) as f:
+        expected = np.stack([f["Rrs"][f"Rrs_{wl}"][:] for wl in (412, 443, 490, 555, 670)], axis=-1)
+    index = [int(np.argmin(np.abs(l1d.wavelengths - wl))) for wl in (412, 443, 490, 555, 670)]
+    np.testing.assert_array_equal(l2a.cube.values[:, :, index], expected)
+    assert np.isnan(np.delete(l2a.cube.values, index, axis=2)).all()
+    assert l2a.cube.name == "Rrs" and l2a.atmospheric_correction == "ocsmart"
+    step = l2a.provenance[-1]
+    assert step["ac_tool"] == "ocsmart" and step["ac_version"] == "v2.6.3" and step["bands_returned"] == 5
+    assert l2a.filename().endswith(".L2A.ocsmart.nc")
+
+
+def test_ocsmart_errors(l1d, tmp_path):
+    from hypso.ac.adapters.base import ACRunError
+    install = tmp_path / "ocsmart_install"
+    install.mkdir()
+    (install / "OCSMART.py").write_text("print('no output written')\n")
+    config = {"ocsmart": {"dir": str(install), "python": __import__("sys").executable}}
+    with pytest.raises(ValueError, match="contains '.'"):
+        l1d.correct_atmosphere("ocsmart", config=config, work_dir=tmp_path / "work.v2")
+    with pytest.raises(ACRunError, match="no OC-SMART output"):
+        l1d.correct_atmosphere("ocsmart", config=config, work_dir=tmp_path / "work")
+    (install / "OCSMART.py").write_text("raise SystemExit(3)\n")
+    with pytest.raises(ACRunError):
+        l1d.correct_atmosphere("ocsmart", config=config, work_dir=tmp_path / "work2")
