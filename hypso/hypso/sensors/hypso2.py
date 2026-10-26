@@ -26,8 +26,10 @@ FWHM_LOOKUP_WL = np.array([435.84, 546.07, 696.54, 706.72, 738.4, 751.46, 763.51
 FWHM_LOOKUP_FWHM = np.array([5.46, 3.34, 3.29, 3.32, 3.42, 3.54, 3.58, 3.59, 4.16, 4.06, 4.66, 4.47, 5.06])
 
 
-def _calibration_files(capture_type: str, coeff_type: str = "moved") -> dict:
-    return get_hypso2_calibration_files(capture_type, coeff_type=coeff_type)
+def _calibration_files(capture_type: str, coeff_type: str = None, version=None) -> dict:
+    # coeff_type/version defaults (abs / V3) live in hypso2_calibration's
+    # data/coefficients.yaml.
+    return get_hypso2_calibration_files(capture_type, coeff_type=coeff_type, version=version)
 
 
 # Classification thresholds and calibration crop strategy per imaging mode -

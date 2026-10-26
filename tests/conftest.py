@@ -30,6 +30,10 @@ L1A_PATH = CAPTURE_DIR / "aeronetvenice_2025-03-04T10-38-05Z-l1a.nc"
 LATS_PATH = CAPTURE_DIR / "processing-temp" / "latitudes_indirectgeoref.dat"
 LONS_PATH = CAPTURE_DIR / "processing-temp" / "longitudes_indirectgeoref.dat"
 COEFF_TYPE = "moved"
+# The baseline (tests/baseline/baseline.json) was recorded with the pre-V3
+# "moved" coefficients, which are coeff_type "moved", version "V2" in the
+# versioned catalog (hypso2_calibration data/coefficients.yaml, ×48).
+COEFF_VERSION = "V2"
 
 BASELINE_PATH = Path(__file__).parent / "baseline" / "baseline.json"
 
@@ -61,7 +65,7 @@ def satobj():
     # code path the production pipeline (hypso-processing-pipeline) still uses.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", DeprecationWarning)
-        obj.generate_l1b_cube(coeff_type=COEFF_TYPE)
+        obj.generate_l1b_cube(coeff_type=COEFF_TYPE, version=COEFF_VERSION)
         obj.generate_l1d_cube(use_direct_georef=False)
 
     return obj

@@ -6,7 +6,7 @@ import netCDF4 as nc
 import numpy as np
 import pytest
 
-from conftest import COEFF_TYPE, L1A_PATH, requires_real_capture
+from conftest import COEFF_TYPE, COEFF_VERSION, L1A_PATH, requires_real_capture
 from hypso.io.capture_tree import capture_to_tree
 from hypso.io.product import read_product, write_product
 from hypso.processing import capture_params, l1a_to_l1b, l1c_to_l1d
@@ -28,7 +28,7 @@ def old_l1b():
     satobj = Hypso(path=L1A_PATH, load_cube=True, verbose=False)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", DeprecationWarning)
-        satobj.generate_l1b_cube(coeff_type=COEFF_TYPE)
+        satobj.generate_l1b_cube(coeff_type=COEFF_TYPE, version=COEFF_VERSION)
     return satobj
 
 
@@ -41,7 +41,7 @@ def test_capture_params_match_capture_object(l1a_tree, old_l1b):
 
 
 def test_l1a_to_l1b_matches_capture_path(l1a_tree, old_l1b, tmp_path):
-    tree = l1a_to_l1b(l1a_tree, COEFF_TYPE)
+    tree = l1a_to_l1b(l1a_tree, COEFF_TYPE, version=COEFF_VERSION)
     ds = tree.dataset
     assert ds.attrs["processing_level"] == "L1B"
     np.testing.assert_array_equal(ds["Lt"].values, old_l1b.l1b_cube.to_numpy())
@@ -61,8 +61,8 @@ def test_l1a_to_l1b_matches_capture_path(l1a_tree, old_l1b, tmp_path):
 def test_l1a_to_l1b_leaves_input_unchanged(l1a_tree):
     before = l1a_tree.dataset["dn"].values.copy()
     corrections_attrs, root_attrs = dict(l1a_tree["metadata/corrections"].attrs), dict(l1a_tree.attrs)
-    out = l1a_to_l1b(l1a_tree, "adjusted")
-    assert out["metadata/corrections"].attrs["radiometric_coefficients_version"] == "adjusted"
+    out = l1a_to_l1b(l1a_tree, "moved", version="V3")
+    assert out["metadata/corrections"].attrs["radiometric_coefficients_version"] == "moved"
     assert dict(l1a_tree["metadata/corrections"].attrs) == corrections_attrs
     assert dict(l1a_tree.attrs) == root_attrs and l1a_tree.encoding["source"] == str(L1A_PATH)
     assert l1a_tree.attrs["processing_level"] == "L1A"
@@ -72,7 +72,7 @@ def test_l1a_to_l1b_leaves_input_unchanged(l1a_tree):
 
 def test_l1a_to_l1b_rejects_other_levels(l1a_tree):
     with pytest.raises(ValueError):
-        l1a_to_l1b(l1a_to_l1b(l1a_tree, COEFF_TYPE))
+        l1a_to_l1b(l1a_to_l1b(l1a_tree, COEFF_TYPE, version=COEFF_VERSION))
 
 
 def test_capture_params_iso_time(satobj):

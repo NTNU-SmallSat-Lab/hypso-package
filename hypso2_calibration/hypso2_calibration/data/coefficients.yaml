@@ -1,0 +1,87 @@
+# HYPSO-2 calibration coefficients: which file each correction uses, by
+# version, and the per-correction versions each release selects.
+#
+# get_hypso2_calibration_files(coeff_type=..., version=...):
+#   coeff_type - radiometric variant (abs, moved, lab)
+#   version    - a release name below (default: default_release), or a dict
+#                {correction: version} to mix versions; corrections missing
+#                from the dict come from default_release.
+#
+# Adding a coefficient file or release is a data-only edit here (plus the
+# file in this directory). Then run
+#   python -m hypso.calibration.manifest update hypso2_calibration
+# and tag a release - see docs/versioning.rst.
+
+default_coeff_type: abs
+default_release: V3
+
+radiometric:
+  V3:
+    abs:
+      file: h2_radiometric_calibration_matrix_full_v3_abs.npz
+      description: >-
+        V3 moved with adjusted absolute radiometric gains: about 11% lower
+        radiance than V3 moved (median ratio 0.887, 5-95% 0.857-0.921), no
+        spectral shift between the two.
+    moved:
+      file: h2_radiometric_calibration_matrix_full_moved_v3.npz
+      description: V3 moved.
+  V2:
+    abs:
+      file: h2_radiometric_calibration_matrix_full_v2_abs.npz
+      description: Pre-V3 "adjusted" set (was h2_radiometric_calibration_matrix_adjusted_v11.npz).
+    moved:
+      file: h2_radiometric_calibration_matrix_full_moved_v2.npz
+      description: Pre-V3 "moved" set (was h2_radiometric_calibration_matrix_full_moved.npz).
+  V1:
+    lab:
+      file: h2_radiometric_calibration_matrix_full_v1_lab.npz
+      description: Lab coefficients, the pre-V3 "original" set (was h2_radiometric_calibration_matrix_full.npz).
+
+smile:
+  V3:
+    file: smile_correction_matrix_HYPSO-2_full_sobel_v3.npz
+  V2:
+    file: smile_correction_matrix_HYPSO-2_full_v2.npz
+
+spectral:
+  V3:
+    file: spectral_array_calibrated_poly_full_v3.npz
+    description: >-
+      Shifts band centres by +0.3 to +1.7 nm relative to V2, which renames the
+      integer-wavelength bands (Lt_<nm>, rhot_<nm>) that OC-SMART's HYPSO band
+      table and POLYMER band settings select by name.
+  V2:
+    file: spectral_array_calibrated_poly_full_v2.npz
+    description: Polynomial fit over the whole spectrum (was spectral_array_calibrated_poly_full.npz).
+  V1:
+    file: h2_spectral_calibration_wavelengths_center_row_v1.npz
+    description: Lab centre-row wavelengths (was h2_spectral_calibration_wavelengths_center_row.npz).
+
+# No destriping coefficients for HYPSO-2 in any version.
+
+releases:
+  V3:
+    radiometric: V3
+    smile: V3
+    spectral: V2          # V2 on purpose: OC-SMART compatibility (see spectral V3 above)
+    spectral_full_frame: V2
+  V2:
+    radiometric: V2
+    smile: V2
+    spectral: V2
+    spectral_full_frame: V2
+  V1:
+    radiometric: V1
+    smile: V2             # as the pre-V3 "original" set
+    spectral: V1
+    spectral_full_frame: V2
+
+# Deprecated coeff_type names -> (coeff_type, release).
+aliases:
+  adjusted: [abs, V2]
+  original: [lab, V1]
+
+# Shipped, not selectable yet: h2_radiometric_calibration_matrix_wide_v3_abs.npz
+# (pre-cropped for wide captures; needs the "as_is" crop mode wired per capture
+# type and validation before it is offered).

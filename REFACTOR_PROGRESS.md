@@ -35,18 +35,25 @@ permission to modify — unlike `/home/camerop/AC/hypso-package`, which is **rea
    warnings so docs can't go stale again; (e) decide where it is hosted (keep GitHub Pages, or Read the Docs).
    Best done after the Dataset rewrite (steps 2-4) settles the public API, so the reference isn't written
    twice.
-4. **Step 1 is complete (×45).** Next: steps 2-4 of ×37 (processing as Dataset -> Dataset functions, Hypso
+4. **Clean up `reflectance/toa_reflectance.py`** (user, 2026-10-26): consolidate the TOA/SRF code. Today it is
+   spread over `reflectance/toa_reflectance.py` (legacy `compute_toa_reflectance` wrapper, `compute_reflectance`,
+   `earth_sun_distance`, low-level SRF/SSI helpers, figure-writing code), `reflectance/spectral_response.py`
+   (`SpectralResponse`, `compute_spectral_response`) and `processing/toa.py` (`l1c_to_l1d`, `srf_dataset`).
+   Direction: one module for the reflectance step (with `earth_sun_distance`) and one `srf.py`-style module for
+   SRFs/solar irradiance/effective FWHM; drop the legacy wrapper and the CSV/PNG figure side effects once
+   HypsoCapture is gone (×49).
+5. **Step 1 is complete (×45).** Next: steps 2-4 of ×37 (processing as Dataset -> Dataset functions, Hypso
    facade, delete old code). SNAP confirmed by the user (×46).
    `masked=True` in the write wrappers still writes the NaN-masked cube; switch to flags-only once AC
    staging applies pixel_flags (AC step).
-5. **Hypso facade (step 3) must accept** the pipeline's direct-georef fallback, which assigns
-   `satobj.solar_zenith_angles` etc. (read-only properties in the refactor) - ×38.
-6. **Release tags**: refactor branch tagged `v26.10.0a1` (×46). Next alphas as milestones land; final
+6. ~~Hypso facade must accept the pipeline's direct-georef fallback~~ - obsolete (×49: no pipeline
+   compatibility needed).
+7. **Release tags**: `v26.10.0a1` (×46), `v26.10.0a2` (V3 coefficients, ×48). Next alphas as milestones land; final
    `vYY.M.0` on the merge to main once the pipeline uses the refactor. Tags are local until pushed.
-7. **Test environment**: 3 `test_ac_subprocess.py` failures (`hypso` not importable in driver subprocesses);
+8. **Test environment**: 3 `test_ac_subprocess.py` failures (`hypso` not importable in driver subprocesses);
    `test_real_polymer_imports_succeed_through_subprocess` silently skips (fixture path renamed
    `..._DO_NOT_USE`; pipeline now uses `AC/Polymer/Polymer`) - ×37.
-8. **Outside this repo, handled separately by the user**: eoread fork commit `3609d25` (F0 / d^2) on the
+9. **Outside this repo, handled separately by the user**: eoread fork commit `3609d25` (F0 / d^2) on the
    flat-layout reader (×37); hypso-processing-pipeline paths for the new file names (×42).
 
 Older open items (recorded earlier; status to confirm in item 1):
@@ -164,6 +171,49 @@ Full unabridged plan text: see the "Approved Plan" section pasted at the bottom 
 duplicated per update — if it's missing, check `/home/camerop/.claude/plans/rosy-frolicking-summit.md` instead).
 
 ## Status (update this section as work progresses — most recent at top)
+
+- **2026-10-26 (×49): no pipeline compatibility required (user: "Pipeline is not using this refactor").**
+  hypso-processing-pipeline keeps using production hypso-package and will be moved to the new API separately.
+  Consequences: the ×37 step-3 compatibility facade (keeping ~50 HypsoCapture names) is dropped;
+  HypsoCapture, Hypso1/Hypso2, capture_types.py, io/dispatch.py, containers.py, load/, write/ and the old
+  writer are deleted once l1b_to_l1c (georeferencing) and AC -> L2A exist as tree functions. Pipeline-driven
+  concessions go too: legacy file names by default, `masked=True` NaN-masked copies, write_l1x_nc_file
+  wrappers. Revised order: (1) l1b_to_l1c, (2) AC -> L2A tree functions (apply pixel_flags at staging when
+  masked input is requested), (3) delete old code, tests moved to the new API. Open (user): public API
+  shape after deletion - functions only (recommended) or functions plus a thin convenience wrapper.
+
+- **2026-10-26 (×48): HYPSO-2 calibration coefficient versions - implemented and verified.**
+  Source of V3 files: `/home/camerop/AC/hypso-package-polymer_v3` (uncommitted production copy, branch
+  `polymer_v3`; same 5 files, identical sha256, in `/home/camerop/AC/V3_Rad_Coeffs`). Production's copy deletes
+  the pre-V3 sets; the refactor keeps them.
+  - **Two arguments**: `coeff_type` = radiometric variant, `version` = coefficient release. Default
+    `coeff_type="abs"`, `version="V3"` (user: abs, not moved, is the default).
+  - **Releases** (per-correction defaults): V3 = radiometric V3, smile V3 (sobel), spectral **V2** (user:
+    V2 spectral with V3 is for OC-SMART compatibility - V3 spectral shifts band centres +0.3..+1.7 nm,
+    renaming the integer-wavelength bands OC-SMART's HYPSO band table and POLYMER band settings select by
+    name); V2 = today's pre-V3 sets (radiometric V2, smile full_v2, spectral poly_full); V1 = "original",
+    the lab coefficients (radiometric variant `lab`, spectral center_row, smile full_v2 as today).
+  - **Radiometric variants**: V3 {abs, moved}; V2 {abs (was "adjusted", adjusted_v11), moved}; V1 {lab}.
+  - **Mixing**: `version` may be a per-correction dict, e.g. {"radiometric": "V3", "smile": "V3",
+    "spectral": "V3"}; missing corrections come from the V3 release.
+  - Catalog in YAML (data-only edits for future sets); provenance records release, per-correction version
+    and variant, file and sha256. Pre-V3 files renamed with explicit versions. Deprecated aliases:
+    `adjusted` -> abs/V2, `original` -> lab/V1.
+  - Note: the pipeline passes coeff_type explicitly (reprocess config `rad_cal_coeffs_options: [moved]`), so
+    through the refactor it gets V3 moved unless its config changes.
+  - Open: `wide_v3_abs` (pre-cropped for wide captures, needs as_is crop mode) shipped but not selectable.
+  - Implemented: 5 V3 files copied from AC/V3_Rad_Coeffs (sha256 checked against both sources); pre-V3 files
+    renamed with explicit versions (git mv; sha256 pinned to the pre-rename manifest in
+    tests/test_coefficients.py); `hypso2_calibration/data/coefficients.yaml` catalog (in data/, so the
+    manifest covers it) read by `main.py` (`resolve_coefficients`, `get_hypso2_calibration_files(capture_type,
+    coeff_type, version)`, returns a `selection` entry); pyyaml added to hypso2_calibration deps. `version`
+    threaded through the sensor hook, `set_calibration_coeff_files` (satobj.coefficient_selection) and
+    `l1a_to_l1b`; provenance records coefficient_release + per-correction versions. Calibration summary logged
+    at INFO by both paths (hypso/calibration/summary.py). docs/calibration.rst.
+  - Verified: refactor `l1a_to_l1b(coeff_type, version="V3")` is identical (cube and wavelengths) to the
+    production V3 copy's own calibration for both moved and abs on the venice fixture L1A; abs/moved scene
+    radiance ratio median 0.893 (5-95% 0.851-0.921). Golden regression pinned to coeff_type moved / version V2
+    (= pre-V3 moved; conftest COEFF_VERSION).
 
 - **2026-10-26 (×46): ESA SNAP confirmed; first refactor tag `v26.10.0a1`.** User confirmed SNAP opens the
   step-1 output (metadata dimensions inside their groups, pixel_flags as masks, NASA-style name). User

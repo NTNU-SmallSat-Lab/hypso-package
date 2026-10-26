@@ -235,6 +235,11 @@ def _record_step(tree, satobj, level, correction, masked) -> None:
     for name in ("coeff_type",):
         if getattr(satobj, name, None) is not None:
             parameters[name] = getattr(satobj, name)
+    selection = getattr(satobj, "coefficient_selection", None)
+    if selection and level != "L1A":
+        parameters["coefficient_release"] = selection["release"]
+        for kind in ("radiometric", "smile", "spectral"):
+            parameters[f"{kind}_version"] = selection[kind]
     if level in ("L1C", "L1D", "L2A"):
         parameters["georeferencing"] = ("indirect" if getattr(satobj, "latitudes", None) is not None
                                         else "direct" if getattr(satobj, "latitudes_direct", None) is not None

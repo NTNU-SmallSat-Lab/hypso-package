@@ -248,7 +248,7 @@ def test_calibration_attrs_checksums():
     from hypso.calibration.manifest import load
     from importlib.resources import files
     listed = load("hypso2_calibration")
-    name = "data/h2_radiometric_calibration_matrix_full_moved.npz"
+    name = "data/h2_radiometric_calibration_matrix_full_moved_v2.npz"
     attrs = provenance.calibration_attrs("hypso2_calibration",
                                          {"radiometric": files("hypso2_calibration").joinpath(name), "smile": None})
     assert attrs["radiometric_sha256"] == listed[name]

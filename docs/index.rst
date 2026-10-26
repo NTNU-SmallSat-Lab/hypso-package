@@ -11,6 +11,7 @@ Welcome to Hypso Package's documentation!
    :caption: Contents:
 
    architecture
+   calibration
    versioning
 
 

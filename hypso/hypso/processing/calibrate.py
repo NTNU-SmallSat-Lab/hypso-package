@@ -15,6 +15,7 @@ from hypso.calibration.destriping import run_destriping_correction
 from hypso.calibration.radiometric import run_radiometric_calibration
 from hypso.calibration.registry import get_custom_calibration_coeffs
 from hypso.calibration.smile import run_smile_correction
+from hypso.calibration.summary import format_calibration_summary
 from hypso.io.product import PRODUCT_DIMS, product_name
 from hypso.io.provenance import add_step, calibration_attrs
 
@@ -25,16 +26,18 @@ logger = logging.getLogger(__name__)
 _FILE_KINDS = ("radiometric", "smile", "destriping", "spectral")
 
 
-def _calibration_files(params: CaptureParams, coeff_type: str, coeff_files: dict) -> dict:
+def _calibration_files(params: CaptureParams, coeff_type: str, version, coeff_files: dict):
     # set_calibration_coeff_files: explicit files, then a registered custom
-    # set, then the sensor's built-in presets.
+    # set, then the sensor's built-in coefficients. Returns (files, selection);
+    # selection is the versioned choice when the sensor provides one.
     if coeff_files is not None:
-        return {key: coeff_files.get(key) for key in _FILE_KINDS}
+        return {key: coeff_files.get(key) for key in _FILE_KINDS}, None
     custom = get_custom_calibration_coeffs(params.sat_id, coeff_type)
     if custom is not None:
-        return {key: custom.get(key) for key in _FILE_KINDS}
-    files = params.sensor_profile.calibration_files(params.capture_type, coeff_type=coeff_type)
-    return {key: files.get(key) for key in _FILE_KINDS}
+        return {key: custom.get(key) for key in _FILE_KINDS}, None
+    kwargs = {k: v for k, v in (("coeff_type", coeff_type), ("version", version)) if v is not None}
+    files = params.sensor_profile.calibration_files(params.capture_type, **kwargs)
+    return {key: files.get(key) for key in _FILE_KINDS}, files.get("selection")
 
 
 def _load(path, kind: str, params: CaptureParams, bin_factor: int = None, crop_mode: str = None):
@@ -50,15 +53,20 @@ def _load(path, kind: str, params: CaptureParams, bin_factor: int = None, crop_m
         return None
 
 
-def l1a_to_l1b(tree: xr.DataTree, coeff_type: str = "moved", coeff_files: dict = None,
+def l1a_to_l1b(tree: xr.DataTree, coeff_type: str = None, version=None, coeff_files: dict = None,
                radiometric: bool = True, smile: bool = True, destripe: bool = True,
                spectral: bool = True) -> xr.DataTree:
     """Calibrate an L1A tree to L1B (TOA radiance `Lt`).
 
-    coeff_type: built-in preset ("moved", "adjusted", "original") or a set
-        registered with hypso.calibration.register_calibration_coeffs. None
-        uses the file's metadata/corrections radiometric_coefficients_version.
-    coeff_files: explicit {kind: path} instead of coeff_type.
+    coeff_type: radiometric variant - for HYPSO-2 "abs" (default), "moved",
+        "lab" - or a set registered with
+        hypso.calibration.register_calibration_coeffs. None uses the file's
+        metadata/corrections radiometric_coefficients_version if present,
+        else the sensor's default.
+    version: coefficient release ("V3" default, "V2", "V1"), or a
+        per-correction dict to mix versions, e.g. {"spectral": "V3"} (see
+        hypso2_calibration's data/coefficients.yaml).
+    coeff_files: explicit {kind: path} instead of coeff_type/version.
     radiometric/smile/destripe/spectral: switch individual steps off.
     """
     if tree.attrs.get("processing_level") != "L1A":
@@ -70,7 +78,9 @@ def l1a_to_l1b(tree: xr.DataTree, coeff_type: str = "moved", coeff_files: dict =
     else:
         corrections.attrs["radiometric_coefficients_version"] = str(coeff_type).lower()
 
-    files = _calibration_files(params, coeff_type, coeff_files)
+    files, selection = _calibration_files(params, coeff_type, version, coeff_files)
+    if selection is not None:
+        coeff_type = selection["coeff_type"]
     crop_modes = params.sensor_profile.capture_mode_crop_modes.get(params.capture_type, {})
     rad_coeffs = _load(files["radiometric"], "radiometric", params)
     smile_coeffs = _load(files["smile"], "smile", params, crop_mode=crop_modes.get("smile", "crop_and_bin"))
@@ -123,10 +133,16 @@ def l1a_to_l1b(tree: xr.DataTree, coeff_type: str = "moved", coeff_files: dict =
     result = tree.copy()
     result.dataset = out
     result["metadata/corrections"] = xr.DataTree(corrections)
+    logger.info("%s", format_calibration_summary(params.sat_id, params.capture_type, files, applied, selection))
+    parameters = {"coeff_type": coeff_type or "custom", "capture_type": params.capture_type,
+                  "corrections_applied": applied}
+    if selection is not None:
+        parameters["coefficient_release"] = selection["release"]
+        for kind in ("radiometric", "smile", "spectral"):
+            parameters[f"{kind}_version"] = selection[kind]
     source = tree.encoding.get("source")
     result.encoding.pop("source", None)
     add_step(result, "l1b", input_file=source or "L1A (in memory)",
-             parameters={"coeff_type": coeff_type or "custom", "capture_type": params.capture_type,
-                         "corrections_applied": applied},
+             parameters=parameters,
              calibration=calibration_attrs("hypso{}_calibration".format(params.sat_id.split("-")[-1]), files))
     return result

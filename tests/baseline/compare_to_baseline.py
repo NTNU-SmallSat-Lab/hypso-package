@@ -55,7 +55,7 @@ def main():
     lats = np.fromfile(LATS_PATH, dtype=np.float32).reshape(satobj.spatial_dimensions)
     lons = np.fromfile(LONS_PATH, dtype=np.float32).reshape(satobj.spatial_dimensions)
     satobj.run_georeferencing(latitudes=lats, longitudes=lons)
-    satobj.generate_l1b_cube(coeff_type=COEFF_TYPE)
+    satobj.generate_l1b_cube(coeff_type=COEFF_TYPE, version="V2")   # baseline = pre-V3 "moved" (×48)
     satobj.generate_l1d_cube(use_direct_georef=False)
 
     results = []

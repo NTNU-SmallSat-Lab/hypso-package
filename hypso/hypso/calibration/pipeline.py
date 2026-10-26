@@ -23,12 +23,14 @@ from .radiometric import run_radiometric_calibration
 from .smile import run_smile_correction
 from .destriping import run_destriping_correction
 from .registry import get_custom_calibration_coeffs
+from .summary import format_calibration_summary
 from hypso.capture_types import _get_fwhm, _get_fwhm_unbinned
 
 logger = logging.getLogger(__name__)
 
 
-def set_calibration_coeff_files(satobj, coeff_type: str = 'moved', coeff_files: dict = None, **kwargs) -> None:
+def set_calibration_coeff_files(satobj, coeff_type: str = None, coeff_files: dict = None, version=None,
+                                **kwargs) -> None:
     """
     Set the absolute path for the calibration coefficients (radiometric, smile,
     destriping, spectral) for this capture's sensor. Three ways to supply them,
@@ -40,9 +42,11 @@ def set_calibration_coeff_files(satobj, coeff_type: str = 'moved', coeff_files: 
        hypso.calibration.register_calibration_coeffs(sat_id, name, files) - a
        custom, reusable, named set, plugged in without touching the bundled
        hypsoN_calibration packages.
-    3. `coeff_type` falling through to satobj.sensor_profile's calibration_files
-       resolver (the sensor's built-in presets, e.g. "moved"/"adjusted"/
-       "original" for HYPSO-1/-2).
+    3. `coeff_type` (and `version`) falling through to satobj.sensor_profile's
+       calibration_files resolver: the sensor's built-in coefficients (for
+       HYPSO-2 the versioned catalog in hypso2_calibration's
+       data/coefficients.yaml - coeff_type abs/moved/lab, version V3/V2/V1 or
+       a per-correction dict; None means the sensor's defaults).
 
     :return: None.
     """
@@ -65,10 +69,19 @@ def set_calibration_coeff_files(satobj, coeff_type: str = 'moved', coeff_files: 
             logger.debug("Using registered custom calibration coefficient set %r", coeff_type)
             calibration_files = custom
         else:
-            logger.debug("Setting calibration coefficient files with coeff_type: %s", coeff_type)
-            calibration_files = satobj.sensor_profile.calibration_files(capture_type, coeff_type=coeff_type)
+            logger.debug("Setting calibration coefficient files with coeff_type: %s, version: %s",
+                         coeff_type, version)
+            profile_kwargs = {k: v for k, v in (("coeff_type", coeff_type), ("version", version)) if v is not None}
+            calibration_files = satobj.sensor_profile.calibration_files(capture_type, **profile_kwargs)
 
-    satobj.coeff_type = coeff_type if coeff_type is not None else "custom"
+    # The versioned selection (release, per-correction versions) when the
+    # sensor's resolver provides one - recorded in provenance and the
+    # calibration summary.
+    satobj.coefficient_selection = calibration_files.get("selection") if isinstance(calibration_files, dict) else None
+    if satobj.coefficient_selection:
+        satobj.coeff_type = satobj.coefficient_selection["coeff_type"]
+    else:
+        satobj.coeff_type = coeff_type if coeff_type is not None else "custom"
     satobj.rad_coeff_file = calibration_files['radiometric']
     satobj.smile_coeff_file = calibration_files['smile']
     satobj.destriping_coeff_file = calibration_files['destriping']
@@ -166,6 +179,7 @@ def run_calibration(satobj,
     load_calibration_coeff_files(satobj)
 
     calibrated_cube = satobj.l1a_cube.to_numpy()
+    applied = []
 
     if satobj.rad_coeffs is not None:
         if radiometric:
@@ -181,6 +195,7 @@ def run_calibration(satobj,
                                             bin_factor=satobj.bin_factor,
                                             rad_coeffs=satobj.rad_coeffs
                                             )
+            applied.append("radiometric")
 
     if satobj.smile_coeffs is not None:
         if smile:
@@ -189,6 +204,7 @@ def run_calibration(satobj,
 
             calibrated_cube = run_smile_correction(cube=calibrated_cube,
                                             smile_coeffs=satobj.smile_coeffs)
+            applied.append("smile")
 
     if satobj.destriping_coeffs is not None:
         if destripe:
@@ -197,6 +213,7 @@ def run_calibration(satobj,
 
             calibrated_cube = run_destriping_correction(cube=calibrated_cube,
                                                 destriping_coeffs=satobj.destriping_coeffs)
+            applied.append("destriping")
 
     if satobj.spectral_coeffs is not None:
         if spectral:
@@ -204,6 +221,7 @@ def run_calibration(satobj,
                 logger.info("Running spectral correction (binned)...")
 
             satobj.wavelengths = satobj.spectral_coeffs
+            applied.append("spectral")
             # fwhm is derived from wavelengths via the sensor's lookup table
             # (see io/dispatch.py's set_hypso_attributes) - resync it here too,
             # or it stays stale (computed from the pre-calibration wavelengths
@@ -223,4 +241,9 @@ def run_calibration(satobj,
             if hasattr(satobj, 'fwhm_lookup_wl') and hasattr(satobj, 'fwhm_lookup_fwhm'):
                 satobj.fwhm_unbinned = _get_fwhm_unbinned(satobj)
 
+    logger.info("%s", format_calibration_summary(
+        satobj.sat_id, satobj.capture_type,
+        {"radiometric": satobj.rad_coeff_file, "smile": satobj.smile_coeff_file,
+         "destriping": satobj.destriping_coeff_file, "spectral": satobj.spectral_coeff_file},
+        applied, getattr(satobj, "coefficient_selection", None)))
     return calibrated_cube
