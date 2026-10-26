@@ -1,9 +1,9 @@
-"""Product file names (REFACTOR_PROGRESS.md x42).
+"""Product file names.
 
-Current style, NASA OB.DAAC-like - satellite first, then time, so a plain
-listing groups by satellite and sorts by time:
+Current style, NASA OB.DAAC-like - satellite and instrument first, then
+time, so a plain listing groups by satellite and sorts by time::
 
-    {SAT}_HSI.{YYYYMMDDTHHMMSS}.{target}.{LEVEL}[.{ac}][.{grid}][.{label}].nc
+    {SAT}_{INSTRUMENT}.{YYYYMMDDTHHMMSS}.{target}.{LEVEL}[.{ac}][.{grid}][.{label}].nc
 
     HYPSO2_HSI.20250612T095802.aeronetvenice.L1A.nc
     HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.nc
@@ -11,7 +11,11 @@ listing groups by satellite and sorts by time:
     HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.adjusted.nc   (label: experiments)
     HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.polymer.utm33n_880m.nc   (regridded)
 
-`.` separates fields and never appears inside one. L2A always carries the
+The first field is the satellite and the instrument, like NASA's
+``{MISSION}_{INSTRUMENT}`` (``PACE_OCI``): ``HYPSO2_HSI`` is HYPSO-2's
+Hyperspectral Imager, the instrument every product so far comes from
+(:data:`INSTRUMENTS` lists the known ones). `.` separates fields and never
+appears inside one. L2A always carries the
 AC field; a regridded product carries its grid (hypso.grid.grid_name:
 utm<zone><n|s> or epsg<code>, then the pixel size, e.g. utm33n_880m,
 epsg4326_0p01deg); the optional free-text label is always last and may
@@ -32,7 +36,9 @@ from typing import Optional
 
 _TOKEN = re.compile(r"[A-Za-z0-9_-]+")
 _LEVEL = re.compile(r"L\d[A-Z]")
-_PLATFORM = re.compile(r"([A-Z]+)(\d+)_HSI")
+_PLATFORM = re.compile(r"([A-Z]+)(\d+)_([A-Z][A-Z0-9]*)")
+#: Instrument tokens of the first name field, and what they stand for.
+INSTRUMENTS = {"HSI": "Hyperspectral Imager"}
 GRID_TOKEN = re.compile(r"(utm\d{1,2}[ns]|epsg\d+|custom)_\d+(p\d+)?(x\d+(p\d+)?)?(m|deg)")
 _TIME_FORMAT = "%Y%m%dT%H%M%S"
 _CAPTURE_ID_TIME_FORMAT = "%Y-%m-%dT%H-%M-%SZ"
@@ -57,20 +63,22 @@ def _check_token(kind: str, value: str) -> str:
     return value
 
 
-def platform_token(sat_id: str) -> str:
-    """"HYPSO-2" -> "HYPSO2_HSI"."""
-    token = sat_id.replace("-", "") + "_HSI"
+def platform_token(sat_id: str, instrument: str = "HSI") -> str:
+    """The satellite-and-instrument field: ``("HYPSO-2", "HSI")`` -> ``"HYPSO2_HSI"``."""
+    if instrument not in INSTRUMENTS:
+        raise ValueError(f"unknown instrument {instrument!r}; known: {sorted(INSTRUMENTS)}")
+    token = f"{sat_id.replace('-', '')}_{instrument}"
     if not _PLATFORM.fullmatch(token):
         raise ValueError(f"unsupported sat_id {sat_id!r}")
     return token
 
 
-def sat_id_from_token(token: str) -> str:
-    """"HYPSO2_HSI" -> "HYPSO-2"."""
+def parse_platform_token(token: str) -> tuple:
+    """``"HYPSO2_HSI"`` -> ``("HYPSO-2", "HSI")``: satellite and instrument."""
     match = _PLATFORM.fullmatch(token)
-    if not match:
-        raise ValueError(f"not a platform token: {token!r}")
-    return f"{match.group(1)}-{match.group(2)}"
+    if not match or match.group(3) not in INSTRUMENTS:
+        raise ValueError(f"not a satellite-and-instrument field: {token!r}")
+    return f"{match.group(1)}-{match.group(2)}", match.group(3)
 
 
 @dataclass(frozen=True)
@@ -83,6 +91,7 @@ class ProductName:
     grid: Optional[str] = None      # regridded only, e.g. "utm33n_880m"
     label: Optional[str] = None     # experiments only
     legacy_label: Optional[str] = None  # legacy names: e.g. "moved_unmasked"
+    instrument: str = "HSI"         # instrument token (INSTRUMENTS); legacy names: always HSI
     extension: str = "nc"
     style: str = "current"          # "current" | "legacy"
 
@@ -100,7 +109,7 @@ class ProductName:
             raise ValueError(f"invalid level {self.level!r}")
         if (self.level == "L2A") != (self.ac is not None):
             raise ValueError("the AC field is required for L2A and only allowed there")
-        fields = [platform_token(self.sat_id), self.time.strftime(_TIME_FORMAT),
+        fields = [platform_token(self.sat_id, self.instrument), self.time.strftime(_TIME_FORMAT),
                   _check_token("target", self.target), self.level]
         if self.ac is not None:
             fields.append(_check_token("ac", self.ac))
@@ -120,18 +129,22 @@ class ProductName:
 
 
 def product_name(sat_id: str, time: datetime, target: str, level: str,
-                 ac: str = None, label: str = None, grid: str = None) -> ProductName:
+                 ac: str = None, label: str = None, grid: str = None, instrument: str = "HSI") -> ProductName:
     if time.tzinfo is not None:
         time = time.astimezone(timezone.utc).replace(tzinfo=None)
     return ProductName(sat_id=sat_id, time=time, target=target, level=level.upper(), ac=ac, grid=grid,
-                       label=label)
+                       label=label, instrument=instrument)
 
 
 def _parse_current(name: str) -> Optional[ProductName]:
     fields = name.split(".")
-    if len(fields) < 5 or not _PLATFORM.fullmatch(fields[0]):
+    if len(fields) < 5:
         return None
-    platform, time, target, level, *rest, extension = fields
+    try:
+        sat_id, instrument = parse_platform_token(fields[0])
+    except ValueError:
+        return None
+    _, time, target, level, *rest, extension = fields
     if not _LEVEL.fullmatch(level) or not _TOKEN.fullmatch(target):
         return None
     try:
@@ -149,8 +162,8 @@ def _parse_current(name: str) -> Optional[ProductName]:
         return None
     if rest:
         label = rest[0]
-    return ProductName(sat_id=sat_id_from_token(platform), time=time, target=target, level=level,
-                       ac=ac, grid=grid, label=label, extension=extension)
+    return ProductName(sat_id=sat_id, time=time, target=target, level=level, ac=ac, grid=grid, label=label,
+                       extension=extension, instrument=instrument)
 
 
 def _parse_legacy(name: str) -> Optional[ProductName]:

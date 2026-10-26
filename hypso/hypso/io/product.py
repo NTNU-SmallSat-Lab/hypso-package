@@ -63,9 +63,8 @@ BAND_COORDS = ("wavelength", "radiation_wavelength", "fwhm")
 
 ENCODING = {"zlib": True, "complevel": 4, "shuffle": True}
 
-# Root geometry variable -> (cf attribute builder, long_name). Same table as
-# io/writer.py's _INDIRECT/_DIRECT_ANGLE_FIELDS ("_direct" means indirect
-# georeferencing - pre-existing naming, kept for readers that key off it).
+# Root geometry variable -> CF attribute builder. ("Indirect" in the
+# *_direct long names is pre-existing naming, kept for readers that key off it.)
 _GEOMETRY_ATTRS = {
     "latitude": lambda: cf.latitude_attrs(),
     "longitude": lambda: cf.longitude_attrs(),

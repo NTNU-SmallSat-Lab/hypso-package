@@ -14,7 +14,7 @@ class CalibrationShapeMismatchError(ValueError):
     crop_modes) doesn't actually match the shape this capture's own AOI/
     bin_factor implies. Means this capture's geometry doesn't really match
     the standard configuration its capture_type's pre-baked file was built
-    for - see REFACTOR_PROGRESS.md's capture-dimensions plan (Limit D)."""
+    for."""
 
 
 def crop_and_bin_matrix(matrix, x_start, x_stop, y_start, y_stop, bin_x=1, bin_y=1) -> np.ndarray:

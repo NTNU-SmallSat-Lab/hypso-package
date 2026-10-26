@@ -1,8 +1,8 @@
-"""CF (Climate and Forecast) attribute builders shared by every NetCDF level
-writer (see io/writer.py). Centralizing these fixes several confirmed bugs
-that existed because each level's writer set these attributes inline,
-independently, with no shared source of truth - see ARCHITECTURE_PROPOSAL.md
-and REFACTOR_PROGRESS.md for how each one was found.
+"""CF (Climate and Forecast) attribute builders for every product level,
+used by the one writer (hypso.io.product.write_product). Keeping them in
+one place fixed several bugs of the earlier per-level writers, which each
+set these attributes inline (wrong latitude units and ranges, a tuple
+radiation_wavelength, missing Conventions).
 """
 from typing import Optional
 
@@ -97,9 +97,9 @@ def geolocation_ref_attrs() -> dict:
     now that geometry variables (latitude/longitude/crs_wgs84) live in the
     same (root) group as the product variables referencing them - CF's
     group-relative name resolution only walks up to ancestor groups, never
-    sideways to siblings, so this only works because io/writer.py no longer
-    nests products/geometry into separate groups (see the NetCDF group
-    structure decision in REFACTOR_PROGRESS.md)."""
+    sideways to siblings, so this only works because the writer no longer
+    nests products and geometry into separate groups (docs/architecture.rst,
+    "File format")."""
     return {
         "coordinates": "latitude longitude",
         "grid_mapping": "crs_wgs84",

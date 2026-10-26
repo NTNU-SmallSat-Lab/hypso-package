@@ -1,8 +1,6 @@
-"""Per-level NetCDF schema. Replaces the previous design of one ~480-line
-writer file (and one loader file) per product level - confirmed near-
-duplicates of each other differing mostly by find/replace of the level name
-and product variable name (see REFACTOR_PROGRESS.md) - with one shared
-writer/reader (io/writer.py, io/reader.py) parametrized by a LevelSchema.
+"""Per-level NetCDF schema: what differs between product levels (product
+variable name, units, CF standard name, title, whether there is geometry),
+so one reader and writer (hypso.io.product) serve every level.
 
 The single most load-bearing thing this schema captures: whether a level
 has geometry at all. L1A/L1B are pre-georeferencing and genuinely have no
@@ -27,13 +25,8 @@ class LevelSchema:
     # standard name table (v95); None where no name fits.
     product_standard_name: str = None
     spatial_dims: tuple = ("lines", "samples")
-    # Every level implemented so far is swath-shaped: (lines, samples) tied to the
-    # capture's along-track/across-track geometry. This field exists so a future
-    # gridded Level 3 product (regular lat/lon grid, mosaicked/composited across
-    # captures - not implemented yet, no generation code exists for it) can reuse
-    # io/writer.py's product/geometry-writing code by declaring spatial_dims=
-    # ("lat", "lon") instead, rather than needing a parallel writer. Not otherwise
-    # exercised today - every current schema keeps the default.
+    # Unused: gridded products (hypso.grid) are recognised by their (y, x)
+    # dimensions (hypso.io.product.spatial_dims), not by a schema.
 
 
 L1A_SCHEMA = LevelSchema(
@@ -75,13 +68,9 @@ L1D_SCHEMA = LevelSchema(
     title="HYPSO Level 1D Top-of-Atmosphere Reflectance",
 )
 
-# L2A varies by which AC method produced it: the actual product variable name
-# comes from satobj.l2a_cube[correction].attrs['l2_variable_name'] (set by each
-# AC adapter - "chla"/"Rrs"/etc, not a fixed name), not a schema constant -
-# io/writer.py's write_l2a_nc reads it per-call and overrides product_prefix on
-# this schema (dataclasses.replace) before writing. product_prefix/product_units
-# here are only the fallback used if a correction's cube is missing that attr
-# (matches write/l2a_nc_writer.py's original except-fallback to "Rrs").
+# L2A's product variable depends on the AC method (Rrs, rho_w, rhos); the
+# writer takes its units and names from io.cf.L2A_PRODUCTS by variable name.
+# The values here are the fallback for any other variable.
 L2A_SCHEMA = LevelSchema(
     processing_level="L2",
     product_prefix="Rrs",

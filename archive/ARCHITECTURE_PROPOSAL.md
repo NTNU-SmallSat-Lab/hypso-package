@@ -1,3 +1,8 @@
+> **Archived (2026-10-27).** The original research proposal for this refactor (2026-08), kept for the
+> reasoning it records. It describes the capture-object design (`HypsoBase`, level classes, `io/writer.py`)
+> that the plain-Dataset rewrite (REFACTOR_PROGRESS.md ×37, 2026-10-25) replaced. The current design is
+> `docs/architecture.rst`; the format, naming, CF/SNAP and provenance decisions made here survive there.
+
 > **Historical document.** This is the August 2026 proposal that started the refactor. The design has
 > since moved on (plain xarray products, the capture-object classes removed - see `REFACTOR_PROGRESS.md`
 > ×37 onwards). For the current design read `docs/architecture.rst`.

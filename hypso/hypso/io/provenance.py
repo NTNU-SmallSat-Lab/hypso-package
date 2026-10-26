@@ -1,4 +1,4 @@
-"""Processing provenance carried in every product (REFACTOR_PROGRESS.md x39).
+"""Processing provenance carried in every product.
 
 Each processing step adds a `metadata/processing/<step>` node (one per
 step, kept when the product is read and written again, so a file holds its

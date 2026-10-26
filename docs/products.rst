@@ -23,15 +23,17 @@ File names
 
 .. code-block:: text
 
-   {SAT}_HSI.{YYYYMMDDTHHMMSS}.{target}.{LEVEL}[.{method}][.{grid}][.{label}].nc
+   {SAT}_{INSTRUMENT}.{YYYYMMDDTHHMMSS}.{target}.{LEVEL}[.{method}][.{grid}][.{label}].nc
 
    HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.nc
    HYPSO2_HSI.20250304T103805.aeronetvenice.L2A.polymer.nc
    HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.utm33n_876m.nc      (regridded)
    HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.test.nc             (label)
 
-The satellite comes first, then the capture time (UTC), so a listing groups by
-satellite and sorts by time. ``.`` only separates fields. L2A always names its
+The first field is the satellite and the instrument, as in NASA's
+``{MISSION}_{INSTRUMENT}`` names (``PACE_OCI``): ``HYPSO2_HSI`` is the
+Hyperspectral Imager (HSI) on HYPSO-2. Then comes the capture time (UTC), so a
+listing groups by satellite and sorts by time. ``.`` only separates fields. L2A always names its
 atmospheric correction method, a regridded product its grid (:doc:`grid`);
 the optional label is for experiments. The calibration set and masking are
 not part of the name: they are recorded in the file. Older names

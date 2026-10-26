@@ -8,10 +8,9 @@ hypso/pyproject.toml pointing at the hypso.satpy module - Satpy looks for
 etc/readers/*.yaml next to that module (see etc/readers/hypso_l1c.yaml and
 hypso_l1d.yaml, which reference HypsoL1FileHandler by file_reader).
 
-Only L1C and L1D are covered this pass (both have geometry - the case
-visualization/compositing needs; L1B is pre-georeferencing and isn't a
-sensible standalone visualization target). See REFACTOR_PROGRESS.md for the
-approved plan and why L1B/L2A are left as a follow-on.
+Only L1C and L1D are covered (both have geometry, which visualization and
+compositing need; L1B is pre-georeferencing). L2A and gridded products are
+not yet covered; Product.to_satpy() works for any georeferenced product.
 """
 from datetime import datetime
 

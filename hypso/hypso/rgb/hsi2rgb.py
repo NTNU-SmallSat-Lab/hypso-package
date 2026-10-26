@@ -1,8 +1,7 @@
 """HSI-cube-to-RGB rendering via CIE color matching functions (Magnusson et
 al., IGARSS 2020 - see the docstring's citation). No in-package callers yet;
-kept as the comparison for the planned HYPSO-2 RGB camera support
-(REFACTOR_PROGRESS.md TODO): an RGB rendered from the HSI cube to hold up
-against the RGB camera image. The D_illuminants.mat data file is in this
+kept as the comparison for the planned HYPSO-2 RGB camera support: an RGB
+rendered from the HSI cube to hold up against the RGB camera image. The D_illuminants.mat data file is in this
 package's data/ directory.
 
     from hypso.rgb import HSI2RGB

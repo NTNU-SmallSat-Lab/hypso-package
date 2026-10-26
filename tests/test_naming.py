@@ -91,3 +91,17 @@ def test_grid_field_errors():
         product_name("HYPSO-2", T, "aeronetvenice", "L1D", grid="utm33n").filename()
     with pytest.raises(ValueError, match="read back as a grid"):
         product_name("HYPSO-2", T, "aeronetvenice", "L1D", label="utm33n_30m").filename()
+
+
+def test_instrument_field():
+    # "HSI" is the instrument (Hyperspectral Imager), like NASA's PACE_OCI
+    from hypso.io.naming import INSTRUMENTS, parse_platform_token, platform_token
+    assert INSTRUMENTS["HSI"] == "Hyperspectral Imager"
+    assert platform_token("HYPSO-2") == "HYPSO2_HSI"
+    assert parse_platform_token("HYPSO1_HSI") == ("HYPSO-1", "HSI")
+    name = parse_product_name("HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.nc")
+    assert (name.sat_id, name.instrument) == ("HYPSO-2", "HSI")
+    with pytest.raises(ValueError, match="unknown instrument"):
+        product_name("HYPSO-2", T, "aeronetvenice", "L1D", instrument="RGB").filename()
+    with pytest.raises(ValueError, match="not a HYPSO product file name"):
+        parse_product_name("HYPSO2_XYZ.20250612T095802.aeronetvenice.L1D.nc")   # unknown instrument

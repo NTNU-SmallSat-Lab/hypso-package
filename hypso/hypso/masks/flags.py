@@ -1,4 +1,4 @@
-"""Masks as one CF flag variable (REFACTOR_PROGRESS.md x42): products are
+"""Masks as one CF flag variable: products are
 written unmasked, with land/cloud/custom masks as bits of `pixel_flags`
 (dims (lines, samples)), the CF flag_masks / flag_meanings encoding that
 ESA SNAP turns into masks and NASA uses for l2_flags.

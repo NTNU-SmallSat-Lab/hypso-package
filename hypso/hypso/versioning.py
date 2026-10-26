@@ -1,5 +1,5 @@
 """Version and source identity of hypso and the hypsoN_calibration packages,
-for product provenance (REFACTOR_PROGRESS.md x39/x40).
+for product provenance (hypso.io.provenance).
 
 All three packages share one version, derived from git tags (vYY.M.N) by
 setuptools_scm at build time - see docs/versioning.rst. At runtime the

@@ -139,7 +139,7 @@ def l1a_to_l1b(tree: xr.DataTree, coeff_type: str = None, version=None, coeff_fi
     for kind in _FILE_KINDS:
         out.attrs[f"{kind}_file"] = str(Path(files[kind]).name) if files[kind] is not None else "None"
 
-    # metadata/corrections as io/writer.py records it after calibration.
+    # metadata/corrections: the coefficients applied, kept with the product.
     if rad_coeffs is not None:
         corrections["rad_matrix"] = (("radrows", "radcols"), np.asarray(rad_coeffs, dtype="f4"))
     if spectral_coeffs is not None:

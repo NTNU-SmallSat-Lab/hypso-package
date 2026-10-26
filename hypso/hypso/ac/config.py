@@ -1,5 +1,5 @@
 """Where the external atmospheric-correction tools are installed and how to
-run them: one YAML file, one section per tool (REFACTOR_PROGRESS.md ×51).
+run them: one YAML file, one section per tool.
 
 The package has no built-in tool locations. The file is found from, in
 order: the `config` argument (a path or an already-loaded dict), or the

@@ -1,16 +1,8 @@
 """Sensor-profile registry.
 
-Replaces the old pattern of one hand-written HypsoCapture subclass per sensor
-(hypso1.py/hypso2.py each duplicating the same ~50-line __init__ just to set
-different instrument constants) with a single generic descriptor,
-SensorProfile, plus a registry keyed by the file's own sat_id attribute.
-
-Adding a future sensor means adding one profile module (see hypso1.py/
-hypso2.py in this package for the pattern) and registering it here - no new
-HypsoCapture subclass is required, though one may still be written for
-isinstance()-style identity if that's useful to callers (see hypso.hypso1/
-hypso.hypso2, which now do exactly that: a ~10-line subclass that just
-forwards the right profile to HypsoCapture).
+One SensorProfile per sensor, in a registry keyed by the file's sat_id
+attribute. Adding a sensor means adding one profile module (see hypso1.py
+and hypso2.py) and registering it here.
 """
 from dataclasses import dataclass
 from typing import Callable
@@ -20,10 +12,9 @@ import numpy as np
 
 @dataclass(frozen=True)
 class SensorProfile:
-    """Everything HypsoCapture needs to know about one sensor, previously
-    hardcoded per-subclass. See REFACTOR_PROGRESS.md / ARCHITECTURE_PROPOSAL.md
-    for how this list was derived (every self.<attr> HypsoCapture reads that a
-    subclass, not HypsoCapture itself, used to be responsible for setting).
+    """Everything the processing needs to know about one sensor (HYPSO-1,
+    HYPSO-2): detector geometry, capture modes, band/FWHM lookup and
+    calibration package.
 
     calibration_files is the pluggable replacement for the old
     Hypso1/Hypso2._set_calibration_coeff_files override: given

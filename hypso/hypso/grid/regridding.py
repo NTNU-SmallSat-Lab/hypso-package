@@ -1,5 +1,5 @@
 """Regridding: a product (L1C, L1D or L2A) from sensor geometry onto a map
-grid, as a product of the same level (REFACTOR_PROGRESS.md TODO 2).
+grid, as a product of the same level.
 
 The gridded product has dims (y, x[, bands]) with CF projection coordinates
 x/y and a `crs` grid-mapping variable, which ESA SNAP and GIS tools read as

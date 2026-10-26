@@ -58,10 +58,7 @@ register_sensor(HYPSO1_PROFILE)
 
 
 def get_hypso1_wavelengths(aoi_x=428, column_count=1080, bin_factor=9):
-    """Unchanged from hypso.hypso1.get_hypso1_wavelengths - kept here since
-    it's sensor data/calibration logic, not HypsoCapture orchestration. Also
-    re-exported from hypso.hypso1 for backward compatibility (confirmed
-    public export, hypso/__init__.py)."""
+    """Nominal HYPSO-1 band-centre wavelengths (nm) for an AOI and binning."""
     from hypso.calibration import read_coeffs_from_file
 
     calibration_files = get_hypso1_calibration_files()
