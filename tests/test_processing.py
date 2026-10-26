@@ -9,7 +9,8 @@ import pytest
 from conftest import COEFF_TYPE, L1A_PATH, requires_real_capture
 from hypso.io.capture_tree import capture_to_tree
 from hypso.io.product import read_product, write_product
-from hypso.processing import capture_params, l1a_to_l1b
+from hypso.processing import capture_params, l1a_to_l1b, l1c_to_l1d
+from test_capture_tree import assert_same_gcps
 from test_product_io import FORMAT_2_ATTRS, assert_same_file
 
 pytestmark = requires_real_capture
@@ -72,3 +73,26 @@ def test_l1a_to_l1b_leaves_input_unchanged(l1a_tree):
 def test_l1a_to_l1b_rejects_other_levels(l1a_tree):
     with pytest.raises(ValueError):
         l1a_to_l1b(l1a_to_l1b(l1a_tree, COEFF_TYPE))
+
+
+def test_capture_params_iso_time(satobj):
+    assert capture_params(capture_to_tree(satobj, "l1c")).iso_time == satobj.iso_time
+
+
+def test_l1c_to_l1d_matches_capture_path(satobj, tmp_path):
+    # conftest's satobj: indirect georeferencing, L1B and L1D generated on
+    # the capture object - the reference.
+    tree = l1c_to_l1d(capture_to_tree(satobj, "l1c"))
+    ds = tree.dataset
+    assert ds.attrs["processing_level"] == "L1D"
+    np.testing.assert_array_equal(ds["rhot"].values, satobj.l1d_cube.to_numpy())
+
+    old, new = tmp_path / "old.nc", tmp_path / "new.nc"
+    write_product(capture_to_tree(satobj, "l1d"), old)
+    write_product(tree, new)
+    assert_same_file(old, new, ignore_attrs=FORMAT_2_ATTRS, ignore_groups=("/metadata/processing",))
+    with nc.Dataset(new) as f:
+        step = f["metadata/processing/l1d"]
+        assert step.ssi_source == "tsis" and step.solar_zenith == "solar_zenith"
+        assert np.isclose(step.earth_sun_distance_au, f["metadata/srf"].earth_sun_distance_au)
+        assert "l1c" in f["metadata/processing"].groups   # lineage from the L1C tree

@@ -2,6 +2,7 @@
 the values io/dispatch.py's set_hypso_attributes/check_capture_type put on a
 capture object, computed the same way."""
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from types import SimpleNamespace
 
 import numpy as np
@@ -26,6 +27,7 @@ class CaptureParams:
     frame_count: int
     image_height: int
     image_width: int
+    iso_time: str            # acquisition start, UTC (ISO 8601)
     capture_config: dict = field(repr=False)
 
     @property
@@ -39,6 +41,17 @@ class CaptureParams:
         lookup_fwhm = self.sensor_profile.fwhm_lookup_fwhm
         return np.array([lookup_fwhm[np.argmin(np.abs(w - lookup_wl))] for w in np.asarray(wavelengths)],
                         dtype=float)
+
+
+def acquisition_time(global_attrs: dict) -> str:
+    """io/dispatch.py's iso_time: the date_aquired (sic) or timestamp_acquired
+    global attribute, as an ISO 8601 UTC string."""
+    datestring = global_attrs.get("date_aquired", global_attrs.get("timestamp_acquired"))
+    try:
+        dt = datetime.strptime(datestring, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=timezone.utc)
+    except ValueError:
+        dt = datetime.strptime(datestring, "%Y-%m-%dT%H:%M:%S.%f%zZ").replace(tzinfo=timezone.utc)
+    return datetime.fromtimestamp(dt.timestamp(), tz=timezone.utc).isoformat()
 
 
 def capture_params(tree: xr.DataTree) -> CaptureParams:
@@ -66,4 +79,4 @@ def capture_params(tree: xr.DataTree) -> CaptureParams:
     capture_type = next((name for name, attr, expected in profile.capture_type_thresholds
                          if getattr(lookup, attr, None) == expected), "custom")
     return CaptureParams(sat_id=sat_id, sensor_profile=profile, capture_type=capture_type,
-                         capture_config=attrs, **values)
+                         iso_time=acquisition_time(tree.attrs), capture_config=attrs, **values)

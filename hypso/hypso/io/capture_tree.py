@@ -207,7 +207,8 @@ def capture_to_tree(satobj, level: str, correction: str = None, masked: bool = F
             for name, attr in table.items():
                 value = getattr(satobj, attr, None)
                 if value is not None:
-                    root[name] = (SPATIAL_DIMS, np.asarray(value, dtype="f4"))
+                    # Full precision in memory; write_product stores float32.
+                    root[name] = (SPATIAL_DIMS, np.asarray(value))
 
     flags = _flags(satobj)
     if flags is not None:
