@@ -20,9 +20,17 @@ radiometric:
     abs:
       file: h2_radiometric_calibration_matrix_full_v3_abs.npz
       description: >-
-        V3 moved with adjusted absolute radiometric gains: about 11% lower
-        radiance than V3 moved (median ratio 0.887, 5-95% 0.857-0.921), no
-        spectral shift between the two.
+        V3 scaled to the absolute level of HYPSO-1 relative to PACE over
+        Libya-4: about 11% lower radiance than V3 moved (median ratio 0.887,
+        5-95% 0.857-0.921), no spectral shift between the two.
+      capture_types:
+        wide:
+          file: h2_radiometric_calibration_matrix_wide_v3_abs.npz
+          crop: as_is
+          description: >-
+            Wide captures: derived from binned wide data and used as is (no
+            crop/bin); about 1% below the binned full matrix (production
+            73eb6b8a).
     moved:
       file: h2_radiometric_calibration_matrix_full_moved_v3.npz
       description: V3 moved.
@@ -82,6 +90,7 @@ aliases:
   adjusted: [abs, V2]
   original: [lab, V1]
 
-# Shipped, not selectable yet: h2_radiometric_calibration_matrix_wide_v3_abs.npz
-# (pre-cropped for wide captures; needs the "as_is" crop mode wired per capture
-# type and validation before it is offered).
+# A file entry may have `capture_types: {<type>: {file, crop, description}}`
+# to use another file for that capture type (e.g. V3 abs for wide captures);
+# `crop: as_is` uses that file without cropping/binning (it is pre-baked for
+# one AOI/bin_factor), otherwise it is cropped and binned to the capture.

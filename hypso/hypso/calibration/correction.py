@@ -67,7 +67,7 @@ def read_coeffs_from_file(coeff_path: str, coeff_type: str, x_start: int=None,  
     Read correction coefficients from file
 
     :param coeff_path: Coefficient path to read (.csv or .npz)
-    :param crop_mode: only meaningful for coeff_type in ("smile", "destriping").
+    :param crop_mode: only meaningful for coeff_type in ("radiometric", "smile", "destriping").
         "crop_and_bin" (default) crops the loaded array to [y_start:y_stop,
         x_start:x_stop] and bins bin_factor columns together - the file is
         assumed to cover the sensor's full native resolution. "as_is" skips
@@ -78,7 +78,9 @@ def read_coeffs_from_file(coeff_path: str, coeff_type: str, x_start: int=None,  
         would imply, raising CalibrationShapeMismatchError on a mismatch
         rather than silently using a wrong-shaped array. Comes from
         SensorProfile.capture_mode_crop_modes (see calibration/pipeline.py's
-        set_calibration_coeff_files), not inferred from the filename.
+        set_calibration_coeff_files) or, for a specific file, the
+        calibration package's catalog (HYPSO-2: data/coefficients.yaml
+        `crop`), not inferred from the filename.
 
     :return: 2D array of coefficients
     """
@@ -97,7 +99,20 @@ def read_coeffs_from_file(coeff_path: str, coeff_type: str, x_start: int=None,  
                     # later this needs to be updated
 
                     case 'radiometric':
-                        coefficients = coefficients[key][y_start:y_stop, x_start: x_stop].reshape(y_stop-y_start, -1, bin_factor).mean(axis=2).reshape(y_stop-y_start, -1) # reshape full coeff matrix based on values in config
+                        if crop_mode == "as_is":
+                            # Pre-baked for one AOI/bin_factor, e.g. HYPSO-2's
+                            # V3 wide matrix, derived from binned wide data
+                            # (production 73eb6b8a).
+                            coefficients = coefficients[key]
+                            expected_shape = (y_stop - y_start, (x_stop - x_start) // bin_factor)
+                            if coefficients.shape != expected_shape:
+                                raise CalibrationShapeMismatchError(
+                                    f"radiometric calibration file {coeff_path} is pre-baked for shape "
+                                    f"{coefficients.shape}, but this capture's AOI/bin_factor implies "
+                                    f"{expected_shape}."
+                                )
+                        else:
+                            coefficients = coefficients[key][y_start:y_stop, x_start: x_stop].reshape(y_stop-y_start, -1, bin_factor).mean(axis=2).reshape(y_stop-y_start, -1) # reshape full coeff matrix based on values in config
                     case 'spectral':
                         coefficients = coefficients[key][x_start:x_stop].reshape(-1, bin_factor).mean(axis=1).reshape(-1)
                     case 'smile':

@@ -10,7 +10,8 @@ from hypso2_calibration.main import CATALOG, resolve_coefficients
 
 
 def _names(files):
-    return {k: (Path(str(v)).name if v is not None else None) for k, v in files.items() if k != "selection"}
+    return {k: (Path(str(v)).name if v is not None else None) for k, v in files.items()
+            if k not in ("selection", "crop_modes")}
 
 
 def test_default_is_abs_v3_with_v2_spectral():
@@ -75,6 +76,8 @@ def test_every_catalog_file_exists():
     from importlib.resources import files
     data = files("hypso2_calibration").joinpath("data")
     names = [v["file"] for versions in CATALOG["radiometric"].values() for v in versions.values()]
+    names += [o["file"] for versions in CATALOG["radiometric"].values() for v in versions.values()
+              for o in (v.get("capture_types") or {}).values()]
     names += [v["file"] for kind in ("smile", "spectral") for v in CATALOG[kind].values()]
     missing = [n for n in names if not data.joinpath(n).is_file()]
     assert not missing
@@ -98,3 +101,16 @@ def test_pre_v3_files_unchanged(key, sha):
     kind, version, variant = key
     entry = CATALOG[kind][version][variant] if variant else CATALOG[kind][version]
     assert sha256_file(files("hypso2_calibration").joinpath(f"data/{entry['file']}")) == sha
+
+
+def test_wide_captures_use_the_wide_v3_abs_matrix():
+    # Production 73eb6b8a: V3 abs uses the wide matrix for wide captures,
+    # as is (no crop/bin).
+    wide = get_hypso2_calibration_files(capture_type="wide")
+    assert _names(wide)["radiometric"] == "h2_radiometric_calibration_matrix_wide_v3_abs.npz"
+    assert wide["crop_modes"] == {"radiometric": "as_is"}
+    assert wide["selection"]["radiometric_capture_type"] == "wide"
+    for capture_type, coeff_type, version in (("nominal", "abs", "V3"), ("wide", "moved", "V3"),
+                                              ("wide", "abs", "V2")):
+        files = get_hypso2_calibration_files(capture_type=capture_type, coeff_type=coeff_type, version=version)
+        assert "wide" not in _names(files)["radiometric"] and files["crop_modes"] == {}

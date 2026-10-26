@@ -49,7 +49,7 @@ permission to modify — unlike `/home/camerop/AC/hypso-package`, which is **rea
    staging applies pixel_flags (AC step).
 6. ~~Hypso facade must accept the pipeline's direct-georef fallback~~ - obsolete (×49: no pipeline
    compatibility needed).
-7. **Release tags**: `v26.10.0a1` (×46), `v26.10.0a2` (V3 coefficients, ×48). Next alphas as milestones land; final
+7. **Release tags**: `v26.10.0a1` (×46), `v26.10.0a2` (V3 coefficients, ×48), `v26.10.0a3` (wide V3 abs, ×52). Next alphas as milestones land; final
    `vYY.M.0` on the merge to main once the pipeline uses the refactor. Tags are local until pushed.
 8. **Test environment**: ~~3 `test_ac_subprocess.py` failures~~ fixed (×51, `2810fa3c`);
    `test_real_polymer_imports_succeed_through_subprocess` still silently skips (fixture path renamed
@@ -173,6 +173,20 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
 
 ## Status (update this section as work progresses — most recent at top)
 
+- **2026-10-26 (×52): production 73eb6b8a wide-capture fix ported.** Production (`AC/hypso-package-polymer_v3`,
+  commit 73eb6b8a "HYPSO-2 V3 radiometric calibration; calibration packages 26.10.0"): V3 abs uses
+  `h2_radiometric_calibration_matrix_wide_v3_abs.npz` for wide captures, as is (derived from binned wide
+  data; ~1% below the binned full matrix). Ported as data, not file-name checks: coefficients.yaml file entries
+  can carry `capture_types: {<type>: {file, crop: as_is}}`; `get_hypso2_calibration_files` returns
+  `crop_modes` for the selected files; both calibration paths apply them over the sensor profile's per-mode
+  crop modes; `read_coeffs_from_file` honours `crop_mode="as_is"` for radiometric (with the same shape check as
+  smile/destriping). Also: the capture-object path no longer swallows a radiometric shape mismatch (it used to
+  continue without radiometric correction). Production's other change in that commit - testing the smile
+  wide/nominal condition on the file name instead of the full path - has no counterpart here (crop modes, not
+  names, decide). Verified: on the (wide) venice fixture the refactor's moved/V3 and abs/V3 L1B are identical
+  to production 73eb6b8a; abs/moved scene ratio median 0.885. Provenance records radiometric_capture_type and
+  radiometric_crop. Manifest updated; tagged v26.10.0a3.
+
 - **2026-10-26 (×51): atmospheric correction as tree functions - DPS, Polymer, ACOLITE, OC-SMART done.**
   User decisions: AC tool locations are configuration only, no defaults; settings in a YAML file
   (`hypso.ac.config`: `config=` path/dict or `HYPSO_AC_CONFIG`); no real AC runs on aulus2 for now (mocked
@@ -248,7 +262,7 @@ duplicated per update — if it's missing, check `/home/camerop/.claude/plans/ro
     `adjusted` -> abs/V2, `original` -> lab/V1.
   - Note: the pipeline passes coeff_type explicitly (reprocess config `rad_cal_coeffs_options: [moved]`), so
     through the refactor it gets V3 moved unless its config changes.
-  - Open: `wide_v3_abs` (pre-cropped for wide captures, needs as_is crop mode) shipped but not selectable.
+  - ~~Open: `wide_v3_abs` shipped but not selectable~~ - selected for wide captures with V3 abs (×52).
   - Implemented: 5 V3 files copied from AC/V3_Rad_Coeffs (sha256 checked against both sources); pre-V3 files
     renamed with explicit versions (git mv; sha256 pinned to the pre-rename manifest in
     tests/test_coefficients.py); `hypso2_calibration/data/coefficients.yaml` catalog (in data/, so the

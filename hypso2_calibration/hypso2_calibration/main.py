@@ -79,23 +79,37 @@ def get_hypso2_calibration_files(capture_type=None, coeff_type=None, version=Non
     Get the absolute paths of the calibration coefficients included in the
     package (radiometric, smile, destriping, spectral). See
     resolve_coefficients for coeff_type and version; the defaults are
-    abs / V3. capture_type is accepted for interface compatibility and not
-    used yet.
+    abs / V3. capture_type selects a capture-type-specific file where the
+    catalog has one (e.g. the wide matrix for V3 abs).
 
     :return: {"radiometric", "smile", "destriping", "spectral",
-        "spectral_full_frame": path or None, "selection": resolve_coefficients(...)}.
+        "spectral_full_frame": path or None, "crop_modes": {kind: "as_is" |
+        "crop_and_bin"} for files that declare one, "selection":
+        resolve_coefficients(...) (plus "radiometric_capture_type" when a
+        capture-type file was chosen)}.
     """
     selection = resolve_coefficients(coeff_type, version)
     radiometric_version, variant = selection["radiometric"].split("/")
+    crop_modes = {}
 
     def path(name):
         return files('hypso2_calibration').joinpath(f'data/{name}')
 
+    def entry(kind, item):
+        override = (item.get("capture_types") or {}).get(capture_type)
+        if override is None:
+            return item["file"]
+        if kind == "radiometric":
+            selection["radiometric_capture_type"] = capture_type
+        crop_modes[kind] = override.get("crop", "crop_and_bin")
+        return override["file"]
+
     return {
-        "radiometric": path(CATALOG["radiometric"][radiometric_version][variant]["file"]),
-        "smile": path(CATALOG["smile"][selection["smile"]]["file"]),
+        "radiometric": path(entry("radiometric", CATALOG["radiometric"][radiometric_version][variant])),
+        "smile": path(entry("smile", CATALOG["smile"][selection["smile"]])),
         "destriping": None,   # no HYPSO-2 destriping coefficients in any version
         "spectral": path(CATALOG["spectral"][selection["spectral"]]["file"]),
         "spectral_full_frame": path(CATALOG["spectral"][selection["spectral_full_frame"]]["file"]),
+        "crop_modes": crop_modes,
         "selection": selection,
     }

@@ -37,7 +37,9 @@ def _calibration_files(params: CaptureParams, coeff_type: str, version, coeff_fi
         return {key: custom.get(key) for key in _FILE_KINDS}, None
     kwargs = {k: v for k, v in (("coeff_type", coeff_type), ("version", version)) if v is not None}
     files = params.sensor_profile.calibration_files(params.capture_type, **kwargs)
-    return {key: files.get(key) for key in _FILE_KINDS}, files.get("selection")
+    selected = {key: files.get(key) for key in _FILE_KINDS}
+    selected["crop_modes"] = files.get("crop_modes") or {}
+    return selected, files.get("selection")
 
 
 def _load(path, kind: str, params: CaptureParams, bin_factor: int = None, crop_mode: str = None):
@@ -81,8 +83,12 @@ def l1a_to_l1b(tree: xr.DataTree, coeff_type: str = None, version=None, coeff_fi
     files, selection = _calibration_files(params, coeff_type, version, coeff_files)
     if selection is not None:
         coeff_type = selection["coeff_type"]
-    crop_modes = params.sensor_profile.capture_mode_crop_modes.get(params.capture_type, {})
-    rad_coeffs = _load(files["radiometric"], "radiometric", params)
+    # Per capture type (sensor profile), overridden by what the selected file
+    # itself declares (calibration catalog, e.g. the V3 wide matrix).
+    crop_modes = {**params.sensor_profile.capture_mode_crop_modes.get(params.capture_type, {}),
+                  **files.pop("crop_modes", {})}
+    rad_coeffs = _load(files["radiometric"], "radiometric", params,
+                       crop_mode=crop_modes.get("radiometric", "crop_and_bin"))
     smile_coeffs = _load(files["smile"], "smile", params, crop_mode=crop_modes.get("smile", "crop_and_bin"))
     destriping_coeffs = _load(files["destriping"], "destriping", params,
                               crop_mode=crop_modes.get("destriping", "crop_and_bin"))
@@ -140,6 +146,9 @@ def l1a_to_l1b(tree: xr.DataTree, coeff_type: str = None, version=None, coeff_fi
         parameters["coefficient_release"] = selection["release"]
         for kind in ("radiometric", "smile", "spectral"):
             parameters[f"{kind}_version"] = selection[kind]
+        if "radiometric_capture_type" in selection:
+            parameters["radiometric_capture_type"] = selection["radiometric_capture_type"]
+    parameters["radiometric_crop"] = crop_modes.get("radiometric", "crop_and_bin")
     source = tree.encoding.get("source")
     result.encoding.pop("source", None)
     add_step(result, "l1b", input_file=source or "L1A (in memory)",

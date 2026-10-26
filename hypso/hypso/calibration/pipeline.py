@@ -94,7 +94,9 @@ def set_calibration_coeff_files(satobj, coeff_type: str = None, coeff_files: dic
     # the correct behavior for coeff_files=/registered custom sets (neither
     # has ever supported "as_is" pre-baked files, so this preserves their
     # existing behavior unchanged).
-    crop_modes = satobj.sensor_profile.capture_mode_crop_modes.get(capture_type, {})
+    crop_modes = {**satobj.sensor_profile.capture_mode_crop_modes.get(capture_type, {}),
+                  **(calibration_files.get("crop_modes") or {} if isinstance(calibration_files, dict) else {})}
+    satobj.rad_coeff_crop_mode = crop_modes.get('radiometric', 'crop_and_bin')
     satobj.smile_coeff_crop_mode = crop_modes.get('smile', 'crop_and_bin')
     satobj.destriping_coeff_crop_mode = crop_modes.get('destriping', 'crop_and_bin')
 
@@ -108,8 +110,13 @@ def load_calibration_coeff_files(satobj) -> None:
 
     :return: None.
     """
+    rad_crop_mode = getattr(satobj, 'rad_coeff_crop_mode', 'crop_and_bin')
     try:
-        satobj.rad_coeffs = read_coeffs_from_file(satobj.rad_coeff_file, 'radiometric', satobj.x_start, satobj.x_stop, satobj.y_start, satobj.y_stop, satobj.bin_factor)
+        satobj.rad_coeffs = read_coeffs_from_file(satobj.rad_coeff_file, 'radiometric', satobj.x_start, satobj.x_stop, satobj.y_start, satobj.y_stop, satobj.bin_factor, crop_mode=rad_crop_mode)
+    except CalibrationShapeMismatchError:
+        # As for smile/destriping: a pre-baked file that doesn't fit is an
+        # error, not "no radiometric correction".
+        raise
     except Exception:
         satobj.rad_coeffs = None
 

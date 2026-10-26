@@ -128,3 +128,26 @@ def test_l1b_to_l1c_argument_errors(l1a_tree):
         l1b_to_l1c(l1b, latitudes=LATS_PATH)
     with pytest.raises(ValueError, match="shape"):
         l1b_to_l1c(l1b, latitudes=np.zeros((2, 2)), longitudes=np.zeros((2, 2)))
+
+
+def test_wide_capture_abs_v3_both_paths(l1a_tree):
+    # The fixture is a wide capture: V3 abs uses the wide matrix as is
+    # (production 73eb6b8a) on both calibration paths.
+    from hypso import Hypso
+    satobj = Hypso(path=L1A_PATH, load_cube=True, verbose=False)
+    satobj.generate_l1b_cube(coeff_type="abs", version="V3")
+    tree = l1a_to_l1b(l1a_tree, "abs", version="V3")
+    np.testing.assert_array_equal(tree.dataset["Lt"].values, satobj.l1b_cube.to_numpy())
+    step = tree["metadata/processing/l1b"].attrs
+    assert step["radiometric_capture_type"] == "wide" and step["radiometric_crop"] == "as_is"
+    assert "wide_v3_abs" in step["radiometric_file"]
+
+
+def test_as_is_radiometric_shape_mismatch_raises():
+    from importlib.resources import files
+    from hypso.calibration.correction import CalibrationShapeMismatchError, read_coeffs_from_file
+    wide = files("hypso2_calibration").joinpath("data/h2_radiometric_calibration_matrix_wide_v3_abs.npz")
+    with pytest.raises(CalibrationShapeMismatchError):
+        # a nominal-sized AOI does not fit the pre-baked wide matrix
+        read_coeffs_from_file(wide, "radiometric", x_start=428, x_stop=1508, y_start=0, y_stop=684,
+                              bin_factor=9, crop_mode="as_is")
