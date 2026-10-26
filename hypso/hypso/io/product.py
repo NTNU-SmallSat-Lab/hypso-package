@@ -194,6 +194,8 @@ def read_product(path) -> xr.DataTree:
                 if node.path.endswith("/gcp"):
                     ds = ds.rename({k: v for k, v in _GCP_RENAMES.items() if k in ds.variables})
                 tree[node.path] = xr.DataTree(ds)
+        # Not written to files; processing steps record it as their input.
+        tree.encoding["source"] = str(path)
         return tree
     finally:
         raw.close()

@@ -35,6 +35,7 @@ WRITE_TIME_ATTRS = ("date_created",)
 # Format-2 global attributes write_product adds or updates on files from the
 # current io/writer.py (checked separately in test_format_2_global_attrs).
 FORMAT_2_ATTRS = WRITE_TIME_ATTRS + (
+    "fps",   # metadata/capture_config: loader-added alias of framerate, dropped in format 2
     "Conventions", "processing_level", "product_format_version", "history",
     "geospatial_lat_min", "geospatial_lat_max", "geospatial_lon_min", "geospatial_lon_max",
     "geospatial_lat_units", "geospatial_lon_units")
@@ -65,7 +66,8 @@ def assert_same_file(path_a, path_b, ignore_attrs=WRITE_TIME_ATTRS, ignore_group
         ga["/"] = {k: v for k, v in ga["/"].items() if k not in ignore_attrs}
         gb["/"] = {k: v for k, v in gb["/"].items() if k not in ignore_attrs}
         for g in ga:
-            x, y = ga[g], gb[g]
+            x = {k: v for k, v in ga[g].items() if k not in ignore_attrs}
+            y = {k: v for k, v in gb[g].items() if k not in ignore_attrs}
             assert sorted(x) == sorted(y), g
             assert all(_same(x[k], y[k]) for k in x), (g, [k for k in x if not _same(x[k], y[k])])
 

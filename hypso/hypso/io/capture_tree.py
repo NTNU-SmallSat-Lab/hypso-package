@@ -5,8 +5,9 @@ write_product like everything else (REFACTOR_PROGRESS.md x45).
 Mirrors io/writer.py's _write_level_nc group by group, so the written file
 matches the old writer's output apart from the format-2 additions
 (provenance, product_format_version, geospatial bounds, pixel_flags) and
-one fix: L1A gets no calibration-file global attributes (it is not
-calibrated).
+three fixes: L1A gets no calibration-file global attributes (it is not
+calibrated), GCP arrays keep their source dtype instead of float32, and the
+loader's duplicate capture_config `fps` (alias of framerate) is dropped.
 
 Transitional: once processing steps are Dataset -> Dataset functions
 (step 2) they build and annotate the tree themselves, and this module goes
@@ -90,8 +91,13 @@ def _calibration_filename_attrs(satobj) -> dict:
 
 def _metadata_nodes(satobj) -> dict:
     md = satobj.metadata
+    capture_config = _attrs(md.capture_config.attrs)
+    if "framerate" in capture_config:
+        # io/dispatch.py adds `fps` as an alias of framerate on load; nothing
+        # reads it, and format 2 keeps only framerate (×47).
+        capture_config.pop("fps", None)
     nodes = {
-        "metadata/capture_config": xr.Dataset(attrs=_attrs(md.capture_config.attrs)),
+        "metadata/capture_config": xr.Dataset(attrs=capture_config),
         "metadata/timing": xr.Dataset(
             {"timestamps": ("lines", np.asarray(md.timing.vars["timestamps"][:], dtype="f8"))},
             attrs=_attrs(md.timing.attrs)),
@@ -111,7 +117,9 @@ def _metadata_nodes(satobj) -> dict:
             continue   # not available for this capture
     nodes["metadata/corrections"] = xr.Dataset(corrections, attrs=_attrs(md.corrections.attrs))
 
-    gcp_vars = {f"gcp_{k}": ("gcps", np.asarray(v, dtype="f4")) for k, v in (md.gcp.vars or {}).items()}
+    # Source precision (ground-station files store float64); io/writer.py
+    # downcast to float32 - a format-2 change (×47).
+    gcp_vars = {f"gcp_{k}": ("gcps", np.asarray(v)) for k, v in (md.gcp.vars or {}).items()}
     nodes["metadata/gcp"] = xr.Dataset(gcp_vars, attrs=_attrs(md.gcp.attrs or {}))
     return nodes
 

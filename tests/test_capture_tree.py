@@ -17,7 +17,19 @@ def test_matches_old_writer(satobj, written_nc_files, tmp_path, level, correctio
     out = tmp_path / f"new-{level}.nc"
     write_product(capture_to_tree(satobj, level, correction=correction), out)
     assert_same_file(written_nc_files[level], out, ignore_attrs=FORMAT_2_ATTRS,
-                     ignore_groups=("/metadata/processing",))
+                     ignore_groups=("/metadata/processing", "/metadata/gcp"))
+    assert_same_gcps(written_nc_files[level], out)
+
+
+def assert_same_gcps(old_path, new_path):
+    # GCPs keep the source float64; the old writer downcast them to float32.
+    with nc.Dataset(old_path) as a, nc.Dataset(new_path) as b:
+        old, new = a["metadata/gcp"], b["metadata/gcp"]
+        assert sorted(old.variables) == sorted(new.variables)
+        assert {k: old.getncattr(k) for k in old.ncattrs()} == {k: new.getncattr(k) for k in new.ncattrs()}
+        for name in old.variables:
+            assert new[name].dtype == np.float64
+            np.testing.assert_array_equal(np.asarray(new[name][:], np.float32), old[name][:])
 
 
 def test_provenance_recorded(satobj, tmp_path):
@@ -79,5 +91,6 @@ def test_public_writers_go_through_write_product(satobj, written_nc_files, tmp_p
         with nc.Dataset(path) as f:
             assert f.product_format_version == "2.0" and "processing" in f["metadata"].groups
         assert_same_file(written_nc_files[level], path, ignore_attrs=FORMAT_2_ATTRS,
-                         ignore_groups=("/metadata/processing",))
+                         ignore_groups=("/metadata/processing", "/metadata/gcp"))
+        assert_same_gcps(written_nc_files[level], path)
     assert {p.name for p in CAPTURE_DIR.iterdir()} == before
