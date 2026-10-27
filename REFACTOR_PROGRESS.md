@@ -37,9 +37,14 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    path); a HYPSO-1 capture and a nominal (non-wide) HYPSO-2 capture through L1D (everything so far is one
    HYPSO-2 wide capture; this also settles the old "variable capture dimensions" item, ×20/×31).
 3. ~~**Dependencies**~~ - done (×65).
-4. **Satpy readers and gridded products** (×58): the readers' file patterns take a gridded name's grid field
-   as `label`, and geolocate through latitude/longitude as a swath. Give gridded products their area from
-   `crs`/`x`/`y`, or document `Product.to_satpy()` as the way in.
+4. ~~**Satpy readers and gridded products**~~ - done (×66).
+4b. **NetCDF file sizes** (user, 2026-10-27): see whether files can be made smaller. Reference capture: L1A
+   (ground station, uint16) 101 MB, L1D 218 MB (float32, zlib 4 + shuffle, 120 bands of 598 x 1092). Options to
+   evaluate for size, read speed and SNAP/AC-reader compatibility: lossless or bounded-error quantization of
+   float bands (netCDF4 `quantize_mode`/`significant_digits`, or int16 with `scale_factor`/`add_offset`
+   packing, which CF and SNAP understand), per-band chunking vs whole-array chunks, compression level or other
+   codecs (zstd via netCDF-C plugins, if readers have them), float64 geometry stored as float32, and duplicated
+   metadata (e.g. `*_direct` geometry, `metadata/corrections` matrices). Measure on the reference capture.
 5. **Releases** (×46, ×48, ×52): tags `v26.10.0a1`-`a3` exist only locally (not on origin). Tag the next
    alpha for ×53-×63 when wanted; the final `vYY.M.0` on the merge to `main` once the pipeline uses the
    refactor.
@@ -58,6 +63,12 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-10-27 (×66): Satpy and gridded products.** The hypso_l1c/hypso_l1d readers recognise a regridded
+  file by its contents (`crs` + `x`/`y`; the name patterns already matched, the grid field landing in `label`)
+  and give its bands `get_area_def()`'s AreaDefinition instead of latitude/longitude coordinates;
+  `Product.to_satpy()` uses `area_definition()` for gridded products. Shared helper
+  `hypso.grid.areas.area_from_grid`. Verified on the 300 m UTM L1D: same extent as `area_definition()`, values
+  equal; swath files still load as SwathDefinition. Reader descriptions updated (no more io.writer).
 - **2026-10-27 (×65): dependencies trimmed.** `hypso/pyproject.toml` dropped 16 packages nothing in `hypso/hypso`
   imports: cartopy, rasterio, py6s, pillow, shapely, tqdm, progressbar, requests, scikit-learn, xgboost, joblib,
   global-land-mask, h5py, pvlib, earthaccess, seaborn. Kept: numpy, scipy, xarray, netcdf4, pandas, pyproj,

@@ -94,11 +94,18 @@ def area_definition(tree: xr.DataTree) -> AreaDefinition:
     ds = tree.dataset
     if spatial_dims(ds) != GRID_DIMS:
         raise ValueError("not a gridded product (regrid it first)")
-    crs = pyproj.CRS.from_cf(dict(ds[GRID_MAPPING].attrs))
-    x, y = ds["x"].values, ds["y"].values
-    size_x, size_y = float(tree.attrs["grid_resolution_x"]), float(tree.attrs["grid_resolution_y"])
+    return area_from_grid(dict(ds[GRID_MAPPING].attrs), ds["x"].values, ds["y"].values,
+                          float(tree.attrs["grid_resolution_x"]), float(tree.attrs["grid_resolution_y"]),
+                          tree.attrs.get("grid", "hypso_grid"))
+
+
+def area_from_grid(crs_attrs: dict, x, y, size_x: float, size_y: float, name: str = "hypso_grid") -> AreaDefinition:
+    """AreaDefinition from a CF grid-mapping variable's attributes, the x/y
+    pixel-centre coordinates and the pixel size - what a gridded product
+    file holds (also used by the Satpy readers)."""
+    crs = pyproj.CRS.from_cf(dict(crs_attrs))
+    x, y = np.asarray(x), np.asarray(y)
     extent = (x.min() - size_x / 2, y.min() - size_y / 2, x.max() + size_x / 2, y.max() + size_y / 2)
-    name = tree.attrs.get("grid", "hypso_grid")
     return AreaDefinition(name, name, name, crs, x.size, y.size, extent)
 
 

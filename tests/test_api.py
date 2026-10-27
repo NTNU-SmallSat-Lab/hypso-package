@@ -510,6 +510,18 @@ def test_regrid_average(l1d):
         l1d.resample(l1d.swath_definition(), method="average")
 
 
+def test_satpy_gridded(l1d, tmp_path):
+    from pyresample.geometry import AreaDefinition
+    from satpy import Scene
+    g = l1d.regrid(resolution=3000, method="average")
+    assert isinstance(g.to_satpy()["band_1"].attrs["area"], AreaDefinition)
+    scene = Scene(filenames=[str(g.write(out_dir=tmp_path))], reader="hypso_l1d")
+    name = next(n for n in scene.available_dataset_names() if n.startswith("rhot_"))
+    scene.load([name])
+    area = scene[name].attrs["area"]
+    assert isinstance(area, AreaDefinition) and area.area_extent == g.area_definition().area_extent
+
+
 def test_hsi2rgb_on_l1d(l1d):
     from hypso.rgb import HSI2RGB
     rgb = HSI2RGB(l1d.wavelengths, l1d.cube.values)

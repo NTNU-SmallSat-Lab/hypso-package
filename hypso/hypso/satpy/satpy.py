@@ -14,7 +14,8 @@ from datetime import datetime
 
 def product_scene(product, use_direct_georef: bool = False) -> Scene:
     """A satpy Scene of a hypso.Product (any georeferenced level): one
-    dataset per band, on the product's swath."""
+    dataset per band, on the product's swath, or on its map grid if it is
+    regridded."""
     from datetime import datetime as _datetime
     from hypso.processing.capture import acquisition_time
 
@@ -29,7 +30,8 @@ def product_scene(product, use_direct_georef: bool = False) -> Scene:
                                     longitudes=geometry[f"longitude{suffix}"].values,
                                     resolution=product.resolution, standard_name=cube.name,
                                     units=product.tree.dataset[cube.name].attrs.get("units", ""),
-                                    dims=["y", "x"], start_time=time, end_time=time)
+                                    dims=["y", "x"], start_time=time, end_time=time,
+                                    area=product.area_definition() if product.grid else None)
 
 
 def get_datacube_satpy_scene(datacube: xr.DataArray,
@@ -42,6 +44,7 @@ def get_datacube_satpy_scene(datacube: xr.DataArray,
                         dims: list = ['y', 'x'],
                         start_time: datetime = datetime.now(),
                         end_time: datetime = datetime.now(),
+                        area=None,
                         ) -> Scene:
 
     latitudes_xr = xr.DataArray(latitudes, dims=dims)
@@ -49,7 +52,8 @@ def get_datacube_satpy_scene(datacube: xr.DataArray,
 
     scene = Scene()
 
-    swath_def = SwathDefinition(lons=longitudes_xr, lats=latitudes_xr)
+    # A map grid (AreaDefinition) when given, else the swath of latitude/longitude.
+    swath_def = area if area is not None else SwathDefinition(lons=longitudes_xr, lats=latitudes_xr)
 
 
     attrs = {

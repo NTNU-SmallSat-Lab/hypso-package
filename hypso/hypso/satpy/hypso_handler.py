@@ -52,6 +52,10 @@ class HypsoL1FileHandler(NetCDF4FileHandler):
         self.platform_name = sat_id
 
         self._product_prefix = _PRODUCT_PREFIX_BY_FILE_TYPE[filetype_info["file_type"]]
+        # A regridded product (hypso.grid) is on a map grid: x/y coordinates
+        # and a CF `crs` variable. Its bands get get_area_def()'s
+        # AreaDefinition instead of a swath from latitude/longitude.
+        self.gridded = "crs" in self and "x" in self and "y" in self
 
     @property
     def start_time(self) -> datetime:
@@ -95,10 +99,22 @@ class HypsoL1FileHandler(NetCDF4FileHandler):
                 ),
                 "units": band["units"],
                 "standard_name": band["long_name"],
-                "coordinates": ("longitude", "latitude"),
+                **({} if self.gridded else {"coordinates": ("longitude", "latitude")}),
                 "band_index": band["band"],
                 "radiation_wavelength_nm": band["radiation_wavelength"],
             }
+
+    def get_area_def(self, dsid):
+        """The map grid of a regridded product (Satpy calls this for datasets
+        without coordinates)."""
+        if not self.gridded:
+            raise NotImplementedError("swath product: geolocated through latitude/longitude")
+        from hypso.grid.areas import area_from_grid
+        crs_attrs = {key.rsplit("/", 1)[-1]: value for key, value in self.file_content.items()
+                     if key.startswith("crs/attr/")}
+        return area_from_grid(crs_attrs, self["x"].values, self["y"].values,
+                              float(self["/attr/grid_resolution_x"]), float(self["/attr/grid_resolution_y"]),
+                              str(self["/attr/grid"]))
 
     def get_dataset(self, dataset_id, ds_info):
         name = ds_info["name"]
