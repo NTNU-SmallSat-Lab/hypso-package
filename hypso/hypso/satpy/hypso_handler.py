@@ -22,22 +22,10 @@ from satpy.dataset.dataid import WavelengthRange
 
 from hypso.io.product import list_band_variables
 
-# file_type (from the matching reader YAML) -> product variable prefix. Both
-# levels currently write in per-band mode ("Lt_378" etc, not a single
-# datacube variable) with write_product's default datacube=False - see
-# hypso.io.product.
-_PRODUCT_PREFIX_BY_FILE_TYPE = {
-    "hypso_l1c_nc": "Lt",
-    "hypso_l1d_nc": "rhot",
-}
-
-
 class HypsoL1FileHandler(NetCDF4FileHandler):
-    """One handler class shared by the hypso_l1c/hypso_l1d readers - which
-    level is being read is implied by self.filetype_info['file_type']
-    (set by Satpy from whichever reader YAML matched this file), used to look
-    up the right product variable prefix (_PRODUCT_PREFIX_BY_FILE_TYPE).
-    """
+    """One handler class shared by the hypso_l1c, hypso_l1d and hypso_l2a
+    readers: the bands are discovered from the file itself, whatever the
+    cube variable (Lt, rhot, or an L2A method's Rrs, rho_w, rhos)."""
 
     def __init__(self, filename, filename_info, filetype_info):
         super().__init__(filename, filename_info, filetype_info)
@@ -51,7 +39,6 @@ class HypsoL1FileHandler(NetCDF4FileHandler):
         self.sensor = "hypso1" if sat_id == "HYPSO-1" else "hypso2"
         self.platform_name = sat_id
 
-        self._product_prefix = _PRODUCT_PREFIX_BY_FILE_TYPE[filetype_info["file_type"]]
         # A regridded product (hypso.grid) is on a map grid: x/y coordinates
         # and a CF `crs` variable. Its bands get get_area_def()'s
         # AreaDefinition instead of a swath from latitude/longitude.

@@ -55,7 +55,6 @@ dependencies=[
   "satpy >=0.45.0",
   "astropy >=5.3.4",
   "scikit-image >=0.21.0",
-  "matplotlib >=3.8.3",
   "python-dateutil",
   "pyyaml"
 ]
@@ -70,7 +69,7 @@ dynamic = [
 "Bug Tracker" = "https://github.com/NTNU-SmallSat-Lab/hypso-package/issues"
 
 [project.entry-points."satpy.readers"]
-# Registers hypso_l1c/hypso_l1d with Satpy's third-party reader discovery -
+# Registers hypso_l1c/hypso_l1d/hypso_l2a with Satpy's third-party reader discovery -
 # the module target (not the key) is what matters: Satpy looks for an etc/
 # directory next to hypso.satpy, i.e. hypso/hypso/satpy/etc/readers/*.yaml.
 # See hypso/hypso/satpy/hypso_handler.py and docs/architecture.rst.

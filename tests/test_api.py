@@ -522,6 +522,30 @@ def test_satpy_gridded(l1d, tmp_path):
     assert isinstance(area, AreaDefinition) and area.area_extent == g.area_definition().area_extent
 
 
+def test_to_l2a(l1c, l1d):
+    with pytest.raises(ValueError, match="method"):
+        l1d.to("L2A")
+    l2a = l1c.to("L2A", correct_atmosphere={"method": "dps"})      # runs toa_reflectance, then DPS
+    assert l2a.level == "L2A" and l2a.atmospheric_correction == "dps"
+    np.testing.assert_allclose(l2a.cube.values, l1d.correct_atmosphere("dps").cube.values)
+    assert l2a.to("L2A") is l2a
+
+
+def test_satpy_l2a(l1d, tmp_path):
+    from pyresample.geometry import AreaDefinition, SwathDefinition
+    from satpy import Scene
+    l2a = l1d.correct_atmosphere("dps")
+    scene = Scene(filenames=[str(l2a.write(out_dir=tmp_path))], reader="hypso_l2a")
+    name = next(n for n in scene.available_dataset_names() if n.startswith("Rrs_"))
+    scene.load([name])
+    assert isinstance(scene[name].attrs["area"], SwathDefinition)
+    assert scene[name].attrs["units"] == "sr-1"
+    gridded = l2a.regrid(resolution=3000, method="average")
+    scene = Scene(filenames=[str(gridded.write(out_dir=tmp_path))], reader="hypso_l2a")
+    scene.load([name])
+    assert isinstance(scene[name].attrs["area"], AreaDefinition)
+
+
 def test_hsi2rgb_on_l1d(l1d):
     from hypso.rgb import HSI2RGB
     rgb = HSI2RGB(l1d.wavelengths, l1d.cube.values)

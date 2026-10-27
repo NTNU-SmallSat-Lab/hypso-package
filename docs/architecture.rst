@@ -233,7 +233,7 @@ Satpy
 -----
 
 ``Product.to_satpy()`` builds a ``satpy.Scene`` from a product. Separately,
-``hypso_l1c`` and ``hypso_l1d`` are registered Satpy reader plugins, so files
+``hypso_l1c``, ``hypso_l1d`` and ``hypso_l2a`` are registered Satpy reader plugins, so files
 open through Satpy's own interface without this package's API::
 
     from satpy import Scene
@@ -241,9 +241,11 @@ open through Satpy's own interface without this package's API::
     scene = Scene(reader="hypso_l1c", filenames=["HYPSO2_HSI.….L1C.nc"])
     scene.load(["Lt_550", "latitude", "longitude"])
 
-Both readers share ``HypsoL1FileHandler`` (``hypso/satpy/hypso_handler.py``).
+The readers share ``HypsoL1FileHandler`` (``hypso/satpy/hypso_handler.py``).
 Bands are discovered per file with ``hypso.io.product.list_band_variables``,
-because the band set depends on binning and calibration. The readers match
+because the band set depends on binning and calibration (and, for L2A, on
+the method: ``Rrs_<nm>``, ``rho_w_<nm>`` or ``rhos_<nm>``). Regridded files
+are read on their map grid (``get_area_def``), others as swaths. The readers match
 current and older file names. They are registered through a ``satpy.readers``
 entry point, so the package must be installed (an editable install is
 enough).

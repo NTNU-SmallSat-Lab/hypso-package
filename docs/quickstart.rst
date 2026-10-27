@@ -25,6 +25,9 @@ file layout. Every processing method returns a new, immutable
    l1d = l1a.to("L1D", georeference={"latitudes": "latitudes_indirectgeoref.dat",
                                      "longitudes": "longitudes_indirectgeoref.dat"})
 
+``to("L2A", correct_atmosphere={"method": "polymer", "config": "ac_tools.yaml"})``
+continues through atmospheric correction; L2A has no default method.
+
 Calibration and the other steps log what they do through Python's
 ``logging``; ``logging.basicConfig(level=logging.INFO)`` shows it.
 
@@ -55,7 +58,11 @@ Masks and derived products
 
 .. code-block:: python
 
-   masked = l1d.with_masks(land=land, cloud=cloud)        # boolean (lines, samples) arrays
+   from hypso.masks import sea_land_cloud_masks
+
+   # the ground processing's classification, processing-temp/sea-land-cloud.labels
+   slc = sea_land_cloud_masks("sea-land-cloud.labels", l1d.cube.shape[:2])
+   masked = l1d.with_masks(land=slc["land"], cloud=slc["cloud"])   # or any boolean arrays
    with_chl = masked.with_variables(chla=chla_array)      # written alongside the cube
 
 Atmospheric correction

@@ -1,0 +1,34 @@
+reader:
+  name: hypso_l2a
+  short_name: HYPSO L2A
+  long_name: HYPSO Level 2A Atmospherically Corrected Reflectance
+  description: >
+    Reader for HYPSO-1/HYPSO-2 L2A NetCDF files written by
+    hypso.io.product.write_product. Per-band datasets (Rrs_<nm>, rho_w_<nm> or
+    rhos_<nm>, depending on the atmospheric correction method) are discovered
+    at load time. Regridded products (hypso.grid) are read on their map grid,
+    others as swaths.
+  reader: !!python/name:satpy.readers.core.yaml_reader.FileYAMLReader
+  sensors: [hypso1, hypso2]
+
+file_types:
+  hypso_l2a_nc:
+    file_reader: !!python/name:hypso.satpy.hypso_handler.HypsoL1FileHandler
+    file_patterns:
+    - '{capture_target}_{start_time:%Y-%m-%dT%H-%M-%SZ}-l2a-{method}.nc'
+    - '{capture_target}_{start_time:%Y-%m-%dT%H-%M-%SZ}-{label}-l2a-{method}.nc'
+    # current names (hypso.io.naming): {SAT}_{INSTRUMENT}.{time}.{target}.L2A.{method}[.{grid}][.{label}].nc
+    - '{platform}_HSI.{start_time:%Y%m%dT%H%M%S}.{capture_target}.L2A.{method}.nc'
+    - '{platform}_HSI.{start_time:%Y%m%dT%H%M%S}.{capture_target}.L2A.{method}.{label}.nc'
+
+datasets:
+  latitude:
+    name: latitude
+    standard_name: latitude
+    units: degree
+    file_type: hypso_l2a_nc
+  longitude:
+    name: longitude
+    standard_name: longitude
+    units: degree
+    file_type: hypso_l2a_nc

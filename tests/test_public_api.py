@@ -26,7 +26,7 @@ def test_io_modules():
 
 
 def test_masks_and_ac():
-    from hypso.masks import decode_jon_cnn_cloud_mask, decode_jon_cnn_land_mask  # noqa: F401
+    from hypso.masks import read_sea_land_cloud, sea_land_cloud_masks  # noqa: F401
     from hypso.masks.flags import apply_flags, decode_flags, encode_flags  # noqa: F401
     from hypso.ac import (  # noqa: F401
         load_acolite_l2r_nc, load_acolite_l2w_nc, load_ocsmart_h5, load_polymer_l2_v1_nc, load_polymer_l2_v2_nc,
@@ -73,7 +73,8 @@ def test_capture_object_api_removed(name):
                                     "hypso.io.dispatch", "hypso.io.reader", "hypso.io.writer", "hypso.load",
                                     "hypso.write", "hypso.calibration.pipeline", "hypso.ac.adapters.polymer",
                                     "hypso.classification", "hypso.spectral_analysis", "hypso.reflectance",
-                                    "hypso.georeferencing", "hypso.geometry_definition", "hypso.resample"])
+                                    "hypso.georeferencing", "hypso.geometry_definition", "hypso.resample",
+                                    "hypso.masks.jonas_svm_classifier", "hypso.masks.jon_cnn_classifier"])
 def test_old_modules_removed(module):
     with pytest.raises(ModuleNotFoundError):
         importlib.import_module(module)

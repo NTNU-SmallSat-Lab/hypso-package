@@ -1,2 +1,1 @@
-from .jon_cnn_classifier import *
-from .jonas_svm_classifier import *
+from .sea_land_cloud import LABELS, read_sea_land_cloud, sea_land_cloud_masks

@@ -51,7 +51,8 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    refactor.
 6. **Outside this repository, for the user**: eoread fork commit `3609d25` (F0 and d^2) on the flat-layout
    reader, and ACOLITE's/OC-SMART's readers on new files (×37); moving hypso-processing-pipeline to
-   `hypso.open` and the new names (×42, ×49), where `Product.window` can replace its HYPSO extraction; the
+   `hypso.open` and the new names (×42, ×49), where `Product.window` can replace its HYPSO extraction and
+   `hypso.masks.sea_land_cloud_masks` its `decode_jon_cnn_*` calls (×70); the
    pipeline's `find_window_indices` measures distance in degrees and can pick a farther pixel (×60).
 
 Parked until there is a concrete need: Zarr output (×29); HYPSO-2 RGB camera support (×14; needs an
@@ -64,6 +65,15 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-10-27 (×70): masks reader, to("L2A"), Satpy L2A.** Removed `hypso/masks/jonas_svm_classifier.py`
+  (never called, here, in production or in the pipeline; its unused matplotlib import was the package's only
+  one, so matplotlib is no longer a dependency). The Jon CNN decoder is now `hypso.masks.sea_land_cloud`:
+  `read_sea_land_cloud(path, shape)` and `sea_land_cloud_masks(path, shape)` for the ground processing's
+  `processing-temp/sea-land-cloud.labels` (0 water, 1 land, 2 cloud; size checked against the shape). On the
+  reference capture: 22% water, 66% land, 13% cloud. The pipeline's `decode_jon_cnn_*` calls (production
+  API) need the new names when it moves over (TODO 6). `Product.to("L2A", correct_atmosphere={"method": ...})`
+  (no default method; raises without one). New Satpy reader `hypso_l2a` (Rrs/rho_w/rhos bands discovered per
+  file; gridded files on their map grid); unused per-level prefix table removed from the handler.
 - **2026-10-27 (×69): HYPSO-1 on HYPSO-2's calibration scheme** (user: yes). `hypso1_calibration` now has a
   `data/coefficients.yaml` catalog: V2 = `moved` (default, unchanged) and `abs` (was `adjusted`), V1 = `lab` (was
   `original`); smile/destriping per capture type and the moon radiometric matrix as `capture_types` entries

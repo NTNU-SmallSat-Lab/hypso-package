@@ -557,15 +557,17 @@ class Product:
         return self._tree.attrs.get("atmospheric_correction")
 
     def to(self, level: str, calibrate: dict = None, georeference: dict = None,
-           toa_reflectance: dict = None) -> "Product":
+           toa_reflectance: dict = None, correct_atmosphere: dict = None) -> "Product":
         """Run the processing steps from this level up to ``level``.
 
         Parameters
         ----------
-        level : {"L1B", "L1C", "L1D"}
+        level : {"L1B", "L1C", "L1D", "L2A"}
             Target level.
-        calibrate, georeference, toa_reflectance : dict, optional
-            Options for each step, passed to the method of that name.
+        calibrate, georeference, toa_reflectance, correct_atmosphere : dict, optional
+            Options for each step, passed to the method of that name. For
+            L2A, ``correct_atmosphere`` must name the ``method``; there is
+            no default method.
 
         Returns
         -------
@@ -575,12 +577,17 @@ class Product:
         --------
         >>> l1d = l1a.to("L1D", calibrate={"version": "V2"},
         ...              georeference={"latitudes": lats, "longitudes": lons})
+        >>> l2a = l1d.to("L2A", correct_atmosphere={"method": "dps"})
         """
         level = level.upper()
-        if level not in LEVELS or LEVELS.index(level) < LEVELS.index(self.level):
+        order = LEVELS + ("L2A",)
+        if level not in order or order.index(level) < order.index(self.level):
             raise ValueError(f"cannot go from {self.level} to {level}")
+        if level == "L2A" and self.level != "L2A" and not (correct_atmosphere or {}).get("method"):
+            raise ValueError('to("L2A") needs correct_atmosphere={"method": ...}: one of "dps", "polymer", '
+                             '"acolite", "ocsmart"')
         options = {"calibrate": calibrate or {}, "georeference": georeference or {},
-                   "toa_reflectance": toa_reflectance or {}}
+                   "toa_reflectance": toa_reflectance or {}, "correct_atmosphere": correct_atmosphere or {}}
         product = self
         while product.level != level:
             step = _STEPS[product.level]
@@ -638,8 +645,8 @@ class Product:
         return path
 
 
-_STEPS = {"L1A": "calibrate", "L1B": "georeference", "L1C": "toa_reflectance"}
-_NEXT = {"L1A": "L1B", "L1B": "L1C", "L1C": "L1D"}
+_STEPS = {"L1A": "calibrate", "L1B": "georeference", "L1C": "toa_reflectance", "L1D": "correct_atmosphere"}
+_NEXT = {"L1A": "L1B", "L1B": "L1C", "L1C": "L1D", "L1D": "L2A"}
 
 
 def open(path) -> Product:  # noqa: A001 - mirrors xarray.open_dataset / builtin-style entry point

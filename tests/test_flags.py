@@ -67,3 +67,16 @@ def test_flags_survive_write_and_read(tmp_path):
         assert not np.isnan(f["rhot_400"][:]).any()   # product stays unmasked
     decoded = decode_flags(read_product(path).dataset[FLAGS_NAME])
     assert np.array_equal(decoded["land"], LAND) and np.array_equal(decoded["cloud"], CLOUD)
+
+
+def test_sea_land_cloud_reader(tmp_path):
+    from hypso.masks import LABELS, read_sea_land_cloud, sea_land_cloud_masks
+    labels = np.array([[0, 1, 2], [2, 1, 0]], dtype=np.uint8)
+    path = tmp_path / "sea-land-cloud.labels"
+    path.write_bytes(labels.tobytes())
+    np.testing.assert_array_equal(read_sea_land_cloud(path, (2, 3)), labels)
+    masks = sea_land_cloud_masks(path, (2, 3))
+    assert set(masks) == set(LABELS)
+    np.testing.assert_array_equal(masks["cloud"], labels == 2)
+    with pytest.raises(ValueError, match="holds 6 labels"):
+        read_sea_land_cloud(path, (3, 3))
