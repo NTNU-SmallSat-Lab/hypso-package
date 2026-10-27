@@ -1,16 +1,18 @@
-"""Satpy FileHandler for HYPSO L1C/L1D NetCDF files (as written by
-hypso.io.product.write_product (Product.write) - the flat root-group
-layout: per-band Lt_<wave>/rhot_<wave> variables and latitude/longitude/
-crs_wgs84 all as root-level siblings, see hypso.io.writer's module docstring).
+"""Satpy FileHandlers for HYPSO NetCDF files.
+
+HypsoL1FileHandler reads HSI L1C, L1D and L2A products as written by
+hypso.io.product.write_product (Product.write): the flat root-group layout,
+per-band variables (Lt_<wave>, rhot_<wave>, an L2A method's Rrs_<wave>, ...)
+and latitude/longitude as root-level siblings, swath or regridded.
+HypsoRGBFileHandler reads RGB camera products (hypso.rgb.write_camera).
 
 Registered via the [project.entry-points."satpy.readers"] entry in
 hypso/pyproject.toml pointing at the hypso.satpy module - Satpy looks for
-etc/readers/*.yaml next to that module (see etc/readers/hypso_l1c.yaml and
-hypso_l1d.yaml, which reference HypsoL1FileHandler by file_reader).
+etc/readers/*.yaml next to that module (hypso_l1c, hypso_l1d, hypso_l2a and
+hypso_rgb_l1a reference these classes by file_reader).
 
-Only L1C and L1D are covered (both have geometry, which visualization and
-compositing need; L1B is pre-georeferencing). L2A and gridded products are
-not yet covered; Product.to_satpy() works for any georeferenced product.
+L1B is pre-georeferencing and not covered; Product.to_satpy() works for any
+georeferenced product.
 """
 from datetime import datetime
 
@@ -117,3 +119,28 @@ class HypsoL1FileHandler(NetCDF4FileHandler):
         data.attrs["platform_name"] = self.platform_name
 
         return data
+
+
+class HypsoRGBFileHandler(HypsoL1FileHandler):
+    """RGB camera products (hypso.rgb.write_camera): fixed R, G, B datasets
+    from the reader YAML, geolocated by per-pixel latitude/longitude, or on
+    the map grid of a regridded camera image. An unregistered product has no
+    geolocation, so Satpy cannot place it."""
+
+    def __init__(self, filename, filename_info, filetype_info):
+        super().__init__(filename, filename_info, filetype_info)
+        self.sensor = "hypso2_rgb"
+
+    def available_datasets(self, configured_datasets=None):
+        for is_avail, ds_info in (configured_datasets or []):
+            if is_avail is not None:
+                yield is_avail, ds_info
+                continue
+            matches = self.file_type_matches(ds_info["file_type"])
+            if matches and ds_info["name"] not in self:
+                matches = False
+            if matches and ds_info["name"] in ("R", "G", "B"):
+                ds_info = dict(ds_info)
+                if self.gridded:
+                    ds_info.pop("coordinates", None)
+            yield matches, ds_info

@@ -1,0 +1,49 @@
+reader:
+  name: hypso_rgb_l1a
+  short_name: HYPSO RGB L1A
+  long_name: HYPSO-2 RGB camera image (demosaiced counts)
+  description: >
+    Reader for HYPSO-2 RGB camera products written by hypso.rgb.write_camera:
+    R, G, B in the camera's own frame with per-pixel latitude/longitude (a
+    registered image, hypso.rgb.register_camera), or on a map grid
+    (hypso.rgb.regrid_camera). Unregistered products have no geolocation.
+  reader: !!python/name:satpy.readers.core.yaml_reader.FileYAMLReader
+  sensors: [hypso2_rgb]
+
+file_types:
+  hypso_rgb_l1a_nc:
+    file_reader: !!python/name:hypso.satpy.hypso_handler.HypsoRGBFileHandler
+    file_patterns:
+    # hypso.io.naming with the RGB instrument token, matched literally (the HSI readers match _HSI)
+    - '{platform}_RGB.{start_time:%Y%m%dT%H%M%S}.{capture_target}.L1A.nc'
+    - '{platform}_RGB.{start_time:%Y%m%dT%H%M%S}.{capture_target}.L1A.{label}.nc'
+
+datasets:
+  R:
+    name: R
+    standard_name: red_counts
+    units: '1'
+    coordinates: [longitude, latitude]
+    file_type: hypso_rgb_l1a_nc
+  G:
+    name: G
+    standard_name: green_counts
+    units: '1'
+    coordinates: [longitude, latitude]
+    file_type: hypso_rgb_l1a_nc
+  B:
+    name: B
+    standard_name: blue_counts
+    units: '1'
+    coordinates: [longitude, latitude]
+    file_type: hypso_rgb_l1a_nc
+  latitude:
+    name: latitude
+    standard_name: latitude
+    units: degree
+    file_type: hypso_rgb_l1a_nc
+  longitude:
+    name: longitude
+    standard_name: longitude
+    units: degree
+    file_type: hypso_rgb_l1a_nc

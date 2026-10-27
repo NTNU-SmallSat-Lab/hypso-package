@@ -5,3 +5,4 @@ from .hsi2rgb import HSI2RGB
 from .registration import (CameraRegistration, camera_lonlat, camera_to_hsi_pixels, georeference_camera,
                            hsi_to_camera_pixels, register_camera)
 from .maps import camera_gsd, plot_rgb_map, regrid_camera
+from .product import camera_filename, camera_product, open_camera, write_camera

@@ -65,3 +65,43 @@ least twice the camera's pixel size and takes the nearest pixel otherwise.
 regridded hypso.Product) with optional latitude/longitude graticule, scale bar,
 north arrow, coastlines (needs cartopy and its Natural Earth data) and title.
 Both need matplotlib, which the package does not depend on.
+
+Camera products
+---------------
+
+The camera is not a ``hypso.Product`` (no wavelengths, calibration levels or
+SRFs); a camera product is an xarray Dataset in the same CF/ACDD conventions:
+
+.. code-block:: python
+
+   from hypso.rgb import camera_product, write_camera, open_camera
+
+   camera_l1a = camera_product(camera, reg, l1d)    # reg may be None or failed
+   path = write_camera(camera_l1a, out_dir=".")     # HYPSO2_RGB.20250404T022723.ariake.L1A.nc
+   camera_l1a = open_camera(path)
+
+``R``, ``G`` and ``B`` are the demosaiced counts in the camera's own frame,
+stored as uint8 (the bilinear demosaic rounded). ``L1A`` means uncalibrated
+counts. A registered product adds float32 ``latitude``/``longitude`` per pixel,
+``in_hsi_swath`` (when the HSI product is given) and the registration
+attributes; an unregistered one records why, without geolocation
+(``georeferenced = "false"``). The file name uses the ``RGB`` instrument token
+(:doc:`products`); a :func:`~hypso.rgb.regrid_camera` result gets the grid
+token too (``...L1A.utm52n_100m.nc``). About 22 MB for a registered
+3840 x 2748 image.
+
+Satpy
+-----
+
+The ``hypso_rgb_l1a`` reader matches ``_RGB`` names only (the HSI readers match
+``_HSI``) and has a ``true_color`` composite from R, G and B:
+
+.. code-block:: python
+
+   from satpy import Scene
+
+   scene = Scene(reader="hypso_rgb_l1a", filenames=[str(path)])
+   scene.load(["true_color"])
+
+A native-frame product is a swath (per-pixel latitude/longitude), a regridded
+one is read on its map grid. Unregistered products cannot be placed by Satpy.

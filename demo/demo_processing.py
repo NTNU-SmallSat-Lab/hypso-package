@@ -156,6 +156,35 @@ plt.title("L1D, HSI2RGB")
 plt.show()
 
 # %% [markdown]
+# ## RGB camera
+#
+# HYPSO-2's RGB camera image (`<capture id>-rgb/*.bmp`, ~30 m pixels) has no
+# georeferencing. `register_camera` matches it to the HSI image (SIFT +
+# RANSAC homography); it is an explicit step, never run on reading. A
+# registered camera product has latitude/longitude for every camera pixel,
+# can be regridded onto a map and is written as
+# `HYPSO2_RGB.<time>.<target>.L1A.nc` (Satpy reader `hypso_rgb_l1a`). Not
+# every capture has a camera image (this cell skips if there is none).
+
+# %%
+from hypso.rgb import (camera_product, find_camera_image, plot_rgb_map, read_camera_image, regrid_camera,
+                       register_camera, write_camera)
+
+image_file = find_camera_image(CAPTURE_DIR)
+if image_file is None:
+    print("no RGB camera image in", CAPTURE_DIR)
+else:
+    camera = read_camera_image(image_file)
+    reg = register_camera(camera, l1d)
+    print("registered:", reg.ok, reg.reason, f"{reg.inliers} inliers, RMS {reg.rms_m:.0f} m")
+    if reg.ok:
+        camera_l1a = camera_product(camera, reg, l1d)
+        print(write_camera(camera_l1a, out_dir=OUT_DIR).name)
+        plot_rgb_map(regrid_camera(camera_l1a), graticule=True, scale_bar=True, north_arrow=True,
+                     coastlines=True)
+        plt.show()
+
+# %% [markdown]
 # ## Masks and derived products
 #
 # Products are written unmasked. Masks go into the CF flag variable

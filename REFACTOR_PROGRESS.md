@@ -42,7 +42,7 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
 4b. ~~**NetCDF file sizes**~~ - done (×71): bands BitRound 14 bits by default, L1D 218 -> about 135 MB.
 4c. ~~**Band subsets**~~ - done (×79).
 4d. ~~**Compute in float32**~~ - done (×75).
-4e. **RGB camera co-registration** (×72; approach agreed with the user 2026-10-27). The camera image has no
+4e. **RGB camera co-registration** (done ×84/×85; ×72; approach agreed with the user 2026-10-27). The camera image has no
    georeferencing, and the ground processing does not register it. Plan: regrid the HSI L1D (an RGB rendering,
    3 bands) onto a UTM grid at about 100-200 m (a true map plane, which removes the pushbroom geometry); SIFT
    keypoints (scikit-image, already a dependency; ORB if accurate enough) on that map and the downsampled
@@ -140,6 +140,17 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-10-27 (×85): RGB camera products** (TODO 4e done). `hypso.rgb.product`: `camera_product(camera,
+  registration=None, hsi=None)` -> Dataset (not a hypso.Product: no wavelengths/levels/SRFs) with R/G/B uint8
+  (rounded demosaic) in the native frame, per-pixel float32 latitude/longitude and `in_hsi_swath` when
+  registered, a failed registration recorded with its reason; instrument `RGB`, level `L1A` (uncalibrated
+  counts), target from the HSI product or the BMP name. `camera_filename` (`HYPSO2_RGB.<time>.<target>.L1A
+  [.grid][.label].nc`, the camera's own time), `write_camera` (zlib 4), `open_camera`. Satpy: reader
+  `hypso_rgb_l1a` (`HypsoRGBFileHandler`, `_RGB` names only, swath or map grid), composite
+  etc/composites/hypso2_rgb.yaml `true_color` from R, G, B. Ariake 2025-04-04: 22.5 MB, Satpy true_color on
+  the swath (SwathDefinition) and on a 100 m regrid (AreaDefinition). Demo cell (skips when a capture has no
+  camera image; the Venice demo capture has none), docs/camera.rst, tests/test_camera_product.py
+  (synthetic). The hypso_handler module docstring updated (it still said L2A was not covered).
 - **2026-10-27 (×84): RGB camera registration and maps** (user; never run automatically on reading).
   `hypso.rgb.registration`: `register_camera(camera, hsi)` (HSI 640/550/460 nm regridded to UTM 150 m; SIFT,
   ratio 0.8, cross-check; RANSAC homography camera px -> map; seeded) returns a `CameraRegistration` (homography
@@ -151,7 +162,7 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
   `plot_rgb_map` (gridded camera or regridded Product; graticule, scale bar, north arrow true north, coastlines
   via cartopy if present, outlined labels). Ariake 2025-04-04: ok, 344/435 inliers, 194 m, coverage 75%,
   register 26 s, georeference 13 s; Natural Earth coastlines line up on camera and HSI maps. docs/camera.rst.
-  Still to do for TODO 4e: a camera Product (RGB names, levels), Satpy reader and composite, demo.
+  Still to do for TODO 4e: a camera Product (RGB names, levels), Satpy reader and composite, demo (done ×85).
 - **2026-10-27 (×82): internal docstrings** (TODO 1). The `:param x:` / `:return:` docstrings in
   hypso.calibration, hypso.geometry and hypso.utils converted to NumPy sections (wording kept); the 38 empty
   entries filled from the code; 13 undocumented functions documented (geometry bbox/gsd/resolution, frame

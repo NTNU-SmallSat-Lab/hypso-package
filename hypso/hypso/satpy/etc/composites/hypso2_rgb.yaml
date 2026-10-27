@@ -1,0 +1,16 @@
+# True-color composite for the hypso_rgb_l1a reader (HYPSO-2's RGB camera):
+# the camera's own R, G, B channels, by name (the channel set is fixed).
+#
+# Usage:
+#   scn = Scene(reader="hypso_rgb_l1a", filenames=[...])
+#   scn.load(["true_color"])
+sensor_name: visir/hypso2_rgb
+
+composites:
+  true_color:
+    compositor: !!python/name:satpy.composites.GenericCompositor
+    prerequisites:
+    - name: R
+    - name: G
+    - name: B
+    standard_name: true_color
