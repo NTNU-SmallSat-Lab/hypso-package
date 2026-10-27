@@ -32,11 +32,14 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    (`hypso.calibration`, `hypso.geometry`, `hypso.sensors`, `hypso.io` cf/schema, private helpers; four
    comments still say `satobj`). Check the published site after the first push to `main` (only `main`
    publishes).
-2. **Verification beyond the reference capture**: Polymer, ACOLITE and OC-SMART for real through
-   `correct_atmosphere` on one reprocess capture, compared with its L2A files (when aulus2 is free; all AC
-   tests so far use the tools' real outputs, not real runs); fix the silently skipped real-Polymer test (stale
-   path); a HYPSO-1 capture and a nominal (non-wide) HYPSO-2 capture through L1D (everything so far is one
-   HYPSO-2 wide capture; this also settles the old "variable capture dimensions" item, ×20/×31).
+2. **Verification beyond the reference capture** (×68 did HYPSO-1 and a second HYPSO-2 site, now regression
+   tests). Left: the real Polymer, ACOLITE and OC-SMART runs through `correct_atmosphere` (when aulus2 is free;
+   the user's production installations are not to be touched - configure a separate one in HYPSO_AC_CONFIG);
+   a nominal (non-wide) capture, of which none was found in the local data folders (all are 598 x 1092).
+2b. **HYPSO-1 calibration naming** (×68, decision for the user): `hypso1_calibration` still has the old
+   `moved` (default) / `adjusted` / `original` names, prints instead of logging, and has no version or
+   catalog scheme, unlike HYPSO-2's `abs`/`moved`/`lab` with V1-V3 (×48). The docs describe HYPSO-2's
+   scheme only. Bring HYPSO-1 onto the same scheme, or document the difference.
 3. ~~**Dependencies**~~ - done (×65).
 4. ~~**Satpy readers and gridded products**~~ - done (×66).
 4b. **NetCDF file sizes** (user, 2026-10-27): see whether files can be made smaller. Reference capture: L1A
@@ -64,6 +67,18 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-10-27 (×68): verification beyond the reference capture.** A HYPSO-1 capture
+  (koreanCalValJL_2026-08-27, wide) and a second HYPSO-2 site (kemigawa_2025-12-28, from the reprocess set)
+  through the refactor with the production coefficients (`moved`; V2 for HYPSO-2), against the production
+  files: L1B identical to float32 precision (max rel 6e-8), L1C latitude exactly equal, solar zenith to float32
+  precision; kemigawa L1D identical to float32 precision; HYPSO-1 L1D (produced 2026-09-14, before the
+  Earth-Sun distance fix) a constant 0.958346 of ours = (d_old/d_new)^2 exactly (spread 1e-7). Now
+  `tests/test_production_parity.py` (skips without the data). No nominal (non-wide) capture exists locally.
+  The real-tool tests in `test_ac_subprocess.py` now take tool locations from HYPSO_AC_CONFIG instead of
+  hard-coded paths (the Polymer one had gone stale and skipped silently); they skip with the reason when it is
+  not configured. Note: before that change the real-ACOLITE test ran once against the user's production
+  checkout (import plus a missing-input run, log to a temporary directory; nothing modified). Production AC
+  installations are not to be used (user, 2026-10-27).
 - **2026-10-27 (×67): docstrings, user-facing modules.** NumPy-style docstrings for `hypso.srf`
   (load_solar_irradiance, earth_sun_distance, compute_spectral_response, srf_dataset), `hypso.io.naming`
   (ProductName, product_name, parse_product_name), `hypso.io.provenance` (add_step, calibration_attrs,

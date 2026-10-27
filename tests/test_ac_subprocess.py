@@ -17,8 +17,9 @@ Three tiers per tool, cheapest/most-general first:
    deliberately pointed at nonexistent tool paths, proving ACRunError
    propagates correctly end-to-end through a real subprocess boundary.
    Needs no external tool installed (the paths are meant to not exist).
-3. A real-tool-checkout test (skipped if absent) that runs the actual driver
-   against the real tool installed on this machine, with a deliberately-
+3. A real-tool test that runs the actual driver against a real installation,
+   taken from the AC tool configuration (HYPSO_AC_CONFIG; skipped, with the
+   reason, when it has no section for the tool), with a deliberately-
    missing INPUT FILE - proving the real imports succeed through the isolated
    subprocess. Manually verified while building this pass: Polymer's
    eoread.hypso.Level1_HYPSO raises a clean FileNotFoundError on the missing
@@ -37,18 +38,26 @@ from hypso.ac.adapters import _polymer_driver
 from conftest import requires_real_capture
 from hypso.ac.adapters import _acolite_driver
 
-REAL_POLYMER_BASE_PATH = Path("/home/camerop/AC/Polymer/Polymer_HYPSO_SRF_Oct_2025")
-REAL_ACOLITE_PATH = Path("/home/camerop/AC/ACOLITE/acolite")
+def _configured(tool: str) -> dict:
+    """The tool's section of the AC tool configuration (HYPSO_AC_CONFIG), or
+    {}. The package has no built-in tool locations, and neither do these
+    tests: they run a real installation only when one is configured (they
+    used to hard-code paths, which went stale and skipped silently)."""
+    from hypso.ac.config import load_ac_config
+    try:
+        return load_ac_config().get(tool) or {}
+    except (ValueError, OSError):
+        return {}
+
+
+REAL_POLYMER = _configured("polymer")
+REAL_ACOLITE = _configured("acolite")
 
 requires_real_polymer = pytest.mark.skipif(
-    not REAL_POLYMER_BASE_PATH.is_dir(),
-    reason=f"real Polymer checkout not present at {REAL_POLYMER_BASE_PATH}",
-)
+    not REAL_POLYMER, reason="real-tool test: set HYPSO_AC_CONFIG with a polymer section to run it")
 
 requires_real_acolite = pytest.mark.skipif(
-    not REAL_ACOLITE_PATH.is_dir(),
-    reason=f"real ACOLITE checkout not present at {REAL_ACOLITE_PATH}",
-)
+    not REAL_ACOLITE, reason="real-tool test: set HYPSO_AC_CONFIG with an acolite section to run it")
 
 
 # --- tier 1: driver-level unit tests, no subprocess, no Polymer ---
@@ -322,24 +331,23 @@ def test_real_polymer_imports_succeed_through_subprocess(tmp_path):
     # ModuleNotFoundError/ImportError. It must instead fail with
     # FileNotFoundError, proving eoread/polymer/core/eotools all imported
     # correctly in the isolated subprocess.
-    base = REAL_POLYMER_BASE_PATH
     config = {
-        "polymer_base_path": str(base),
-        "polymer_path": str(base / "polymer-master-v5"),
-        "eoread_path": str(base / "eoread"),
-        "eotools_path": str(base / "eotools"),
-        "core_path": str(base / "core"),
+        "polymer_base_path": REAL_POLYMER["base_path"],
+        "polymer_path": REAL_POLYMER["polymer_path"],
+        "eoread_path": REAL_POLYMER.get("eoread_path", ""),
+        "eotools_path": REAL_POLYMER.get("eotools_path", ""),
+        "core_path": REAL_POLYMER.get("core_path", ""),
         "polymer_l1_input_nc_file": str(tmp_path / "does_not_exist-l1c.nc"),
         "polymer_output_dir": str(tmp_path),
         "if_exists": "overwrite",
         "srf_nc_path": str(tmp_path / "does_not_exist_srf.nc"),
-        "polymer_version": "v1",
+        "polymer_version": REAL_POLYMER.get("version", "v2"),
         "optional_output_datasets": ["SPM"],
     }
 
     with pytest.raises(ACRunError) as exc:
         run_subprocess_driver(
-            python_path=sys.executable,
+            python_path=REAL_POLYMER.get("python", sys.executable),
             driver_module="hypso.ac.adapters._polymer_driver",
             config=config,
             tool_name="polymer",
@@ -549,7 +557,7 @@ def test_real_acolite_imports_and_runs_through_subprocess(tmp_path):
     # here (status "ok" + a real ACOLITE-written log file in the output dir)
     # is itself the proof that real ACOLITE code executed, not a lack of one.
     config = {
-        "acolite_path": str(REAL_ACOLITE_PATH),
+        "acolite_path": REAL_ACOLITE["path"],
         "sensor": "HYPSO2",
         "settings_overrides": {
             "inputfile": str(tmp_path / "does_not_exist-l1c.nc"),
@@ -561,7 +569,7 @@ def test_real_acolite_imports_and_runs_through_subprocess(tmp_path):
     }
 
     result = run_subprocess_driver(
-        python_path=sys.executable,
+        python_path=REAL_ACOLITE.get("python", sys.executable),
         driver_module="hypso.ac.adapters._acolite_driver",
         config=config,
         tool_name="acolite",
