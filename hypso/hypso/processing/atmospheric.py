@@ -111,7 +111,8 @@ def _dps(tree, masked, mask_flags, statistic="min", percentile=None):
                                                                                   "percentile": percentile}))
 
 
-def _machi(tree, masked, mask_flags, est_min_R=0.05, tol=0.01, approach_rate=1.0, fit_exclude_flags=None):
+def _machi(tree, masked, mask_flags, est_min_R=0.05, tol=0.01, approach_rate=1.0, fit_exclude_flags=None,
+           fit_subsample=1):
     # MACHI (hypso.ac.machi, vendored unchanged from upstream ebbc3e72): fit one
     # scattering (A) and one transmission (T) spectrum on the image's finite
     # pixels (all of them, as upstream - user decision 2026-10-27 - or without
@@ -136,8 +137,17 @@ def _machi(tree, masked, mask_flags, est_min_R=0.05, tol=0.01, approach_rate=1.0
         raise ValueError("MACHI needs finite pixels to fit; none are left")
     # Bands without signal (all zero: HYPSO's smile correction blanks < 400 nm)
     # make MACHI's update divide by zero and stop at once; fit the others only.
-    used = np.flatnonzero(np.any(pixels[fit] != 0, axis=0))
-    t_fit, a_fit, objective = machi.atm_correction(pixels[fit][:, used].astype(np.float64), solar=np.ones(used.size),
+    rows = np.flatnonzero(fit)
+    used = np.flatnonzero([np.any(pixels[rows, b] != 0) for b in range(bands)])
+    if fit_subsample > 1:
+        # Every Nth fit pixel, plus each band's darkest one: MACHI starts A from
+        # (and caps it at) the per-band minimum, and a plain subsample misses it
+        # (A then shifts by ~1e-3, ~4% of dark water). With the minima kept, a
+        # 1-in-16 fit changes rhos by ~7e-5 for 1/12 of the time and 1/4 of the
+        # memory (reference capture, REFACTOR_PROGRESS.md ×80).
+        darkest = [rows[int(np.argmin(pixels[rows, b]))] for b in used]
+        rows = np.union1d(rows[::int(fit_subsample)], darkest)
+    t_fit, a_fit, objective = machi.atm_correction(pixels[rows][:, used].astype(np.float64), solar=np.ones(used.size),
                                                    tol=tol, est_min_R=est_min_R, approach_rate=approach_rate)
     T = np.full(bands, np.nan)
     A = np.full(bands, np.nan)
@@ -145,9 +155,9 @@ def _machi(tree, masked, mask_flags, est_min_R=0.05, tol=0.01, approach_rate=1.0
     with np.errstate(divide="ignore", invalid="ignore"):
         corrected = np.where(T > 0, (cube - A) / T, np.nan)
     settings = {"est_min_R": est_min_R, "tol": tol, "approach_rate": approach_rate,
-                "fit_exclude_flags": list(fit_exclude_flags or [])}
+                "fit_exclude_flags": list(fit_exclude_flags or []), "fit_subsample": int(fit_subsample)}
     parameters = {**settings, "masked": masked, "mask_flags": list(mask_flags) if mask_flags else "all" if masked else "",
-                  "fit_pixels": int(fit.sum()), "bands_fitted": int(used.size),
+                  "fit_pixels": int(rows.size), "bands_fitted": int(used.size),
                   "bands_without_signal": [int(b) for b in np.setdiff1d(np.arange(bands), used)],
                   "iterations": len(objective) - 1,
                   "objective_final": float(objective[-1])}
@@ -555,7 +565,8 @@ def correct_atmosphere(tree: xr.DataTree, method: str = "machi", masked: bool = 
         Method-specific. machi: ``est_min_R`` (expected minimum surface
         reflectance, default 0.05), ``tol`` (default 0.01), ``approach_rate``
         (default 1), ``fit_exclude_flags`` (pixel_flags names left out of the
-        fit; default none, all finite pixels). dps: ``statistic`` (``"min"`` or
+        fit; default none, all finite pixels), ``fit_subsample`` (fit on every
+        Nth pixel plus each band's darkest; default 1, all). dps: ``statistic`` (``"min"`` or
         ``"percentile"``), ``percentile``. polymer, acolite, ocsmart: any key
         of the tool's configuration section (e.g. ``settings={...}``),
         overriding it; acolite also ``output`` (``"l2w"`` or ``"l2r"``) and

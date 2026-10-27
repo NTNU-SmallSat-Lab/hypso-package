@@ -76,7 +76,22 @@ Options: ``est_min_R`` (expected minimum surface reflectance, default 0.05),
 ``tol`` (relative change of the objective at which the fit stops, default
 0.01), ``approach_rate`` (default 1), and ``fit_exclude_flags`` (pixel_flags
 left out of the fit, e.g. ``["cloud"]``; by default every finite pixel is used,
-as upstream). The correction is applied to every pixel. Bands without signal
+as upstream), and ``fit_subsample`` (fit on every Nth pixel; default 1). The
+correction is applied to every pixel.
+
+``fit_subsample`` trades a little accuracy for speed and memory, e.g. for many
+captures in parallel. The fit always keeps each band's darkest pixel, because
+MACHI starts the scattering spectrum from the per-band minimum; without it the
+result over dark water shifts by several percent. On the reference capture:
+
+=====================  =======  ===========  ====================================
+``fit_subsample``      Fit      Peak memory  Change in ``rhos``
+=====================  =======  ===========  ====================================
+1 (default)            34 s     3.3 GB       (reference)
+16                     2.7 s    0.8 GB       about 7e-5 (0.3% of dark water)
+=====================  =======  ===========  ====================================
+
+Bands without signal
 (HYPSO's smile correction leaves the bands below 400 nm at zero) are not fitted
 and come out NaN.
 

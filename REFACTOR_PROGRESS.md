@@ -126,6 +126,14 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-10-27 (×80): MACHI fit subsampling** (user: option, default unchanged). `fit_subsample=N` fits A and T on
+  every Nth finite pixel plus each band's darkest pixel; the correction is still applied to every pixel.
+  Measured on the reference capture: a plain 1-in-4 subsample shifts A by ~1e-3 (up to 4% of dark water at AAOT)
+  because MACHI starts A from, and caps it at, the per-band minimum; keeping the darkest pixels brings 1-in-16 to
+  ~7e-5 (0.3% of dark water) at 2.7 s and 0.8 GB instead of 34 s and 3.3 GB. Default 1 (all pixels, as upstream).
+  Recorded in provenance; documented with the table. One-capture check at AAOT (MACHI rhos/pi vs AERONET-OC,
+  Polymer, ACOLITE): MACHI 2-5x above AERONET in the blue, close to ACOLITE there - expected, as rhos keeps sky
+  reflection; the 67-capture study was stopped (user: confident in MACHI).
 - **2026-10-27 (×79): band subsets** (user). `Product.select_bands(wavelength_range | wavelengths | indices)` and
   `hypso.processing.select_bands`, from L1B on (L1A raises: smile correction mixes bands). Each band keeps its
   full-set index as a `band_index` coordinate (files: the band variables' `band` attribute, now written from it

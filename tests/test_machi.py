@@ -35,3 +35,18 @@ def test_machi_options(l1d):
     assert int(excluded.provenance[-1]["fit_pixels"]) == 548 * l1d.cube.shape[1]
     with pytest.raises(ValueError, match="unknown flags"):
         correct_atmosphere(flagged.tree, "machi", fit_exclude_flags=["land"])
+
+
+
+@requires_real_capture
+def test_machi_fit_subsample(l1d):
+    full = hypso.Product(correct_atmosphere(l1d.tree, "machi"))
+    sub = hypso.Product(correct_atmosphere(l1d.tree, "machi", fit_subsample=16))
+    step = sub.provenance[-1]
+    assert int(step["fit_pixels"]) < int(full.provenance[-1]["fit_pixels"]) / 15
+    a_full, a_sub = full.tree["metadata/machi"].dataset["A"].values, sub.tree["metadata/machi"].dataset["A"].values
+    ok = np.isfinite(a_full)
+    assert np.max(np.abs(a_sub[ok] - a_full[ok])) < 5e-4          # darkest pixels kept: A barely moves
+    w_full, w_sub = full.window(45.3139, 12.5083)["mean"].values, sub.window(45.3139, 12.5083)["mean"].values
+    finite = np.isfinite(w_full)
+    assert np.max(np.abs(w_sub[finite] - w_full[finite])) < 5e-4
