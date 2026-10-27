@@ -11,6 +11,18 @@ logger = logging.getLogger(__name__)
 
 
 def load_acolite_l2r_nc(nc_file_path: Path) -> dict:
+    """Read an ACOLITE L2R file (surface reflectance ``rhos``).
+
+    Parameters
+    ----------
+    nc_file_path : pathlib.Path
+
+    Returns
+    -------
+    dict
+        ``{variable name: xarray.DataArray}``, with ``rhos`` as one
+        ``(y, x, band)`` cube on its band wavelengths.
+    """
 
     logger.info("Opening ACOLITE L2R NetCDF file %s", nc_file_path)
 
@@ -47,6 +59,18 @@ def load_acolite_l2r_nc(nc_file_path: Path) -> dict:
 
 
 def load_acolite_l2w_nc(nc_file_path: Path) -> dict:
+    """Read an ACOLITE L2W file (``Rrs`` and water products).
+
+    Parameters
+    ----------
+    nc_file_path : pathlib.Path
+
+    Returns
+    -------
+    dict
+        ``{variable name: xarray.DataArray}``, with ``Rrs`` as one
+        ``(y, x, band)`` cube on its band wavelengths.
+    """
 
     logger.info("Opening ACOLITE L2W NetCDF file %s", nc_file_path)
 

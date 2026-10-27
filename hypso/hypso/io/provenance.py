@@ -37,6 +37,7 @@ _SECRET_KEY = re.compile(r"(_u|_p|user(name)?|pass(word)?|token|secret|credentia
 
 
 def utc_now() -> str:
+    """The current UTC time, ISO 8601 to the second with a ``Z`` suffix."""
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
@@ -55,7 +56,15 @@ def attr_value(value):
 
 
 def redact(settings: dict):
-    """(settings without credential-like keys, sorted removed keys)."""
+    """Remove credential-like keys (user names, passwords, tokens, secrets, API keys) from settings.
+
+    Returns
+    -------
+    settings : dict
+        Without those keys.
+    removed : list of str
+        The removed keys, sorted.
+    """
     removed = sorted(k for k in settings if _SECRET_KEY.search(str(k)))
     return {k: v for k, v in settings.items() if k not in removed}, removed
 
@@ -72,12 +81,26 @@ def _package_attrs(prefix: str, package: str, label: str = None) -> dict:
 
 
 def software_attrs() -> dict:
+    """hypso-package's name, version and git commit, for a provenance step."""
     return _package_attrs("software", "hypso", label="hypso-package")
 
 
 def calibration_attrs(package: str, files: dict) -> dict:
-    """`files`: {kind: path}, e.g. {"radiometric": ..., "smile": ...}; None
-    entries (a step not applied) are skipped."""
+    """Provenance attributes for the calibration files used.
+
+    Parameters
+    ----------
+    package : str
+        Calibration package, e.g. ``"hypso2_calibration"``.
+    files : dict
+        ``{kind: path}``, e.g. ``{"radiometric": ..., "smile": ...}``; None
+        entries (a correction not applied) are skipped.
+
+    Returns
+    -------
+    dict
+        The package's version and commit, and each file's name and sha256.
+    """
     attrs = _package_attrs("calibration_package", package)
     for kind, path in files.items():
         if path is None:
@@ -89,6 +112,11 @@ def calibration_attrs(package: str, files: dict) -> dict:
 
 def ac_attrs(tool: str, version: str = None, git_commit: str = None, install_path=None,
              settings_effective: dict = None, settings_user: dict = None) -> dict:
+    """Provenance attributes for an atmospheric correction tool run.
+
+    Settings are stored as JSON with credential-like keys removed
+    (:func:`redact`).
+    """
     attrs = {"ac_tool": tool, "ac_version": version or "unknown", "ac_git_commit": git_commit or "",
              "ac_install_path": str(install_path or "")}
     redacted = set()
@@ -105,8 +133,23 @@ def ac_attrs(tool: str, version: str = None, git_commit: str = None, install_pat
 
 def add_step(tree: xr.DataTree, step: str, *, input_file=None, parameters: dict = None,
              calibration: dict = None, ac: dict = None) -> None:
-    """Record a processing step on `tree` (in place). `calibration` /
-    `ac` are dicts from calibration_attrs() / ac_attrs()."""
+    """Record a processing step on a product tree, in place.
+
+    Adds ``metadata/processing/<step>`` and a line to the ``history``
+    attribute.
+
+    Parameters
+    ----------
+    tree : xarray.DataTree
+    step : str
+        Step name, e.g. ``"l1b"``, ``"regrid"``.
+    input_file : str or path, optional
+        What the step read (only its name is kept).
+    parameters : dict, optional
+        The step's parameters.
+    calibration, ac : dict, optional
+        From :func:`calibration_attrs` and :func:`ac_attrs`.
+    """
     date = utc_now()
     attrs = {"date_utc": date, **software_attrs()}
     if input_file is not None:

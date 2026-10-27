@@ -12,6 +12,16 @@ logger = logging.getLogger(__name__)
 
 # For NetCDF output from Feb 2026 version of Polymer
 def load_polymer_l2_v2_nc(nc_file_path: Path) -> dict:
+    """Read a Polymer v2 output file's 2D and 3D variables.
+
+    For the reflectance prefer :func:`read_polymer_reflectance`, which also
+    handles the per-band ``rho_w_<nm>`` variables the v2 build writes.
+
+    Returns
+    -------
+    dict
+        ``{variable name: xarray.DataArray}`` (other variables as read).
+    """
 
     polymer_datasets = [
         "latitude",
@@ -86,6 +96,13 @@ def load_polymer_l2_v2_nc(nc_file_path: Path) -> dict:
 
 # For NetCDF output from Oct 2025 version of Polymer
 def load_polymer_l2_v1_nc(nc_file_path: Path) -> dict:
+    """Read a Polymer v1 output file.
+
+    Returns
+    -------
+    dict
+        ``{variable name: xarray.DataArray}``.
+    """
 
     polymer_datasets = [
         "bands",
@@ -233,12 +250,19 @@ def _load_reflectances_cube_v1(f, refl_vars, wavelengths, dim_names_3d):
 
 
 def read_polymer_reflectance(nc_file_path) -> tuple:
-    """(rho_w as a (y, x, bands) float array, band wavelengths in nm) from a
-    Polymer output file, whichever way the build stores it: one 3D `rho_w`
-    variable, or one `rho_w_<nm>` variable per band (what the v2 build
-    writes for HYPSO - load_polymer_l2_v2_nc misses these). Bands are ordered
-    by wavelength; wavelengths come from the file's `bands` variable when it
-    matches the per-band names, else from the names."""
+    """Polymer's water reflectance, however the build stores it.
+
+    Either one 3D ``rho_w`` variable, or one ``rho_w_<nm>`` variable per band
+    (what the v2 build writes for HYPSO).
+
+    Returns
+    -------
+    rho_w : numpy.ndarray
+        ``(y, x, bands)``, ordered by wavelength.
+    wavelengths : numpy.ndarray
+        In nm, from the file's ``bands`` variable when it matches the
+        per-band names, else from the names.
+    """
     with nc.Dataset(nc_file_path) as f:
         bands_var = np.asarray(f["bands"][:], dtype=float) if "bands" in f.variables else None
         if "rho_w" in f.variables and f["rho_w"].ndim == 3:

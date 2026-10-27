@@ -192,13 +192,26 @@ class GridOperators:
 
 def resample_product(tree: xr.DataTree, target, method: str = "nearest",
                      radius_of_influence: float = None) -> xr.Dataset:
-    """xr.Dataset on `target` (pyresample AreaDefinition or SwathDefinition):
-    the product cube (y, x, band, with the source band wavelengths), each
-    derived variable (y, x), each flag as boolean flag_<name>, and the
-    target's latitude/longitude. method: "nearest", "bilinear", or
-    "average" (grid targets coarser than the product) - per kind of
-    variable as in GridOperators. radius_of_influence (m) defaults to
-    default_radius()."""
+    """A product's contents on any pyresample target, as a bare Dataset.
+
+    Parameters
+    ----------
+    tree : xarray.DataTree
+        A georeferenced product tree.
+    target : pyresample.geometry.AreaDefinition or SwathDefinition
+    method : {"nearest", "bilinear", "average"}, default "nearest"
+        Per kind of variable as in :class:`GridOperators`; ``"average"`` only
+        onto grids coarser than the product.
+    radius_of_influence : float, optional
+        In m; default :func:`default_radius`.
+
+    Returns
+    -------
+    xarray.Dataset
+        The cube ``(y, x, band)`` with the source band wavelengths, each
+        derived variable ``(y, x)``, each flag as boolean ``flag_<name>``,
+        and the target's latitude and longitude.
+    """
     from hypso.io.product import _extra_variables
     ds = tree.dataset
     ops = GridOperators(tree, target, method, radius_of_influence)

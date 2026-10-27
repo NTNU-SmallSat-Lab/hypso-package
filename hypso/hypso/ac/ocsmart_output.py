@@ -10,6 +10,14 @@ logger = logging.getLogger(__name__)
 
 
 def load_ocsmart_h5(h5_file_path: Path) -> dict:
+    """Read an OC-SMART L2 HDF5 file.
+
+    Returns
+    -------
+    dict
+        ``{variable name: xarray.DataArray}``; the per-band groups (``Rrs``,
+        ``Lt``, ...) as ``(y, x, band)`` cubes on their band wavelengths.
+    """
 
     #Wavelengths: 12, -2
 

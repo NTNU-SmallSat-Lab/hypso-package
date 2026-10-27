@@ -83,6 +83,11 @@ def parse_platform_token(token: str) -> tuple:
 
 @dataclass(frozen=True)
 class ProductName:
+    """A parsed or composed product file name; :meth:`filename` renders it.
+
+    Build one with :func:`product_name`, or parse a file name with
+    :func:`parse_product_name`.
+    """
     sat_id: Optional[str]           # "HYPSO-2"; None for legacy names (not encoded)
     time: datetime                  # capture start, UTC
     target: str
@@ -130,6 +135,32 @@ class ProductName:
 
 def product_name(sat_id: str, time: datetime, target: str, level: str,
                  ac: str = None, label: str = None, grid: str = None, instrument: str = "HSI") -> ProductName:
+    """Compose a product name.
+
+    Parameters
+    ----------
+    sat_id : str
+        e.g. ``"HYPSO-2"``.
+    time : datetime.datetime
+        Capture start; converted to UTC if timezone-aware.
+    target : str
+        Capture target, e.g. ``"aeronetvenice"``.
+    level : str
+        ``"L1A"`` ... ``"L1D"``, ``"L2A"``.
+    ac : str, optional
+        Atmospheric correction method; required for L2A, not allowed otherwise.
+    label : str, optional
+        Free-text label for experiments (letters, digits, ``_``, ``-``).
+    grid : str, optional
+        Grid name of a regridded product (:func:`hypso.grid.grid_name`).
+    instrument : str, default "HSI"
+        Instrument token (:data:`INSTRUMENTS`).
+
+    Returns
+    -------
+    ProductName
+        ``product_name(...).filename()`` gives the file name.
+    """
     if time.tzinfo is not None:
         time = time.astimezone(timezone.utc).replace(tzinfo=None)
     return ProductName(sat_id=sat_id, time=time, target=target, level=level.upper(), ac=ac, grid=grid,
@@ -177,7 +208,22 @@ def _parse_legacy(name: str) -> Optional[ProductName]:
 
 
 def parse_product_name(path) -> ProductName:
-    """Parse a current-style or legacy product file name."""
+    """Parse a current-style or legacy product file name.
+
+    Parameters
+    ----------
+    path : str or pathlib.Path
+        A file name or path; only the name is used.
+
+    Returns
+    -------
+    ProductName
+
+    Raises
+    ------
+    ValueError
+        If the name is not a HYPSO product name.
+    """
     name = Path(path).name
     parsed = _parse_current(name) or _parse_legacy(name)
     if parsed is None:

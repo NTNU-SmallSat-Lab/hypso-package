@@ -26,11 +26,12 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
 
 ## TODO (one list, reviewed 2026-10-27; details in the referenced entries)
 
-1. **Docstrings for the rest of the code** (×62). NumPy style is done for `hypso.api`, `hypso.processing`,
-   `hypso.io.product`, `hypso.grid.regrid`, `hypso.window`, `hypso.masks.flags`, `hypso.ac.config`. To do:
-   `hypso.srf`, `hypso.io` naming/cf/provenance/schema, `hypso.grid` areas/resample, the `hypso.ac` output
-   readers, `hypso.calibration`, `hypso.geometry`, `hypso.sensors`. Check the published site after the first
-   push to `main` (only `main` publishes).
+1. **Docstrings for the rest of the code** (×62, ×67). NumPy style is done for every user-facing module:
+   `hypso.api`, `hypso.processing`, `hypso.io` product/naming/provenance, `hypso.grid`, `hypso.window`,
+   `hypso.srf`, `hypso.masks.flags`, `hypso.ac` config and output readers. Left: internals
+   (`hypso.calibration`, `hypso.geometry`, `hypso.sensors`, `hypso.io` cf/schema, private helpers; four
+   comments still say `satobj`). Check the published site after the first push to `main` (only `main`
+   publishes).
 2. **Verification beyond the reference capture**: Polymer, ACOLITE and OC-SMART for real through
    `correct_atmosphere` on one reprocess capture, compared with its L2A files (when aulus2 is free; all AC
    tests so far use the tools' real outputs, not real runs); fix the silently skipped real-Polymer test (stale
@@ -63,6 +64,11 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-10-27 (×67): docstrings, user-facing modules.** NumPy-style docstrings for `hypso.srf`
+  (load_solar_irradiance, earth_sun_distance, compute_spectral_response, srf_dataset), `hypso.io.naming`
+  (ProductName, product_name, parse_product_name), `hypso.io.provenance` (add_step, calibration_attrs,
+  ac_attrs, redact, ...), `hypso.grid` (grid_area, utm_crs, resample_product) and the `hypso.ac` readers
+  (previously undocumented). Claims checked against the code (distance formula, redacted keys, attributes).
 - **2026-10-27 (×66): Satpy and gridded products.** The hypso_l1c/hypso_l1d readers recognise a regridded
   file by its contents (`crs` + `x`/`y`; the name patterns already matched, the grid field landing in `label`)
   and give its bands `get_area_def()`'s AreaDefinition instead of latitude/longitude coordinates;

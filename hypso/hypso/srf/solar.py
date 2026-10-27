@@ -13,9 +13,20 @@ THUILLIER_FILE = "Solar_irradiance_Thuillier_2002.csv"
 
 
 def load_solar_irradiance(source: str = "tsis"):
-    """(irradiance in mW m-2 nm-1, wavelengths in nm) of the reference
-    spectrum: "tsis" (TSIS-1 HSRS v2, 2022-11-30, 0.005 nm) or "thuillier"
-    (Thuillier 2002)."""
+    """A reference solar irradiance spectrum.
+
+    Parameters
+    ----------
+    source : {"tsis", "thuillier"}, default "tsis"
+        TSIS-1 HSRS v2 (2022-11-30, 0.005 nm sampling) or Thuillier (2002).
+
+    Returns
+    -------
+    irradiance : numpy.ndarray
+        In mW m-2 nm-1.
+    wavelengths : numpy.ndarray
+        In nm.
+    """
     data = files("hypso.srf").joinpath("data")
     if source == "tsis":
         spectrum = np.load(str(data.joinpath(TSIS_FILE)))
@@ -29,13 +40,22 @@ def load_solar_irradiance(source: str = "tsis"):
 
 
 def earth_sun_distance(iso_time) -> float:
-    """
-    Earth-Sun distance in AU (R/R_0, distance over mean distance) for the
-    acquisition date, from the day of year.
-    http://physics.stackexchange.com/questions/177949/earth-sun-distance-on-a-given-day-of-the-year
-    0.9856 deg/day is the mean orbital motion; day 4 is perihelion. The
-    cosine argument is in degrees (until 2026-10-23 it was passed to np.cos
-    as radians, giving a date-dependent TOA reflectance error of up to ~6%).
+    """Earth-Sun distance in AU for a date.
+
+    ``1 - 0.01672 cos(0.9856 (doy - 4))`` with the cosine argument in degrees:
+    0.9856 deg/day is the mean orbital motion, day 4 is perihelion. (Until
+    2026-10-23 the argument was passed as radians, a date-dependent TOA
+    reflectance error of up to about 6%.)
+
+    Parameters
+    ----------
+    iso_time : str or datetime
+        Acquisition time.
+
+    Returns
+    -------
+    float
+        Distance over the mean distance (R / R_0).
     """
     julian_day = parser.isoparse(iso_time).timetuple().tm_yday
     return float(1 - 0.01672 * np.cos(np.radians(0.9856 * (julian_day - 4))))

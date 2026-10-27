@@ -10,6 +10,10 @@ logger = logging.getLogger(__name__)
 
 
 def ac_polymer_srf_getter(srf_nc_path: Path):
+    """Polymer ``srf_getter`` reading HYPSO's spectral response functions
+    from a standalone SRF NetCDF file. See also
+    :func:`ac_polymer_srf_getter_from_l1`, which reads them from the L1
+    product's ``metadata/srf``."""
 
     ds = xr.open_dataset(srf_nc_path)
 

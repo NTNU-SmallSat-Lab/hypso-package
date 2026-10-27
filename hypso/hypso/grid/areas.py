@@ -61,9 +61,19 @@ def resolution(tree: xr.DataTree) -> float:
 
 
 def utm_crs(latitudes, longitudes) -> pyproj.CRS:
-    """WGS84 UTM CRS of the zone containing the scene centre (EPSG 326xx
-    north, 327xx south). Standard 6-degree zones; the Norway/Svalbard
-    exceptions are not applied."""
+    """The WGS84 UTM CRS of the zone containing the scene centre.
+
+    EPSG 326xx (north) or 327xx (south); standard 6-degree zones, without the
+    Norway and Svalbard exceptions.
+
+    Parameters
+    ----------
+    latitudes, longitudes : array_like
+
+    Returns
+    -------
+    pyproj.CRS
+    """
     lat = float(np.nanmean(latitudes))
     lon = float(np.nanmean(longitudes))
     zone = min(int((lon + 180) // 6) + 1, 60)
@@ -71,9 +81,24 @@ def utm_crs(latitudes, longitudes) -> pyproj.CRS:
 
 
 def grid_area(crs, resolution: float, latitudes, longitudes, area_id: str = "hypso_grid") -> AreaDefinition:
-    """The AreaDefinition in `crs` (anything pyproj accepts) with square
-    pixels of `resolution` (CRS units) covering these coordinates, its
-    extent snapped to multiples of `resolution`."""
+    """A grid covering the given coordinates, snapped to the pixel size.
+
+    Parameters
+    ----------
+    crs : str, int or pyproj.CRS
+        Anything pyproj accepts, e.g. ``"EPSG:32633"``.
+    resolution : float
+        Square pixel size in the CRS's units.
+    latitudes, longitudes : array_like
+        Coordinates to cover (NaN ignored).
+    area_id : str, default "hypso_grid"
+
+    Returns
+    -------
+    pyresample.geometry.AreaDefinition
+        Extent snapped to whole multiples of ``resolution``, so grids of two
+        captures in the same CRS and resolution share pixel boundaries.
+    """
     crs = pyproj.CRS.from_user_input(crs)
     transformer = pyproj.Transformer.from_crs("EPSG:4326", crs, always_xy=True)
     x, y = transformer.transform(np.asarray(longitudes, dtype=float), np.asarray(latitudes, dtype=float))

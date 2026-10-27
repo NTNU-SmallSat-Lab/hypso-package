@@ -56,7 +56,21 @@ class SpectralResponse:
 
 def compute_spectral_response(band_centers_unbinned, fwhm_unbinned, bin_factor: int,
                               ssi_source: str = "tsis") -> SpectralResponse:
-    """SpectralResponse from unbinned band centres and FWHM (nm)."""
+    """Spectral response of a sensor's bands.
+
+    Parameters
+    ----------
+    band_centers_unbinned, fwhm_unbinned : array_like
+        Band centres and FWHM in nm before spectral binning.
+    bin_factor : int
+        Spectral binning factor of the image.
+    ssi_source : {"tsis", "thuillier"}, default "tsis"
+        Solar irradiance spectrum for the per-band F0.
+
+    Returns
+    -------
+    SpectralResponse
+    """
     ssi, solar_wavelengths = load_solar_irradiance(ssi_source)
     srfs, grid_ssi, grid_wl = gaussian_srfs(ssi, solar_wavelengths, band_centers_unbinned, fwhm_unbinned)
     binned = bin_srfs(srfs, bin_factor)
@@ -144,11 +158,24 @@ def effective_fwhm(srfs: csr_matrix, wavelengths) -> np.ndarray:
 
 
 def srf_dataset(sr: SpectralResponse, wavelengths, fwhm, iso_time=None) -> xr.Dataset:
-    """A product's metadata/srf group: esun / esun_wavelengths /
-    effective_fwhm(_unbinned), earth_sun_distance_au, and one Band_<i>
-    variable per band (non-zero part of its binned SRF, on its own
-    wav_Band_<i> wavelength coordinate). Polymer reads its SRFs from here
-    (hypso.ac.ac_polymer_srf_getter_from_l1)."""
+    """A product's ``metadata/srf`` group.
+
+    Parameters
+    ----------
+    sr : SpectralResponse
+    wavelengths, fwhm : array_like
+        The product's band centres and FWHM (nm).
+    iso_time : str, optional
+        Acquisition time, for ``earth_sun_distance_au``.
+
+    Returns
+    -------
+    xarray.Dataset
+        ``esun``, ``esun_wavelengths``, ``effective_fwhm(_unbinned)``, and one
+        ``Band_<i>`` variable per band (the non-zero part of its binned SRF,
+        on its own ``wav_Band_<i>`` coordinate). Polymer reads its SRFs from
+        here (:func:`hypso.ac.ac_polymer.ac_polymer_srf_getter_from_l1`).
+    """
     data, attrs = {}, {}
     for name, value in (("esun", sr.esun), ("esun_wavelengths", sr.band_centers),
                         ("effective_fwhm", sr.effective_fwhm),
