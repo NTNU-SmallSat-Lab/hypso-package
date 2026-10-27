@@ -11,12 +11,13 @@ L1A        ``dn``          raw counts, as downlinked                        1 (c
 L1B        ``Lt``          top-of-atmosphere radiance                       W m-2 um-1 sr-1
 L1C        ``Lt``          L1B with latitude, longitude and angles          W m-2 um-1 sr-1
 L1D        ``rhot``        top-of-atmosphere reflectance                    1
-L2A        ``Rrs``,        atmospherically corrected reflectance; the       sr-1 (``Rrs``),
-           ``rho_w``,      variable depends on the method                   1 (``rho_w``,
-           ``rhos``        (:doc:`atmospheric_correction`)                  ``rhos``)
+L2A        ``rhos``,       atmospherically corrected reflectance; the       1 (``rhos``,
+           ``Rrs``,        variable depends on the method: ``rhos`` from    ``rho_w``),
+           ``rho_w``       MACHI, the default                               sr-1 (``Rrs``)
 =========  ==============  ===============================================  ===================
 
-``hypso.open`` reads any level; ``product.level`` says which it is.
+``hypso.open`` reads any level; ``product.level`` says which it is. The L2A methods
+are described in :doc:`atmospheric_correction`.
 
 File names
 ----------
@@ -66,7 +67,11 @@ Global attributes
    processing step.
 
 Data are compressed (zlib level 4) and stored unmasked; L1A counts stay
-``uint16``. ``product.write(datacube=True)`` writes the cube as one 3D
+``uint16``. The float bands of L1B-L2A keep 14 significant mantissa bits by
+default (netCDF BitRound: at most 3.1e-5 relative error, far below the sensor
+noise, about 40% smaller files; values stay float32 and NaN is kept; the
+``band_quantization`` attribute says so); ``write(significant_bits=None)``
+writes them lossless. ``product.write(datacube=True)`` writes the cube as one 3D
 variable instead of one variable per band.
 
 Band subsets

@@ -17,7 +17,7 @@ in ESA SNAP.
               .toa_reflectance())
    l1d.write()                          # HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.nc
 
-   l2a = l1d.correct_atmosphere("polymer", config="ac_tools.yaml")
+   l2a = l1d.correct_atmosphere()        # MACHI; or "polymer", config="ac_tools.yaml"
    l2a.window(45.3139, 12.5083, size=3)  # matchup window at AAOT
 
 =========  ===============================================  =================

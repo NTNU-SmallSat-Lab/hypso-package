@@ -9,6 +9,8 @@
 #
 # Set the paths below to a capture of your own. The reference capture used in
 # the package tests is a HYPSO-2 wide capture over Venice (2025-03-04).
+# The figures need matplotlib (`pip install matplotlib`), which the package
+# itself does not depend on.
 
 # %%
 import logging
@@ -71,7 +73,8 @@ for step in l1d.provenance:
     print(step["step"], step.get("software_version"), step.get("coefficient_release", ""))
 
 reread = hypso.open(path)
-assert np.array_equal(reread.cube.values, l1d.cube.values.astype(np.float32))
+# bands are stored with 14 significant bits by default (write(significant_bits=None): lossless)
+assert np.allclose(reread.cube.values, l1d.cube.values, rtol=5e-5)
 
 # %% [markdown]
 # ## Contents: cube, wavelengths, geometry, spectra
@@ -170,12 +173,18 @@ print(list(with_ndvi.flags), list(with_ndvi.variables.data_vars))
 # %% [markdown]
 # ## Atmospheric correction
 #
-# `dps` (dark pixel subtraction) runs in this process. Polymer, ACOLITE and
-# OC-SMART run in their own installations, configured in a YAML file (see
+# MACHI, the default, runs in this process: one scattering and one
+# transmission spectrum for the whole image, fitted so the corrected spectra
+# are smooth; it gives surface reflectance `rhos` (not water-leaving Rrs).
+# `dps` (dark pixel subtraction) also runs in this process. Polymer, ACOLITE
+# and OC-SMART run in their own installations, configured in a YAML file (see
 # docs/atmospheric_correction.rst); `masked=True` gives them NaN where the
 # flags are set.
 
 # %%
+machi = with_ndvi.correct_atmosphere()                  # MACHI
+print(machi, machi.filename())
+model = machi.tree["metadata/machi"].dataset            # the fitted spectra
 l2a = with_ndvi.correct_atmosphere("dps", masked=True, mask_flags=["land"])
 print(l2a, l2a.filename())
 
@@ -184,12 +193,31 @@ print(l2a, l2a.filename())
 # l2a = l1d.correct_atmosphere("ocsmart", config="ac_tools.yaml")
 # l2a.variables    # the tool's 2D products and flags, e.g. chla, polymer_flags
 
-plt.figure(figsize=(6, 4))
-plt.plot(l2a.wavelengths, l2a.spectrum(*SITE).values)
-plt.title("DPS Rrs at AAOT")
-plt.xlabel("wavelength (nm)")
-plt.ylabel("Rrs (sr-1)")
+fig, axs = plt.subplots(1, 2, figsize=(12, 4))
+axs[0].plot(model["wavelength"], model["T"], label="T (transmission)")
+axs[0].plot(model["wavelength"], model["A"], label="A (scattering)")
+axs[0].set(title="MACHI fitted spectra", xlabel="wavelength (nm)")
+axs[0].legend()
+axs[1].plot(machi.wavelengths, machi.spectrum(*SITE).values / np.pi, label="MACHI rhos / pi")
+axs[1].plot(l2a.wavelengths, l2a.spectrum(*SITE).values, label="DPS Rrs")
+axs[1].set(title="at AAOT", xlabel="wavelength (nm)", ylabel="sr-1")
+axs[1].legend()
+plt.tight_layout()
 plt.show()
+
+# %% [markdown]
+# ## Band subsets
+#
+# From L1B on, `select_bands` keeps some bands (by range, wavelengths or
+# index); `hypso.open(path, wavelength_range=...)` reads only those from a
+# file. Each band keeps its index in the full band set, so later steps give
+# the same values as on all bands.
+
+# %%
+visible = l1d.select_bands(wavelength_range=(450, 700))
+print(dict(visible.cube.sizes), visible.cube["band_index"].values[[0, -1]])
+three = hypso.open(path, wavelengths=[640, 550, 460])
+print(three.wavelengths)
 
 # %% [markdown]
 # ## Map grids

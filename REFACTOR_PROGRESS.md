@@ -32,9 +32,7 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    (`hypso.calibration`, `hypso.geometry`, `hypso.sensors`, `hypso.io` cf/schema, private helpers; four
    comments still say `satobj`). Check the published site after the first push to `main` (only `main`
    publishes).
-1b. **Review the documentation, remove stale parts** (user, 2026-10-27): read `docs/*.rst`, the READMEs, module
-   docstrings and the demo against the current code; remove or rewrite what describes removed or changed
-   behaviour (e.g. capture-object wording, old file names, superseded design notes in architecture.rst).
+1b. ~~**Review the documentation, remove stale parts**~~ - done (×81).
 2. **Verification beyond the reference capture** (×68 did HYPSO-1 and a second HYPSO-2 site, now regression
    tests). Left: the real Polymer, ACOLITE and OC-SMART runs through `correct_atmosphere` (when aulus2 is free;
    the user's production installations are not to be touched - configure a separate one in HYPSO_AC_CONFIG);
@@ -126,6 +124,15 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-10-27 (×81): documentation review** (user). Read docs/*.rst, both READMEs and the demo against the code.
+  architecture.rst: overview (MACHI default, band selection, hypso.grid/window/rgb, keystone), product tree
+  (band_index, gridded layout, metadata/machi), Product methods (window, select_bands, to up to L2A; .tree is a
+  shallow copy), processing table (select_bands, regrid, keystone), file format (BitRound quantization), both
+  sensors' catalogs and the optional keystone model, the F0 leftover, in-process AC methods, extension recipe.
+  calibration.rst: both sensors' defaults, keystone section. products.rst: L2A rhos from MACHI, quantization.
+  README and index: MACHI default. Demo: matplotlib note (no longer a dependency), MACHI and its fitted spectra,
+  band subsets, quantization-aware round-trip check; notebook regenerated; runs end to end (24 cells, 5 figures).
+  Grid, windows, versioning, installation and coefficient history were current.
 - **2026-10-27 (×80): MACHI fit subsampling** (user: option, default unchanged). `fit_subsample=N` fits A and T on
   every Nth finite pixel plus each band's darkest pixel; the correction is still applied to every pixel.
   Measured on the reference capture: a plain 1-in-4 subsample shifts A by ~1e-3 (up to 4% of dark water at AAOT)

@@ -21,7 +21,10 @@ product and return the next level's product.
      l1a_to_l1b   calibrate.py      radiometric, smile, destriping, spectral
      l1b_to_l1c   georeference.py   coordinates and viewing/solar angles
      l1c_to_l1d   toa.py            TOA reflectance, metadata/srf
-     correct_atmosphere  atmospheric.py   DPS, Polymer, ACOLITE, OC-SMART
+     correct_atmosphere  atmospheric.py   MACHI (default), DPS, Polymer, ACOLITE, OC-SMART
+     select_bands bands.py          band subsets (from L1B on)
+   hypso.grid                                         regrid / resample onto map grids
+   hypso.window                                       pixel windows for matchups
         |
    hypso.io                                           the file format
      product.py      read_product / write_product (every level, every layout)
@@ -30,9 +33,11 @@ product and return the next level's product.
      cf.py, schema.py  CF attributes, per-level titles and units
         |
    building blocks
-     hypso.calibration, hypso.geometry, hypso.srf, hypso.masks,
-     hypso.ac (tool drivers, output readers, configuration),
-     hypso.sensors, hypso1_calibration / hypso2_calibration
+     hypso.calibration (incl. the optional keystone correction), hypso.geometry,
+     hypso.srf, hypso.masks (flags, sea/land/cloud labels),
+     hypso.ac (MACHI, tool drivers, output readers, configuration),
+     hypso.rgb (HSI2RGB rendering, RGB camera images), hypso.sensors,
+     hypso1_calibration / hypso2_calibration (coefficient files and catalogs)
 
 Earlier versions centred on one large capture object (``HypsoCapture``) that
 held about a hundred attributes, ran every step in place, and was copied
@@ -48,19 +53,23 @@ function takes and returns:
 .. code-block:: text
 
    /                          root Dataset
-       <prefix>               product cube (lines, samples, bands):
-                              dn (L1A), Lt (L1B/L1C), rhot (L1D),
-                              the method's variable at L2A (Rrs, rho_w, rhos)
+       <prefix>               product cube (lines, samples, bands), or
+                              (y, x, bands) when regridded: dn (L1A), Lt (L1B/L1C),
+                              rhot (L1D), the method's variable at L2A
+                              (rhos for MACHI, Rrs, rho_w)
        wavelength             band coordinate: nominal centre, 0.1 nm
        radiation_wavelength   band coordinate: calibrated centre
        fwhm                   band coordinate
+       band_index             band coordinate: index in the full band set
+                              (after select_bands, and on products read from files)
+       x, y, crs              regridded products: projection coordinates, grid mapping
        latitude, longitude, crs_wgs84, <angles>, <angles>_direct
                               from L1C on
        pixel_flags            optional: masks as CF flags
        <other>                optional: derived (lines, samples) products
        attrs                  global attributes; processing_level is required
    /metadata/<group>          capture_config, timing, adcs, corrections,
-                              gcp, srf, processing
+                              gcp, srf, processing (and machi after MACHI)
 
 The product is one 3D array in memory, which makes band arithmetic and
 ``.sel()`` straightforward. It is split into one variable per band only when
@@ -85,7 +94,7 @@ immutable wrapper around one tree.
              .calibrate()                                    # abs / V3
              .georeference(latitudes=lat_file, longitudes=lon_file)
              .toa_reflectance())
-   l2a = l1d.correct_atmosphere("polymer", config="ac_tools.yaml")
+   l2a = l1d.correct_atmosphere()                    # MACHI; or "polymer", config=...
    l2a.write()
 
 Every method returns a new ``Product``; setting an attribute raises. That
@@ -94,12 +103,14 @@ and lets pipelines treat each stage as file in, function, file out. Calling a
 step on the wrong level raises an error that says which level it needs and
 suggests ``.to(level)``, which runs only the missing steps.
 
-Besides the processing steps, ``Product`` offers ``.cube``, ``.geometry``,
-``.flags``, ``.variables``, ``.provenance``, ``.spectrum()``, ``.pixel()``,
-``.resolution``, ``.swath_definition()``, ``.resample()``, ``.regrid()``,
-``.area_definition()``, ``.grid``, ``.to_satpy()``,
+Besides the processing steps (and ``.to(level)``, up to L2A), ``Product``
+offers ``.cube``, ``.wavelengths``, ``.geometry``, ``.flags``, ``.variables``,
+``.provenance``, ``.spectrum()``, ``.window()``, ``.pixel()``,
+``.select_bands()``, ``.resolution``, ``.swath_definition()``, ``.resample()``,
+``.regrid()``, ``.area_definition()``, ``.grid``, ``.to_satpy()``,
 ``.with_masks()``, ``.with_variables()``, ``.filename()`` and ``.write()``.
-``.tree`` returns a copy of the underlying tree for anything else.
+``.tree`` returns a shallow copy of the underlying tree for anything else
+(arrays are shared: replace them, never modify them in place).
 
 The processing functions in ``hypso.processing`` stay public for callers that
 prefer working on trees directly.
@@ -112,13 +123,16 @@ Function                  Levels             Records in ``metadata/processing``
 ========================  =================  =========================================
 ``l1a_to_l1b``            L1A -> L1B         coefficient release, per-correction
                                              versions, files and SHA-256, corrections
-                                             applied, capture type
+                                             applied (keystone only on request),
+                                             capture type
 ``l1b_to_l1c``            L1B -> L1C         indirect or direct georeferencing,
                                              coordinate files
 ``l1c_to_l1d``            L1C -> L1D         solar irradiance source, SRF grid,
                                              Earth-Sun distance
 ``correct_atmosphere``    L1C or L1D -> L2A  tool, version, installation commit,
                                              effective and user settings
+``select_bands``          same level         selection, bands kept
+``hypso.grid.regrid``     same level         grid, CRS, method, coverage
 ========================  =================  =========================================
 
 The science code these steps call (``hypso.calibration``, ``hypso.geometry``,
@@ -143,7 +157,10 @@ parent groups, never sideways between siblings (with the old ``products`` and
 because SNAP's NetCDF-CF reader dates from NetCDF 3 without groups. One 2D
 variable per band is the layout SNAP's spectrum view expects. All CF
 attributes come from ``hypso.io.cf``, so a file read in any supported layout
-is written back in the current one.
+is written back in the current one. Float bands keep 14 significant mantissa
+bits by default (netCDF BitRound, at most 3.1e-5 relative error, far below the
+sensor noise; about 40% smaller L1D files); BitRound rather than
+GranularBitRound because the latter turns NaN into -0.0 in netCDF-C 4.9.3.
 
 Sensors and calibration
 -----------------------
@@ -157,13 +174,15 @@ Sensor profiles (``hypso.sensors``)
    calling ``register_sensor``.
 
 Coefficient catalogs
-   HYPSO-2's coefficient files, versions (V3, V2, V1) and releases are listed in
-   ``hypso2_calibration/data/coefficients.yaml``. ``coeff_type`` picks the
+   Each calibration package lists its coefficient files, versions and releases
+   in ``data/coefficients.yaml`` (HYPSO-2: V3, V2, V1; HYPSO-1: V2, V1), read by
+   ``_catalog.py``, identical in both packages. ``coeff_type`` picks the
    radiometric variant, and ``version`` picks the release or sets versions per
    correction. A file entry can name a different file for one capture type
    (V3 ``abs`` uses a pre-binned wide matrix for wide captures), and
-   ``crop: as_is`` marks a file that must not be cropped and binned. See
-   :doc:`calibration`.
+   ``crop: as_is`` marks a file that must not be cropped and binned. Models
+   outside the releases (HYPSO-2's keystone model, shipped disabled for
+   review) are under ``optional``. See :doc:`calibration`.
 
 Your own coefficient files
    Without editing the calibration packages, either register a named set once
@@ -191,12 +210,12 @@ Spectral response and TOA reflectance
 ``hypso.srf`` holds the spectral response of the bands. ``gaussian_srfs`` builds
 one Gaussian SRF per unbinned band on the solar spectrum's wavelength grid
 (TSIS-1 HSRS, or Thuillier 2002, from ``srf/solar.py``); ``bin_srfs`` bins them
-like the image; ``band_irradiance`` gives each band's solar irradiance (F0,
-``F0``) and ``effective_fwhm`` its width. ``compute_spectral_response``
+like the image; ``band_irradiance`` gives each band's solar irradiance F0
+and ``effective_fwhm`` its width. ``compute_spectral_response``
 returns all of it as one ``SpectralResponse``, and ``srf_dataset`` turns that
 into a product's ``metadata/srf`` group: ``F0``, effective FWHM,
-``earth_sun_distance_au``, and one ``Band_<i>`` variable per band on its own
-``wav_Band_<i>`` grid. Polymer reads its SRFs from this group (its
+``earth_sun_distance_au``, and one ``Band_<i>`` variable per band (``i`` its
+``band_index``) on its own ``wav_Band_<i>`` grid. Polymer reads its SRFs from this group (its
 ``srf_getter`` is ``hypso.ac.ac_polymer_srf_getter_from_l1``), and readers that
 convert radiance themselves can take F0 and the Earth-Sun distance from it.
 
@@ -209,8 +228,9 @@ convert radiance themselves can take F0 and the Earth-Sun distance from it.
 Atmospheric correction
 ----------------------
 
-``hypso.processing.correct_atmosphere`` runs DPS in-process, and Polymer,
-ACOLITE and OC-SMART as separate processes:
+``hypso.processing.correct_atmosphere`` runs MACHI (the default; vendored in
+``hypso.ac.machi``) and DPS in-process, and Polymer, ACOLITE and OC-SMART as
+separate processes:
 
 - Polymer and ACOLITE run through ``python -m
   hypso.ac.adapters._polymer_driver`` / ``_acolite_driver`` started by
@@ -271,10 +291,12 @@ New calibration coefficients
    then update the checksum manifest and tag a release (:doc:`versioning`).
 
 A new atmospheric-correction method
-   A ``_<method>(tree, masked, mask_flags, work_dir, config, **options)``
-   function in ``processing/atmospheric.py`` that runs the method, maps its
+   A function in ``processing/atmospheric.py`` that runs the method, maps its
    bands onto the input and returns ``_l2a_tree(...)``, plus its entry in
-   ``_METHODS`` and ``_INPUT_LEVELS``. Run external tools in a subprocess.
+   ``_METHODS`` and ``_INPUT_LEVELS``: ``_<method>(tree, masked, mask_flags,
+   **options)`` for an in-process method, with ``work_dir`` and ``config``
+   added (and an entry in ``_EXTERNAL``) for an external tool, which runs in a
+   subprocess.
 
 A new product level
    A ``LevelSchema`` in ``io/schema.py`` (title, product prefix and units,

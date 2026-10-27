@@ -3,15 +3,16 @@ Calibration coefficients
 
 L1A to L1B calibration applies radiometric, smile, destriping and spectral
 corrections, each from a coefficient file shipped in the sensor's calibration
-package. For HYPSO-2 the files are versioned, and you choose them with two
-arguments:
+package. The files are versioned, and you choose them with two arguments:
 
 ``coeff_type``
-    The radiometric variant: ``abs`` (default), ``moved``, or ``lab``.
+    The radiometric variant: ``abs``, ``moved`` or ``lab``. Default ``abs`` for
+    HYPSO-2, ``moved`` for HYPSO-1.
 
 ``version``
-    The coefficient release: ``V3`` (default), ``V2`` or ``V1``, or a
-    dictionary that sets the version of individual corrections.
+    The coefficient release - HYPSO-2: ``V3`` (default), ``V2``, ``V1``;
+    HYPSO-1: ``V2`` (default), ``V1`` - or a dictionary that sets the version
+    of individual corrections.
 
 .. code-block:: python
 
@@ -117,5 +118,14 @@ the same directory. Then update the checksum manifest and tag a release (see
 :doc:`versioning`)::
 
    python -m hypso.calibration.manifest update hypso2_calibration
+
+Keystone (optional, unreviewed)
+-------------------------------
+
+``calibrate(keystone=True)`` also corrects keystone (spatial misregistration
+across the spectrum) with HYPSO-2's distortion model, after radiometric
+calibration and before smile. The model is shipped for review and marked not
+enabled, so applying it warns; it is off by default, and HYPSO-1 has no model.
+What it is and where it came from: :doc:`coefficient_history`.
 
 Where the coefficient files came from is recorded in :doc:`coefficient_history`.

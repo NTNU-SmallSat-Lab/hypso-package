@@ -8,20 +8,20 @@ Product levels:
 - L1B: top-of-atmosphere radiance
 - L1C: top-of-atmosphere radiance with georeferencing
 - L1D: top-of-atmosphere reflectance with georeferencing
-- L2A: atmospherically corrected reflectance (dark pixel subtraction, Polymer, ACOLITE or OC-SMART)
+- L2A: atmospherically corrected reflectance (MACHI by default; dark pixel subtraction, Polymer, ACOLITE or OC-SMART)
 
 ## Quick start
 ```python
 import hypso
 
 l1a = hypso.open("aeronetvenice_2025-06-12T09-58-02Z-l1a.nc")   # any level, any HYPSO file layout
-l1d = (l1a.calibrate()                                          # V3 calibration ("abs") by default
+l1d = (l1a.calibrate()                                          # HYPSO-2: abs / V3 by default
           .georeference(latitudes="latitudes_indirectgeoref.dat",
                         longitudes="longitudes_indirectgeoref.dat")
           .toa_reflectance())
 l1d.write()          # HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.nc
 
-l2a = l1d.correct_atmosphere("polymer", config="ac_tools.yaml")
+l2a = l1d.correct_atmosphere()                                  # MACHI; or "polymer", config="ac_tools.yaml"
 l2a.spectrum(latitude=45.314, longitude=12.508)                 # spectrum at a location
 ```
 Every step returns a new product and records itself in the file (`metadata/processing`, `history`).
