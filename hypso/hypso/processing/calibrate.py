@@ -65,15 +65,16 @@ def l1a_to_l1b(tree: xr.DataTree, coeff_type: str = None, version=None, coeff_fi
     tree : xarray.DataTree
         L1A product tree.
     coeff_type : str, optional
-        Radiometric variant: for HYPSO-2 ``"abs"`` (default), ``"moved"`` or
-        ``"lab"``, or a set registered with
+        Radiometric variant: ``"abs"``, ``"moved"`` or ``"lab"`` (default
+        ``"abs"`` for HYPSO-2, ``"moved"`` for HYPSO-1), or a set registered with
         ``hypso.calibration.register_calibration_coeffs``. None uses the
         file's ``radiometric_coefficients_version`` if present, else the
         sensor's default.
     version : str or dict, optional
-        Coefficient release, ``"V3"`` (default), ``"V2"`` or ``"V1"``, or
-        ``{correction: release}`` to mix them, e.g. ``{"spectral": "V3"}``
-        (``hypso2_calibration``'s ``data/coefficients.yaml``).
+        Coefficient release (HYPSO-2: ``"V3"`` default, ``"V2"``, ``"V1"``;
+        HYPSO-1: ``"V2"`` default, ``"V1"``), or ``{correction: release}`` to
+        mix them, e.g. ``{"spectral": "V3"}`` (the calibration package's
+        ``data/coefficients.yaml``).
     coeff_files : dict, optional
         Explicit ``{kind: path}`` instead of ``coeff_type`` and ``version``.
     radiometric, smile, destripe, spectral : bool, default True

@@ -1,0 +1,84 @@
+# HYPSO-1 calibration coefficients: which file each correction uses, by
+# version, and the per-correction versions each release selects - the same
+# scheme as hypso2_calibration (selection logic: _catalog.py).
+#
+# get_hypso1_calibration_files(capture_type, coeff_type=..., version=...):
+#   coeff_type - radiometric variant (abs, moved, lab)
+#   version    - a release name below (default: default_release), or a dict
+#                {correction: version} to mix versions.
+#
+# Adding a coefficient file or release is a data-only edit here (plus the
+# file in this directory). Then run
+#   python -m hypso.calibration.manifest update hypso1_calibration
+# and tag a release - see docs/versioning.rst.
+
+# Any other capture type gets no files (as before the catalog).
+known_capture_types: [nominal, wide, custom, moon]
+
+default_coeff_type: moved     # HYPSO-1's long-standing default (HYPSO-2's is abs)
+default_release: V2
+
+# Moon captures use the moon matrix whatever the variant.
+radiometric:
+  V2:
+    abs:
+      file: radiometric_calibration_matrix_HYPSO-1_full_v1_adjusted_v11.npz
+      description: The pre-catalog "adjusted" set.
+      capture_types:
+        moon: {file: radiometric_calibration_matrix_HYPSO-1_moon.npz}
+    moved:
+      file: h1_radiometric_calibration_matrix_full_moved.npz
+      description: The "moved" set (the default).
+      capture_types:
+        moon: {file: radiometric_calibration_matrix_HYPSO-1_moon.npz}
+  V1:
+    lab:
+      file: radiometric_calibration_matrix_HYPSO-1_full_v1.npz
+      description: Lab coefficients, the pre-catalog "original" set.
+      capture_types:
+        moon: {file: radiometric_calibration_matrix_HYPSO-1_moon.npz}
+
+smile:
+  V1:
+    file: spectral_calibration_matrix_HYPSO-1_full_v1.npz
+    description: >-
+      Full-frame matrix, cropped per capture (custom and moon captures, which
+      do not share the nominal/wide frame geometry).
+    capture_types:
+      nominal: {file: smile_correction_matrix_HYPSO-1_nominal_v1.npz}
+      wide: {file: smile_correction_matrix_HYPSO-1_wide_v1.npz}
+
+destriping:
+  V1:
+    file: null
+    description: No destriping for custom and moon captures.
+    capture_types:
+      nominal: {file: destriping_matrix_HYPSO-1_nominal_v1.npz}
+      wide: {file: destriping_matrix_HYPSO-1_wide_v1.npz}
+
+spectral:
+  V2:
+    file: spectral_array_calibrated_poly_full.npz
+    description: Polynomial fit over the whole spectrum, static offset.
+  V1:
+    file: spectral_calibration_wavelengths_center_row_HYPSO-1.npz
+    description: Lab centre-row wavelengths.
+
+releases:
+  V2:
+    radiometric: V2
+    smile: V1
+    destriping: V1
+    spectral: V2
+    spectral_full_frame: V2
+  V1:
+    radiometric: V1
+    smile: V1
+    destriping: V1
+    spectral: V1
+    spectral_full_frame: V2
+
+# Deprecated coeff_type names -> (coeff_type, release).
+aliases:
+  adjusted: [abs, V2]
+  original: [lab, V1]

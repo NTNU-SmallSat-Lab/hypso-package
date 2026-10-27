@@ -36,10 +36,7 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    tests). Left: the real Polymer, ACOLITE and OC-SMART runs through `correct_atmosphere` (when aulus2 is free;
    the user's production installations are not to be touched - configure a separate one in HYPSO_AC_CONFIG);
    a nominal (non-wide) capture, of which none was found in the local data folders (all are 598 x 1092).
-2b. **HYPSO-1 calibration naming** (×68, decision for the user): `hypso1_calibration` still has the old
-   `moved` (default) / `adjusted` / `original` names, prints instead of logging, and has no version or
-   catalog scheme, unlike HYPSO-2's `abs`/`moved`/`lab` with V1-V3 (×48). The docs describe HYPSO-2's
-   scheme only. Bring HYPSO-1 onto the same scheme, or document the difference.
+2b. ~~**HYPSO-1 calibration naming**~~ - done (×69): same scheme as HYPSO-2.
 3. ~~**Dependencies**~~ - done (×65).
 4. ~~**Satpy readers and gridded products**~~ - done (×66).
 4b. **NetCDF file sizes** (user, 2026-10-27): see whether files can be made smaller. Reference capture: L1A
@@ -67,6 +64,17 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-10-27 (×69): HYPSO-1 on HYPSO-2's calibration scheme** (user: yes). `hypso1_calibration` now has a
+  `data/coefficients.yaml` catalog: V2 = `moved` (default, unchanged) and `abs` (was `adjusted`), V1 = `lab` (was
+  `original`); smile/destriping per capture type and the moon radiometric matrix as `capture_types` entries
+  (replaces `capture_modes.yaml`); `known_capture_types` keeps unknown types getting no files, as before. No
+  coefficient file renamed; old names work with a DeprecationWarning; the old print messages are gone. The
+  selection logic moved into `_catalog.py`, identical in both calibration packages (they cannot share code;
+  a test checks the copies match); `get_hypso1/2_calibration_files` keep their signatures (production
+  hypso-package calls them). HYPSO-2's OC-SMART spectral warning is now catalog data (`spectral_note`).
+  Verified: all 12 old capture-type x coeff-type combinations select the same files as before; the HYPSO-1
+  production-parity test still passes. docs/calibration.rst gained a HYPSO-1 section; calibrate() docstrings
+  give both sensors' defaults.
 - **2026-10-27 (×68): verification beyond the reference capture.** A HYPSO-1 capture
   (koreanCalValJL_2026-08-27, wide) and a second HYPSO-2 site (kemigawa_2025-12-28, from the reprocess set)
   through the refactor with the production coefficients (`moved`; V2 for HYPSO-2), against the production

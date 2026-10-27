@@ -52,6 +52,29 @@ V1         ``lab``                     V2           V1
 The old names ``adjusted`` and ``original`` still work and mean ``abs``/V2 and
 ``lab``/V1, with a deprecation warning.
 
+HYPSO-1
+-------
+
+HYPSO-1 uses the same scheme (``hypso1_calibration``'s
+``data/coefficients.yaml``) with its own releases and a different default:
+
+=========  ==========================  ===========  ==============  ==============
+Release    Radiometric variants        Smile        Destriping      Spectral
+=========  ==========================  ===========  ==============  ==============
+V2         ``moved`` (default),        V1           V1              V2
+           ``abs``
+V1         ``lab``                     V1           V1              V1
+=========  ==========================  ===========  ==============  ==============
+
+* The default is ``moved``/V2, HYPSO-1's long-standing default (HYPSO-2's is
+  ``abs``/V3).
+* ``abs`` is the set previously called ``adjusted``, ``lab`` the one called
+  ``original``; the old names still work, with a deprecation warning. The
+  coefficient files themselves are unchanged.
+* Smile and destriping depend on the capture type (nominal, wide; custom and
+  moon captures use the full-frame smile matrix and no destriping), and moon
+  captures use the moon radiometric matrix whatever the variant.
+
 Mixing versions
 ---------------
 

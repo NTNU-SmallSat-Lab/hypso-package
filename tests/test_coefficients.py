@@ -114,3 +114,29 @@ def test_wide_captures_use_the_wide_v3_abs_matrix():
                                               ("wide", "abs", "V2")):
         files = get_hypso2_calibration_files(capture_type=capture_type, coeff_type=coeff_type, version=version)
         assert "wide" not in _names(files)["radiometric"] and files["crop_modes"] == {}
+
+
+def test_catalog_module_copies_identical():
+    # Both calibration packages carry the same _catalog.py (they cannot share code).
+    import hypso1_calibration._catalog as one
+    import hypso2_calibration._catalog as two
+    assert Path(one.__file__).read_text() == Path(two.__file__).read_text()
+
+
+def test_hypso1_versions_and_names():
+    # HYPSO-1 on HYPSO-2's scheme (REFACTOR_PROGRESS.md ×69): moved (default) / abs / lab, V2 / V1.
+    from hypso1_calibration import get_hypso1_calibration_files, resolve_coefficients as resolve1
+    assert resolve1() == {"coeff_type": "moved", "release": "V2", "radiometric": "V2/moved", "smile": "V1",
+                          "destriping": "V1", "spectral": "V2", "spectral_full_frame": "V2"}
+    names = lambda f: {k: (Path(str(v)).name if v else None) for k, v in f.items() if k not in ("crop_modes", "selection")}
+    wide = names(get_hypso1_calibration_files("wide", coeff_type="abs"))
+    assert wide["radiometric"] == "radiometric_calibration_matrix_HYPSO-1_full_v1_adjusted_v11.npz"
+    assert wide["smile"] == "smile_correction_matrix_HYPSO-1_wide_v1.npz"
+    assert wide["destriping"] == "destriping_matrix_HYPSO-1_wide_v1.npz"
+    lab = names(get_hypso1_calibration_files("custom", coeff_type="lab", version="V1"))
+    assert lab["radiometric"] == "radiometric_calibration_matrix_HYPSO-1_full_v1.npz" and lab["destriping"] is None
+    assert lab["spectral"] == "spectral_calibration_wavelengths_center_row_HYPSO-1.npz"
+    moon = names(get_hypso1_calibration_files("moon"))
+    assert moon["radiometric"] == "radiometric_calibration_matrix_HYPSO-1_moon.npz"
+    with pytest.warns(DeprecationWarning, match="deprecated"):
+        assert names(get_hypso1_calibration_files("wide", coeff_type="adjusted")) == wide

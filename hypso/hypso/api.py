@@ -449,10 +449,12 @@ class Product:
         Parameters
         ----------
         coeff_type : str, optional
-            Radiometric variant: ``"abs"`` (default), ``"moved"`` or ``"lab"``.
+            Radiometric variant: ``"abs"``, ``"moved"`` or ``"lab"``. Default:
+            ``"abs"`` for HYPSO-2, ``"moved"`` for HYPSO-1.
         version : str or dict, optional
-            Coefficient release, ``"V3"`` (default), ``"V2"`` or ``"V1"``, or
-            ``{correction: release}`` to mix them, e.g. ``{"spectral": "V3"}``.
+            Coefficient release, or ``{correction: release}`` to mix them,
+            e.g. ``{"spectral": "V3"}``. HYPSO-2: ``"V3"`` (default), ``"V2"``,
+            ``"V1"``; HYPSO-1: ``"V2"`` (default), ``"V1"``.
         **kwargs
             Passed to :func:`hypso.processing.l1a_to_l1b`: ``coeff_files``
             (explicit files), and ``radiometric``, ``smile``, ``destripe``,

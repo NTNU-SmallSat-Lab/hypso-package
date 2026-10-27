@@ -1,99 +1,28 @@
-from importlib.resources import files
+from . import _catalog
 
-import yaml
-
-# capture_type -> which calibration files this mode uses, declared in YAML
-# instead of Python so a future imaging mode needs only a data change here
-# (plus the actual new .npz file(s) in data/), not a code change - see
-# data/capture_modes.yaml for the full schema documentation. Loaded once at
-# import time, not per-call.
-_CAPTURE_TYPE_FILES = yaml.safe_load(
-    files('hypso1_calibration').joinpath('data/capture_modes.yaml').read_text())
+# Which coefficient file each correction uses, per version and capture type,
+# and the versions each release selects - data/coefficients.yaml (data-only
+# edits for new coefficients; see that file's header). Selection logic:
+# _catalog.py, shared with hypso2_calibration.
+CATALOG = _catalog.load("hypso1_calibration")
 
 
-def get_hypso1_calibration_files(capture_type="custom", coeff_type='moved') -> None:
+def resolve_coefficients(coeff_type: str = None, version=None) -> dict:
+    """The coefficient selection for a coeff_type and version, without file
+    paths (see _catalog.resolve). coeff_type: "moved" (default), "abs" or
+    "lab"; the deprecated names "adjusted" and "original" map to (abs, V2)
+    and (lab, V1). version: "V2" (default), "V1", or {correction: version}."""
+    return _catalog.resolve(CATALOG, coeff_type, version)
+
+
+def get_hypso1_calibration_files(capture_type="custom", coeff_type=None, version=None) -> dict:
     """
-    Get the absolute path for the calibration coefficients included in the package. This includes radiometric,
-    smile and destriping correction.
+    Get the absolute paths of the calibration coefficients included in the
+    package (radiometric, smile, destriping, spectral) for a capture type
+    ("nominal", "wide", "custom", "moon"). See resolve_coefficients for
+    coeff_type and version; the defaults are moved / V2.
 
-    :return: None.
+    :return: {"radiometric", "smile", "destriping", "spectral",
+        "spectral_full_frame": path or None, "crop_modes", "selection"}.
     """
-
-    if coeff_type == 'moved':
-        # old versions commented out
-        # Moon calibrated, without adjusting gain based on PACE
-        # npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1_adjusted_weighted_final.npz"
-        # Moon calibrated, with adjusting gain based on PACE
-        # npz_file_radiometric = "h1_rad_coeff_adjusted_full.npz"
-        # Adjusted based on moon dip I think
-        # npz_file_spectral = "h1_spectral_coeff_adjusted_full.npz"
-
-        print("[INFO] Using 'moved' calibration coefficients for HYPSO-1. This is the default for radiometric and spectral coefficients. Other options 'original' or 'adjusted' can be passed using the 'coeff_type' keyword argument.")
-        # Radiometric coefficients only moved
-        npz_file_radiometric = "h1_radiometric_calibration_matrix_full_moved.npz"
-        # Adjusted using polynomial fit, using whole spectrum, static offset
-        npz_file_spectral = "spectral_array_calibrated_poly_full.npz"
-    elif coeff_type == 'adjusted':
-        print("[INFO] Using 'adjusted' calibration coefficients for HYPSO-1.")
-        npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1_adjusted_v11.npz"
-        npz_file_spectral = "spectral_array_calibrated_poly_full.npz"
-
-    elif coeff_type == 'original': 
-        print("[INFO] Using 'original' calibration coefficients for HYPSO-1.")
-        npz_file_radiometric = "radiometric_calibration_matrix_HYPSO-1_full_v1.npz"
-        npz_file_spectral = "spectral_calibration_wavelengths_center_row_HYPSO-1.npz"
-    else: 
-        raise ValueError(f"Invalid coeff_type: {coeff_type}. Must be 'moved', 'adjusted', or 'original.'")
-
-    mode_files = _CAPTURE_TYPE_FILES.get(capture_type)
-    if mode_files is None:
-        # Unknown capture_type - matches the historical behavior of this
-        # function's old case _: branch.
-        npz_file_radiometric = None
-        npz_file_smile = None
-        npz_file_destriping = None
-        npz_file_spectral = None
-    else:
-        # radiometric/spectral default to the coeff_type-driven selection
-        # above unless this mode's own entry overrides them (only "moon"
-        # does, for radiometric - see capture_modes.yaml).
-        npz_file_radiometric = mode_files.get('radiometric', npz_file_radiometric)
-        npz_file_smile = mode_files.get('smile')
-        npz_file_destriping = mode_files.get('destriping')
-
-    npz_file_spectral_full_frame = "spectral_array_calibrated_poly_full.npz"
-
-    if npz_file_radiometric:
-        rad_coeff_file = files('hypso1_calibration').joinpath(f'data/{npz_file_radiometric}')
-    else:
-        rad_coeff_file = None
-
-    if npz_file_smile:
-        smile_coeff_file = files('hypso1_calibration').joinpath(f'data/{npz_file_smile}')
-    else:
-        smile_coeff_file = None
-
-    if npz_file_destriping:
-        destriping_coeff_file = files('hypso1_calibration').joinpath(f'data/{npz_file_destriping}')
-    else:
-        destriping_coeff_file = None
-
-    if npz_file_spectral:
-        spectral_coeff_file = files('hypso1_calibration').joinpath(f'data/{npz_file_spectral}')
-    else:
-        spectral_coeff_file = None
-
-    if npz_file_spectral_full_frame:
-        spectral_full_frame_coeff_file = files('hypso1_calibration').joinpath(f'data/{npz_file_spectral_full_frame}')
-    else:
-        spectral_full_frame_coeff_file = None
-
-    calibration_files = {
-        "radiometric": rad_coeff_file,
-        "smile": smile_coeff_file,
-        "destriping": destriping_coeff_file,
-        "spectral": spectral_coeff_file,
-        "spectral_full_frame": spectral_full_frame_coeff_file
-    }
-
-    return calibration_files
+    return _catalog.calibration_files("hypso1_calibration", CATALOG, capture_type, coeff_type, version)

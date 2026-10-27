@@ -85,6 +85,14 @@ releases:
     spectral: V1
     spectral_full_frame: V2
 
+# Warn when a selection uses a spectral version outside `versions` (not for
+# release V1).
+spectral_note:
+  versions: [V2]
+  message: >-
+    renames integer-wavelength bands relative to V2; OC-SMART's HYPSO band
+    table and POLYMER band settings select bands by these names.
+
 # Deprecated coeff_type names -> (coeff_type, release).
 aliases:
   adjusted: [abs, V2]

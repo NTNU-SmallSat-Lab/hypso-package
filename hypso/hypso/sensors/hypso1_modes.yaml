@@ -9,15 +9,15 @@
 # AOI - use unmodified) or "crop_and_bin" (the default if the coeff_type is
 # omitted here - crop to this capture's own AOI, average bin_factor columns
 # together). See calibration/correction.py's read_coeffs_from_file for how
-# this gets consumed, and hypso1_calibration/data/capture_modes.yaml for the
-# sibling schema deciding *which* file each mode uses in the first place.
+# this gets consumed, and hypso1_calibration/data/coefficients.yaml
+# (capture_types entries) for *which* file each mode uses.
 #
 # "custom" is the un-listed fallback for any capture that matches none of
-# these thresholds - not a YAML entry, see io/dispatch.py's check_capture_type.
+# these thresholds - not a YAML entry (hypso.processing.capture).
 #
 # Adding a future imaging mode: add an entry here (and, if it has its own
-# pre-baked calibration files, a matching entry in hypso1_calibration's
-# capture_modes.yaml) - no Python code changes needed for either.
+# pre-baked calibration files, capture_types entries in hypso1_calibration's
+# coefficients.yaml) - no Python code changes needed for either.
 #
 # ORDER MATTERS: check_capture_type checks these in file order, first match
 # wins. Different modes check different attrs (frame_count vs image_height),

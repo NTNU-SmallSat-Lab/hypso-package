@@ -5,7 +5,7 @@
 # change, and tag that commit as a new release (vYY.M.N) - see
 # docs/versioning.rst.
 files:
-  data/capture_modes.yaml: 96243b119fc3eb39951be1bdc1c9fa60f83bba66a59f59a6e1b77c0f744e5f95
+  data/coefficients.yaml: 2f55b37d0f6fe384188f9f19dfc37f4ce9cb8bffd587670ee4f7a92fdfdfaf09
   data/destriping_matrix_HYPSO-1_nominal_v1.npz: aed4c507788aff9e0145a9a22fd9d0ce4e7bdbbb9810d7cdd6ffdf1f78088ec4
   data/destriping_matrix_HYPSO-1_wide_v1.npz: 81e7ca53aca4a87ae7114c5f111ed48a66140b76cdc852f3ef42e33e610aa29c
   data/h1_radiometric_calibration_matrix_full_moved.npz: d13b0efe006bbeac13d92eee5ef4ea0bef682a0ef6fc93829e3de13ae3256363
