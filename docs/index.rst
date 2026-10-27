@@ -43,6 +43,7 @@ L2A        atmospherically corrected reflectance            ``correct_atmosphere
 
    products
    calibration
+   coefficient_history
    atmospheric_correction
    grid
    windows

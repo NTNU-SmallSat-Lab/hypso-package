@@ -34,11 +34,7 @@ anything but DONE, fix and rerun it; do not stage other files while it runs (it 
 
 Prepared but NOT yet committed or wired in (untracked or unstaged; commit after the job):
 
-1. **Coefficients cleanup** (user, 2026-10-27). `docs/coefficient_history.rst` written (the HYPSO-1 version log
-   verbatim, HYPSO-2 notes, the smile/keystone model, the removed CSVs) and linked from `docs/index.rst` and
-   `docs/calibration.rst`. Still to do: `git rm -r coefficients/` (23 CSVs identical to the shipped `.npz`, NaN
-   included; `convert_csv_to_npz.py`; the version log, now in the docs; `H2_A-hat`/`H2_B-hat`, now shipped as
-   below), build the docs with `-W`.
+1. ~~**Coefficients cleanup**~~ - done (×76).
 2. **Keystone groundwork** (user: ship the model disabled, for review later). Done: `hypso2_calibration/data/
    h2_distortion_model_v1.npz` (`A_hat`, `B_hat`, `terms`); `coefficients.yaml` `optional: keystone: V1`
    (`enabled: false`, description); `_catalog.optional_model` (both copies identical) and `optional_model()` in
@@ -154,6 +150,12 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-10-27 (×76): coefficients folder removed.** The top-level `coefficients/` (about 400 MB: 23 CSVs
+  identical to the shipped `.npz` files, NaN included; `convert_csv_to_npz.py`; the HYPSO-1 version log;
+  `H2_A-hat`/`H2_B-hat`) is gone; nothing read it. The version log is now verbatim in
+  `docs/coefficient_history.rst` (linked from the index and the calibration guide), which also records where
+  the CSVs were. The two H2 files are HYPSO-2's smile/keystone distortion model and move into
+  `hypso2_calibration` with the keystone groundwork (next entry). History keeps the files.
 - **2026-10-27 (×75): float32 cubes in memory.** Calibration and AC now store their cube as float32 (the precision
   files hold); calibration's corrections still run in float64 inside the step, so an L1B in memory equals what
   its file holds. L1D cube 627 -> 313 MB; peak memory L1A -> L2A 2.3 GB on the reference capture.

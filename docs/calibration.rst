@@ -117,3 +117,5 @@ the same directory. Then update the checksum manifest and tag a release (see
 :doc:`versioning`)::
 
    python -m hypso.calibration.manifest update hypso2_calibration
+
+Where the coefficient files came from is recorded in :doc:`coefficient_history`.
