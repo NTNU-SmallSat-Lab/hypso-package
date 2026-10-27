@@ -6,8 +6,8 @@ taken about 2 s before the HSI capture starts. The mosaic is RGGB; the ground
 processing's demosaiced copy (``processing-temp/rgb-camera-image-debayered.png``)
 is this module's bilinear RGGB demosaic rotated 180 degrees (checked on the
 2025-04-04 Ariake capture: correlation 0.98-1.00 per channel). The file has
-no georeferencing; co-registration with the HSI image is a REFACTOR_PROGRESS.md
-TODO.
+no georeferencing. Reading never registers it; that is an explicit step,
+:func:`hypso.rgb.register_camera` (the HSI product gives the geolocation).
 
 Examples
 --------

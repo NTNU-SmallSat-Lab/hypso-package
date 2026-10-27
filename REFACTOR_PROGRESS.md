@@ -70,6 +70,15 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    them). To build: a quality check on inlier spread (coverage of the camera image), not only count; leave
    unregistered with the reason below threshold; `register_camera` -> camera Product (native frame, per-pixel
    lat/lon), homography and QC in provenance; the pixel mappings; RGB names, Satpy reader, composite, demo.
+4g. **HSI-RGB fusion (super-resolution)** (user, 2026-10-27; after the camera product, TODO 4e). Fuse the HSI
+   (120 bands, 876 x 108 m) with the co-registered RGB camera (3 bands, ~30 m) into a finer hyperspectral cube -
+   hyperspectral-multispectral fusion / "hyperspectral pansharpening" (e.g. CNMF, HySure, GSA, or learned
+   methods). Prerequisites, in order: (1) estimate the camera's spectral response by regressing camera colours
+   on HSI spectra where they overlap; (2) tighten registration well below an HSI pixel across-track (108 m; now
+   ~200 m): local refinement or full-resolution matching; (3) handle the ~2 s time offset (clouds, glint). Fusion
+   adds spatial detail, not real fine-scale spectral information: validate fused spectra against the original
+   HSI before any water-colour use. Not possible: spectral super-resolution (bands are binned 9x on board) or
+   multi-capture SR (repeat captures are days apart).
 4f. **Keystone review** (×77, for the calibration team): HYPSO-2's distortion model (`h2_distortion_model_v1.npz`,
    `optional: keystone` in coefficients.yaml, `enabled: false`) is applied only with `calibrate(keystone=True)`,
    with a warning. Questions: is B_hat valid for the flight model; is the sample axis oriented as the detector
@@ -131,6 +140,18 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-10-27 (×84): RGB camera registration and maps** (user; never run automatically on reading).
+  `hypso.rgb.registration`: `register_camera(camera, hsi)` (HSI 640/550/460 nm regridded to UTM 150 m; SIFT,
+  ratio 0.8, cross-check; RANSAC homography camera px -> map; seeded) returns a `CameraRegistration` (homography
+  to UTM metres, inliers, RMS m, inlier convex-hull coverage, ok/reason; quality check: >= 30 inliers,
+  coverage >= 25%, RMS <= 500 m); `georeference_camera` -> Dataset R/G/B + per-pixel latitude/longitude +
+  `in_hsi_swath` + registration attributes; `hsi_to_camera_pixels` (inverse homography) and
+  `camera_to_hsi_pixels` (kd-tree). `hypso.rgb.maps`: `regrid_camera` (any grid, e.g. the HSI's; "auto" averages
+  only when cells >= 2x the ~32 m camera pixel - averaging onto pixel-size cells left empty cells) and
+  `plot_rgb_map` (gridded camera or regridded Product; graticule, scale bar, north arrow true north, coastlines
+  via cartopy if present, outlined labels). Ariake 2025-04-04: ok, 344/435 inliers, 194 m, coverage 75%,
+  register 26 s, georeference 13 s; Natural Earth coastlines line up on camera and HSI maps. docs/camera.rst.
+  Still to do for TODO 4e: a camera Product (RGB names, levels), Satpy reader and composite, demo.
 - **2026-10-27 (×82): internal docstrings** (TODO 1). The `:param x:` / `:return:` docstrings in
   hypso.calibration, hypso.geometry and hypso.utils converted to NumPy sections (wording kept); the 38 empty
   entries filled from the code; 13 undocumented functions documented (geometry bbox/gsd/resolution, frame
