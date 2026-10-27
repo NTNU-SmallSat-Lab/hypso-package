@@ -36,9 +36,7 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    tests so far use the tools' real outputs, not real runs); fix the silently skipped real-Polymer test (stale
    path); a HYPSO-1 capture and a nominal (non-wide) HYPSO-2 capture through L1D (everything so far is one
    HYPSO-2 wide capture; this also settles the old "variable capture dimensions" item, ×20/×31).
-3. **Dependencies** in `hypso/pyproject.toml`: nothing in `hypso/hypso` imports scikit-learn, xgboost, py6s,
-   rasterio, cartopy, progressbar, shapely, tqdm, joblib, requests or pillow (checked 2026-10-27); astropy and
-   scikit-image have one importer each. Drop the unused ones (and check the calibration packages' lists).
+3. ~~**Dependencies**~~ - done (×65).
 4. **Satpy readers and gridded products** (×58): the readers' file patterns take a gridded name's grid field
    as `label`, and geolocate through latitude/longitude as a swath. Give gridded products their area from
    `crs`/`x`/`y`, or document `Product.to_satpy()` as the way in.
@@ -60,6 +58,13 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-10-27 (×65): dependencies trimmed.** `hypso/pyproject.toml` dropped 16 packages nothing in `hypso/hypso`
+  imports: cartopy, rasterio, py6s, pillow, shapely, tqdm, progressbar, requests, scikit-learn, xgboost, joblib,
+  global-land-mask, h5py, pvlib, earthaccess, seaborn. Kept: numpy, scipy, xarray, netcdf4, pandas, pyproj,
+  pyresample, satpy, astropy (geometry), scikit-image (destriping), matplotlib (masks module, imported with the
+  package), python-dateutil, pyyaml, the calibration packages. Fixed the xarray floor to 2024.10.0
+  (`xarray.DataTree`; was 2023.12). Verified: all 61 modules import with the dropped packages blocked for
+  direct imports from hypso. Calibration packages' lists (numpy, pyyaml) were already minimal.
 - **2026-10-27 (×64): plan and TODO cleanup.** TODO list reviewed and renumbered (above): closed items folded
   into "Done", the old capture-dimension item merged into verification, new items for dependencies, Satpy and
   gridded products, unpushed tags. Superseded plans archived verbatim: `archive/ARCHITECTURE_PROPOSAL.md`
