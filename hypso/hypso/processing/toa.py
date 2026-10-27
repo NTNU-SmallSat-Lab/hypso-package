@@ -9,7 +9,7 @@ themselves, such as Polymer. The spectral response and solar spectra are in
 import numpy as np
 import xarray as xr
 
-from hypso.io.product import product_name
+from hypso.io.product import BAND_INDEX, band_indices, product_name
 from hypso.io.provenance import add_step
 from hypso.srf import compute_spectral_response, earth_sun_distance, srf_dataset
 
@@ -68,7 +68,16 @@ def srf_node(tree: xr.DataTree, ssi_source: str = "tsis", use_unbinned: bool = T
     wavelengths = tree.dataset["radiation_wavelength"].values
     params = capture_params(tree)
     return srf_dataset(spectral_response(tree, ssi_source, use_unbinned), wavelengths, params.fwhm(wavelengths),
-                       params.iso_time)
+                       params.iso_time, band_indices=_sr_indices(tree, use_unbinned))
+
+
+def _sr_indices(tree: xr.DataTree, use_unbinned: bool) -> np.ndarray:
+    # The spectral response covers the sensor's full band set when built from
+    # the unbinned wavelengths (metadata/corrections), so a band subset
+    # (Product.select_bands) picks its bands by band_index; built from the
+    # product's own bands it is already on them.
+    cube = tree.dataset[product_name(tree)]
+    return band_indices(cube) if use_unbinned else np.arange(cube.sizes["bands"])
 
 
 def l1c_to_l1d(tree: xr.DataTree, use_direct_georef: bool = False, ssi_source: str = "tsis",
@@ -102,7 +111,8 @@ def l1c_to_l1d(tree: xr.DataTree, use_direct_georef: bool = False, ssi_source: s
 
     zenith_name = "solar_zenith_direct" if use_direct_georef and "solar_zenith_direct" in root else "solar_zenith"
     sr = spectral_response(tree, ssi_source=ssi_source, use_unbinned=use_unbinned)
-    reflectance = toa_reflectance(radiance.values, sr.f0, params.iso_time, root[zenith_name].values)
+    indices = _sr_indices(tree, use_unbinned)
+    reflectance = toa_reflectance(radiance.values, sr.f0[indices], params.iso_time, root[zenith_name].values)
 
     out = root.drop_vars([product_name(tree), "wavelength", "radiation_wavelength", "fwhm"])
     out["rhot"] = xr.DataArray(reflectance, dims=radiance.dims, coords={
@@ -113,7 +123,7 @@ def l1c_to_l1d(tree: xr.DataTree, use_direct_georef: bool = False, ssi_source: s
 
     result = tree.copy()
     result.dataset = out
-    result["metadata/srf"] = xr.DataTree(srf_dataset(sr, wavelengths, fwhm, params.iso_time))
+    result["metadata/srf"] = xr.DataTree(srf_dataset(sr, wavelengths, fwhm, params.iso_time, band_indices=indices))
     source = tree.encoding.get("source")
     result.encoding.pop("source", None)
     add_step(result, "l1d", input_file=source or "L1C (in memory)",

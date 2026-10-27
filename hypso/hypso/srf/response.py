@@ -157,7 +157,7 @@ def effective_fwhm(srfs: csr_matrix, wavelengths) -> np.ndarray:
     return widths
 
 
-def srf_dataset(sr: SpectralResponse, wavelengths, fwhm, iso_time=None) -> xr.Dataset:
+def srf_dataset(sr: SpectralResponse, wavelengths, fwhm, iso_time=None, band_indices=None) -> xr.Dataset:
     """A product's ``metadata/srf`` group.
 
     Parameters
@@ -167,6 +167,10 @@ def srf_dataset(sr: SpectralResponse, wavelengths, fwhm, iso_time=None) -> xr.Da
         The product's band centres and FWHM (nm).
     iso_time : str, optional
         Acquisition time, for ``earth_sun_distance_au``.
+    band_indices : array_like of int, optional
+        Each band's index in ``sr`` (the sensor's full band set), for a
+        product with a subset of bands (``Product.select_bands``); default
+        ``0..n-1``. The per-band tables and ``Band_<index>`` SRFs follow it.
 
     Returns
     -------
@@ -178,8 +182,9 @@ def srf_dataset(sr: SpectralResponse, wavelengths, fwhm, iso_time=None) -> xr.Da
     """
     data, attrs = {}, {}
     # F0 was called esun until 2026-10-27 (REFACTOR_PROGRESS.md ×74); older files keep that name.
-    for name, value in (("F0", sr.f0), ("F0_wavelengths", sr.band_centers),
-                        ("effective_fwhm", sr.effective_fwhm),
+    indices = np.arange(len(wavelengths)) if band_indices is None else np.asarray(band_indices, dtype=int)
+    for name, value in (("F0", sr.f0[indices]), ("F0_wavelengths", sr.band_centers[indices]),
+                        ("effective_fwhm", sr.effective_fwhm[indices]),
                         ("effective_fwhm_unbinned", sr.effective_fwhm_unbinned)):
         data[name] = xr.Variable((name,), np.asarray(value, dtype="f8"))
     data["F0"].attrs = {
@@ -190,7 +195,8 @@ def srf_dataset(sr: SpectralResponse, wavelengths, fwhm, iso_time=None) -> xr.Da
         attrs["earth_sun_distance_au"] = earth_sun_distance(iso_time)
 
     grid = np.asarray(sr.grid_wl)
-    for index, wavelength in enumerate(wavelengths):
+    for position, (index, wavelength) in enumerate(zip(indices, wavelengths)):
+        index = int(index)
         band = f"Band_{index}"
         response = sr.srf[index, :].toarray().flatten()
         nonzero = response > 0
@@ -201,5 +207,5 @@ def srf_dataset(sr: SpectralResponse, wavelengths, fwhm, iso_time=None) -> xr.Da
         data[dim] = xr.Variable((dim,), np.asarray(wl, dtype="f4"), {"units": "nm"})
         data[band] = xr.Variable((dim,), np.asarray(values, dtype="f4"), {
             "band_info": band, "band_wavelength": float(wavelength), "index": index,
-            "effective_fwhm": float(sr.effective_fwhm[index]), "center_fwhm": float(fwhm[index])})
+            "effective_fwhm": float(sr.effective_fwhm[index]), "center_fwhm": float(fwhm[position])})
     return xr.Dataset(data, attrs=attrs)

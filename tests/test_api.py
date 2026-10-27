@@ -551,8 +551,7 @@ def test_satpy_gridded(l1d, tmp_path):
 
 
 def test_to_l2a(l1c, l1d):
-    with pytest.raises(ValueError, match="method"):
-        l1d.to("L2A")
+    assert l1d.to("L2A").atmospheric_correction == "machi"          # the default method (×78)
     l2a = l1c.to("L2A", correct_atmosphere={"method": "dps"})      # runs toa_reflectance, then DPS
     assert l2a.level == "L2A" and l2a.atmospheric_correction == "dps"
     np.testing.assert_allclose(l2a.cube.values, l1d.correct_atmosphere("dps").cube.values)

@@ -7,6 +7,10 @@ the input's bands, its 2D products and flags, the input's geometry,
 
 Methods:
 
+- "machi" (default): MACHI, Minimal Atmospheric Compensation for Hyperspectral
+  Imagers (hypso.ac.machi, vendored from NTNU SmallSat Lab), in-process on the
+  L1D cube: one scattering and one transmission spectrum for the whole image,
+  fitted so corrected spectra are smooth; surface reflectance ``rhos``.
 - "dps": dark pixel subtraction, in-process on the L1D cube.
 - "polymer": Polymer in a subprocess (hypso.ac.adapters._polymer_driver),
   from L1C (default) or L1D. Installation and settings come from the AC
@@ -48,7 +52,7 @@ from hypso.masks.flags import FLAGS_NAME, apply_flags
 
 logger = logging.getLogger(__name__)
 
-_INPUT_LEVELS = {"dps": ("L1D",), "polymer": ("L1C", "L1D"), "acolite": ("L1C", "L1D"), "ocsmart": ("L1D",)}
+_INPUT_LEVELS = {"machi": ("L1D",), "dps": ("L1D",), "polymer": ("L1C", "L1D"), "acolite": ("L1C", "L1D"), "ocsmart": ("L1D",)}
 
 
 def _input_cube(tree: xr.DataTree, masked: bool, mask_flags) -> xr.DataArray:
@@ -105,6 +109,65 @@ def _dps(tree, masked, mask_flags, statistic="min", percentile=None):
     return _l2a_tree(tree, "dps", "Rrs", corrected, parameters,
                      ac_attrs("dps", version="hypso-package", settings_effective={"statistic": statistic,
                                                                                   "percentile": percentile}))
+
+
+def _machi(tree, masked, mask_flags, est_min_R=0.05, tol=0.01, approach_rate=1.0, fit_exclude_flags=None):
+    # MACHI (hypso.ac.machi, vendored unchanged from upstream ebbc3e72): fit one
+    # scattering (A) and one transmission (T) spectrum on the image's finite
+    # pixels (all of them, as upstream - user decision 2026-10-27 - or without
+    # those flagged in fit_exclude_flags), then rhos = (rhot - A) / T for every
+    # pixel. The input is reflectance, so MACHI's solar spectrum is ones.
+    from hypso.ac import machi
+    cube = _input_cube(tree, masked, mask_flags).values
+    lines, samples, bands = cube.shape
+    pixels = cube.reshape(-1, bands)
+    fit = np.isfinite(pixels).all(axis=1)
+    if fit_exclude_flags:
+        if FLAGS_NAME not in tree.dataset:
+            raise ValueError("fit_exclude_flags given but the product has no pixel_flags")
+        from hypso.masks.flags import decode_flags
+        flags = decode_flags(tree.dataset[FLAGS_NAME])
+        unknown = sorted(set(fit_exclude_flags) - set(flags))
+        if unknown:
+            raise ValueError(f"unknown flags {unknown}; the product has {sorted(flags)}")
+        for name in fit_exclude_flags:
+            fit &= ~flags[name].values.ravel()
+    if fit.sum() < 2:
+        raise ValueError("MACHI needs finite pixels to fit; none are left")
+    # Bands without signal (all zero: HYPSO's smile correction blanks < 400 nm)
+    # make MACHI's update divide by zero and stop at once; fit the others only.
+    used = np.flatnonzero(np.any(pixels[fit] != 0, axis=0))
+    t_fit, a_fit, objective = machi.atm_correction(pixels[fit][:, used].astype(np.float64), solar=np.ones(used.size),
+                                                   tol=tol, est_min_R=est_min_R, approach_rate=approach_rate)
+    T = np.full(bands, np.nan)
+    A = np.full(bands, np.nan)
+    T[used], A[used] = t_fit, a_fit
+    with np.errstate(divide="ignore", invalid="ignore"):
+        corrected = np.where(T > 0, (cube - A) / T, np.nan)
+    settings = {"est_min_R": est_min_R, "tol": tol, "approach_rate": approach_rate,
+                "fit_exclude_flags": list(fit_exclude_flags or [])}
+    parameters = {**settings, "masked": masked, "mask_flags": list(mask_flags) if mask_flags else "all" if masked else "",
+                  "fit_pixels": int(fit.sum()), "bands_fitted": int(used.size),
+                  "bands_without_signal": [int(b) for b in np.setdiff1d(np.arange(bands), used)],
+                  "iterations": len(objective) - 1,
+                  "objective_final": float(objective[-1])}
+    result = _l2a_tree(tree, "machi", "rhos", corrected, parameters,
+                       ac_attrs("machi", version=MACHI_VERSION, settings_effective=settings))
+    wavelengths = tree.dataset["radiation_wavelength"].values
+    result["metadata/machi"] = xr.DataTree(xr.Dataset(
+        {"T": ("bands", np.asarray(T, dtype="f8"), {"long_name": "Atmospheric transmission fitted by MACHI",
+                                                   "units": "1"}),
+         "A": ("bands", np.asarray(A, dtype="f8"), {"long_name": "Atmospheric scattering (path reflectance) "
+                                                                 "fitted by MACHI", "units": "1"}),
+         "objective": ("iteration", np.asarray(objective, dtype="f8"),
+                       {"long_name": "MACHI objective (mean squared spectral derivative) per iteration"})},
+        coords={"wavelength": ("bands", np.asarray(wavelengths, dtype="f8"), {"units": "nm"})},
+        attrs={"model": "rhos = (rhot - A) / T", "source": MACHI_VERSION}))
+    return result
+
+
+# Vendored MACHI version (hypso/ac/machi.py).
+MACHI_VERSION = "MACHI ebbc3e72 (vendored)"
 
 
 def _band_map(source_wavelengths, tool_wavelengths) -> tuple:
@@ -463,11 +526,11 @@ def _capture_id(tree: xr.DataTree) -> str:
     return make_name(tree.attrs.get("sat_id"), time, tree.attrs.get("location_description"), "L1D").capture_id
 
 
-_METHODS = {"dps": _dps, "polymer": _polymer, "acolite": _acolite, "ocsmart": _ocsmart}
+_METHODS = {"machi": _machi, "dps": _dps, "polymer": _polymer, "acolite": _acolite, "ocsmart": _ocsmart}
 _EXTERNAL = {"polymer", "acolite", "ocsmart"}
 
 
-def correct_atmosphere(tree: xr.DataTree, method: str, masked: bool = False, mask_flags=None,
+def correct_atmosphere(tree: xr.DataTree, method: str = "machi", masked: bool = False, mask_flags=None,
                        work_dir=None, config=None, **options) -> xr.DataTree:
     """Atmospheric correction of an L1C or L1D tree.
 
@@ -475,7 +538,7 @@ def correct_atmosphere(tree: xr.DataTree, method: str, masked: bool = False, mas
     ----------
     tree : xarray.DataTree
         L1C or L1D product tree in sensor geometry (not regridded).
-    method : {"dps", "polymer", "acolite", "ocsmart"}
+    method : {"machi", "dps", "polymer", "acolite", "ocsmart"}, default "machi"
         See the module description.
     masked : bool, default False
         Give the method NaN where ``pixel_flags`` are set (all flags, or only
@@ -489,7 +552,10 @@ def correct_atmosphere(tree: xr.DataTree, method: str, masked: bool = False, mas
         External tools only: AC tool configuration (:mod:`hypso.ac.config`);
         default the ``HYPSO_AC_CONFIG`` environment variable.
     **options
-        Method-specific. dps: ``statistic`` (``"min"`` or
+        Method-specific. machi: ``est_min_R`` (expected minimum surface
+        reflectance, default 0.05), ``tol`` (default 0.01), ``approach_rate``
+        (default 1), ``fit_exclude_flags`` (pixel_flags names left out of the
+        fit; default none, all finite pixels). dps: ``statistic`` (``"min"`` or
         ``"percentile"``), ``percentile``. polymer, acolite, ocsmart: any key
         of the tool's configuration section (e.g. ``settings={...}``),
         overriding it; acolite also ``output`` (``"l2w"`` or ``"l2r"``) and

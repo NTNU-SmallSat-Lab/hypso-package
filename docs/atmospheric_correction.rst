@@ -2,19 +2,21 @@ Atmospheric correction
 ======================
 
 ``Product.correct_atmosphere(method, ...)`` turns an L1C or L1D product into an
-L2A product:
+L2A product. Without a method it uses MACHI, which needs nothing installed:
 
 .. code-block:: python
 
    import hypso
 
    l1d = hypso.open("....L1D.nc")
+   l2a = l1d.correct_atmosphere()                    # MACHI (default)
    l2a = l1d.correct_atmosphere("polymer", config="ac_tools.yaml")
    l2a.write()      # HYPSO2_HSI.<time>.<target>.L2A.polymer.nc
 
 ==============  ===========  ==============================  ============================
 Method          Input        Product                         Runs
 ==============  ===========  ==============================  ============================
+``machi``       L1D          ``rhos``                        in this process (default)
 ``dps``         L1D          ``Rrs``                         in this process
 ``polymer``     L1C or L1D   ``rho_w``                       Polymer, in a subprocess
 ``acolite``     L1C or L1D   ``Rrs`` (``output="l2w"``,      ACOLITE, in a subprocess
@@ -52,6 +54,41 @@ Method          Variables
 Tool standard names that are not CF names are kept as ``source_standard_name``;
 ACOLITE's chlorophyll and SPM names are mapped to the CF ``..._in_sea_water``
 names.
+
+MACHI
+-----
+
+MACHI (Minimal Atmospheric Compensation for Hyperspectral Imagers, NTNU
+SmallSat Lab, `github.com/NTNU-SmallSat-Lab/MACHI
+<https://github.com/NTNU-SmallSat-Lab/MACHI>`_, MIT licence) is included in the
+package (``hypso.ac.machi``, from upstream commit ``ebbc3e72``, unchanged). It
+models the surface reflectance as ``rhos = (rhot - A) / T``, with one scattering
+spectrum ``A`` and one transmission spectrum ``T`` for the whole image, fitted so
+that the corrected spectra are as smooth as possible: surface spectra are
+smooth, gas absorption is not. ``A`` starts from the darkest pixel per band.
+
+.. code-block:: python
+
+   l2a = l1d.correct_atmosphere("machi", est_min_R=0.05, tol=0.01)
+   l2a.tree["metadata/machi"]        # the fitted T and A, and the objective per iteration
+
+Options: ``est_min_R`` (expected minimum surface reflectance, default 0.05),
+``tol`` (relative change of the objective at which the fit stops, default
+0.01), ``approach_rate`` (default 1), and ``fit_exclude_flags`` (pixel_flags
+left out of the fit, e.g. ``["cloud"]``; by default every finite pixel is used,
+as upstream). The correction is applied to every pixel. Bands without signal
+(HYPSO's smile correction leaves the bands below 400 nm at zero) are not fitted
+and come out NaN.
+
+It is fast and needs no tools, which makes it the default, but treat it as a
+first look rather than a validated water product (upstream's own list): little
+in situ validation yet; a simple light-propagation model; one correction for the
+whole image although aerosols, glint and water vapour vary across it; no sun
+glint correction; Rayleigh and aerosol scattering are hard to separate from
+smooth surface spectra; bands with nearly complete absorption are a problem; and
+it needs the expected minimum reflectance. Its output is surface reflectance
+``rhos``, not water-leaving ``Rrs``. On the reference capture (598 x 1092 pixels,
+120 bands) it takes about 30 s and 4 GB of memory.
 
 Masked input
 ------------

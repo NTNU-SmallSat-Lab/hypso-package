@@ -58,19 +58,22 @@ class Product:
         raise AttributeError("Product is immutable; processing methods return a new Product")
 
     @classmethod
-    def open(cls, path) -> "Product":
+    def open(cls, path, wavelength_range=None, wavelengths=None, indices=None) -> "Product":
         """Read a product file of any level and any supported layout.
 
         Parameters
         ----------
         path : str or pathlib.Path
             A current-format, older grouped or ground-station L1A file.
+        wavelength_range, wavelengths, indices : optional
+            Read only some bands (as :meth:`select_bands`); only those are
+            read from the file. Not for L1A.
 
         Returns
         -------
         Product
         """
-        return cls(read_product(path))
+        return cls(read_product(path, wavelength_range=wavelength_range, wavelengths=wavelengths, indices=indices))
 
     # -- contents -----------------------------------------------------------
 
@@ -439,6 +442,37 @@ class Product:
         tree.dataset = root
         return Product(tree)
 
+    def select_bands(self, wavelength_range=None, wavelengths=None, indices=None) -> "Product":
+        """A new Product with only some of the bands (from L1B on).
+
+        Parameters
+        ----------
+        wavelength_range : tuple of float, optional
+            ``(min, max)`` in nm: the bands whose centre lies within it.
+        wavelengths : array_like, optional
+            Wavelengths in nm: the nearest band to each.
+        indices : array_like of int, optional
+            Band indices in the sensor's full band set (``band_index``).
+
+        Returns
+        -------
+        Product
+            Each band keeps its full-set index, so later steps (TOA
+            reflectance, SRFs) give the same values as on all bands.
+
+        Raises
+        ------
+        ValueError
+            On L1A: calibration needs every band.
+
+        Examples
+        --------
+        >>> vis = l1b.select_bands(wavelength_range=(450, 700))
+        """
+        from hypso.processing.bands import select_bands
+        return Product(select_bands(self._tree, wavelength_range=wavelength_range, wavelengths=wavelengths,
+                                    indices=indices))
+
     # -- processing (each returns a new Product) ----------------------------
 
     def _require(self, level: str, method: str):
@@ -517,14 +551,15 @@ class Product:
         return Product(l1c_to_l1d(self._tree, use_direct_georef=use_direct_georef, ssi_source=ssi_source,
                                   use_unbinned=use_unbinned))
 
-    def correct_atmosphere(self, method: str, masked: bool = False, mask_flags=None, work_dir=None,
+    def correct_atmosphere(self, method: str = "machi", masked: bool = False, mask_flags=None, work_dir=None,
                            config=None, **options) -> "Product":
         """Atmospheric correction to L2A.
 
         Parameters
         ----------
-        method : {"dps", "polymer", "acolite", "ocsmart"}
-            Dark pixel subtraction (in this process), or an external tool.
+        method : {"machi", "dps", "polymer", "acolite", "ocsmart"}, default "machi"
+            MACHI or dark pixel subtraction (in this process), or an
+            external tool.
         masked : bool, default False
             Give the method NaN where ``pixel_flags`` are set.
         mask_flags : list of str, optional
@@ -537,9 +572,9 @@ class Product:
             (:mod:`hypso.ac.config`); default the ``HYPSO_AC_CONFIG``
             environment variable.
         **options
-            Method-specific options overriding the configuration, e.g.
-            ``settings={...}`` for Polymer or ACOLITE, ``output="l2r"`` for
-            ACOLITE.
+            Method-specific options, e.g. ``est_min_R=0.05`` for MACHI,
+            ``settings={...}`` overriding the configuration for Polymer or
+            ACOLITE, ``output="l2r"`` for ACOLITE.
 
         Returns
         -------
@@ -570,8 +605,8 @@ class Product:
             Target level.
         calibrate, georeference, toa_reflectance, correct_atmosphere : dict, optional
             Options for each step, passed to the method of that name. For
-            L2A, ``correct_atmosphere`` must name the ``method``; there is
-            no default method.
+            L2A, ``correct_atmosphere={"method": ...}`` picks the method
+            (default MACHI).
 
         Returns
         -------
@@ -581,15 +616,13 @@ class Product:
         --------
         >>> l1d = l1a.to("L1D", calibrate={"version": "V2"},
         ...              georeference={"latitudes": lats, "longitudes": lons})
+        >>> l2a = l1d.to("L2A")                                        # MACHI
         >>> l2a = l1d.to("L2A", correct_atmosphere={"method": "dps"})
         """
         level = level.upper()
         order = LEVELS + ("L2A",)
         if level not in order or order.index(level) < order.index(self.level):
             raise ValueError(f"cannot go from {self.level} to {level}")
-        if level == "L2A" and self.level != "L2A" and not (correct_atmosphere or {}).get("method"):
-            raise ValueError('to("L2A") needs correct_atmosphere={"method": ...}: one of "dps", "polymer", '
-                             '"acolite", "ocsmart"')
         options = {"calibrate": calibrate or {}, "georeference": georeference or {},
                    "toa_reflectance": toa_reflectance or {}, "correct_atmosphere": correct_atmosphere or {}}
         product = self
@@ -658,7 +691,7 @@ _STEPS = {"L1A": "calibrate", "L1B": "georeference", "L1C": "toa_reflectance", "
 _NEXT = {"L1A": "L1B", "L1B": "L1C", "L1C": "L1D", "L1D": "L2A"}
 
 
-def open(path) -> Product:  # noqa: A001 - mirrors xarray.open_dataset / builtin-style entry point
+def open(path, wavelength_range=None, wavelengths=None, indices=None) -> Product:  # noqa: A001
     """Read a HYPSO product file.
 
     Parameters
@@ -666,6 +699,8 @@ def open(path) -> Product:  # noqa: A001 - mirrors xarray.open_dataset / builtin
     path : str or pathlib.Path
         A product file of any level (L1A-L2A), in the current format, the
         older grouped format, or a ground-station L1A.
+    wavelength_range, wavelengths, indices : optional
+        Read only some bands (see :meth:`Product.select_bands`).
 
     Returns
     -------
@@ -676,4 +711,4 @@ def open(path) -> Product:  # noqa: A001 - mirrors xarray.open_dataset / builtin
     >>> import hypso
     >>> l1d = hypso.open("HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.nc")
     """
-    return Product.open(path)
+    return Product.open(path, wavelength_range=wavelength_range, wavelengths=wavelengths, indices=indices)

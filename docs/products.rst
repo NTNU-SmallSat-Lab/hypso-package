@@ -69,6 +69,28 @@ Data are compressed (zlib level 4) and stored unmasked; L1A counts stay
 ``uint16``. ``product.write(datacube=True)`` writes the cube as one 3D
 variable instead of one variable per band.
 
+Band subsets
+------------
+
+``select_bands`` keeps some bands and drops the rest, from L1B on (calibration
+needs every band, because the smile correction resamples each spectrum across
+bands):
+
+.. code-block:: python
+
+   vis = l1b.select_bands(wavelength_range=(450, 700))   # bands centred in 450-700 nm
+   rgb = l1d.select_bands(wavelengths=[640, 550, 460])   # the nearest band to each
+   few = l1d.select_bands(indices=[20, 40, 60])          # by index in the full band set
+
+Each kept band keeps its index in the sensor's full band set (the
+``band_index`` coordinate; ``band`` attribute in files), so processing a subset
+gives the same values as processing all bands and selecting afterwards: TOA
+reflectance and ``metadata/srf`` look F0 and the SRFs up by it. The selection is
+recorded in the processing record. ``metadata/corrections`` stays complete; in a
+subset its full-band variables use the dimension ``bands_full``. Atmospheric
+correction on subsets works for the in-process methods; the external tools have
+not been tried on them.
+
 Masks
 -----
 

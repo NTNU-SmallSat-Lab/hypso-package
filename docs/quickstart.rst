@@ -25,8 +25,9 @@ file layout. Every processing method returns a new, immutable
    l1d = l1a.to("L1D", georeference={"latitudes": "latitudes_indirectgeoref.dat",
                                      "longitudes": "longitudes_indirectgeoref.dat"})
 
-``to("L2A", correct_atmosphere={"method": "polymer", "config": "ac_tools.yaml"})``
-continues through atmospheric correction; L2A has no default method.
+``to("L2A")`` continues through atmospheric correction with MACHI, the default
+method; ``to("L2A", correct_atmosphere={"method": "polymer", "config": "ac_tools.yaml"})``
+picks another.
 
 Calibration and the other steps log what they do through Python's
 ``logging``; ``logging.basicConfig(level=logging.INFO)`` shows it.
@@ -70,6 +71,7 @@ Atmospheric correction
 
 .. code-block:: python
 
+   l2a = l1d.correct_atmosphere()                    # MACHI, the default
    l2a = l1d.correct_atmosphere("dps")
    l2a = l1d.correct_atmosphere("polymer", config="ac_tools.yaml", masked=True)
    l2a.variables             # the tool's own 2D products and flags

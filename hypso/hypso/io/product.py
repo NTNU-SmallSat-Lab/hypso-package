@@ -60,6 +60,25 @@ def spatial_dims(ds) -> tuple:
 def product_dims(ds) -> tuple:
     return spatial_dims(ds) + ("bands",)
 BAND_COORDS = ("wavelength", "radiation_wavelength", "fwhm")
+# Optional band coordinate: each band's index in the sensor's full band set,
+# present after Product.select_bands (and on any product read from a file,
+# from the bands' `band` attribute). Without it, bands are 0..n-1.
+BAND_INDEX = "band_index"
+
+
+def band_indices(cube) -> np.ndarray:
+    """Each band's index in the sensor's full band set (``band_index``
+    coordinate, else ``0..n-1``)."""
+    if BAND_INDEX in cube.coords:
+        return np.asarray(cube[BAND_INDEX].values, dtype=int)
+    return np.arange(cube.sizes["bands"])
+
+
+def band_coords(cube) -> dict:
+    """The cube's band coordinates (including ``band_index`` when present), to
+    carry over to a new cube on the same bands."""
+    names = BAND_COORDS + ((BAND_INDEX,) if BAND_INDEX in cube.coords else ())
+    return {name: ("bands", cube[name].values) for name in names}
 
 ENCODING = {"zlib": True, "complevel": 4, "shuffle": True}
 # Float band variables (L1B-L2A) keep this many significant mantissa bits by
@@ -179,6 +198,7 @@ def _product_from_bands(ds: xr.Dataset, names: list):
         "radiation_wavelength": ("bands", [_scalar(ds[n].attrs.get("radiation_wavelength", ds[n].attrs["wavelength"]))
                                            for n in names]),
         "fwhm": ("bands", [float(ds[n].attrs["fwhm"]) for n in names]),
+        BAND_INDEX: ("bands", [int(ds[n].attrs["band"]) for n in names]),
     }
     return prefix, xr.DataArray(cube, dims=product_dims(ds), coords=coords)
 
@@ -204,12 +224,17 @@ def source_layout(path) -> str:
         return "ground_station_l1a" if "dn" in f["products"].variables else "legacy"
 
 
-def read_product(path) -> xr.DataTree:
+def read_product(path, wavelength_range=None, wavelengths=None, indices=None) -> xr.DataTree:
     """Read any supported HYPSO product file into the in-memory model.
 
     Parameters
     ----------
     path : str or pathlib.Path
+    wavelength_range, wavelengths, indices : optional
+        Read only some bands, selected as in
+        :func:`hypso.processing.bands.select_bands` (at most one of them).
+        Only the selected band variables are read from the file; a file
+        holding the cube as one variable is read whole and then subset.
 
     Returns
     -------
@@ -233,6 +258,17 @@ def read_product(path) -> xr.DataTree:
 
         sat_id = root.attrs.get("sat_id") or root.attrs.get("instrument")
         names = _band_variables(products)
+        selection = {k: v for k, v in (("wavelength_range", wavelength_range), ("wavelengths", wavelengths),
+                                       ("indices", indices)) if v is not None}
+        if selection and names:
+            # Choose the band variables from their attributes; only these are read below.
+            from hypso.processing.bands import _positions
+            proxy = xr.DataArray(np.zeros(len(names)), dims="bands", coords={
+                "radiation_wavelength": ("bands", [_scalar(products[n].attrs.get("radiation_wavelength",
+                                                                                   products[n].attrs["wavelength"]))
+                                                   for n in names]),
+                BAND_INDEX: ("bands", [int(products[n].attrs["band"]) for n in names])})
+            names = [names[i] for i in _positions(proxy, wavelength_range, wavelengths, indices)]
         if names:
             prefix, cube = _product_from_bands(products, names)
         else:
@@ -270,7 +306,18 @@ def read_product(path) -> xr.DataTree:
                 ds = node.to_dataset(inherit=False).load()
                 if node.path.endswith("/gcp"):
                     ds = ds.rename({k: v for k, v in _GCP_RENAMES.items() if k in ds.variables})
+                if "bands" in ds.dims and ds.sizes["bands"] != out.sizes["bands"]:
+                    # full-band metadata under a band subset (see select_bands)
+                    ds = ds.rename_dims({"bands": "bands_full"})
                 tree[node.path] = xr.DataTree(ds)
+        if selection:
+            # Same bookkeeping as select_bands (band_index, metadata/srf trimmed,
+            # processing step); the cube already holds only the read bands.
+            from hypso.processing.bands import select_bands
+            if names:
+                selection = {"indices": tree.dataset[prefix][BAND_INDEX].values}
+            tree.encoding["source"] = str(path)
+            tree = select_bands(tree, **selection)
         # Not written to files; processing steps record it as their input.
         tree.encoding["source"] = str(path)
         return tree
@@ -333,18 +380,19 @@ def _root_dataset(tree: xr.DataTree, datacube: bool, significant_bits=SIGNIFICAN
         out[prefix] = xr.Variable(dims + ("bands",), cube.values, attrs)
         encoding[prefix] = {**_encoding(out[prefix], dtype), **quantize}
     else:
+        indices = band_indices(cube)
         for band in range(cube.sizes["bands"]):
             wave = float(cube["wavelength"].values[band])
             wave_name = str(int(wave))
             name = f"{prefix}_{wave_name}"
             attrs = cf.band_attrs(
-                long_name=f"{long_name} Band {band} ({wave_name} nm)",
+                long_name=f"{long_name} Band {indices[band]} ({wave_name} nm)",
                 units=units,
                 wavelength_nm=wave,
                 radiation_wavelength_nm=float(cube["radiation_wavelength"].values[band]),
                 fwhm=float(cube["fwhm"].values[band]),
                 wave_name=wave_name,
-                band_index=band,
+                band_index=int(indices[band]),
                 include_geolocation=has_geometry,
                 var_name=name,
                 standard_name=standard_name,

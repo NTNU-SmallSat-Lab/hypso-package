@@ -21,7 +21,7 @@ import warnings
 import numpy as np
 import xarray as xr
 
-from hypso.io.product import product_name, spatial_dims
+from hypso.io.product import band_coords, product_name, spatial_dims
 from hypso.masks.flags import FLAGS_NAME, decode_flags
 
 CV_BAND_RANGE = (405.0, 570.0)
@@ -93,7 +93,7 @@ def window_statistics(tree: xr.DataTree, center: tuple, latitude: float, longitu
     valid = np.any(np.isfinite(pixels[:, :, in_range]), axis=2)
 
     band = ("bands",)
-    coords = {name: ("bands", cube[name].values) for name in ("wavelength", "radiation_wavelength", "fwhm")}
+    coords = band_coords(cube)
     center_lat = float(ds["latitude"].values[line, sample])
     center_lon = float(ds["longitude"].values[line, sample])
     result = xr.Dataset(

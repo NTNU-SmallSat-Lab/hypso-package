@@ -27,7 +27,7 @@ import pyproj
 import xarray as xr
 from pyresample.geometry import AreaDefinition
 
-from hypso.io.product import GRID_DIMS, GRID_MAPPING, product_name
+from hypso.io.product import GRID_DIMS, GRID_MAPPING, band_coords, product_name
 from hypso.io.provenance import add_step
 from hypso.masks.flags import FLAGS_NAME, decode_flags, encode_flags
 
@@ -113,8 +113,7 @@ def regrid(tree: xr.DataTree, target="utm", resolution: float = None, method: st
 
     out = xr.Dataset(attrs=dict(ds.attrs))
     out[cube_name] = xr.DataArray(ops.floats(cube.values), dims=GRID_DIMS + ("bands",),
-                                  coords={name: ("bands", cube[name].values)
-                                          for name in ("wavelength", "radiation_wavelength", "fwhm")},
+                                  coords=band_coords(cube),
                                   attrs=dict(cube.attrs))
     grid_lon, grid_lat = area.get_lonlats()
     out["latitude"] = (GRID_DIMS, grid_lat)

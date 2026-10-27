@@ -24,33 +24,6 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
 - **Docs**: `pip install -r docs/requirements.txt; sphinx-build -W --keep-going -b html docs docs/_build/html`;
   CI (`.github/workflows/docs.yaml`) builds on every push and publishes `main` to gh-pages.
 
-## In progress (2026-10-27) - finish these first
-
-State: a detached job (`~/hypso-package-refactor/release_a4.sh`; outcome in `release_a4.status`, test output in
-`release_a4.log`) runs the full suite and, only if it passes, commits the float32 change (×75, with the
-`test_window` float64 fix), tags `v26.10.0a4` and pushes `refactor` plus tags `v26.10.0a1`-`a4` by name. It was
-started after a first attempt failed on `test_window` (float32 vs float64 tolerance; fixed). If it reports
-anything but DONE, fix and rerun it; do not stage other files while it runs (it commits the index).
-
-Prepared but NOT yet committed or wired in (untracked or unstaged; commit after the job):
-
-1. ~~**Coefficients cleanup**~~ - done (×76).
-2. ~~**Keystone groundwork**~~ - done (×77); review by the calibration team is TODO 4f.
-3. **MACHI as the default L1D -> L2A method** (user; https://github.com/NTNU-SmallSat-Lab/MACHI, MIT, Joseph
-   Garrett). Done: `hypso/ac/machi.py` vendored from `machi/base.py` at ebbc3e72 (only `atm_correction` and its
-   helpers; MIT notice; verified identical T, A and objective history to upstream on synthetic data). Still to
-   do: a `machi` method in `processing/atmospheric.py` (L1D only; flatten finite pixels to (pixels, bands);
-   `solar=np.ones(n_bands)` since the input is reflectance; output `rhos`, dimensionless; T, A and the objective
-   history in `metadata/machi`; provenance with upstream commit, settings, iterations); make it the default
-   `method` of `correct_atmosphere()` and of `to("L2A")`; tests; run on the reference capture with figures (T
-   and A spectra, TOA vs corrected spectra over water and land), runtime and memory; docs
-   (atmospheric_correction.rst, quick start). **Open user decisions**: `est_min_R` default (code 0.05, README
-   1%); fit on all finite pixels (as upstream) or exclude flagged cloud/land by default. **Report upstream**:
-   `standarization` typo disables the triangular initialisation; `est_min_R` code/README mismatch; default
-   `solar=1.0` crashes (`solar[...]` indexed); `AC.plot`/`AC.save` broken; `load_solar` hard-codes a path
-   into an old hypso-package.
-4. After 1-3: full suite, update this file's log (×76 keystone + coefficients, ×77 MACHI), commit, push.
-
 ## TODO (one list, reviewed 2026-10-27; details in the referenced entries)
 
 1. **Docstrings for the rest of the code** (×62, ×67). NumPy style is done for every user-facing module:
@@ -73,9 +46,7 @@ Prepared but NOT yet committed or wired in (untracked or unstaged; commit after 
 3. ~~**Dependencies**~~ - done (×65).
 4. ~~**Satpy readers and gridded products**~~ - done (×66).
 4b. ~~**NetCDF file sizes**~~ - done (×71): bands BitRound 14 bits by default, L1D 218 -> about 135 MB.
-4c. **Band subsets** (user, 2026-10-27): `Product.select_bands(...)` from L1B on (calibration needs every band:
-   smile correction mixes them), keeping each band's original index so `metadata/srf`, F0 and Polymer's SRF
-   lookup stay right; recorded in provenance.
+4c. ~~**Band subsets**~~ - done (×79).
 4d. ~~**Compute in float32**~~ - done (×75).
 4e. **RGB camera co-registration** (×72; approach agreed with the user 2026-10-27). The camera image has no
    georeferencing, and the ground processing does not register it. Plan: regrid the HSI L1D (an RGB rendering,
@@ -135,6 +106,14 @@ Prepared but NOT yet committed or wired in (untracked or unstaged; commit after 
      per installation by the OCSMART_Input.txt lock and a memory guard (aulus2: mind the user's reprocess, about
      6 heavy workers). Within Polymer: pass its `multiprocessing=N` through the tool settings.
 
+6c. **Report to MACHI upstream** (github.com/NTNU-SmallSat-Lab/MACHI, found while vendoring ebbc3e72, ×78):
+   the `standarization` typo in `atm_correction` means the triangular initialisation of A is never applied;
+   `est_min_R` is 0.05 in the code but "1%" in the README; the default `solar=1.0` crashes (`T_update` indexes
+   `solar[...]`); all-zero bands (e.g. HYPSO < 400 nm after smile correction) make `T_update` divide by zero and
+   stop the fit after one iteration; `AC.plot` uses undefined names and `AC.save` checks `filename[:4]`;
+   `load_solar` reads a hard-coded relative path into an old hypso-package. hypso.ac.machi keeps upstream's
+   behaviour; the wrapper passes `solar=ones` and fits only bands with signal.
+
 Parked until there is a concrete need: Zarr output (×29); HYPSO-2 RGB camera and future optical instruments (×14, ×63,
 ×71; groundwork in place: an `INSTRUMENTS` entry in `hypso.io.naming` gives file names, and each instrument
 gets its own Satpy readers matching its token literally, as the HSI readers match `_HSI`; `hypso.rgb.HSI2RGB`
@@ -147,6 +126,31 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-10-27 (×79): band subsets** (user). `Product.select_bands(wavelength_range | wavelengths | indices)` and
+  `hypso.processing.select_bands`, from L1B on (L1A raises: smile correction mixes bands). Each band keeps its
+  full-set index as a `band_index` coordinate (files: the band variables' `band` attribute, now written from it
+  and read back into it), so TOA reflectance picks F0 by it and `metadata/srf` (`srf_dataset(band_indices=...)`)
+  holds the kept bands' tables and `Band_<index>` SRFs: select-then-process equals process-then-select.
+  `metadata/srf`/`metadata/machi` are trimmed; other full-band metadata (`metadata/corrections`) stays complete
+  under a `bands_full` dimension (DataTree forbids a child reusing the parent's `bands` with another size).
+  `hypso.open(path, wavelength_range=...)` / `read_product(..., wavelengths=..., indices=...)` read only the
+  selected band variables from the file (reference L1D, peak memory: all 120 bands 691 MB, 72 bands 580 MB,
+  3 bands 374 MB, about 370 MB of which is geometry and metadata). `band_coords()` carries `band_index` through
+  regridding and windows. The external AC tools have not been tried on subsets. Lesson: the MACHI commit run
+  failed with ImportErrors because band-selection edits landed mid-run (test process had old modules
+  loaded) - never edit code while a suite runs.
+- **2026-10-27 (×78): MACHI is the default L1D -> L2A method** (user). `hypso.ac.machi`: MACHI's algorithm
+  (`atm_correction` and helpers) vendored from github.com/NTNU-SmallSat-Lab/MACHI `machi/base.py` at ebbc3e72
+  (MIT, Joseph Garrett), unchanged - identical T, A and objective history to upstream on synthetic data.
+  `correct_atmosphere("machi")` (now the default of `correct_atmosphere()`, `Product.correct_atmosphere()` and
+  `to("L2A")`): fits one scattering A and one transmission T spectrum on all finite pixels (user decision;
+  `fit_exclude_flags` optional), `solar=ones` since the input is reflectance, then `rhos = (rhot - A) / T`;
+  `est_min_R` 0.05 by default (user: as the code, configurable), `tol`, `approach_rate`; T, A and the objective
+  per iteration in `metadata/machi`; provenance with settings, fit pixels, bands and iterations. HYPSO's six
+  bands below 400 nm are zero after smile correction and stopped the fit after one iteration, so only bands
+  with signal are fitted (the others NaN). Reference capture: 7 iterations, 34 s, 4.2 GB; T shows O2-A/B and
+  water vapour, A falls with wavelength. Docs: AC guide MACHI section with upstream's limitations, quick start.
+  Upstream issues to report: TODO 6c.
 - **2026-10-27 (×77): keystone groundwork** (user: possible later, ship disabled for review). HYPSO-2's
   smile/keystone model (the former H2_A-hat/H2_B-hat, Lawrence 2003, terms [1, x, y, xy, x2, y2], x spectral,
   y spatial) ships as `hypso2_calibration/data/h2_distortion_model_v1.npz`, catalogued under a new `optional`
