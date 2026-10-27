@@ -191,7 +191,8 @@ def _stage_input(tree: xr.DataTree, masked: bool, mask_flags, work_dir: Path, ad
         staged["metadata/srf"] = xr.DataTree(srf_node(staged))
     work_dir.mkdir(parents=True, exist_ok=True)
     path = work_dir / (name or Product(staged).filename())
-    write_product(staged, path)
+    # Lossless: AC amplifies input errors about tenfold in Rrs (×71).
+    write_product(staged, path, significant_bits=None)
     return path
 
 

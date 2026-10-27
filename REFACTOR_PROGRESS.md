@@ -36,27 +36,72 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    tests). Left: the real Polymer, ACOLITE and OC-SMART runs through `correct_atmosphere` (when aulus2 is free;
    the user's production installations are not to be touched - configure a separate one in HYPSO_AC_CONFIG);
    a nominal (non-wide) capture, of which none was found in the local data folders (all are 598 x 1092).
+   With the AC work: whether `metadata/srf` can be stored on a coarser wavelength grid than the solar
+   spectrum's 0.005 nm (now float32, ×73; 3.7 MB -> less) - check what Polymer's SRF use needs first, since
+   F0 is computed on the fine grid (user, 2026-10-27).
 2b. ~~**HYPSO-1 calibration naming**~~ - done (×69): same scheme as HYPSO-2.
 3. ~~**Dependencies**~~ - done (×65).
 4. ~~**Satpy readers and gridded products**~~ - done (×66).
-4b. **NetCDF file sizes** (user, 2026-10-27): see whether files can be made smaller. Reference capture: L1A
-   (ground station, uint16) 101 MB, L1D 218 MB (float32, zlib 4 + shuffle, 120 bands of 598 x 1092). Options to
-   evaluate for size, read speed and SNAP/AC-reader compatibility: lossless or bounded-error quantization of
-   float bands (netCDF4 `quantize_mode`/`significant_digits`, or int16 with `scale_factor`/`add_offset`
-   packing, which CF and SNAP understand), per-band chunking vs whole-array chunks, compression level or other
-   codecs (zstd via netCDF-C plugins, if readers have them), float64 geometry stored as float32, and duplicated
-   metadata (e.g. `*_direct` geometry, `metadata/corrections` matrices). Measure on the reference capture.
+4b. ~~**NetCDF file sizes**~~ - done (×71): bands BitRound 14 bits by default, L1D 218 -> about 135 MB.
+4c. **Band subsets** (user, 2026-10-27): `Product.select_bands(...)` from L1B on (calibration needs every band:
+   smile correction mixes them), keeping each band's original index so `metadata/srf`, F0 and Polymer's SRF
+   lookup stay right; recorded in provenance.
+4d. **Compute in float32** in memory (L1B on is float64 in memory, about 630 MB per cube; files are float32).
+4e. **RGB camera co-registration** (×72; approach agreed with the user 2026-10-27). The camera image has no
+   georeferencing, and the ground processing does not register it. Plan: regrid the HSI L1D (an RGB rendering,
+   3 bands) onto a UTM grid at about 100-200 m (a true map plane, which removes the pushbroom geometry); SIFT
+   keypoints (scikit-image, already a dependency; ORB if accurate enough) on that map and the downsampled
+   camera image; RANSAC homography from camera pixels to UTM x/y (exact for a frame camera over flat ground);
+   check inliers, residual RMS (m) and a coastline overlay figure, recorded in provenance; leave unregistered
+   with the reason when too few matches survive (open ocean, cloud). Product: the camera image in its native
+   (y, x) frame, unresampled, with per-pixel 2D latitude/longitude of the same shape (user: wanted), like a
+   swath product - so `regrid()`, `window()`, `pixel()` and Satpy work unchanged; geometry lossless (measure
+   the compressed size, about 84 MB raw). Also a pixel mapping between the camera and HSI images in their
+   original dimensions (user): HSI -> camera (fractional camera row/col per HSI pixel, via UTM and the inverse
+   homography; exact) and camera -> HSI (HSI line/sample per camera pixel, via lat/lon and a kd-tree), computed
+   on demand from the stored homography (e.g. `camera.to_hsi_pixels(l1d)`, `l1d.to_camera_pixels(camera)`);
+   NaN outside the camera's field of view. No special common-grid support (user): the built-in `regrid()`
+   covers it once the camera product has per-pixel lat/lon. Estimated 10-30 s and a few hundred MB per capture. Then a camera
+   product (instrument token `RGB`), a Satpy `hypso_rgb` reader matching `_RGB` names and a `true_color`
+   composite. Start with a prototype on 2-3 captures (Ariake, Venice, a cloudy one) with verification figures.
 5. **Releases** (×46, ×48, ×52): tags `v26.10.0a1`-`a3` exist only locally (not on origin). Tag the next
    alpha for ×53-×63 when wanted; the final `vYY.M.0` on the merge to `main` once the pipeline uses the
    refactor.
 6. **Outside this repository, for the user**: eoread fork commit `3609d25` (F0 and d^2) on the flat-layout
-   reader, and ACOLITE's/OC-SMART's readers on new files (×37); moving hypso-processing-pipeline to
+   reader, and ACOLITE's/OC-SMART's readers on new files (×37); **eoread's HYPSO reader must read the renamed
+   `metadata/srf/F0` / `F0_wavelengths`** (were `esun`/`esun_wavelengths` until ×74): it reads them by name and
+   otherwise silently falls back to a separate `<sensor>_esun.nc`, so until it is updated Polymer on new files
+   does not use the file's F0 (older files keep `esun`; reading both names covers both); moving
+   hypso-processing-pipeline to
    `hypso.open` and the new names (×42, ×49), where `Product.window` can replace its HYPSO extraction and
-   `hypso.masks.sea_land_cloud_masks` its `decode_jon_cnn_*` calls (×70); the
+   `hypso.masks.sea_land_cloud_masks` its `decode_jon_cnn_*` calls (×70); reading PACE and OLCI through Satpy
+   instead of the pipeline's own file parsing (`olci_l1b`, `olci_l2`, `pace_oci_l1b_nc` exist in Satpy 0.60;
+   PACE OCI L2 **AOP** (Rrs, l2_flags) and L1C have no reader yet - write one, ideally contributed to Satpy;
+   user, 2026-10-27); the
    pipeline's `find_window_indices` measures distance in degrees and can pick a farther pixel (×60).
 
-Parked until there is a concrete need: Zarr output (×29); HYPSO-2 RGB camera support (×14; needs an
-`INSTRUMENTS` entry in `hypso.io.naming`, and `hypso.rgb.HSI2RGB` gives the comparison image).
+6b. **Pipeline (hypso-processing-pipeline) wishlist** (user, 2026-10-27; also in the pipeline's own TODO.md,
+   created then; checked against the pipeline at 5476f3d):
+   - **PACE and Sentinel-3 matchups.** AERONET-OC matchups (stages 3/5) support PACE only (OCI L2 AOP Rrs,
+     L1C Lwn, L1B rhot). OLCI exists only in the full-swath colocation (`colocation/sentinel3_source.py`,
+     `cdse.py`). Add OLCI L2 WFR to the matchups: search/download via `cdse.py`, window with WQSF flag
+     exclusion, via Satpy `olci_l2` (with the PACE AOP reader, item 6).
+   - **Tidy matchup tables (decided by the user 2026-10-27).** Today one wide CSV (1832 columns) with mixed names (`oci_` for PACE Rrs but
+     `oci_lwn_`/`oci_rhot_`; AC method inside the sensor prefix, `hypso_polymer_convolved_`; `_cv` both
+     aggregate and per band; `mean_sat_zenith_angle` vs `sensor_zenith`). Proposed: tidy `matchups.csv` (one row
+     per matchup and source: matchup_id, source, product, ac_method, time, lat/lon, distance, box_size,
+     pixel_valid, cv_median, angles, owt) + long `spectra.csv` (matchup_id, source, product, wavelength_nm,
+     mean, median, std, cv, valid_count) - new sensors/methods add rows, not columns; the wide table is a pivot.
+     Matches `Product.window()`'s output.
+   - **AC in parallel.** Stage 2 runs captures and AC tools strictly one after another. Across captures: a
+     process pool (`--workers N`; each AC tool already runs in its own process), with OC-SMART still serialised
+     per installation by the OCSMART_Input.txt lock and a memory guard (aulus2: mind the user's reprocess, about
+     6 heavy workers). Within Polymer: pass its `multiprocessing=N` through the tool settings.
+
+Parked until there is a concrete need: Zarr output (×29); HYPSO-2 RGB camera and future optical instruments (×14, ×63,
+×71; groundwork in place: an `INSTRUMENTS` entry in `hypso.io.naming` gives file names, and each instrument
+gets its own Satpy readers matching its token literally, as the HSI readers match `_HSI`; `hypso.rgb.HSI2RGB`
+gives the comparison image).
 
 Done since the rewrite (×41-×63): plan and TODO cleanup (×64), regridding with cell averaging (×58, ×59), pixel
 windows (×60), demo (×61), docs site (×62), instrument field in names (×63), L2A outputs (×57), TOA cleanup
@@ -65,6 +110,32 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-10-27 (×74): esun renamed F0** (user). Python: `SpectralResponse.f0`, `toa_reflectance(radiance, f0, ...)`,
+  `band_irradiance` documented as F0. Files: `metadata/srf/F0` and `F0_wavelengths` (were `esun`,
+  `esun_wavelengths`); older files keep theirs (metadata passes through). eoread's HYPSO reader reads the old
+  names and must be updated (TODO 6; not touched here).
+- **2026-10-27 (×73): SRFs stored as float32.** `metadata/srf` Band_<i> values and wav_Band_<i> grids are now
+  float32 (were float64). Raw size halves, but the stored size barely changes (3.72 -> 3.65 MB on the reference
+  L1D): the SRFs are computed in float32, so the float64 copies' zero low bytes already compressed away. Kept
+  as the honest precision. TOA reflectance unchanged (it uses the in-memory SRFs); Polymer's getter still reads
+  all 120 bands. A coarser SRF grid waits for the AC work (TODO 2).
+- **2026-10-27 (×72): RGB camera groundwork.** Capture directories hold `<capture id>-rgb/<target>_<YYYY_MM_DD>
+  T<HH_MM_SS>.bmp`: an 8-bit raw Bayer mosaic, 3840 x 2748, taken about 2 s before the HSI capture, with no
+  camera metadata anywhere in the capture directory (capture_config.ini and the telemetry log are HSI-only;
+  processing-temp/SIFT_plot.png is the HSI's own coastline georeferencing). The pattern is RGGB (the only one
+  giving natural colours on the Ariake capture) and the ground processing's `processing-temp/rgb-camera-image-
+  debayered.png` is a bilinear RGGB demosaic rotated 180 degrees (ours matches it: correlation 0.9999, mean
+  difference 0.17 counts). New `hypso.rgb.camera`: `find_camera_image`, `read_camera_image` (demosaic and
+  rotation optional), `demosaic_bilinear`, `camera_image_time`; `INSTRUMENTS` gains `RGB`; pillow is a
+  dependency again (used directly now). Co-registration and a Satpy reader: TODO 4e.
+- **2026-10-27 (×71): band quantization.** Measured on the reference L1D (bands are 95% of the file; float32
+  noise bits do not compress: zlib 9 saves <1%, zstd is larger). `write()` now keeps 14 significant mantissa
+  bits of the float bands of L1B-L2A by default (netCDF BitRound; max relative error 3.1e-5, against at least
+  0.75% sensor noise from the window CV at AAOT): L1D bands 206 -> 123 MB. `significant_bits=None` writes
+  lossless; L1A counts, geometry, derived variables and metadata are always lossless; AC staging is always
+  lossless (AC amplifies input error about tenfold in Rrs); recorded in `band_quantization`. GranularBitRound
+  was rejected: netCDF-C 4.9.3 turns NaN and Inf into -0.0 with it. BitRound keeps them and is idempotent.
+  Found on the way: `Product.tree` is a shallow copy (arrays shared); docstring corrected.
 - **2026-10-27 (×70): masks reader, to("L2A"), Satpy L2A.** Removed `hypso/masks/jonas_svm_classifier.py`
   (never called, here, in production or in the pipeline; its unused matplotlib import was the package's only
   one, so matplotlib is no longer a dependency). The Jon CNN decoder is now `hypso.masks.sea_land_cloud`:

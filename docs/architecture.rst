@@ -192,9 +192,9 @@ Spectral response and TOA reflectance
 one Gaussian SRF per unbinned band on the solar spectrum's wavelength grid
 (TSIS-1 HSRS, or Thuillier 2002, from ``srf/solar.py``); ``bin_srfs`` bins them
 like the image; ``band_irradiance`` gives each band's solar irradiance (F0,
-``esun``) and ``effective_fwhm`` its width. ``compute_spectral_response``
+``F0``) and ``effective_fwhm`` its width. ``compute_spectral_response``
 returns all of it as one ``SpectralResponse``, and ``srf_dataset`` turns that
-into a product's ``metadata/srf`` group: ``esun``, effective FWHM,
+into a product's ``metadata/srf`` group: ``F0``, effective FWHM,
 ``earth_sun_distance_au``, and one ``Band_<i>`` variable per band on its own
 ``wav_Band_<i>`` grid. Polymer reads its SRFs from this group (its
 ``srf_getter`` is ``hypso.ac.ac_polymer_srf_getter_from_l1``), and readers that

@@ -38,7 +38,7 @@ def ac_polymer_srf_getter_from_l1(l1_nc_path: Path):
 
     Returns only the Band_* variables, ordered by band index: Polymer's
     get_SRF(rename_method='bands') asserts the dataset has exactly one
-    variable per band, so the group's esun/effective_fwhm variables must
+    variable per band, so the group's F0/effective_fwhm variables must
     not be passed on.
 
     Files written before the group held SRFs fall back to the single

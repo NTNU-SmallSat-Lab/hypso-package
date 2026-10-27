@@ -49,7 +49,8 @@ def test_write_names_and_round_trips(l1d, tmp_path):
     assert path.name == "HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.nc"
     reopened = hypso.open(path)
     assert reopened.level == "L1D"
-    np.testing.assert_array_equal(reopened.cube.values, l1d.cube.values.astype(np.float32))
+    # bands keep 14 significant bits by default (×71)
+    np.testing.assert_allclose(reopened.cube.values, l1d.cube.values, rtol=5e-5)
     assert [s["step"] for s in reopened.provenance] == ["l1b", "l1c", "l1d"]
     assert path.with_name(l1d.filename(label="test")).name.endswith(".L1D.test.nc")
 
@@ -71,6 +72,32 @@ def _production_l2a(method):
 def _assert_same_cube(l2a, production):
     np.testing.assert_array_equal(l2a.wavelengths, production.wavelengths)
     np.testing.assert_allclose(l2a.cube.values, production.cube.values, rtol=1e-6, equal_nan=True)
+
+
+def test_quantization(l1d, tmp_path):
+    import netCDF4 as nc
+    exact = l1d.cube.values.astype(np.float32)
+    lossless = hypso.open(l1d.write(out_dir=tmp_path, label="lossless", significant_bits=None))
+    np.testing.assert_array_equal(lossless.cube.values, exact)
+    path = l1d.write(out_dir=tmp_path)
+    quantized = hypso.open(path).cube.values
+    np.testing.assert_allclose(quantized, exact, rtol=5e-5)
+    assert not np.array_equal(quantized, exact)
+    # NaN survives (GranularBitRound would turn it into -0.0) and rewriting changes nothing
+    tree = l1d.tree
+    root = tree.to_dataset(inherit=False)
+    values = root["rhot"].values.copy()          # .tree shares arrays: never modify them in place
+    values[:5] = np.nan
+    root["rhot"] = root["rhot"].copy(data=values)
+    tree.dataset = root
+    with_nan = hypso.open(hypso.Product(tree).write(out_dir=tmp_path, label="nan"))
+    assert np.isnan(with_nan.cube.values[:5]).all()
+    again = hypso.open(with_nan.write(out_dir=tmp_path, label="nan2")).cube.values
+    np.testing.assert_array_equal(again, with_nan.cube.values)
+    with nc.Dataset(path) as f:
+        assert f.band_quantization == "BitRound, 14 significant bits (max relative error 3.1e-05)"
+    with nc.Dataset(tmp_path / l1d.filename(label="lossless")) as f:
+        assert f.band_quantization == "none (lossless)"
 
 
 def test_dps(l1d):
@@ -199,6 +226,7 @@ def test_polymer_masked_input_and_temp_cleanup(l1d, monkeypatch):
     staged = calls[0]["staged"]
     assert staged.level == "L1D"
     assert np.isnan(staged.cube.values[:50]).all() and not np.isnan(staged.cube.values[50:]).any()
+    np.testing.assert_array_equal(staged.cube.values[50:], l1d.cube.values[50:].astype(np.float32))   # lossless
     assert not Path(calls[0]["config"]["polymer_output_dir"]).exists()   # temporary work_dir removed
     assert l2a.flags["land"].values[:50].all()
 
@@ -447,7 +475,7 @@ def test_regrid_utm(l1d, tmp_path):
         assert "crs_wgs84" not in f.variables
     reread = hypso.open(path)
     assert reread.grid == g.grid and reread.area_definition().shape == g.cube.shape[:2]
-    np.testing.assert_array_equal(reread.cube.values, g.cube.values.astype(np.float32))   # written as f4
+    np.testing.assert_allclose(reread.cube.values, g.cube.values, rtol=5e-5)   # f4, 14 significant bits; NaN outside the swath kept
     np.testing.assert_array_equal(reread.flags[OUTSIDE_FLAG].values, outside)
     # onto its own grid: unchanged
     np.testing.assert_array_equal(reread.regrid(reread).cube.values, reread.cube.values)
@@ -557,3 +585,21 @@ def test_hsi2rgb_on_l1d(l1d):
     red, green, blue = rgb.mean(axis=(0, 1))
     assert 0.15 < rgb.mean() < 0.5
     assert green <= red
+
+
+RGB_CAPTURE = Path("/home/camerop/HYPSO_DATA_AOC/ariake_2025-04-04T02-27-25Z")
+
+
+@pytest.mark.skipif(not RGB_CAPTURE.is_dir(), reason=f"{RGB_CAPTURE} not present")
+def test_rgb_camera_matches_ground_processing():
+    # Groundwork for the RGB camera (×72): raw RGGB mosaic -> R, G, B, rotated
+    # 180 degrees, as the ground processing's debayered PNG.
+    from PIL import Image
+    from hypso.rgb import find_camera_image, read_camera_image
+    from hypso.io.naming import INSTRUMENTS
+    image = read_camera_image(find_camera_image(RGB_CAPTURE))
+    assert image.dims == ("y", "x", "channel") and image.shape == (2748, 3840, 3)
+    assert image.attrs["acquisition_time"] == "2025-04-04T02:27:23Z" and "RGB" in INSTRUMENTS
+    ground = np.asarray(Image.open(RGB_CAPTURE / "processing-temp" / "rgb-camera-image-debayered.png"), np.float32)
+    assert np.abs(image.values - ground).mean() < 0.5
+    assert read_camera_image(find_camera_image(RGB_CAPTURE), demosaic=False).dtype == np.uint8

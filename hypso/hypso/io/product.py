@@ -62,6 +62,12 @@ def product_dims(ds) -> tuple:
 BAND_COORDS = ("wavelength", "radiation_wavelength", "fwhm")
 
 ENCODING = {"zlib": True, "complevel": 4, "shuffle": True}
+# Float band variables (L1B-L2A) keep this many significant mantissa bits by
+# default (netCDF BitRound; values stay float32): about 40% smaller L1D bands
+# at most 2**-15 (3.1e-5) relative error, far below the sensor noise
+# (REFACTOR_PROGRESS.md ×71). Not GranularBitRound: netCDF-C 4.9.3 turns NaN
+# and Inf into -0.0 with it; BitRound keeps them, and is idempotent.
+SIGNIFICANT_BITS = 14
 
 # Root geometry variable -> CF attribute builder. ("Indirect" in the
 # *_direct long names is pre-existing naming, kept for readers that key off it.)
@@ -293,7 +299,7 @@ def _encoding(var: xr.DataArray, dtype=None) -> dict:
     return enc
 
 
-def _root_dataset(tree: xr.DataTree, datacube: bool):
+def _root_dataset(tree: xr.DataTree, datacube: bool, significant_bits=SIGNIFICANT_BITS):
     """Root Dataset as written, plus its encoding."""
     ds = tree.dataset
     prefix = product_name(tree)
@@ -312,6 +318,10 @@ def _root_dataset(tree: xr.DataTree, datacube: bool):
         product = cf.L2A_PRODUCTS[prefix]
         units, long_name, standard_name = product["units"], product["long_name"], product.get("standard_name")
     dtype = "u2" if prefix == "dn" else "f4"
+    quantize = {}
+    if significant_bits is not None and dtype == "f4":
+        # netCDF4's significant_digits means bits for BitRound
+        quantize = {"significant_digits": int(significant_bits), "quantize_mode": "BitRound"}
 
     out, encoding = {}, {}
     if datacube:
@@ -321,7 +331,7 @@ def _root_dataset(tree: xr.DataTree, datacube: bool):
         if has_geometry:
             attrs.update(geolocation)
         out[prefix] = xr.Variable(dims + ("bands",), cube.values, attrs)
-        encoding[prefix] = _encoding(out[prefix], dtype)
+        encoding[prefix] = {**_encoding(out[prefix], dtype), **quantize}
     else:
         for band in range(cube.sizes["bands"]):
             wave = float(cube["wavelength"].values[band])
@@ -342,7 +352,7 @@ def _root_dataset(tree: xr.DataTree, datacube: bool):
             if has_geometry:
                 attrs.update(geolocation)
             out[name] = xr.Variable(dims, cube.values[:, :, band], attrs)
-            encoding[name] = _encoding(out[name], dtype)
+            encoding[name] = {**_encoding(out[name], dtype), **quantize}
 
     for name, builder in _GEOMETRY_ATTRS.items():
         if name in ds.data_vars:
@@ -376,6 +386,10 @@ def _root_dataset(tree: xr.DataTree, datacube: bool):
     attrs["processing_level"] = level   # "L2A", not the format-1 "L2"
     attrs["product_format_version"] = PRODUCT_FORMAT_VERSION
     attrs["date_created"] = utc_now()
+    # Lossless files say so too, so a reader never has to guess.
+    attrs["band_quantization"] = (f"BitRound, {quantize['significant_digits']} significant bits (max relative "
+                                  f"error {2.0 ** -(quantize['significant_digits'] + 1):.1e})"
+                                  if quantize else "none (lossless)")
     if has_geometry:
         lat, lon = ds["latitude"].values, ds["longitude"].values
         attrs.update(geospatial_lat_min=float(np.nanmin(lat)), geospatial_lat_max=float(np.nanmax(lat)),
@@ -384,7 +398,8 @@ def _root_dataset(tree: xr.DataTree, datacube: bool):
     return xr.Dataset(out, attrs=attrs), encoding
 
 
-def write_product(tree: xr.DataTree, path, datacube: bool = False) -> None:
+def write_product(tree: xr.DataTree, path, datacube: bool = False,
+                  significant_bits=SIGNIFICANT_BITS) -> None:
     """Write a product tree in the current file format.
 
     Parameters
@@ -394,8 +409,15 @@ def write_product(tree: xr.DataTree, path, datacube: bool = False) -> None:
     path : str or pathlib.Path
     datacube : bool, default False
         Write the cube as one 3D variable instead of one variable per band.
+    significant_bits : int or None, default 14
+        Keep this many significant mantissa bits of the float band variables
+        (L1B-L2A; netCDF BitRound, max relative error ``2**-(bits + 1)``;
+        values stay float32, NaN is kept, readers need nothing special). None
+        writes them lossless. L1A counts, geometry, derived variables and
+        metadata are always lossless. Recorded in the ``band_quantization``
+        global attribute.
     """
-    root, root_encoding = _root_dataset(tree, datacube)
+    root, root_encoding = _root_dataset(tree, datacube, significant_bits)
     nodes = {"/": root}
     encoding = {"/": root_encoding}
     for node in tree.subtree:

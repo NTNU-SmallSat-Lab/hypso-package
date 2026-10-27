@@ -102,6 +102,6 @@ def test_instrument_field():
     name = parse_product_name("HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.nc")
     assert (name.sat_id, name.instrument) == ("HYPSO-2", "HSI")
     with pytest.raises(ValueError, match="unknown instrument"):
-        product_name("HYPSO-2", T, "aeronetvenice", "L1D", instrument="RGB").filename()
+        product_name("HYPSO-2", T, "aeronetvenice", "L1D", instrument="XYZ").filename()
     with pytest.raises(ValueError, match="not a HYPSO product file name"):
         parse_product_name("HYPSO2_XYZ.20250612T095802.aeronetvenice.L1D.nc")   # unknown instrument

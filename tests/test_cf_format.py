@@ -144,7 +144,7 @@ def test_l1d_carries_srfs_and_earth_sun_distance(written_nc_files, open_nc):
     srf = open_nc(written_nc_files["l1d"])["metadata/srf"]
     assert len([n for n in srf.variables if n.startswith("Band_")]) == 120
     assert 0.98 < srf.earth_sun_distance_au < 1.02
-    assert srf["esun"].units == "mW m-2 nm-1"
+    assert srf["F0"].units == "mW m-2 nm-1"
 
 
 def test_l2a_product_variable(written_nc_files, open_nc):

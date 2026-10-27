@@ -37,12 +37,6 @@ The HYPSO package can be installed using the Python package manager `pip`:
 ```
 pip install hypso
 ```
-If you encounter an error about gdal, try the following commands:
-```
-sudo apt-get install gdal-bin libgdal-dev
-pip install gdal==3.8.4
-pip install hypso
-```
 
 ## Calibration Libraries
 Calibration files for HYPSO-1 and HYPSO-2 are distributed in two separate Python packages, installed

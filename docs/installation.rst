@@ -27,12 +27,3 @@ Dark pixel subtraction (``dps``) needs nothing more. Polymer, ACOLITE and
 OC-SMART are separate installations that the package runs in their own
 processes; tell it where they are in a YAML file
 (:doc:`atmospheric_correction`).
-
-GDAL
-----
-
-If installing a dependency fails on GDAL, install the system library first:
-
-.. code-block:: bash
-
-   sudo apt-get install gdal-bin libgdal-dev

@@ -18,6 +18,8 @@ file_types:
     - '{capture_target}_{start_time:%Y-%m-%dT%H-%M-%SZ}-l2a-{method}.nc'
     - '{capture_target}_{start_time:%Y-%m-%dT%H-%M-%SZ}-{label}-l2a-{method}.nc'
     # current names (hypso.io.naming): {SAT}_{INSTRUMENT}.{time}.{target}.L2A.{method}[.{grid}][.{label}].nc
+    # _HSI is matched literally: these readers are for the hyperspectral imager only; another
+    # instrument (e.g. an RGB camera) gets its own reader matching its own token.
     - '{platform}_HSI.{start_time:%Y%m%dT%H%M%S}.{capture_target}.L2A.{method}.nc'
     - '{platform}_HSI.{start_time:%Y%m%dT%H%M%S}.{capture_target}.L2A.{method}.{label}.nc'
 

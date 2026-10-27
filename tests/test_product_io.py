@@ -56,8 +56,8 @@ def assert_same_file(path_a, path_b, ignore_attrs=WRITE_TIME_ATTRS, ignore_group
             assert x.dtype == y.dtype, name
             assert x.dimensions == y.dimensions, name
             assert _same(x[:], y[:]), name
-            ax = {k: x.getncattr(k) for k in x.ncattrs()}
-            ay = {k: y.getncattr(k) for k in y.ncattrs()}
+            ax = {k: x.getncattr(k) for k in x.ncattrs() if k not in ignore_attrs}
+            ay = {k: y.getncattr(k) for k in y.ncattrs() if k not in ignore_attrs}
             assert sorted(ax) == sorted(ay), name
             assert all(_same(ax[k], ay[k]) for k in ax), name
         ga = {k: v for k, v in _group_attrs(a).items() if keep(k)}
@@ -273,9 +273,10 @@ def test_convert_product_names_and_records(tmp_path):
 @requires_real_capture
 @pytest.mark.parametrize("level", ["l1a", "l1b", "l1c", "l1d", "l2a"])
 def test_real_files_round_trip(written_nc_files, tmp_path, level):
+    # lossless rewrites: this checks the format, not the band quantization
     out = tmp_path / f"rt-{level}.nc"
-    write_product(read_product(written_nc_files[level]), out)
-    assert_same_file(written_nc_files[level], out, ignore_attrs=FORMAT_2_ATTRS)
+    write_product(read_product(written_nc_files[level]), out, significant_bits=None)
+    assert_same_file(written_nc_files[level], out, ignore_attrs=FORMAT_2_ATTRS + ("band_quantization", "_QuantizeBitRoundNumberOfSignificantBits"))
     again = tmp_path / f"rt2-{level}.nc"
-    write_product(read_product(out), again)
+    write_product(read_product(out), again, significant_bits=None)
     assert_same_file(out, again)

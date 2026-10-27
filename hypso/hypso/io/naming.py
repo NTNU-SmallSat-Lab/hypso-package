@@ -38,7 +38,7 @@ _TOKEN = re.compile(r"[A-Za-z0-9_-]+")
 _LEVEL = re.compile(r"L\d[A-Z]")
 _PLATFORM = re.compile(r"([A-Z]+)(\d+)_([A-Z][A-Z0-9]*)")
 #: Instrument tokens of the first name field, and what they stand for.
-INSTRUMENTS = {"HSI": "Hyperspectral Imager"}
+INSTRUMENTS = {"HSI": "Hyperspectral Imager", "RGB": "RGB camera"}
 GRID_TOKEN = re.compile(r"(utm\d{1,2}[ns]|epsg\d+|custom)_\d+(p\d+)?(x\d+(p\d+)?)?(m|deg)")
 _TIME_FORMAT = "%Y%m%dT%H%M%S"
 _CAPTURE_ID_TIME_FORMAT = "%Y-%m-%dT%H-%M-%SZ"

@@ -32,7 +32,10 @@ File names
 
 The first field is the satellite and the instrument, as in NASA's
 ``{MISSION}_{INSTRUMENT}`` names (``PACE_OCI``): ``HYPSO2_HSI`` is the
-Hyperspectral Imager (HSI) on HYPSO-2. Then comes the capture time (UTC), so a
+Hyperspectral Imager (HSI) on HYPSO-2. The instrument field is there for
+other instruments on board (an RGB camera, future optical instruments): each
+gets its own token in ``hypso.io.naming.INSTRUMENTS`` and its own Satpy
+readers, which match only that token. Then comes the capture time (UTC), so a
 listing groups by satellite and sorts by time. ``.`` only separates fields. L2A always names its
 atmospheric correction method, a regridded product its grid (:doc:`grid`);
 the optional label is for experiments. The calibration set and masking are

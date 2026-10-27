@@ -1,7 +1,7 @@
 """Spectral response of HYPSO's bands: Gaussian spectral response functions
 (SRFs) per unbinned band, sampled on the solar irradiance spectrum's
 wavelength grid and binned like the image; and what follows from them -
-per-band solar irradiance (esun, F0) and effective FWHM.
+per-band solar irradiance (F0) and effective FWHM.
 
 compute_spectral_response() builds all of it into one SpectralResponse;
 srf_dataset() turns that into a product's metadata/srf group.
@@ -17,7 +17,7 @@ from .solar import earth_sun_distance, load_solar_irradiance
 
 logger = logging.getLogger(__name__)
 
-# How each solar spectrum is named in metadata (until 2026-10-26 the esun
+# How each solar spectrum is named in metadata (until 2026-10-26 the F0
 # description always said TSIS-1, even for Thuillier).
 SOLAR_SPECTRA = {"tsis": "TSIS-1 HSRS v2 (2022-11-30)", "thuillier": "Thuillier et al. (2002) spectrum"}
 
@@ -39,7 +39,7 @@ class SpectralResponse:
     #: Solar spectral irradiance on grid_wl, mW m-2 nm-1 - (n_grid,).
     ssi: np.ndarray
     #: Per-band solar irradiance F0 (irradiance weighted by each band's SRF) - (n_bands,).
-    esun: np.ndarray
+    f0: np.ndarray
     #: Per-band effective FWHM, measured from the binned SRFs - (n_bands,).
     effective_fwhm: np.ndarray
     #: Per-unbinned-band effective FWHM, measured from srf_unbinned (not the
@@ -81,7 +81,7 @@ def compute_spectral_response(band_centers_unbinned, fwhm_unbinned, bin_factor: 
         srf_unbinned=srfs,
         grid_wl=np.asarray(grid_wl),
         ssi=np.asarray(grid_ssi),
-        esun=band_irradiance(binned, grid_ssi),
+        f0=band_irradiance(binned, grid_ssi),
         effective_fwhm=effective_fwhm(binned, grid_wl),
         effective_fwhm_unbinned=effective_fwhm(srfs, grid_wl),
         bin_factor=bin_factor,
@@ -136,15 +136,15 @@ def bin_srfs(srfs: csr_matrix, bin_factor: int) -> csr_matrix:
 
 
 def band_irradiance(srfs: csr_matrix, ssi) -> np.ndarray:
-    """Per-band solar irradiance (F0, esun): the irradiance averaged with
+    """Per-band solar irradiance F0: the irradiance averaged with
     each band's SRF as weights."""
-    esun = np.zeros(srfs.shape[0])
+    f0 = np.zeros(srfs.shape[0])
     for i in range(srfs.shape[0]):
         start, end = srfs.indptr[i], srfs.indptr[i + 1]
         if start < end:
             weights = srfs.data[start:end]
-            esun[i] = np.sum(ssi[srfs.indices[start:end]] * (weights / np.sum(weights)))
-    return esun
+            f0[i] = np.sum(ssi[srfs.indices[start:end]] * (weights / np.sum(weights)))
+    return f0
 
 
 def effective_fwhm(srfs: csr_matrix, wavelengths) -> np.ndarray:
@@ -171,17 +171,18 @@ def srf_dataset(sr: SpectralResponse, wavelengths, fwhm, iso_time=None) -> xr.Da
     Returns
     -------
     xarray.Dataset
-        ``esun``, ``esun_wavelengths``, ``effective_fwhm(_unbinned)``, and one
+        ``F0``, ``F0_wavelengths``, ``effective_fwhm(_unbinned)``, and one
         ``Band_<i>`` variable per band (the non-zero part of its binned SRF,
         on its own ``wav_Band_<i>`` coordinate). Polymer reads its SRFs from
         here (:func:`hypso.ac.ac_polymer.ac_polymer_srf_getter_from_l1`).
     """
     data, attrs = {}, {}
-    for name, value in (("esun", sr.esun), ("esun_wavelengths", sr.band_centers),
+    # F0 was called esun until 2026-10-27 (REFACTOR_PROGRESS.md ×74); older files keep that name.
+    for name, value in (("F0", sr.f0), ("F0_wavelengths", sr.band_centers),
                         ("effective_fwhm", sr.effective_fwhm),
                         ("effective_fwhm_unbinned", sr.effective_fwhm_unbinned)):
         data[name] = xr.Variable((name,), np.asarray(value, dtype="f8"))
-    data["esun"].attrs = {
+    data["F0"].attrs = {
         "units": "mW m-2 nm-1",
         "description": (f"Band-averaged (SRF-weighted) solar irradiance F0 at 1 AU, from the "
                         f"{SOLAR_SPECTRA[sr.ssi_source]}; the F0 used for this file's TOA reflectance")}
@@ -195,8 +196,10 @@ def srf_dataset(sr: SpectralResponse, wavelengths, fwhm, iso_time=None) -> xr.Da
         nonzero = response > 0
         values, wl = (response[nonzero], grid[nonzero]) if np.any(nonzero) else (response, grid)
         dim = f"wav_{band}"
-        data[dim] = xr.Variable((dim,), wl, {"units": "nm"})
-        data[band] = xr.Variable((dim,), values, {
+        # float32: ample for SRF weights and their 0.005 nm grid (float32 resolves
+        # about 6e-5 nm at 800 nm), half the size of float64 (REFACTOR_PROGRESS.md ×73).
+        data[dim] = xr.Variable((dim,), np.asarray(wl, dtype="f4"), {"units": "nm"})
+        data[band] = xr.Variable((dim,), np.asarray(values, dtype="f4"), {
             "band_info": band, "band_wavelength": float(wavelength), "index": index,
             "effective_fwhm": float(sr.effective_fwhm[index]), "center_fwhm": float(fwhm[index])})
     return xr.Dataset(data, attrs=attrs)

@@ -16,7 +16,7 @@ from hypso.srf import compute_spectral_response, earth_sun_distance, srf_dataset
 from .capture import capture_params
 
 
-def toa_reflectance(radiance: np.ndarray, esun, iso_time, solar_zenith) -> np.ndarray:
+def toa_reflectance(radiance: np.ndarray, f0, iso_time, solar_zenith) -> np.ndarray:
     """Top-of-atmosphere reflectance from radiance.
 
     ``rho = pi L d^2 / (F0 cos(sza))``, with ``d`` the Earth-Sun distance in
@@ -27,7 +27,7 @@ def toa_reflectance(radiance: np.ndarray, esun, iso_time, solar_zenith) -> np.nd
     ----------
     radiance : numpy.ndarray
         ``(lines, samples, bands)`` radiance in W m-2 um-1 sr-1.
-    esun : array_like
+    f0 : array_like
         Per-band solar irradiance F0 in mW m-2 nm-1 (numerically equal to
         W m-2 um-1).
     iso_time : str
@@ -41,7 +41,7 @@ def toa_reflectance(radiance: np.ndarray, esun, iso_time, solar_zenith) -> np.nd
         Reflectance, in the radiance's dtype.
     """
     distance = earth_sun_distance(iso_time)
-    multiplier = (np.asarray(esun)[None, None, :] * np.cos(np.radians(solar_zenith))[:, :, None]) \
+    multiplier = (np.asarray(f0)[None, None, :] * np.cos(np.radians(solar_zenith))[:, :, None]) \
         / (np.pi * distance ** 2)
     return (radiance / multiplier).astype(np.asarray(radiance).dtype)
 
@@ -102,7 +102,7 @@ def l1c_to_l1d(tree: xr.DataTree, use_direct_georef: bool = False, ssi_source: s
 
     zenith_name = "solar_zenith_direct" if use_direct_georef and "solar_zenith_direct" in root else "solar_zenith"
     sr = spectral_response(tree, ssi_source=ssi_source, use_unbinned=use_unbinned)
-    reflectance = toa_reflectance(radiance.values, sr.esun, params.iso_time, root[zenith_name].values)
+    reflectance = toa_reflectance(radiance.values, sr.f0, params.iso_time, root[zenith_name].values)
 
     out = root.drop_vars([product_name(tree), "wavelength", "radiation_wavelength", "fwhm"])
     out["rhot"] = xr.DataArray(reflectance, dims=radiance.dims, coords={

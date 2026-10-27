@@ -78,7 +78,10 @@ class Product:
     def tree(self) -> xr.DataTree:
         """The underlying product tree, as an :class:`xarray.DataTree`.
 
-        A copy: changing it does not change this Product.
+        A shallow copy: adding, replacing or removing variables and attributes
+        does not change this Product, but the arrays are shared (copying the
+        cube on every access would double memory), so do not modify array
+        values in place - assign a new array instead.
         """
         return self._tree.copy()
 
@@ -619,7 +622,8 @@ class Product:
         return product_name(self.sat_id, time, self.target, self.level, ac=ac, grid=self.grid,
                             label=label).filename()
 
-    def write(self, path=None, out_dir=None, label: str = None, datacube: bool = False) -> Path:
+    def write(self, path=None, out_dir=None, label: str = None, datacube: bool = False,
+              significant_bits=14) -> Path:
         """Write the product in the current file format.
 
         Parameters
@@ -632,6 +636,10 @@ class Product:
             Label for the default name.
         datacube : bool, default False
             Write the cube as one 3D variable instead of one per band.
+        significant_bits : int or None, default 14
+            Keep this many significant mantissa bits of the float bands
+            (L1B-L2A): about 40% smaller L1D bands at most 3.1e-5 relative
+            error; None writes them lossless.
 
         Returns
         -------
@@ -641,7 +649,7 @@ class Product:
         if path is None:
             path = Path(out_dir or ".") / self.filename(label=label)
         path = Path(path)
-        write_product(self._tree, path, datacube=datacube)
+        write_product(self._tree, path, datacube=datacube, significant_bits=significant_bits)
         return path
 
 
