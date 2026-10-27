@@ -20,13 +20,18 @@ _CUSTOM_COEFFS: dict = {}
 def register_calibration_coeffs(sat_id: str, name: str, files: dict) -> None:
     """Register a named, reusable set of calibration coefficient files for a sensor.
 
-    :param sat_id: sensor identifier this set applies to, e.g. "HYPSO-1" (matches
+    Parameters
+    ----------
+    sat_id
+        sensor identifier this set applies to, e.g. "HYPSO-1" (matches
         the product's sat_id attribute / SensorProfile.sat_id).
-    :param name: the coeff_type name this set will be selected under, e.g.
+    name
+        the coeff_type name this set will be selected under, e.g.
         "my_lab_calibration". Must not collide with a sensor's own built-in
         coeff_type names ("moved"/"adjusted"/"original") - those are resolved
         first and would shadow a custom set registered under the same name.
-    :param files: dict supplying a path (str/Path) for at least one of
+    files
+        dict supplying a path (str/Path) for at least one of
         "radiometric", "smile", "destriping", "spectral", "spectral_full_frame".
         Missing keys default to None (that correction stage is then skipped,
         same as the built-in resolvers already do for a capture_type that

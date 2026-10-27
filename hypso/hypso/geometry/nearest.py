@@ -59,12 +59,21 @@ def haversine_2(lon1, lat1, lon2, lat2):
     Calculate the great circle distance between two points on the earth (specified in decimal degrees).
     Source: https://stackoverflow.com/a/4913653
 
-    :param lon1: Longitude of first point
-    :param lat1: Latitude of first point
-    :param lon2: Longitude of second point
-    :param lat2: Latitude of second point
+    Parameters
+    ----------
+    lon1
+        Longitude of first point
+    lat1
+        Latitude of first point
+    lon2
+        Longitude of second point
+    lat2
+        Latitude of second point
 
-    :return: Distance in km between two points on earth
+    Returns
+    -------
+    out
+        Distance in km between two points on earth
     """
 
     # convert decimal degrees to radians

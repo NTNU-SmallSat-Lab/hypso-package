@@ -5,8 +5,15 @@ def is_integer_num(n) -> bool:
     """
     Check if a number is an integer
 
-    :param n: Number to check
-    :return: Boolean value indicating whether or not the number is an integer
+    Parameters
+    ----------
+    n
+        Number to check
+
+    Returns
+    -------
+    out
+        Boolean value indicating whether or not the number is an integer
     """
     if isinstance(n, int):
         return True

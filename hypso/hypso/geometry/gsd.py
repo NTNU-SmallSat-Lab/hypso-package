@@ -12,7 +12,22 @@ def compute_gsd(frame_count,
                 image_height, 
                 latitudes, 
                 longitudes,
-                verbose=False) -> None:
+                verbose=False) -> tuple:
+    """Along- and across-track ground sampling distance (m) of every pixel.
+
+    Parameters
+    ----------
+    frame_count, image_height : int
+        Lines and samples of the capture.
+    latitudes, longitudes : numpy.ndarray
+        ``(lines, samples)`` pixel coordinates in degrees.
+    verbose : bool, default False
+
+    Returns
+    -------
+    along_track_gsd, across_track_gsd : numpy.ndarray
+        Distances between neighbouring pixels along and across the track.
+    """
 
     #frame_count = self.frame_count
     #image_height = self.image_height

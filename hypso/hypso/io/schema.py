@@ -15,6 +15,8 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class LevelSchema:
+    """What differs between product levels: product variable name, units,
+    CF standard name, title and whether the level has geometry."""
     processing_level: str          # e.g. "L1B" - written as the processing_level global attr
     product_prefix: str            # "Lt" (radiance) or "rhot" (reflectance)
     product_units: str             # CF units string, "" for dimensionless reflectance
@@ -90,6 +92,7 @@ SCHEMAS_BY_LEVEL = {
 
 
 def get_schema(level: str) -> LevelSchema:
+    """The :class:`LevelSchema` of a level ("L1A" ... "L1D", "L2A"/"L2")."""
     try:
         return SCHEMAS_BY_LEVEL[level.upper()]
     except KeyError:

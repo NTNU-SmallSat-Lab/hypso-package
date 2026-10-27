@@ -1,6 +1,7 @@
 
 def compute_bbox(latitudes, 
-                 longitudes) -> None:
+                 longitudes) -> tuple:
+    """Bounding box of the coordinates: ``(lon_min, lat_min, lon_max, lat_max)`` in degrees."""
 
     lon_min = longitudes.min()
     lon_max = longitudes.max()

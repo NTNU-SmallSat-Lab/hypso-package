@@ -35,6 +35,7 @@ _HEADER = """\
 
 
 def sha256_file(path) -> str:
+    """SHA-256 hex digest of a file, read in 1 MiB chunks."""
     h = hashlib.sha256()
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(1 << 20), b""):
@@ -55,14 +56,17 @@ def compute(package: str) -> dict:
 
 
 def manifest_path(package: str) -> Path:
+    """Path of a calibration package's checksum manifest."""
     return _package_dir(package) / MANIFEST_NAME
 
 
 def load(package: str) -> dict:
+    """The manifest's ``{path: sha256}``."""
     return yaml.safe_load(manifest_path(package).read_text())["files"]
 
 
 def write(package: str) -> Path:
+    """Recompute the package's checksums and write its manifest."""
     path = manifest_path(package)
     body = yaml.safe_dump({"package": package, "files": compute(package)}, sort_keys=True)
     path.write_text(_HEADER.format(package=package) + body)
@@ -81,6 +85,7 @@ def check(package: str) -> dict:
 
 
 def main(argv) -> int:
+    """Command line: ``check`` or ``update`` the given (default: all) calibration packages."""
     if not argv or argv[0] not in ("check", "update"):
         print(__doc__)
         return 2

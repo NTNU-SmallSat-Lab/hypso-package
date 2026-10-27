@@ -34,11 +34,11 @@ class SensorProfile:
     fwhm_lookup_wl: np.ndarray
     fwhm_lookup_fwhm: np.ndarray
     calibration_files: Callable[[str, str], dict]
-    #: Ordered (capture_type, satobj_attr, expected_value) rules used to
-    #: classify a loaded capture - the first rule whose getattr(satobj,
-    #: satobj_attr) == expected_value wins; no match falls back to "custom".
-    #: Drives what calibration_files(capture_type, ...) above receives (see
-    #: io/dispatch.py's check_capture_type). Previously one hardcoded,
+    #: Ordered (capture_type, attribute, expected_value) rules used to
+    #: classify a capture - the first rule whose capture attribute (frame_count,
+    #: image_height, ...) equals expected_value wins; no match falls back to
+    #: "custom" (hypso.processing.capture.classify_capture_type). Drives what
+    #: calibration_files(capture_type, ...) above receives. Previously one hardcoded,
     #: sensor-agnostic if/elif chain shared by every sensor regardless of
     #: which SensorProfile was active - moved here so a future sensor with
     #: different frame/image dimensions declares its own thresholds instead

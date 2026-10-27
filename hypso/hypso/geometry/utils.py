@@ -18,9 +18,15 @@ def minimum_bounding_rectangle(points) -> np.ndarray:
     Returns a set of points representing the corners of the bounding box.
     source: https://stackoverflow.com/questions/13542855/algorithm-to-find-the-minimum-area-rectangle-for-given-points-in-order-to-comput/33619018#33619018
 
-    :param points: nx2 matrix of coordinates
+    Parameters
+    ----------
+    points
+        nx2 matrix of coordinates
 
-    :return: a set of four points representing the corners of the bounding box.
+    Returns
+    -------
+    out
+        a set of four points representing the corners of the bounding box.
     """
     pi2 = np.pi/2
 
@@ -78,9 +84,15 @@ def mat_from_quat(quat) -> np.ndarray:
     """
     Matrix from Quaternion
 
-    :param quat: must be a four element list of numbers or 4 element nump array
+    Parameters
+    ----------
+    quat
+        must be a four element list of numbers or 4 element nump array
 
-    :return: a 3x3 numpy array containing the rotation matrix
+    Returns
+    -------
+    out
+        a 3x3 numpy array containing the rotation matrix
     """
 
     mag = m.sqrt(quat[0]**2 + quat[1]**2 + quat[2]**2 + quat[3]**2)
@@ -118,13 +130,21 @@ def mat_from_quat(quat) -> np.ndarray:
 
 def rotate_axis_angle(vec, axis, angle) -> np.ndarray:
     """
-    Rotates vector :param vec: around axis :param axis: by angle :param angle:
+    Rotate vector ``vec`` around ``axis`` by ``angle``.
 
-    :param vec: column vector
-    :param axis: column vector of unit length
-    :param angle: angle in radians
+    Parameters
+    ----------
+    vec
+        column vector
+    axis
+        column vector of unit length
+    angle
+        angle in radians
 
-    :return: vector vec rotated arous the given axis by the given angle
+    Returns
+    -------
+    out
+        vector vec rotated arous the given axis by the given angle
     """
 
     dot = np.dot(vec, axis)
@@ -167,10 +187,17 @@ def ellipsoid_line_intersection(point, direction) -> Tuple[float, float]:
     """
     Calculates the ellipsodie and line intersection
 
-    :param point:
-    :param direction:
+    Parameters
+    ----------
+    point
+        Start point of the line, ECEF (m).
+    direction
+        Direction of the line, ECEF.
 
-    :return:
+    Returns
+    -------
+    out
+        The intersection point on the WGS84 ellipsoid (ECEF, m) and the line parameter ``t``.
     """
     # x^2 + y^2 +f_*z^2 = a^2
 
@@ -196,9 +223,15 @@ def ecef_to_lat_lon_alt(pos) -> np.ndarray:
     """
     Input pos has to be Nx3, and units in meters
 
-    :param pos:
+    Parameters
+    ----------
+    pos
+        (N, 3) ECEF positions in metres.
 
-    :return: lat lon (with respect to ECI axes) and altitude in degrees and meters
+    Returns
+    -------
+    out
+        lat lon (with respect to ECI axes) and altitude in degrees and meters
     """
 
     if len(pos.shape) != 2:
@@ -241,9 +274,15 @@ def eci_to_lat_loneci_alt(pos) -> np.ndarray:
     """
     ECI to latitude and longitude and altitude
 
-    :param pos:
+    Parameters
+    ----------
+    pos
+        (N, 3) ECI positions in metres.
 
-    :return:
+    Returns
+    -------
+    out
+        (N, 3) latitude, ECI longitude (degrees) and altitude (m).
     """
     return ecef_to_lat_lon_alt(pos)
 
@@ -251,11 +290,20 @@ def eci_to_lat_loneci_alt(pos) -> np.ndarray:
 def eci_lon_to_ecef_lon(datetime_utc, lon, time_offset) -> float:
     """
     ECI to longitude to ECEF Longitude conversion
-    :param datetime_utc:
-    :param lon:
-    :param time_offset:
 
-    :return:
+    Parameters
+    ----------
+    datetime_utc
+        Time (UTC), for the Earth's rotation angle.
+    lon
+        Longitude in the ECI frame (radians).
+    time_offset
+        Seconds added to the Greenwich mean sidereal time.
+
+    Returns
+    -------
+    out
+        Longitude in the ECEF frame (radians).
     """
     s_sdrl = get_greenwich_mean_sidereal_time_seconds(datetime_utc) + time_offset
     sdrl_rad = s_sdrl*2.0*m.pi / (24*3600)
@@ -266,11 +314,19 @@ def eci_to_lat_lon_alt(pos, times, time_offset) -> np.ndarray:
     """
     ECI to Lat/Lon Altitude
 
-    :param pos: needs to be Nx3
-    :param times: needs to be N
-    :param time_offset: is a float. is an additional time offset to adjust georeferencing
+    Parameters
+    ----------
+    pos
+        needs to be Nx3
+    times
+        needs to be N
+    time_offset
+        is a float. is an additional time offset to adjust georeferencing
 
-    :return: Numpy array with pseudo latitude and longitude and altitude
+    Returns
+    -------
+    out
+        Numpy array with pseudo latitude and longitude and altitude
     """
 
     if len(pos.shape) != 2:
@@ -294,8 +350,16 @@ def eci_to_lat_lon_alt(pos, times, time_offset) -> np.ndarray:
 def pos_ecef_to_lat_lon_alt(pos) -> np.ndarray:
     """
     Coverts POS ECEF to latitude and longitude and altitude
-    :param pos:
-    :return:
+
+    Parameters
+    ----------
+    pos
+        (N, 3) ECEF positions in metres.
+
+    Returns
+    -------
+    out
+        (N, 3) latitude, longitude (degrees) and altitude (m).
     """
     return eci_to_lat_loneci_alt(pos)
 
@@ -303,8 +367,16 @@ def pos_ecef_to_lat_lon_alt(pos) -> np.ndarray:
 def lat_lon_alt_to_ecef(lla) -> np.ndarray:
     """
     Converts latitude and longitude ALT to ECEF
-    :param lla:
-    :return:
+
+    Parameters
+    ----------
+    lla
+        (N, 3) latitude, longitude (degrees) and altitude (m).
+
+    Returns
+    -------
+    out
+        (N, 3) ECEF positions in metres.
     """
     pos_ecef = np.zeros(lla.shape)
     for i in range(lla.shape[0]):

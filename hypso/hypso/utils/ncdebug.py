@@ -17,9 +17,15 @@ def flatten_dict(nested_dict: dict) -> dict:
     """
     Flatten a nested dictionary into a single level dictionary
 
-    :param nested_dict: Nested dictionary to flatten
+    Parameters
+    ----------
+    nested_dict
+        Nested dictionary to flatten
 
-    :return: Single level dictionary with keys corresponding to the previous nested levels
+    Returns
+    -------
+    out
+        Single level dictionary with keys corresponding to the previous nested levels
     """
     res = {}
     if isinstance(nested_dict, dict):
@@ -38,9 +44,15 @@ def nested_dict_to_df(values_dict: dict) -> pd.DataFrame:
     """
     Convert nested dictionary to DataFrame.
 
-    :param values_dict: Nested dictionary
+    Parameters
+    ----------
+    values_dict
+        Nested dictionary
 
-    :return: Dataframe where the nested level are displayed as a column.
+    Returns
+    -------
+    out
+        Dataframe where the nested level are displayed as a column.
     """
 
     flat_dict = flatten_dict(values_dict)
@@ -56,11 +68,19 @@ def navigate_recursive_nc(nc_file: nc.Dataset, path: str = '', depth: int = 0) -
     Navigate recursively the structure of a .nc file and return the dictionary structure. The function will call
     itself to navigate recursively.
 
-    :param nc_file: Open .nc Dataset file
-    :param path: Relative path to append to recursivness
-    :param depth: Depth at which we are navigating
+    Parameters
+    ----------
+    nc_file
+        Open .nc Dataset file
+    path
+        Relative path to append to recursivness
+    depth
+        Depth at which we are navigating
 
-    :return: Dictionary of dictionaries containing the structure of the .nc file
+    Returns
+    -------
+    out
+        Dictionary of dictionaries containing the structure of the .nc file
     """
     label = path + nc_file.name
     tree_structure = {
@@ -121,9 +141,15 @@ def list_array_1d_to_string(arr: Union[np.ndarray, list, tuple]) -> Union[tuple,
     """
     Converts 1D numpy array to string
 
-    :param arr: 1D numpy array of numbers or strings to convert to string
+    Parameters
+    ----------
+    arr
+        1D numpy array of numbers or strings to convert to string
 
-    :return: String of combined values or the same value if not a list
+    Returns
+    -------
+    out
+        String of combined values or the same value if not a list
     """
     var_str = ''
     end_var_str = ''
@@ -150,11 +176,19 @@ def recursive_print_nc(nc_file: nc.Dataset, path: str = '', depth: int = 0) -> N
     Navigate recursively the structure of a .nc file and print the structure. The function will call
     itself to navigate recursively.
 
-    :param nc_file: Open .nc Dataset file
-    :param path: Relative path to append to recursivness
-    :param depth: Depth at which we are navigating
+    Parameters
+    ----------
+    nc_file
+        Open .nc Dataset file
+    path
+        Relative path to append to recursivness
+    depth
+        Depth at which we are navigating
 
-    :return: No return.
+    Returns
+    -------
+    out
+        No return.
     """
 
     indent = ''
@@ -228,9 +262,16 @@ def recursive_print_nc(nc_file: nc.Dataset, path: str = '', depth: int = 0) -> N
 def print_nc(nc_file: str) -> None:
     """
     Print the contents of a .nc file
-    :param nc_file_path: Absolute path to a .nc file
 
-    :return: No return
+    Parameters
+    ----------
+    nc_file
+        Path to a .nc file
+
+    Returns
+    -------
+    out
+        No return
     """
     recursive_print_nc(nc.Dataset(nc_file, format="NETCDF4"))
 
@@ -240,10 +281,17 @@ def compare_netcdf_files(file1: str, file2: str) -> pd.DataFrame:
     Compare two .nc files and returns a pandas DataFrame where each attribute, variable and values are compared side
     by side.
 
-    :param file1: Absolute path to file 1
-    :param file2: Absolute path to file 2
+    Parameters
+    ----------
+    file1
+        Absolute path to file 1
+    file2
+        Absolute path to file 2
 
-    :return: Dataframe with the compared characteristics
+    Returns
+    -------
+    out
+        Dataframe with the compared characteristics
     """
     file1 = Path(file1).absolute()
     file2 = Path(file2).absolute()

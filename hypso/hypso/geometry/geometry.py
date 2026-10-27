@@ -46,6 +46,9 @@ def interpolate_at_frame_nc(adcs,
                             framerate: float=15,
                             exposure: float=25,
                             verbose=False) -> np.ndarray:
+    """:func:`interpolate_at_frame` for a product's ``metadata/adcs`` group:
+    ``adcs`` is a dict of its variables (timestamps, position_x/y/z,
+    quaternion_s/x/y/z)."""
 
     pos_x = adcs["position_x"]
     pos_y = adcs["position_y"]
@@ -80,15 +83,28 @@ def interpolate_at_frame(adcs_timestamps: np.ndarray, position: np.ndarray,
     """
     Function to interpolate at the frame based on the quaternion, position and timestamps
 
-    :param adcs_timestamps:
-    :param position:
-    :param quaternion:
-    :param lines_timestamps: lines_Timestamps
-    :param additional_time_offset: Tuning offset for timestamps
-    :param framerate: framerate in fps
-    :param exposure: Exposure time in milliseconds
+    Parameters
+    ----------
+    adcs_timestamps
+        ADCS sample times (s).
+    position
+        Satellite positions at the ADCS times.
+    quaternion
+        Attitude quaternions at the ADCS times.
+    lines_timestamps
+        lines_Timestamps
+    additional_time_offset
+        Tuning offset for timestamps
+    framerate
+        framerate in fps
+    exposure
+        Exposure time in milliseconds
 
-    :return pd.DataFrame:
+    Returns
+    -------
+    numpy.ndarray or int
+        One row per frame: frame time, flash index, ECI position x, y, z (m) and
+        attitude quaternion q0-q3; -1 if the inputs are inconsistent.
     """
 
     if adcs_timestamps.shape[0] != position.shape[0]:
@@ -159,12 +175,23 @@ def interpolate_at_frame(adcs_timestamps: np.ndarray, position: np.ndarray,
 
 def pixel_index_to_angle(index, aoi_offset, fov_full, pixels_full) -> float:
     """
-    :param index:
-    :param aoi_offset:
-    :param fov_full: field of view of the sensor in degrees
-    :param pixels_full: the count of pixels corresponding to full field of view
+    Viewing angle of a detector pixel across the field of view.
 
-    :return: offset angle to pixel from the fov center in radians
+    Parameters
+    ----------
+    index
+        Pixel index within the capture's AOI.
+    aoi_offset
+        Offset of the AOI's first pixel on the full detector.
+    fov_full
+        field of view of the sensor in degrees
+    pixels_full
+        the count of pixels corresponding to full field of view
+
+    Returns
+    -------
+    out
+        offset angle to pixel from the fov center in radians
     """
 
     full_index = index + aoi_offset
@@ -187,14 +214,26 @@ def pixel_index_to_angle(index, aoi_offset, fov_full, pixels_full) -> float:
 
 
 def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_offset: int=266,
-                        verbose = False) -> Tuple[np.ndarray, np.ndarray]:
+                        verbose = False) -> tuple:
     """
     Compute pixel coordinates (lat lon) using the framepose data
 
-    :param framepose_data_path:
-    :param image_height: pixels per line in a datacube
+    Parameters
+    ----------
+    framepose_data
+        Per-frame position and attitude (from :func:`interpolate_at_frame`).
+    image_height
+        Pixels per line (samples).
+    aoi_offset
+        Offset of the capture's first sample on the full detector.
 
-    :return: latitudes numpy arra, longitudes numpy array
+    Returns
+    -------
+    latitudes, longitudes : numpy.ndarray
+        Pixel coordinates in degrees.
+    geometry : list
+        ``[camera position, body x axis, body z axis, path lengths]`` in ITRS.
+    All three are -1 if the line of sight misses the Earth.
     """
 
     # This time parameter is an offset to the time used in determining the
@@ -391,12 +430,21 @@ def compute_local_angles(framepose_data: np.ndarray,
     """
     Compute the Local Angles of the Capture (Second Variation)
 
-    :param framepose_data:
-    :param lats:
-    :param lons:
-    :param indices: neds to be an integer type
+    Parameters
+    ----------
+    framepose_data
+        Per-frame position and attitude (from ``interpolate_at_frame``).
+    lats
+        Pixel latitudes (degrees).
+    lons
+        Pixel longitudes (degrees).
+    indices
+        neds to be an integer type
 
-    :return: Returns array of local angles, and a list of numpy arrays of the satellite and sun zenith and azimuth pos
+    Returns
+    -------
+    out
+        Returns array of local angles, and a list of numpy arrays of the satellite and sun zenith and azimuth pos
     """
     if verbose:
         logger.info("Computing local angles (sun and satellite azimuth and zenith angles) ...")
@@ -474,10 +522,17 @@ def compute_elevation_angle(image_pos, sat_pos) -> float:
     """
     Computes the elevation angle given a location and a satellite position in ITRS (type of ECEF)
 
-    :param image_pos:
-    :param sat_pos:
+    Parameters
+    ----------
+    image_pos
+        Location on the ground, ITRS/ECEF (m).
+    sat_pos
+        Satellite position, ITRS/ECEF (m).
 
-    :return: Elevation angle in radians
+    Returns
+    -------
+    out
+        Elevation angle in radians
     """
     viewpoint_mid_latlon_geocentric = np.array(
         [m.atan2(R_eq * image_pos[2], R_pl * m.sqrt(image_pos[0] ** 2 + image_pos[1] ** 2)),
@@ -503,10 +558,17 @@ def compute_off_nadir_angle(image_pos, sat_pos) -> float:
     """
     Compute the off-nadir angle between the image and the satellite position
 
-    :param image_pos:
-    :param sat_pos:
+    Parameters
+    ----------
+    image_pos
+        Location on the ground, ITRS/ECEF (m).
+    sat_pos
+        Satellite position, ITRS/ECEF (m).
 
-    :return: The off-nadir angle float value in radians
+    Returns
+    -------
+    out
+        The off-nadir angle float value in radians
     """
 
     pos_itrf_vp_to_sat = sat_pos - image_pos
@@ -518,10 +580,17 @@ def get_wkt(top_latlon, bot_latlon) -> str:
     """
     Gets WKT
 
-    :param top_latlon:
-    :param bot_latlon:
+    Parameters
+    ----------
+    top_latlon
+        Latitude/longitude along the top edge of the capture.
+    bot_latlon
+        Latitude/longitude along the bottom edge of the capture.
 
-    :return: a long string in Well known text representation of shapes format
+    Returns
+    -------
+    out
+        a long string in Well known text representation of shapes format
     """
 
     string = 'LINESTRING('
@@ -541,13 +610,23 @@ def get_wkt_points(latlon_top, latlon_mid_top, latlon_mid, latlon_mid_bot, latlo
     """
     Get WKT Points in a string readable format
 
-    :param latlon_top:
-    :param latlon_mid_top:
-    :param latlon_mid:
-    :param latlon_mid_bot:
-    :param latlon_bot:
+    Parameters
+    ----------
+    latlon_top
+        Latitude/longitude of the top point.
+    latlon_mid_top
+        Latitude/longitude of the mid-top point.
+    latlon_mid
+        Latitude/longitude of the mid point.
+    latlon_mid_bot
+        Latitude/longitude of the mid-bot point.
+    latlon_bot
+        Latitude/longitude of the bot point.
 
-    :return: String of the WKT points
+    Returns
+    -------
+    out
+        String of the WKT points
     """
     string = ''
     for i in range(latlon_top.shape[0]):

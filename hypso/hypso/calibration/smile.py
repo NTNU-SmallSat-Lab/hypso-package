@@ -7,9 +7,17 @@ def run_smile_correction(cube: np.ndarray,
     Run smile correction on each frame in a cube, using the center row in the frame as the reference wavelength/band
     for smile correction.
 
-    :param cube: 3-channel spectral cube
-    :param smile_coeffs: Dictionary containing the coefficients for smile correction
-    :return:
+    Parameters
+    ----------
+    cube
+        3-channel spectral cube
+    smile_coeffs
+        Dictionary containing the coefficients for smile correction
+
+    Returns
+    -------
+    out
+        The smile-corrected cube, same shape.
     """
 
     num_frames, image_height, image_width = cube.shape
@@ -32,10 +40,17 @@ def run_smile_correction_one_frame(frame: np.ndarray,
     Run smile correction on each row in a frame, using the center row as the reference wavelength/band for
     smile correction.
 
-    :param frame: 2D frame on which to apply smile correction
-    :param smile_coeffs: Spectral coefficients (Wavelength)
+    Parameters
+    ----------
+    frame
+        2D frame on which to apply smile correction
+    smile_coeffs
+        Spectral coefficients (Wavelength)
 
-    :return: Corrected frame after smile correction
+    Returns
+    -------
+    out
+        Corrected frame after smile correction
     """
 
     image_height, image_width = frame.shape
@@ -68,11 +83,19 @@ def run_smile_correction_one_row(row: np.ndarray,
     Applies smile correction. Use cubic spline interpolation to resample one row onto the correct
     wavelengths/bands from a reference wavelength/band array to correct for the smile effect.
 
-    :param row: Data row to apply smile correction
-    :param wavelength:
-    :param wavelength_ref:
+    Parameters
+    ----------
+    row
+        Data row to apply smile correction
+    wavelength
+        The row's band wavelengths (its smile coefficients).
+    wavelength_ref
+        The reference (centre-row) wavelengths to resample onto.
 
-    :return: Row corrected for smile effect
+    Returns
+    -------
+    out
+        Row corrected for smile effect
     """
 
     row_interpolated = interpolate.splrep(wavelength, row)

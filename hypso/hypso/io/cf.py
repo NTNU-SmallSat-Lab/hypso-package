@@ -23,8 +23,8 @@ def global_attrs(processing_level: str, title: str) -> dict:
     processing step, not a value that gets overwritten each time a new
     level is written), which needs the *existing* value from whatever was
     already on the source product - see hypso.io.provenance.add_step,
-    which builds it from satobj.metadata.global_attrs and appends this
-    write's own entry before writing it."""
+    which appends each processing step's line to the product's existing
+    ``history``."""
     return {
         "Conventions": CONVENTIONS,
         "title": title,
@@ -49,6 +49,7 @@ def latitude_attrs() -> dict:
 
 
 def longitude_attrs() -> dict:
+    """CF attributes of the longitude variable."""
     return {
         "long_name": "Longitude",
         "standard_name": "longitude",

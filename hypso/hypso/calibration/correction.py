@@ -66,8 +66,18 @@ def read_coeffs_from_file(coeff_path: str, coeff_type: str, x_start: int=None,  
     """
     Read correction coefficients from file
 
-    :param coeff_path: Coefficient path to read (.csv or .npz)
-    :param crop_mode: only meaningful for coeff_type in ("radiometric", "smile", "destriping").
+    Parameters
+    ----------
+    coeff_path
+        Coefficient path to read (.csv or .npz)
+    coeff_type
+        "radiometric", "smile", "destriping" or "spectral".
+    x_start, x_stop, y_start, y_stop
+        The capture's area of interest on the full detector (columns, rows).
+    bin_factor
+        Spectral binning factor.
+    crop_mode
+        only meaningful for coeff_type in ("radiometric", "smile", "destriping").
         "crop_and_bin" (default) crops the loaded array to [y_start:y_stop,
         x_start:x_stop] and bins bin_factor columns together - the file is
         assumed to cover the sensor's full native resolution. "as_is" skips
@@ -77,12 +87,14 @@ def read_coeffs_from_file(coeff_path: str, coeff_type: str, x_start: int=None,  
         shape is checked against what this capture's own AOI/bin_factor
         would imply, raising CalibrationShapeMismatchError on a mismatch
         rather than silently using a wrong-shaped array. Comes from
-        SensorProfile.capture_mode_crop_modes (see calibration/pipeline.py's
-        set_calibration_coeff_files) or, for a specific file, the
-        calibration package's catalog (HYPSO-2: data/coefficients.yaml
-        `crop`), not inferred from the filename.
+        SensorProfile.capture_mode_crop_modes or, for a specific file, the
+        calibration package's catalog (data/coefficients.yaml ``crop``), not
+        inferred from the filename.
 
-    :return: 2D array of coefficients
+    Returns
+    -------
+    out
+        2D array of coefficients
     """
     coefficients = None
     try:

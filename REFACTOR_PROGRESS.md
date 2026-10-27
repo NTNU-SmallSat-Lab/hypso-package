@@ -26,12 +26,8 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
 
 ## TODO (one list, reviewed 2026-10-27; details in the referenced entries)
 
-1. **Docstrings for the rest of the code** (×62, ×67). NumPy style is done for every user-facing module:
-   `hypso.api`, `hypso.processing`, `hypso.io` product/naming/provenance, `hypso.grid`, `hypso.window`,
-   `hypso.srf`, `hypso.masks.flags`, `hypso.ac` config and output readers. Left: internals
-   (`hypso.calibration`, `hypso.geometry`, `hypso.sensors`, `hypso.io` cf/schema, private helpers; four
-   comments still say `satobj`). Check the published site after the first push to `main` (only `main`
-   publishes).
+1. ~~**Docstrings for the rest of the code**~~ - done (×82). Check the published site after the first push to
+   `main` (only `main` publishes).
 1b. ~~**Review the documentation, remove stale parts**~~ - done (×81).
 2. **Verification beyond the reference capture** (×68 did HYPSO-1 and a second HYPSO-2 site, now regression
    tests). Left: the real Polymer, ACOLITE and OC-SMART runs through `correct_atmosphere` (when aulus2 is free;
@@ -63,6 +59,7 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    covers it once the camera product has per-pixel lat/lon. Estimated 10-30 s and a few hundred MB per capture. Then a camera
    product (instrument token `RGB`), a Satpy `hypso_rgb` reader matching `_RGB` names and a `true_color`
    composite. Start with a prototype on 2-3 captures (Ariake, Venice, a cloudy one) with verification figures.
+   When it lands, add the camera (reading, registration, overlay on the HSI image) to the demo (user).
 4f. **Keystone review** (×77, for the calibration team): HYPSO-2's distortion model (`h2_distortion_model_v1.npz`,
    `optional: keystone` in coefficients.yaml, `enabled: false`) is applied only with `calibrate(keystone=True)`,
    with a warning. Questions: is B_hat valid for the flight model; is the sample axis oriented as the detector
@@ -124,6 +121,15 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-10-27 (×82): internal docstrings** (TODO 1). The `:param x:` / `:return:` docstrings in
+  hypso.calibration, hypso.geometry and hypso.utils converted to NumPy sections (wording kept); the 38 empty
+  entries filled from the code; 13 undocumented functions documented (geometry bbox/gsd/resolution, frame
+  interpolation, the manifest CLI, LevelSchema/get_schema); the last `satobj` comments rewritten. A check of
+  every documented parameter against the signatures found and fixed wrong or missing names
+  (`run_radiometric_calibration`, `read_coeffs_from_file`, `direct_georeference`, `print_nc`), and reading the
+  code corrected three statements: `eci_lon_to_ecef_lon` works in radians; `interpolate_at_frame` returns an
+  array (not a DataFrame) or -1; `direct_georeference` returns three values (annotation fixed). io.cf and
+  sensors keep prose (summary-only) docstrings. Docs build with -W.
 - **2026-10-27 (×81): documentation review** (user). Read docs/*.rst, both READMEs and the demo against the code.
   architecture.rst: overview (MACHI default, band selection, hypso.grid/window/rgb, keystone), product tree
   (band_index, gridded layout, metadata/machi), Product methods (window, select_bands, to up to L2A; .tree is a
