@@ -26,3 +26,9 @@ def get_hypso1_calibration_files(capture_type="custom", coeff_type=None, version
         "spectral_full_frame": path or None, "crop_modes", "selection"}.
     """
     return _catalog.calibration_files("hypso1_calibration", CATALOG, capture_type, coeff_type, version)
+
+
+def optional_model(kind: str, version: str = None):
+    """An optional model outside the releases (e.g. "keystone"): (path, entry)
+    or (None, None) - see _catalog.optional_model."""
+    return _catalog.optional_model("hypso1_calibration", CATALOG, kind, version)

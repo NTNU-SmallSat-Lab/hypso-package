@@ -39,3 +39,9 @@ def get_hypso2_calibration_files(capture_type=None, coeff_type=None, version=Non
         capture-type file was chosen)}.
     """
     return _catalog.calibration_files("hypso2_calibration", CATALOG, capture_type, coeff_type, version)
+
+
+def optional_model(kind: str, version: str = None):
+    """An optional model outside the releases (e.g. "keystone"): (path, entry)
+    or (None, None) - see _catalog.optional_model."""
+    return _catalog.optional_model("hypso2_calibration", CATALOG, kind, version)

@@ -111,6 +111,21 @@ HYPSO-2
 ``hypso2_calibration``'s ``data/coefficients.yaml`` records, for each file,
 what it is and its name before the V1-V3 releases (the ``was ...`` notes).
 
+Smile and keystone model
+------------------------
+
+``hypso2_calibration`` also ships ``h2_distortion_model_v1.npz``: the
+coefficients ``A_hat`` and ``B_hat`` (previously the files ``H2_A-hat`` and
+``H2_B-hat``) of HYPSO-2's detector distortion model after Lawrence (2003), as
+used in the calibration team's processing. For each detector pixel (``x``
+spectral, ``y`` spatial) the true position is a second-order polynomial with the
+terms ``[1, x, y, xy, x², y²]``: ``A_hat`` gives the spectral shift (smile),
+``B_hat`` the spatial shift (keystone, -2.9 to +1.8 pixels across the full
+frame). The shipped V2 smile matrix agrees with the ``A_hat`` model within about
+2 nm, so it was probably derived from it. The keystone correction is not applied
+by default; it is available for review (``keystone`` in ``coefficients.yaml``,
+disabled; ``calibrate(keystone=True)`` applies it, with a warning).
+
 Removed source files
 --------------------
 

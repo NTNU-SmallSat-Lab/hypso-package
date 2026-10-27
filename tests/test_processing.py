@@ -106,3 +106,25 @@ def test_toa_reflectance_formula():
     rho = toa_reflectance(radiance, f0, "2025-07-04T00:00:00+00:00", sza)
     np.testing.assert_allclose(rho[0, 0], np.pi * 100.0 * d ** 2 / (f0 * 0.5))
     assert d > 1.016   # aphelion is in early July
+
+
+
+def test_keystone_is_opt_in_and_flagged_unreviewed(l1a):
+    # Groundwork (×77): off by default; HYPSO-2's model is shipped disabled, so it warns.
+    default = l1a_to_l1b(l1a.tree, "moved", version="V2")
+    assert "keystone" not in default["metadata/processing/l1b"].attrs["corrections_applied"]
+    with pytest.warns(UserWarning, match="not reviewed"):
+        corrected = l1a_to_l1b(l1a.tree, "moved", version="V2", keystone=True)
+    step = corrected["metadata/processing/l1b"].attrs
+    assert "keystone" in step["corrections_applied"] and step["keystone_version"] == "V1"
+    assert step["keystone_model_enabled"] == "false" and len(step["keystone_sha256"]) == 64
+    a, b = default.dataset["Lt"].values, corrected.dataset["Lt"].values
+    assert a.shape == b.shape and not np.array_equal(a, b)
+    assert np.median(np.abs(b - a) / np.maximum(np.abs(a), 1e-6)) < 0.02     # a sub-pixel resampling
+
+
+def test_keystone_needs_a_model():
+    from hypso.processing.calibrate import _keystone_model
+    from types import SimpleNamespace
+    with pytest.raises(ValueError, match="no keystone model"):
+        _keystone_model(SimpleNamespace(sat_id="HYPSO-1"))

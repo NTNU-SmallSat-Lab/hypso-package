@@ -35,17 +35,7 @@ anything but DONE, fix and rerun it; do not stage other files while it runs (it 
 Prepared but NOT yet committed or wired in (untracked or unstaged; commit after the job):
 
 1. ~~**Coefficients cleanup**~~ - done (×76).
-2. **Keystone groundwork** (user: ship the model disabled, for review later). Done: `hypso2_calibration/data/
-   h2_distortion_model_v1.npz` (`A_hat`, `B_hat`, `terms`); `coefficients.yaml` `optional: keystone: V1`
-   (`enabled: false`, description); `_catalog.optional_model` (both copies identical) and `optional_model()` in
-   both packages' `main.py`; manifests updated; `hypso/calibration/keystone.py` (`correct_keystone`,
-   `keystone_positions`, `model_terms`: band centres and samples mapped to full-frame x/y, each band resampled
-   along samples at B(x, y), linear by default); `tests/test_keystone.py` (passes). Still to do: wire
-   `keystone: bool = False` into `l1a_to_l1b` and `Product.calibrate` (after radiometric, before smile, as the
-   model works on raw detector geometry), warn when the model is `enabled: false`, record file/sha256/applied
-   in provenance and the calibration summary, raise for sensors without a model (HYPSO-1); a real-capture test
-   and a before/after figure for the calibration team. Review questions for them: valid for the flight model?
-   order relative to smile/crop/binning? should `A_hat` replace the stored V2 smile matrix (agrees within ~2 nm)?
+2. ~~**Keystone groundwork**~~ - done (×77); review by the calibration team is TODO 4f.
 3. **MACHI as the default L1D -> L2A method** (user; https://github.com/NTNU-SmallSat-Lab/MACHI, MIT, Joseph
    Garrett). Done: `hypso/ac/machi.py` vendored from `machi/base.py` at ebbc3e72 (only `atm_correction` and its
    helpers; MIT notice; verified identical T, A and objective history to upstream on synthetic data). Still to
@@ -104,6 +94,13 @@ Prepared but NOT yet committed or wired in (untracked or unstaged; commit after 
    covers it once the camera product has per-pixel lat/lon. Estimated 10-30 s and a few hundred MB per capture. Then a camera
    product (instrument token `RGB`), a Satpy `hypso_rgb` reader matching `_RGB` names and a `true_color`
    composite. Start with a prototype on 2-3 captures (Ariake, Venice, a cloudy one) with verification figures.
+4f. **Keystone review** (×77, for the calibration team): HYPSO-2's distortion model (`h2_distortion_model_v1.npz`,
+   `optional: keystone` in coefficients.yaml, `enabled: false`) is applied only with `calibrate(keystone=True)`,
+   with a warning. Questions: is B_hat valid for the flight model; is the sample axis oriented as the detector
+   rows (a flipped L1A would mirror the correction); order relative to smile/crop/binning; should A_hat's smile
+   model replace the V2 smile matrix (agrees within ~2 nm). Figure on the reference capture: shift -1.4..+1.7
+   samples, image change median 0.35% (99th pct 15% at sharp edges). When reviewed: `enabled: true`, consider
+   it in a release.
 5. **Releases** (×46, ×48, ×52): tags `v26.10.0a1`-`a3` exist only locally (not on origin). Tag the next
    alpha for ×53-×63 when wanted; the final `vYY.M.0` on the merge to `main` once the pipeline uses the
    refactor.
@@ -150,6 +147,16 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-10-27 (×77): keystone groundwork** (user: possible later, ship disabled for review). HYPSO-2's
+  smile/keystone model (the former H2_A-hat/H2_B-hat, Lawrence 2003, terms [1, x, y, xy, x2, y2], x spectral,
+  y spatial) ships as `hypso2_calibration/data/h2_distortion_model_v1.npz`, catalogued under a new `optional`
+  section (`keystone: V1`, `enabled: false`) outside the releases; `_catalog.optional_model` (both copies) and
+  `optional_model()` in both packages. `hypso.calibration.keystone.correct_keystone` maps band centres and
+  samples to full-frame x/y and resamples each band along samples at B(x, y) (linear). `calibrate(keystone=True)`
+  / `l1a_to_l1b(keystone=True)` applies it after radiometric and before smile; warns while the model is not
+  enabled; raises for sensors without one (HYPSO-1); provenance records version, enabled flag, file and sha256;
+  the summary has a keystone line ("off (opt-in)" by default). Default calibration unchanged. Reference capture:
+  shift -1.4..+1.7 samples, image change median 0.35%. docs/coefficient_history.rst describes the model.
 - **2026-10-27 (×76): coefficients folder removed.** The top-level `coefficients/` (about 400 MB: 23 CSVs
   identical to the shipped `.npz` files, NaN included; `convert_csv_to_npz.py`; the HYPSO-1 version log;
   `H2_A-hat`/`H2_B-hat`) is gone; nothing read it. The version log is now verbatim in

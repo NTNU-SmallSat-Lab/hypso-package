@@ -133,3 +133,17 @@ def calibration_files(package: str, catalog: dict, capture_type=None, coeff_type
     out["selection"] = selection
     logger.debug("%s coefficients: %s", package, selection)
     return out
+
+
+def optional_model(package: str, catalog: dict, kind: str, version: str = None):
+    """An optional, release-independent model (e.g. ``keystone``): ``(path,
+    entry)`` for ``version`` (default the kind's ``default`` version), or
+    ``(None, None)`` if the catalog has none. ``entry["enabled"]`` says whether
+    it has been reviewed for use; callers decide what to do when it is false.
+    Releases never select these."""
+    models = catalog.get("optional", {}).get(kind)
+    if not models:
+        return None, None
+    key = _version_key(version or models["default"], [k for k in models if k != "default"])
+    entry = models[key]
+    return files(package).joinpath(f"data/{entry['file']}"), {"version": key, **entry}

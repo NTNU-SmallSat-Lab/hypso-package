@@ -4,7 +4,7 @@ hypso.processing.l1a_to_l1b). The same details are recorded in the product's
 metadata/processing/l1b provenance."""
 from pathlib import Path
 
-_CORRECTIONS = ("radiometric", "smile", "destriping", "spectral")
+_CORRECTIONS = ("radiometric", "keystone", "smile", "destriping", "spectral")
 
 
 def format_calibration_summary(sat_id: str, capture_type: str, files: dict, applied, selection: dict = None) -> str:
@@ -22,6 +22,8 @@ def format_calibration_summary(sat_id: str, capture_type: str, files: dict, appl
         version = (selection or {}).get(correction)
         if correction in applied:
             state = "applied"
+        elif correction == "keystone" and path is None:
+            state = "off (opt-in: keystone=True)"
         elif path is None:
             state = "skipped (no coefficients)"
         else:

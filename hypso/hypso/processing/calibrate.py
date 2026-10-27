@@ -4,7 +4,9 @@ Coefficient files come from the sensor's calibration package
 (``hypso1_calibration``, ``hypso2_calibration``); see the calibration guide
 for the variants and releases.
 """
+import importlib
 import logging
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -12,6 +14,7 @@ import xarray as xr
 
 from hypso.calibration.correction import CalibrationShapeMismatchError, read_coeffs_from_file
 from hypso.calibration.destriping import run_destriping_correction
+from hypso.calibration.keystone import correct_keystone
 from hypso.calibration.radiometric import run_radiometric_calibration
 from hypso.calibration.registry import get_custom_calibration_coeffs
 from hypso.calibration.smile import run_smile_correction
@@ -55,9 +58,23 @@ def _load(path, kind: str, params: CaptureParams, bin_factor: int = None, crop_m
         return None
 
 
+def _keystone_model(params: CaptureParams):
+    """(path, entry, B_hat) of the sensor's optional keystone model; raises if
+    it has none, warns if it is not enabled (reviewed) for use."""
+    package = "hypso{}_calibration".format(params.sat_id.split("-")[-1])
+    main = importlib.import_module(f"{package}.main")
+    path, entry = main.optional_model("keystone") if hasattr(main, "optional_model") else (None, None)
+    if path is None:
+        raise ValueError(f"{params.sat_id} has no keystone model in {package}")
+    if not entry.get("enabled", False):
+        warnings.warn(f"keystone correction: {package}'s model {entry['version']} is not reviewed for use yet "
+                      f"(enabled: false); results are experimental", UserWarning, stacklevel=3)
+    return path, entry, np.load(path)["B_hat"]
+
+
 def l1a_to_l1b(tree: xr.DataTree, coeff_type: str = None, version=None, coeff_files: dict = None,
                radiometric: bool = True, smile: bool = True, destripe: bool = True,
-               spectral: bool = True) -> xr.DataTree:
+               spectral: bool = True, keystone: bool = False) -> xr.DataTree:
     """Calibrate an L1A tree to L1B (top-of-atmosphere radiance ``Lt``).
 
     Parameters
@@ -79,6 +96,12 @@ def l1a_to_l1b(tree: xr.DataTree, coeff_type: str = None, version=None, coeff_fi
         Explicit ``{kind: path}`` instead of ``coeff_type`` and ``version``.
     radiometric, smile, destripe, spectral : bool, default True
         False skips that correction.
+    keystone : bool, default False
+        Also correct keystone (spatial misregistration across the spectrum)
+        with the sensor's optional distortion model, after radiometric
+        calibration and before smile (:mod:`hypso.calibration.keystone`).
+        Groundwork, unreviewed: HYPSO-2's model is shipped disabled, so this
+        warns; sensors without a model raise ValueError.
 
     Returns
     -------
@@ -109,6 +132,9 @@ def l1a_to_l1b(tree: xr.DataTree, coeff_type: str = None, version=None, coeff_fi
                               crop_mode=crop_modes.get("destriping", "crop_and_bin"))
     spectral_coeffs = _load(files["spectral"], "spectral", params)
     spectral_coeffs_unbinned = _load(files["spectral"], "spectral", params, bin_factor=1)
+    keystone_entry = None
+    if keystone:
+        files["keystone"], keystone_entry, keystone_b_hat = _keystone_model(params)
 
     root = tree.to_dataset(inherit=False)
     cube = np.asarray(root[product_name(tree)].values, dtype="double")   # load_l1a_nc_cube reads doubles
@@ -119,6 +145,11 @@ def l1a_to_l1b(tree: xr.DataTree, coeff_type: str = None, version=None, coeff_fi
                                            image_width=params.image_width, frame_count=params.frame_count,
                                            bin_factor=params.bin_factor, rad_coeffs=rad_coeffs)
         applied.append("radiometric")
+    if keystone_entry is not None:
+        # The model describes raw detector geometry: before smile, on the AOI's full-frame offsets.
+        cube = correct_keystone(cube, keystone_b_hat, x_start=params.x_start, y_start=params.y_start,
+                                bin_factor=params.bin_factor)
+        applied.append("keystone")
     if smile_coeffs is not None and smile:
         cube = run_smile_correction(cube=cube, smile_coeffs=smile_coeffs)
         applied.append("smile")
@@ -166,6 +197,9 @@ def l1a_to_l1b(tree: xr.DataTree, coeff_type: str = None, version=None, coeff_fi
         if "radiometric_capture_type" in selection:
             parameters["radiometric_capture_type"] = selection["radiometric_capture_type"]
     parameters["radiometric_crop"] = crop_modes.get("radiometric", "crop_and_bin")
+    if keystone_entry is not None:
+        parameters["keystone_version"] = keystone_entry["version"]
+        parameters["keystone_model_enabled"] = bool(keystone_entry.get("enabled", False))
     source = tree.encoding.get("source")
     result.encoding.pop("source", None)
     add_step(result, "l1b", input_file=source or "L1A (in memory)",

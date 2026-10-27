@@ -460,8 +460,9 @@ class Product:
             ``"V1"``; HYPSO-1: ``"V2"`` (default), ``"V1"``.
         **kwargs
             Passed to :func:`hypso.processing.l1a_to_l1b`: ``coeff_files``
-            (explicit files), and ``radiometric``, ``smile``, ``destripe``,
-            ``spectral`` (False to skip a correction).
+            (explicit files), ``radiometric``, ``smile``, ``destripe``,
+            ``spectral`` (False to skip a correction), and ``keystone``
+            (True to apply the sensor's keystone model; unreviewed groundwork).
 
         Returns
         -------

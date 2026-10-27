@@ -85,6 +85,24 @@ releases:
     spectral: V1
     spectral_full_frame: V2
 
+# Optional models, outside the releases (hypso.calibration selects them only
+# when asked, e.g. calibrate(keystone=True)). `enabled: false` = not reviewed
+# for use yet; the package warns when it is applied.
+optional:
+  keystone:
+    default: V1
+    V1:
+      file: h2_distortion_model_v1.npz
+      enabled: false
+      description: >-
+        HYPSO-2 detector distortion model after Lawrence (2003): A_hat (smile,
+        spectral shift) and B_hat (keystone, spatial shift) are second-order
+        polynomial coefficients over the full frame with terms [1, x, y, xy,
+        x2, y2], x spectral, y spatial (were the files H2_A-hat / H2_B-hat).
+        Keystone -2.9 to +1.8 pixels across the full frame. Unreviewed: is it
+        valid for the flight model, and how does it combine with the crops,
+        binning and the separate smile matrix?
+
 # Warn when a selection uses a spectral version outside `versions` (not for
 # release V1).
 spectral_note:
