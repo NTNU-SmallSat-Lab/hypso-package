@@ -45,6 +45,13 @@ def load_l2a_nc(nc_file_path: Path, load_cube: bool = True) -> Tuple[dict, dict,
             nc_cube
 
 
+def _spectral_band_vars(group) -> list:
+    # products can hold non-spectral variables next to the bands (e.g. POLYMER's
+    # chla), which have no wavelength/fwhm and are not part of the cube
+    return [v for v in group.variables
+            if {"wavelength", "fwhm"} <= set(group.variables[v].ncattrs())]
+
+
 def load_l2a_nc_cube(nc_file_path: Path) -> np.ndarray:
     """
     Get Raw Cube from Hypso l2a.nc File
@@ -70,12 +77,14 @@ def load_l2a_nc_cube(nc_file_path: Path) -> np.ndarray:
         except Exception as ex:
             print("[INFO] Loading Rrs cube from separate bands...")
 
-            height, width = np.array(group.variables[list(group.variables)[0]][:], dtype='double').shape
-            depth = len(list(group.variables))
+            band_vars = _spectral_band_vars(group)
+
+            height, width = np.array(group.variables[band_vars[0]][:], dtype='double').shape
+            depth = len(band_vars)
 
             cube = np.empty((height,width,depth))
 
-            for idx, Rrs_band in enumerate(tqdm(list(group.variables))):
+            for idx, Rrs_band in enumerate(tqdm(band_vars)):
 
                 #print("[INFO] Loading band " + str(idx) + "...")
 
@@ -122,8 +131,8 @@ def load_l2a_nc_cube_attrs(nc_file_path: Path) -> np.ndarray:
 
             group = f.groups["products"]
 
-            for idx, Rrs_band in enumerate(list(group.variables)):
-                
+            for idx, Rrs_band in enumerate(_spectral_band_vars(group)):
+
                 subgroup = f.groups["products"][Rrs_band]
 
                 wavelength = getattr(subgroup, "wavelength")
