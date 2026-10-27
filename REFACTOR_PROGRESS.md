@@ -60,6 +60,16 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    product (instrument token `RGB`), a Satpy `hypso_rgb` reader matching `_RGB` names and a `true_color`
    composite. Start with a prototype on 2-3 captures (Ariake, Venice, a cloudy one) with verification figures.
    When it lands, add the camera (reading, registration, overlay on the HSI image) to the demo (user).
+   **Prototype result (×83, 2026-10-27)**: HSI L1D read with 3 bands (`hypso.open(..., wavelengths=[640, 550,
+   460])`), regridded to UTM 150 m (nearest); camera demosaiced, rotated 180 degrees (no mirroring needed),
+   downsampled 4x; skimage SIFT on both, `match_descriptors` (ratio 0.8, cross-check), RANSAC
+   `ProjectiveTransform` (threshold 3 map px). Ariake 2025-04-04: 341/435 inliers, residual RMS 187 m; Venice
+   2025-06-12: 196/241, 198 m; Annapolis 2025-02-04 (snow, cloud, dark): 94/146, 223 m, inliers clustered in one
+   corner. All about 40 s (SIFT ~20 s, RANSAC 0.1 s). Accuracy ~1.3-1.5 map pixels, well below the HSI's
+   876 x 108 m pixels. The camera footprint extends beyond the HSI swath (those pixels are extrapolated - flag
+   them). To build: a quality check on inlier spread (coverage of the camera image), not only count; leave
+   unregistered with the reason below threshold; `register_camera` -> camera Product (native frame, per-pixel
+   lat/lon), homography and QC in provenance; the pixel mappings; RGB names, Satpy reader, composite, demo.
 4f. **Keystone review** (×77, for the calibration team): HYPSO-2's distortion model (`h2_distortion_model_v1.npz`,
    `optional: keystone` in coefficients.yaml, `enabled: false`) is applied only with `calibrate(keystone=True)`,
    with a warning. Questions: is B_hat valid for the flight model; is the sample axis oriented as the detector
