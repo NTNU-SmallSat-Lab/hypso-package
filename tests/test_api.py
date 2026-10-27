@@ -394,7 +394,7 @@ def test_window(l1d):
     site = (45.3139, 12.5083)
     line, sample = l1d.pixel(*site)
     w = l1d.window(*site, size=5)
-    box = l1d.cube.values[line - 2:line + 3, sample - 2:sample + 3]
+    box = l1d.cube.values[line - 2:line + 3, sample - 2:sample + 3].astype(np.float64)   # window() works in float64
     assert w.attrs["box_size"] == "5x5" and w.attrs["box_pixel_count"] == 25
     assert (w.attrs["center_line"], w.attrs["center_sample"]) == (line, sample) and w.attrs["center_distance_m"] < 500
     np.testing.assert_allclose(w["mean"].values, box.mean(axis=(0, 1)))

@@ -24,6 +24,47 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
 - **Docs**: `pip install -r docs/requirements.txt; sphinx-build -W --keep-going -b html docs docs/_build/html`;
   CI (`.github/workflows/docs.yaml`) builds on every push and publishes `main` to gh-pages.
 
+## In progress (2026-10-27) - finish these first
+
+State: a detached job (`~/hypso-package-refactor/release_a4.sh`; outcome in `release_a4.status`, test output in
+`release_a4.log`) runs the full suite and, only if it passes, commits the float32 change (×75, with the
+`test_window` float64 fix), tags `v26.10.0a4` and pushes `refactor` plus tags `v26.10.0a1`-`a4` by name. It was
+started after a first attempt failed on `test_window` (float32 vs float64 tolerance; fixed). If it reports
+anything but DONE, fix and rerun it; do not stage other files while it runs (it commits the index).
+
+Prepared but NOT yet committed or wired in (untracked or unstaged; commit after the job):
+
+1. **Coefficients cleanup** (user, 2026-10-27). `docs/coefficient_history.rst` written (the HYPSO-1 version log
+   verbatim, HYPSO-2 notes, the smile/keystone model, the removed CSVs) and linked from `docs/index.rst` and
+   `docs/calibration.rst`. Still to do: `git rm -r coefficients/` (23 CSVs identical to the shipped `.npz`, NaN
+   included; `convert_csv_to_npz.py`; the version log, now in the docs; `H2_A-hat`/`H2_B-hat`, now shipped as
+   below), build the docs with `-W`.
+2. **Keystone groundwork** (user: ship the model disabled, for review later). Done: `hypso2_calibration/data/
+   h2_distortion_model_v1.npz` (`A_hat`, `B_hat`, `terms`); `coefficients.yaml` `optional: keystone: V1`
+   (`enabled: false`, description); `_catalog.optional_model` (both copies identical) and `optional_model()` in
+   both packages' `main.py`; manifests updated; `hypso/calibration/keystone.py` (`correct_keystone`,
+   `keystone_positions`, `model_terms`: band centres and samples mapped to full-frame x/y, each band resampled
+   along samples at B(x, y), linear by default); `tests/test_keystone.py` (passes). Still to do: wire
+   `keystone: bool = False` into `l1a_to_l1b` and `Product.calibrate` (after radiometric, before smile, as the
+   model works on raw detector geometry), warn when the model is `enabled: false`, record file/sha256/applied
+   in provenance and the calibration summary, raise for sensors without a model (HYPSO-1); a real-capture test
+   and a before/after figure for the calibration team. Review questions for them: valid for the flight model?
+   order relative to smile/crop/binning? should `A_hat` replace the stored V2 smile matrix (agrees within ~2 nm)?
+3. **MACHI as the default L1D -> L2A method** (user; https://github.com/NTNU-SmallSat-Lab/MACHI, MIT, Joseph
+   Garrett). Done: `hypso/ac/machi.py` vendored from `machi/base.py` at ebbc3e72 (only `atm_correction` and its
+   helpers; MIT notice; verified identical T, A and objective history to upstream on synthetic data). Still to
+   do: a `machi` method in `processing/atmospheric.py` (L1D only; flatten finite pixels to (pixels, bands);
+   `solar=np.ones(n_bands)` since the input is reflectance; output `rhos`, dimensionless; T, A and the objective
+   history in `metadata/machi`; provenance with upstream commit, settings, iterations); make it the default
+   `method` of `correct_atmosphere()` and of `to("L2A")`; tests; run on the reference capture with figures (T
+   and A spectra, TOA vs corrected spectra over water and land), runtime and memory; docs
+   (atmospheric_correction.rst, quick start). **Open user decisions**: `est_min_R` default (code 0.05, README
+   1%); fit on all finite pixels (as upstream) or exclude flagged cloud/land by default. **Report upstream**:
+   `standarization` typo disables the triangular initialisation; `est_min_R` code/README mismatch; default
+   `solar=1.0` crashes (`solar[...]` indexed); `AC.plot`/`AC.save` broken; `load_solar` hard-codes a path
+   into an old hypso-package.
+4. After 1-3: full suite, update this file's log (×76 keystone + coefficients, ×77 MACHI), commit, push.
+
 ## TODO (one list, reviewed 2026-10-27; details in the referenced entries)
 
 1. **Docstrings for the rest of the code** (×62, ×67). NumPy style is done for every user-facing module:
@@ -32,6 +73,9 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    (`hypso.calibration`, `hypso.geometry`, `hypso.sensors`, `hypso.io` cf/schema, private helpers; four
    comments still say `satobj`). Check the published site after the first push to `main` (only `main`
    publishes).
+1b. **Review the documentation, remove stale parts** (user, 2026-10-27): read `docs/*.rst`, the READMEs, module
+   docstrings and the demo against the current code; remove or rewrite what describes removed or changed
+   behaviour (e.g. capture-object wording, old file names, superseded design notes in architecture.rst).
 2. **Verification beyond the reference capture** (×68 did HYPSO-1 and a second HYPSO-2 site, now regression
    tests). Left: the real Polymer, ACOLITE and OC-SMART runs through `correct_atmosphere` (when aulus2 is free;
    the user's production installations are not to be touched - configure a separate one in HYPSO_AC_CONFIG);
@@ -46,7 +90,7 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
 4c. **Band subsets** (user, 2026-10-27): `Product.select_bands(...)` from L1B on (calibration needs every band:
    smile correction mixes them), keeping each band's original index so `metadata/srf`, F0 and Polymer's SRF
    lookup stay right; recorded in provenance.
-4d. **Compute in float32** in memory (L1B on is float64 in memory, about 630 MB per cube; files are float32).
+4d. ~~**Compute in float32**~~ - done (×75).
 4e. **RGB camera co-registration** (×72; approach agreed with the user 2026-10-27). The camera image has no
    georeferencing, and the ground processing does not register it. Plan: regrid the HSI L1D (an RGB rendering,
    3 bands) onto a UTM grid at about 100-200 m (a true map plane, which removes the pushbroom geometry); SIFT
@@ -110,6 +154,9 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-10-27 (×75): float32 cubes in memory.** Calibration and AC now store their cube as float32 (the precision
+  files hold); calibration's corrections still run in float64 inside the step, so an L1B in memory equals what
+  its file holds. L1D cube 627 -> 313 MB; peak memory L1A -> L2A 2.3 GB on the reference capture.
 - **2026-10-27 (×74): esun renamed F0** (user). Python: `SpectralResponse.f0`, `toa_reflectance(radiance, f0, ...)`,
   `band_irradiance` documented as F0. Files: `metadata/srf/F0` and `F0_wavelengths` (were `esun`,
   `esun_wavelengths`); older files keep theirs (metadata passes through). eoread's HYPSO reader reads the old

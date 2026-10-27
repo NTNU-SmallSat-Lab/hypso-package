@@ -132,7 +132,9 @@ def l1a_to_l1b(tree: xr.DataTree, coeff_type: str = None, version=None, coeff_fi
         applied.append("spectral")
 
     out = root.drop_vars([product_name(tree), "wavelength", "radiation_wavelength", "fwhm"])
-    out["Lt"] = xr.DataArray(cube, dims=PRODUCT_DIMS, coords={
+    # float32 from here on: the precision files hold anyway, half the memory of
+    # float64 (REFACTOR_PROGRESS.md ×75); the corrections above run in float64.
+    out["Lt"] = xr.DataArray(np.asarray(cube, dtype=np.float32), dims=PRODUCT_DIMS, coords={
         "wavelength": ("bands", np.around(wavelengths, 1)),
         "radiation_wavelength": ("bands", wavelengths),
         "fwhm": ("bands", params.fwhm(wavelengths))})

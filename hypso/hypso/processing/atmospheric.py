@@ -65,7 +65,7 @@ def _l2a_tree(tree: xr.DataTree, method: str, variable: str, cube: np.ndarray, p
     root = tree.to_dataset(inherit=False)
     source = root[product_name(tree)]
     out = root.drop_vars([product_name(tree), "wavelength", "radiation_wavelength", "fwhm"])
-    out[variable] = xr.DataArray(cube, dims=PRODUCT_DIMS, coords={
+    out[variable] = xr.DataArray(np.asarray(cube, dtype=np.float32), dims=PRODUCT_DIMS, coords={
         name: ("bands", source[name].values) for name in ("wavelength", "radiation_wavelength", "fwhm")})
     for name, (values, attrs) in (variables or {}).items():
         out[name] = xr.Variable(SPATIAL_DIMS, values, attrs)
@@ -130,7 +130,7 @@ def _onto_bands(tree, tool_cube, tool_wavelengths) -> tuple:
     """The tool's (y, x, n) cube on the input product's bands (NaN where it
     has none), and how many bands it filled."""
     source_idx, tool_idx = _band_map(tree.dataset["radiation_wavelength"].values, tool_wavelengths)
-    cube = np.full(tree.dataset[product_name(tree)].shape, np.nan)
+    cube = np.full(tree.dataset[product_name(tree)].shape, np.nan, dtype=np.float32)
     cube[:, :, source_idx] = np.asarray(tool_cube)[:, :, tool_idx]
     return cube, int(len(source_idx))
 
