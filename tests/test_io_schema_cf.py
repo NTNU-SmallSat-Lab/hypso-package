@@ -12,7 +12,7 @@ from hypso.io.schema import get_schema, SCHEMAS_BY_LEVEL
 # --- schema ---
 
 def test_all_levels_present():
-    assert set(SCHEMAS_BY_LEVEL) == {"L1A", "L1B", "L1C", "L1D", "L2A"}
+    assert set(SCHEMAS_BY_LEVEL) == {"L1A", "L1B", "L1C", "L1D", "L2A", "L2B"}
 
 
 @pytest.mark.parametrize("level,expected", [

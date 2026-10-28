@@ -27,7 +27,7 @@ import pyproj
 import xarray as xr
 from pyresample.geometry import AreaDefinition
 
-from hypso.io.product import GRID_DIMS, GRID_MAPPING, band_coords, product_name
+from hypso.io.product import GRID_DIMS, GRID_MAPPING, band_coords, has_cube, product_name
 from hypso.io.provenance import add_step
 from hypso.masks.flags import FLAGS_NAME, decode_flags, encode_flags
 
@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 OUTSIDE_FLAG = "outside_swath"
 COUNT_NAME = "source_pixel_count"
-_LEVELS = ("L1C", "L1D", "L2A")
+_LEVELS = ("L1C", "L1D", "L2A", "L2B")
 
 
 def _target_area(tree, target, resolution) -> AreaDefinition:
@@ -99,22 +99,24 @@ def regrid(tree: xr.DataTree, target="utm", resolution: float = None, method: st
     if method not in METHODS:
         raise ValueError(f"method must be one of {METHODS}, got {method!r}")
     ds = tree.to_dataset(inherit=False)
-    cube_name = product_name(tree)
-    cube = ds[cube_name]
+    cube_name = product_name(tree) if has_cube(tree) else None    # L2B: 2D variables only
+    cube = ds[cube_name] if cube_name else None
     area = _target_area(tree, target, resolution)
 
-    size_gb = area.shape[0] * area.shape[1] * cube.sizes["bands"] * cube.dtype.itemsize / 1e9
+    layers = cube.sizes["bands"] if cube is not None else len(ds.data_vars)
+    size_gb = area.shape[0] * area.shape[1] * layers * 4 / 1e9
     if size_gb > max_gb:
         raise ValueError(f"the {area.shape[0]} x {area.shape[1]} grid would make a {size_gb:.1f} GB cube "
                          f"(max_gb={max_gb}); use a coarser resolution or raise max_gb")
     ops = GridOperators(tree, area, method, radius_of_influence)
-    logger.info("Regridding %s %s onto %s (%d x %d, %s)", level, cube_name, area.crs.name, area.shape[0],
-                area.shape[1], method)
+    logger.info("Regridding %s %s onto %s (%d x %d, %s)", level, cube_name or "variables", area.crs.name,
+                area.shape[0], area.shape[1], method)
 
     out = xr.Dataset(attrs=dict(ds.attrs))
-    out[cube_name] = xr.DataArray(ops.floats(cube.values), dims=GRID_DIMS + ("bands",),
-                                  coords=band_coords(cube),
-                                  attrs=dict(cube.attrs))
+    if cube is not None:
+        out[cube_name] = xr.DataArray(ops.floats(cube.values), dims=GRID_DIMS + ("bands",),
+                                      coords=band_coords(cube),
+                                      attrs=dict(cube.attrs))
     grid_lon, grid_lat = area.get_lonlats()
     out["latitude"] = (GRID_DIMS, grid_lat)
     out["longitude"] = (GRID_DIMS, grid_lon)

@@ -1,0 +1,32 @@
+reader:
+  name: hypso_l2b
+  short_name: HYPSO L2B
+  long_name: HYPSO Level 2B Geophysical Products
+  description: >
+    Reader for HYPSO-1/HYPSO-2 L2B NetCDF files (hypso.processing.l2b):
+    geophysical products derived from an L2A (chlorophyll, IOPs, TSM, Kd), one
+    group per file. Each 2D float variable is a dataset, discovered at load
+    time. Regridded products (hypso.grid) are read on their map grid, others
+    as swaths.
+  reader: !!python/name:satpy.readers.core.yaml_reader.FileYAMLReader
+  sensors: [hypso1, hypso2]
+
+file_types:
+  hypso_l2b_nc:
+    file_reader: !!python/name:hypso.satpy.hypso_handler.HypsoL2BFileHandler
+    file_patterns:
+    # hypso.io.naming: {SAT}_HSI.{time}.{target}.L2B.{GROUP}.{source}[.{grid}][.{label}].nc
+    - '{platform}_HSI.{start_time:%Y%m%dT%H%M%S}.{capture_target}.L2B.{group}.{source}.nc'
+    - '{platform}_HSI.{start_time:%Y%m%dT%H%M%S}.{capture_target}.L2B.{group}.{source}.{label}.nc'
+
+datasets:
+  latitude:
+    name: latitude
+    standard_name: latitude
+    units: degree
+    file_type: hypso_l2b_nc
+  longitude:
+    name: longitude
+    standard_name: longitude
+    units: degree
+    file_type: hypso_l2b_nc

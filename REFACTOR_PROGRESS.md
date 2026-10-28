@@ -102,7 +102,10 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    of several seconds, std ~5 s; the slew slows the footprint to roughly 1 km/s, so seconds map to km) plus cross-track 3.7 km RMS (2.4 km mean bias - not timing; HSI
    georef error in the ground truth or attitude). Good enough as a prior (search radius ~20 km) and a
    flagged fallback (~5-15 km), not as georeferencing. Planner code: git.ntnu.no
-   NTNU-SmallSatLab/flight-scripts (needs NTNU login). Ask HYPSO ops how the camera is triggered: a known rule beats a fitted one. Checked
+   NTNU-SmallSatLab/flight-scripts (needs NTNU login). The prototype (scripts, per-capture
+   registrations, analysis.csv, decompose.csv, footprints.png, galata_geometry.png) is kept in
+   `../camera_geometry_prototype/` next to this repository (not versioned; it was in a temporary session
+   folder). Ask HYPSO ops how the camera is triggered: a known rule beats a fitted one. Checked
    (2026-10-27): no downlinked file records the exposure time. The BMP and its name come from the
    satellite's `rgb-images` folder (ground_systems `process-capture.sh` only moves it to `<capture>-rgb`;
    an onboard `logs` folder would go to `<capture>-logs`, none of the 127 captures has one).
@@ -183,6 +186,15 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
      Satpy reader `hypso_l2b`; pipeline matchups against in situ chlorophyll where available.
    - Note: strictly, IOPs are absorption and backscattering coefficients; chlorophyll and TSM are
      concentrations derived from Rrs or IOPs. Group names should keep that clear (`IOP` vs `CHL`, `TSM`).
+4j. **Small fixes found 2026-10-27/28**:
+   - Pose interpolation in `hypso.geometry.interpolate_at_frame`: (a) positions are interpolated linearly
+     (up to ~0.9 km sag mid-gap with 30 s ADCS sampling; spline or Hermite with `velocity.csv` reproduces
+     held-out samples to ~0 m, see 4h); (b) some captures have repeated or out-of-order ADCS timestamps
+     (crashed the camera analysis's Slerp): sort and drop duplicates before interpolating. Both change direct
+     georeferencing output: compare before/after on a few captures.
+   - Satpy composites (`etc/composites/hypso1.yaml`, `hypso2.yaml`, `hypso2_rgb.yaml`) import
+     `satpy.composites.GenericCompositor`, deprecated (moved to `satpy.composites.core`, old path removed
+     in Satpy 1.0). Switch when the minimum Satpy version allows, or keep a fallback.
 4f. **Keystone review** (×77, for the calibration team): HYPSO-2's distortion model (`h2_distortion_model_v1.npz`,
    `optional: keystone` in coefficients.yaml, `enabled: false`) is applied only with `calibrate(keystone=True)`,
    with a warning. Questions: is B_hat valid for the flight model; is the sample axis oriented as the detector
@@ -190,8 +202,9 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    model replace the V2 smile matrix (agrees within ~2 nm). Figure on the reference capture: shift -1.4..+1.7
    samples, image change median 0.35% (99th pct 15% at sharp edges). When reviewed: `enabled: true`, consider
    it in a release.
-5. **Releases** (×46, ×48, ×52): tags `v26.10.0a1`-`a3` exist only locally (not on origin). Tag the next
-   alpha for ×53-×63 when wanted; the final `vYY.M.0` on the merge to `main` once the pipeline uses the
+5. **Releases** (×46, ×48, ×52): tags `v26.10.0a1`-`a5` are on origin (checked 2026-10-28; a5 = ×84).
+   Tag the next alpha when wanted (×85-×87 since a5: camera products, L2A quantity names, L2B; the
+   L2A name change and POLYMER-as-Rrs / DPS-as-rhos change outputs, worth a tag); the final `vYY.M.0` on the merge to `main` once the pipeline uses the
    refactor.
 6. **Outside this repository, for the user**: eoread fork commit `3609d25` (F0 and d^2) on the flat-layout
    reader, and ACOLITE's/OC-SMART's readers on new files (×37); **eoread's HYPSO reader must read the renamed
@@ -236,6 +249,16 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-10-28 (×87): L2B infrastructure** (TODO 4i step 1). Level L2B: geophysical products derived from an
+  L2A, one group per file, no band cube (every product a 2D variable). Naming `...L2B.<GROUP>.<source>
+  [.grid][.label].nc` with `L2B_GROUPS` CHL, IOP, TSM, KD (same two fields as L2A's quantity and method).
+  `hypso.processing.make_l2b(l2a_tree, group, source, variables, parameters)` keeps geometry, flags, grid and
+  metadata, records an `l2b_<group>_<source>` step, attrs `l2b_group`/`l2b_source`. Cube-less products
+  through `io.product` (`CUBELESS_LEVELS`, `has_cube`; read, write with float variables quantized like
+  bands), `Product` (`shape`, `variables`, `filename`, repr; `cube` raises), `regrid`, `window` (stats per
+  variable over a `products` dim), `resample`, `to_satpy`, Satpy reader `hypso_l2b`
+  (`HypsoL2BFileHandler`, every 2D float variable). tests/test_l2b.py (synthetic band-ratio products), naming
+  tests, docs/products.rst. Next: step 2, the AC tools' own products moved into L2B.
 - **2026-10-28 (×86): L2A quantity in the file name** (user). L2A names carry the quantity before the
   method: `...L2A.RRS.<method>[.grid][.label].nc` (remote-sensing reflectance `Rrs`, sr-1) or
   `...L2A.RHOS.<method>...` (surface reflectance `rhos`); plain tokens named after the variable chosen over

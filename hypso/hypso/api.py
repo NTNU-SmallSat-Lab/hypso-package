@@ -43,14 +43,14 @@ class Product:
     Raises
     ------
     ValueError
-        If the tree has no valid ``processing_level`` (L1A-L1D, L2A).
+        If the tree has no valid ``processing_level`` (L1A-L1D, L2A, L2B).
     """
 
     __slots__ = ("_tree",)
 
     def __init__(self, tree: xr.DataTree):
         level = tree.attrs.get("processing_level")
-        if level not in LEVELS + ("L2A",):
+        if level not in LEVELS + ("L2A", "L2B"):
             raise ValueError(f"not a HYPSO product tree (processing_level={level!r})")
         object.__setattr__(self, "_tree", tree)
 
@@ -90,7 +90,7 @@ class Product:
 
     @property
     def level(self) -> str:
-        """Processing level: ``"L1A"``, ``"L1B"``, ``"L1C"``, ``"L1D"`` or ``"L2A"``."""
+        """Processing level: ``"L1A"``, ``"L1B"``, ``"L1C"``, ``"L1D"``, ``"L2A"`` or ``"L2B"``."""
         return self._tree.attrs["processing_level"]
 
     @property
@@ -109,14 +109,21 @@ class Product:
 
         Dimensions ``(lines, samples, bands)``, or ``(y, x, bands)`` when
         gridded, with ``wavelength``, ``radiation_wavelength`` and ``fwhm``
-        band coordinates.
+        band coordinates. L2B products have none (ValueError); their
+        products are :attr:`variables`.
         """
         return self._tree.dataset[cube_name(self._tree)]
 
     @property
+    def shape(self) -> tuple:
+        """Spatial shape: ``(lines, samples)``, or ``(y, x)`` when gridded."""
+        ds = self._tree.dataset
+        return tuple(ds.sizes[d] for d in self._spatial_dims())
+
+    @property
     def wavelengths(self) -> np.ndarray:
         """Band centre wavelengths in nm, as calibrated (``radiation_wavelength``)."""
-        return self._tree.dataset["radiation_wavelength"].values
+        return self.cube["radiation_wavelength"].values
 
     @property
     def geometry(self) -> xr.Dataset:
@@ -144,11 +151,12 @@ class Product:
         """Derived 2D products, as a Dataset.
 
         Those added with :meth:`with_variables` and those an atmospheric
-        correction tool returns (e.g. ``chla``, ``polymer_flags``).
+        correction tool returns (e.g. ``chla``, ``polymer_flags``); for an
+        L2B product, its products (e.g. ``chlor_a``).
         """
-        from hypso.io.product import _extra_variables
+        from hypso.io.product import _extra_variables, has_cube
         ds = self._tree.dataset
-        return ds[_extra_variables(ds, [cube_name(self._tree)])]
+        return ds[_extra_variables(ds, [cube_name(self._tree)] if has_cube(self._tree) else [])]
 
     @property
     def grid(self):
@@ -175,6 +183,10 @@ class Product:
         return sorted(steps, key=lambda s: s.get("date_utc", ""))
 
     def __repr__(self):
+        from hypso.io.product import has_cube
+        if not has_cube(self._tree):
+            return (f"<hypso.Product {self.sat_id} {self.target} {self.level} {self._tree.attrs.get('l2b_group')}: "
+                    f"{list(self.variables.data_vars)} {dict(zip(self._spatial_dims(), self.shape))}>")
         cube = self.cube
         return (f"<hypso.Product {self.sat_id} {self.target} {self.level}: {cube.name} "
                 f"{dict(cube.sizes)}>")
@@ -436,8 +448,8 @@ class Product:
             if name in reserved and name not in self.variables:
                 raise ValueError(f"{name!r} is already a product, geometry or flag variable")
             data = value if isinstance(value, xr.DataArray) else xr.DataArray(np.asarray(value), dims=dims)
-            if data.shape != self.cube.shape[:2]:
-                raise ValueError(f"{name!r} has shape {data.shape}, expected {self.cube.shape[:2]}")
+            if data.shape != self.shape:
+                raise ValueError(f"{name!r} has shape {data.shape}, expected {self.shape}")
             root[name] = xr.Variable(dims, data.values, dict(data.attrs))
         tree.dataset = root
         return Product(tree)
@@ -641,14 +653,15 @@ class Product:
         label : str, optional
             Free-text label for experiments, the last name field.
         ac : str, optional
-            Override the atmospheric correction field (L2A).
+            Override the atmospheric correction field (L2A) or source (L2B).
 
         Returns
         -------
         str
             e.g. ``"HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.nc"``; L2A
             names carry the quantity (from the product variable) and the
-            method, e.g. ``"...L2A.RHOS.machi.nc"``.
+            method, e.g. ``"...L2A.RHOS.machi.nc"``; L2B names the group
+            and source, e.g. ``"...L2B.CHL.oc4.nc"``.
         """
         from hypso.io.naming import name_method
         from hypso.processing.capture import acquisition_time
@@ -658,6 +671,9 @@ class Product:
         if self.level == "L2A":
             ac = name_method(ac or self.atmospheric_correction)
             quantity = self.cube.name
+        elif self.level == "L2B":
+            ac = ac or self._tree.attrs["l2b_source"]
+            quantity = self._tree.attrs["l2b_group"]
         return product_name(self.sat_id, time, self.target, self.level, ac=ac, grid=self.grid,
                             label=label, quantity=quantity).filename()
 

@@ -4,6 +4,7 @@ HypsoL1FileHandler reads HSI L1C, L1D and L2A products as written by
 hypso.io.product.write_product (Product.write): the flat root-group layout,
 per-band variables (Lt_<wave>, rhot_<wave>, an L2A method's Rrs_<wave>, ...)
 and latitude/longitude as root-level siblings, swath or regridded.
+HypsoL2BFileHandler reads L2B products (2D variables, no bands).
 HypsoRGBFileHandler reads RGB camera products (hypso.rgb.write_camera).
 
 Registered via the [project.entry-points."satpy.readers"] entry in
@@ -119,6 +120,31 @@ class HypsoL1FileHandler(NetCDF4FileHandler):
         data.attrs["platform_name"] = self.platform_name
 
         return data
+
+
+class HypsoL2BFileHandler(HypsoL1FileHandler):
+    """L2B products (hypso.processing.l2b): no bands; each 2D float variable
+    (e.g. ``chlor_a``, ``aph_443``) is a dataset, found in the file itself."""
+
+    _NOT_PRODUCTS = {"latitude", "longitude", "crs_wgs84", "crs", "x", "y", "pixel_flags",
+                     "solar_zenith_angle", "solar_azimuth_angle", "sensor_zenith_angle", "sensor_azimuth_angle"}
+
+    def available_datasets(self, configured_datasets=None):
+        for is_avail, ds_info in (configured_datasets or []):
+            if is_avail is not None:
+                yield is_avail, ds_info
+                continue
+            yield self.file_type_matches(ds_info["file_type"]), ds_info
+        file_type = self.filetype_info["file_type"]
+        dims = ("y", "x") if self.gridded else ("lines", "samples")
+        for key, value in self.file_content.items():
+            if "/" in key or key in self._NOT_PRODUCTS or key.endswith("_direct"):
+                continue
+            if self.get(f"{key}/dimensions") != dims or not np.issubdtype(np.dtype(self.get(f"{key}/dtype")), np.floating):
+                continue
+            yield True, {"name": key, "file_type": file_type, "units": self.get(f"{key}/attr/units", ""),
+                         "standard_name": self.get(f"{key}/attr/standard_name", key),
+                         **({} if self.gridded else {"coordinates": ("longitude", "latitude")})}
 
 
 class HypsoRGBFileHandler(HypsoL1FileHandler):

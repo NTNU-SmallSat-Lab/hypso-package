@@ -269,7 +269,12 @@ def read_product(path, wavelength_range=None, wavelengths=None, indices=None) ->
                                                    for n in names]),
                 BAND_INDEX: ("bands", [int(products[n].attrs["band"]) for n in names])})
             names = [names[i] for i in _positions(proxy, wavelength_range, wavelengths, indices)]
-        if names:
+        cubeless = _level_key(root.attrs.get("processing_level", "")) in CUBELESS_LEVELS
+        if cubeless:
+            if selection:
+                raise ValueError(f"{path}: an L2B product has no bands to select")
+            prefix = cube = None
+        elif names:
             prefix, cube = _product_from_bands(products, names)
         else:
             cubes = [n for n, v in products.data_vars.items() if v.ndim == 3]
@@ -286,7 +291,8 @@ def read_product(path, wavelength_range=None, wavelengths=None, indices=None) ->
             raise ValueError(f"{path}: no processing_level attribute")
 
         dims = spatial_dims(products)
-        out = xr.Dataset({prefix: cube}, attrs={**root.attrs, "processing_level": _level_key(level)})
+        out = xr.Dataset({} if cubeless else {prefix: cube},
+                         attrs={**root.attrs, "processing_level": _level_key(level)})
         for name in _GEOMETRY_ATTRS:
             if name in geometry.data_vars:
                 out[name] = (dims, geometry[name].values)
@@ -306,7 +312,7 @@ def read_product(path, wavelength_range=None, wavelengths=None, indices=None) ->
                 ds = node.to_dataset(inherit=False).load()
                 if node.path.endswith("/gcp"):
                     ds = ds.rename({k: v for k, v in _GCP_RENAMES.items() if k in ds.variables})
-                if "bands" in ds.dims and ds.sizes["bands"] != out.sizes["bands"]:
+                if "bands" in ds.dims and not cubeless and ds.sizes["bands"] != out.sizes["bands"]:
                     # full-band metadata under a band subset (see select_bands)
                     ds = ds.rename_dims({"bands": "bands_full"})
                 tree[node.path] = xr.DataTree(ds)
@@ -329,7 +335,19 @@ def read_product(path, wavelength_range=None, wavelengths=None, indices=None) ->
 # write
 # --------------------------------------------------------------------------
 
+#: Levels whose products are 2D variables only, without a band cube.
+CUBELESS_LEVELS = ("L2B",)
+
+
+def has_cube(tree: xr.DataTree) -> bool:
+    """Whether the product has a band cube (every level but L2B)."""
+    return tree.attrs.get("processing_level") not in CUBELESS_LEVELS
+
+
 def product_name(tree: xr.DataTree) -> str:
+    if not has_cube(tree):
+        raise ValueError(f"{tree.attrs['processing_level']} products have no band cube; their products are "
+                         "2D variables")
     dims = product_dims(tree.dataset)
     cubes = [n for n, v in tree.dataset.data_vars.items() if v.dims == dims]
     if len(cubes) != 1:
@@ -349,9 +367,10 @@ def _encoding(var: xr.DataArray, dtype=None) -> dict:
 def _root_dataset(tree: xr.DataTree, datacube: bool, significant_bits=SIGNIFICANT_BITS):
     """Root Dataset as written, plus its encoding."""
     ds = tree.dataset
-    prefix = product_name(tree)
+    cubeless = not has_cube(tree)
+    prefix = None if cubeless else product_name(tree)
     schema = get_schema(_level_key(ds.attrs["processing_level"]))
-    cube = ds[prefix]
+    cube = None if cubeless else ds[prefix]
     has_geometry = "latitude" in ds.data_vars
     dims = spatial_dims(ds)
     gridded = dims == GRID_DIMS
@@ -371,7 +390,9 @@ def _root_dataset(tree: xr.DataTree, datacube: bool, significant_bits=SIGNIFICAN
         quantize = {"significant_digits": int(significant_bits), "quantize_mode": "BitRound"}
 
     out, encoding = {}, {}
-    if datacube:
+    if cubeless:
+        pass
+    elif datacube:
         attrs = {"units": units, "long_name": long_name, "wavelength_units": "nanometers",
                  **({"standard_name": standard_name} if standard_name else {}),
                  "fwhm": cube["fwhm"].values, "wavelengths": cube["wavelength"].values}
@@ -412,6 +433,9 @@ def _root_dataset(tree: xr.DataTree, datacube: bool, significant_bits=SIGNIFICAN
             var_attrs.update(geolocation)
         out[name] = xr.Variable(dims, ds[name].values, var_attrs)
         encoding[name] = _encoding(out[name])
+        if cubeless and out[name].dtype.kind == "f":
+            # L2B's products are its float variables: written as float32, quantized like band variables
+            encoding[name] = {**_encoding(out[name], "f4"), **quantize}
     if gridded:
         for name in GRID_DIMS:
             out[name] = xr.Variable((name,), ds[name].values, dict(ds[name].attrs))

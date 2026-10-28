@@ -8,7 +8,7 @@ import xarray as xr
 from pyresample import kd_tree
 from pyresample.bilinear import NumpyBilinearResampler
 
-from hypso.io.product import product_name
+from hypso.io.product import has_cube, product_name
 from hypso.masks.flags import FLAGS_NAME, decode_flags
 
 from .areas import METRES_PER_DEGREE, geolocation, resolution as product_resolution, source_definition
@@ -215,10 +215,10 @@ def resample_product(tree: xr.DataTree, target, method: str = "nearest",
     from hypso.io.product import _extra_variables
     ds = tree.dataset
     ops = GridOperators(tree, target, method, radius_of_influence)
-    cube = ds[product_name(tree)]
+    cube = ds[product_name(tree)] if has_cube(tree) else None      # L2B: 2D variables only
 
-    out = {cube.name: (("y", "x", "band"), ops.floats(cube.values))}
-    for name in _extra_variables(ds, [cube.name]):
+    out = {cube.name: (("y", "x", "band"), ops.floats(cube.values))} if cube is not None else {}
+    for name in _extra_variables(ds, [cube.name] if cube is not None else []):
         var = ds[name]
         values = (ops.integers(var.values, is_flag_variable(name, var.attrs)) if var.dtype.kind in "iub"
                   else ops.floats(var.values, name))
@@ -230,8 +230,10 @@ def resample_product(tree: xr.DataTree, target, method: str = "nearest",
             out[f"flag_{name}"] = (("y", "x"), flag.values)
 
     grid_lon, grid_lat = target.get_lonlats()
-    result = xr.Dataset(out, coords={"latitude": (("y", "x"), grid_lat), "longitude": (("y", "x"), grid_lon),
-                                     "wavelength": ("band", cube["radiation_wavelength"].values)})
+    coords = {"latitude": (("y", "x"), grid_lat), "longitude": (("y", "x"), grid_lon)}
+    if cube is not None:
+        coords["wavelength"] = ("band", cube["radiation_wavelength"].values)
+    result = xr.Dataset(out, coords=coords)
     result.attrs.update(sat_id=tree.attrs.get("sat_id"), target=tree.attrs.get("location_description"),
                         processing_level=tree.attrs.get("processing_level"), resample_method=method,
                         radius_of_influence_m=float(ops.radius))

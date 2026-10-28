@@ -23,8 +23,10 @@ def product_scene(product, use_direct_georef: bool = False) -> Scene:
     geometry = product.geometry
     if f"latitude{suffix}" not in geometry:
         raise ValueError(f"{product.level} product has no geolocation")
-    cube = product.cube
     time = _datetime.fromisoformat(acquisition_time(product.tree.attrs))
+    if product.level == "L2B":
+        return _variables_scene(product, geometry, suffix, time)
+    cube = product.cube
     return get_datacube_satpy_scene(datacube=cube, wavelengths=cube["radiation_wavelength"].values,
                                     latitudes=geometry[f"latitude{suffix}"].values,
                                     longitudes=geometry[f"longitude{suffix}"].values,
@@ -32,6 +34,23 @@ def product_scene(product, use_direct_georef: bool = False) -> Scene:
                                     units=product.tree.dataset[cube.name].attrs.get("units", ""),
                                     dims=["y", "x"], start_time=time, end_time=time,
                                     area=product.area_definition() if product.grid else None)
+
+
+def _variables_scene(product, geometry, suffix: str, time) -> Scene:
+    """A product without a band cube (L2B): one dataset per float variable."""
+    lat = xr.DataArray(geometry[f"latitude{suffix}"].values, dims=["y", "x"])
+    lon = xr.DataArray(geometry[f"longitude{suffix}"].values, dims=["y", "x"])
+    area = product.area_definition() if product.grid else SwathDefinition(lons=lon, lats=lat)
+    sensor = "hypso1" if product.sat_id == "HYPSO-1" else "hypso2"
+    scene = Scene()
+    for name, var in product.variables.data_vars.items():
+        if var.dtype.kind != "f":
+            continue
+        scene[name] = xr.DataArray(var.values, dims=["y", "x"], attrs={
+            **{k: v for k, v in var.attrs.items() if k not in ("coordinates", "grid_mapping")},
+            "name": name, "area": area, "start_time": time, "end_time": time,
+            "platform_name": product.sat_id, "sensor": sensor})
+    return scene
 
 
 def get_datacube_satpy_scene(datacube: xr.DataArray,

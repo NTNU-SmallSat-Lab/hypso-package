@@ -82,17 +82,30 @@ L2A_SCHEMA = LevelSchema(
     title="HYPSO Level 2 Bottom-of-Atmosphere Reflectance",
 )
 
+# L2B: geophysical products derived from an L2A (hypso.io.naming.L2B_GROUPS).
+# There is no band cube - every product is a 2D variable with its own units -
+# so the product_* fields are unused.
+L2B_SCHEMA = LevelSchema(
+    processing_level="L2B",
+    product_prefix="",
+    product_units="",
+    product_long_name="",
+    has_geometry=True,
+    title="HYPSO Level 2B Geophysical Products",
+)
+
 SCHEMAS_BY_LEVEL = {
     "L1A": L1A_SCHEMA,
     "L1B": L1B_SCHEMA,
     "L1C": L1C_SCHEMA,
     "L1D": L1D_SCHEMA,
     "L2A": L2A_SCHEMA,
+    "L2B": L2B_SCHEMA,
 }
 
 
 def get_schema(level: str) -> LevelSchema:
-    """The :class:`LevelSchema` of a level ("L1A" ... "L1D", "L2A"/"L2")."""
+    """The :class:`LevelSchema` of a level ("L1A" ... "L1D", "L2A"/"L2", "L2B")."""
     try:
         return SCHEMAS_BY_LEVEL[level.upper()]
     except KeyError:

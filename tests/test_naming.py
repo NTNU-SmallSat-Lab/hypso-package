@@ -129,3 +129,17 @@ def test_l2a_quantity_field():
 def test_names_before_quantity_field_still_parse(old, ac, grid, label):
     parsed = parse_product_name(old)
     assert (parsed.level, parsed.quantity, parsed.ac, parsed.grid, parsed.label) == ("L2A", None, ac, grid, label)
+
+
+def test_l2b_names():
+    # L2B: product group and source in the quantity/method fields (TODO 4i, x87)
+    from hypso.io.naming import L2B_GROUPS
+    assert {"CHL", "IOP", "TSM", "KD"} <= set(L2B_GROUPS)
+    name = product_name("HYPSO-2", T, "aeronetvenice", "L2B", ac="oc4", quantity="CHL", grid="utm33n_880m")
+    assert name.filename() == "HYPSO2_HSI.20250612T095802.aeronetvenice.L2B.CHL.oc4.utm33n_880m.nc"
+    assert parse_product_name(name.filename()) == name
+    for bad in (dict(quantity="RRS", ac="oc4"), dict(ac="oc4"), dict(quantity="CHL")):
+        with pytest.raises(ValueError):
+            product_name("HYPSO-2", T, "aeronetvenice", "L2B", **bad).filename()
+    with pytest.raises(ValueError):
+        parse_product_name("HYPSO2_HSI.20250612T095802.aeronetvenice.L2B.oc4.nc")     # no group

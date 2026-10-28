@@ -14,6 +14,9 @@ L1D        ``rhot``        top-of-atmosphere reflectance                    1
 L2A        ``rhos`` or     atmospherically corrected: surface reflectance   1 (``rhos``),
            ``Rrs``         ``rhos`` (MACHI, the default; DPS; ACOLITE L2R)  sr-1 (``Rrs``)
                            or remote-sensing reflectance ``Rrs``
+L2B        none            geophysical products derived from an L2A, one    per variable
+                           group per file (chlorophyll, IOPs, TSM, Kd): 2D
+                           variables only (``product.variables``)
 =========  ==============  ===============================================  ===================
 
 ``hypso.open`` reads any level; ``product.level`` says which it is. The L2A methods
@@ -29,6 +32,7 @@ File names
    HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.nc
    HYPSO2_HSI.20250304T103805.aeronetvenice.L2A.RHOS.machi.nc
    HYPSO2_HSI.20250304T103805.aeronetvenice.L2A.RRS.polymer.nc
+   HYPSO2_HSI.20250304T103805.aeronetvenice.L2B.CHL.oc4.nc
    HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.utm33n_876m.nc      (regridded)
    HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.test.nc             (label)
 
@@ -45,7 +49,11 @@ produced it (ACOLITE's L2W and L2R are both ``acolite``; the quantity tells
 them apart). The quantity is also the ``l2a_quantity`` global attribute. L2A
 names from before the quantity field (``L2A.<method>``) are still read; older
 POLYMER files hold ``rho_w`` (= pi Rrs) and are named ``RHOW`` when converted.
-A regridded product names its grid (:doc:`grid`);
+L2B names its product group (``CHL``, ``IOP``, ``TSM``, ``KD``;
+``hypso.io.naming.L2B_GROUPS``) and its source, the algorithm or the AC tool
+whose own product it is. A regridded product names its grid (:doc:`grid`),
+at any level: a single capture on a map stays L1D, L2A or L2B (L3 is kept for
+future multi-capture composites);
 the optional label is for experiments. The calibration set and masking are
 not part of the name: they are recorded in the file. Older names
 (``{target}_{YYYY-MM-DDTHH-MM-SSZ}-{label}-{level}.nc``) are still read.
@@ -146,3 +154,18 @@ with their wavelengths, so the spectrum view works; masks in ``pixel_flags``
 show in the Mask Manager; products from L1C on are geocoded through
 ``latitude`` and ``longitude``, and regridded products as map-projected
 rasters.
+
+
+L2B products
+------------
+
+An L2B product holds geophysical products derived from one L2A product, one
+group per file. It has no band cube: every product is a 2D variable with its
+own units, and per-wavelength quantities are separate variables (``aph_443``,
+``bbp_443``), as in NASA's OC_IOP files. It keeps the L2A's geometry,
+``pixel_flags``, grid and metadata, so ``regrid``, ``window`` (statistics per
+variable over a ``products`` dimension), ``to_satpy`` and the ``hypso_l2b``
+Satpy reader work as for the other levels; ``product.cube`` and band methods
+do not apply. ``hypso.processing.make_l2b`` builds one from an L2A and the
+derived variables. The algorithms (band-ratio chlorophyll, Kd, TSM, QAA IOPs)
+and the AC tools' own products as L2B files are in progress.
