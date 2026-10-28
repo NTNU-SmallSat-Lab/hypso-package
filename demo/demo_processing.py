@@ -221,7 +221,8 @@ print(l2a, l2a.filename())
 # l2a = l1d.correct_atmosphere("polymer", config="ac_tools.yaml")
 # l2a = l1c.correct_atmosphere("acolite", config="ac_tools.yaml", output="l2w")
 # l2a = l1d.correct_atmosphere("ocsmart", config="ac_tools.yaml")
-# l2a.variables    # the tool's 2D products and flags, e.g. chla, polymer_flags
+# l2a.variables    # the tool's 2D outputs and flags, e.g. chla, polymer_flags
+# l2a.tool_products()["CHL"]    # its chlorophyll as an L2B product; l2a.write() writes it too
 
 fig, axs = plt.subplots(1, 2, figsize=(12, 4))
 axs[0].plot(model["wavelength"], model["T"], label="T (transmission)")

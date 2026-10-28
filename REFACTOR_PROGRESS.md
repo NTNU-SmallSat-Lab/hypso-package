@@ -168,8 +168,7 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    - L2B files have no band cube: every product is a 2D variable, per-wavelength IOPs as separate
      variables (`aph_443`, `adg_443`, `bbp_443`), as in NASA's OC_IOP files.
    - Steps: (1) infrastructure: level L2B, naming, cube-less products through read/write/regrid/window/
-     pixel/to_satpy, Satpy `hypso_l2b`; (2) move the tool products out of L2A (`l2a.tool_products()`
-     returns L2B products; the L2A no longer carries them); (3) package algorithms on `L2A.RRS`
+     pixel/to_satpy, Satpy `hypso_l2b`; (2) move the tool products out of L2A (done ×88); (3) package algorithms on `L2A.RRS`
      (`l2a.derive("CHL", algorithm="oc4")`, Kd490, Nechad TSM, red-edge chl); (4) QAA IOPs, GIOP later.
    - Level `L2B`, named like L2A with the product group first: `...L2B.<GROUP>.<source>.nc`, e.g.
      `L2B.CHL.oc4.nc`, `L2B.IOP.qaa.nc`, `L2B.CHL.polymer.nc` (the tool's own product); one group per file,
@@ -250,6 +249,16 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-10-28 (×88): AC tools' products moved to L2B** (TODO 4i step 2, user chose move over copy).
+  `hypso.processing.split_tool_products(l2a_tree)` -> `(l2a_without, {group: l2b_tree})`, groups by variable
+  name (`tool_product_group`: CHL `chla|chl_*|chlor_a*|ndci`, TSM `spm*|tsm*|tur_*|t_dogliotti*|t_nechad*`,
+  KD `kd*`); the correction's diagnostics (Polymer `logfb`, `Rgli`, `Rnir`) stay in L2A; the tool's
+  `*_flags` stay in L2A and are copied into each L2B; L2B source = the tool (`L2B.CHL.polymer`).
+  `Product.tool_products()`; `Product.write()` for L2A writes the L2A without them plus their L2B files in
+  the same directory (`tool_products=False` drops them with a warning). In memory, a fresh L2A still
+  carries them in `variables` (so `tool_products()` works before writing); L2A files written before ×88
+  still hold them and split the same way. Pipeline impact (TODO 6b): it reads chlorophyll from L2B files now.
+  Docs (atmospheric_correction, products), demo comment, tests.
 - **2026-10-28 (×87): L2B infrastructure** (TODO 4i step 1). Level L2B: geophysical products derived from an
   L2A, one group per file, no band cube (every product a 2D variable). Naming `...L2B.<GROUP>.<source>
   [.grid][.label].nc` with `L2B_GROUPS` CHL, IOP, TSM, KD (same two fields as L2A's quantity and method).
@@ -2146,3 +2155,6 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
   re-verified passing against this point (all committed: `9dfe2952`, `f080a61e`, `884b8d5f`).
 - **2026-08-25, session start:** Plan approved. Verified the repo imports cleanly with
   `hypso1_calibration`/`hypso2_calibration` siblings on `sys.path` (no pip install needed).
+
+   - Since ×86/×88: L2A names are `L2A.RRS.<method>`/`L2A.RHOS.<method>` (POLYMER now Rrs, DPS rhos), and the
+     AC tools' chlorophyll/TSM are in `L2B.CHL.<tool>`/`L2B.TSM.<tool>` files, not in the L2A: update readers.

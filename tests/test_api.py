@@ -200,6 +200,7 @@ def test_polymer_mocked(l1c, monkeypatch, tmp_path):
     # 2D products: chla = 10**logchl (linear, mg m-3) and Polymer's own flags
     variables = l2a.variables
     assert {"chla", "logfb", "SPM", "Rgli", "Rnir", "polymer_flags"} <= set(variables)
+    assert set(l2a.tool_products()) == {"CHL", "TSM"}                 # chla, SPM -> L2B (x88)
     with nc.Dataset(POLYMER_OUTPUT) as f:
         logchl, flags = f["logchl"][:], f["flags"][:]
     np.testing.assert_allclose(variables["chla"].values, np.ma.filled(10.0 ** logchl.astype(np.float64), np.nan),
@@ -210,11 +211,14 @@ def test_polymer_mocked(l1c, monkeypatch, tmp_path):
     np.testing.assert_allclose(variables["chla"].values, _production_l2a("polymer").variables["chla"].values,
                                rtol=1e-5, equal_nan=True)
 
-    # and they survive writing
+    # and they survive writing: chla in the L2B file next to the L2A (x88), flags in both
     reread = hypso.open(l2a.write(out_dir=tmp_path))
+    assert "chla" not in reread.variables
     assert reread.variables["polymer_flags"].dtype == flags.dtype
     assert reread.variables["polymer_flags"].attrs["flag_meanings"] == variables["polymer_flags"].attrs["flag_meanings"]
-    assert reread.variables["chla"].attrs["standard_name"] == "mass_concentration_of_chlorophyll_a_in_sea_water"
+    chl = hypso.open(tmp_path / l2a.tool_products()["CHL"].filename())
+    assert chl.variables["chla"].attrs["standard_name"] == "mass_concentration_of_chlorophyll_a_in_sea_water"
+    assert chl.variables["polymer_flags"].dtype == flags.dtype
 
 
 @requires_ac_outputs
@@ -286,6 +290,7 @@ def test_acolite_mocked(l1c, monkeypatch, tmp_path):
     # L2W's 2D products and flags, with CF standard names where ACOLITE's aren't
     variables = l2w.variables
     assert {"acolite_l2_flags", "SPM_Nechad2010_664", "chl_re_mishra", "ndci"} <= set(variables)
+    assert set(l2w.tool_products()["CHL"].variables.data_vars) >= {"chl_re_mishra", "ndci", "acolite_l2_flags"}
     with nc.Dataset(ACOLITE_OUTPUTS["L2W"]) as f:
         np.testing.assert_array_equal(variables["acolite_l2_flags"].values, f["l2_flags"][:])
     chl = variables["chl_re_mishra"].attrs
@@ -343,6 +348,7 @@ def test_ocsmart_with_fake_installation(l1d, tmp_path):
 
     variables = l2a.variables
     assert {"chlor_a_oci", "chlor_a_yoc", "ocsmart_l2_flags"} <= set(variables)
+    assert l2a.tool_products()["CHL"].filename().endswith(".L2B.CHL.ocsmart.nc")
     assert not {"Latitude", "Solar_zenith"} & set(variables)
     assert variables["chlor_a_oci"].attrs["units"] == "mg m-3"
     assert variables["ocsmart_l2_flags"].dtype.kind == "i"

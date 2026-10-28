@@ -14,6 +14,7 @@ called on unchanged. Underneath are the tree functions in
 :mod:`hypso.processing` and the product tree of :mod:`hypso.io.product`
 (:attr:`Product.tree`), which stay available for direct use.
 """
+import logging
 from pathlib import Path
 
 import numpy as np
@@ -22,6 +23,8 @@ import xarray as xr
 from hypso.io.naming import product_name
 from hypso.io.product import PRODUCT_DIMS, product_name as cube_name, read_product, write_product
 from hypso.masks.flags import FLAGS_NAME, decode_flags
+
+logger = logging.getLogger(__name__)
 
 LEVELS = ("L1A", "L1B", "L1C", "L1D")
 
@@ -678,7 +681,7 @@ class Product:
                             label=label, quantity=quantity).filename()
 
     def write(self, path=None, out_dir=None, label: str = None, datacube: bool = False,
-              significant_bits=14) -> Path:
+              significant_bits=14, tool_products: bool = True) -> Path:
         """Write the product in the current file format.
 
         Parameters
@@ -695,17 +698,52 @@ class Product:
             Keep this many significant mantissa bits of the float bands
             (L1B-L2A): about 40% smaller L1D bands at most 3.1e-5 relative
             error; None writes them lossless.
+        tool_products : bool, default True
+            L2A: also write the AC tool's own products (:meth:`tool_products`)
+            as L2B files in the same directory. The L2A file never holds them;
+            False drops them (with a warning).
 
         Returns
         -------
         pathlib.Path
-            The written file.
+            The written file (for L2A, the L2A file).
         """
         if path is None:
             path = Path(out_dir or ".") / self.filename(label=label)
         path = Path(path)
-        write_product(self._tree, path, datacube=datacube, significant_bits=significant_bits)
+        tree = self._tree
+        if self.level == "L2A":
+            from hypso.processing.l2b import split_tool_products
+            tree, products = split_tool_products(tree)
+            if tool_products:
+                for product in products.values():
+                    out = Product(product)
+                    l2b_path = out.write(out_dir=path.parent, label=label, significant_bits=significant_bits)
+                    logger.info("AC tool products written to %s", l2b_path.name)
+            elif products:
+                logger.warning("AC tool products %s not written (tool_products=False)", sorted(products))
+        write_product(tree, path, datacube=datacube, significant_bits=significant_bits)
         return path
+
+    def tool_products(self) -> dict:
+        """The AC tool's own geophysical products as L2B products.
+
+        Polymer's ``chla``, ACOLITE's ``chl_*``/``SPM_*``, OC-SMART's
+        ``chlor_a_*``/``tsm_*``, ... grouped by
+        :data:`hypso.io.naming.L2B_GROUPS`, each with the tool's flags. An
+        L2A file does not keep them: :meth:`write` writes them as L2B files
+        (``...L2B.CHL.polymer.nc``) next to it.
+
+        Returns
+        -------
+        dict
+            ``{group: Product}``, e.g. ``{"CHL": ..., "TSM": ...}``; empty
+            for in-process methods (MACHI, DPS).
+        """
+        from hypso.processing.l2b import split_tool_products
+        if self.level != "L2A":
+            raise ValueError(f"tool products come from an L2A, got {self.level}")
+        return {group: Product(tree) for group, tree in split_tool_products(self._tree)[1].items()}
 
 
 _STEPS = {"L1A": "calibrate", "L1B": "georeference", "L1C": "toa_reflectance", "L1D": "correct_atmosphere"}

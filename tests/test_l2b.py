@@ -85,3 +85,38 @@ def test_make_l2b_errors(l2a, l1d):
         make_l2b(l2a.tree, "CHL", "test", {"latitude": (np.zeros(l2a.shape), {})})
     with pytest.raises(ValueError, match="may only contain"):
         make_l2b(l2a.tree, "CHL", "oc.4", good)
+
+
+def test_tool_products_move_to_l2b(l2a, tmp_path):
+    # TODO 4i step 2 (x88): an AC tool's own products go to L2B files, its
+    # diagnostics stay in L2A, its flags are kept in L2A and copied to each L2B
+    import xarray as xr
+    from hypso.processing.l2b import tool_product_group
+    shape = l2a.shape
+    tool = l2a.with_variables(
+        chla=xr.DataArray(np.full(shape, 1.5, np.float32), attrs={"units": "mg m-3"}),
+        SPM=xr.DataArray(np.full(shape, 3.0, np.float32), attrs={"units": "g m-3"}),
+        logfb=xr.DataArray(np.zeros(shape, np.float32), attrs={"units": "1"}),
+        polymer_flags=xr.DataArray(np.zeros(shape, np.int32), attrs={"long_name": "Polymer flags"}))
+    assert [tool_product_group(n) for n in ("chla", "chl_re_mishra", "chlor_a_oci", "ndci", "SPM_Nechad2010_664",
+                                            "tsm_yoc", "Kd_490", "logfb", "Rgli", "polymer_flags")] == \
+        ["CHL", "CHL", "CHL", "CHL", "TSM", "TSM", "KD", None, None, None]
+    products = tool.tool_products()
+    assert set(products) == {"CHL", "TSM"}
+    assert set(products["CHL"].variables.data_vars) == {"chla", "polymer_flags"}
+    assert set(products["TSM"].variables.data_vars) == {"SPM", "polymer_flags"}
+    assert products["CHL"].filename().endswith(".L2B.CHL.dps.nc")
+    assert l2a.tool_products() == {}
+
+    path = tool.write(out_dir=tmp_path)
+    written = sorted(p.name for p in tmp_path.glob("*.nc"))
+    assert written == sorted([path.name, products["CHL"].filename(), products["TSM"].filename()])
+    back = hypso.open(path)
+    assert set(back.variables.data_vars) == {"logfb", "polymer_flags"}        # products moved out
+    chl = hypso.open(tmp_path / products["CHL"].filename())
+    np.testing.assert_allclose(chl.variables["chla"].values, 1.5)
+
+    alone = tmp_path / "alone"
+    alone.mkdir()
+    tool.write(out_dir=alone, tool_products=False)
+    assert len(list(alone.glob("*.nc"))) == 1

@@ -167,5 +167,8 @@ own units, and per-wavelength quantities are separate variables (``aph_443``,
 variable over a ``products`` dimension), ``to_satpy`` and the ``hypso_l2b``
 Satpy reader work as for the other levels; ``product.cube`` and band methods
 do not apply. ``hypso.processing.make_l2b`` builds one from an L2A and the
-derived variables. The algorithms (band-ratio chlorophyll, Kd, TSM, QAA IOPs)
-and the AC tools' own products as L2B files are in progress.
+derived variables. The AC tools' own products
+(Polymer's ``chla``, ACOLITE's ``chl_*``, OC-SMART's ``chlor_a_*``, ...) are
+L2B products: ``l2a.tool_products()``, written by ``l2a.write()`` as
+``L2B.<GROUP>.<tool>`` files (:doc:`atmospheric_correction`). The package's
+own algorithms (band-ratio chlorophyll, Kd, TSM, QAA IOPs) are in progress.
