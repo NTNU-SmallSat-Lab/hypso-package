@@ -11,9 +11,11 @@ Methods:
   Imagers (hypso.ac.machi, vendored from NTNU SmallSat Lab), in-process on the
   L1D cube: one scattering and one transmission spectrum for the whole image,
   fitted so corrected spectra are smooth; surface reflectance ``rhos``.
-- "dps": dark pixel subtraction, in-process on the L1D cube.
+- "dps": dark pixel subtraction, in-process on the L1D cube; surface
+  reflectance ``rhos``.
 - "polymer": Polymer in a subprocess (hypso.ac.adapters._polymer_driver),
-  from L1C (default) or L1D. Installation and settings come from the AC
+  from L1C (default) or L1D; Polymer's water reflectance divided by pi, Rrs.
+  Installation and settings come from the AC
   tool configuration (hypso.ac.config).
 - "acolite": ACOLITE in a subprocess (hypso.ac.adapters._acolite_driver),
   from L1C (default) or L1D; output="l2w" (Rrs, default) or "l2r" (rhos).
@@ -25,6 +27,9 @@ Methods:
   in that directory: the file is written and restored under the same lock
   hypso-processing-pipeline uses (.OCSMART_Input.lock), so concurrent runs
   on one installation wait for each other.
+
+The product variable is ``Rrs`` or ``rhos`` and gives the quantity field of
+the file name (hypso.io.naming: ``L2A.RRS.<method>`` or ``L2A.RHOS.<method>``).
 
 External tools read a file: the input is written (masked if requested,
 with metadata/srf added if missing) into `work_dir`, which is a temporary
@@ -47,6 +52,7 @@ from hypso.ac.adapters.base import ACRunError, run_subprocess_driver
 from hypso.ac.config import tool_config
 
 from hypso.io.product import PRODUCT_DIMS, SPATIAL_DIMS, product_name, write_product
+from hypso.io.naming import quantity_token
 from hypso.io.provenance import ac_attrs, add_step
 from hypso.masks.flags import FLAGS_NAME, apply_flags
 
@@ -75,6 +81,7 @@ def _l2a_tree(tree: xr.DataTree, method: str, variable: str, cube: np.ndarray, p
         out[name] = xr.Variable(SPATIAL_DIMS, values, attrs)
     out.attrs["processing_level"] = "L2A"
     out.attrs["atmospheric_correction"] = method
+    out.attrs["l2a_quantity"] = quantity_token(variable)
 
     result = tree.copy()
     result.dataset = out
@@ -97,16 +104,16 @@ def _dps(tree, masked, mask_flags, statistic="min", percentile=None):
         dark_spectrum = np.nanpercentile(cube, percentile, axis=(0, 1))
     else:
         raise ValueError("statistic must be 'min' or 'percentile'")
-    # Dark-subtracted TOA reflectance is a water-leaving reflectance
-    # (dimensionless); divided by pi it is Rrs (sr-1), like ACOLITE L2W and
-    # OC-SMART (user decision 2026-10-26; before, the reflectance was stored
-    # under the name Rrs).
-    corrected = np.clip(cube - dark_spectrum, 0, None) / np.pi
+    # Subtracting the dark spectrum removes the path signal only (no
+    # transmittance, glint or sky-reflection correction), so the result is a
+    # surface reflectance, rhos (user decision 2026-10-28, reversing the
+    # 2026-10-26 one that divided by pi and stored it as Rrs).
+    corrected = np.clip(cube - dark_spectrum, 0, None)
     parameters = {"masked": masked, "mask_flags": list(mask_flags) if mask_flags else "all" if masked else "",
                   "statistic": statistic, "dark_spectrum": [float(v) for v in dark_spectrum]}
     if percentile is not None:
         parameters["percentile"] = percentile
-    return _l2a_tree(tree, "dps", "Rrs", corrected, parameters,
+    return _l2a_tree(tree, "dps", "rhos", corrected, parameters,
                      ac_attrs("dps", version="hypso-package", settings_effective={"statistic": statistic,
                                                                                   "percentile": percentile}))
 
@@ -342,10 +349,14 @@ def _polymer(tree, masked, mask_flags, work_dir, config=None, **options):
     parameters = {"masked": masked, "mask_flags": list(mask_flags) if mask_flags else "all" if masked else "",
                   "input_level": tree.attrs["processing_level"], "bands_returned": n_bands,
                   "output_file": output_file.name}
+    # Polymer returns water-leaving reflectance rho_w = pi Rrs; stored as Rrs
+    # (sr-1) like the other water products (user decision 2026-10-28).
+    cube = cube / np.pi
+    parameters["converted"] = "Rrs = rho_w / pi"
     ac = ac_attrs("polymer", version=version, git_commit=_git_commit(cfg.get("polymer_path") or cfg.get("base_path")),
                   install_path=cfg.get("base_path"), settings_effective=settings,
                   settings_user={**(options.get("settings") or {}), **{k: v for k, v in options.items() if k != "settings"}})
-    return _l2a_tree(tree, "polymer", "rho_w", cube, parameters, ac, variables)
+    return _l2a_tree(tree, "polymer", "Rrs", cube, parameters, ac, variables)
 
 
 # hypso.ac.adapters.acolite.ACOLITEAdapter's settings, applied over the

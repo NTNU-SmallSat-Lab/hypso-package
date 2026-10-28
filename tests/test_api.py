@@ -69,9 +69,9 @@ def _production_l2a(method):
     return hypso.open(REPROCESS_DIR / f"aeronetvenice_2025-03-04T10-38-05Z-moved_unmasked-l2a-{method}.nc")
 
 
-def _assert_same_cube(l2a, production):
+def _assert_same_cube(l2a, production, scale=1.0):
     np.testing.assert_array_equal(l2a.wavelengths, production.wavelengths)
-    np.testing.assert_allclose(l2a.cube.values, production.cube.values, rtol=1e-6, equal_nan=True)
+    np.testing.assert_allclose(l2a.cube.values, production.cube.values * scale, rtol=1e-6, equal_nan=True)
 
 
 def test_quantization(l1d, tmp_path):
@@ -101,14 +101,15 @@ def test_quantization(l1d, tmp_path):
 
 
 def test_dps(l1d):
-    # Dark pixel subtraction: per-band minimum subtracted, clipped at 0, then
-    # divided by pi so the cube is Rrs (sr-1) like the other methods
-    # (2026-10-26; before, the reflectance difference itself was stored).
+    # Dark pixel subtraction: per-band minimum subtracted, clipped at 0; a
+    # surface reflectance, rhos (2026-10-28; 2026-10-26 to -28 it was divided
+    # by pi and stored as Rrs).
     l2a = l1d.correct_atmosphere("dps")
     cube = l1d.cube.values
-    np.testing.assert_allclose(l2a.cube.values, np.clip(cube - cube.min(axis=(0, 1)), 0, None) / np.pi, rtol=1e-6)
-    assert l2a.level == "L2A" and l2a.cube.name == "Rrs" and l2a.atmospheric_correction == "dps"
-    assert l2a.filename() == "HYPSO2_HSI.20250304T103805.aeronetvenice.L2A.dps.nc"
+    np.testing.assert_allclose(l2a.cube.values, np.clip(cube - cube.min(axis=(0, 1)), 0, None), rtol=1e-6)
+    assert l2a.level == "L2A" and l2a.cube.name == "rhos" and l2a.atmospheric_correction == "dps"
+    assert l2a.filename() == "HYPSO2_HSI.20250304T103805.aeronetvenice.L2A.RHOS.dps.nc"
+    assert l2a.tree.attrs["l2a_quantity"] == "RHOS"
     assert [s["step"] for s in l2a.provenance][-1] == "l2a_dps"
     assert "latitude" in l2a.geometry
 
@@ -126,20 +127,23 @@ def test_dps_masked_ignores_flagged_pixels(l1d):
     assert np.isnan(l2a.cube.values[:100]).all()
     assert not np.isnan(l2a.cube.values[100:]).any()
     dark = np.nanmin(np.where(land[..., None], np.nan, l1d.cube.values), axis=(0, 1))
-    np.testing.assert_allclose(l2a.cube.values[100:], np.clip(l1d.cube.values[100:] - dark, 0, None) / np.pi,
-                               rtol=1e-6)
+    np.testing.assert_allclose(l2a.cube.values[100:], np.clip(l1d.cube.values[100:] - dark, 0, None), rtol=1e-6)
     with pytest.raises(ValueError, match="pixel_flags"):
         l1d.correct_atmosphere("dps", masked=True)
 
 
 def test_l2a_written_attributes(l1d, tmp_path):
     import netCDF4 as nc
+    from hypso.io.cf import L2A_PRODUCTS
     path = l1d.correct_atmosphere("dps").write(out_dir=tmp_path)
     with nc.Dataset(path) as f:
-        band = f["Rrs_378"] if "Rrs_378" in f.variables else f[next(v for v in f.variables if v.startswith("Rrs_"))]
-        assert band.units == "sr-1" and band.long_name.startswith("Remote Sensing Reflectance")
-        assert band.standard_name == ("surface_ratio_of_upwelling_radiance_emerging_from_sea_water_"
-                                      "to_downwelling_radiative_flux_in_air")
+        band = f[next(v for v in f.variables if v.startswith("rhos_"))]
+        assert band.units == "1" and band.long_name.startswith("Surface Reflectance")
+        assert f.l2a_quantity == "RHOS"
+    # Rrs products (Polymer, ACOLITE L2W, OC-SMART) get the CF standard name
+    assert L2A_PRODUCTS["Rrs"]["units"] == "sr-1"
+    assert L2A_PRODUCTS["Rrs"]["standard_name"] == ("surface_ratio_of_upwelling_radiance_emerging_from_sea_water_"
+                                                    "to_downwelling_radiative_flux_in_air")
 
 
 def test_correct_atmosphere_level_and_method_errors(l1a, l1d):
@@ -183,13 +187,15 @@ def test_polymer_mocked(l1c, monkeypatch, tmp_path):
     assert calls[0]["config"]["polymer_settings"] == {"band_cloudmask": 790, "bands_corr": [448, 660]}
     assert (tmp_path / "work").is_dir()                                                           # kept
 
-    assert l2a.level == "L2A" and l2a.cube.name == "rho_w" and l2a.atmospheric_correction == "polymer"
-    _assert_same_cube(l2a, _production_l2a("polymer"))
+    # Polymer's rho_w (the production file's cube) divided by pi: Rrs
+    assert l2a.level == "L2A" and l2a.cube.name == "Rrs" and l2a.atmospheric_correction == "polymer"
+    _assert_same_cube(l2a, _production_l2a("polymer"), scale=1 / np.pi)
     step = l2a.provenance[-1]
     assert step["step"] == "l2a_polymer" and step["ac_tool"] == "polymer" and step["ac_version"] == "v2"
     assert '"band_cloudmask": 790' in step["settings_effective"] and "bands_corr" in step["settings_user"]
     assert step["input_level"] == "L1C" and step["bands_returned"] == 113
-    assert l2a.filename().endswith(".L2A.polymer.nc")
+    assert l2a.filename().endswith(".L2A.RRS.polymer.nc") and l2a.tree.attrs["l2a_quantity"] == "RRS"
+    assert step["converted"] == "Rrs = rho_w / pi"
 
     # 2D products: chla = 10**logchl (linear, mg m-3) and Polymer's own flags
     variables = l2a.variables
@@ -275,7 +281,7 @@ def test_acolite_mocked(l1c, monkeypatch, tmp_path):
     step = l2w.provenance[-1]
     assert step["step"] == "l2a_acolite_l2w" and step["ac_tool"] == "acolite" and step["ac_version"] == "git checkout"
     assert '"dsf_wave_range": "450,800"' in step["settings_effective"]        # what ACOLITE reported
-    assert l2w.filename().endswith(".L2A.acolite_l2w.nc")
+    assert l2w.filename().endswith(".L2A.RRS.acolite.nc")
 
     # L2W's 2D products and flags, with CF standard names where ACOLITE's aren't
     variables = l2w.variables
@@ -296,6 +302,7 @@ def test_acolite_mocked(l1c, monkeypatch, tmp_path):
     assert l2r.cube.name == "rhos" and l2r.atmospheric_correction == "acolite_l2r"
     _assert_same_cube(l2r, _production_l2a("acolite_l2r"))
     assert l2r.provenance[-1]["reused_output"] == "true"
+    assert l2r.filename().endswith(".L2A.RHOS.acolite.nc")
     with pytest.raises(ValueError, match="output must be"):
         l1c.correct_atmosphere("acolite", output="l3", config=ACOLITE_CONFIG)
 
@@ -332,7 +339,7 @@ def test_ocsmart_with_fake_installation(l1d, tmp_path):
     step = l2a.provenance[-1]
     assert step["ac_tool"] == "ocsmart" and step["ac_version"] == "v2.6.3"
     assert step["bands_returned"] == int((~np.isnan(l2a.cube.values).all(axis=(0, 1))).sum())
-    assert l2a.filename().endswith(".L2A.ocsmart.nc")
+    assert l2a.filename().endswith(".L2A.RRS.ocsmart.nc")
 
     variables = l2a.variables
     assert {"chlor_a_oci", "chlor_a_yoc", "ocsmart_l2_flags"} <= set(variables)
@@ -563,10 +570,10 @@ def test_satpy_l2a(l1d, tmp_path):
     from satpy import Scene
     l2a = l1d.correct_atmosphere("dps")
     scene = Scene(filenames=[str(l2a.write(out_dir=tmp_path))], reader="hypso_l2a")
-    name = next(n for n in scene.available_dataset_names() if n.startswith("Rrs_"))
+    name = next(n for n in scene.available_dataset_names() if n.startswith("rhos_"))
     scene.load([name])
     assert isinstance(scene[name].attrs["area"], SwathDefinition)
-    assert scene[name].attrs["units"] == "sr-1"
+    assert scene[name].attrs["units"] == "1"
     gridded = l2a.regrid(resolution=3000, method="average")
     scene = Scene(filenames=[str(gridded.write(out_dir=tmp_path))], reader="hypso_l2a")
     scene.load([name])

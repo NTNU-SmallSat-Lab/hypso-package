@@ -11,14 +11,15 @@ L2A product. Without a method it uses MACHI, which needs nothing installed:
    l1d = hypso.open("....L1D.nc")
    l2a = l1d.correct_atmosphere()                    # MACHI (default)
    l2a = l1d.correct_atmosphere("polymer", config="ac_tools.yaml")
-   l2a.write()      # HYPSO2_HSI.<time>.<target>.L2A.polymer.nc
+   l2a.write()      # HYPSO2_HSI.<time>.<target>.L2A.RRS.polymer.nc
 
 ==============  ===========  ==============================  ============================
 Method          Input        Product                         Runs
 ==============  ===========  ==============================  ============================
 ``machi``       L1D          ``rhos``                        in this process (default)
-``dps``         L1D          ``Rrs``                         in this process
-``polymer``     L1C or L1D   ``rho_w``                       Polymer, in a subprocess
+``dps``         L1D          ``rhos``                        in this process
+``polymer``     L1C or L1D   ``Rrs`` (Polymer's ``rho_w``    Polymer, in a subprocess
+                             divided by pi)
 ``acolite``     L1C or L1D   ``Rrs`` (``output="l2w"``,      ACOLITE, in a subprocess
                              default) or ``rhos``
                              (``output="l2r"``)
@@ -30,10 +31,15 @@ cube is on the input's bands; bands the method does not return are NaN. The
 method, its version, the installation's git commit and the settings used are
 recorded in ``metadata/processing/l2a_<method>``.
 
-Units: ``Rrs`` is in sr-1 (CF standard name
-``surface_ratio_of_upwelling_radiance_emerging_from_sea_water_to_downwelling_radiative_flux_in_air``);
-``rho_w`` (= pi Rrs) and ``rhos`` are dimensionless. ``dps`` subtracts each
-band's darkest value from the TOA reflectance and divides by pi.
+Every method produces one of two quantities, named in the file name
+(:doc:`products`): ``Rrs`` (``L2A.RRS.<method>``), remote-sensing reflectance
+in sr-1 (CF standard name
+``surface_ratio_of_upwelling_radiance_emerging_from_sea_water_to_downwelling_radiative_flux_in_air``),
+or ``rhos`` (``L2A.RHOS.<method>``), surface reflectance, dimensionless.
+Polymer's water-leaving reflectance ``rho_w`` (= pi Rrs) is divided by pi, so
+all water products are ``Rrs``. ``dps`` subtracts each band's darkest value
+from the TOA reflectance: only the path signal is removed (no transmittance
+or glint correction), so the result is ``rhos``.
 
 Each method's 2D outputs are kept as variables next to the cube (in
 ``product.variables``), with the tool's own flags as an integer flag variable:

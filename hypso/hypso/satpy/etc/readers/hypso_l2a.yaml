@@ -4,8 +4,8 @@ reader:
   long_name: HYPSO Level 2A Atmospherically Corrected Reflectance
   description: >
     Reader for HYPSO-1/HYPSO-2 L2A NetCDF files written by
-    hypso.io.product.write_product. Per-band datasets (Rrs_<nm>, rho_w_<nm> or
-    rhos_<nm>, depending on the atmospheric correction method) are discovered
+    hypso.io.product.write_product. Per-band datasets (Rrs_<nm> or rhos_<nm>,
+    the quantity in the file name; rho_w_<nm> in older POLYMER files) are discovered
     at load time. Regridded products (hypso.grid) are read on their map grid,
     others as swaths.
   reader: !!python/name:satpy.readers.core.yaml_reader.FileYAMLReader
@@ -17,9 +17,12 @@ file_types:
     file_patterns:
     - '{capture_target}_{start_time:%Y-%m-%dT%H-%M-%SZ}-l2a-{method}.nc'
     - '{capture_target}_{start_time:%Y-%m-%dT%H-%M-%SZ}-{label}-l2a-{method}.nc'
-    # current names (hypso.io.naming): {SAT}_{INSTRUMENT}.{time}.{target}.L2A.{method}[.{grid}][.{label}].nc
-    # _HSI is matched literally: these readers are for the hyperspectral imager only; another
-    # instrument (e.g. an RGB camera) gets its own reader matching its own token.
+    # current names (hypso.io.naming): {SAT}_{INSTRUMENT}.{time}.{target}.L2A.{QUANTITY}.{method}[.{grid}][.{label}].nc
+    # with QUANTITY RRS or RHOS; _HSI is matched literally: these readers are for the hyperspectral
+    # imager only; another instrument (e.g. an RGB camera) gets its own reader matching its own token.
+    - '{platform}_HSI.{start_time:%Y%m%dT%H%M%S}.{capture_target}.L2A.{quantity}.{method}.nc'
+    - '{platform}_HSI.{start_time:%Y%m%dT%H%M%S}.{capture_target}.L2A.{quantity}.{method}.{label}.nc'
+    # names from before the quantity field: L2A.{method}[.{grid}][.{label}]
     - '{platform}_HSI.{start_time:%Y%m%dT%H%M%S}.{capture_target}.L2A.{method}.nc'
     - '{platform}_HSI.{start_time:%Y%m%dT%H%M%S}.{capture_target}.L2A.{method}.{label}.nc'
 

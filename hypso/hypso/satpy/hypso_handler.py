@@ -27,7 +27,7 @@ from hypso.io.product import list_band_variables
 class HypsoL1FileHandler(NetCDF4FileHandler):
     """One handler class shared by the hypso_l1c, hypso_l1d and hypso_l2a
     readers: the bands are discovered from the file itself, whatever the
-    cube variable (Lt, rhot, or an L2A method's Rrs, rho_w, rhos)."""
+    cube variable (Lt, rhot, or an L2A product's Rrs or rhos; rho_w in older files)."""
 
     def __init__(self, filename, filename_info, filetype_info):
         super().__init__(filename, filename_info, filetype_info)

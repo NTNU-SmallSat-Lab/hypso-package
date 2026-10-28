@@ -3,20 +3,22 @@
 Current style, NASA OB.DAAC-like - satellite and instrument first, then
 time, so a plain listing groups by satellite and sorts by time::
 
-    {SAT}_{INSTRUMENT}.{YYYYMMDDTHHMMSS}.{target}.{LEVEL}[.{ac}][.{grid}][.{label}].nc
+    {SAT}_{INSTRUMENT}.{YYYYMMDDTHHMMSS}.{target}.{LEVEL}[.{QUANTITY}.{ac}][.{grid}][.{label}].nc
 
     HYPSO2_HSI.20250612T095802.aeronetvenice.L1A.nc
     HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.nc
-    HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.polymer.nc
+    HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.RRS.polymer.nc
+    HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.RHOS.machi.nc
     HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.adjusted.nc   (label: experiments)
-    HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.polymer.utm33n_880m.nc   (regridded)
+    HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.RRS.polymer.utm33n_880m.nc   (regridded)
 
 The first field is the satellite and the instrument, like NASA's
 ``{MISSION}_{INSTRUMENT}`` (``PACE_OCI``): ``HYPSO2_HSI`` is HYPSO-2's
 Hyperspectral Imager, the instrument every product so far comes from
 (:data:`INSTRUMENTS` lists the known ones). `.` separates fields and never
-appears inside one. L2A always carries the
-AC field; a regridded product carries its grid (hypso.grid.grid_name:
+appears inside one. L2A always carries the quantity (:data:`QUANTITIES`:
+``RRS`` remote-sensing reflectance, ``RHOS`` surface reflectance) and the AC
+method, which produced it; a regridded product carries its grid (hypso.grid.grid_name:
 utm<zone><n|s> or epsg<code>, then the pixel size, e.g. utm33n_880m,
 epsg4326_0p01deg); the optional free-text label is always last and may
 not look like a grid. Calibration set and
@@ -40,6 +42,10 @@ _PLATFORM = re.compile(r"([A-Z]+)(\d+)_([A-Z][A-Z0-9]*)")
 #: Instrument tokens of the first name field, and what they stand for.
 INSTRUMENTS = {"HSI": "Hyperspectral Imager", "RGB": "RGB camera"}
 GRID_TOKEN = re.compile(r"(utm\d{1,2}[ns]|epsg\d+|custom)_\d+(p\d+)?(x\d+(p\d+)?)?(m|deg)")
+#: L2A quantity tokens and the product variable each names. RHOW (water-leaving
+#: reflectance, pi Rrs) only names files written before POLYMER's output was
+#: converted to Rrs; new products are RRS or RHOS.
+QUANTITIES = {"RRS": "Rrs", "RHOS": "rhos", "RHOW": "rho_w"}
 _TIME_FORMAT = "%Y%m%dT%H%M%S"
 _CAPTURE_ID_TIME_FORMAT = "%Y-%m-%dT%H-%M-%SZ"
 
@@ -92,13 +98,14 @@ class ProductName:
     time: datetime                  # capture start, UTC
     target: str
     level: str                      # "L1A" ... "L1D", "L2A"
-    ac: Optional[str] = None        # L2A only, e.g. "polymer", "acolite_l2r"
+    ac: Optional[str] = None        # L2A only, e.g. "polymer", "acolite"
     grid: Optional[str] = None      # regridded only, e.g. "utm33n_880m"
     label: Optional[str] = None     # experiments only
     legacy_label: Optional[str] = None  # legacy names: e.g. "moved_unmasked"
     instrument: str = "HSI"         # instrument token (INSTRUMENTS); legacy names: always HSI
     extension: str = "nc"
     style: str = "current"          # "current" | "legacy"
+    quantity: Optional[str] = None  # L2A only (QUANTITIES); None when parsed from an older L2A name
 
     @property
     def capture_id(self) -> str:
@@ -112,12 +119,14 @@ class ProductName:
             raise ValueError("sat_id is required for a current-style name")
         if not _LEVEL.fullmatch(self.level):
             raise ValueError(f"invalid level {self.level!r}")
-        if (self.level == "L2A") != (self.ac is not None):
-            raise ValueError("the AC field is required for L2A and only allowed there")
+        if (self.level == "L2A") != (self.ac is not None) or (self.level == "L2A") != (self.quantity is not None):
+            raise ValueError("the quantity and AC fields are required for L2A and only allowed there")
         fields = [platform_token(self.sat_id, self.instrument), self.time.strftime(_TIME_FORMAT),
                   _check_token("target", self.target), self.level]
         if self.ac is not None:
-            fields.append(_check_token("ac", self.ac))
+            if self.quantity not in QUANTITIES:
+                raise ValueError(f"unknown quantity {self.quantity!r}; known: {sorted(QUANTITIES)}")
+            fields += [self.quantity, _check_token("ac", self.ac)]
         if self.grid is not None:
             if not GRID_TOKEN.fullmatch(self.grid):
                 raise ValueError(f"invalid grid {self.grid!r}")
@@ -128,13 +137,28 @@ class ProductName:
             fields.append(_check_token("label", self.label))
         return ".".join(fields) + "." + self.extension
 
-    def with_level(self, level: str, ac: Optional[str] = None) -> "ProductName":
+    def with_level(self, level: str, ac: Optional[str] = None, quantity: Optional[str] = None) -> "ProductName":
         """Same capture (label and grid), another level."""
-        return replace(self, level=level, ac=ac, legacy_label=None, style="current")
+        return replace(self, level=level, ac=ac, quantity=quantity, legacy_label=None, style="current")
+
+
+def quantity_token(variable: str) -> str:
+    """The L2A quantity token of a product variable: ``"Rrs"`` -> ``"RRS"``."""
+    for token, name in QUANTITIES.items():
+        if name == variable:
+            return token
+    raise ValueError(f"no quantity token for product variable {variable!r}; known: {sorted(QUANTITIES.values())}")
+
+
+def name_method(ac: str) -> str:
+    """The AC field of an L2A name: the method, without ACOLITE's output
+    suffix (the quantity field says L2R or L2W): ``"acolite_l2w"`` -> ``"acolite"``."""
+    return re.sub(r"_l2[rw]$", "", ac)
 
 
 def product_name(sat_id: str, time: datetime, target: str, level: str,
-                 ac: str = None, label: str = None, grid: str = None, instrument: str = "HSI") -> ProductName:
+                 ac: str = None, label: str = None, grid: str = None, instrument: str = "HSI",
+                 quantity: str = None) -> ProductName:
     """Compose a product name.
 
     Parameters
@@ -155,6 +179,9 @@ def product_name(sat_id: str, time: datetime, target: str, level: str,
         Grid name of a regridded product (:func:`hypso.grid.grid_name`).
     instrument : str, default "HSI"
         Instrument token (:data:`INSTRUMENTS`).
+    quantity : str, optional
+        L2A quantity token (:data:`QUANTITIES`, e.g. ``"RRS"``), or the
+        product variable (``"Rrs"``); required for L2A.
 
     Returns
     -------
@@ -163,8 +190,10 @@ def product_name(sat_id: str, time: datetime, target: str, level: str,
     """
     if time.tzinfo is not None:
         time = time.astimezone(timezone.utc).replace(tzinfo=None)
+    if quantity is not None and quantity not in QUANTITIES:
+        quantity = quantity_token(quantity)
     return ProductName(sat_id=sat_id, time=time, target=target, level=level.upper(), ac=ac, grid=grid,
-                       label=label, instrument=instrument)
+                       label=label, instrument=instrument, quantity=quantity)
 
 
 def _parse_current(name: str) -> Optional[ProductName]:
@@ -182,8 +211,11 @@ def _parse_current(name: str) -> Optional[ProductName]:
         time = datetime.strptime(time, _TIME_FORMAT)
     except ValueError:
         return None
-    ac = grid = label = None
+    ac = grid = label = quantity = None
     if level == "L2A":
+        if rest and rest[0] in QUANTITIES:
+            quantity, *rest = rest
+        # names from before the quantity field (L2A.<ac>) parse with quantity None
         if not rest:
             return None
         ac, *rest = rest
@@ -194,7 +226,7 @@ def _parse_current(name: str) -> Optional[ProductName]:
     if rest:
         label = rest[0]
     return ProductName(sat_id=sat_id, time=time, target=target, level=level, ac=ac, grid=grid, label=label,
-                       extension=extension, instrument=instrument)
+                       extension=extension, instrument=instrument, quantity=quantity)
 
 
 def _parse_legacy(name: str) -> Optional[ProductName]:

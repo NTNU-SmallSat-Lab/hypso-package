@@ -11,9 +11,9 @@ L1A        ``dn``          raw counts, as downlinked                        1 (c
 L1B        ``Lt``          top-of-atmosphere radiance                       W m-2 um-1 sr-1
 L1C        ``Lt``          L1B with latitude, longitude and angles          W m-2 um-1 sr-1
 L1D        ``rhot``        top-of-atmosphere reflectance                    1
-L2A        ``rhos``,       atmospherically corrected reflectance; the       1 (``rhos``,
-           ``Rrs``,        variable depends on the method: ``rhos`` from    ``rho_w``),
-           ``rho_w``       MACHI, the default                               sr-1 (``Rrs``)
+L2A        ``rhos`` or     atmospherically corrected: surface reflectance   1 (``rhos``),
+           ``Rrs``         ``rhos`` (MACHI, the default; DPS; ACOLITE L2R)  sr-1 (``Rrs``)
+                           or remote-sensing reflectance ``Rrs``
 =========  ==============  ===============================================  ===================
 
 ``hypso.open`` reads any level; ``product.level`` says which it is. The L2A methods
@@ -24,10 +24,11 @@ File names
 
 .. code-block:: text
 
-   {SAT}_{INSTRUMENT}.{YYYYMMDDTHHMMSS}.{target}.{LEVEL}[.{method}][.{grid}][.{label}].nc
+   {SAT}_{INSTRUMENT}.{YYYYMMDDTHHMMSS}.{target}.{LEVEL}[.{QUANTITY}.{method}][.{grid}][.{label}].nc
 
    HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.nc
-   HYPSO2_HSI.20250304T103805.aeronetvenice.L2A.polymer.nc
+   HYPSO2_HSI.20250304T103805.aeronetvenice.L2A.RHOS.machi.nc
+   HYPSO2_HSI.20250304T103805.aeronetvenice.L2A.RRS.polymer.nc
    HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.utm33n_876m.nc      (regridded)
    HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.test.nc             (label)
 
@@ -37,8 +38,14 @@ Hyperspectral Imager (HSI) on HYPSO-2. The instrument field is there for
 other instruments on board (an RGB camera, future optical instruments): each
 gets its own token in ``hypso.io.naming.INSTRUMENTS`` and its own Satpy
 readers, which match only that token. Then comes the capture time (UTC), so a
-listing groups by satellite and sorts by time. ``.`` only separates fields. L2A always names its
-atmospheric correction method, a regridded product its grid (:doc:`grid`);
+listing groups by satellite and sorts by time. ``.`` only separates fields. L2A always names
+its quantity, ``RRS`` (remote-sensing reflectance ``Rrs``, sr-1) or ``RHOS``
+(surface reflectance ``rhos``), and the atmospheric correction method that
+produced it (ACOLITE's L2W and L2R are both ``acolite``; the quantity tells
+them apart). The quantity is also the ``l2a_quantity`` global attribute. L2A
+names from before the quantity field (``L2A.<method>``) are still read; older
+POLYMER files hold ``rho_w`` (= pi Rrs) and are named ``RHOW`` when converted.
+A regridded product names its grid (:doc:`grid`);
 the optional label is for experiments. The calibration set and masking are
 not part of the name: they are recorded in the file. Older names
 (``{target}_{YYYY-MM-DDTHH-MM-SSZ}-{label}-{level}.nc``) are still read.

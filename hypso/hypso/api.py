@@ -646,15 +646,20 @@ class Product:
         Returns
         -------
         str
-            e.g. ``"HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.nc"``.
+            e.g. ``"HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.nc"``; L2A
+            names carry the quantity (from the product variable) and the
+            method, e.g. ``"...L2A.RHOS.machi.nc"``.
         """
+        from hypso.io.naming import name_method
         from hypso.processing.capture import acquisition_time
         from datetime import datetime
         time = datetime.fromisoformat(acquisition_time(self._tree.attrs))
-        if ac is None and self.level == "L2A":
-            ac = self.atmospheric_correction
+        quantity = None
+        if self.level == "L2A":
+            ac = name_method(ac or self.atmospheric_correction)
+            quantity = self.cube.name
         return product_name(self.sat_id, time, self.target, self.level, ac=ac, grid=self.grid,
-                            label=label).filename()
+                            label=label, quantity=quantity).filename()
 
     def write(self, path=None, out_dir=None, label: str = None, datacube: bool = False,
               significant_bits=14) -> Path:

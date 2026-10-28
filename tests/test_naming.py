@@ -9,15 +9,15 @@ from hypso.io.naming import parse_product_name, product_name
 T = datetime(2025, 6, 12, 9, 58, 2)
 
 
-@pytest.mark.parametrize("level, ac, label, expected", [
-    ("L1A", None, None, "HYPSO2_HSI.20250612T095802.aeronetvenice.L1A.nc"),
-    ("L1D", None, None, "HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.nc"),
-    ("L2A", "polymer", None, "HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.polymer.nc"),
-    ("L1D", None, "adjusted", "HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.adjusted.nc"),
-    ("L2A", "acolite_l2r", "adjusted", "HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.acolite_l2r.adjusted.nc"),
+@pytest.mark.parametrize("level, quantity, ac, label, expected", [
+    ("L1A", None, None, None, "HYPSO2_HSI.20250612T095802.aeronetvenice.L1A.nc"),
+    ("L1D", None, None, None, "HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.nc"),
+    ("L2A", "RRS", "polymer", None, "HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.RRS.polymer.nc"),
+    ("L1D", None, None, "adjusted", "HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.adjusted.nc"),
+    ("L2A", "RHOS", "acolite", "adjusted", "HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.RHOS.acolite.adjusted.nc"),
 ])
-def test_compose_and_parse(level, ac, label, expected):
-    name = product_name("HYPSO-2", T, "aeronetvenice", level, ac=ac, label=label)
+def test_compose_and_parse(level, quantity, ac, label, expected):
+    name = product_name("HYPSO-2", T, "aeronetvenice", level, ac=ac, label=label, quantity=quantity)
     assert name.filename() == expected
     parsed = parse_product_name(expected)
     assert parsed == name
@@ -42,6 +42,8 @@ def test_sorts_by_satellite_then_time():
 
 @pytest.mark.parametrize("kwargs", [
     dict(level="L2A"),                      # L2A without AC
+    dict(level="L2A", ac="polymer"),        # L2A without quantity
+    dict(level="L2A", ac="polymer", quantity="CHL"),   # unknown quantity
     dict(level="L1D", ac="polymer"),        # AC on a non-L2A level
     dict(level="L1D", label="bad.label"),   # '.' inside a field
     dict(level="L1D", target="venice lagoon"),
@@ -64,7 +66,7 @@ def test_legacy_names_still_parse(legacy, level, ac, legacy_label):
     assert (parsed.level, parsed.ac, parsed.legacy_label) == (level, ac, legacy_label)
     assert parsed.capture_id == "aeronetvenice_2025-06-12T09-58-02Z"
     # A legacy name converts to the current style once sat_id is known.
-    current = replace(parsed, sat_id="HYPSO-2").with_level(level, ac)
+    current = replace(parsed, sat_id="HYPSO-2").with_level(level, ac, "RHOS" if ac else None)
     assert current.filename().startswith("HYPSO2_HSI.20250612T095802.aeronetvenice.")
 
 
@@ -77,11 +79,12 @@ def test_unrelated_names_rejected():
 @pytest.mark.parametrize("level, ac, grid, label, expected", [
     ("L1D", None, "utm33n_876m", None, "HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.utm33n_876m.nc"),
     ("L2A", "polymer", "epsg4326_0p0079deg", "test",
-     "HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.polymer.epsg4326_0p0079deg.test.nc"),
+     "HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.RRS.polymer.epsg4326_0p0079deg.test.nc"),
     ("L1C", None, "custom_30x40m", None, "HYPSO2_HSI.20250612T095802.aeronetvenice.L1C.custom_30x40m.nc"),
 ])
 def test_grid_field(level, ac, grid, label, expected):
-    name = product_name("HYPSO-2", T, "aeronetvenice", level, ac=ac, grid=grid, label=label)
+    name = product_name("HYPSO-2", T, "aeronetvenice", level, ac=ac, grid=grid, label=label,
+                        quantity="RRS" if ac else None)
     assert name.filename() == expected
     assert parse_product_name(expected) == name
 
@@ -105,3 +108,24 @@ def test_instrument_field():
         product_name("HYPSO-2", T, "aeronetvenice", "L1D", instrument="XYZ").filename()
     with pytest.raises(ValueError, match="not a HYPSO product file name"):
         parse_product_name("HYPSO2_XYZ.20250612T095802.aeronetvenice.L1D.nc")   # unknown instrument
+
+
+def test_l2a_quantity_field():
+    # L2A names carry the quantity (RRS, RHOS) before the method (2026-10-28)
+    from hypso.io.naming import name_method, quantity_token
+    assert quantity_token("Rrs") == "RRS" and quantity_token("rhos") == "RHOS" and quantity_token("rho_w") == "RHOW"
+    assert name_method("acolite_l2w") == "acolite" and name_method("polymer") == "polymer"
+    # the product variable is accepted in place of the token
+    assert product_name("HYPSO-2", T, "aeronetvenice", "L2A", ac="machi", quantity="rhos").filename() == \
+        "HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.RHOS.machi.nc"
+    with pytest.raises(ValueError, match="no quantity token"):
+        quantity_token("chla")
+
+
+@pytest.mark.parametrize("old, ac, grid, label", [
+    ("HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.polymer.nc", "polymer", None, None),
+    ("HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.acolite_l2r.utm33n_880m.test.nc", "acolite_l2r", "utm33n_880m", "test"),
+])
+def test_names_before_quantity_field_still_parse(old, ac, grid, label):
+    parsed = parse_product_name(old)
+    assert (parsed.level, parsed.quantity, parsed.ac, parsed.grid, parsed.label) == ("L2A", None, ac, grid, label)

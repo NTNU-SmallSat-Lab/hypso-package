@@ -149,7 +149,8 @@ def test_l1d_carries_srfs_and_earth_sun_distance(written_nc_files, open_nc):
 
 def test_l2a_product_variable(written_nc_files, open_nc):
     ds = open_nc(written_nc_files["l2a"])
-    assert band_variables(ds, "Rrs") and not band_variables(ds, "rhot")
+    assert band_variables(ds, "rhos") and not band_variables(ds, "rhot")
+    assert ds.l2a_quantity == "RHOS"
     assert ds.atmospheric_correction == "dps" and ds.processing_level == "L2A"
 
 

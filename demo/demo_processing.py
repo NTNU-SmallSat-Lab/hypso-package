@@ -205,7 +205,8 @@ print(list(with_ndvi.flags), list(with_ndvi.variables.data_vars))
 # MACHI, the default, runs in this process: one scattering and one
 # transmission spectrum for the whole image, fitted so the corrected spectra
 # are smooth; it gives surface reflectance `rhos` (not water-leaving Rrs).
-# `dps` (dark pixel subtraction) also runs in this process. Polymer, ACOLITE
+# `dps` (dark pixel subtraction) also runs in this process and also gives
+# `rhos`. File names say which: `L2A.RHOS.machi`, `L2A.RRS.polymer`. Polymer, ACOLITE
 # and OC-SMART run in their own installations, configured in a YAML file (see
 # docs/atmospheric_correction.rst); `masked=True` gives them NaN where the
 # flags are set.
@@ -227,9 +228,9 @@ axs[0].plot(model["wavelength"], model["T"], label="T (transmission)")
 axs[0].plot(model["wavelength"], model["A"], label="A (scattering)")
 axs[0].set(title="MACHI fitted spectra", xlabel="wavelength (nm)")
 axs[0].legend()
-axs[1].plot(machi.wavelengths, machi.spectrum(*SITE).values / np.pi, label="MACHI rhos / pi")
-axs[1].plot(l2a.wavelengths, l2a.spectrum(*SITE).values, label="DPS Rrs")
-axs[1].set(title="at AAOT", xlabel="wavelength (nm)", ylabel="sr-1")
+axs[1].plot(machi.wavelengths, machi.spectrum(*SITE).values, label="MACHI rhos")
+axs[1].plot(l2a.wavelengths, l2a.spectrum(*SITE).values, label="DPS rhos")
+axs[1].set(title="at AAOT", xlabel="wavelength (nm)", ylabel="surface reflectance")
 axs[1].legend()
 plt.tight_layout()
 plt.show()

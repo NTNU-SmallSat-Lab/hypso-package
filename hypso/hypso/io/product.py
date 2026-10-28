@@ -498,9 +498,14 @@ def convert_product(src, out_dir=None) -> Path:
     level = _level_key(attrs["processing_level"])
     sat_id = attrs.get("sat_id") or attrs.get("instrument")
     name = parse_product_name(src)
-    ac = name.ac if level == "L2A" else None
+    ac = quantity = None
+    if level == "L2A":
+        from hypso.io.naming import name_method
+        ac = name_method(name.ac or attrs["atmospheric_correction"])
+        quantity = product_name(tree)
     dst = Path(out_dir or src.parent) / make_product_name(sat_id, name.time, name.target, level,
-                                                          ac=ac, grid=name.grid, label=name.label).filename()
+                                                          ac=ac, grid=name.grid, label=name.label,
+                                                          quantity=quantity).filename()
     if dst.resolve() == src.resolve():
         raise ValueError(f"{src} is already a current-format product name")
     add_step(tree, "convert", input_file=src, parameters={"source_layout": source_layout(src)})

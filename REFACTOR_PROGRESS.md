@@ -75,10 +75,114 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    hyperspectral-multispectral fusion / "hyperspectral pansharpening" (e.g. CNMF, HySure, GSA, or learned
    methods). Prerequisites, in order: (1) estimate the camera's spectral response by regressing camera colours
    on HSI spectra where they overlap; (2) tighten registration well below an HSI pixel across-track (108 m; now
-   ~200 m): local refinement or full-resolution matching; (3) handle the ~2 s time offset (clouds, glint). Fusion
+   ~200 m): local refinement or full-resolution matching; (3) handle the time offset between the camera exposure and the HSI lines seeing the same ground (the
+   camera fires about mid-capture, not 2 s before it as the BMP name suggests; see 4h) for clouds and glint. Fusion
    adds spatial detail, not real fine-scale spectral information: validate fused spectra against the original
    HSI before any water-colour use. Not possible: spectral super-resolution (bands are binned 9x on board) or
    multi-capture SR (repeat captures are days apart).
+4h. **Physical-model georeferencing for HSI and camera, two stages** (user, 2026-10-27). Today the package only
+   reads the ground processing's indirect georeferencing (`latitudes_indirectgeoref.dat` from `gcp.points`;
+   the ground processing matches coastlines with SIFT, user 2026-10-27) and camera registration is image-to-HSI homography
+   (fails on low-texture scenes: Galata 2025-01-02, Venice 2026-01-10, Annapolis 2025-02-04; geometry-guided
+   matching within 10 km did not rescue them, 0-9 inliers).
+   **Camera geometry prototype** (scratchpad camgeo/, ×85+): pinhole camera from the specs (iDS UI-1492LE,
+   MT9J003 1.67 um, 35 mm lens; FOV 10.5 x 7.5 deg) on the ADCS pose (slerp quaternion, spline position,
+   TEME->ITRS with astropy, WGS84 ellipsoid intersection; checked: HSI boresight matches the package's direct
+   georef to 0.001 deg). Finding: the camera is NOT exposed at the BMP-name time but about mid-capture
+   (best fit: HSI mid-time + ~1 s, ~42 s after the name time); mounting = the 180 deg image rotation plus
+   < 1 deg. Per-capture fit residual 100-370 m (the registration's own accuracy); leave-one-out with one
+   fixed model 1-4 km typical (median 2.1 km on 11 captures). Exposure time and pitch are nearly degenerate
+   along-track (the satellite pitches ~0.56 deg/s during captures); captures with other slews (annapolis
+   2025-11-05, `flip_rgb: false`) separate them. **Full set** (127 HYPSO-2 captures with a camera image,
+   89 registered = 70%): global mounting euler xyz (0.72, -0.08, 179.71) deg, exposure = HSI mid-time
+   + 1.75 s; leave-one-out RMS median 5.4 km, p90 14 km, max 20 km (the first 11 captures suggested 2 km:
+   too optimistic). Per-capture fits stay good (median 0.03 deg, ~0.3 km), but the per-capture
+   correction scatters: exposure -7..+11 s around mid-capture, pitch -6..+6 deg. Not attitude sampling
+   (86/89 have 0.25 s ADCS around mid-capture). Error mostly along-track (RMS 7.2 km: exposure-time jitter
+   of several seconds, std ~5 s; the slew slows the footprint to roughly 1 km/s, so seconds map to km) plus cross-track 3.7 km RMS (2.4 km mean bias - not timing; HSI
+   georef error in the ground truth or attitude). Good enough as a prior (search radius ~20 km) and a
+   flagged fallback (~5-15 km), not as georeferencing. Planner code: git.ntnu.no
+   NTNU-SmallSatLab/flight-scripts (needs NTNU login). Ask HYPSO ops how the camera is triggered: a known rule beats a fitted one. Checked
+   (2026-10-27): no downlinked file records the exposure time. The BMP and its name come from the
+   satellite's `rgb-images` folder (ground_systems `process-capture.sh` only moves it to `<capture>-rgb`;
+   an onboard `logs` folder would go to `<capture>-logs`, none of the 127 captures has one).
+   `-hsi0/timestamps_services.txt` (capture start/end and per-frame times, services clock) and
+   `timestamps.txt` (system time base) have no camera entry; `telemetry.log` is binary. On Venice
+   2025-06-12 the BMP name (09:57:58) is 1.8 s before the `timestamps.txt` base time and 4.4 s before
+   capture start, so it marks the capture's start-up, not the exposure. Onboard software
+   (github.com/NTNU-SmallSat-Lab/hypso-sw, checked at c8e7f77): `rgb capture <HW trigger y/n> <raw/rgb>
+   <bmp/png/jpg> <file name>` is a separate command; the file name (and so the BMP time) is supplied by
+   the command, not stamped at exposure; software trigger fires immediately, HW trigger waits for a pulse
+   (`is_SetExternalTrigger(IS_SET_TRIGGER_HI_LO)`). The design (doc/plantUML/hsi_sequence.uml) takes the
+   RGB image after the first 50% of HSI frames - matching the fit (45-59% of the capture, HSI mid + ~1 s).
+   The HSI service code has no RGB call or trigger output, so in practice the mid-capture timing comes from
+   the uploaded command sequence (capture planner, not in hypso-sw or ground_systems). The exposure time is
+   not recorded in any downlinked file; the fitted rule stays, anchored on the design. Also seen: HSI frame intervals jitter (0.04-0.22 s at 8 fps nominal).
+   **Plan, two stages:**
+   (1) *Coarse, physical*: direct georeferencing (HSI per line, camera per frame) with a few per-capture pose
+   corrections (pointing offset 2-3 angles, time offset) fitted to control points, not a free 8-parameter
+   warp. Control points from a reference that works on water scenes: the coastline. Match the
+   sea-land-cloud classification's land/water boundary to an accurate coastline (OSM or GSHHG full
+   resolution, tens of metres; Natural Earth 10 m is too coarse) by chamfer / distance-transform
+   optimisation over the pose corrections. Joint HSI + camera fit: one attitude bias, two sensors.
+   (2) *Fine*: local refinement from the coarse result, e.g. feature or intensity (normalised
+   cross-correlation, optical flow) matching between camera and HSI or against the coastline, restricted to
+   a small search window, giving a smooth residual field (per-line correction for the pushbroom HSI).
+   Validate on AERONET-OC platform positions and against the ground processing's indirect georef.
+   **Better inputs to evaluate:**
+   - Attitude rate: some captures have 0.25 s ADCS sampling during the capture (Venice 2025-06-12: 540
+     samples), others only 30 s (Galata 2025-01-02: 33 samples). Check whether model error follows it;
+     `*-adcs.bin` (873 kB) may hold more than the extracted CSVs; `startracker.csv`, `angular_velocity.csv`
+     and `target_quaternion.csv` (commanded attitude) are unused so far.
+   - Orbit: HYPSO-2 has GPS (user). The processing-temp CSVs are extracted from the FM ADCS telemetry
+     (user's `strip_tm_with_bad_header`: timestamp col 245; position 246-248 and velocity 249-251, ECI;
+     estimated attitude quaternion 254-257 + control error 294; star tracker quaternion 230-233). Velocity
+     agrees with d(position)/dt to 1.3 m/s; positions are smooth enough that a cubic spline or Hermite
+     (position + velocity) reproduces held-out samples to ~0 m over 60 s gaps, where linear is off 3.7 km.
+     `position.csv` vs `position-tle.csv` differ almost purely along-track
+     (Venice 2025-06-12 418 m, Annapolis 2025-11-05 497 m, Galata 2025-01-02 3.3 km; radial/cross-track
+     < 0.1 km): the TLE error signature, so `position.csv` is the GPS track. The ground processing's
+     `frametime-pose.csv` uses `position.csv` (0 m difference) - good. Historical TLEs (CelesTrak /
+     Space-Track) would be worse, not better. But positions are interpolated linearly (ground processing and
+     the package's `interpolate_at_frame`): with 30 s sampling the chord sags up to ~0.9 km below the orbit
+     mid-gap, ~0.3 km on the ground at 20 deg off-nadir. Use a spline (the camera prototype does) or the
+     velocity; check the raw GPS rate in `*-adcs.bin`.
+   - Terrain: no DEM anywhere yet (both models intersect the ellipsoid). Land captures need one (Copernicus
+     GLO-30): 2 km relief at 20 deg off-nadir moves a pixel ~700 m. Earth curvature itself is already in
+     the ellipsoid intersection; the camera homography (a flat plane) ignores it, ~20-90 m over a footprint.
+   - Long-term: refit the mounting and timing over time to catch drift or onboard-software changes.
+4i. **L2B: geophysical products (IOPs, chlorophyll, ...) in their own files** (user, 2026-10-28). Today
+   the AC tools' 2D outputs ride inside the L2A file as extra variables (Polymer `chla`, `logfb`, `SPM`;
+   ACOLITE `chl_re_mishra`, `SPM_Nechad2010_664`, `ndci`; OC-SMART `chlor_a_oci`, `chlor_a_yoc`, `tsm_yoc`),
+   and nothing is derived by the package itself. Wanted: separate files, like NASA's L2 OC / OC_IOP suites.
+   Proposal (agreed with the user 2026-10-28):
+   - Level decision (user, 2026-10-28): L2B for products derived from an L2A (the level shows the
+     dependency); regridding stays a grid field, not a level (`L2B.CHL.oc4.utm33n_880m.nc`, as Sentinel-2
+     keeps L1C/L2A for map-projected scenes); L3 reserved for future multi-capture composites (mosaics, time
+     composites). NASA's single-level alternative (`L2.OC_AOP`/`L2.OC_IOP`) considered and not taken: L2A
+     is already in use.
+   - L2B files have no band cube: every product is a 2D variable, per-wavelength IOPs as separate
+     variables (`aph_443`, `adg_443`, `bbp_443`), as in NASA's OC_IOP files.
+   - Steps: (1) infrastructure: level L2B, naming, cube-less products through read/write/regrid/window/
+     pixel/to_satpy, Satpy `hypso_l2b`; (2) move the tool products out of L2A (`l2a.tool_products()`
+     returns L2B products; the L2A no longer carries them); (3) package algorithms on `L2A.RRS`
+     (`l2a.derive("CHL", algorithm="oc4")`, Kd490, Nechad TSM, red-edge chl); (4) QAA IOPs, GIOP later.
+   - Level `L2B`, named like L2A with the product group first: `...L2B.<GROUP>.<source>.nc`, e.g.
+     `L2B.CHL.oc4.nc`, `L2B.IOP.qaa.nc`, `L2B.CHL.polymer.nc` (the tool's own product); one group per file,
+     several variables allowed (an IOP file holds a, bb, aph, adg at chosen wavelengths). Same geometry,
+     flags and provenance as the L2A input, input file and algorithm recorded; regriddable like L2A.
+   - Input: an `L2A.RRS.*` product (IOP and chlorophyll algorithms need Rrs, not rhos). From RHOS only
+     indices that tolerate it (e.g. NDCI), flagged as such.
+   - Algorithms in the package, from Rrs on HYPSO's bands: OCx band-ratio chlorophyll (OC4-style, coefficients
+     fitted or adopted for HYPSO band centres), Kd(490), QAA or GIOP for IOPs (a, bb, aph, adg), Nechad
+     TSM/turbidity, NDCI / red-edge chlorophyll for turbid and eutrophic waters. Each with its reference and
+     validity flags (out-of-range inputs, failed inversions).
+   - The tools' own products: copy them out of the L2A into L2B files (`L2B.CHL.polymer`, ...) so every
+     chlorophyll source is found the same way; keep them in L2A too, or move them (decide).
+   - CF standard names (chlorophyll, suspended matter, absorption/backscattering coefficients), units;
+     Satpy reader `hypso_l2b`; pipeline matchups against in situ chlorophyll where available.
+   - Note: strictly, IOPs are absorption and backscattering coefficients; chlorophyll and TSM are
+     concentrations derived from Rrs or IOPs. Group names should keep that clear (`IOP` vs `CHL`, `TSM`).
 4f. **Keystone review** (×77, for the calibration team): HYPSO-2's distortion model (`h2_distortion_model_v1.npz`,
    `optional: keystone` in coefficients.yaml, `enabled: false`) is applied only with `calibrate(keystone=True)`,
    with a warning. Questions: is B_hat valid for the flight model; is the sample axis oriented as the detector
@@ -120,14 +224,6 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
      per installation by the OCSMART_Input.txt lock and a memory guard (aulus2: mind the user's reprocess, about
      6 heavy workers). Within Polymer: pass its `multiprocessing=N` through the tool settings.
 
-6c. **Report to MACHI upstream** (github.com/NTNU-SmallSat-Lab/MACHI, found while vendoring ebbc3e72, ×78):
-   the `standarization` typo in `atm_correction` means the triangular initialisation of A is never applied;
-   `est_min_R` is 0.05 in the code but "1%" in the README; the default `solar=1.0` crashes (`T_update` indexes
-   `solar[...]`); all-zero bands (e.g. HYPSO < 400 nm after smile correction) make `T_update` divide by zero and
-   stop the fit after one iteration; `AC.plot` uses undefined names and `AC.save` checks `filename[:4]`;
-   `load_solar` reads a hard-coded relative path into an old hypso-package. hypso.ac.machi keeps upstream's
-   behaviour; the wrapper passes `solar=ones` and fits only bands with signal.
-
 Parked until there is a concrete need: Zarr output (×29); HYPSO-2 RGB camera and future optical instruments (×14, ×63,
 ×71; groundwork in place: an `INSTRUMENTS` entry in `hypso.io.naming` gives file names, and each instrument
 gets its own Satpy readers matching its token literally, as the HSI readers match `_HSI`; `hypso.rgb.HSI2RGB`
@@ -140,6 +236,18 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-10-28 (×86): L2A quantity in the file name** (user). L2A names carry the quantity before the
+  method: `...L2A.RRS.<method>[.grid][.label].nc` (remote-sensing reflectance `Rrs`, sr-1) or
+  `...L2A.RHOS.<method>...` (surface reflectance `rhos`); plain tokens named after the variable chosen over
+  NASA's suite names (AOP/SFREFL). `hypso.io.naming`: `QUANTITIES` (RRS, RHOS; RHOW only names older POLYMER
+  files holding `rho_w`), `ProductName.quantity`, `quantity_token`, `name_method` (ACOLITE's
+  `acolite_l2w`/`_l2r` become `acolite`; the quantity tells them apart; the `atmospheric_correction`
+  attribute keeps the full name). Names from before the field (`L2A.<method>`) still parse (quantity None).
+  New global attribute `l2a_quantity`. **POLYMER** output divided by pi and stored as `Rrs` (provenance
+  `converted = "Rrs = rho_w / pi"`). **DPS** now stores the dark-subtracted reflectance as `rhos` without
+  the pi division (reverses the 2026-10-26 decision: only the path signal is removed, so it is a surface
+  reflectance). L2A Satpy reader matches both name forms. Docs (products, atmospheric_correction,
+  architecture), demo, tests.
 - **2026-10-27 (×85): RGB camera products** (TODO 4e done). `hypso.rgb.product`: `camera_product(camera,
   registration=None, hsi=None)` -> Dataset (not a hypso.Product: no wavelengths/levels/SRFs) with R/G/B uint8
   (rounded demosaic) in the native frame, per-pixel float32 latitude/longitude and `in_hsi_swath` when

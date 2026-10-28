@@ -56,7 +56,7 @@ function takes and returns:
        <prefix>               product cube (lines, samples, bands), or
                               (y, x, bands) when regridded: dn (L1A), Lt (L1B/L1C),
                               rhot (L1D), the method's variable at L2A
-                              (rhos for MACHI, Rrs, rho_w)
+                              (rhos or Rrs; rho_w in older POLYMER files)
        wavelength             band coordinate: nominal centre, 0.1 nm
        radiation_wavelength   band coordinate: calibrated centre
        fwhm                   band coordinate
@@ -264,7 +264,7 @@ open through Satpy's own interface without this package's API::
 The readers share ``HypsoL1FileHandler`` (``hypso/satpy/hypso_handler.py``).
 Bands are discovered per file with ``hypso.io.product.list_band_variables``,
 because the band set depends on binning and calibration (and, for L2A, on
-the method: ``Rrs_<nm>``, ``rho_w_<nm>`` or ``rhos_<nm>``). Regridded files
+the quantity: ``Rrs_<nm>`` or ``rhos_<nm>``; ``rho_w_<nm>`` in older POLYMER files). Regridded files
 are read on their map grid (``get_area_def``), others as swaths. The readers match
 current and older file names. They are registered through a ``satpy.readers``
 entry point, so the package must be installed (an editable install is

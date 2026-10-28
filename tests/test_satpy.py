@@ -47,7 +47,8 @@ def test_hsi_readers_match_only_hsi_names(level, ac):
     from trollsift import globify
     import hypso.satpy
     from hypso.io.naming import product_name
-    name = product_name("HYPSO-2", datetime(2025, 3, 4, 10, 38, 5), "aeronetvenice", level, ac=ac).filename()
+    name = product_name("HYPSO-2", datetime(2025, 3, 4, 10, 38, 5), "aeronetvenice", level, ac=ac,
+                        quantity="RRS" if ac else None).filename()
     reader = Path(hypso.satpy.__file__).parent / "etc" / "readers" / f"hypso_{level.lower()}.yaml"
     config = yaml.load(reader.read_text(), Loader=yaml.BaseLoader)
     patterns = [p for ft in config["file_types"].values() for p in ft["file_patterns"] if p.startswith("{platform}")]
