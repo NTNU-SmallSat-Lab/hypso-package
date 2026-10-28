@@ -2,8 +2,9 @@
 
 **If you are picking this up cold:** read "Where things stand" and the TODO list below, then
 `docs/architecture.rst` (the current design; the docs site builds from `docs/`). The status log after that
-is history, newest first; entries are numbered ×N and other files refer to them. Superseded plans are in
-`archive/` (the original proposal and the capture-object-era plan). This workspace
+is history, newest first; entries are numbered ×N and other files refer to them. Superseded plans (the original proposal
+and the capture-object-era plan) were in `archive/`, removed 2026-10-28; read them from git history, e.g.
+`git show a416c3c9:archive/ARCHITECTURE_PROPOSAL.md` and `git show a416c3c9:archive/REFACTOR_PLAN_2026-08.md`. This workspace
 (`~/hypso-package-refactor/hypso-package`) is a git clone the user gave explicit permission to modify -
 unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
 
