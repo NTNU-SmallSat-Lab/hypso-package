@@ -195,6 +195,14 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    - Satpy composites (`etc/composites/hypso1.yaml`, `hypso2.yaml`, `hypso2_rgb.yaml`) import
      `satpy.composites.GenericCompositor`, deprecated (moved to `satpy.composites.core`, old path removed
      in Satpy 1.0). Switch when the minimum Satpy version allows, or keep a fallback.
+4k. **Original lab coefficients as an alternative** (user, 2026-10-28: "Add the original lab coeffs back as
+   an alternative"). Current state: the lab set is still shipped and selectable for both satellites as
+   release V1, `coeff_type="lab"` (the old name `original` still works, with a deprecation warning); HYPSO-2 V1
+   = lab radiometric + V2 smile + V1 spectral, HYPSO-1 V1 = lab + V1 smile/destriping/spectral. V2 and V3 have
+   only `abs` and `moved`. To clarify with the user what "back" means: (a) a `lab` radiometric variant inside
+   V3 (with V3 smile and V2 spectral), (b) the lab set's own smile/spectral exactly as originally delivered
+   (the pre-catalog files), (c) lab as a selectable alternative in the pipeline/configs, or something removed
+   in the ×76 cleanup (the CSVs were identical to the shipped `.npz`).
 4f. **Keystone review** (×77, for the calibration team): HYPSO-2's distortion model (`h2_distortion_model_v1.npz`,
    `optional: keystone` in coefficients.yaml, `enabled: false`) is applied only with `calibrate(keystone=True)`,
    with a warning. Questions: is B_hat valid for the flight model; is the sample axis oriented as the detector
