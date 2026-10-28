@@ -173,4 +173,30 @@ def test_derive_chlorophyll_and_tsm(l2a_rrs, l2a, tmp_path):
     with pytest.raises(ValueError, match="no algorithm"):
         l2a_rrs.derive("CHL", "oc3")
     with pytest.raises(ValueError, match="no package algorithm"):
-        l2a_rrs.derive("IOP")
+        l2a_rrs.derive("XYZ")
+
+
+def test_derive_qaa_iop_and_kd(l2a_rrs):
+    # TODO 4i step 4 (x90): QAA (v6, v5 below Rrs665 0.0015) and Kd from a, bbp
+    from hypso.processing.l2b_algorithms import QAA_STANDARD as c, band_at
+    iop = l2a_rrs.derive("IOP")
+    assert iop.filename().endswith(".L2B.IOP.qaa.nc")
+    assert set(iop.variables.data_vars) == {f"{p}_{w}" for p in ("a", "bbp") for w in (443, 490, 560, 665)}
+    cube, wl = l2a_rrs.cube.values[:1, :1], l2a_rrs.wavelengths
+    r = {w: band_at(cube, wl, w)[0, 0] for w in (443, 490, 560, 665)}
+    assert r[665] >= c["v5_below_rrs665"]                       # this spectrum takes the v6 path
+    a665 = c["aw"][3] + c["k"][0] * (r[665] / (r[443] + r[490])) ** c["k"][1]
+    np.testing.assert_allclose(iop.variables["a_665"].values[0, 0], a665, rtol=1e-5)
+    rrs665 = r[665] / (0.52 + 1.7 * r[665])
+    g0, g1 = c["g"]
+    u665 = (-g0 + np.sqrt(g0 ** 2 + 4 * g1 * rrs665)) / (2 * g1)
+    np.testing.assert_allclose(iop.variables["bbp_665"].values[0, 0], u665 * a665 / (1 - u665) - c["bbw"][3],
+                               rtol=1e-5)
+    a = iop.variables["a_443"].values[0, 0]
+    assert 0.0 < iop.variables["bbp_443"].values[0, 0] < 0.1 and c["aw"][0] < a < 5      # physically plausible
+    kd = l2a_rrs.derive("KD")
+    assert kd.filename().endswith(".L2B.KD.qaa.nc") and "Kd_490" in kd.variables
+    m = c["m"]
+    a490, bbp490 = (iop.variables[f"{p}_490"].values[0, 0] for p in ("a", "bbp"))
+    np.testing.assert_allclose(kd.variables["Kd_490"].values[0, 0],
+                               m[0] * a490 + m[1] * (1 - m[2] * np.exp(-m[3] * a490)) * bbp490, rtol=1e-5)

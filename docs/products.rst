@@ -178,6 +178,8 @@ own algorithms run on an L2A, mostly on ``Rrs`` (an ``L2A.RRS`` product):
    chl = l2a.derive("CHL")               # ...L2B.CHL.oci.nc: chlor_a, chl_oc4, chl_ci
    tsm = l2a.derive("TSM")               # ...L2B.TSM.nechad2010.nc: spm_nechad2010_665
    ndci = l2a.derive("CHL", "ndci")      # red-edge, turbid/eutrophic waters; also from rhos
+   iop = l2a.derive("IOP")               # ...L2B.IOP.qaa.nc: a_443 ... a_665, bbp_443 ... bbp_665
+   kd = l2a.derive("KD")                 # ...L2B.KD.qaa.nc: Kd_443 ... Kd_665
 
 =====  ==============  ==================================================================
 Group  Algorithm       Products and reference
@@ -192,8 +194,14 @@ CHL    ``ndci``        ``chl_ndci``, ``ndci``: Mishra and Mishra 2012 (turbid an
                        eutrophic waters only; no validity mask)
 TSM    ``nechad2010``  ``spm_nechad2010_665`` (g m-3): Nechad et al. 2010 at 665 nm,
        (default)       NaN where rhow >= 0.5 C
+IOP    ``qaa``         ``a_<nm>``, ``bbp_<nm>`` (m-1) at 443, 490, 560, 665 nm: Lee's QAA
+       (default)       v6, v5 where Rrs665 < 0.0015, as implemented in ACOLITE
+KD     ``qaa``         ``Kd_<nm>`` (m-1): from QAA's a and bbp, Lee et al. 2005 (30 degree
+       (default)       sun)
 =====  ==============  ==================================================================
 
 Rrs at each algorithm's wavelength is interpolated between the two nearest
 bands. Coefficients follow the tables in ACOLITE (``data/Shared/algorithms``)
-and the cited papers. Kd(490) and IOP inversions (QAA) are not yet available.
+and the cited papers. QAA does not yet split absorption into phytoplankton
+and CDOM/detritus. Negative Rrs (e.g. in the red over clear water) gives
+negative TSM, absorption and Kd; there is no validity flag for it yet.

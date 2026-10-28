@@ -168,8 +168,8 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    - L2B files have no band cube: every product is a 2D variable, per-wavelength IOPs as separate
      variables (`aph_443`, `adg_443`, `bbp_443`), as in NASA's OC_IOP files.
    - Steps: (1) infrastructure: level L2B, naming, cube-less products through read/write/regrid/window/
-     pixel/to_satpy, Satpy `hypso_l2b`; (2) move the tool products out of L2A (done ×88); (3) package algorithms on `L2A.RRS` (done ×89
-     except Kd490: needs a verified coefficient source); (4) QAA IOPs, GIOP later.
+     pixel/to_satpy, Satpy `hypso_l2b`; (2) move the tool products out of L2A (done ×88); (3) package algorithms on `L2A.RRS` (done ×89; Kd490 via QAA ×90); (4) QAA IOPs (done ×90), GIOP later. Open: a
+     validity flag for negative input Rrs (TSM, QAA give negative values), QAA's aph/adg split.
    - Level `L2B`, named like L2A with the product group first: `...L2B.<GROUP>.<source>.nc`, e.g.
      `L2B.CHL.oc4.nc`, `L2B.IOP.qaa.nc`, `L2B.CHL.polymer.nc` (the tool's own product); one group per file,
      several variables allowed (an IOP file holds a, bb, aph, adg at chosen wavelengths). Same geometry,
@@ -257,6 +257,15 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-10-28 (×90): QAA IOPs and Kd** (TODO 4i step 4). `l2b_algorithms.qaa`: Lee's QAA ported from ACOLITE
+  (`acolite/parameters/qaa/qaa_compute.py` incl. its 2025-04-29 Rrs fix; "standard" coefficients from
+  `data/Shared/algorithms/QAA/qaa_settings.txt`; read only, ACOLITE not run): v6 (reference 665/670 nm), v5
+  (560/555 nm) where Rrs665 < 0.0015, at 443/490/560/665 nm. `derive("IOP")` -> `L2B.IOP.qaa` (`a_<nm>`,
+  `bbp_<nm>`, m-1); `derive("KD")` -> `L2B.KD.qaa` (`Kd_<nm>` from a and bbp with Lee et al. 2005's model for a
+  30 degree sun, as ACOLITE). This also covers Kd(490), which step 3 left out. Tests: v6 a665/bbp665 and Kd490
+  by hand. Venice 2025-03-04 AAOT 5x5 median, OC-SMART Rrs: a443 0.090, a490 0.054, bbp443 0.0058, Kd490
+  0.069 m-1; Polymer Rrs: a665 -0.66, Kd665 -0.75 (negative Rrs665). Open: a validity flag for negative input
+  Rrs (TSM, QAA), aph/adg split (QAA steps 7-10).
 - **2026-10-28 (×89): the package's own L2B algorithms** (TODO 4i step 3). `hypso.processing.l2b_algorithms`
   (coefficients from ACOLITE's tables `data/Shared/algorithms`, read-only, with references): CHL `oci`
   (default; NASA chlor_a: Hu CI a0 -0.4287, a1 230.47 below 0.25 mg m-3, OC4 above 0.35, linear blend),

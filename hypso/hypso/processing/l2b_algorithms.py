@@ -23,8 +23,15 @@ ATBDs:
   SPM = A rhow / (1 - rhow / C), A = 355.85 g m-3, C = 0.1728 (Nechad et
   al. 2010); NaN where rhow >= 0.5 C (ACOLITE's default limit).
 
-Not yet: Kd(490) (needs a verified coefficient source) and IOP inversions
-(QAA, TODO 4i step 4).
+- ``qaa`` (IOP and KD groups): Lee's Quasi-Analytical Algorithm, as
+  implemented in ACOLITE (``acolite/parameters/qaa/qaa_compute.py``, with its
+  2025-04-29 fix, and ``data/Shared/algorithms/QAA/qaa_settings.txt``
+  "standard" coefficients): QAA v6 (reference 665 nm), with QAA v5
+  (reference 560 nm) where Rrs665 < 0.0015 sr-1, at 443, 490, 560 and 665 nm.
+  IOP: total absorption ``a_<nm>`` and particulate backscattering
+  ``bbp_<nm>`` (m-1). KD: ``Kd_<nm>`` from a and bbp with Lee et al. 2005's
+  model for a 30 degree sun (m-1). No split of absorption into phytoplankton
+  and CDOM/detritus (QAA steps 7-10) yet.
 """
 import numpy as np
 
@@ -115,6 +122,68 @@ def _nechad2010(rrs, wavelengths):
                                          "long_name": "Suspended particulate matter (Nechad et al. 2010, 665 nm)"})}
 
 
+# QAA, ACOLITE's "standard" configuration. aw at 560/665 are Lee's aw555/aw670,
+# as in Lee's code and ACOLITE.
+QAA_WAVES = (443, 490, 560, 665)
+QAA_STANDARD = {"aw": (0.00693, 0.015, 0.0596, 0.439), "bbw": (0.0025, 0.00158, 0.0009, 0.00034),
+                "g": (0.08945, 0.1247), "h": (-0.469266027944581, -1.36582826429176, -1.14590292783408),
+                "k": (0.39, 1.14), "l": (2.0, 1.2, -0.9), "m": (1.118, 4.373, 0.657, 1.489),
+                "v5_below_rrs665": 0.0015}
+
+
+def qaa(rrs, wavelengths, coef=QAA_STANDARD) -> dict:
+    """Lee's QAA (v6, v5 where Rrs665 < 0.0015) at :data:`QAA_WAVES`:
+    ``{wave: (a, bbp, Kd)}``, each an array of the spatial shape."""
+    big = {w: band_at(rrs, wavelengths, w) for w in QAA_WAVES}
+    with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
+        small = {w: r / (0.52 + 1.7 * r) for w, r in big.items()}                     # step 0: below-surface rrs
+        g0, g1 = coef["g"]
+        u = {w: (-g0 + np.sqrt(g0 ** 2 + 4 * g1 * r)) / (2 * g1) for w, r in small.items()}   # step 1
+        aw, bbw, h, k, l, m = (coef[n] for n in ("aw", "bbw", "h", "k", "l", "m"))
+        # step 2: absorption at the reference wavelength
+        chi = np.log10((small[443] + small[490]) / (small[560] + 5 * small[665] * (small[665] / small[490])))
+        a_ref = {5: aw[2] + np.power(10.0, h[2] + h[1] * chi + h[0] * chi ** 2),
+                 6: aw[3] + k[0] * np.power(big[665] / (big[443] + big[490]), k[1])}
+        ref = {5: (560, 555.0, 2), 6: (665, 670.0, 3)}                                 # (band, Lee's wave, index)
+        # step 3: bbp at the reference wavelength; step 4: its spectral slope
+        bbp_ref = {v: u[ref[v][0]] * a_ref[v] / (1 - u[ref[v][0]]) - bbw[ref[v][2]] for v in (5, 6)}
+        slope = l[0] * (1 - l[1] * np.exp(l[2] * small[443] / small[560]))
+        use_v5 = big[665] < coef["v5_below_rrs665"]
+        out = {}
+        for i, w in enumerate(QAA_WAVES):
+            per_version = {}
+            for v in (5, 6):
+                if w == ref[v][0]:
+                    a, bbp = a_ref[v], bbp_ref[v]
+                else:
+                    bbp = bbp_ref[v] * np.power(ref[v][1] / w, slope)                 # step 5
+                    a = (1 - u[w]) * (bbw[i] + bbp) / u[w]                             # step 6
+                kd = m[0] * a + m[1] * (1 - m[2] * np.exp(-m[3] * a)) * bbp            # Lee et al. 2005, as ACOLITE
+                per_version[v] = (a, bbp, kd)
+            out[w] = tuple(np.where(use_v5, x5, x6) for x5, x6 in zip(per_version[5], per_version[6]))
+    return out
+
+
+_QAA_REF = "Lee et al. 2002/2009 QAA v5/v6 as implemented in ACOLITE; Kd: Lee et al. 2005"
+
+
+def _qaa_iop(rrs, wavelengths):
+    out = {}
+    for w, (a, bbp, _) in qaa(rrs, wavelengths).items():
+        out[f"a_{w}"] = (a, {"units": "m-1", "long_name": f"Total absorption coefficient at {w} nm (QAA)",
+                             "standard_name": "volume_absorption_coefficient_of_radiative_flux_in_sea_water"})
+        out[f"bbp_{w}"] = (bbp, {"units": "m-1", "long_name": f"Particulate backscattering coefficient at {w} nm "
+                                                              "(QAA)"})
+    return out
+
+
+def _qaa_kd(rrs, wavelengths):
+    return {f"Kd_{w}": (kd, {"units": "m-1", "long_name": f"Diffuse attenuation coefficient of downwelling "
+                                                          f"irradiance at {w} nm (QAA, Lee et al. 2005)",
+                              "standard_name": "volume_attenuation_coefficient_of_downwelling_radiative_flux_in_sea_water"})
+            for w, (_, _, kd) in qaa(rrs, wavelengths).items()}
+
+
 #: (group, algorithm) -> (function, cube variables it accepts, reference, default for the group)
 ALGORITHMS = {
     ("CHL", "oci"): (_oci, ("Rrs",), "NASA OCI: Hu et al. 2012/2019 CI and O'Reilly and Werdell 2019 OC4", True),
@@ -122,6 +191,8 @@ ALGORITHMS = {
     ("CHL", "ci"): (_ci, ("Rrs",), "Hu et al. 2012, coefficients Hu et al. 2019", False),
     ("CHL", "ndci"): (_ndci, ("Rrs", "rhos"), "Mishra and Mishra 2012", False),
     ("TSM", "nechad2010"): (_nechad2010, ("Rrs",), "Nechad et al. 2010", True),
+    ("IOP", "qaa"): (_qaa_iop, ("Rrs",), _QAA_REF, True),
+    ("KD", "qaa"): (_qaa_kd, ("Rrs",), _QAA_REF, True),
 }
 
 
