@@ -725,6 +725,32 @@ class Product:
         write_product(tree, path, datacube=datacube, significant_bits=significant_bits)
         return path
 
+    def derive(self, group: str, algorithm: str = None) -> "Product":
+        """An L2B product from one of the package's algorithms (from L2A).
+
+        Parameters
+        ----------
+        group : str
+            ``"CHL"`` (chlorophyll-a) or ``"TSM"`` (suspended matter).
+        algorithm : str, optional
+            CHL: ``"oci"`` (default; NASA's chlor_a, CI and OC4 blend),
+            ``"oc4"``, ``"ci"``, ``"ndci"`` (turbid/eutrophic waters); TSM:
+            ``"nechad2010"`` (default). See
+            :mod:`hypso.processing.l2b_algorithms`.
+
+        Returns
+        -------
+        Product
+            Level L2B, e.g. ``...L2B.CHL.oci.nc``.
+
+        Examples
+        --------
+        >>> chl = l2a.derive("CHL")                 # from an L2A.RRS product
+        >>> chl.variables["chlor_a"]
+        """
+        from hypso.processing.l2b import derive
+        return Product(derive(self._tree, group, algorithm))
+
     def tool_products(self) -> dict:
         """The AC tool's own geophysical products as L2B products.
 

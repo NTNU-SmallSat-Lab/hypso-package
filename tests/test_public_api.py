@@ -15,7 +15,7 @@ def test_top_level_api():
 
 def test_processing_functions():
     from hypso.processing import (  # noqa: F401
-        capture_params, correct_atmosphere, l1a_to_l1b, l1b_to_l1c, l1c_to_l1d, select_bands, make_l2b,
+        capture_params, correct_atmosphere, l1a_to_l1b, l1b_to_l1c, l1c_to_l1d, select_bands, make_l2b, derive,
     )
 
 

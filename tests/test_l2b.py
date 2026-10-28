@@ -120,3 +120,57 @@ def test_tool_products_move_to_l2b(l2a, tmp_path):
     alone.mkdir()
     tool.write(out_dir=alone, tool_products=False)
     assert len(list(alone.glob("*.nc"))) == 1
+
+
+@pytest.fixture(scope="module")
+def l2a_rrs(l2a):
+    # An L2A.RRS product with one known spectrum everywhere: productive water
+    # (green peak, red-edge peak), so OC4 and NDCI are in their valid range.
+    tree = l2a.tree
+    root = tree.to_dataset(inherit=False)
+    wl = root["rhos"]["radiation_wavelength"].values
+    spectrum = np.interp(wl, [400, 443, 490, 510, 560, 670, 705, 800],
+                         [0.002, 0.0025, 0.004, 0.005, 0.008, 0.002, 0.004, 0.0005]).astype(np.float32)
+    cube = root["rhos"].copy(data=np.broadcast_to(spectrum, root["rhos"].shape).copy())
+    root = root.drop_vars("rhos")
+    root["Rrs"] = cube
+    root.attrs["l2a_quantity"] = "RRS"
+    tree.dataset = root
+    return hypso.Product(tree)
+
+
+def test_derive_chlorophyll_and_tsm(l2a_rrs, l2a, tmp_path):
+    # TODO 4i step 3 (x89): the package's own algorithms
+    from hypso.processing.l2b_algorithms import NECHAD2010_665, OC4_OLCI, band_at
+    chl = l2a_rrs.derive("CHL")
+    assert chl.filename().endswith(".L2B.CHL.oci.nc")
+    assert set(chl.variables.data_vars) == {"chlor_a", "chl_oc4", "chl_ci"}
+    cube, wl = l2a_rrs.cube.values[:1, :1], l2a_rrs.wavelengths
+    blue = max(band_at(cube, wl, w)[0, 0] for w in (443, 490, 510))
+    x = np.log10(blue / band_at(cube, wl, 560)[0, 0])
+    expected_oc4 = 10 ** sum(a * x ** i for i, a in enumerate(OC4_OLCI))
+    np.testing.assert_allclose(chl.variables["chl_oc4"].values[0, 0], expected_oc4, rtol=1e-5)
+    # productive water: CI is above the 0.35 mg m-3 blend edge, so chlor_a = OC4
+    assert chl.variables["chl_ci"].values[0, 0] > 0.35
+    np.testing.assert_allclose(chl.variables["chlor_a"].values[0, 0], expected_oc4, rtol=1e-5)
+    assert chl.variables["chlor_a"].attrs["standard_name"] == "mass_concentration_of_chlorophyll_a_in_sea_water"
+    assert chl.provenance[-1]["step"] == "l2b_chl_oci" and "O'Reilly" in chl.provenance[-1]["reference"]
+
+    tsm = l2a_rrs.derive("TSM")
+    rhow = np.pi * band_at(cube, wl, 665)[0, 0]
+    c = NECHAD2010_665
+    np.testing.assert_allclose(tsm.variables["spm_nechad2010_665"].values[0, 0],
+                               c["A"] * rhow / (1 - rhow / c["C"]), rtol=1e-5)
+    assert tsm.filename().endswith(".L2B.TSM.nechad2010.nc")
+
+    ndci = l2a.derive("CHL", "ndci")                     # NDCI also accepts rhos (an index)
+    assert {"chl_ndci", "ndci"} == set(ndci.variables.data_vars)
+    back = hypso.open(chl.write(out_dir=tmp_path))
+    np.testing.assert_allclose(back.variables["chlor_a"].values, chl.variables["chlor_a"].values, rtol=1e-4)
+
+    with pytest.raises(ValueError, match="needs an L2A with Rrs"):
+        l2a.derive("CHL")                                # OCI on surface reflectance
+    with pytest.raises(ValueError, match="no algorithm"):
+        l2a_rrs.derive("CHL", "oc3")
+    with pytest.raises(ValueError, match="no package algorithm"):
+        l2a_rrs.derive("IOP")

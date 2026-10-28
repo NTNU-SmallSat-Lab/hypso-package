@@ -171,4 +171,29 @@ derived variables. The AC tools' own products
 (Polymer's ``chla``, ACOLITE's ``chl_*``, OC-SMART's ``chlor_a_*``, ...) are
 L2B products: ``l2a.tool_products()``, written by ``l2a.write()`` as
 ``L2B.<GROUP>.<tool>`` files (:doc:`atmospheric_correction`). The package's
-own algorithms (band-ratio chlorophyll, Kd, TSM, QAA IOPs) are in progress.
+own algorithms run on an L2A, mostly on ``Rrs`` (an ``L2A.RRS`` product):
+
+.. code-block:: python
+
+   chl = l2a.derive("CHL")               # ...L2B.CHL.oci.nc: chlor_a, chl_oc4, chl_ci
+   tsm = l2a.derive("TSM")               # ...L2B.TSM.nechad2010.nc: spm_nechad2010_665
+   ndci = l2a.derive("CHL", "ndci")      # red-edge, turbid/eutrophic waters; also from rhos
+
+=====  ==============  ==================================================================
+Group  Algorithm       Products and reference
+=====  ==============  ==================================================================
+CHL    ``oci``         ``chlor_a``: NASA's blend of the colour index (Hu et al. 2012,
+       (default)       coefficients 2019) below 0.25 mg m-3 and OC4 above 0.35;
+                       also ``chl_oc4``, ``chl_ci``
+CHL    ``oc4``         ``chl_oc4``: OC4 band ratio, OLCI coefficients (O'Reilly and
+                       Werdell 2019)
+CHL    ``ci``          ``chl_ci``: colour index only
+CHL    ``ndci``        ``chl_ndci``, ``ndci``: Mishra and Mishra 2012 (turbid and
+                       eutrophic waters only; no validity mask)
+TSM    ``nechad2010``  ``spm_nechad2010_665`` (g m-3): Nechad et al. 2010 at 665 nm,
+       (default)       NaN where rhow >= 0.5 C
+=====  ==============  ==================================================================
+
+Rrs at each algorithm's wavelength is interpolated between the two nearest
+bands. Coefficients follow the tables in ACOLITE (``data/Shared/algorithms``)
+and the cited papers. Kd(490) and IOP inversions (QAA) are not yet available.

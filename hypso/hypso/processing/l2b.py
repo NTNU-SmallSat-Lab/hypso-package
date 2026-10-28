@@ -134,3 +134,42 @@ def split_tool_products(tree: xr.DataTree) -> tuple:
     rest = tree.copy()
     rest.dataset = root.drop_vars(moved)
     return rest, l2b
+
+
+def derive(tree: xr.DataTree, group: str, algorithm: str = None) -> xr.DataTree:
+    """An L2B tree from one of the package's algorithms on an L2A.
+
+    Parameters
+    ----------
+    tree : xarray.DataTree
+        An L2A tree; most algorithms need ``Rrs`` (``L2A.RRS.*``).
+    group : str
+        L2B group, e.g. ``"CHL"`` or ``"TSM"``.
+    algorithm : str, optional
+        See :data:`hypso.processing.l2b_algorithms.ALGORITHMS`; default the
+        group's default (CHL: ``"oci"``, TSM: ``"nechad2010"``).
+
+    Returns
+    -------
+    xarray.DataTree
+        ``...L2B.<group>.<algorithm>``.
+    """
+    from hypso.io.product import product_name
+    from hypso.processing.l2b_algorithms import ALGORITHMS, default_algorithm
+    if tree.attrs.get("processing_level") != "L2A":
+        raise ValueError(f"L2B products are derived from L2A, got {tree.attrs.get('processing_level')}")
+    algorithm = algorithm or default_algorithm(group)
+    if (group, algorithm) not in ALGORITHMS:
+        raise ValueError(f"no algorithm {algorithm!r} for {group}; available: "
+                         f"{sorted(a for g, a in ALGORITHMS if g == group)}")
+    function, inputs, reference, _ = ALGORITHMS[(group, algorithm)]
+    name = product_name(tree)
+    if name not in inputs:
+        raise ValueError(f"{group} {algorithm} needs an L2A with {' or '.join(inputs)}, this one has {name} "
+                         f"(e.g. derive from an L2A.RRS product: Polymer, OC-SMART, ACOLITE L2W)")
+    cube = tree.dataset[name]
+    outputs = function(cube.values, cube["radiation_wavelength"].values)
+    variables = {var: (values.astype(np.float32), {**attrs, "algorithm": algorithm, "reference": reference})
+                 for var, (values, attrs) in outputs.items()}
+    return make_l2b(tree, group, algorithm, variables,
+                    parameters={"algorithm": algorithm, "reference": reference, "input_variable": name})

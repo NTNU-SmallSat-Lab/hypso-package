@@ -10,4 +10,4 @@ from .georeference import l1b_to_l1c
 from .toa import l1c_to_l1d, toa_reflectance
 from .atmospheric import correct_atmosphere
 from .bands import select_bands
-from .l2b import make_l2b, split_tool_products
+from .l2b import derive, make_l2b, split_tool_products

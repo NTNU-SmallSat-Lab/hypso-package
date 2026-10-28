@@ -168,8 +168,8 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    - L2B files have no band cube: every product is a 2D variable, per-wavelength IOPs as separate
      variables (`aph_443`, `adg_443`, `bbp_443`), as in NASA's OC_IOP files.
    - Steps: (1) infrastructure: level L2B, naming, cube-less products through read/write/regrid/window/
-     pixel/to_satpy, Satpy `hypso_l2b`; (2) move the tool products out of L2A (done ×88); (3) package algorithms on `L2A.RRS`
-     (`l2a.derive("CHL", algorithm="oc4")`, Kd490, Nechad TSM, red-edge chl); (4) QAA IOPs, GIOP later.
+     pixel/to_satpy, Satpy `hypso_l2b`; (2) move the tool products out of L2A (done ×88); (3) package algorithms on `L2A.RRS` (done ×89
+     except Kd490: needs a verified coefficient source); (4) QAA IOPs, GIOP later.
    - Level `L2B`, named like L2A with the product group first: `...L2B.<GROUP>.<source>.nc`, e.g.
      `L2B.CHL.oc4.nc`, `L2B.IOP.qaa.nc`, `L2B.CHL.polymer.nc` (the tool's own product); one group per file,
      several variables allowed (an IOP file holds a, bb, aph, adg at chosen wavelengths). Same geometry,
@@ -249,6 +249,17 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-10-28 (×89): the package's own L2B algorithms** (TODO 4i step 3). `hypso.processing.l2b_algorithms`
+  (coefficients from ACOLITE's tables `data/Shared/algorithms`, read-only, with references): CHL `oci`
+  (default; NASA chlor_a: Hu CI a0 -0.4287, a1 230.47 below 0.25 mg m-3, OC4 above 0.35, linear blend),
+  `oc4` (O'Reilly and Werdell 2019 OLCI: 0.42540, -3.21679, 2.86907, -0.62628, -1.09333; 443/490/510 vs
+  560), `ci`, `ndci` (Mishra and Mishra 2012: 14.039, 86.115, 194.325; 670/705; also from rhos; turbid
+  waters only, no mask); TSM `nechad2010` (A 355.85, C 0.1728 at 665 nm, NaN where pi Rrs >= 0.5 C).
+  Rrs interpolated between the nearest bands. `hypso.processing.derive(tree, group, algorithm)`,
+  `Product.derive("CHL")` -> `L2B.CHL.oci`. Venice 2025-03-04 (reprocessed L2A files, read only), AAOT 5x5
+  median chlor_a: OC-SMART 0.64, Polymer 0.56, ACOLITE L2W 0.18 mg m-3; Polymer TSM -0.46 g m-3 (negative
+  Rrs665 there; ACOLITE does not mask negatives either - candidate validity flag). Not done: Kd(490) (no
+  verified coefficient source found locally; not written from memory), QAA (step 4). docs/products.rst.
 - **2026-10-28 (×88): AC tools' products moved to L2B** (TODO 4i step 2, user chose move over copy).
   `hypso.processing.split_tool_products(l2a_tree)` -> `(l2a_without, {group: l2b_tree})`, groups by variable
   name (`tool_product_group`: CHL `chla|chl_*|chlor_a*|ndci`, TSM `spm*|tsm*|tur_*|t_dogliotti*|t_nechad*`,
