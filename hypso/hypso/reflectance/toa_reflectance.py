@@ -94,8 +94,9 @@ def compute_srf(ssi,
 
 
     # Create SRFs
-    fwhm_nm = sensor_fwhm
+    fwhm_nm = np.asarray(sensor_fwhm, dtype=float)
     sigma_nm = fwhm_nm / (2 * np.sqrt(2 * np.log(2)))
+    n_sigma = 4  # half width of the gaussian SRF [sigma], as in h2-onboard-calibration (moon/moon_LIME_utility_functions.py)
 
 
     sensor_band_indices = [np.abs(solar_wavelengths - w).argmin() for w in sensor_wavelengths]
@@ -108,15 +109,15 @@ def compute_srf(ssi,
         center_lambda_nm = solar_wavelengths[sensor_band_index]
 
         #center_lambda_nm = band
-        start_lambda_nm = np.round(center_lambda_nm - (3 * sigma_nm[i]), 4)
-        soft_end_lambda_nm = np.round(center_lambda_nm + (3 * sigma_nm[i]), 4)
+        start_lambda_nm = np.round(center_lambda_nm - (n_sigma * sigma_nm[i]), 4)
+        soft_end_lambda_nm = np.round(center_lambda_nm + (n_sigma * sigma_nm[i]), 4)
 
         srf_wl = [center_lambda_nm]
         lower_wl = []
         upper_wl = []
 
-        # get the elements in the wavelength array that are 3Sigma above and below center_w
-        # if the center_w is closer to one end than 3Sigma then one of the arrays will be shorter
+        # get the elements in the wavelength array that are n_sigma sigma above and below center_w
+        # if the center_w is closer to one end than n_sigma sigma then one of the arrays will be shorter
         # than the other. This needs to be corrected for so that the center is still kept
         # when making the gaussian, therefore len_diff is found.
 
@@ -159,7 +160,7 @@ def compute_srf(ssi,
             # len_diff is added to make up for the missing elements because of clipping
             # at the ends mentioned above. this replaces the clipped elements and makes sure
             # gaussian has correct width
-            gx = np.linspace(-3 * sigma_nm[i], 3 * sigma_nm[i], len(srf_wl) + len_diff)
+            gx = np.linspace(-n_sigma * sigma_nm[i], n_sigma * sigma_nm[i], len(srf_wl) + len_diff)
 
         gaussian_srf = np.exp(-(gx / sigma_nm[i]) ** 2 / 2)  # Not divided by the sum, because we want peak to 1.0
 

@@ -93,4 +93,9 @@ class Hypso2(HypsoBase):
         self.destriping_coeff_file = calibration_files["destriping"]
         self.spectral_coeff_file = calibration_files["spectral"]
 
+        if calibration_files["srf"] is not None:
+            # in-orbit (v3) FWHM, replaces the values set in __init__ (used for the TOA reflectance)
+            srf = np.load(calibration_files["srf"])
+            self.srf_wl, self.srf_fwhm = srf["wavelength"], srf["fwhm"]
+
         return None

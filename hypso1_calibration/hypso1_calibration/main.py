@@ -72,6 +72,10 @@ def get_hypso1_calibration_files(capture_type, coeff_type=None) -> None:
         # full-frame smile matrix (Sobel), cropped and binned to the capture AOI when read
         npz_file_smile = "smile_correction_matrix_HYPSO-1_full_sobel_v3.npz"
 
+    # v3: spectral resolution (FWHM at the window centres) estimated from the Moon (h2-onboard-calibration,
+    # moon/moon_LIME_resolution.py). Other types keep the FWHM values set in the Hypso1 class
+    npz_file_srf = "h1_srf_fwhm_v3.npz" if 'v3' in coeff_type else None
+
     if npz_file_radiometric:
         rad_coeff_file = files('hypso1_calibration').joinpath(f'data/{npz_file_radiometric}')
     else:
@@ -92,11 +96,17 @@ def get_hypso1_calibration_files(capture_type, coeff_type=None) -> None:
     else:
         spectral_coeff_file = None
 
+    if npz_file_srf:
+        srf_file = files('hypso1_calibration').joinpath(f'data/{npz_file_srf}')
+    else:
+        srf_file = None
+
     calibration_files = {
         "radiometric": rad_coeff_file,
         "smile": smile_coeff_file,
         "destriping": destriping_coeff_file,
-        "spectral": spectral_coeff_file
+        "spectral": spectral_coeff_file,
+        "srf": srf_file
     }
 
     return calibration_files

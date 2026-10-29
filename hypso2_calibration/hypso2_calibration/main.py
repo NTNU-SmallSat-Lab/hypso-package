@@ -74,6 +74,10 @@ def get_hypso2_calibration_files(capture_type=None, coeff_type=None) -> None:
         # smile_correction_matrix_HYPSO-2_full.npz is spatially flipped, and was never applied
         # (the smile file failed to load), so it is kept off for the older coefficient types
         npz_file_smile = None
+
+    # v3: spectral resolution (FWHM at the window centres) estimated from the Moon (h2-onboard-calibration,
+    # moon/moon_LIME_resolution.py). Other types keep the FWHM values set in the Hypso2 class
+    npz_file_srf = "h2_srf_fwhm_v3.npz" if 'v3' in coeff_type else None
     npz_file_destriping = None
 
     if npz_file_radiometric:
@@ -96,11 +100,17 @@ def get_hypso2_calibration_files(capture_type=None, coeff_type=None) -> None:
     else:
         spectral_coeff_file = None
 
+    if npz_file_srf:
+        srf_file = files('hypso2_calibration').joinpath(f'data/{npz_file_srf}')
+    else:
+        srf_file = None
+
     calibration_files = {
         "radiometric": rad_coeff_file,
         "smile": smile_coeff_file,
         "destriping": destriping_coeff_file,
-        "spectral": spectral_coeff_file
+        "spectral": spectral_coeff_file,
+        "srf": srf_file
     }
 
     return calibration_files

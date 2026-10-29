@@ -1048,6 +1048,7 @@ class HypsoBase:
 
         except:
             self.generate_l1c_cube(coeff_type=coeff_type, use_direct_georef=use_direct_georef)
+            self._get_fwhm()  # again, with the wavelengths and FWHM of the calibration
             self.l1d_cube, self.srf, self.esun = self._run_toa_reflectance(use_indirect_georef=not use_direct_georef)
 
         return None
@@ -1055,11 +1056,7 @@ class HypsoBase:
 
     def _get_fwhm(self) -> None:
 
-        fwhm_per_band = []
-        for band in self.wavelengths:
-            idx = np.argmin(np.abs(band - self.srf_wl))
-            fwhm_per_band.append(self.srf_fwhm[idx])
-
-        self.fwhm = fwhm_per_band
+        # FWHM linearly interpolated between the srf_wl values (constant outside them), one value per band
+        self.fwhm = list(np.interp(self.wavelengths, self.srf_wl, self.srf_fwhm))
 
         return None
