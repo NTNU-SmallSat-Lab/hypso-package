@@ -195,6 +195,18 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    - Satpy composites (`etc/composites/hypso1.yaml`, `hypso2.yaml`, `hypso2_rgb.yaml`) import
      `satpy.composites.GenericCompositor`, deprecated (moved to `satpy.composites.core`, old path removed
      in Satpy 1.0). Switch when the minimum Satpy version allows, or keep a fallback.
+4m. **Target calibration releases** (user, 2026-10-29): "ultimately there should be lab (v1), v2, and v3.1
+   coefficients in the refactored hypso package", both satellites. So:
+   - **V1 = the complete lab set** (resolves 4k's question: V1 itself, not a separate `lab` release): lab
+     radiometric (already identical), the corrected lab smile (replacing the row-reversed file), lab spectral
+     (production `polymer_v1`: lab polynomial / smile row 608, 86a29f7e, 2b560445). Changes V1 outputs (today
+     V1 = lab gains + V2 smile + V1 centre-row wavelengths).
+   - **V2** as now (`moved`, `abs`).
+   - **V3.1** (4l), the default.
+   - **V3**: not in the target list, so presumably removed (V3.1 = V3 with rescaled abs gains and the new FWHM;
+     V3 moved = V3.1 moved). Confirm with the user before deleting V3, since products made with it record
+     `release: V3` in their provenance.
+   Order: 4l (V3.1, new default) and V1-as-lab, then drop V3 if confirmed.
 4k. **Original lab coefficients as an alternative** (user, 2026-10-28: "Add the original lab coeffs back as
    an alternative"). Current state: the lab set is still shipped and selectable for both satellites as
    release V1, `coeff_type="lab"` (the old name `original` still works, with a deprecation warning); HYPSO-2 V1
