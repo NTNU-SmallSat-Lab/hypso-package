@@ -203,10 +203,12 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
      V1 = lab gains + V2 smile + V1 centre-row wavelengths).
    - **V2** as now (`moved`, `abs`).
    - **V3.1** (4l), the default.
-   - **V3**: not in the target list, so presumably removed (V3.1 = V3 with rescaled abs gains and the new FWHM;
-     V3 moved = V3.1 moved). Confirm with the user before deleting V3, since products made with it record
-     `release: V3` in their provenance.
-   Order: 4l (V3.1, new default) and V1-as-lab, then drop V3 if confirmed.
+   - **V3 is superseded by V3.1** (user, 2026-10-29): remove the V3 release once V3.1 is in. Files V3.1 reuses
+     unchanged (V3 sobel smile, V3 spectral, V3 moved gains) stay, under V3.1. Products made with V3 keep
+     `release: V3` in their provenance; asking for `release="V3"` should then fail with a message pointing
+     to V3.1 (or map to V3.1 with a deprecation warning, like the old `adjusted`/`original` names; decide
+     when implementing). Note it in coefficient_history.rst.
+   Order: 4l (V3.1, new default), V1 as the complete lab set, then remove V3.
 4k. **Original lab coefficients as an alternative** (user, 2026-10-28: "Add the original lab coeffs back as
    an alternative"). Current state: the lab set is still shipped and selectable for both satellites as
    release V1, `coeff_type="lab"` (the old name `original` still works, with a deprecation warning); HYPSO-2 V1
