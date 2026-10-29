@@ -203,6 +203,29 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    V3 (with V3 smile and V2 spectral), (b) the lab set's own smile/spectral exactly as originally delivered
    (the pre-catalog files), (c) lab as a selectable alternative in the pipeline/configs, or something removed
    in the ×76 cleanup (the CSVs were identical to the shipped `.npz`).
+   Findings 2026-10-29 (vs the user's `~/AC/lab_coeffs_h2/` and `~/hypso2_calibration_versions/`): the
+   refactor's lab radiometric matrix is identical to the lab delivery; its `smile_correction_matrix_HYPSO-2_full.npz`
+   is production's row-reversed file (35340a9a), not the corrected lab smile (46e9aedd = `polymer_v1` fix), and
+   is unused (V1 takes the V2 smile); `h2_spectral_calibration_coefficients.npz` differs from the lab file
+   (384c3cd6 vs 3552c56e); the lab FWHM file is not included (user: keep the built-in table). Proposal:
+   replace the flipped smile with the lab smile as smile V1, add a `lab` release (lab radiometric, lab smile,
+   lab spectral: polynomial or smile row 608 as in `polymer_v1` 2b560445), keep V1 unchanged. Also: the V2
+   smile matrix has 1172 rows but is cropped as a 1216-row matrix (~25-30 rows off, < 0.17 nm; 4j).
+4l. **Bring over the updated SRF modelling from production hypso-package** (user, 2026-10-29). Which change is
+   meant is to be confirmed with the user; candidates found (read only, nothing in production touched):
+   - production `polymer` branch 99172075 (2026-10-23): SRFs, F0 and Earth-Sun distance written to L1C/L1D
+     (the refactor has its own version since the Earth-Sun fix: `metadata/srf`, F0, d);
+   - `origin/aria` / `main`: 6440034b "Update SRF and ESUN code, new TSIS-1 full res" (2025-10-22) and
+     23a12542/816306f7 "updates to srf implementation for reflectance" (the refactor uses TSIS-1 in
+     `srf/solar.py`; compare the SRF shape model and the F0 integration);
+   - `polymer_v1` clone (`~/AC/hypso-package-polymer_v1`, local): HYPSO-2 `v1` = complete lab calibration
+     (413f770b, 86a29f7e, ad8866c7, 2b560445: lab smile fixed, lab spectral polynomial, band wavelengths from
+     lab smile row 608), see 4k;
+   - `~/hypso2_calibration_versions/` (user's calibration versions doc): FWHM from the built-in 13-line table
+     (`hypso2.py` `srf_wl`/`srf_fwhm`) for all versions, not the lab FWHM file (user decision 2026-10-28);
+     check the refactor's sensor-profile FWHM table matches.
+   Port the chosen modelling into `hypso.srf` (`srf_dataset`, `effective_fwhm`), with a before/after
+   comparison of SRFs and F0 on the reference capture.
 4f. **Keystone review** (×77, for the calibration team): HYPSO-2's distortion model (`h2_distortion_model_v1.npz`,
    `optional: keystone` in coefficients.yaml, `enabled: false`) is applied only with `calibrate(keystone=True)`,
    with a warning. Questions: is B_hat valid for the flight model; is the sample axis oriented as the detector
