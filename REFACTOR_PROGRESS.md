@@ -211,21 +211,40 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    replace the flipped smile with the lab smile as smile V1, add a `lab` release (lab radiometric, lab smile,
    lab spectral: polynomial or smile row 608 as in `polymer_v1` 2b560445), keep V1 unchanged. Also: the V2
    smile matrix has 1172 rows but is cropped as a 1216-row matrix (~25-30 rows off, < 0.17 nm; 4j).
-4l. **Bring over the updated SRF modelling from production hypso-package** (user, 2026-10-29). Which change is
-   meant is to be confirmed with the user; candidates found (read only, nothing in production touched):
-   - production `polymer` branch 99172075 (2026-10-23): SRFs, F0 and Earth-Sun distance written to L1C/L1D
-     (the refactor has its own version since the Earth-Sun fix: `metadata/srf`, F0, d);
-   - `origin/aria` / `main`: 6440034b "Update SRF and ESUN code, new TSIS-1 full res" (2025-10-22) and
-     23a12542/816306f7 "updates to srf implementation for reflectance" (the refactor uses TSIS-1 in
-     `srf/solar.py`; compare the SRF shape model and the F0 integration);
-   - `polymer_v1` clone (`~/AC/hypso-package-polymer_v1`, local): HYPSO-2 `v1` = complete lab calibration
-     (413f770b, 86a29f7e, ad8866c7, 2b560445: lab smile fixed, lab spectral polynomial, band wavelengths from
-     lab smile row 608), see 4k;
-   - `~/hypso2_calibration_versions/` (user's calibration versions doc): FWHM from the built-in 13-line table
-     (`hypso2.py` `srf_wl`/`srf_fwhm`) for all versions, not the lab FWHM file (user decision 2026-10-28);
-     check the refactor's sensor-profile FWHM table matches.
-   Port the chosen modelling into `hypso.srf` (`srf_dataset`, `effective_fwhm`), with a before/after
-   comparison of SRFs and F0 on the reference capture.
+4l. **Bring over the V3.1 calibration and SRF modelling** (user, 2026-10-29; V3.1 is production's default from
+   2026-10-29). Source: `~/hypso2_calibration_versions/v3.1/` (files as delivered + README) and
+   `~/AC/hypso-package-polymer_v3`, branch `polymer_v3`, commits c390ca27 (V3.1), 11756523 (SRF modelling,
+   from aria 368d16d9), af82d75c (`abs31` renamed `v31v2spec`); calibration packages 26.10.1. Read only;
+   production not touched. To port into the refactor (both satellites):
+   - **Radiometric:** V3.1 `abs` gains, HYPSO-2 x0.963 of V3 abs (wide x0.971; the wide matrix equals the full
+     V3.1 matrix binned), HYPSO-1 x0.972 of aria's HYPSO-1 V3 (full and wide). New release `V3.1` in both
+     catalogs (`coefficients.yaml`), as the default (production default `v31`); V3.1 `moved` = V3 moved
+     (not added); smile = V3 sobel, spectral = V3 (identical files). HYPSO-1 V3.1 also needs aria's HYPSO-1 V3
+     smile (`smile_correction_matrix_HYPSO-1_full_sobel_v3.npz`) and spectral array
+     (`spectral_array_calibrated_poly_full_v3.npz`).
+   - **Variant for OC-SMART** (production `v31v2spec`): V3.1 gains, V3 smile, pre-V3 spectral (HYPSO-2
+     `spectral_array_calibrated_poly_full`; HYPSO-1 its moved array), V3.1 FWHM. In the refactor: V3.1 with
+     `spectral: V2` (the catalog's per-component selection already allows it).
+   - **FWHM tables (new):** in-orbit FWHM at 8 lines 430-764 nm, `h{1,2}_srf_fwhm_v31.npz` (keys wavelength,
+     fwhm, fwhm_std); HYPSO-2 430.0: 6.64, 478.2: 3.68, 526.2: 3.40, 574.1: 3.55, 621.7: 3.40, 669.2: 3.42,
+     716.5: 3.47, 763.6: 4.28 nm. A catalog component (`fwhm: V3.1`), used by V3.1 releases; other releases
+     keep the sensor profile's built-in table. Today the refactor takes FWHM from the sensor profile only
+     (`sensors/`, `io.product._fwhm_from_profile`).
+   - **SRF modelling (all releases in production):** per-band FWHM interpolated linearly between the table's
+     lines (`np.interp`, constant outside) instead of the nearest line (refactor: nearest, in
+     `_fwhm_from_profile` and the capture FWHM); Gaussian SRFs and the solar-spectrum truncation over +-4
+     sigma instead of +-3 (refactor `srf/response.py` uses 3 in `gaussian_srfs` and the truncation;
+     `SRF_N_SIGMA = 4` in production, as h2-onboard-calibration); FWHM recomputed after an L1B made inside
+     L1D generation (check the refactor's equivalent path).
+   - **Default and raw L1A:** production resolves a missing `coeff_type` to `v31`; the refactor's default
+     release becomes V3.1.
+   - Downstream (record, pipeline side): Polymer via eoread maps `v31`/`v31v2spec` to `HYPSO-2_moved`; band
+     names V3 for V3.1, V2 for the OC-SMART variant; OC-SMART uses the V2-spectral variant.
+   - Checks: compare refactor V3.1 L1B/L1D and SRFs/F0 against production `polymer_v3` on the reference capture
+     (as ×55 did for V2); update docs/calibration.rst, coefficient_history.rst, manifests, tests
+     (test_sensors, release tables).
+   Related: 4k (lab set), 4j (V2 smile row offset). Production's other SRF items checked 2026-10-29: SRFs, F0
+   and d written to L1C/L1D (99172075) are already in the refactor; aria 6440034b (TSIS-1 full res) to compare.
 4f. **Keystone review** (×77, for the calibration team): HYPSO-2's distortion model (`h2_distortion_model_v1.npz`,
    `optional: keystone` in coefficients.yaml, `enabled: false`) is applied only with `calibrate(keystone=True)`,
    with a warning. Questions: is B_hat valid for the flight model; is the sample axis oriented as the detector
