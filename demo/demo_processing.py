@@ -44,7 +44,7 @@ SITE = (45.3139, 12.5083)   # AAOT, the AERONET-OC platform off Venice
 l1a = hypso.open(L1A_FILE)
 print(l1a)
 
-l1b = l1a.calibrate()                                   # radiometric "abs", V3 coefficients (defaults)
+l1b = l1a.calibrate()                                   # radiometric "abs", V3.1 coefficients (defaults)
 l1c = l1b.georeference(latitudes=LATITUDES, longitudes=LONGITUDES)
 l1d = l1c.toa_reflectance()
 print(l1d)
@@ -52,9 +52,9 @@ print(l1d)
 # The same in one call, running only the missing steps:
 # l1d = l1a.to("L1D", georeference={"latitudes": LATITUDES, "longitudes": LONGITUDES})
 
-# Other calibration choices (docs/calibration.rst). V3 uses V2 spectral
-# coefficients by default, for OC-SMART; to use V3 spectral too:
-# l1b = l1a.calibrate(version={"spectral": "V3"})
+# Other calibration choices (docs/calibration.rst). For OC-SMART, whose band
+# table uses the pre-V3 band names, V3.1 with the V2 spectral calibration:
+# l1b = l1a.calibrate(version="V3.1v2spec")
 # The pre-V3 "moved" set:
 # l1b = l1a.calibrate("moved", version="V2")
 

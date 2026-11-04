@@ -83,7 +83,7 @@ def test_wide_capture_abs_v31_uses_wide_matrix_and_fwhm_table(l1a):
     assert step["radiometric_capture_type"] == "wide" and step["radiometric_crop"] == "as_is"
     assert "wide_v31_abs" in step["radiometric_file"] and step["fwhm_version"] == "V3.1"
     corrections = tree["metadata/corrections"].dataset
-    table = np.load(files("hypso2_calibration").joinpath("data/h2_srf_fwhm_v31.npz"))
+    table = np.load(files("hypso2_calibration").joinpath("data/fwhm/h2_srf_fwhm_v31.npz"))
     np.testing.assert_array_equal(corrections["fwhm_table_fwhm"].values, table["fwhm"])
     cube = tree.dataset["Lt"]
     np.testing.assert_allclose(cube["fwhm"].values, interpolate_fwhm(table["wavelength"], table["fwhm"],
@@ -95,7 +95,7 @@ def test_wide_capture_abs_v31_uses_wide_matrix_and_fwhm_table(l1a):
 
 def test_as_is_radiometric_shape_mismatch_raises():
     from hypso.calibration.correction import CalibrationShapeMismatchError, read_coeffs_from_file
-    wide = files("hypso2_calibration").joinpath("data/h2_radiometric_calibration_matrix_wide_v31_abs.npz")
+    wide = files("hypso2_calibration").joinpath("data/radiometric/h2_radiometric_calibration_matrix_wide_v31_abs.npz")
     with pytest.raises(CalibrationShapeMismatchError):
         # a nominal-sized AOI does not fit the pre-baked wide matrix
         read_coeffs_from_file(wide, "radiometric", x_start=428, x_stop=1508, y_start=0, y_stop=684,

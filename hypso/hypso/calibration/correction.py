@@ -1,9 +1,8 @@
+"""Reading calibration coefficient files and the mask helpers used with destriping."""
 import logging
+from pathlib import Path
 
 import numpy as np
-from scipy import interpolate
-from pathlib import Path
-import copy
 
 logger = logging.getLogger(__name__)
 
@@ -96,84 +95,50 @@ def read_coeffs_from_file(coeff_path: str, coeff_type: str, x_start: int=None,  
     out
         2D array of coefficients
     """
-    coefficients = None
+    if coeff_path is None:
+        return None
+    coeff_path = Path(coeff_path)
     try:
-        if coeff_path is None:
-            coefficients = None
-        else:
-
-            # Processing should be Float 32
-            if coeff_path.suffix == ".npz":
-                coefficients = np.load(coeff_path)
-                key = list(coefficients.keys())[0]
-                match coeff_type:
-                    # TODO smile and destriping is not defined for HYPSO-2 yet, which is why we can keep the simple definitions
-                    # later this needs to be updated
-
-                    case 'radiometric':
-                        if crop_mode == "as_is":
-                            # Pre-baked for one AOI/bin_factor, e.g. HYPSO-2's
-                            # V3 wide matrix, derived from binned wide data
-                            # (production 73eb6b8a).
-                            coefficients = coefficients[key]
-                            expected_shape = (y_stop - y_start, (x_stop - x_start) // bin_factor)
-                            if coefficients.shape != expected_shape:
-                                raise CalibrationShapeMismatchError(
-                                    f"radiometric calibration file {coeff_path} is pre-baked for shape "
-                                    f"{coefficients.shape}, but this capture's AOI/bin_factor implies "
-                                    f"{expected_shape}."
-                                )
-                        else:
-                            coefficients = coefficients[key][y_start:y_stop, x_start: x_stop].reshape(y_stop-y_start, -1, bin_factor).mean(axis=2).reshape(y_stop-y_start, -1) # reshape full coeff matrix based on values in config
-                    case 'spectral':
-                        coefficients = coefficients[key][x_start:x_stop].reshape(-1, bin_factor).mean(axis=1).reshape(-1)
-                    case 'smile':
-                        if crop_mode == "as_is":
-                            coefficients = coefficients[key]
-                            expected_shape = (y_stop - y_start, (x_stop - x_start) // bin_factor)
-                            if coefficients.shape != expected_shape:
-                                raise CalibrationShapeMismatchError(
-                                    f"smile calibration file {coeff_path} is pre-baked for shape "
-                                    f"{coefficients.shape}, but this capture's AOI/bin_factor implies "
-                                    f"{expected_shape}."
-                                )
-                        else:
-                            coefficients = coefficients[key][y_start:y_stop, x_start: x_stop].reshape(y_stop-y_start, -1, bin_factor).mean(axis=2).reshape(y_stop-y_start, -1)
-                    case 'destriping':
-                        if crop_mode == "as_is":
-                            coefficients = coefficients[key]
-                            expected_shape = (y_stop - y_start, (x_stop - x_start) // bin_factor)
-                            if coefficients.shape != expected_shape:
-                                raise CalibrationShapeMismatchError(
-                                    f"destriping calibration file {coeff_path} is pre-baked for shape "
-                                    f"{coefficients.shape}, but this capture's AOI/bin_factor implies "
-                                    f"{expected_shape}."
-                                )
-                        else:
-                            # Not exercised by any file shipped today (every
-                            # destriping file hypso1_calibration provides is
-                            # "as_is"), but wired through symmetrically with
-                            # smile so a future imaging mode with a raw,
-                            # croppable destriping matrix needs only a schema
-                            # entry (SensorProfile.capture_mode_crop_modes),
-                            # not new code here.
-                            coefficients = coefficients[key][y_start:y_stop, x_start: x_stop].reshape(y_stop-y_start, -1, bin_factor).mean(axis=2).reshape(y_stop-y_start, -1)
-                    case _:
-                        raise ValueError('Coefficient type ' + coeff_type + ' does not exist.')
-
-            elif coeff_path.suffix == ".csv": # TODO do we ever use this? should I account for it?
-                coefficients = np.genfromtxt(coeff_path, delimiter=',', dtype="float64")
-            else:
-                coefficients = None
-
+        if coeff_path.suffix == ".csv":
+            # Coefficients registered by users (hypso.calibration.registry) may be CSV; they are used as
+            # stored, without cropping or binning. The shipped coefficients are all .npz.
+            return np.genfromtxt(coeff_path, delimiter=",", dtype="float64")
+        if coeff_path.suffix != ".npz":
+            return None
+        with np.load(coeff_path) as npz:
+            array = npz[list(npz.keys())[0]]
+        if coeff_type == "spectral":
+            # band centres along the detector's spectral axis: crop to the AOI, average bin_factor columns
+            return array[x_start:x_stop].reshape(-1, bin_factor).mean(axis=1).reshape(-1)
+        if coeff_type in ("radiometric", "smile", "destriping"):
+            return _matrix_for_capture(array, coeff_type, coeff_path, x_start, x_stop, y_start, y_stop,
+                                       bin_factor, crop_mode)
+        raise ValueError(f"Coefficient type {coeff_type} does not exist.")
     except CalibrationShapeMismatchError:
         raise
     except BaseException as ex:
         logger.exception("Could not read coefficients file.")
-        coefficients = None
         raise ValueError("Could not read coefficients file.") from ex
 
-    return coefficients
+
+def _matrix_for_capture(array, coeff_type, coeff_path, x_start, x_stop, y_start, y_stop, bin_factor,
+                        crop_mode):
+    """A 2D (rows, spectral columns) coefficient matrix for one capture.
+
+    "crop_and_bin": the file covers the full detector; crop it to the AOI
+    and average bin_factor columns. "as_is": the file is pre-baked for one
+    AOI and bin_factor (e.g. a wide-capture matrix); use it unchanged, after
+    checking its shape against this capture's.
+    """
+    expected_shape = (y_stop - y_start, (x_stop - x_start) // bin_factor)
+    if crop_mode == "as_is":
+        if array.shape != expected_shape:
+            raise CalibrationShapeMismatchError(
+                f"{coeff_type} calibration file {coeff_path} is pre-baked for shape {array.shape}, but this "
+                f"capture's AOI/bin_factor implies {expected_shape}.")
+        return array
+    rows = y_stop - y_start
+    return array[y_start:y_stop, x_start:x_stop].reshape(rows, -1, bin_factor).mean(axis=2).reshape(rows, -1)
 
 
 def make_overexposed_mask(cube, over_exposed_lim=4094):

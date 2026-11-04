@@ -15,7 +15,7 @@ Product levels:
 import hypso
 
 l1a = hypso.open("aeronetvenice_2025-06-12T09-58-02Z-l1a.nc")   # any level, any HYPSO file layout
-l1d = (l1a.calibrate()                                          # HYPSO-2: abs / V3 by default
+l1d = (l1a.calibrate()                                          # abs / V3.1 by default
           .georeference(latitudes="latitudes_indirectgeoref.dat",
                         longitudes="longitudes_indirectgeoref.dat")
           .toa_reflectance())

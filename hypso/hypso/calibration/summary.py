@@ -1,10 +1,9 @@
-"""One summary of a calibration run, logged at INFO by both calibration
-paths (hypso.calibration.pipeline.run_calibration and
-hypso.processing.l1a_to_l1b). The same details are recorded in the product's
+"""One summary of a calibration run, logged at INFO by
+hypso.processing.l1a_to_l1b. The same details are recorded in the product's
 metadata/processing/l1b provenance."""
 from pathlib import Path
 
-_CORRECTIONS = ("radiometric", "keystone", "smile", "destriping", "spectral")
+_CORRECTIONS = ("radiometric", "keystone", "smile", "destriping", "spectral", "fwhm")
 
 
 def format_calibration_summary(sat_id: str, capture_type: str, files: dict, applied, selection: dict = None) -> str:
@@ -24,6 +23,8 @@ def format_calibration_summary(sat_id: str, capture_type: str, files: dict, appl
             state = "applied"
         elif correction == "keystone" and path is None:
             state = "off (opt-in: keystone=True)"
+        elif correction == "fwhm":
+            state = "table" if path is not None else "sensor profile table"
         elif path is None:
             state = "skipped (no coefficients)"
         else:

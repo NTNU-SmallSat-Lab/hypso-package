@@ -96,6 +96,53 @@ V1              ``lab``                     V1           V1          V1        s
   moon captures use the full-frame smile matrix and no destriping), and moon
   captures use the moon radiometric matrix whatever the variant.
 
+What the packages contain
+-------------------------
+
+Each calibration package (``hypso1_calibration``, ``hypso2_calibration``)
+keeps its files in ``data/``, one folder per correction, and lists which file
+each correction uses, by release, in ``data/coefficients.yaml``:
+
+=================  ==========================================================================
+Folder             Contents
+=================  ==========================================================================
+``radiometric/``   Gains: V3.1 ``abs`` (full frame, and a pre-binned wide-capture matrix used
+                   as is), ``moved`` (V3.1 and V2), V2 ``abs``, V1 ``lab``; HYPSO-1 also a
+                   moon matrix, used for moon captures whatever the variant.
+``smile/``         V3 (Sobel, full frame, cropped per capture) for V3.1; V2 (HYPSO-2) or the
+                   V1 nominal, wide and full-frame matrices (HYPSO-1) for the older releases.
+``destriping/``    HYPSO-1 only: the V1 matrices for nominal and wide captures, used by every
+                   HYPSO-1 release including V3.1, as in production. There is no V3 or V3.1
+                   destriping, and HYPSO-2 has none in any release.
+``spectral/``      Band centres: V3 (V3.1), V2 (V3.1v2spec, V2), the lab centre row (V1).
+``fwhm/``          The V3.1 in-orbit FWHM tables; older releases use the sensor profile's
+                   built-in table.
+``optional/``      HYPSO-2's keystone/distortion model (``h2_distortion_model_v1.npz``), outside
+                   the releases and off by default: ``calibrate(keystone=True)`` applies it,
+                   with a warning, until it is reviewed.
+``reference/``     Files kept for reference that no release selects and calibration never
+                   reads (below).
+=================  ==========================================================================
+
+The catalog's ``reference_files`` section describes each reference file; in
+short:
+
+* HYPSO-2: the lab smile matrix as in production, with its rows reversed (a
+  known error, never applied: V1 uses the V2 smile); lab-era full-frame
+  spectral calibration matrices (plain and smoothed) and polynomial
+  coefficients; engineering-model and pre-launch flight-model spectral
+  coefficients; a moon radiometric matrix (HYPSO-2 moon captures use the
+  release's gains, as in production); pre-binned 2025 nominal and wide gains;
+  a band-centre table.
+* HYPSO-1: pre-binned V1 gains for nominal and wide captures (the releases
+  crop the full-frame gains instead); a band-centre table.
+
+A test (``tests/test_coefficients.py``) checks that every file in ``data/``
+is either selected by the catalog or listed as a reference file, and that
+every path the catalog names exists. File names, contents and checksums are
+unchanged by the folder layout, so products' provenance (file name and
+SHA-256) stays comparable across versions.
+
 Mixing versions
 ---------------
 
@@ -120,11 +167,13 @@ Python's ``logging`` module:
 
 .. code-block:: text
 
-   Calibration summary: HYPSO-2, capture type wide, coeff_type abs, release V3
-     radiometric  applied V3/abs  h2_radiometric_calibration_matrix_full_v3_abs.npz
+   Calibration summary: HYPSO-2, capture type wide, coeff_type abs, release V3.1
+     radiometric  applied V3.1/abs  h2_radiometric_calibration_matrix_wide_v31_abs.npz
+     keystone     off (opt-in: keystone=True)
      smile        applied V3  smile_correction_matrix_HYPSO-2_full_sobel_v3.npz
      destriping   skipped (no coefficients)
-     spectral     applied V2  spectral_array_calibrated_poly_full_v2.npz
+     spectral     applied V3  spectral_array_calibrated_poly_full_v3.npz
+     fwhm         table V3.1  h2_srf_fwhm_v31.npz
 
 The package does not configure logging itself. To see INFO messages, configure
 it in your script, for example ``logging.basicConfig(level=logging.INFO)``.

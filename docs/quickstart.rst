@@ -16,7 +16,7 @@ file layout. Every processing method returns a new, immutable
    import hypso
 
    l1a = hypso.open("HYPSO2_HSI.20250304T103805.aeronetvenice.L1A.nc")
-   l1b = l1a.calibrate()                    # radiometric "abs", V3 coefficients
+   l1b = l1a.calibrate()                    # radiometric "abs", V3.1 coefficients
    l1c = l1b.georeference(latitudes="latitudes_indirectgeoref.dat",
                           longitudes="longitudes_indirectgeoref.dat")
    l1d = l1c.toa_reflectance()

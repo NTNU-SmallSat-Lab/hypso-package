@@ -163,3 +163,31 @@ def test_hypso1_versions_and_names():
     assert moon["radiometric"] == "radiometric_calibration_matrix_HYPSO-1_moon.npz"
     with pytest.warns(DeprecationWarning, match="deprecated"):
         assert names(get_hypso1_calibration_files("wide", coeff_type="adjusted")) == wide
+
+
+
+@pytest.mark.parametrize("package", ["hypso1_calibration", "hypso2_calibration"])
+def test_data_folder_is_organized(package):
+    # ×93: every file in data/ is in its correction's folder and either selected by the catalog or listed
+    # under reference_files; every path the catalog names exists
+    import yaml
+    from importlib.resources import files
+    data = Path(str(files(package).joinpath("data")))
+    catalog = yaml.safe_load((data / "coefficients.yaml").read_text())
+
+    def paths(node):
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if key == "file" and isinstance(value, str):
+                    yield value
+                else:
+                    yield from paths(value)
+    selected = {p for section in ("radiometric", "smile", "destriping", "spectral", "fwhm", "optional")
+                for p in paths(catalog.get(section, {}))}
+    reference = set(catalog.get("reference_files", {}))
+    on_disk = {str(p.relative_to(data)) for p in data.rglob("*.npz")}
+    assert selected | reference == on_disk
+    assert not selected & reference
+    assert all(p.split("/")[0] == "reference" for p in reference)
+    assert all(p.split("/")[0] in ("radiometric", "smile", "destriping", "spectral", "fwhm", "optional")
+               for p in selected)

@@ -8,9 +8,13 @@
 #                {correction: version} to mix versions.
 #
 # Adding a coefficient file or release is a data-only edit here (plus the
-# file in this directory). Then run
+# file in its folder). Then run
 #   python -m hypso.calibration.manifest update hypso1_calibration
 # and tag a release - see docs/versioning.rst.
+#
+# Layout of data/: one folder per correction - radiometric/, smile/,
+# destriping/, spectral/, fwhm/ - plus reference/ (files no release uses; see
+# reference_files at the end). File paths below are relative to data/.
 
 # Any other capture type gets no files (as before the catalog).
 known_capture_types: [nominal, wide, custom, moon]
@@ -22,71 +26,72 @@ default_release: V3.1
 radiometric:
   V3.1:
     abs:
-      file: radiometric_calibration_matrix_HYPSO-1_full_v31.npz
+      file: radiometric/radiometric_calibration_matrix_HYPSO-1_full_v31.npz
       description: >-
         V3.1 (2026-10-29): x0.972 of aria's HYPSO-1 V3. From production
         polymer_v3 c390ca27.
       capture_types:
         wide:
-          file: radiometric_calibration_matrix_HYPSO-1_wide_v31.npz
+          file: radiometric/radiometric_calibration_matrix_HYPSO-1_wide_v31.npz
           crop: as_is
           description: Wide captures, pre-binned for the wide AOI (1092 x 120); used as is.
-        moon: {file: radiometric_calibration_matrix_HYPSO-1_moon.npz}
+        moon: {file: radiometric/radiometric_calibration_matrix_HYPSO-1_moon.npz}
   V2:
     abs:
-      file: radiometric_calibration_matrix_HYPSO-1_full_v1_adjusted_v11.npz
+      file: radiometric/radiometric_calibration_matrix_HYPSO-1_full_v1_adjusted_v11.npz
       description: The pre-catalog "adjusted" set.
       capture_types:
-        moon: {file: radiometric_calibration_matrix_HYPSO-1_moon.npz}
+        moon: {file: radiometric/radiometric_calibration_matrix_HYPSO-1_moon.npz}
     moved:
-      file: h1_radiometric_calibration_matrix_full_moved.npz
+      file: radiometric/h1_radiometric_calibration_matrix_full_moved.npz
       description: The "moved" set (the default).
       capture_types:
-        moon: {file: radiometric_calibration_matrix_HYPSO-1_moon.npz}
+        moon: {file: radiometric/radiometric_calibration_matrix_HYPSO-1_moon.npz}
   V1:
     lab:
-      file: radiometric_calibration_matrix_HYPSO-1_full_v1.npz
+      file: radiometric/radiometric_calibration_matrix_HYPSO-1_full_v1.npz
       description: Lab coefficients, the pre-catalog "original" set.
       capture_types:
-        moon: {file: radiometric_calibration_matrix_HYPSO-1_moon.npz}
+        moon: {file: radiometric/radiometric_calibration_matrix_HYPSO-1_moon.npz}
 
 smile:
   V3:
-    file: smile_correction_matrix_HYPSO-1_full_sobel_v3.npz
+    file: smile/smile_correction_matrix_HYPSO-1_full_sobel_v3.npz
     description: >-
       aria's HYPSO-1 V3 smile (Sobel), full frame, cropped and binned for every
       capture type (production polymer_v3 uses it for V3.1 nominal and wide).
     capture_types:
-      nominal: {file: smile_correction_matrix_HYPSO-1_full_sobel_v3.npz, crop: crop_and_bin}
-      wide: {file: smile_correction_matrix_HYPSO-1_full_sobel_v3.npz, crop: crop_and_bin}
+      nominal: {file: smile/smile_correction_matrix_HYPSO-1_full_sobel_v3.npz, crop: crop_and_bin}
+      wide: {file: smile/smile_correction_matrix_HYPSO-1_full_sobel_v3.npz, crop: crop_and_bin}
   V1:
-    file: spectral_calibration_matrix_HYPSO-1_full_v1.npz
+    file: smile/spectral_calibration_matrix_HYPSO-1_full_v1.npz
+    # (despite its name, the full-frame V1 smile matrix)
     description: >-
       Full-frame matrix, cropped per capture (custom and moon captures, which
       do not share the nominal/wide frame geometry).
     capture_types:
-      nominal: {file: smile_correction_matrix_HYPSO-1_nominal_v1.npz}
-      wide: {file: smile_correction_matrix_HYPSO-1_wide_v1.npz}
+      nominal: {file: smile/smile_correction_matrix_HYPSO-1_nominal_v1.npz}
+      wide: {file: smile/smile_correction_matrix_HYPSO-1_wide_v1.npz}
 
 destriping:
   V1:
     file: null
     description: No destriping for custom and moon captures.
     capture_types:
-      nominal: {file: destriping_matrix_HYPSO-1_nominal_v1.npz}
-      wide: {file: destriping_matrix_HYPSO-1_wide_v1.npz}
+      nominal: {file: destriping/destriping_matrix_HYPSO-1_nominal_v1.npz}
+      wide: {file: destriping/destriping_matrix_HYPSO-1_wide_v1.npz}
 
 spectral:
   V3:
-    file: spectral_array_calibrated_poly_full_v3.npz
+    file: spectral/spectral_array_calibrated_poly_full_v3.npz
     description: >-
       aria's HYPSO-1 V3 spectral calibration (production polymer_v3, V3.1);
       renames integer-wavelength bands relative to V2.
   V2:
-    file: spectral_array_calibrated_poly_full.npz
+    file: spectral/spectral_array_calibrated_poly_full.npz
     description: Polynomial fit over the whole spectrum, static offset.
   V1:
-    file: spectral_calibration_wavelengths_center_row_HYPSO-1.npz
+    file: spectral/spectral_calibration_wavelengths_center_row_HYPSO-1.npz
     description: Lab centre-row wavelengths.
 
 # Per-band FWHM lines; band FWHM is interpolated between them (constant
@@ -94,7 +99,7 @@ spectral:
 # built-in table (hypso.sensors.hypso1).
 fwhm:
   V3.1:
-    file: h1_srf_fwhm_v31.npz
+    file: fwhm/h1_srf_fwhm_v31.npz
     description: >-
       In-orbit FWHM at 8 lines (keys wavelength, fwhm, fwhm_std): 430.0: 4.20,
       478.2: 4.07, 526.2: 4.11, 574.1: 4.54, 621.8: 3.48, 669.4: 3.59, 716.8:
@@ -137,3 +142,12 @@ aliases:
 release_aliases:
   v31: [V3.1, null]                 # production coeff_type names
   v31v2spec: [V3.1v2spec, null]
+
+# Files shipped for reference: no release selects them and calibration never
+# reads them.
+reference_files:
+  reference/radiometric_calibration_matrix_HYPSO-1_nominal_v1.npz: >-
+    Pre-binned V1 gains for nominal captures (the releases crop the full-frame
+    gains instead).
+  reference/radiometric_calibration_matrix_HYPSO-1_wide_v1.npz: Pre-binned V1 gains for wide captures.
+  reference/spectral_bands_HYPSO-1_v1.npz: A band-centre table.

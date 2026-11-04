@@ -84,16 +84,16 @@ def l1a_to_l1b(tree: xr.DataTree, coeff_type: str = None, version=None, coeff_fi
     tree : xarray.DataTree
         L1A product tree.
     coeff_type : str, optional
-        Radiometric variant: ``"abs"``, ``"moved"`` or ``"lab"`` (default
-        ``"abs"`` for HYPSO-2, ``"moved"`` for HYPSO-1), or a set registered with
-        ``hypso.calibration.register_calibration_coeffs``. None uses the
-        file's ``radiometric_coefficients_version`` if present, else the
-        sensor's default.
+        Radiometric variant: ``"abs"`` (default), ``"moved"`` or ``"lab"``, or a
+        set registered with ``hypso.calibration.register_calibration_coeffs``.
+        None uses the file's ``radiometric_coefficients_version`` if present,
+        else the default. Without ``version``, a variant the default release
+        lacks takes the newest release that has it (HYPSO-1 ``"moved"``: V2).
     version : str or dict, optional
-        Coefficient release (HYPSO-2: ``"V3"`` default, ``"V2"``, ``"V1"``;
-        HYPSO-1: ``"V2"`` default, ``"V1"``), or ``{correction: release}`` to
-        mix them, e.g. ``{"spectral": "V3"}`` (the calibration package's
-        ``data/coefficients.yaml``).
+        Coefficient release - ``"V3.1"`` (default), ``"V3.1v2spec"`` (V2 band
+        names, for OC-SMART), ``"V2"``, ``"V1"``; ``"V3"`` means V3.1 - or
+        ``{correction: release}`` to mix them, e.g. ``{"smile": "V2"}`` (the
+        calibration package's ``data/coefficients.yaml``).
     coeff_files : dict, optional
         Explicit ``{kind: path}`` instead of ``coeff_type`` and ``version``.
     radiometric, smile, destripe, spectral : bool, default True

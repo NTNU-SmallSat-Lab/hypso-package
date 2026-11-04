@@ -91,7 +91,7 @@ immutable wrapper around one tree.
    import hypso
 
    l1d = (hypso.open("…L1A.nc")
-             .calibrate()                                    # abs / V3
+             .calibrate()                                    # abs / V3.1
              .georeference(latitudes=lat_file, longitudes=lon_file)
              .toa_reflectance())
    l2a = l1d.correct_atmosphere()                    # MACHI; or "polymer", config=...
@@ -175,7 +175,7 @@ Sensor profiles (``hypso.sensors``)
 
 Coefficient catalogs
    Each calibration package lists its coefficient files, versions and releases
-   in ``data/coefficients.yaml`` (HYPSO-2: V3, V2, V1; HYPSO-1: V2, V1), read by
+   in ``data/coefficients.yaml`` (V3.1, V3.1v2spec, V2, V1 for both satellites), read by
    ``_catalog.py``, identical in both packages. ``coeff_type`` picks the
    radiometric variant, and ``version`` picks the release or sets versions per
    correction. A file entry can name a different file for one capture type

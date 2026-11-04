@@ -258,6 +258,10 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
      (test_sensors, release tables).
    Related: 4k (lab set), 4j (V2 smile row offset). Production's other SRF items checked 2026-10-29: SRFs, F0
    and d written to L1C/L1D (99172075) are already in the refactor; aria 6440034b (TSIS-1 full res) to compare.
+4n. **Destriping with V3.1 (for the calibration team)** (2026-11-04): HYPSO-1's only destriping matrices are
+   V1 (nominal, wide), derived with the V1 smile; V3.1 applies them after the V3 Sobel smile, as production
+   `v31` does. Is that combination valid, or is a V3/V3.1 destriping needed? HYPSO-2 has never had
+   destriping.
 4f. **Keystone review** (×77, for the calibration team): HYPSO-2's distortion model (`h2_distortion_model_v1.npz`,
    `optional: keystone` in coefficients.yaml, `enabled: false`) is applied only with `calibrate(keystone=True)`,
    with a warning. Questions: is B_hat valid for the flight model; is the sample axis oriented as the detector
@@ -312,6 +316,23 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-11-04 (×93): calibration data, docs and code organised** (user: "Data files, docs, and code"; keep
+  every file). `data/` in both calibration packages now has one folder per correction (`radiometric/`,
+  `smile/`, `destriping/` HYPSO-1, `spectral/`, `fwhm/`, `optional/`) and `reference/` for the 13 files no
+  release uses (HYPSO-2: the row-reversed lab smile, lab-era spectral matrices and coefficients, EQM and
+  pre-launch FM spectral coefficients, the moon and 2025 nominal/wide matrices, a band table; HYPSO-1:
+  pre-binned V1 nominal/wide gains, a band table); folders follow the catalog's own references (script, no
+  hand sorting). Catalog paths are relative to `data/`; a `reference_files` section describes each
+  reference file; header notes the layout; HYPSO-1's `spectral_calibration_matrix_HYPSO-1_full_v1.npz` noted
+  as the full-frame V1 smile. File names, contents and sha256 unchanged (provenance comparable). Test:
+  every data file is selected or a reference file, every catalog path exists. Code: `read_coeffs_from_file`
+  - the three copies of the 2D crop/check logic folded into `_matrix_for_capture` (same behaviour), stale
+  comments replaced (HYPSO-2 has smile since V2; CSV is for registered custom coefficients), unused imports
+  removed; calibration summary gains an `fwhm` line and no longer names the removed
+  `hypso.calibration.pipeline`; `l1a_to_l1b` and `Product.calibrate` docstrings, docs (architecture,
+  quickstart, calibration summary example), README and demo updated from the V3/HYPSO-1-moved defaults to
+  V3.1. docs/calibration.rst: "What the packages contain" (folders, destriping, optional keystone,
+  reference files). `commit_after_tests.sh` (outside the repo): skips paths already staged as deleted.
 - **2026-11-04 (×92): V3.1 calibration, V3.1v2spec, SRF modelling; V3 superseded** (user; TODO 4l, part of 4m).
   From production `polymer_v3` (c390ca27, 11756523, af82d75c; read only): HYPSO-2 V3.1 abs full/wide gains
   (x0.963 / x0.971 of V3 abs) and `h2_srf_fwhm_v31.npz`; HYPSO-1 V3.1 full/wide gains (x0.972 of aria's V3),
