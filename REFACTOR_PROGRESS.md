@@ -312,6 +312,15 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-11-04 (×91): RGB exposure adjustment** (user). `hypso.rgb.adjust_exposure(image, ev=None, percentile=99,
+  target=0.9, gamma=None, full_scale=255, normalize=False, black_point=None, black_percentile=1)`: one gain for
+  all channels (colours kept, unlike `plot_rgb_map`'s per-channel stretch), in stops or automatic (99th
+  percentile of Rec. 709 luminance -> 90% of full scale), optional black point (`"channel"`, `"common"`,
+  values) and display gamma; numpy, DataArray or camera Dataset; attrs `exposure_gain`/`_ev`/`_gamma`/`_black`.
+  `exposure_gain`, `black_level`; `plot_rgb_map(..., exposure={...})`. Galata 2025-01-02 (dark): auto +2.4
+  EV; plain gain looks washed out (dark offset and haze amplified), per-channel black point + auto looks
+  natural. Venice 2025-06-12: blue nearly saturated (1st percentile 239/255), so per-channel black points
+  turn it yellow; use "common" or none there. docs/camera.rst, tests/test_rgb_exposure.py.
 - **2026-10-28 (×90): QAA IOPs and Kd** (TODO 4i step 4). `l2b_algorithms.qaa`: Lee's QAA ported from ACOLITE
   (`acolite/parameters/qaa/qaa_compute.py` incl. its 2025-04-29 Rrs fix; "standard" coefficients from
   `data/Shared/algorithms/QAA/qaa_settings.txt`; read only, ACOLITE not run): v6 (reference 665/670 nm), v5

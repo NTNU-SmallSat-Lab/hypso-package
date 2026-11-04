@@ -106,7 +106,7 @@ def regrid_camera(geo: xr.Dataset, target="utm", resolution: float = None, metho
     return out
 
 
-def _rgb_and_grid(source, stretch):
+def _rgb_and_grid(source, stretch, exposure=None):
     """(H x W x 3 image in 0-1 with NaN outside, x, y in metres, CRS)."""
     if isinstance(source, xr.Dataset):
         rgb = np.stack([source[c].values for c in CHANNELS], axis=-1).astype(float)
@@ -120,6 +120,12 @@ def _rgb_and_grid(source, stretch):
         area = source.area_definition()
         crs = area.crs
         x, y = area.get_proj_vectors()
+    if exposure is not None:
+        # one gain for all channels (colours kept); a camera image's white is 255, a reflectance cube's 1
+        from hypso.rgb.exposure import adjust_exposure
+        full_scale = 255.0 if isinstance(source, xr.Dataset) else 1.0
+        image = adjust_exposure(rgb, full_scale=full_scale, normalize=True, **exposure)
+        return np.where(np.isnan(rgb), np.nan, image), np.asarray(x), np.asarray(y), crs
     low, high = np.nanpercentile(rgb, stretch, axis=(0, 1))
     image = np.clip((rgb - low) / (high - low), 0, 1)
     return image, np.asarray(x), np.asarray(y), crs
@@ -131,7 +137,8 @@ def _nice_length(span):
 
 
 def plot_rgb_map(source, ax=None, graticule: bool = True, scale_bar: bool = True, north_arrow: bool = True,
-                 coastlines: bool = False, title: str = None, stretch=(2, 98), graticule_step: float = None):
+                 coastlines: bool = False, title: str = None, stretch=(2, 98), graticule_step: float = None,
+                 exposure: dict = None):
     """Plot a gridded RGB image as a map.
 
     Parameters
@@ -155,6 +162,11 @@ def plot_rgb_map(source, ax=None, graticule: bool = True, scale_bar: bool = True
         Percentiles mapped to black and white per channel.
     graticule_step : float, optional
         Degrees between graticule lines; default chosen from the extent.
+    exposure : dict, optional
+        Use :func:`hypso.rgb.adjust_exposure` (one gain for all channels,
+        colours kept) instead of the per-channel ``stretch``, with these
+        arguments, e.g. ``{}`` (automatic), ``{"ev": 1}`` or
+        ``{"gamma": 2.2}``.
 
     Returns
     -------
@@ -166,7 +178,7 @@ def plot_rgb_map(source, ax=None, graticule: bool = True, scale_bar: bool = True
     except ImportError as error:
         raise ImportError("plot_rgb_map needs matplotlib (pip install matplotlib)") from error
     outline = [patheffects.withStroke(linewidth=2.5, foreground="black")]      # readable on any background
-    image, x, y, crs = _rgb_and_grid(source, stretch)
+    image, x, y, crs = _rgb_and_grid(source, stretch, exposure)
     image = np.where(np.isnan(image), 1.0, image)
     if ax is None:
         _, ax = plt.subplots(figsize=(7, 7))

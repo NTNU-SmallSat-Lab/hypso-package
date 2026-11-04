@@ -6,3 +6,4 @@ from .registration import (CameraRegistration, camera_lonlat, camera_to_hsi_pixe
                            hsi_to_camera_pixels, register_camera)
 from .maps import camera_gsd, plot_rgb_map, regrid_camera
 from .product import camera_filename, camera_product, open_camera, write_camera
+from .exposure import adjust_exposure, black_level, exposure_gain

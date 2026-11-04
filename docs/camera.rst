@@ -66,6 +66,36 @@ regridded hypso.Product) with optional latitude/longitude graticule, scale bar,
 north arrow, coastlines (needs cartopy and its Natural Earth data) and title.
 Both need matplotlib, which the package does not depend on.
 
+Exposure
+--------
+
+The camera's exposure varies a lot between captures: a winter capture can be
+2-3 stops too dark, a bright summer one saturated in blue.
+:func:`~hypso.rgb.adjust_exposure` changes the brightness of any RGB image
+(camera image, camera product, ``HSI2RGB`` output) with one gain for all
+channels, so colours are kept:
+
+.. code-block:: python
+
+   from hypso.rgb import adjust_exposure
+
+   brighter = adjust_exposure(camera, ev=1.5)                       # +1.5 stops
+   auto = adjust_exposure(camera)                                   # 99th percentile -> 90% of full scale
+   natural = adjust_exposure(camera, black_point="channel", normalize=True)   # 0-1, for plotting
+   plot_rgb_map(own_grid, exposure={"black_point": "channel"})
+
+``ev`` is in stops (gain 2**ev); without it the gain is automatic.
+``black_point`` subtracts a dark level first: ``"channel"`` each channel's
+1st percentile (removes the camera's dark offset and atmospheric haze,
+usually the most natural look over water), ``"common"`` one level for all
+channels (keeps the colour balance), or values. ``gamma`` applies a display
+gamma. A saturated channel cannot be restored: on a capture whose blue is
+clipped, per-channel black levels turn the image yellow, so use ``"common"``
+or none there. The result is for display; it is float32 and records
+``exposure_gain``, ``exposure_ev``, ``exposure_gamma`` and
+``exposure_black``. ``plot_rgb_map(..., exposure={...})`` uses it instead of
+its per-channel percentile ``stretch``.
+
 Camera products
 ---------------
 
