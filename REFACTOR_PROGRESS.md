@@ -267,6 +267,15 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    the corrected cube's band wavelengths are the smile's centre row of that window; take V1's spectral
    calibration from the lab smile at the capture's centre row instead of a fixed file (a catalog option such
    as `spectral: {from_smile_centre_row: true}`). Differs from production polymer_v1, which ships row 608.
+4p. **OC-SMART with the refactor** (×95; user, 2026-11-04). Done: fork CameronLP/OC-SMART cloned to
+   `../OC-SMART-github`, branch `hypso-refactor` (3677966, pushed): sensors HYPSO1_HSI (placeholder, skipped
+   with a warning; no auxdata) and HYPSO2_HSI (the existing HYPSO auxdata, renamed), and the HYPSO reader reads
+   the refactor's flat layout. The three LFS auxdata files were copied from the patched v2.6.3 copy (sha256 =
+   the LFS pointer oids; `git update-index --skip-worktree`, no git-lfs installed). Left: a dedicated conda
+   env from the fork's requirements; an `ocsmart` entry in HYPSO_AC_CONFIG pointing at the clone; a Venice run
+   with release V3.1v2spec (and V1v2spec) compared with the reprocessed OC-SMART L2A. Not touched on user
+   request: the fork's lat/lon subset typo in `latlon2linepixl` (`southeast_line` used for the pixel bounds,
+   from c9df10b; not HYPSO specific).
 4f. **Keystone review** (×77, for the calibration team): HYPSO-2's distortion model (`h2_distortion_model_v1.npz`,
    `optional: keystone` in coefficients.yaml, `enabled: false`) is applied only with `calibrate(keystone=True)`,
    with a warning. Questions: is B_hat valid for the flight model; is the sample axis oriented as the detector
@@ -321,6 +330,12 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-11-04 (×95): OC-SMART input prefix follows the installation** (TODO 4p). Tagged v26.10.0a7 on ×94
+  (8c1fcd08). The OC-SMART fork's `hypso-refactor` branch now has one sensor per satellite (HYPSO1_HSI,
+  HYPSO2_HSI) instead of HYPSO_HSI. `_ocsmart_prefix` stages the L1D as `HYPSO<n>_HSI_<capture_id>-l1d.nc`
+  when the installation ships `auxdata/sensorinfo/HYPSO<n>_HSI.txt`, else as `HYPSO_HSI_...` (v2.6.3).
+  `test_ocsmart_with_fake_installation` covers both. The fork's patched reader was checked directly on a
+  refactor L1D (Venice, regridded): geometry and the capture time read, 83 of 83 OC-SMART bands found.
 - **2026-11-04 (×94): V1 = the complete HYPSO-2 lab calibration; V1v2spec** (TODO 4m/4k). As production
   `polymer_v1` (413f770b, 86a29f7e, ad8866c7, 2b560445; read only) and the user's lab delivery
   (`~/AC/lab_coeffs_h2/`): smile V1 = `smile/smile_correction_matrix_HYPSO-2_full_lab.npz` (the lab delivery,

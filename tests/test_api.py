@@ -320,24 +320,31 @@ from pathlib import Path
 cfg = dict(line.split(" = ", 1) for line in Path("OCSMART_Input.txt").read_text().splitlines() if " = " in line)
 l1b, l2 = Path(cfg["l1b_path"].strip()), Path(cfg["l2_path"].strip())
 staged = sorted(l1b.glob("*.nc"))
-assert len(staged) == 1 and staged[0].name.startswith("HYPSO_HSI_"), staged
+assert len(staged) == 1 and staged[0].name.startswith(EXPECTED_PREFIX + "_"), staged
 print("fake OC-SMART processing", staged[0].name)
 shutil.copy(REAL_OUTPUT, l2 / staged[0].name.replace(".nc", "_L2_OCSMART.h5"))
 """
 
 
 @requires_ac_outputs
-def test_ocsmart_with_fake_installation(l1d, tmp_path):
+@pytest.mark.parametrize("per_satellite", [False, True], ids=["v2.6.3", "fork"])
+def test_ocsmart_with_fake_installation(l1d, tmp_path, per_satellite):
+    # v2.6.3 knows one sensor HYPSO_HSI; the fork's hypso-refactor branch has
+    # HYPSO1_HSI / HYPSO2_HSI, recognised by its sensorinfo files.
     install = tmp_path / "OCSMART_Linux_v2.6.3"
     install.mkdir()
-    (install / "OCSMART.py").write_text(f"REAL_OUTPUT = {str(OCSMART_OUTPUT)!r}\n" + FAKE_OCSMART)
+    prefix = "HYPSO2_HSI" if per_satellite else "HYPSO_HSI"
+    if per_satellite:
+        (install / "auxdata" / "sensorinfo").mkdir(parents=True)
+        (install / "auxdata" / "sensorinfo" / "HYPSO2_HSI.txt").write_text("")
+    (install / "OCSMART.py").write_text(f"REAL_OUTPUT = {str(OCSMART_OUTPUT)!r}\nEXPECTED_PREFIX = {prefix!r}\n" + FAKE_OCSMART)
     (install / "OCSMART_Input.txt").write_text("original contents\n")
     config = {"ocsmart": {"dir": str(install), "python": __import__("sys").executable}}
 
     l2a = l1d.correct_atmosphere("ocsmart", config=config, work_dir=tmp_path / "work")
     assert (install / "OCSMART_Input.txt").read_text() == "original contents\n"     # restored
     assert (install / ".OCSMART_Input.lock").exists()                              # pipeline's lock file
-    output = tmp_path / "work" / "ocsmart" / "HYPSO_HSI_aeronetvenice_2025-03-04T10-38-05Z-l1d_L2_OCSMART.h5"
+    output = tmp_path / "work" / "ocsmart" / f"{prefix}_aeronetvenice_2025-03-04T10-38-05Z-l1d_L2_OCSMART.h5"
     assert output.is_file()
     assert l2a.cube.name == "Rrs" and l2a.atmospheric_correction == "ocsmart"
     _assert_same_cube(l2a, _production_l2a("ocsmart"))

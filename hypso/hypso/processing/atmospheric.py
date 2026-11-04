@@ -438,10 +438,20 @@ def _acolite(tree, masked, mask_flags, work_dir, config=None, output="l2w", reus
     return _l2a_tree(tree, f"acolite_{output}", variable, cube, parameters, ac, variables)
 
 
-# OC-SMART's sensor autodetection (src/sensorinfo.py) only recognises HYPSO
-# input files by this prefix (no satellite digit; HYPSO-1 and -2 share one
-# coefficient file) - hypso.ac.adapters.ocsmart.OCSMARTAdapter.HYPSO_PREFIX.
-OCSMART_PREFIX = "HYPSO_HSI"
+# OC-SMART's sensor autodetection (src/sensorinfo.py) recognises HYPSO input
+# files by their name prefix. Installations from the CameronLP/OC-SMART fork's
+# hypso-refactor branch have one sensor per satellite (HYPSO1_HSI, HYPSO2_HSI;
+# HYPSO-1 is a placeholder there, skipped until it has auxdata) and ship
+# auxdata/sensorinfo/HYPSO<n>_HSI.txt; older installations (v2.6.3) have the
+# single sensor HYPSO_HSI.
+OCSMART_LEGACY_PREFIX = "HYPSO_HSI"
+
+
+def _ocsmart_prefix(install_dir, tree) -> str:
+    sensorinfo = Path(install_dir) / "auxdata" / "sensorinfo"
+    if not any(sensorinfo.glob("HYPSO[0-9]_HSI.txt")):
+        return OCSMART_LEGACY_PREFIX
+    return str(tree.attrs.get("sat_id", "")).replace("-", "").upper() + "_HSI"     # HYPSO-2 -> HYPSO2_HSI
 
 
 # OC-SMART output variables that repeat the input's geometry.
@@ -487,8 +497,9 @@ def _ocsmart(tree, masked, mask_flags, work_dir, config=None, **options):
     staging_dir = work_dir.absolute() / "ocsmart_staging" / "l1b"
     output_dir = work_dir.absolute() / "ocsmart"
     output_dir.mkdir(parents=True, exist_ok=True)
-    _stage_input(tree, masked, mask_flags, staging_dir, add_srfs=False, name=f"{OCSMART_PREFIX}_{capture_id}-l1d.nc")
-    output_file = output_dir / f"{OCSMART_PREFIX}_{capture_id}-l1d_L2_OCSMART.h5"
+    prefix = _ocsmart_prefix(install_dir, tree)
+    _stage_input(tree, masked, mask_flags, staging_dir, add_srfs=False, name=f"{prefix}_{capture_id}-l1d.nc")
+    output_file = output_dir / f"{prefix}_{capture_id}-l1d_L2_OCSMART.h5"
 
     input_txt = install_dir / "OCSMART_Input.txt"
     lines = []
