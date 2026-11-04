@@ -195,7 +195,7 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    - Satpy composites (`etc/composites/hypso1.yaml`, `hypso2.yaml`, `hypso2_rgb.yaml`) import
      `satpy.composites.GenericCompositor`, deprecated (moved to `satpy.composites.core`, old path removed
      in Satpy 1.0). Switch when the minimum Satpy version allows, or keep a fallback.
-4m. **Target calibration releases** (user, 2026-10-29): "ultimately there should be lab (v1), v2, and v3.1
+4m. **Target calibration releases** (done ×92-×94; user, 2026-10-29): "ultimately there should be lab (v1), v2, and v3.1
    coefficients in the refactored hypso package", both satellites. So:
    - **V1 = the complete lab set** (resolves 4k's question: V1 itself, not a separate `lab` release): lab
      radiometric (already identical), the corrected lab smile (replacing the row-reversed file), lab spectral
@@ -208,7 +208,7 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
      `release: V3` in their provenance; `release="V3"` maps to V3.1 with a deprecation warning that says
      the abs gains are ~3% lower (user decision 2026-10-29), like the old `adjusted`/`original` names. Note it in coefficient_history.rst.
    Order: 4l (V3.1, new default), V1 as the complete lab set, then remove V3.
-4k. **Original lab coefficients as an alternative** (user, 2026-10-28: "Add the original lab coeffs back as
+4k. **Original lab coefficients as an alternative** (done ×94 as V1; user, 2026-10-28: "Add the original lab coeffs back as
    an alternative"). Current state: the lab set is still shipped and selectable for both satellites as
    release V1, `coeff_type="lab"` (the old name `original` still works, with a deprecation warning); HYPSO-2 V1
    = lab radiometric + V2 smile + V1 spectral, HYPSO-1 V1 = lab + V1 smile/destriping/spectral. V2 and V3 have
@@ -262,6 +262,11 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    V1 (nominal, wide), derived with the V1 smile; V3.1 applies them after the V3 Sobel smile, as production
    `v31` does. Is that combination valid, or is a V3/V3.1 destriping needed? HYPSO-2 has never had
    destriping.
+4o. **V1 spectral for windows not centred on row 608** (×94): V1's band centres are the lab smile's row 608,
+   the smile correction's reference row for the AOC window only. For other windows (e.g. nominal captures)
+   the corrected cube's band wavelengths are the smile's centre row of that window; take V1's spectral
+   calibration from the lab smile at the capture's centre row instead of a fixed file (a catalog option such
+   as `spectral: {from_smile_centre_row: true}`). Differs from production polymer_v1, which ships row 608.
 4f. **Keystone review** (×77, for the calibration team): HYPSO-2's distortion model (`h2_distortion_model_v1.npz`,
    `optional: keystone` in coefficients.yaml, `enabled: false`) is applied only with `calibrate(keystone=True)`,
    with a warning. Questions: is B_hat valid for the flight model; is the sample axis oriented as the detector
@@ -316,6 +321,20 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-11-04 (×94): V1 = the complete HYPSO-2 lab calibration; V1v2spec** (TODO 4m/4k). As production
+  `polymer_v1` (413f770b, 86a29f7e, ad8866c7, 2b560445; read only) and the user's lab delivery
+  (`~/AC/lab_coeffs_h2/`): smile V1 = `smile/smile_correction_matrix_HYPSO-2_full_lab.npz` (the lab delivery,
+  sha 46e9aedd, = polymer_v1's fix of the row-reversed production file); spectral V1 =
+  `spectral/h2_spectral_array_lab_smile_row608.npz`, verified equal to row 608 of that smile (the centre row
+  smile correction resamples onto for the AOC window, aoi_y 62, 1092 rows; user decision 2026-10-28);
+  release V1 = lab gains + lab smile + row 608 (also full frame) + the sensor-profile FWHM table (user
+  decision); new release V1v2spec (V2 spectral, for OC-SMART; alias `v1v2spec`). The old V1 centre-row
+  wavelengths moved to `reference/`. Venice 2025-03-04: V1 and V1v2spec give identical radiance; V1 band
+  centres +1.11..+1.24 nm vs V2 (median 1.14), renaming all 120 bands. Corrected an earlier claim: the
+  package's `h2_spectral_calibration_coefficients.npz` has the same values as the lab delivery (key
+  `arr_0` vs `data`). HYPSO-1 V1 unchanged (already its lab set). Tests: release table, V1 spectral = lab
+  smile row 608, checksums. docs/calibration.rst. Changes V1 outputs (before: V2 smile, centre-row
+  wavelengths).
 - **2026-11-04 (×93): calibration data, docs and code organised** (user: "Data files, docs, and code"; keep
   every file). `data/` in both calibration packages now has one folder per correction (`radiometric/`,
   `smile/`, `destriping/` HYPSO-1, `spectral/`, `fwhm/`, `optional/`) and `reference/` for the 13 files no

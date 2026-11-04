@@ -2,6 +2,7 @@
 data/coefficients.yaml, REFACTOR_PROGRESS.md ×48)."""
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 from hypso.calibration.manifest import sha256_file
@@ -49,8 +50,11 @@ def test_v31v2spec_and_release_names():
      "smile_correction_matrix_HYPSO-2_full_v2.npz", "spectral_array_calibrated_poly_full_v2.npz"),
     ("abs", "v2", "h2_radiometric_calibration_matrix_full_v2_abs.npz",
      "smile_correction_matrix_HYPSO-2_full_v2.npz", "spectral_array_calibrated_poly_full_v2.npz"),
+    # V1 = the complete lab set (×94): lab gains, lab smile, band centres from the lab smile's row 608
     ("lab", "V1", "h2_radiometric_calibration_matrix_full_v1_lab.npz",
-     "smile_correction_matrix_HYPSO-2_full_v2.npz", "h2_spectral_calibration_wavelengths_center_row_v1.npz"),
+     "smile_correction_matrix_HYPSO-2_full_lab.npz", "h2_spectral_array_lab_smile_row608.npz"),
+    ("lab", "V1v2spec", "h2_radiometric_calibration_matrix_full_v1_lab.npz",
+     "smile_correction_matrix_HYPSO-2_full_lab.npz", "spectral_array_calibrated_poly_full_v2.npz"),
 ])
 def test_releases(coeff_type, version, radiometric, smile, spectral):
     names = _names(get_hypso2_calibration_files(coeff_type=coeff_type, version=version))
@@ -99,14 +103,18 @@ def test_every_catalog_file_exists():
 
 
 # The V2/V1 files are the pre-V3 files renamed, byte for byte: sha256 values
-# from the coefficient manifest before the renames.
+# from the coefficient manifest before the renames. Except V1's smile and
+# spectral (×94): the lab delivery's smile (= production polymer_v1 ad8866c7)
+# and its row 608 (polymer_v1 2b560445), replacing the V2 smile and the old
+# lab centre row (b5eb0724..., now in reference/).
 _PRE_V3_SHA256 = {
     ("radiometric", "V2", "moved"): "ceec3db9e1a164c060da2a273e8287c8d70cc1703f044c07068e427bd14d9513",
     ("radiometric", "V2", "abs"): "e022ac744aac9be56301e3d6880606264ecb541e2515f435bc33e2fdf3308a14",
     ("radiometric", "V1", "lab"): "933d83251050d9587f0e71d452511ff63b6a5212e52ecf0a7c90b92063783f29",
     ("smile", "V2", None): "3537f5d2bbc7c1d87e183b88959321802707b2a14ef8c89a38bfe9862d4dd4cd",
     ("spectral", "V2", None): "40627dd626d612c682085545734816e5c4324acb0a17ab3f2848a1ee3306c027",
-    ("spectral", "V1", None): "b5eb0724927319dee8b050adba0221ab3e040916b2e4f1df436fdf869ea666c7",
+    ("smile", "V1", None): "46e9aedd54e85c2aa3c08fb6f2fe1bab4f482c7e3d37af9558dcfa138664f587",
+    ("spectral", "V1", None): "b372ffdc15ad74774b900218a0c1e0428d816f9ba7815f701d1ceae0f46b70f3",
 }
 
 
@@ -191,3 +199,12 @@ def test_data_folder_is_organized(package):
     assert all(p.split("/")[0] == "reference" for p in reference)
     assert all(p.split("/")[0] in ("radiometric", "smile", "destriping", "spectral", "fwhm", "optional")
                for p in selected)
+
+
+
+def test_v1_spectral_is_the_lab_smile_row_608():
+    # ×94 (user decision 2026-10-28): V1's band centres are row 608 of the lab smile, the centre row the
+    # smile correction resamples onto for the AOC window (aoi_y 62, 1092 rows)
+    files = get_hypso2_calibration_files(coeff_type="lab", version="V1")
+    with np.load(files["smile"]) as smile, np.load(files["spectral"]) as spectral:
+        np.testing.assert_array_equal(spectral[spectral.files[0]], smile[smile.files[0]][62 + 1092 // 2])

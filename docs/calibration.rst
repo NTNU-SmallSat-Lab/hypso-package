@@ -10,7 +10,7 @@ package. The files are versioned, and you choose them with two arguments:
 
 ``version``
     The coefficient release - ``V3.1`` (default), ``V3.1v2spec`` (for
-    OC-SMART), ``V2``, ``V1``, for both satellites - or a dictionary that sets
+    OC-SMART), ``V2``, ``V1`` (and, for HYPSO-2, ``V1v2spec``) - or a dictionary that sets
     the version of individual corrections. Production's names ``v31`` and
     ``v31v2spec`` work too; ``V3`` maps to ``V3.1`` with a deprecation warning.
 
@@ -36,7 +36,8 @@ Release         Radiometric variants        Smile        Spectral  FWHM
 V3.1 (default)  ``abs``, ``moved``          V3 (Sobel)   V3        V3.1 (in-orbit)
 V3.1v2spec      ``abs``, ``moved``          V3 (Sobel)   **V2**    V3.1 (in-orbit)
 V2              ``abs``, ``moved``          V2           V2        sensor profile
-V1              ``lab``                     V2           V1        sensor profile
+V1              ``lab``                     V1 (lab)     V1 (lab)  sensor profile
+V1v2spec        ``lab``                     V1 (lab)     **V2**    sensor profile
 ==============  ==========================  ===========  ========  ==============
 
 * **V3.1** (2026-10-29, production's default ``v31``): ``abs`` is V3 ``abs``
@@ -51,7 +52,14 @@ V1              ``lab``                     V2           V1        sensor profil
   settings for the V3 names with V3.1.
 * **V2** is the set used before V3 (``moved``, and ``abs``, which used to be
   called ``adjusted``).
-* **V1** is the lab calibration (previously ``original``).
+* **V1** is the complete lab calibration (previously ``original``): the lab
+  gains, the lab smile as delivered by the calibration team (2026-10-28), and
+  band centres from row 608 of that smile matrix. Smile correction resamples
+  every row onto the frame's centre row, which is detector row 608 for the AOC
+  window (``aoi_y`` 62, 1092 rows), so those are the corrected cube's band
+  wavelengths there; for windows centred elsewhere they are slightly off.
+  Before 2026-11, V1 used the V2 smile and the old lab centre-row wavelengths.
+* **V1v2spec** is V1 with the V2 band names, for OC-SMART.
 * **V3** is superseded by V3.1: ``version="V3"`` uses V3.1 with a deprecation
   warning (the ``abs`` gains differ by about 3%).
 
@@ -109,12 +117,13 @@ Folder             Contents
 ``radiometric/``   Gains: V3.1 ``abs`` (full frame, and a pre-binned wide-capture matrix used
                    as is), ``moved`` (V3.1 and V2), V2 ``abs``, V1 ``lab``; HYPSO-1 also a
                    moon matrix, used for moon captures whatever the variant.
-``smile/``         V3 (Sobel, full frame, cropped per capture) for V3.1; V2 (HYPSO-2) or the
-                   V1 nominal, wide and full-frame matrices (HYPSO-1) for the older releases.
+``smile/``         V3 (Sobel, full frame, cropped per capture) for V3.1; V2 and the lab
+                   smile (HYPSO-2), or the V1 nominal, wide and full-frame matrices (HYPSO-1).
 ``destriping/``    HYPSO-1 only: the V1 matrices for nominal and wide captures, used by every
                    HYPSO-1 release including V3.1, as in production. There is no V3 or V3.1
                    destriping, and HYPSO-2 has none in any release.
-``spectral/``      Band centres: V3 (V3.1), V2 (V3.1v2spec, V2), the lab centre row (V1).
+``spectral/``      Band centres: V3 (V3.1), V2 (V3.1v2spec, V2, V1v2spec), and for V1 the
+                   lab smile's row 608 (HYPSO-2) or the lab centre row (HYPSO-1).
 ``fwhm/``          The V3.1 in-orbit FWHM tables; older releases use the sensor profile's
                    built-in table.
 ``optional/``      HYPSO-2's keystone/distortion model (``h2_distortion_model_v1.npz``), outside
@@ -127,10 +136,12 @@ Folder             Contents
 The catalog's ``reference_files`` section describes each reference file; in
 short:
 
-* HYPSO-2: the lab smile matrix as in production, with its rows reversed (a
-  known error, never applied: V1 uses the V2 smile); lab-era full-frame
-  spectral calibration matrices (plain and smoothed) and polynomial
-  coefficients; engineering-model and pre-launch flight-model spectral
+* HYPSO-2: the lab smile matrix as production shipped it, with its rows
+  reversed (a known error; smile V1 is the corrected lab delivery); the old
+  V1 lab centre-row wavelengths; lab-era full-frame spectral calibration
+  matrices (plain and smoothed); the lab spectral polynomial (the same values
+  as the calibration team's delivery; V1 takes its band wavelengths from the
+  lab smile instead); engineering-model and pre-launch flight-model spectral
   coefficients; a moon radiometric matrix (HYPSO-2 moon captures use the
   release's gains, as in production); pre-binned 2025 nominal and wide gains;
   a band-centre table.

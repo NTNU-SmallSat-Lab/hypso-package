@@ -57,6 +57,13 @@ smile:
     file: smile/smile_correction_matrix_HYPSO-2_full_sobel_v3.npz
   V2:
     file: smile/smile_correction_matrix_HYPSO-2_full_v2.npz
+  V1:
+    file: smile/smile_correction_matrix_HYPSO-2_full_lab.npz
+    description: >-
+      The lab smile, wavelength (nm) per detector pixel, as delivered by the
+      calibration team (lab_coeffs_h2, 2026-10-28; production polymer_v1
+      ad8866c7). Replaces the row-reversed file production shipped under the
+      name smile_correction_matrix_HYPSO-2_full.npz (now in reference/).
 
 spectral:
   V3:
@@ -69,8 +76,14 @@ spectral:
     file: spectral/spectral_array_calibrated_poly_full_v2.npz
     description: Polynomial fit over the whole spectrum (was spectral_array_calibrated_poly_full.npz).
   V1:
-    file: spectral/h2_spectral_calibration_wavelengths_center_row_v1.npz
-    description: Lab centre-row wavelengths (was h2_spectral_calibration_wavelengths_center_row.npz).
+    file: spectral/h2_spectral_array_lab_smile_row608.npz
+    description: >-
+      Row 608 of the lab smile (smile V1): smile correction resamples every
+      row onto the frame's centre row, detector row 608 for the AOC window
+      (aoi_y 62, 1092 rows), so these are the corrected cube's band
+      wavelengths there (user decision 2026-10-28; production polymer_v1
+      2b560445). Exact only for windows centred on row 608. The lab polynomial
+      is 0.13 nm below it (median), the old lab centre row 0.06 nm.
 
 # No destriping coefficients for HYPSO-2 in any version.
 
@@ -103,10 +116,15 @@ releases:
     smile: V2
     spectral: V2
     spectral_full_frame: V2
-  V1:
+  V1:                     # the complete lab calibration (production polymer_v1 'v1')
     radiometric: V1
-    smile: V2             # as the pre-V3 "original" set
+    smile: V1
     spectral: V1
+    spectral_full_frame: V1
+  V1v2spec:               # V1 with the V2 band names, for OC-SMART (production polymer_v1 'v1v2spec')
+    radiometric: V1
+    smile: V1
+    spectral: V2
     spectral_full_frame: V2
 
 # Optional models, outside the releases (hypso.calibration selects them only
@@ -145,6 +163,7 @@ release_aliases:
   V3: [V3.1, "V3 is superseded by V3.1 (abs gains about 3% lower, in-orbit FWHM table)"]
   v31: [V3.1, null]                 # production coeff_type names
   v31v2spec: [V3.1v2spec, null]
+  v1v2spec: [V1v2spec, null]
 
 # A file entry may have `capture_types: {<type>: {file, crop, description}}`
 # to use another file for that capture type (e.g. V3 abs for wide captures);
@@ -155,14 +174,16 @@ release_aliases:
 # reads them.
 reference_files:
   reference/smile_correction_matrix_HYPSO-2_full.npz: >-
-    The lab smile matrix as in production hypso-package, with its rows reversed
-    (a known error, never applied: V1 uses the V2 smile). The corrected lab
-    smile is the user's lab delivery (TODO 4m).
+    The lab smile matrix as production hypso-package shipped it, with its rows
+    reversed and about 0.2 nm off (a known error; production code crashed
+    before applying it). Smile V1 is the corrected lab delivery.
   reference/h2_spectral_calibration_matrix.npz: Full-frame spectral calibration matrix (lab era).
   reference/h2_spectral_calibration_matrix_smoothed.npz: The same, smoothed.
   reference/h2_spectral_calibration_coefficients.npz: >-
-    Lab-era spectral polynomial coefficients; differs from the user's later lab
-    delivery of the same name.
+    The lab spectral polynomial (quadratic in detector column: -7.19670e-06,
+    0.398151, 208.973); the same values as the calibration team's 2026-10-28
+    delivery (stored there under key `data`, here `arr_0`). Not used: V1 takes
+    its band wavelengths from the lab smile.
   reference/EQM_spectral_coeffs_fluorescent_before_shock_vib.npz: >-
     Engineering-model spectral coefficients (fluorescent lamp, before shock and
     vibration tests).
@@ -175,3 +196,6 @@ reference_files:
     Pre-binned 2025 gains for wide captures; equal to the V1 lab matrix cropped
     to the wide AOI and binned.
   reference/spectral_bands_HYPSO-2.npz: A band-centre table.
+  reference/h2_spectral_calibration_wavelengths_center_row_v1.npz: >-
+    The lab centre-row wavelengths that were V1's spectral calibration before
+    2026-11 (0.06 nm below the lab smile's row 608, median).
