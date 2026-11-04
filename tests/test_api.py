@@ -622,3 +622,18 @@ def test_rgb_camera_matches_ground_processing():
     ground = np.asarray(Image.open(RGB_CAPTURE / "processing-temp" / "rgb-camera-image-debayered.png"), np.float32)
     assert np.abs(image.values - ground).mean() < 0.5
     assert read_camera_image(find_camera_image(RGB_CAPTURE), demosaic=False).dtype == np.uint8
+
+
+def test_ocsmart_version_from_folder_name_or_git(tmp_path):
+    import subprocess
+    from hypso.processing.atmospheric import _ocsmart_version
+    release = tmp_path / "OCSMART_Linux_v2.6.3"
+    release.mkdir()
+    assert _ocsmart_version(release) == "v2.6.3"
+    checkout = tmp_path / "OC-SMART"
+    checkout.mkdir()
+    assert _ocsmart_version(checkout) == "unknown"
+    subprocess.run(["git", "init", "-q", "-b", "hypso-refactor", str(checkout)], check=True)
+    subprocess.run(["git", "-C", str(checkout), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q",
+                    "--allow-empty", "-m", "init"], check=True)
+    assert _ocsmart_version(checkout) == "git:hypso-refactor"

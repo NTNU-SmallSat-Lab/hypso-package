@@ -459,9 +459,18 @@ _OCSMART_GEOMETRY = {"Latitude", "Longitude", "Relative_azimuth", "Sensor_zenith
 
 
 def _ocsmart_version(install_dir) -> str:
-    # Installations are named like OCSMART_Linux_v2.6.3.
+    # Release installations are named like OCSMART_Linux_v2.6.3; a git checkout
+    # (e.g. the CameronLP/OC-SMART fork) is identified by its branch, with the
+    # commit recorded separately (ac_git_commit).
     match = re.search(r"v\d+(\.\d+)+", Path(install_dir).name)
-    return match.group(0) if match else "unknown"
+    if match:
+        return match.group(0)
+    try:
+        out = subprocess.run(["git", "-C", str(install_dir), "rev-parse", "--abbrev-ref", "HEAD"],
+                             capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        return "unknown"
+    return f"git:{out.stdout.strip()}" if out.returncode == 0 and out.stdout.strip() else "unknown"
 
 
 @contextmanager
@@ -544,7 +553,8 @@ def _ocsmart(tree, masked, mask_flags, work_dir, config=None, **options):
     parameters = {"masked": masked, "mask_flags": list(mask_flags) if mask_flags else "all" if masked else "",
                   "input_level": "L1D", "bands_returned": n_bands, "output_file": output_file.name}
     settings = {"l2_prod": l2_prod, "solz_limit": solz_limit, "senz_limit": senz_limit}
-    ac = ac_attrs("ocsmart", version=_ocsmart_version(install_dir), install_path=install_dir,
+    ac = ac_attrs("ocsmart", version=_ocsmart_version(install_dir), git_commit=_git_commit(install_dir),
+                  install_path=install_dir,
                   settings_effective=settings, settings_user=options)
     return _l2a_tree(tree, "ocsmart", "Rrs", cube, parameters, ac, variables)
 

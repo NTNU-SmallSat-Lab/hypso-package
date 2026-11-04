@@ -271,9 +271,12 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    `../OC-SMART-github`, branch `hypso-refactor` (3677966, pushed): sensors HYPSO1_HSI (placeholder, skipped
    with a warning; no auxdata) and HYPSO2_HSI (the existing HYPSO auxdata, renamed), and the HYPSO reader reads
    the refactor's flat layout. The three LFS auxdata files were copied from the patched v2.6.3 copy (sha256 =
-   the LFS pointer oids; `git update-index --skip-worktree`, no git-lfs installed). Left: a dedicated conda
-   env from the fork's requirements; an `ocsmart` entry in HYPSO_AC_CONFIG pointing at the clone; a Venice run
-   with release V3.1v2spec (and V1v2spec) compared with the reprocessed OC-SMART L2A. Not touched on user
+   the LFS pointer oids; `git update-index --skip-worktree`, no git-lfs installed). Conda env
+   `ocsmart-refactor` (Python 3.12, numpy 2.5, GDAL from conda-forge, l8angles 1.0.0 and lll-gas-corr-lib
+   0.2.4 wheels from Light-and-Life-Lab). Real runs on Venice verified (×96). Left: an `ocsmart` entry in the
+   user's HYPSO_AC_CONFIG (`dir: .../OC-SMART-github`, `python: .../envs/ocsmart-refactor/bin/python`);
+   more captures and V1v2spec; ancillary files are downloaded with the user's own `~/.netrc` (the two Venice
+   MERRA-2 files were copied from the v2.6.3 cache). Not touched on user
    request: the fork's lat/lon subset typo in `latlon2linepixl` (`southeast_line` used for the pixel bounds,
    from c9df10b; not HYPSO specific).
 4q. **toybox-ac as an AC method** (user, 2026-11-04: "add support for toybox-ac"). toybox-ac
@@ -356,6 +359,17 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-11-04 (×96): real OC-SMART through the refactor, verified** (TODO 4p). The fork's `hypso-refactor`
+  branch in env `ocsmart-refactor`, run by `correct_atmosphere("ocsmart")` on Venice 2025-03-04 (about 280 s
+  per run). A: V2 moved with legacy SRF modelling (the reprocess's L1D) matches the production OC-SMART L2A
+  to 1.5e-7 sr-1 on every band and pixel (in memory; 1e-6 after 14-bit write), the same 83 bands and 132738
+  valid pixels: the fork's reader, the HYPSO2_HSI renaming and the refactor's staging/loading are right.
+  B: V3.1v2spec: Rrs 15-23% below A over the scene (median per band; V3.1 TOA about 14% below V2 moved,
+  amplified by the AC). At AAOT (3x3, the pipeline's matchup box) against AERONET-OC (F0-fixed matchup
+  table): A/AOC 0.85, 0.88, 0.92, 1.08, 1.69, 1.60 and B/AOC 1.10, 0.89, 0.90, 0.96, 1.42, 1.29 at 443, 490,
+  510, 560, 620, 667 nm (one matchup). Provenance: an installation without a version in its folder name
+  records `ac_version` `git:<branch>` and `ac_git_commit` (was "unknown" and empty). OC-SMART's `tsm(yoc)`
+  is absent in the fork's and production's output alike (not in `l2_prod`); the loader's warning is harmless.
 - **2026-11-04 (×95): OC-SMART input prefix follows the installation** (TODO 4p). Tagged v26.10.0a7 on ×94
   (8c1fcd08). The OC-SMART fork's `hypso-refactor` branch now has one sensor per satellite (HYPSO1_HSI,
   HYPSO2_HSI) instead of HYPSO_HSI. `_ocsmart_prefix` stages the L1D as `HYPSO<n>_HSI_<capture_id>-l1d.nc`
