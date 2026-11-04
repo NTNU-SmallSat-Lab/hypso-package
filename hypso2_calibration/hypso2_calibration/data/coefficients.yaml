@@ -13,27 +13,28 @@
 # and tag a release - see docs/versioning.rst.
 
 default_coeff_type: abs
-default_release: V3
+default_release: V3.1
 
 radiometric:
-  V3:
+  V3.1:
     abs:
-      file: h2_radiometric_calibration_matrix_full_v3_abs.npz
+      file: h2_radiometric_calibration_matrix_full_v31_abs.npz
       description: >-
-        V3 scaled to the absolute level of HYPSO-1 relative to PACE over
-        Libya-4: about 11% lower radiance than V3 moved (median ratio 0.887,
-        5-95% 0.857-0.921), no spectral shift between the two.
+        V3.1 (2026-10-29): V3 abs rescaled, x0.963 (5-95% 0.960-0.971) of V3 abs
+        for full-frame captures, nearly uniform over wavelength. V3 abs was V3
+        moved scaled to the absolute level of HYPSO-1 relative to PACE over
+        Libya-4 (about 11% below V3 moved). From production polymer_v3
+        c390ca27.
       capture_types:
         wide:
-          file: h2_radiometric_calibration_matrix_wide_v3_abs.npz
+          file: h2_radiometric_calibration_matrix_wide_v31_abs.npz
           crop: as_is
           description: >-
-            Wide captures: derived from binned wide data and used as is (no
-            crop/bin); about 1% below the binned full matrix (production
-            73eb6b8a).
+            Wide captures: x0.971 of V3 wide abs; equals the full V3.1 matrix
+            binned to the wide AOI (ratio 1.000); used as is.
     moved:
       file: h2_radiometric_calibration_matrix_full_moved_v3.npz
-      description: V3 moved.
+      description: V3 moved (unchanged in V3.1).
   V2:
     abs:
       file: h2_radiometric_calibration_matrix_full_v2_abs.npz
@@ -68,12 +69,30 @@ spectral:
 
 # No destriping coefficients for HYPSO-2 in any version.
 
+# Per-band FWHM: lines (nm) and their FWHM; band FWHM is interpolated between
+# them (constant outside). Releases without an `fwhm` version use the sensor
+# profile's built-in table (hypso.sensors.hypso2).
+fwhm:
+  V3.1:
+    file: h2_srf_fwhm_v31.npz
+    description: >-
+      In-orbit FWHM at 8 lines 430-764 nm (keys wavelength, fwhm, fwhm_std):
+      430.0: 6.64, 478.2: 3.68, 526.2: 3.40, 574.1: 3.55, 621.7: 3.40,
+      669.2: 3.42, 716.5: 3.47, 763.6: 4.28 nm.
+
 releases:
-  V3:
-    radiometric: V3
+  V3.1:
+    radiometric: V3.1
     smile: V3
-    spectral: V2          # V2 on purpose: OC-SMART compatibility (see spectral V3 above)
+    spectral: V3
+    spectral_full_frame: V3
+    fwhm: V3.1
+  V3.1v2spec:             # V3.1 with the pre-V3 band names, for OC-SMART (production 'v31v2spec')
+    radiometric: V3.1
+    smile: V3
+    spectral: V2
     spectral_full_frame: V2
+    fwhm: V3.1
   V2:
     radiometric: V2
     smile: V2
@@ -103,8 +122,8 @@ optional:
         valid for the flight model, and how does it combine with the crops,
         binning and the separate smile matrix?
 
-# Warn when a selection uses a spectral version outside `versions` (not for
-# release V1).
+# Warn when a custom selection ({correction: version}) uses a spectral version
+# outside `versions`; the releases' own choices are deliberate.
 spectral_note:
   versions: [V2]
   message: >-
@@ -115,6 +134,12 @@ spectral_note:
 aliases:
   adjusted: [abs, V2]
   original: [lab, V1]
+
+# Other names for releases: [release, deprecation message or null].
+release_aliases:
+  V3: [V3.1, "V3 is superseded by V3.1 (abs gains about 3% lower, in-orbit FWHM table)"]
+  v31: [V3.1, null]                 # production coeff_type names
+  v31v2spec: [V3.1v2spec, null]
 
 # A file entry may have `capture_types: {<type>: {file, crop, description}}`
 # to use another file for that capture type (e.g. V3 abs for wide captures);

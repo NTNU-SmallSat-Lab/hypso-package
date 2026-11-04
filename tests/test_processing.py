@@ -3,6 +3,8 @@ reference capture. End-to-end values are checked against the pre-refactor
 baseline in test_regression_real_capture.py; each step was also checked
 identical to the removed capture-object path before it was deleted
 (REFACTOR_PROGRESS.md ×47-×52)."""
+from importlib.resources import files
+
 import numpy as np
 import pytest
 
@@ -72,18 +74,28 @@ def test_l1d_provenance_and_srfs(l1d):
     assert len([n for n in srf.dataset.data_vars if n.startswith("Band_")]) == 120
 
 
-def test_wide_capture_abs_v3_uses_wide_matrix(l1a):
-    # The fixture is a wide capture: V3 abs uses the wide matrix as is
-    # (production 73eb6b8a; identical L1B verified against it).
-    step = l1a_to_l1b(l1a.tree, "abs", version="V3")["metadata/processing/l1b"].attrs
+def test_wide_capture_abs_v31_uses_wide_matrix_and_fwhm_table(l1a):
+    # The fixture is a wide capture: V3.1 abs uses the wide matrix as is (as V3 did, production
+    # 73eb6b8a), and its FWHM table travels with the product (×92)
+    from hypso.processing.capture import interpolate_fwhm
+    tree = l1a_to_l1b(l1a.tree, "abs", version="V3.1")
+    step = tree["metadata/processing/l1b"].attrs
     assert step["radiometric_capture_type"] == "wide" and step["radiometric_crop"] == "as_is"
-    assert "wide_v3_abs" in step["radiometric_file"]
+    assert "wide_v31_abs" in step["radiometric_file"] and step["fwhm_version"] == "V3.1"
+    corrections = tree["metadata/corrections"].dataset
+    table = np.load(files("hypso2_calibration").joinpath("data/h2_srf_fwhm_v31.npz"))
+    np.testing.assert_array_equal(corrections["fwhm_table_fwhm"].values, table["fwhm"])
+    cube = tree.dataset["Lt"]
+    np.testing.assert_allclose(cube["fwhm"].values, interpolate_fwhm(table["wavelength"], table["fwhm"],
+                                                                     cube["radiation_wavelength"].values))
+    v2 = l1a_to_l1b(l1a.tree, "abs", version="V2")
+    assert v2["metadata/processing/l1b"].attrs["fwhm_version"] == "sensor profile"
+    assert "fwhm_table_wavelength" not in v2["metadata/corrections"].dataset
 
 
 def test_as_is_radiometric_shape_mismatch_raises():
-    from importlib.resources import files
     from hypso.calibration.correction import CalibrationShapeMismatchError, read_coeffs_from_file
-    wide = files("hypso2_calibration").joinpath("data/h2_radiometric_calibration_matrix_wide_v3_abs.npz")
+    wide = files("hypso2_calibration").joinpath("data/h2_radiometric_calibration_matrix_wide_v31_abs.npz")
     with pytest.raises(CalibrationShapeMismatchError):
         # a nominal-sized AOI does not fit the pre-baked wide matrix
         read_coeffs_from_file(wide, "radiometric", x_start=428, x_stop=1508, y_start=0, y_stop=684,

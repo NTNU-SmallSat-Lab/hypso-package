@@ -182,12 +182,12 @@ def list_band_variables(path) -> list:
 
 
 def _fwhm_from_profile(sat_id: str, wavelengths: np.ndarray) -> np.ndarray:
-    # Same nearest-neighbour lookup as capture_types._get_fwhm, for files that
-    # store no per-band fwhm (ground-station L1A).
+    # The sensor profile's table, interpolated as CaptureParams.fwhm, for
+    # files that store no per-band fwhm (ground-station L1A).
+    from hypso.processing.capture import interpolate_fwhm
     from hypso.sensors import get_sensor_profile
     profile = get_sensor_profile(sat_id)
-    return np.array([profile.fwhm_lookup_fwhm[np.argmin(np.abs(w - profile.fwhm_lookup_wl))]
-                     for w in wavelengths], dtype=float)
+    return interpolate_fwhm(profile.fwhm_lookup_wl, profile.fwhm_lookup_fwhm, wavelengths)
 
 
 def _product_from_bands(ds: xr.Dataset, names: list):

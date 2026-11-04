@@ -13,6 +13,7 @@ The sys.path inserts mirror tests/baseline/compare_to_baseline.py so the suite
 works both against an editable install (pip install -e hypso/) and a bare
 checkout with the hypsoN_calibration siblings checked out next to hypso/.
 """
+import contextlib
 import sys
 from pathlib import Path
 
@@ -88,3 +89,26 @@ def written_nc_files(products, tmp_path_factory):
     files = {level: product.write(out_dir=out_dir) for level, product in products.items()}
     files["l2a"] = products["l1d"].correct_atmosphere("dps").write(out_dir=out_dir)
     return files
+
+
+@contextlib.contextmanager
+def legacy_srf_modelling():
+    """The SRF modelling before ×92 (production before 11756523): band FWHM
+    from the nearest table line and Gaussian SRFs over +/-3 sigma. For
+    comparisons against files made that way (baseline.json, production
+    reprocess files)."""
+    import hypso.srf.response as response
+    from hypso.processing.capture import CaptureParams
+
+    def nearest(self, wavelengths):
+        lines, values = (self.fwhm_table if self.fwhm_table is not None
+                         else (self.sensor_profile.fwhm_lookup_wl, self.sensor_profile.fwhm_lookup_fwhm))
+        lines = np.asarray(lines)
+        return np.array([values[np.argmin(np.abs(w - lines))] for w in np.asarray(wavelengths)], dtype=float)
+
+    saved = CaptureParams.fwhm, response.SRF_N_SIGMA
+    CaptureParams.fwhm, response.SRF_N_SIGMA = nearest, 3
+    try:
+        yield
+    finally:
+        CaptureParams.fwhm, response.SRF_N_SIGMA = saved

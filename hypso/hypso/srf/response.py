@@ -22,6 +22,11 @@ logger = logging.getLogger(__name__)
 SOLAR_SPECTRA = {"tsis": "TSIS-1 HSRS v2 (2022-11-30)", "thuillier": "Thuillier et al. (2002) spectrum"}
 
 
+#: Half width of the Gaussian SRFs, in sigma (was 3): production 11756523,
+#: from aria 368d16d9, as in h2-onboard-calibration.
+SRF_N_SIGMA = 4
+
+
 @dataclass(frozen=True)
 class SpectralResponse:
     """SRFs and what is derived from them. Shapes: n_bands = binned band
@@ -50,7 +55,7 @@ class SpectralResponse:
     #: "tsis" (TSIS-1 HSRS) or "thuillier" (Thuillier 2002).
     ssi_source: str
     #: Wavelength grid: the irradiance spectrum's own, truncated to the bands'
-    #: range +/- 3 sigma.
+    #: range +/- SRF_N_SIGMA sigma.
     grid: str = "native-truncated"
 
 
@@ -90,15 +95,15 @@ def compute_spectral_response(band_centers_unbinned, fwhm_unbinned, bin_factor: 
 
 
 def gaussian_srfs(ssi, solar_wavelengths, sensor_wavelengths, sensor_fwhm):
-    """One Gaussian SRF (peak 1, +/- 3 sigma) per band on the irradiance
+    """One Gaussian SRF (peak 1, +/- :data:`SRF_N_SIGMA` sigma) per band on the irradiance
     spectrum's wavelength grid, truncated to the first band's start and the
     last band's end. Returns (srfs as sparse CSR, truncated irradiance,
     truncated wavelengths)."""
     sigma_nm = sensor_fwhm / (2 * np.sqrt(2 * np.log(2)))
 
     sensor_band_indices = [np.abs(solar_wavelengths - w).argmin() for w in sensor_wavelengths]
-    first_band_start = solar_wavelengths[sensor_band_indices[0]] - 3 * sigma_nm[0]
-    last_band_end = solar_wavelengths[sensor_band_indices[-1]] + 3 * sigma_nm[-1]
+    first_band_start = solar_wavelengths[sensor_band_indices[0]] - SRF_N_SIGMA * sigma_nm[0]
+    last_band_end = solar_wavelengths[sensor_band_indices[-1]] + SRF_N_SIGMA * sigma_nm[-1]
     start = np.abs(solar_wavelengths - first_band_start).argmin()
     end = np.abs(solar_wavelengths - last_band_end).argmin()
     truncated_ssi = ssi[start:end + 1]
@@ -106,9 +111,9 @@ def gaussian_srfs(ssi, solar_wavelengths, sensor_wavelengths, sensor_fwhm):
 
     srfs = lil_matrix((len(sensor_wavelengths), len(truncated_wavelengths)), dtype=np.float32)
     for i, center in enumerate(sensor_wavelengths):
-        start_idx = np.abs(truncated_wavelengths - (center - 3 * sigma_nm[i])).argmin()
-        end_idx = np.abs(truncated_wavelengths - (center + 3 * sigma_nm[i])).argmin()
-        gx = np.linspace(-3 * sigma_nm[i], 3 * sigma_nm[i], end_idx - start_idx + 1)
+        start_idx = np.abs(truncated_wavelengths - (center - SRF_N_SIGMA * sigma_nm[i])).argmin()
+        end_idx = np.abs(truncated_wavelengths - (center + SRF_N_SIGMA * sigma_nm[i])).argmin()
+        gx = np.linspace(-SRF_N_SIGMA * sigma_nm[i], SRF_N_SIGMA * sigma_nm[i], end_idx - start_idx + 1)
         srfs[i, start_idx:end_idx + 1] = np.exp(-(gx / sigma_nm[i]) ** 2 / 2)
     return srfs.tocsr(), truncated_ssi, truncated_wavelengths
 

@@ -14,22 +14,37 @@ def _names(files):
             if k not in ("selection", "crop_modes")}
 
 
-def test_default_is_abs_v3_with_v2_spectral():
+def test_default_is_abs_v31():
+    # V3.1, production's default (polymer_v3 c390ca27, ×92): V3 spectral and the in-orbit FWHM table
     files = get_hypso2_calibration_files()
     assert _names(files) == {
-        "radiometric": "h2_radiometric_calibration_matrix_full_v3_abs.npz",
+        "radiometric": "h2_radiometric_calibration_matrix_full_v31_abs.npz",
         "smile": "smile_correction_matrix_HYPSO-2_full_sobel_v3.npz",
         "destriping": None,
-        "spectral": "spectral_array_calibrated_poly_full_v2.npz",   # V2: OC-SMART compatibility
-        "spectral_full_frame": "spectral_array_calibrated_poly_full_v2.npz",
+        "spectral": "spectral_array_calibrated_poly_full_v3.npz",
+        "spectral_full_frame": "spectral_array_calibrated_poly_full_v3.npz",
+        "fwhm": "h2_srf_fwhm_v31.npz",
     }
-    assert files["selection"] == {"coeff_type": "abs", "release": "V3", "radiometric": "V3/abs",
-                                  "smile": "V3", "spectral": "V2", "spectral_full_frame": "V2"}
+    assert files["selection"] == {"coeff_type": "abs", "release": "V3.1", "radiometric": "V3.1/abs",
+                                  "smile": "V3", "spectral": "V3", "spectral_full_frame": "V3", "fwhm": "V3.1"}
+
+
+def test_v31v2spec_and_release_names():
+    # for OC-SMART: V3.1 with the pre-V3 band names; production's names work; V3 maps to V3.1
+    files = get_hypso2_calibration_files(version="V3.1v2spec")
+    assert _names(files)["spectral"] == "spectral_array_calibrated_poly_full_v2.npz"
+    assert _names(files)["radiometric"] == "h2_radiometric_calibration_matrix_full_v31_abs.npz"
+    assert files["selection"]["fwhm"] == "V3.1"
+    assert get_hypso2_calibration_files(version="v31v2spec")["selection"]["release"] == "V3.1v2spec"
+    assert get_hypso2_calibration_files(version="v31")["selection"]["release"] == "V3.1"
+    with pytest.warns(DeprecationWarning, match="superseded by V3.1"):
+        assert get_hypso2_calibration_files(version="V3")["selection"]["release"] == "V3.1"
+    assert get_hypso2_calibration_files(version="V2")["selection"]["fwhm"] is None     # sensor profile table
 
 
 @pytest.mark.parametrize("coeff_type, version, radiometric, smile, spectral", [
-    ("moved", "V3", "h2_radiometric_calibration_matrix_full_moved_v3.npz",
-     "smile_correction_matrix_HYPSO-2_full_sobel_v3.npz", "spectral_array_calibrated_poly_full_v2.npz"),
+    ("moved", "V3.1", "h2_radiometric_calibration_matrix_full_moved_v3.npz",
+     "smile_correction_matrix_HYPSO-2_full_sobel_v3.npz", "spectral_array_calibrated_poly_full_v3.npz"),
     ("moved", "V2", "h2_radiometric_calibration_matrix_full_moved_v2.npz",
      "smile_correction_matrix_HYPSO-2_full_v2.npz", "spectral_array_calibrated_poly_full_v2.npz"),
     ("abs", "v2", "h2_radiometric_calibration_matrix_full_v2_abs.npz",
@@ -49,10 +64,10 @@ def test_mixing_versions():
     assert names["radiometric"] == "h2_radiometric_calibration_matrix_full_moved_v3.npz"
     assert names["spectral"] == "spectral_array_calibrated_poly_full_v3.npz"
     assert files["selection"]["release"] == "custom"
-    # V3 radiometric with every other correction from V2
-    files = get_hypso2_calibration_files(version={"radiometric": "V3", "smile": "V2"})
+    # V3.1 radiometric with V2 smile, everything else from the default release
+    files = get_hypso2_calibration_files(version={"radiometric": "V3.1", "smile": "V2"})
     assert _names(files)["smile"] == "smile_correction_matrix_HYPSO-2_full_v2.npz"
-    assert files["selection"]["radiometric"] == "V3/abs"
+    assert files["selection"]["radiometric"] == "V3.1/abs"
 
 
 @pytest.mark.parametrize("alias, coeff_type, release", [("adjusted", "abs", "V2"), ("original", "lab", "V1")])
@@ -103,14 +118,13 @@ def test_pre_v3_files_unchanged(key, sha):
     assert sha256_file(files("hypso2_calibration").joinpath(f"data/{entry['file']}")) == sha
 
 
-def test_wide_captures_use_the_wide_v3_abs_matrix():
-    # Production 73eb6b8a: V3 abs uses the wide matrix for wide captures,
-    # as is (no crop/bin).
+def test_wide_captures_use_the_wide_v31_abs_matrix():
+    # V3.1 abs uses the wide matrix for wide captures, as is (no crop/bin), like V3 did (production 73eb6b8a)
     wide = get_hypso2_calibration_files(capture_type="wide")
-    assert _names(wide)["radiometric"] == "h2_radiometric_calibration_matrix_wide_v3_abs.npz"
+    assert _names(wide)["radiometric"] == "h2_radiometric_calibration_matrix_wide_v31_abs.npz"
     assert wide["crop_modes"] == {"radiometric": "as_is"}
     assert wide["selection"]["radiometric_capture_type"] == "wide"
-    for capture_type, coeff_type, version in (("nominal", "abs", "V3"), ("wide", "moved", "V3"),
+    for capture_type, coeff_type, version in (("nominal", "abs", "V3.1"), ("wide", "moved", "V3.1"),
                                               ("wide", "abs", "V2")):
         files = get_hypso2_calibration_files(capture_type=capture_type, coeff_type=coeff_type, version=version)
         assert "wide" not in _names(files)["radiometric"] and files["crop_modes"] == {}
@@ -124,12 +138,21 @@ def test_catalog_module_copies_identical():
 
 
 def test_hypso1_versions_and_names():
-    # HYPSO-1 on HYPSO-2's scheme (REFACTOR_PROGRESS.md ×69): moved (default) / abs / lab, V2 / V1.
+    # HYPSO-1 on HYPSO-2's scheme (REFACTOR_PROGRESS.md ×69): V3.1 (default, ×92) / V2 / V1;
+    # a variant without a version takes the newest release that has it (moved -> V2, lab -> V1).
     from hypso1_calibration import get_hypso1_calibration_files, resolve_coefficients as resolve1
-    assert resolve1() == {"coeff_type": "moved", "release": "V2", "radiometric": "V2/moved", "smile": "V1",
-                          "destriping": "V1", "spectral": "V2", "spectral_full_frame": "V2"}
+    assert resolve1() == {"coeff_type": "abs", "release": "V3.1", "radiometric": "V3.1/abs", "smile": "V3",
+                          "destriping": "V1", "spectral": "V3", "spectral_full_frame": "V2", "fwhm": "V3.1"}
+    assert resolve1("moved") == {"coeff_type": "moved", "release": "V2", "radiometric": "V2/moved", "smile": "V1",
+                                 "destriping": "V1", "spectral": "V2", "spectral_full_frame": "V2", "fwhm": None}
     names = lambda f: {k: (Path(str(v)).name if v else None) for k, v in f.items() if k not in ("crop_modes", "selection")}
-    wide = names(get_hypso1_calibration_files("wide", coeff_type="abs"))
+    v31 = get_hypso1_calibration_files("wide")
+    assert names(v31)["radiometric"] == "radiometric_calibration_matrix_HYPSO-1_wide_v31.npz"
+    assert names(v31)["smile"] == "smile_correction_matrix_HYPSO-1_full_sobel_v3.npz"
+    assert v31["crop_modes"] == {"radiometric": "as_is", "smile": "crop_and_bin"}
+    assert names(get_hypso1_calibration_files("wide", version="v31v2spec"))["spectral"] == \
+        "spectral_array_calibrated_poly_full.npz"
+    wide = names(get_hypso1_calibration_files("wide", coeff_type="abs", version="V2"))
     assert wide["radiometric"] == "radiometric_calibration_matrix_HYPSO-1_full_v1_adjusted_v11.npz"
     assert wide["smile"] == "smile_correction_matrix_HYPSO-1_wide_v1.npz"
     assert wide["destriping"] == "destriping_matrix_HYPSO-1_wide_v1.npz"

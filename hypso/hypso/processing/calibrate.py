@@ -7,6 +7,7 @@ for the variants and releases.
 import importlib
 import logging
 import warnings
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -41,6 +42,7 @@ def _calibration_files(params: CaptureParams, coeff_type: str, version, coeff_fi
     kwargs = {k: v for k, v in (("coeff_type", coeff_type), ("version", version)) if v is not None}
     files = params.sensor_profile.calibration_files(params.capture_type, **kwargs)
     selected = {key: files.get(key) for key in _FILE_KINDS}
+    selected["fwhm"] = files.get("fwhm")
     selected["crop_modes"] = files.get("crop_modes") or {}
     return selected, files.get("selection")
 
@@ -132,6 +134,11 @@ def l1a_to_l1b(tree: xr.DataTree, coeff_type: str = None, version=None, coeff_fi
                               crop_mode=crop_modes.get("destriping", "crop_and_bin"))
     spectral_coeffs = _load(files["spectral"], "spectral", params)
     spectral_coeffs_unbinned = _load(files["spectral"], "spectral", params, bin_factor=1)
+    table = None
+    if files.get("fwhm") is not None:
+        with np.load(files["fwhm"]) as npz:
+            table = (np.asarray(npz["wavelength"], dtype=float), np.asarray(npz["fwhm"], dtype=float))
+        params = replace(params, fwhm_table=table)
     keystone_entry = None
     if keystone:
         files["keystone"], keystone_entry, keystone_b_hat = _keystone_model(params)
@@ -179,6 +186,10 @@ def l1a_to_l1b(tree: xr.DataTree, coeff_type: str = None, version=None, coeff_fi
     if spectral_coeffs is not None:
         corrections["wavelengths"] = ("bands", np.asarray(spectral_coeffs, dtype="f8"))
         corrections["spec_coeffs"] = ("specrows", np.asarray(spectral_coeffs, dtype="f8"))
+    if table is not None:
+        # the FWHM table travels with the product (TOA reflectance and SRFs use it)
+        corrections["fwhm_table_wavelength"] = ("fwhm_lines", table[0])
+        corrections["fwhm_table_fwhm"] = ("fwhm_lines", table[1])
     if spectral_coeffs_unbinned is not None:
         corrections["wavelengths_unbinned"] = ("bands_unbinned", np.asarray(spectral_coeffs_unbinned, dtype="f8"))
         corrections["spec_coeffs_unbinned"] = ("specrows_unbinned",
@@ -194,6 +205,7 @@ def l1a_to_l1b(tree: xr.DataTree, coeff_type: str = None, version=None, coeff_fi
         parameters["coefficient_release"] = selection["release"]
         for kind in ("radiometric", "smile", "spectral"):
             parameters[f"{kind}_version"] = selection[kind]
+        parameters["fwhm_version"] = selection.get("fwhm") or "sensor profile"
         if "radiometric_capture_type" in selection:
             parameters["radiometric_capture_type"] = selection["radiometric_capture_type"]
     parameters["radiometric_crop"] = crop_modes.get("radiometric", "crop_and_bin")

@@ -6,13 +6,13 @@ corrections, each from a coefficient file shipped in the sensor's calibration
 package. The files are versioned, and you choose them with two arguments:
 
 ``coeff_type``
-    The radiometric variant: ``abs``, ``moved`` or ``lab``. Default ``abs`` for
-    HYPSO-2, ``moved`` for HYPSO-1.
+    The radiometric variant: ``abs``, ``moved`` or ``lab``. Default ``abs``.
 
 ``version``
-    The coefficient release - HYPSO-2: ``V3`` (default), ``V2``, ``V1``;
-    HYPSO-1: ``V2`` (default), ``V1`` - or a dictionary that sets the version
-    of individual corrections.
+    The coefficient release - ``V3.1`` (default), ``V3.1v2spec`` (for
+    OC-SMART), ``V2``, ``V1``, for both satellites - or a dictionary that sets
+    the version of individual corrections. Production's names ``v31`` and
+    ``v31v2spec`` work too; ``V3`` maps to ``V3.1`` with a deprecation warning.
 
 .. code-block:: python
 
@@ -20,9 +20,9 @@ package. The files are versioned, and you choose them with two arguments:
 
    l1a = hypso.open("....L1A.nc")
 
-   l1b = l1a.calibrate()                                # abs, V3
+   l1b = l1a.calibrate()                                # abs, V3.1
+   l1b = l1a.calibrate(version="V3.1v2spec")            # V3.1 with the pre-V3 band names, for OC-SMART
    l1b = l1a.calibrate("moved", version="V2")           # the pre-V3 "moved" set
-   l1b = l1a.calibrate(version={"spectral": "V3"})      # V3, but V3 spectral too
 
 ``hypso.processing.l1a_to_l1b(tree, ...)`` takes the same arguments for a
 product tree.
@@ -30,28 +30,45 @@ product tree.
 Releases
 --------
 
-=========  ==========================  ===========  ==============
-Release    Radiometric variants        Smile        Spectral
-=========  ==========================  ===========  ==============
-V3         ``abs``, ``moved``          V3 (Sobel)   **V2**
-V2         ``abs``, ``moved``          V2           V2
-V1         ``lab``                     V2           V1
-=========  ==========================  ===========  ==============
+==============  ==========================  ===========  ========  ==============
+Release         Radiometric variants        Smile        Spectral  FWHM
+==============  ==========================  ===========  ========  ==============
+V3.1 (default)  ``abs``, ``moved``          V3 (Sobel)   V3        V3.1 (in-orbit)
+V3.1v2spec      ``abs``, ``moved``          V3 (Sobel)   **V2**    V3.1 (in-orbit)
+V2              ``abs``, ``moved``          V2           V2        sensor profile
+V1              ``lab``                     V2           V1        sensor profile
+==============  ==========================  ===========  ========  ==============
 
-* **V3 uses the V2 spectral calibration on purpose**, for OC-SMART
-  compatibility. The V3 spectral calibration moves band centres by +0.3 to
-  +1.7 nm, which changes the integer wavelengths in band names (``Lt_<nm>``,
-  ``rhot_<nm>``). OC-SMART's HYPSO band table and POLYMER's band settings pick
-  bands by those names. You can still select V3 spectral explicitly; the
-  package warns when you do.
-* **V3** ``abs`` is V3 ``moved`` with adjusted absolute radiometric gains:
-  about 11% lower radiance.
+* **V3.1** (2026-10-29, production's default ``v31``): ``abs`` is V3 ``abs``
+  rescaled, about 3.7% lower radiance for full-frame captures and 2.9% for
+  wide ones (the wide matrix is used as is); ``moved`` is V3 ``moved``. V3
+  ``abs`` was V3 ``moved`` scaled to the absolute level of HYPSO-1 relative
+  to PACE over Libya-4, about 11% lower.
+* **V3.1v2spec** is V3.1 with the V2 spectral calibration, for OC-SMART. The
+  V3 spectral calibration moves band centres by +0.3 to +1.7 nm, which changes
+  the integer wavelengths in band names (``Lt_<nm>``, ``rhot_<nm>``), and
+  OC-SMART's HYPSO band table picks bands by those names. POLYMER needs band
+  settings for the V3 names with V3.1.
 * **V2** is the set used before V3 (``moved``, and ``abs``, which used to be
   called ``adjusted``).
 * **V1** is the lab calibration (previously ``original``).
+* **V3** is superseded by V3.1: ``version="V3"`` uses V3.1 with a deprecation
+  warning (the ``abs`` gains differ by about 3%).
 
 The old names ``adjusted`` and ``original`` still work and mean ``abs``/V2 and
 ``lab``/V1, with a deprecation warning.
+
+FWHM and SRFs
+-------------
+
+Each band's FWHM comes from a table of lines: the release's ``fwhm`` version
+(V3.1: in-orbit FWHM at 8 lines from 430 to 764 nm) or, for releases without
+one, the sensor profile's built-in table. It is interpolated linearly between
+the lines and constant outside them; before 2026-11 each band took the nearest
+line's value. The table is kept in ``metadata/corrections``
+(``fwhm_table_wavelength``, ``fwhm_table_fwhm``), so TOA reflectance and the
+SRFs use the same FWHM. The SRFs are Gaussians over +/-4 sigma (+/-3 before),
+as in production hypso-package 11756523 and h2-onboard-calibration.
 
 HYPSO-1
 -------
@@ -59,16 +76,19 @@ HYPSO-1
 HYPSO-1 uses the same scheme (``hypso1_calibration``'s
 ``data/coefficients.yaml``) with its own releases and a different default:
 
-=========  ==========================  ===========  ==============  ==============
-Release    Radiometric variants        Smile        Destriping      Spectral
-=========  ==========================  ===========  ==============  ==============
-V2         ``moved`` (default),        V1           V1              V2
-           ``abs``
-V1         ``lab``                     V1           V1              V1
-=========  ==========================  ===========  ==============  ==============
+==============  ==========================  ===========  ==========  ========  ===============
+Release         Radiometric variants        Smile        Destriping  Spectral  FWHM
+==============  ==========================  ===========  ==========  ========  ===============
+V3.1 (default)  ``abs``                     V3 (Sobel)   V1          V3        V3.1 (in-orbit)
+V3.1v2spec      ``abs``                     V3 (Sobel)   V1          **V2**    V3.1 (in-orbit)
+V2              ``moved``, ``abs``          V1           V1          V2        sensor profile
+V1              ``lab``                     V1           V1          V1        sensor profile
+==============  ==========================  ===========  ==========  ========  ===============
 
-* The default is ``moved``/V2, HYPSO-1's long-standing default (HYPSO-2's is
-  ``abs``/V3).
+* The default is ``abs``/V3.1, as in production (``v31``); before 2026-11 it
+  was ``moved``/V2. V3.1's gains are 0.972 times aria's HYPSO-1 V3; its smile
+  is aria's full-frame V3 (Sobel) matrix, cropped for every capture type, and
+  its spectral calibration aria's V3.
 * ``abs`` is the set previously called ``adjusted``, ``lab`` the one called
   ``original``; the old names still work, with a deprecation warning. The
   coefficient files themselves are unchanged.
@@ -80,13 +100,13 @@ Mixing versions
 ---------------
 
 Pass ``version`` as a dictionary with any of ``radiometric``, ``smile``,
-``spectral`` and ``spectral_full_frame``; corrections you leave out come from
-the V3 release:
+``spectral``, ``spectral_full_frame`` and ``fwhm``; corrections you leave out come from
+the V3.1 release:
 
 .. code-block:: python
 
-   # V3 radiometric (abs) with V2 smile
-   l1a_to_l1b(l1a, version={"radiometric": "V3", "smile": "V2"})
+   # V3.1 radiometric (abs) with V2 smile
+   l1a_to_l1b(l1a, version={"radiometric": "V3.1", "smile": "V2"})
 
 What gets recorded
 ------------------

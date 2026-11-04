@@ -224,7 +224,7 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    replace the flipped smile with the lab smile as smile V1, add a `lab` release (lab radiometric, lab smile,
    lab spectral: polynomial or smile row 608 as in `polymer_v1` 2b560445), keep V1 unchanged. Also: the V2
    smile matrix has 1172 rows but is cropped as a 1216-row matrix (~25-30 rows off, < 0.17 nm; 4j).
-4l. **Bring over the V3.1 calibration and SRF modelling** (user, 2026-10-29; V3.1 is production's default from
+4l. **Bring over the V3.1 calibration and SRF modelling** (done ×92; user, 2026-10-29; V3.1 is production's default from
    2026-10-29). Source: `~/hypso2_calibration_versions/v3.1/` (files as delivered + README) and
    `~/AC/hypso-package-polymer_v3`, branch `polymer_v3`, commits c390ca27 (V3.1), 11756523 (SRF modelling,
    from aria 368d16d9), af82d75c (`abs31` renamed `v31v2spec`); calibration packages 26.10.1. Read only;
@@ -312,6 +312,30 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-11-04 (×92): V3.1 calibration, V3.1v2spec, SRF modelling; V3 superseded** (user; TODO 4l, part of 4m).
+  From production `polymer_v3` (c390ca27, 11756523, af82d75c; read only): HYPSO-2 V3.1 abs full/wide gains
+  (x0.963 / x0.971 of V3 abs) and `h2_srf_fwhm_v31.npz`; HYPSO-1 V3.1 full/wide gains (x0.972 of aria's V3),
+  `h1_srf_fwhm_v31.npz`, aria's full-frame V3 sobel smile and V3 spectral. All byte-identical to production
+  (sha256 checked). Catalogs: releases `V3.1` (default, both satellites; smile V3, spectral V3, FWHM V3.1;
+  HYPSO-1 destriping V1, spectral_full_frame V2 as production) and `V3.1v2spec` (V2 spectral, for OC-SMART);
+  HYPSO-1 default variant now `abs` (V3.1 has only abs), was moved/V2; wide gains used as is; HYPSO-1's V3.1
+  smile is the full-frame matrix cropped per capture (`crop: crop_and_bin`). `release_aliases`: `V3` -> V3.1
+  with a DeprecationWarning (user decision), production names `v31`, `v31v2spec`. V3 abs files removed (V3
+  moved, smile, spectral carry on in V3.1). Catalog code (both packages): optional `fwhm` component,
+  release aliases, a variant without a version falls back to the newest release that has it (HYPSO-1
+  `moved` -> V2, `lab` -> V1), the band-name warning only for custom selections. SRF modelling (production
+  11756523, from aria 368d16d9), for every release: band FWHM interpolated between the table's lines
+  (`processing.capture.interpolate_fwhm`, `np.interp`, constant outside; was nearest line), the release's
+  FWHM table kept in `metadata/corrections` (`fwhm_table_wavelength`/`_fwhm`, read by `capture_params`) so
+  L1B FWHM, TOA reflectance and SRFs agree; Gaussian SRFs over +/-4 sigma (`srf.response.SRF_N_SIGMA`, was 3).
+  Provenance: `fwhm_version`, `fwhm_file`/sha256. Effect on Kemigawa 2025-12-28 L1D (V2 moved): FWHM
+  interpolation -0.45..+0.80% per band, 4 sigma +-0.05%; with the old modelling the refactor still equals
+  production's L1D to 1e-6 (so nothing else changed). Tests: `conftest.legacy_srf_modelling()` keeps the
+  baseline and production-parity comparisons exact; new test that the modelling moves L1D < 1% per band;
+  V3.1/V3.1v2spec/alias/fallback/FWHM-table tests. docs/calibration.rst (release tables, FWHM and SRFs),
+  coefficient_history.rst. Not done: production's HYPSO-2 `moved` uses V2 spectral and no FWHM table; here
+  `moved` under V3.1 gets V3 spectral and the V3.1 table (use V3.1v2spec or a custom selection for the
+  former).
 - **2026-11-04 (×91): RGB exposure adjustment** (user). `hypso.rgb.adjust_exposure(image, ev=None, percentile=99,
   target=0.9, gamma=None, full_scale=255, normalize=False, black_point=None, black_percentile=1)`: one gain for
   all channels (colours kept, unlike `plot_rgb_map`'s per-channel stretch), in stops or automatic (99th

@@ -22,7 +22,9 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
-CORRECTIONS = ("radiometric", "smile", "destriping", "spectral", "spectral_full_frame")
+CORRECTIONS = ("radiometric", "smile", "destriping", "spectral", "spectral_full_frame", "fwhm")
+#: Corrections a release may leave out (None: the sensor profile's own table).
+OPTIONAL_CORRECTIONS = ("fwhm",)
 
 
 def load(package: str) -> dict:
@@ -67,6 +69,21 @@ def resolve(catalog: dict, coeff_type: str = None, version=None) -> dict:
 
     corrections = [c for c in CORRECTIONS if _kind(c) in catalog]
     releases = catalog["releases"]
+    release_aliases = {str(k).upper(): v for k, v in (catalog.get("release_aliases") or {}).items()}
+    if isinstance(version, str) and version.upper() in release_aliases \
+            and version.upper() not in {str(r).upper() for r in releases}:
+        target, message = release_aliases[version.upper()]
+        if message:
+            warnings.warn(f"version={version!r}: {message}; using {target!r}", DeprecationWarning, stacklevel=3)
+        version = target
+    if version is None and coeff_type not in catalog["radiometric"][releases[catalog["default_release"]]["radiometric"]]:
+        # A variant the default release lacks (HYPSO-1 "moved", "lab"): the newest release that has it.
+        for name, release_selection in releases.items():
+            if coeff_type in catalog["radiometric"].get(release_selection["radiometric"], {}):
+                logger.info("coeff_type %r is not in release %s; using release %s", coeff_type,
+                            catalog["default_release"], name)
+                version = name
+                break
     if version is None or isinstance(version, str):
         release = _version_key(version or catalog["default_release"], releases)
         selection = dict(releases[release])
@@ -79,6 +96,9 @@ def resolve(catalog: dict, coeff_type: str = None, version=None) -> dict:
         selection.update(version)
 
     for correction in corrections:
+        if selection.get(correction) is None and correction in OPTIONAL_CORRECTIONS:
+            selection[correction] = None
+            continue
         selection[correction] = _version_key(selection[correction], catalog[_kind(correction)])
 
     variants = catalog["radiometric"][selection["radiometric"]]
@@ -86,7 +106,7 @@ def resolve(catalog: dict, coeff_type: str = None, version=None) -> dict:
         raise ValueError(f"Invalid coeff_type: {coeff_type!r} for radiometric {selection['radiometric']}. "
                          f"Available: {sorted(variants)}")
     note = catalog.get("spectral_note")
-    if note and selection["spectral"] not in note["versions"] and release != "V1":
+    if note and release == "custom" and selection["spectral"] not in note["versions"]:
         warnings.warn(f"Spectral calibration {selection['spectral']}: {note['message']}", UserWarning, stacklevel=3)
 
     out = {"coeff_type": coeff_type, "release": release,
@@ -99,7 +119,8 @@ def calibration_files(package: str, catalog: dict, capture_type=None, coeff_type
     """Absolute paths of the selected coefficient files.
 
     Returns {"radiometric", "smile", "destriping", "spectral",
-    "spectral_full_frame": path or None, "crop_modes": {kind: crop} for
+    "spectral_full_frame", "fwhm": path or None (fwhm: a table of lines and
+    their FWHM; None: use the sensor profile's), "crop_modes": {kind: crop} for
     capture-type files that declare one, "selection": resolve(...) (plus
     "radiometric_capture_type" when a capture-type radiometric file was
     chosen)}.
@@ -125,7 +146,7 @@ def calibration_files(package: str, catalog: dict, capture_type=None, coeff_type
         return override.get("file")
 
     out = {"radiometric": path(entry("radiometric", catalog["radiometric"][radiometric_version][variant]))}
-    for correction in ("smile", "destriping", "spectral", "spectral_full_frame"):
+    for correction in ("smile", "destriping", "spectral", "spectral_full_frame", "fwhm"):
         version_key = selection.get(correction)
         out[correction] = (path(entry(_kind(correction), catalog[_kind(correction)][version_key]))
                            if version_key is not None else None)

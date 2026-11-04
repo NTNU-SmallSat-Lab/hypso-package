@@ -5,6 +5,27 @@ How the calibration coefficient files came about, for the record. Which file
 each correction uses today, by version, is in each calibration package's
 ``data/coefficients.yaml`` (:doc:`calibration`).
 
+V3.1 and V3 (2026-11)
+---------------------
+
+V3.1 (production's default from 2026-10-29) came from production
+hypso-package ``polymer_v3`` commits c390ca27 (V3.1 calibration), 11756523
+(SRF modelling, from aria 368d16d9) and af82d75c (``v31v2spec``), with
+calibration packages 26.10.1. The files are byte-identical to production's:
+
+* HYPSO-2: ``h2_radiometric_calibration_matrix_full_v31_abs.npz`` (0.963 times
+  V3 ``abs``), ``h2_radiometric_calibration_matrix_wide_v31_abs.npz`` (0.971
+  times V3 wide ``abs``; the full V3.1 matrix binned), ``h2_srf_fwhm_v31.npz``.
+* HYPSO-1: ``radiometric_calibration_matrix_HYPSO-1_full_v31.npz`` and
+  ``..._wide_v31.npz`` (0.972 times aria's HYPSO-1 V3), ``h1_srf_fwhm_v31.npz``,
+  and aria's ``smile_correction_matrix_HYPSO-1_full_sobel_v3.npz`` and
+  ``spectral_array_calibrated_poly_full_v3.npz``.
+
+V3 is superseded: its ``abs`` matrices (``h2_radiometric_calibration_matrix_full_v3_abs.npz``,
+``..._wide_v3_abs.npz``) were removed from the package and are in git
+history; V3 ``moved``, the V3 smile and the V3 spectral calibration are
+unchanged in V3.1.
+
 HYPSO-1
 -------
 

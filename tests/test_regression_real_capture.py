@@ -12,7 +12,7 @@ import json
 import numpy as np
 import pytest
 
-from conftest import BASELINE_PATH, requires_real_capture
+from conftest import BASELINE_PATH, legacy_srf_modelling, requires_real_capture
 
 pytestmark = requires_real_capture
 
@@ -51,4 +51,18 @@ def test_wavelengths(l1b, baseline):
     ("longitude", "l1d", lambda p: p.geometry["longitude"].values),
 ])
 def test_array_matches_baseline(products, baseline, name, level, getter):
-    assert_matches_signature(name, getter(products[level]), baseline[name])
+    product = products[level]
+    if level == "l1d":
+        # the baseline predates the ×92 SRF modelling (interpolated FWHM, +/-4 sigma)
+        with legacy_srf_modelling():
+            product = products["l1c"].toa_reflectance()
+    assert_matches_signature(name, getter(product), baseline[name])
+
+
+def test_srf_modelling_changes_l1d_slightly(products):
+    # ×92: FWHM interpolated between table lines and +/-4 sigma SRFs move L1D by < 1% per band
+    with legacy_srf_modelling():
+        legacy = products["l1c"].toa_reflectance()
+    ratio = np.nanmedian(products["l1d"].cube.values / legacy.cube.values, axis=(0, 1))
+    ratio = ratio[np.isfinite(ratio)]
+    assert 0.99 < ratio.min() and ratio.max() < 1.01 and np.abs(ratio - 1).max() > 1e-4

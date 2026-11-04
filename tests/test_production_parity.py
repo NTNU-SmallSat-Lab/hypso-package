@@ -9,6 +9,7 @@ import numpy as np
 import pytest
 
 import hypso
+from conftest import legacy_srf_modelling
 
 CAPTURES = {
     # HYPSO-2, Kemigawa (Japan): reprocessed after the Earth-Sun distance fix,
@@ -30,7 +31,10 @@ def _process(name):
            .georeference(latitudes=directory / "processing-temp" / "latitudes_indirectgeoref.dat",
                          longitudes=directory / "processing-temp" / "longitudes_indirectgeoref.dat", direct=False))
     production = {level: hypso.open(directory / f"{capture}-moved_unmasked-{level}.nc") for level in ("l1b", "l1c", "l1d")}
-    return l1c, l1c.toa_reflectance(), production
+    # the production files predate production's own SRF modelling change (11756523), ported in ×92
+    with legacy_srf_modelling():
+        l1d = l1c.toa_reflectance()
+    return l1c, l1d, production
 
 
 @pytest.mark.parametrize("name", list(CAPTURES))
