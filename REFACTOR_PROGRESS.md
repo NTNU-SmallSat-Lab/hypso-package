@@ -359,6 +359,23 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-11-04 (×97): lakes with OC-SMART; `demo/process_capture.py`** (TODO 4p). The fork's HYPSO water mask
+  was global_land_mask's ocean mask, so lakes are land (checked: every Mjøsa point `is_ocean` False; OC-SMART's
+  GMT mask is 30" with a 0.95 water fraction, too coarse for a lake). Fork 4d3fdc3: OCSMART_Input.txt option
+  `hypso_water_mask` = `ocean` (default, unchanged) | `input` (pixels with valid input reflectance are water).
+  The refactor writes `input` when the AC input is masked and the installation is the fork (v2.6.3 unchanged);
+  recorded in settings_effective; fake-installation test covers it (fork-masked). New `demo/process_capture.py`:
+  capture URL on the data server or a local folder -> download L1A, meta and processing-temp's indirect
+  georeferencing and sea/land/cloud labels -> calibrate (default V3.1v2spec, abs) -> indirect georeferencing ->
+  L1D -> masks (land, cloud from the labels; saturated = a band >= 95% of bin_factor x 4095 counts) -> AC on
+  the unmasked pixels -> L1D, L2A, L2B files. Mjøsa 2025-05-28 (HYPSO-2): saturated 277359, cloud 349561, land
+  219459 pixels, 83992 (12.9%) to OC-SMART, Rrs for 83937 of them, median Rrs 0.0039/0.0063/0.0076/0.0012 at
+  442/491/560/664 nm (green peak; pixels between clouds, adjacency/thin-cloud contamination not checked).
+  Against production hypso-package (polymer_v3 af82d75c, read only, run on a copy of the inputs with the
+  pipeline's stage-2 calls, coeff_type v31v2spec): same 120 band names, identical geometry, rhot within
+  3e-5 relative (the 14-bit write), no bias. Production OC-SMART not run (user rule; its ocean mask would
+  give no lake pixels). Follow-up: saturation flagging belongs in the package (today only the script does it;
+  `calibration.make_overexposed_mask` is unused).
 - **2026-11-04 (×96): real OC-SMART through the refactor, verified** (TODO 4p). The fork's `hypso-refactor`
   branch in env `ocsmart-refactor`, run by `correct_atmosphere("ocsmart")` on Venice 2025-03-04 (about 280 s
   per run). A: V2 moved with legacy SRF modelling (the reprocess's L1D) matches the production OC-SMART L2A

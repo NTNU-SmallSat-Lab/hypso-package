@@ -507,6 +507,10 @@ def _ocsmart(tree, masked, mask_flags, work_dir, config=None, **options):
     output_dir = work_dir.absolute() / "ocsmart"
     output_dir.mkdir(parents=True, exist_ok=True)
     prefix = _ocsmart_prefix(install_dir, tree)
+    # The fork's own HYPSO water mask counts only oceans as water (lakes are land); with masked input
+    # it takes the water pixels from the input instead (non-water pixels are NaN). v2.6.3 has no such
+    # option and keeps its ocean mask.
+    water_mask = "input" if masked and prefix != OCSMART_LEGACY_PREFIX else None
     _stage_input(tree, masked, mask_flags, staging_dir, add_srfs=False, name=f"{prefix}_{capture_id}-l1d.nc")
     output_file = output_dir / f"{prefix}_{capture_id}-l1d_L2_OCSMART.h5"
 
@@ -516,7 +520,8 @@ def _ocsmart(tree, masked, mask_flags, work_dir, config=None, **options):
         original = input_txt.read_text() if input_txt.is_file() else None
         try:
             input_txt.write_text(f"l1b_path = {staging_dir}/\nl2_path = {output_dir}/\nl2_prod = {l2_prod}\n"
-                                 f"solz_limit = {solz_limit}\nsenz_limit = {senz_limit}\n")
+                                 f"solz_limit = {solz_limit}\nsenz_limit = {senz_limit}\n"
+                                 + (f"hypso_water_mask = {water_mask}\n" if water_mask else ""))
             process = subprocess.Popen([str(cfg.get("python") or "python3"), "OCSMART.py"], cwd=install_dir,
                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
             for line in process.stdout:
@@ -552,7 +557,8 @@ def _ocsmart(tree, masked, mask_flags, work_dir, config=None, **options):
 
     parameters = {"masked": masked, "mask_flags": list(mask_flags) if mask_flags else "all" if masked else "",
                   "input_level": "L1D", "bands_returned": n_bands, "output_file": output_file.name}
-    settings = {"l2_prod": l2_prod, "solz_limit": solz_limit, "senz_limit": senz_limit}
+    settings = {"l2_prod": l2_prod, "solz_limit": solz_limit, "senz_limit": senz_limit,
+                **({"hypso_water_mask": water_mask} if water_mask else {})}
     ac = ac_attrs("ocsmart", version=_ocsmart_version(install_dir), git_commit=_git_commit(install_dir),
                   install_path=install_dir,
                   settings_effective=settings, settings_user=options)

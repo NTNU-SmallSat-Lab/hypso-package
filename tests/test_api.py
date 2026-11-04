@@ -321,14 +321,16 @@ cfg = dict(line.split(" = ", 1) for line in Path("OCSMART_Input.txt").read_text(
 l1b, l2 = Path(cfg["l1b_path"].strip()), Path(cfg["l2_path"].strip())
 staged = sorted(l1b.glob("*.nc"))
 assert len(staged) == 1 and staged[0].name.startswith(EXPECTED_PREFIX + "_"), staged
+assert cfg.get("hypso_water_mask", "").strip() == EXPECTED_WATER_MASK, cfg
 print("fake OC-SMART processing", staged[0].name)
 shutil.copy(REAL_OUTPUT, l2 / staged[0].name.replace(".nc", "_L2_OCSMART.h5"))
 """
 
 
 @requires_ac_outputs
-@pytest.mark.parametrize("per_satellite", [False, True], ids=["v2.6.3", "fork"])
-def test_ocsmart_with_fake_installation(l1d, tmp_path, per_satellite):
+@pytest.mark.parametrize("per_satellite, masked", [(False, False), (True, False), (True, True)],
+                         ids=["v2.6.3", "fork", "fork-masked"])
+def test_ocsmart_with_fake_installation(l1d, tmp_path, per_satellite, masked):
     # v2.6.3 knows one sensor HYPSO_HSI; the fork's hypso-refactor branch has
     # HYPSO1_HSI / HYPSO2_HSI, recognised by its sensorinfo files.
     install = tmp_path / "OCSMART_Linux_v2.6.3"
@@ -337,11 +339,15 @@ def test_ocsmart_with_fake_installation(l1d, tmp_path, per_satellite):
     if per_satellite:
         (install / "auxdata" / "sensorinfo").mkdir(parents=True)
         (install / "auxdata" / "sensorinfo" / "HYPSO2_HSI.txt").write_text("")
-    (install / "OCSMART.py").write_text(f"REAL_OUTPUT = {str(OCSMART_OUTPUT)!r}\nEXPECTED_PREFIX = {prefix!r}\n" + FAKE_OCSMART)
+    # masked input on the fork: OC-SMART takes the water pixels from the input (lakes are not ocean)
+    water_mask = "input" if masked else ""
+    (install / "OCSMART.py").write_text(f"REAL_OUTPUT = {str(OCSMART_OUTPUT)!r}\nEXPECTED_PREFIX = {prefix!r}\n"
+                                        f"EXPECTED_WATER_MASK = {water_mask!r}\n" + FAKE_OCSMART)
     (install / "OCSMART_Input.txt").write_text("original contents\n")
     config = {"ocsmart": {"dir": str(install), "python": __import__("sys").executable}}
 
-    l2a = l1d.correct_atmosphere("ocsmart", config=config, work_dir=tmp_path / "work")
+    source = l1d.with_masks(land=np.zeros(l1d.cube.shape[:2], bool)) if masked else l1d
+    l2a = source.correct_atmosphere("ocsmart", masked=masked, config=config, work_dir=tmp_path / "work")
     assert (install / "OCSMART_Input.txt").read_text() == "original contents\n"     # restored
     assert (install / ".OCSMART_Input.lock").exists()                              # pipeline's lock file
     output = tmp_path / "work" / "ocsmart" / f"{prefix}_aeronetvenice_2025-03-04T10-38-05Z-l1d_L2_OCSMART.h5"
