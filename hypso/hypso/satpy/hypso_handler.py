@@ -4,7 +4,8 @@ HypsoL1FileHandler reads HSI L1C, L1D and L2A products as written by
 hypso.io.product.write_product (Product.write): the flat root-group layout,
 per-band variables (Lt_<wave>, rhot_<wave>, an L2A method's Rrs_<wave>, ...)
 and latitude/longitude as root-level siblings, swath or regridded.
-HypsoL2BFileHandler reads L2B products (2D variables, no bands).
+HypsoL2BFileHandler reads L2B products (2D variables, no bands); the L2A
+reader reads an L2A.AUX file (the AC tool's intermediates) the same way.
 HypsoRGBFileHandler reads RGB camera products (hypso.rgb.write_camera).
 
 Registered via the [project.entry-points."satpy.readers"] entry in
@@ -60,7 +61,12 @@ class HypsoL1FileHandler(NetCDF4FileHandler):
         reader YAML) unchanged, then dynamically yield one dataset per band
         found in this file (see list_band_variables - the exact band set
         varies by binning/calibration config, so it can't be enumerated in
-        the YAML ahead of time, unlike a fixed-band instrument)."""
+        the YAML ahead of time, unlike a fixed-band instrument). An L2A.AUX
+        file (the AC tool's intermediates, no cube) lists its 2D variables
+        as an L2B file does."""
+        if self.get("/attr/l2a_quantity") == "AUX":
+            yield from HypsoL2BFileHandler.available_datasets(self, configured_datasets)
+            return
         for is_avail, ds_info in (configured_datasets or []):
             if is_avail is not None:
                 yield is_avail, ds_info
@@ -138,7 +144,7 @@ class HypsoL2BFileHandler(HypsoL1FileHandler):
         file_type = self.filetype_info["file_type"]
         dims = ("y", "x") if self.gridded else ("lines", "samples")
         for key, value in self.file_content.items():
-            if "/" in key or key in self._NOT_PRODUCTS or key.endswith("_direct"):
+            if "/" in key or key in HypsoL2BFileHandler._NOT_PRODUCTS or key.endswith("_direct"):
                 continue
             if self.get(f"{key}/dimensions") != dims or not np.issubdtype(np.dtype(self.get(f"{key}/dtype")), np.floating):
                 continue

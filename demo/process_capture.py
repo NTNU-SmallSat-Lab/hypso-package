@@ -18,6 +18,8 @@ Output, in ``--out/<capture>/``::
     <SAT>_HSI.<time>.<target>.L1D.nc
     <SAT>_HSI.<time>.<target>.L2A.RRS.<method>.nc
     <SAT>_HSI.<time>.<target>.L2B.<GROUP>.<method>.nc   (the tool's CHL, TSM, ...)
+    <SAT>_HSI.<time>.<target>.L2A.AUX.<method>.nc       (the tool's other per-band outputs:
+                                                         OC-SMART's Lt, Lr, Lrc, Lwp, tg_sol, tg_sen)
     work/                                                (the AC tool's own files)
 
 External AC tools are found through the AC tool configuration
@@ -168,7 +170,10 @@ def process(name: str, capture_dir: Path, out_dir: Path, method: str, release: s
         raise SystemExit(f"OC-SMART cannot use a path containing '.': {work_dir.absolute()} (choose another --out)")
     l2a = l1d.correct_atmosphere(method, masked=True, config=ac_config, work_dir=work_dir)
     path = l2a.write(out_dir=out_dir)
-    logger.info("wrote %s (and its L2B files: %s)", path.name, ", ".join(sorted(l2a.tool_products())) or "none")
+    aux = l2a.intermediates()
+    logger.info("wrote %s, its L2B files (%s) and %s", path.name, ", ".join(sorted(l2a.tool_products())) or "none",
+                f"its L2A.AUX file ({len(aux.variables.data_vars)} variables)" if aux is not None
+                else "no L2A.AUX file (no intermediates)")
 
     rrs = l2a.cube.values
     valid = np.isfinite(rrs).any(axis=-1)

@@ -643,3 +643,50 @@ def test_ocsmart_version_from_folder_name_or_git(tmp_path):
     subprocess.run(["git", "-C", str(checkout), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q",
                     "--allow-empty", "-m", "init"], check=True)
     assert _ocsmart_version(checkout) == "git:hypso-refactor"
+
+
+@requires_ac_outputs
+def test_ocsmart_every_output_is_written(l1d, tmp_path):
+    """Every variable and band of OC-SMART's raw output ends up in a written
+    file: Rrs in the L2A, chlorophyll in the L2B, flags in both, the other
+    per-band groups (Lt, Lr, Lrc, Lwp, tg_sol, tg_sen) in the L2A.AUX file,
+    geometry as the product's own (×98)."""
+    import netCDF4
+    install = tmp_path / "OCSMART_Linux_v2.6.3"
+    (install / "auxdata" / "sensorinfo").mkdir(parents=True)
+    (install / "auxdata" / "sensorinfo" / "HYPSO2_HSI.txt").write_text("")
+    (install / "OCSMART.py").write_text(f"REAL_OUTPUT = {str(OCSMART_OUTPUT)!r}\nEXPECTED_PREFIX = 'HYPSO2_HSI'\n"
+                                        f"EXPECTED_WATER_MASK = ''\n" + FAKE_OCSMART)
+    (install / "OCSMART_Input.txt").write_text("original contents\n")
+    config = {"ocsmart": {"dir": str(install), "python": __import__("sys").executable}}
+    l2a = l1d.correct_atmosphere("ocsmart", config=config, work_dir=tmp_path / "work")
+    out = tmp_path / "out"
+    out.mkdir()
+    l2a.write(out_dir=out)
+    files = {".".join(p.name.split(".")[3:5]): hypso.open(p) for p in out.glob("*.nc")}
+    assert set(files) == {"L2A.RRS", "L2A.AUX", "L2B.CHL"}, sorted(files)
+    written = set().union(*(set(p.variables.data_vars) for p in files.values()))
+    rrs_bands = set(np.floor(files["L2A.RRS"].wavelengths[~np.isnan(files["L2A.RRS"].cube.values).all(axis=(0, 1))])
+                    .astype(int))
+    renames = {"L2_flags": "ocsmart_l2_flags", "chlor_a(oci)": "chlor_a_oci", "chlor_a(yoc)": "chlor_a_yoc",
+               "tsm(yoc)": "tsm_yoc"}
+    geometry = {"Latitude", "Longitude", "Relative_azimuth", "Sensor_zenith", "Solar_zenith"}
+    missing = []
+    with netCDF4.Dataset(OCSMART_OUTPUT) as raw:
+        for name in raw.variables:
+            if name not in geometry and renames.get(name, name) not in written:
+                missing.append(name)
+        assert set(raw.groups) >= {"Rrs", "Lt", "Lr", "Lrc"}
+        for group_name, group in raw.groups.items():
+            for band in group.variables:
+                nm = int(band.rsplit("_", 1)[1].rstrip("nm"))
+                if group_name == "Rrs":
+                    # OC-SMART's band table names a band by its integer wavelength; the cube's
+                    # band is within 1 nm of it
+                    if not any(abs(nm - b) <= 1 for b in rrs_bands):
+                        missing.append(f"Rrs/{band}")
+                elif f"{group_name}_{nm}" not in files["L2A.AUX"].variables:
+                    missing.append(f"{group_name}/{band}")
+    assert not missing, missing
+    lt = files["L2A.AUX"].variables["Lt_560"]
+    assert lt.attrs["units"] == "sr-1" and lt.attrs["source_variable"] == "Lt/Lt_560nm"

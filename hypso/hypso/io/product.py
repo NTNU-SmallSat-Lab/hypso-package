@@ -269,10 +269,11 @@ def read_product(path, wavelength_range=None, wavelengths=None, indices=None) ->
                                                    for n in names]),
                 BAND_INDEX: ("bands", [int(products[n].attrs["band"]) for n in names])})
             names = [names[i] for i in _positions(proxy, wavelength_range, wavelengths, indices)]
-        cubeless = _level_key(root.attrs.get("processing_level", "")) in CUBELESS_LEVELS
+        cubeless = is_cubeless(root.attrs)
         if cubeless:
             if selection:
-                raise ValueError(f"{path}: an L2B product has no bands to select")
+                raise ValueError(f"{path}: a {root.attrs.get('processing_level')} product without a cube has no "
+                                 "bands to select")
             prefix = cube = None
         elif names:
             prefix, cube = _product_from_bands(products, names)
@@ -302,7 +303,7 @@ def read_product(path, wavelength_range=None, wavelengths=None, indices=None) ->
             out[GRID_MAPPING] = ((), products[GRID_MAPPING].values, dict(products[GRID_MAPPING].attrs))
         elif "latitude" in out and "crs_wgs84" in geometry.data_vars:
             out["crs_wgs84"] = ((), geometry["crs_wgs84"].values)
-        for name in dict.fromkeys(_flag_variables(products) + _extra_variables(products, names)):
+        for name in dict.fromkeys(_flag_variables(products) + _extra_variables(products, [] if cubeless else names)):
             attrs = {k: v for k, v in products[name].attrs.items() if k not in ("coordinates", "grid_mapping")}
             out[name] = (dims, products[name].values, attrs)
 
@@ -339,9 +340,22 @@ def read_product(path, wavelength_range=None, wavelengths=None, indices=None) ->
 CUBELESS_LEVELS = ("L2B",)
 
 
+#: Child node of an in-memory L2A holding the AC tool's other per-band outputs
+#: (2D variables); Product.write writes it as the L2A.AUX file, never into the L2A.
+INTERMEDIATES_NODE = "ac_intermediates"
+
+
+def is_cubeless(attrs) -> bool:
+    """Whether a product with these global attributes has no band cube: L2B,
+    and the L2A.AUX file of an AC tool's other outputs."""
+    from hypso.io.naming import AUX_QUANTITY
+    level = _level_key(attrs.get("processing_level", "") or "")
+    return level in CUBELESS_LEVELS or (level == "L2A" and attrs.get("l2a_quantity") == AUX_QUANTITY)
+
+
 def has_cube(tree: xr.DataTree) -> bool:
-    """Whether the product has a band cube (every level but L2B)."""
-    return tree.attrs.get("processing_level") not in CUBELESS_LEVELS
+    """Whether the product has a band cube (every level but L2B and L2A.AUX)."""
+    return not is_cubeless(tree.attrs)
 
 
 def product_name(tree: xr.DataTree) -> str:
@@ -494,6 +508,12 @@ def write_product(tree: xr.DataTree, path, datacube: bool = False,
     encoding = {"/": root_encoding}
     for node in tree.subtree:
         if node.is_root:
+            continue
+        if node.path.lstrip("/").split("/")[0] == INTERMEDIATES_NODE:
+            # written as their own L2A.AUX file by Product.write
+            if node.parent.is_root:
+                logger.warning("write_product does not write the AC tool's intermediates (%d variables); "
+                               "Product.write writes them as an L2A.AUX file", len(node.dataset.data_vars))
             continue
         ds = node.to_dataset(inherit=False)
         nodes[node.path] = ds

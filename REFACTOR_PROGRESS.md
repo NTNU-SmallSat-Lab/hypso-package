@@ -297,6 +297,23 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
      the OOD and glint flags as CF flag masks; provenance with the model file's sha256. Phase-1b constituents
      (CHL, TSM, aCDOM, adg, aph, bbp + sigmas) would be L2B.<GROUP>.toybox when the model has them.
    - Do not run on aulus2 while the user's reprocess is running (feedback); tests with a small mock model.
+4r. **L2A.AUX for the other AC methods** (user, 2026-11-04: "add aux as todo for the other processors'
+   products"; OC-SMART done ×98). The mechanism is generic (`_l2a_tree(..., intermediates=...)` -> the L2A's
+   `ac_intermediates` node -> `...L2A.AUX.<method>.nc`); the other methods do not feed it yet:
+   - **Polymer**: today only `rho_w` (as Rrs) and its 2D outputs (`Rgli`, `Rnir`, `logchl`, `logfb`, `SPM`,
+     flags) are read. Polymer can write more per-band quantities through its `outputs` setting (e.g. `Rprime`,
+     `Rtoa`, `Ratm`, `Rmol`, `Rw` uncertainties, per its Level2 options); decide which to request and put them
+     in AUX (also check `bands_oc` vs `bands_corr` band sets; memory note polymer_bands_oc_default_confound).
+   - **ACOLITE**: L2R also holds `rhot_<nm>` (its copy of the input; redundant but cheap to keep); ACOLITE can
+     export more with its settings (`l2r_export_*`, e.g. `rhorc`, `rhoray`, `rhoam`/path reflectance,
+     `tt_gas`, `aot`/`aot_<nm>`, `dark_spectrum`); decide which, request them, read them into AUX.
+   - **MACHI and DPS** (in process): their per-band internals (DPS: the dark spectrum; MACHI: the fitted path
+     reflectance, transmittances, the fit's per-band residuals; part of it is in `metadata/machi` already)
+     could go to AUX as 2D or as per-band metadata; decide what is worth a file.
+   - **toybox-ac** (4q): its per-band sigmas and covariance are planned as L2A ancillary variables; decide L2A
+     ancillary vs AUX there.
+   For each: extend `test_ocsmart_every_output_is_written`'s check (every variable of the tool's raw output is
+   in the L2A, an L2B or the AUX file) to that tool's real output.
 4f. **Keystone review** (×77, for the calibration team): HYPSO-2's distortion model (`h2_distortion_model_v1.npz`,
    `optional: keystone` in coefficients.yaml, `enabled: false`) is applied only with `calibrate(keystone=True)`,
    with a warning. Questions: is B_hat valid for the flight model; is the sample axis oriented as the detector
@@ -359,6 +376,36 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-11-04 (×98): every AC tool output is written; `L2A.AUX` file; Mjøsa against production OC-SMART** (user
+  request: "make sure all the products are saved"; user chose a separate file over putting them in the L2A).
+  Found: the OC-SMART loader read a fixed list (no Lwp, tg_sol, tg_sen; the harmless `tsm(yoc)` warning) and the
+  L2A kept only Rrs and the 2D products, so Lt, Lr, Lrc, Lwp, tg_sol, tg_sen (6 x 83 bands) survived only in the
+  raw .h5 in work_dir (deleted when work_dir is temporary); production's pipeline appends them to its L2A.
+  Now: `load_ocsmart_h5` reads every root variable and group (float32); `_ocsmart` puts every per-band group
+  but Rrs into the L2A's `ac_intermediates` child node as 2D variables `<group>_<nm>` (attrs wavelength,
+  source_variable, units: Lt/Lr/Lrc sr-1 = radiance / F0, since OC-SMART's HYPSO input is rhot cos(sza)/pi
+  and its Lt equals that (checked on Mjøsa, ratio 1.0000 at 441/560/664 nm); tg_* 1; Lwp no units, all zero
+  for HYPSO here). `Product.write` writes them as `...L2A.AUX.<method>.nc` (naming token AUX_QUANTITY;
+  `is_cubeless`: L2B and L2A.AUX have no cube; 2D float variables 14-bit like L2B), `write(intermediates=False)`
+  skips it, `Product.intermediates()` returns it, `processing.l2b.split_intermediates` builds it. The node never
+  reaches the L2A or L2B files (write_product skips it; make_l2b drops it - it was copied into the L2B trees);
+  regrid drops it with an info message. Reader: a cube-less file keeps all its 2D variables. Satpy: the
+  hypso_l2a reader lists an AUX file's variables like hypso_l2b. Mjøsa: AUX 42 MB, L2A 25 MB, L2B 10 MB;
+  peak memory 4.2 GB for correct_atmosphere + write. Tests: test_intermediates.py (synthetic intermediates:
+  files, no leak into L2A/L2B, round trip at 14 bits, intermediates=False, regrid, Satpy);
+  test_ocsmart_every_output_is_written (Venice's real OC-SMART output through a fake installation: every root
+  variable and every band of every group is in one of the three files). Polymer and ACOLITE have no
+  intermediates (ACOLITE L2R's rhot is its copy of the input; Polymer writes only rho_w and 2D products,
+  which already stay in the L2A or go to L2B).
+  Mjøsa vs production OC-SMART (user allowed running it; ~/AC/OC-SMART/OC-SMART d37f9f0, env ocsmart, through
+  hypso-processing-pipeline's own `run_ocsmart_correction`, on production hypso-package's v31v2spec L1D, outputs
+  in the scratchpad; OCSMART_Input.txt restored under the lock): production returns 87828 pixels, all ocean
+  (the strip spans 58.3-63.1 N: Oslofjord/Skagerrak), none on Mjøsa. The fork with its default ocean mask on the
+  refactor's L1D file: 87826 pixels, max |dRrs| 2.7e-5 sr-1 (the L1D file's 14-bit rounding through OC-SMART).
+  process_capture.py (masked input, in-memory L1D) vs production on their 81216 common pixels: max |dRrs|
+  9.4e-7 sr-1, 99th pct 2.7e-5 relative; chlor_a_oci max rel 5.7e-5, chlor_a_yoc 3.7e-3; L2_flags equal.
+  Correction: an earlier claim (this session) that production would return nothing for the capture was wrong;
+  it returns nothing on the lake.
 - **2026-11-04 (×97): lakes with OC-SMART; `demo/process_capture.py`** (TODO 4p). The fork's HYPSO water mask
   was global_land_mask's ocean mask, so lakes are land (checked: every Mjøsa point `is_ocean` False; OC-SMART's
   GMT mask is 30" with a 0.95 water fraction, too coarse for a lake). Fork 4d3fdc3: OCSMART_Input.txt option
@@ -370,7 +417,8 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
   L1D -> masks (land, cloud from the labels; saturated = a band >= 95% of bin_factor x 4095 counts) -> AC on
   the unmasked pixels -> L1D, L2A, L2B files. Mjøsa 2025-05-28 (HYPSO-2): saturated 277359, cloud 349561, land
   219459 pixels, 83992 (12.9%) to OC-SMART, Rrs for 83937 of them, median Rrs 0.0039/0.0063/0.0076/0.0012 at
-  442/491/560/664 nm (green peak; pixels between clouds, adjacency/thin-cloud contamination not checked).
+  442/491/560/664 nm (98% of those pixels are the Oslofjord/Skagerrak part of the strip, 58.3-59.9 N; the
+  1298 lake pixels: 0.0019/0.0028/0.0029/0.0010; corrected in ×98).
   Against production hypso-package (polymer_v3 af82d75c, read only, run on a copy of the inputs with the
   pipeline's stage-2 calls, coeff_type v31v2spec): same 120 band names, identical geometry, rhot within
   3e-5 relative (the 14-bit write), no bias. Production OC-SMART not run (user rule; its ocean mask would

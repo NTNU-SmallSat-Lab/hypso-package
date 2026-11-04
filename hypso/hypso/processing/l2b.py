@@ -8,6 +8,11 @@ the L2A's geometry, ``pixel_flags``, grid and metadata, so it can be
 regridded, windowed and read by Satpy like any other level. File names:
 ``...L2B.<GROUP>.<source>.nc``, where the source is the algorithm (e.g.
 ``oc4``) or the AC tool whose own product it is (e.g. ``polymer``).
+
+The AC tool's other per-band outputs (OC-SMART's Lt, Lr, Lrc, Lwp, tg_sol,
+tg_sen, ...) go to a third file next to the L2A, ``...L2A.AUX.<method>.nc``
+(:func:`split_intermediates`), built the same way: 2D variables only, one per
+quantity and band (``Lt_434``), with the L2A's geometry and flags.
 """
 import re
 
@@ -65,8 +70,11 @@ def make_l2b(tree: xr.DataTree, group: str, source: str, variables: dict, parame
     out.attrs = dict(root.attrs)
     out.attrs.update(processing_level="L2B", l2b_group=group, l2b_source=source)
 
+    from hypso.io.product import INTERMEDIATES_NODE
     result = tree.copy()
     result.dataset = out
+    if INTERMEDIATES_NODE in result.children:      # the L2A's AC intermediates belong to its L2A.AUX file
+        del result[INTERMEDIATES_NODE]
     input_source = tree.encoding.get("source")
     result.encoding.pop("source", None)
     add_step(result, f"l2b_{group.lower()}_{source}", input_file=input_source or "L2A (in memory)",
@@ -134,6 +142,54 @@ def split_tool_products(tree: xr.DataTree) -> tuple:
     rest = tree.copy()
     rest.dataset = root.drop_vars(moved)
     return rest, l2b
+
+
+def split_intermediates(tree: xr.DataTree) -> tuple:
+    """Separate an L2A's AC-tool intermediates (its other per-band outputs).
+
+    Parameters
+    ----------
+    tree : xarray.DataTree
+        An L2A tree from :func:`hypso.processing.correct_atmosphere`; the
+        intermediates are its :data:`hypso.io.product.INTERMEDIATES_NODE`
+        child (2D variables such as ``Lt_434``).
+
+    Returns
+    -------
+    tuple
+        ``(l2a_tree, aux_tree or None)``: the L2A without the intermediates,
+        and an L2A.AUX tree (``l2a_quantity`` ``AUX``, no cube) holding them
+        with the L2A's geometry, flags and metadata, or None when there are
+        none.
+    """
+    from hypso.io.naming import AUX_QUANTITY, name_method
+    from hypso.io.product import INTERMEDIATES_NODE
+    if tree.attrs.get("processing_level") != "L2A":
+        raise ValueError(f"intermediates are split from an L2A, got {tree.attrs.get('processing_level')}")
+    if INTERMEDIATES_NODE not in tree.children:
+        return tree, None
+    rest = tree.copy()
+    del rest[INTERMEDIATES_NODE]
+    intermediates = tree[INTERMEDIATES_NODE].to_dataset(inherit=False)
+    if not intermediates.data_vars:
+        return rest, None
+    root = tree.to_dataset(inherit=False)
+    dims = spatial_dims(root)
+    keep = [n for n in root.data_vars
+            if n in _GEOMETRY_ATTRS or n in ("crs_wgs84", GRID_MAPPING, FLAGS_NAME) or n.endswith("_flags")]
+    out = root[keep]
+    out = out.drop_vars([c for c in out.coords if c not in GRID_DIMS])
+    for name, var in intermediates.data_vars.items():
+        out[name] = xr.Variable(dims, var.values, dict(var.attrs))
+    out.attrs = dict(root.attrs)
+    out.attrs["l2a_quantity"] = AUX_QUANTITY
+    aux = rest.copy()
+    aux.dataset = out
+    method = name_method(tree.attrs["atmospheric_correction"])
+    add_step(aux, f"l2a_aux_{method}", input_file=tree.encoding.get("source") or "L2A (in memory)",
+             parameters={"from": "AC tool output", "variables": len(intermediates.data_vars),
+                         "quantities": " ".join(sorted({n.rsplit("_", 1)[0] for n in intermediates.data_vars}))})
+    return rest, aux
 
 
 def derive(tree: xr.DataTree, group: str, algorithm: str = None) -> xr.DataTree:

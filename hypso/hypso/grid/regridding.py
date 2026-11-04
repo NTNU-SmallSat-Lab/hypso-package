@@ -160,6 +160,12 @@ def regrid(tree: xr.DataTree, target="utm", resolution: float = None, method: st
 
     result = tree.copy()
     result.dataset = out
+    from hypso.io.product import INTERMEDIATES_NODE
+    if INTERMEDIATES_NODE in result.children:
+        # the AC tool's intermediates stay in sensor geometry: write them (L2A.AUX) before regridding
+        logger.info("Regridding drops the AC tool's intermediates (%d variables); write the L2A first to keep them",
+                    len(result[INTERMEDIATES_NODE].dataset.data_vars))
+        del result[INTERMEDIATES_NODE]
     source = tree.encoding.get("source")
     result.encoding.pop("source", None)
     parameters = {"grid": name, "crs": crs.to_string(), "shape": f"{area.shape[0]} x {area.shape[1]}",

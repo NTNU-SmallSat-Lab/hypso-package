@@ -188,7 +188,8 @@ class Product:
     def __repr__(self):
         from hypso.io.product import has_cube
         if not has_cube(self._tree):
-            return (f"<hypso.Product {self.sat_id} {self.target} {self.level} {self._tree.attrs.get('l2b_group')}: "
+            kind = self._tree.attrs.get("l2b_group") or self._tree.attrs.get("l2a_quantity")
+            return (f"<hypso.Product {self.sat_id} {self.target} {self.level} {kind}: "
                     f"{list(self.variables.data_vars)} {dict(zip(self._spatial_dims(), self.shape))}>")
         cube = self.cube
         return (f"<hypso.Product {self.sat_id} {self.target} {self.level}: {cube.name} "
@@ -669,10 +670,11 @@ class Product:
         from hypso.processing.capture import acquisition_time
         from datetime import datetime
         time = datetime.fromisoformat(acquisition_time(self._tree.attrs))
+        from hypso.io.product import has_cube
         quantity = None
         if self.level == "L2A":
             ac = name_method(ac or self.atmospheric_correction)
-            quantity = self.cube.name
+            quantity = self.cube.name if has_cube(self._tree) else self._tree.attrs["l2a_quantity"]
         elif self.level == "L2B":
             ac = ac or self._tree.attrs["l2b_source"]
             quantity = self._tree.attrs["l2b_group"]
@@ -680,7 +682,7 @@ class Product:
                             label=label, quantity=quantity).filename()
 
     def write(self, path=None, out_dir=None, label: str = None, datacube: bool = False,
-              significant_bits=14, tool_products: bool = True) -> Path:
+              significant_bits=14, tool_products: bool = True, intermediates: bool = True) -> Path:
         """Write the product in the current file format.
 
         Parameters
@@ -701,6 +703,11 @@ class Product:
             L2A: also write the AC tool's own products (:meth:`tool_products`)
             as L2B files in the same directory. The L2A file never holds them;
             False drops them (with a warning).
+        intermediates : bool, default True
+            L2A: also write the AC tool's other per-band outputs
+            (:meth:`intermediates`, e.g. OC-SMART's Lt, Lr, Lrc, tg_sol) as
+            the ``...L2A.AUX.<method>.nc`` file in the same directory. False
+            drops them (with a warning).
 
         Returns
         -------
@@ -711,7 +718,8 @@ class Product:
             path = Path(out_dir or ".") / self.filename(label=label)
         path = Path(path)
         tree = self._tree
-        if self.level == "L2A":
+        from hypso.io.product import has_cube
+        if self.level == "L2A" and has_cube(tree):          # not the L2A.AUX product itself
             from hypso.processing.l2b import split_tool_products
             tree, products = split_tool_products(tree)
             if tool_products:
@@ -721,6 +729,14 @@ class Product:
                     logger.info("AC tool products written to %s", l2b_path.name)
             elif products:
                 logger.warning("AC tool products %s not written (tool_products=False)", sorted(products))
+            from hypso.processing.l2b import split_intermediates
+            tree, aux = split_intermediates(tree)
+            if aux is not None and intermediates:
+                aux_path = Product(aux).write(out_dir=path.parent, label=label, significant_bits=significant_bits)
+                logger.info("AC tool intermediates (%d variables) written to %s", len(aux.dataset.data_vars),
+                            aux_path.name)
+            elif aux is not None:
+                logger.warning("AC tool intermediates not written (intermediates=False)")
         write_product(tree, path, datacube=datacube, significant_bits=significant_bits)
         return path
 
@@ -769,6 +785,26 @@ class Product:
         if self.level != "L2A":
             raise ValueError(f"tool products come from an L2A, got {self.level}")
         return {group: Product(tree) for group, tree in split_tool_products(self._tree)[1].items()}
+
+    def intermediates(self) -> "Product":
+        """The AC tool's other per-band outputs as an L2A.AUX product.
+
+        OC-SMART's Lt, Lr, Lrc, Lwp, tg_sol and tg_sen (one 2D variable per
+        quantity and band, ``Lt_434``), with the L2A's geometry and flags.
+        :meth:`write` writes them as ``...L2A.AUX.<method>.nc`` next to the
+        L2A; the L2A file does not hold them.
+
+        Returns
+        -------
+        Product or None
+            None when the method returned none (in-process methods, Polymer,
+            ACOLITE).
+        """
+        from hypso.processing.l2b import split_intermediates
+        if self.level != "L2A":
+            raise ValueError(f"intermediates come from an L2A, got {self.level}")
+        aux = split_intermediates(self._tree)[1]
+        return None if aux is None else Product(aux)
 
 
 _STEPS = {"L1A": "calibrate", "L1B": "georeference", "L1C": "toa_reflectance", "L1D": "correct_atmosphere"}

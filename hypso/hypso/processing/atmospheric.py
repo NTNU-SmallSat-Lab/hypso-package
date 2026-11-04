@@ -71,7 +71,7 @@ def _input_cube(tree: xr.DataTree, masked: bool, mask_flags) -> xr.DataArray:
 
 
 def _l2a_tree(tree: xr.DataTree, method: str, variable: str, cube: np.ndarray, parameters: dict,
-              ac: dict, variables: dict = None) -> xr.DataTree:
+              ac: dict, variables: dict = None, intermediates: dict = None) -> xr.DataTree:
     root = tree.to_dataset(inherit=False)
     source = root[product_name(tree)]
     out = root.drop_vars([product_name(tree), "wavelength", "radiation_wavelength", "fwhm"])
@@ -89,6 +89,13 @@ def _l2a_tree(tree: xr.DataTree, method: str, variable: str, cube: np.ndarray, p
     result.encoding.pop("source", None)
     add_step(result, f"l2a_{method}", input_file=input_source or f"{tree.attrs['processing_level']} (in memory)",
              parameters=parameters, ac=ac)
+    if intermediates:
+        # The tool's other per-band outputs: kept out of the L2A's own variables;
+        # Product.write writes them as the L2A.AUX file (processing.l2b.split_intermediates).
+        from hypso.io.product import INTERMEDIATES_NODE, spatial_dims
+        dims = spatial_dims(out)
+        result[INTERMEDIATES_NODE] = xr.DataTree(xr.Dataset(
+            {name: xr.Variable(dims, data, attrs) for name, (data, attrs) in intermediates.items()}))
     return result
 
 
@@ -539,8 +546,11 @@ def _ocsmart(tree, masked, mask_flags, work_dir, config=None, **options):
                          message=f"no OC-SMART output at {output_file} after a zero-exit run - it likely did not "
                                  f"recognise the sensor from the staged file name; see its output above")
 
-    rrs = load_ocsmart_h5(output_file)["Rrs"]
+    raw = load_ocsmart_h5(output_file)
+    rrs = raw.pop("Rrs")
     cube, n_bands = _onto_bands(tree, rrs.values, rrs["band"].values)
+    intermediates = _ocsmart_intermediates(raw, tree.dataset[product_name(tree)].shape[:2])
+    del raw
     # OC-SMART writes no attributes; units/names per its documentation.
     from hypso.io import cf
     chl = {"units": "mg m-3", "standard_name": cf.CHLA_STANDARD_NAME}
@@ -562,7 +572,41 @@ def _ocsmart(tree, masked, mask_flags, work_dir, config=None, **options):
     ac = ac_attrs("ocsmart", version=_ocsmart_version(install_dir), git_commit=_git_commit(install_dir),
                   install_path=install_dir,
                   settings_effective=settings, settings_user=options)
-    return _l2a_tree(tree, "ocsmart", "Rrs", cube, parameters, ac, variables)
+    return _l2a_tree(tree, "ocsmart", "Rrs", cube, parameters, ac, variables, intermediates=intermediates)
+
+
+# OC-SMART's per-band outputs other than Rrs (its l2_prod). For HYPSO its input is
+# rhot cos(solar zenith) / pi, i.e. radiance divided by the extraterrestrial
+# solar irradiance F0 (checked: Lt equals it, 2026-11-04), so its radiances are
+# normalised (sr-1). Products not listed keep OC-SMART's name and no units.
+_OCSMART_INTERMEDIATES = {
+    "Lt": ("Top-of-atmosphere radiance divided by F0", "sr-1"),
+    "Lr": ("Rayleigh radiance divided by F0", "sr-1"),
+    "Lrc": ("Rayleigh-corrected radiance divided by F0", "sr-1"),
+    "Lwp": ("OC-SMART Lwp (its l2_prod Lwp)", None),
+    "tg_sol": ("Gas transmittance, sun to surface", "1"),
+    "tg_sen": ("Gas transmittance, surface to sensor", "1"),
+}
+
+
+def _ocsmart_intermediates(raw: dict, shape) -> dict:
+    """{name: (2D float32, attrs)}, one per band of each per-band group in an
+    OC-SMART output (other than Rrs): ``Lt_434``, ``tg_sol_434``, ..."""
+    out = {}
+    for group, data in raw.items():
+        if data.ndim != 3:
+            continue
+        if data.shape[:2] != tuple(shape):
+            logger.warning("Skipping OC-SMART %s: shape %s, product is %s", group, data.shape[:2], shape)
+            continue
+        long_name, units = _OCSMART_INTERMEDIATES.get(group, (f"OC-SMART {group}", None))
+        for j, nm in enumerate(data["band"].values):
+            attrs = {"long_name": f"{long_name} ({int(nm)} nm, OC-SMART)", "wavelength": float(nm),
+                     "wavelength_units": "nanometers", "source_variable": f"{group}/{group}_{int(nm)}nm"}
+            if units:
+                attrs["units"] = units
+            out[f"{group}_{int(nm)}"] = (np.asarray(data.values[:, :, j], dtype=np.float32), attrs)
+    return out
 
 
 def _capture_id(tree: xr.DataTree) -> str:

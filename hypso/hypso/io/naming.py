@@ -18,7 +18,8 @@ The first field is the satellite and the instrument, like NASA's
 Hyperspectral Imager, the instrument every product so far comes from
 (:data:`INSTRUMENTS` lists the known ones). `.` separates fields and never
 appears inside one. L2A always carries the quantity (:data:`QUANTITIES`:
-``RRS`` remote-sensing reflectance, ``RHOS`` surface reflectance) and the AC
+``RRS`` remote-sensing reflectance, ``RHOS`` surface reflectance; ``AUX`` the
+AC tool's other per-band outputs, :data:`AUX_QUANTITY`) and the AC
 method, which produced it; L2B (products derived from an L2A) always carries
 its product group (:data:`L2B_GROUPS`, e.g. ``CHL``) and the source (the
 algorithm or AC tool) in the same two fields; a regridded product carries its grid (hypso.grid.grid_name:
@@ -49,10 +50,14 @@ GRID_TOKEN = re.compile(r"(utm\d{1,2}[ns]|epsg\d+|custom)_\d+(p\d+)?(x\d+(p\d+)?
 #: reflectance, pi Rrs) only names files written before POLYMER's output was
 #: converted to Rrs; new products are RRS or RHOS.
 QUANTITIES = {"RRS": "Rrs", "RHOS": "rhos", "RHOW": "rho_w"}
+#: L2A token of the file next to an L2A that holds the AC tool's other per-band
+#: outputs (OC-SMART's Lt, Lr, Lrc, Lwp, tg_sol, tg_sen, ...): one 2D variable
+#: per quantity and band, no cube (hypso.processing.l2b.split_intermediates).
+AUX_QUANTITY = "AUX"
 #: L2B product groups: geophysical products derived from an L2A, one group per file.
 L2B_GROUPS = {"CHL": "chlorophyll-a concentration", "IOP": "inherent optical properties (absorption, backscattering)",
               "TSM": "total suspended matter", "KD": "diffuse attenuation coefficient"}
-_PAIRED = {"L2A": QUANTITIES, "L2B": L2B_GROUPS}    # levels with the quantity/group and source fields
+_PAIRED = {"L2A": {**QUANTITIES, AUX_QUANTITY: None}, "L2B": L2B_GROUPS}    # levels with the quantity/group and source fields
 _TIME_FORMAT = "%Y%m%dT%H%M%S"
 _CAPTURE_ID_TIME_FORMAT = "%Y-%m-%dT%H-%M-%SZ"
 
@@ -202,7 +207,7 @@ def product_name(sat_id: str, time: datetime, target: str, level: str,
     """
     if time.tzinfo is not None:
         time = time.astimezone(timezone.utc).replace(tzinfo=None)
-    if quantity is not None and level.upper() == "L2A" and quantity not in QUANTITIES:
+    if quantity is not None and level.upper() == "L2A" and quantity not in _PAIRED["L2A"]:
         quantity = quantity_token(quantity)
     return ProductName(sat_id=sat_id, time=time, target=target, level=level.upper(), ac=ac, grid=grid,
                        label=label, instrument=instrument, quantity=quantity)

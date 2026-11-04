@@ -46,7 +46,9 @@ listing groups by satellite and sorts by time. ``.`` only separates fields. L2A 
 its quantity, ``RRS`` (remote-sensing reflectance ``Rrs``, sr-1) or ``RHOS``
 (surface reflectance ``rhos``), and the atmospheric correction method that
 produced it (ACOLITE's L2W and L2R are both ``acolite``; the quantity tells
-them apart). The quantity is also the ``l2a_quantity`` global attribute. L2A
+them apart). A third token, ``AUX``, names the file of the AC tool's other
+per-band outputs next to an L2A (`AC tool intermediates (L2A.AUX)`_). The
+quantity is also the ``l2a_quantity`` global attribute. L2A
 names from before the quantity field (``L2A.<method>``) are still read; older
 POLYMER files hold ``rho_w`` (= pi Rrs) and are named ``RHOW`` when converted.
 L2B names its product group (``CHL``, ``IOP``, ``TSM``, ``KD``;
@@ -205,3 +207,30 @@ bands. Coefficients follow the tables in ACOLITE (``data/Shared/algorithms``)
 and the cited papers. QAA does not yet split absorption into phytoplankton
 and CDOM/detritus. Negative Rrs (e.g. in the red over clear water) gives
 negative TSM, absorption and Kd; there is no validity flag for it yet.
+
+AC tool intermediates (L2A.AUX)
+-------------------------------
+
+Some AC tools write more per-band quantities than the reflectance: OC-SMART
+writes ``Lt``, ``Lr``, ``Lrc``, ``Lwp``, ``tg_sol`` and ``tg_sen`` (its
+``l2_prod``) for every band it returns. They are kept, but not in the L2A:
+``l2a.intermediates()`` is an L2A product with ``l2a_quantity`` ``AUX`` and no
+cube, one 2D variable per quantity and band (``Lt_434``, ``tg_sol_434``,
+attributes ``wavelength`` and ``source_variable``), with the L2A's geometry
+and flags, and ``l2a.write()`` writes it next to the L2A:
+
+.. code-block:: text
+
+   HYPSO2_HSI.20250528T101551.mjosa.L2A.RRS.ocsmart.nc     Rrs
+   HYPSO2_HSI.20250528T101551.mjosa.L2B.CHL.ocsmart.nc     chlor_a_oci, chlor_a_yoc
+   HYPSO2_HSI.20250528T101551.mjosa.L2A.AUX.ocsmart.nc     Lt_434 ... tg_sen_718 (6 x 83)
+
+For HYPSO, OC-SMART's input is ``rhot cos(solar zenith) / pi``, the radiance
+divided by the solar irradiance F0, so its ``Lt``, ``Lr`` and ``Lrc`` are in
+sr-1 (``Lt`` equals that input); ``tg_*`` are transmittances. Together the
+three files hold every variable of the tool's output (geometry as the
+product's own). ``write(intermediates=False)`` skips the AUX file, and
+``regrid`` drops the intermediates (write the L2A first). The ``hypso_l2a``
+Satpy reader reads an AUX file's variables like an L2B file's. Polymer and
+ACOLITE return no intermediates (ACOLITE L2R's ``rhot`` is its copy of the
+input).
