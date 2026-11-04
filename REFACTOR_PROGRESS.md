@@ -276,6 +276,24 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    with release V3.1v2spec (and V1v2spec) compared with the reprocessed OC-SMART L2A. Not touched on user
    request: the fork's lat/lon subset typo in `latlon2linepixl` (`southeast_line` used for the pixel bounds,
    from c9df10b; not HYPSO specific).
+4q. **toybox-ac as an AC method** (user, 2026-11-04: "add support for toybox-ac"). toybox-ac
+   (`~/AC/toybox-ac`, package `hypso2_rtm`, data `~/AC/toybox-ac-data`) is the user's HYPSO-2 RT-simulation
+   + NN-ensemble AC: numpy-only inference from one `.npz` (`hypso2_rtm.infer.HypsoOC`), Rrs per band with
+   aleatoric/epistemic/total sigmas and band covariance, AOT550, OOD flag bits, glint-risk flag. Today its
+   `scripts/05_run_toybox.py` reads pipeline-layout L1D files (`hypso2_rtm.hypso_l1.HypsoL1D`: /products,
+   /geometry) and writes pipeline-layout L2A. Wanted: `correct_atmosphere("toybox")` from L1D, HYPSO-2 only.
+   - Location of the code and model from HYPSO_AC_CONFIG (`toybox: {dir, model}`), like the other tools;
+     since inference is numpy-only it can run in process (import `hypso2_rtm` from `dir`) instead of a
+     subprocess. Pass rhot, geometry and SRFs from the Product rather than having toybox-ac read the file.
+   - Ancillary: the default model is ancillary-free (on-board); the ancillary variant (O3, H2O, pressure,
+     wind; uvspec gas transmittance) is a separate ground-processing mode (toybox-ac TODO 4b), an option here.
+   - Calibration: the model is trained on V3.1 (toybox-ac `config.yaml`, noise file `hypso2_noise_v31.csv`);
+     check the L1D's release (and band centres / SRFs) against the model's `band_centers_nm` and refuse or
+     warn on a mismatch.
+   - Output: `L2A.RRS.toybox` with Rrs, the sigmas as ancillary variables (CF `ancillary_variables`), AOT550,
+     the OOD and glint flags as CF flag masks; provenance with the model file's sha256. Phase-1b constituents
+     (CHL, TSM, aCDOM, adg, aph, bbp + sigmas) would be L2B.<GROUP>.toybox when the model has them.
+   - Do not run on aulus2 while the user's reprocess is running (feedback); tests with a small mock model.
 4f. **Keystone review** (×77, for the calibration team): HYPSO-2's distortion model (`h2_distortion_model_v1.npz`,
    `optional: keystone` in coefficients.yaml, `enabled: false`) is applied only with `calibrate(keystone=True)`,
    with a warning. Questions: is B_hat valid for the flight model; is the sample axis oriented as the detector
@@ -283,10 +301,9 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    model replace the V2 smile matrix (agrees within ~2 nm). Figure on the reference capture: shift -1.4..+1.7
    samples, image change median 0.35% (99th pct 15% at sharp edges). When reviewed: `enabled: true`, consider
    it in a release.
-5. **Releases** (×46, ×48, ×52): tags `v26.10.0a1`-`a5` are on origin (checked 2026-10-28; a5 = ×84).
-   Tag the next alpha when wanted (×85-×87 since a5: camera products, L2A quantity names, L2B; the
-   L2A name change and POLYMER-as-Rrs / DPS-as-rhos change outputs, worth a tag); the final `vYY.M.0` on the merge to `main` once the pipeline uses the
-   refactor.
+5. **Releases** (×46, ×48, ×52): tags `v26.10.0a1`-`a7` are on origin (a5 = ×84, a6 = ×90, a7 = ×94, 2026-11-04).
+   Tag the next alpha when wanted, especially after output-changing work; the final `vYY.M.0` on the merge
+   to `main` once the pipeline uses the refactor (item 6d).
 6. **Outside this repository, for the user**: eoread fork commit `3609d25` (F0 and d^2) on the flat-layout
    reader, and ACOLITE's/OC-SMART's readers on new files (×37); **eoread's HYPSO reader must read the renamed
    `metadata/srf/F0` / `F0_wavelengths`** (were `esun`/`esun_wavelengths` until ×74): it reads them by name and
@@ -317,6 +334,15 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
      process pool (`--workers N`; each AC tool already runs in its own process), with OC-SMART still serialised
      per installation by the OCSMART_Input.txt lock and a memory guard (aulus2: mind the user's reprocess, about
      6 heavy workers). Within Polymer: pass its `multiprocessing=N` through the tool settings.
+
+6d. **Refactor the matchup pipeline (hypso-processing-pipeline)** (user, 2026-11-04: "I will also want to
+   refactor the matchup pipeline"). Scope to agree with the user. Starting points: item 6 (move to
+   `hypso.open` / the new names, `Product.window`, `hypso.masks`, Satpy for PACE/OLCI) and the 6b wishlist
+   (OLCI matchups, tidy matchup tables, AC in parallel); the new L2A names (`L2A.RRS.<method>`,
+   `L2A.RHOS.<method>`) and L2B files; the AC tools through `correct_atmosphere` (OC-SMART fork, toybox-ac,
+   item 4q) instead of the pipeline's own adapters. Memory notes: the pipeline is the active repo
+   (hypso-processing-pipeline; hypso-matchup-processing is stale), 3-stage design with self-contained
+   capture folders, manifests must be cleared after schema changes.
 
 Parked until there is a concrete need: Zarr output (×29); HYPSO-2 RGB camera and future optical instruments (×14, ×63,
 ×71; groundwork in place: an `INSTRUMENTS` entry in `hypso.io.naming` gives file names, and each instrument
