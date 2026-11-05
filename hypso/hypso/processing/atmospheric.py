@@ -528,7 +528,7 @@ def _ocsmart(tree, masked, mask_flags, work_dir, config=None, **options):
         # OCSMART.py replaces every "." in its configured path values with its
         # own directory, so these paths must not contain one.
         raise ValueError(f"OC-SMART cannot use a work_dir whose path contains '.': {work_dir.absolute()}")
-    l2_prod = cfg.get("l2_prod", "Lt,Lr,Lrc,rrs,chl,tg_sol,tg_sen,Lwp")
+    l2_prod = cfg.get("l2_prod", OCSMART_L2_PROD)
     solz_limit, senz_limit = cfg.get("solz_limit", 70.0), cfg.get("senz_limit", 70.0)
 
     capture_id = _capture_id(tree)
@@ -571,7 +571,12 @@ def _ocsmart(tree, masked, mask_flags, work_dir, config=None, **options):
     raw = load_ocsmart_h5(output_file)
     rrs = raw.pop("Rrs")
     cube, n_bands = _onto_bands(tree, rrs.values, rrs["band"].values)
-    intermediates = _ocsmart_intermediates(raw, tree.dataset[product_name(tree)].shape[:2])
+    shape = tree.dataset[product_name(tree)].shape[:2]
+    # per-band geophysical products (IOPs, AOD) become product variables (-> L2B.IOP, L2B.AOT);
+    # the other per-band groups are the correction's intermediates (-> L2A.AUX)
+    band_products = _ocsmart_band_variables({g: raw.pop(g) for g in list(raw) if g in _OCSMART_PRODUCTS},
+                                            shape, _OCSMART_PRODUCTS)
+    intermediates = _ocsmart_band_variables(raw, shape, _OCSMART_INTERMEDIATES)
     del raw
     # OC-SMART writes no attributes; units/names per its documentation.
     from hypso.io import cf
@@ -585,7 +590,8 @@ def _ocsmart(tree, masked, mask_flags, work_dir, config=None, **options):
                    "chlor_a_yoc": {**chl, "long_name": "Chlorophyll-a concentration, YOC algorithm (OC-SMART)"},
                    "tsm_yoc": {"units": "g m-3", "standard_name": cf.SPM_STANDARD_NAME,
                                "long_name": "Total suspended matter, YOC algorithm (OC-SMART)"}},
-        shape=tree.dataset[product_name(tree)].shape[:2])
+        shape=shape)
+    variables.update(band_products)
 
     parameters = {"masked": masked, "mask_flags": list(mask_flags) if mask_flags else "all" if masked else "",
                   "input_level": "L1D", "bands_returned": n_bands, "output_file": output_file.name}
@@ -596,23 +602,39 @@ def _ocsmart(tree, masked, mask_flags, work_dir, config=None, **options):
     return _l2a_tree(tree, "ocsmart", "Rrs", cube, parameters, ac, variables, intermediates=intermediates)
 
 
+#: OC-SMART's default l2_prod here: Rrs, its chlorophyll and TSM (L2B.CHL, L2B.TSM), its
+#: IOPs (L2B.IOP) and AOD (L2B.AOT), and the correction's per-band intermediates (L2A.AUX).
+OCSMART_L2_PROD = "Lt,Lr,Lrc,rrs,chl,tsm,aod,aph,adg,bbp,at,bt,tg_sol,tg_sen,Lwp"
+
 # OC-SMART's per-band outputs other than Rrs (its l2_prod). For HYPSO its input is
 # rhot cos(solar zenith) / pi, i.e. radiance divided by the extraterrestrial
 # solar irradiance F0 (checked: Lt equals it, 2026-11-04), so its radiances are
-# normalised (sr-1). Products not listed keep OC-SMART's name and no units.
+# normalised (sr-1). Group -> (variable prefix, long name, units); a group not
+# listed keeps OC-SMART's name and gets no units.
 _OCSMART_INTERMEDIATES = {
-    "Lt": ("Top-of-atmosphere radiance divided by F0", "sr-1"),
-    "Lr": ("Rayleigh radiance divided by F0", "sr-1"),
-    "Lrc": ("Rayleigh-corrected radiance divided by F0", "sr-1"),
-    "Lwp": ("OC-SMART Lwp (its l2_prod Lwp)", None),
-    "tg_sol": ("Gas transmittance, sun to surface", "1"),
-    "tg_sen": ("Gas transmittance, surface to sensor", "1"),
+    "Lt": ("Lt", "Top-of-atmosphere radiance divided by F0", "sr-1"),
+    "Lr": ("Lr", "Rayleigh radiance divided by F0", "sr-1"),
+    "Lrc": ("Lrc", "Rayleigh-corrected radiance divided by F0 (Lt/(tg_sol tg_sen) - whitecaps - Lr)", "sr-1"),
+    # OC-SMART's "Lwp" is its whitecap radiance (l1b_wcaps in OCSMART.py), not water-leaving radiance
+    "Lwp": ("Lwp", "Whitecap radiance divided by F0", "sr-1"),
+    "tg_sol": ("tg_sol", "Gas transmittance, sun to surface", "1"),
+    "tg_sen": ("tg_sen", "Gas transmittance, surface to sensor", "1"),
+}
+# Its geophysical per-band products (OC-SMART user guide 3.6.1), named as NASA's OC IOP products.
+_OCSMART_PRODUCTS = {
+    "AOD": ("aod", "Aerosol optical depth", "1"),
+    "aph": ("aph", "Absorption by phytoplankton", "m-1"),
+    "adg": ("adg", "Absorption by detritus and gelbstoff (CDOM)", "m-1"),
+    "bbp": ("bbp", "Backscattering by particulates", "m-1"),
+    "at": ("apg", "Absorption by particulates and CDOM (water excluded)", "m-1"),
+    "bt": ("bp", "Scattering by particulates", "m-1"),
 }
 
 
-def _ocsmart_intermediates(raw: dict, shape) -> dict:
+def _ocsmart_band_variables(raw: dict, shape, table: dict) -> dict:
     """{name: (2D float32, attrs)}, one per band of each per-band group in an
-    OC-SMART output (other than Rrs): ``Lt_434``, ``tg_sol_434``, ..."""
+    OC-SMART output: ``Lt_434``, ``aph_441``, ... (names and units from
+    ``table``, {group: (prefix, long name, units)})."""
     out = {}
     for group, data in raw.items():
         if data.ndim != 3:
@@ -620,13 +642,13 @@ def _ocsmart_intermediates(raw: dict, shape) -> dict:
         if data.shape[:2] != tuple(shape):
             logger.warning("Skipping OC-SMART %s: shape %s, product is %s", group, data.shape[:2], shape)
             continue
-        long_name, units = _OCSMART_INTERMEDIATES.get(group, (f"OC-SMART {group}", None))
+        prefix, long_name, units = table.get(group, (group, f"OC-SMART {group}", None))
         for j, nm in enumerate(data["band"].values):
             attrs = {"long_name": f"{long_name} ({int(nm)} nm, OC-SMART)", "wavelength": float(nm),
                      "wavelength_units": "nanometers", "source_variable": f"{group}/{group}_{int(nm)}nm"}
             if units:
                 attrs["units"] = units
-            out[f"{group}_{int(nm)}"] = (np.asarray(data.values[:, :, j], dtype=np.float32), attrs)
+            out[f"{prefix}_{int(nm)}"] = (np.asarray(data.values[:, :, j], dtype=np.float32), attrs)
     return out
 
 

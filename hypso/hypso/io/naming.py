@@ -56,7 +56,8 @@ QUANTITIES = {"RRS": "Rrs", "RHOS": "rhos", "RHOW": "rho_w"}
 AUX_QUANTITY = "AUX"
 #: L2B product groups: geophysical products derived from an L2A, one group per file.
 L2B_GROUPS = {"CHL": "chlorophyll-a concentration", "IOP": "inherent optical properties (absorption, backscattering)",
-              "TSM": "total suspended matter", "KD": "diffuse attenuation coefficient"}
+              "TSM": "total suspended matter", "KD": "diffuse attenuation coefficient",
+              "AOT": "aerosol optical thickness"}
 _PAIRED = {"L2A": {**QUANTITIES, AUX_QUANTITY: None}, "L2B": L2B_GROUPS}    # levels with the quantity/group and source fields
 _TIME_FORMAT = "%Y%m%dT%H%M%S"
 _CAPTURE_ID_TIME_FORMAT = "%Y-%m-%dT%H-%M-%SZ"

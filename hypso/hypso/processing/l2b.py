@@ -1,7 +1,7 @@
 """L2A to L2B: geophysical products in their own files.
 
 An L2B product holds products derived from one L2A product, one group per
-file (:data:`hypso.io.naming.L2B_GROUPS`: ``CHL``, ``IOP``, ``TSM``, ``KD``):
+file (:data:`hypso.io.naming.L2B_GROUPS`: ``CHL``, ``IOP``, ``TSM``, ``KD``, ``AOT``):
 2D variables only, no band cube; per-wavelength quantities are separate
 variables (``aph_443``, ``bbp_443``), as in NASA's OC_IOP files. It keeps
 the L2A's geometry, ``pixel_flags``, grid and metadata, so it can be
@@ -90,6 +90,9 @@ _TOOL_PRODUCT_GROUPS = (
     ("CHL", re.compile(r"^(chla|chl_.*|chlor_a.*|ndci)$", re.IGNORECASE)),
     ("TSM", re.compile(r"^(spm.*|tsm.*|tur_.*|t_dogliotti.*|t_nechad.*)$", re.IGNORECASE)),
     ("KD", re.compile(r"^kd.*$", re.IGNORECASE)),
+    # per-band IOPs, <quantity>_<nm> (OC-SMART's aph, adg, bbp, apg, bp; QAA's a, bbp)
+    ("IOP", re.compile(r"^(a|aph|adg|apg|bbp|bb|bp)_\d+$", re.IGNORECASE)),
+    ("AOT", re.compile(r"^(aod|aot)(_\d+)?$", re.IGNORECASE)),
 )
 
 

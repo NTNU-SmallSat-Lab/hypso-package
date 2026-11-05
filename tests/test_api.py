@@ -714,3 +714,64 @@ def test_ocsmart_input_carries_only_the_applied_flags(l1d):
     assert "pixel_flags" in tree.dataset                    # the product itself is unchanged
     with pytest.raises(KeyError, match="unknown flags"):
         _ocsmart_flags(tree, True, ["snow"])
+
+
+@requires_ac_outputs
+def test_ocsmart_iop_aod_tsm_go_to_l2b(l1d, tmp_path):
+    """OC-SMART's per-band geophysical products (aph, adg, bbp, at, bt, AOD)
+    and tsm(yoc) are written as L2B.IOP / L2B.AOT / L2B.TSM files, renamed as
+    NASA's OC IOP products (at -> apg, bt -> bp, AOD -> aod); the correction's
+    intermediates stay in the L2A.AUX file. The real Venice output with
+    synthetic IOP groups added (it was run with the default l2_prod of the time)."""
+    import h5py
+    import netCDF4
+    import shutil
+    output = tmp_path / "with_iops.h5"
+    shutil.copy(OCSMART_OUTPUT, output)
+    with h5py.File(output, "r+") as f:
+        shape = f["Rrs"][next(iter(f["Rrs"]))].shape
+        for group, value in (("aph", 0.02), ("adg", 0.05), ("bbp", 0.003), ("at", 0.07), ("bt", 0.4),
+                             ("AOD", 0.1)):
+            g = f.create_group(group)
+            for nm in (441, 490):
+                g.create_dataset(f"{group}_{nm}nm", data=np.full(shape, value, np.float32))
+        f.create_dataset("tsm(yoc)", data=np.full(shape, 3.0, np.float32))
+    install = tmp_path / "OCSMART_Linux_v2.6.3"
+    (install / "auxdata" / "sensorinfo").mkdir(parents=True)
+    (install / "auxdata" / "sensorinfo" / "HYPSO2_HSI.txt").write_text("")
+    (install / "OCSMART.py").write_text(f"REAL_OUTPUT = {str(output)!r}\nEXPECTED_PREFIX = 'HYPSO2_HSI'\n"
+                                        f"EXPECTED_FLAGS = None\n" + FAKE_OCSMART)
+    (install / "OCSMART_Input.txt").write_text("original contents\n")
+    config = {"ocsmart": {"dir": str(install), "python": __import__("sys").executable}}
+    l2a = l1d.correct_atmosphere("ocsmart", config=config, work_dir=tmp_path / "work")
+    assert set(l2a.tool_products()) == {"CHL", "TSM", "IOP", "AOT"}
+    out = tmp_path / "out"
+    out.mkdir()
+    l2a.write(out_dir=out)
+    expected = {"IOP": {f"{q}_{nm}" for q in ("aph", "adg", "bbp", "apg", "bp") for nm in (441, 490)},
+                "AOT": {"aod_441", "aod_490"}, "TSM": {"tsm_yoc"}}
+    for group, names in expected.items():
+        path = next(p for p in out.glob(f"*.L2B.{group}.ocsmart.nc"))
+        with netCDF4.Dataset(path) as f:
+            assert names <= set(f.variables), (group, sorted(f.variables))
+            if group == "IOP":
+                assert f["apg_441"].units == "m-1" and f["apg_441"].source_variable == "at/at_441nm"
+                bp = f["bp_490"][:].filled(np.nan)
+                np.testing.assert_allclose(bp[np.isfinite(bp)], 0.4, rtol=5e-5)       # 14 bits
+    aux = next(out.glob("*.L2A.AUX.ocsmart.nc"))
+    with netCDF4.Dataset(aux) as f:
+        assert not any(n.split("_")[0] in ("aph", "adg", "bbp", "apg", "bp", "aod", "at", "bt", "AOD")
+                       for n in f.variables)
+        assert "whitecap" in f["Lwp_441"].long_name.lower()
+    with netCDF4.Dataset(next(out.glob("*.L2A.RRS.ocsmart.nc"))) as f:
+        assert not {"aph_441", "aod_441", "tsm_yoc"} & set(f.variables)
+
+
+def test_iop_and_aot_names_route_to_l2b():
+    from hypso.processing.l2b import tool_product_group
+    for name in ("aph_441", "adg_490", "bbp_560", "apg_441", "bp_665", "a_443", "bb_443"):
+        assert tool_product_group(name) == "IOP", name
+    for name in ("aod_441", "aot_550", "aod"):
+        assert tool_product_group(name) == "AOT", name
+    for name in ("Lt_441", "tg_sol_441", "Rgli", "at_441", "bt_441", "logfb"):
+        assert tool_product_group(name) is None, name

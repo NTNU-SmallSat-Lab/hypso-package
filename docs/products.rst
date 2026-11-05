@@ -15,7 +15,8 @@ L2A        ``rhos`` or     atmospherically corrected: surface reflectance   1 (`
            ``Rrs``         ``rhos`` (MACHI, the default; DPS; ACOLITE L2R)  sr-1 (``Rrs``)
                            or remote-sensing reflectance ``Rrs``
 L2B        none            geophysical products derived from an L2A, one    per variable
-                           group per file (chlorophyll, IOPs, TSM, Kd): 2D
+                           group per file (chlorophyll, IOPs, TSM, Kd,
+                           aerosol optical thickness): 2D
                            variables only (``product.variables``)
 =========  ==============  ===============================================  ===================
 
@@ -51,7 +52,7 @@ per-band outputs next to an L2A (`AC tool intermediates (L2A.AUX)`_). The
 quantity is also the ``l2a_quantity`` global attribute. L2A
 names from before the quantity field (``L2A.<method>``) are still read; older
 POLYMER files hold ``rho_w`` (= pi Rrs) and are named ``RHOW`` when converted.
-L2B names its product group (``CHL``, ``IOP``, ``TSM``, ``KD``;
+L2B names its product group (``CHL``, ``IOP``, ``TSM``, ``KD``, ``AOT``;
 ``hypso.io.naming.L2B_GROUPS``) and its source, the algorithm or the AC tool
 whose own product it is. A regridded product names its grid (:doc:`grid`),
 at any level: a single capture on a map stays L1D, L2A or L2B (L3 is kept for
@@ -212,8 +213,9 @@ AC tool intermediates (L2A.AUX)
 -------------------------------
 
 Some AC tools write more per-band quantities than the reflectance: OC-SMART
-writes ``Lt``, ``Lr``, ``Lrc``, ``Lwp``, ``tg_sol`` and ``tg_sen`` (its
-``l2_prod``) for every band it returns. They are kept, but not in the L2A:
+writes ``Lt``, ``Lr``, ``Lrc``, ``Lwp`` (its whitecap radiance, not
+water-leaving radiance), ``tg_sol`` and ``tg_sen`` (its ``l2_prod``) for every
+band it returns. They are kept, but not in the L2A:
 ``l2a.intermediates()`` is an L2A product with ``l2a_quantity`` ``AUX`` and no
 cube, one 2D variable per quantity and band (``Lt_434``, ``tg_sol_434``,
 attributes ``wavelength`` and ``source_variable``), with the L2A's geometry
@@ -223,7 +225,19 @@ and flags, and ``l2a.write()`` writes it next to the L2A:
 
    HYPSO2_HSI.20250528T101551.mjosa.L2A.RRS.ocsmart.nc     Rrs
    HYPSO2_HSI.20250528T101551.mjosa.L2B.CHL.ocsmart.nc     chlor_a_oci, chlor_a_yoc
+   HYPSO2_HSI.20250528T101551.mjosa.L2B.TSM.ocsmart.nc     tsm_yoc
+   HYPSO2_HSI.20250528T101551.mjosa.L2B.IOP.ocsmart.nc     aph_, adg_, bbp_, apg_, bp_<nm> (m-1)
+   HYPSO2_HSI.20250528T101551.mjosa.L2B.AOT.ocsmart.nc     aod_<nm>
    HYPSO2_HSI.20250528T101551.mjosa.L2A.AUX.ocsmart.nc     Lt_434 ... tg_sen_718 (6 x 83)
+
+OC-SMART's per-band geophysical products go to L2B, not AUX, named as NASA's
+OC IOP products (its user guide, 3.6.1): ``aph`` phytoplankton absorption,
+``adg`` detritus + CDOM absorption, ``bbp`` particulate backscattering,
+``apg`` (its ``at``) particulate + CDOM absorption without water, ``bp`` (its
+``bt``) particulate scattering, ``aod`` (its ``AOD``) aerosol optical depth;
+``source_variable`` keeps OC-SMART's name. The default ``l2_prod``
+(``hypso.processing.atmospheric.OCSMART_L2_PROD``) requests all of them and
+``tsm``; set ``l2_prod`` in the AC tool configuration for fewer (keep ``rrs``).
 
 For HYPSO, OC-SMART's input is ``rhot cos(solar zenith) / pi``, the radiance
 divided by the solar irradiance F0, so its ``Lt``, ``Lr`` and ``Lrc`` are in

@@ -380,6 +380,25 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-11-05 (×100): OC-SMART IOPs, AOD and TSM as L2B files** (user: "keep Lt but implement the IOP and
+  TSM, and other L2b files"; user chose one AUX file per method, geophysical products to L2B).
+  - Default `l2_prod` is now `OCSMART_L2_PROD` = `Lt,Lr,Lrc,rrs,chl,tsm,aod,aph,adg,bbp,at,bt,tg_sol,tg_sen,Lwp`.
+    `aph`/`adg`/`bbp` keep their names; `at` -> `apg_<nm>` (particulate + CDOM absorption, water excluded, per
+    the OC-SMART user guide 3.6.1), `bt` -> `bp_<nm>` (particulate scattering), `AOD` -> `aod_<nm>`; units m-1
+    / 1; `source_variable` keeps OC-SMART's name. Routed by `_TOOL_PRODUCT_GROUPS` to `L2B.IOP` and the new
+    group `L2B.AOT`; `tsm(yoc)` -> `tsm_yoc` -> `L2B.TSM`. The rest stays in L2A.AUX.
+  - OC-SMART's `Lwp` is its whitecap radiance (`l1b_wcaps`), not water-leaving radiance: label and units
+    (sr-1) corrected; `Lrc` long name gives its formula `Lt/(tg_sol tg_sen) - whitecaps - Lr`.
+  - Tests: `test_ocsmart_iop_aod_tsm_go_to_l2b` (Venice output with synthetic IOP groups, end to end to
+    files), `test_iop_and_aot_names_route_to_l2b`.
+  - Real fork on Erie (masked): L2B.AOT 31 MB, CHL 12, IOP 103, TSM 12; Rrs unchanged. Medians at 441/560 nm:
+    aph 0.22/0.051, adg 0.51/0.11, bbp 0.42/0.19, apg 2.1/2.2 (664: 3.3), bp 21/10 m-1; aod 0.55/0.37;
+    tsm 2.8 g m-3; chl 2.3 mg m-3. **Not validated and partly inconsistent**: `apg` is ~3x aph+adg and rises
+    into the red, and bbp 0.4 m-1 is far above what TSM 2.8 g m-3 implies (bbp/TSM ~0.15 vs ~0.01-0.02
+    m2 g-1). Treat the HYPSO-2 IOP networks' output as unverified until checked against in situ.
+  - Commit ae98b018 (×99) went out with only the test summary as its message: commit_after_tests.sh read a
+    relative message path after cd'ing into the repo. Fixed (realpath, and it refuses a missing/empty file).
+
 - **2026-11-05 (×99): OC-SMART water mask from `pixel_flags` in the fork's HYPSO reader; demo script options;
   Erie** (user: the fork must not get a generic option, "it is a generic processor for multiple sensors").
   - Fork: reverted 4d3fdc3 (`hypso_water_mask` setting). The HYPSO reader (`L1B.readl1b`) now sets
