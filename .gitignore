@@ -32,3 +32,6 @@ __pycache__/
 
 # API pages sphinx-autoapi generates during the docs build
 /docs/api/
+
+# local AC tool paths (demo/ac_tools.example.yaml is the template)
+/demo/ac_tools.yaml

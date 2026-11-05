@@ -42,7 +42,7 @@ OceanData with the credentials in ``~/.netrc``.
 Examples::
 
     python process_capture.py http://129.241.2.147:8009/mjosa/mjosa_2025-05-28T10-15-51Z/ \\
-        --out ~/HYPSO_DATA_REFACTOR --ac-config demo/ac_tools.yaml
+        --out ~/HYPSO_DATA_REFACTOR --ac-config demo/ac_tools.yaml   # a copy of demo/ac_tools.example.yaml
     python process_capture.py ~/HYPSO_DATA_AOC/aeronetvenice_2025-03-04T10-38-05Z --out /tmp/out
     python process_capture.py <capture> <capture> ... --out ~/HYPSO_DATA_REFACTOR
     python process_capture.py --list captures.txt --out ~/HYPSO_DATA_REFACTOR
