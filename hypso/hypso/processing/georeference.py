@@ -110,7 +110,7 @@ def l1b_to_l1c(tree: xr.DataTree, latitudes=None, longitudes=None, direct: bool 
     direct_done = False
     if direct or latitudes is None:
         lat, lon, _ = direct_georeference(framepose_data=framepose, image_height=params.image_height,
-                                          aoi_offset=params.y_start, verbose=False)
+                                          aoi_offset=params.y_start, row_step=params.sample_div, verbose=False)
         if isinstance(lat, int) and isinstance(lon, int):
             logger.warning("ADCS telemetry points parts or all of the image off the Earth's horizon; "
                            "no direct georeferencing for this capture.")

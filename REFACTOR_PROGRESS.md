@@ -297,6 +297,13 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
      the OOD and glint flags as CF flag masks; provenance with the model file's sha256. Phase-1b constituents
      (CHL, TSM, aCDOM, adg, aph, bbp + sigmas) would be L2B.<GROUP>.toybox when the model has them.
    - Do not run on aulus2 while the user's reprocess is running (feedback); tests with a small mock model.
+4t. **Spatial subsampling: check on the first real capture** (×101; HYPSO-2 captures with
+   `spatial_subsampling` 2 expected from ~mid-November 2026). Check: (1) which `row_count` the L1A records (the
+   AOI's 1092 detector rows or the 546 read out; both are handled); (2) that the kept rows are the AOI's first,
+   third, ... (sample i = detector row `aoi_y + 2i`; assumed); (3) that the file reads at all: the real L1A's
+   `metadata/corrections/rad_matrix` is on the `samples` dimension (1092), and a 1092-row matrix next to a
+   546-sample cube makes xarray refuse the tree as unaligned; (4) the processing-temp indirect georeferencing
+   files are 598 x 546.
 4s. **Angle valid ranges**: `sensor_azimuth` (and the other azimuths) carry `valid_min=-180, valid_max=180`, but
    the values are 0-360 (Erie 2025-07-05: sensor azimuth 284-285 deg), so CF readers that apply the range
    (netCDF4 auto-mask, xarray with masking, Panoply, SNAP) show every pixel as missing. Production has the same
@@ -380,6 +387,24 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-11-05 (×101): spatial subsampling** (user's co-worker: HYPSO-2 captures with readout skipping every
+  2nd row along the slit, 1092 -> 546 samples, maybe from next week; the factor is
+  `metadata/capture_config/spatial_subsampling`, so far always 1). Before: `capture_params` read `sample_div`
+  (the older name; 1 in all 400 2026 L1A files checked, none has `spatial_subsampling` yet) into
+  `image_height` only; coefficients, keystone and direct georeferencing assumed one sample per detector row.
+  - `capture.spatial_subsampling(attrs, samples)` -> `(sample_div, detector_rows)`: `spatial_subsampling`,
+    else `sample_div`, checked against the cube's `samples` size; `row_count` may count the AOI's detector
+    rows or the rows read out; a missing factor with a cube that is an exact fraction of `row_count` is inferred
+    with a warning; other mismatches raise. `CaptureParams.detector_rows` = `y_start + i * sample_div`.
+    Capture type classified on the AOI's detector rows (a subsampled wide capture stays wide).
+  - `read_coeffs_from_file(..., row_step)`: radiometric/smile/destriping matrices keep rows
+    `[y_start:y_stop:row_step]`; an `as_is` matrix for the full AOI is thinned the same way (V3.1 abs wide).
+    `correct_keystone`/`keystone_positions(row_step)`, `direct_georeference(row_step)`: detector rows for the
+    model and the viewing angles. `l1a_to_l1b` writes the factor used into the product's capture_config.
+  - Tests (`test_spatial_subsampling.py`, 11): unit cases; on the reference capture thinned to 546 samples,
+    L1B Lt equals the full L1B's every 2nd sample exactly (V3.1 abs as_is wide and V2 moved crop paths);
+    direct georeferencing within 1e-4 deg of the full one, ignoring the subsampling is >100x worse.
+    Open checks on the first real capture: TODO 4t.
 - **2026-11-05 (×100): OC-SMART IOPs, AOD and TSM as L2B files** (user: "keep Lt but implement the IOP and
   TSM, and other L2b files"; user chose one AUX file per method, geophysical products to L2B).
   - Default `l2_prod` is now `OCSMART_L2_PROD` = `Lt,Lr,Lrc,rrs,chl,tsm,aod,aph,adg,bbp,at,bt,tg_sol,tg_sen,Lwp`.

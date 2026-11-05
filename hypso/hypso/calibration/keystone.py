@@ -25,10 +25,12 @@ def model_terms(x, y) -> np.ndarray:
 
 
 def keystone_positions(b_hat, n_samples: int, n_bands: int, x_start: int, y_start: int,
-                       bin_factor: int) -> np.ndarray:
+                       bin_factor: int, row_step: int = 1) -> np.ndarray:
     """Source sample position, in the capture's own sample coordinates, of each
-    ``(sample, band)`` pixel: ``B(x, y) - y_start``, with ``x`` the full-frame
-    column at the band's centre and ``y`` the full-frame row of the sample.
+    ``(sample, band)`` pixel: ``(B(x, y) - y_start) / row_step``, with ``x`` the
+    full-frame column at the band's centre and ``y = y_start + i * row_step``
+    the full-frame row of sample ``i`` (``row_step``: the spatial subsampling,
+    ``sample_div``).
 
     Returns
     -------
@@ -36,13 +38,13 @@ def keystone_positions(b_hat, n_samples: int, n_bands: int, x_start: int, y_star
         ``(n_samples, n_bands)``.
     """
     x = x_start + np.arange(n_bands) * bin_factor + (bin_factor - 1) / 2
-    y = y_start + np.arange(n_samples)
+    y = y_start + np.arange(n_samples) * row_step
     xx, yy = np.meshgrid(x, y)
-    return model_terms(xx, yy) @ np.asarray(b_hat, dtype=np.float64) - y_start
+    return (model_terms(xx, yy) @ np.asarray(b_hat, dtype=np.float64) - y_start) / row_step
 
 
 def correct_keystone(cube: np.ndarray, b_hat, x_start: int, y_start: int, bin_factor: int,
-                     order: int = 1) -> np.ndarray:
+                     order: int = 1, row_step: int = 1) -> np.ndarray:
     """Keystone-correct a ``(lines, samples, bands)`` cube.
 
     Parameters
@@ -59,6 +61,9 @@ def correct_keystone(cube: np.ndarray, b_hat, x_start: int, y_start: int, bin_fa
     order : int, default 1
         Spline order of the resampling (1 = linear, no ringing; the
         calibration team's ``transform()`` used scipy's default, 3).
+    row_step : int, default 1
+        Spatial subsampling (``sample_div``): sample ``i`` is detector row
+        ``y_start + i * row_step``.
 
     Returns
     -------
@@ -67,7 +72,7 @@ def correct_keystone(cube: np.ndarray, b_hat, x_start: int, y_start: int, bin_fa
         outside the capture are 0, as ``map_coordinates`` fills them.
     """
     lines, samples, bands = cube.shape
-    positions = keystone_positions(b_hat, samples, bands, x_start, y_start, bin_factor)
+    positions = keystone_positions(b_hat, samples, bands, x_start, y_start, bin_factor, row_step)
     out = np.empty_like(cube)
     line_index = np.arange(lines, dtype=np.float64)[:, None]
     for band in range(bands):

@@ -23,7 +23,7 @@ from hypso.calibration.summary import format_calibration_summary
 from hypso.io.product import PRODUCT_DIMS, product_name
 from hypso.io.provenance import add_step, calibration_attrs
 
-from .capture import CaptureParams, capture_params
+from .capture import SUBSAMPLING_ATTRS, CaptureParams, capture_params
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,8 @@ def _load(path, kind: str, params: CaptureParams, bin_factor: int = None, crop_m
     kwargs = {} if crop_mode is None else {"crop_mode": crop_mode}
     try:
         return read_coeffs_from_file(path, kind, params.x_start, params.x_stop, params.y_start, params.y_stop,
-                                     params.bin_factor if bin_factor is None else bin_factor, **kwargs)
+                                     params.bin_factor if bin_factor is None else bin_factor,
+                                     row_step=params.sample_div, **kwargs)
     except CalibrationShapeMismatchError:
         raise
     except Exception:
@@ -155,7 +156,7 @@ def l1a_to_l1b(tree: xr.DataTree, coeff_type: str = None, version=None, coeff_fi
     if keystone_entry is not None:
         # The model describes raw detector geometry: before smile, on the AOI's full-frame offsets.
         cube = correct_keystone(cube, keystone_b_hat, x_start=params.x_start, y_start=params.y_start,
-                                bin_factor=params.bin_factor)
+                                bin_factor=params.bin_factor, row_step=params.sample_div)
         applied.append("keystone")
     if smile_coeffs is not None and smile:
         cube = run_smile_correction(cube=cube, smile_coeffs=smile_coeffs)
@@ -198,6 +199,11 @@ def l1a_to_l1b(tree: xr.DataTree, coeff_type: str = None, version=None, coeff_fi
     result = tree.copy()
     result.dataset = out
     result["metadata/corrections"] = xr.DataTree(corrections)
+    # the spatial subsampling as used (it may have been inferred from the cube's size)
+    capture_config = result["metadata/capture_config"].to_dataset(inherit=False)
+    for name in [n for n in SUBSAMPLING_ATTRS if n in capture_config.attrs] or ["spatial_subsampling"]:
+        capture_config.attrs[name] = np.int64(params.sample_div)
+    result["metadata/capture_config"] = xr.DataTree(capture_config)
     logger.info("%s", format_calibration_summary(params.sat_id, params.capture_type, files, applied, selection))
     parameters = {"coeff_type": coeff_type or "custom", "capture_type": params.capture_type,
                   "corrections_applied": applied}

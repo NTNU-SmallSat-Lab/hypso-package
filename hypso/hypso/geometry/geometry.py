@@ -214,7 +214,7 @@ def pixel_index_to_angle(index, aoi_offset, fov_full, pixels_full) -> float:
 
 
 def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_offset: int=266,
-                        verbose = False) -> tuple:
+                        verbose = False, row_step: int = 1) -> tuple:
     """
     Compute pixel coordinates (lat lon) using the framepose data
 
@@ -226,6 +226,9 @@ def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_o
         Pixels per line (samples).
     aoi_offset
         Offset of the capture's first sample on the full detector.
+    row_step
+        Spatial subsampling (``sample_div``): sample ``i`` is detector row
+        ``aoi_offset + i * row_step``.
 
     Returns
     -------
@@ -324,11 +327,12 @@ def direct_georeference(framepose_data: np.ndarray, image_height: int=684, aoi_o
         # Top == highest pixel index ; Bot == lowest pixel index
         # Top == -y axis side of slit ; Bot == +y axis side of slit
         # Getting angle offsets to the selection of pixel indices
-        top_pixel_angle     = pixel_index_to_angle(  image_height     - 1, aoi_offset, fov, hypso_height_sensor)
-        mid_top_pixel_angle = pixel_index_to_angle(3*image_height / 4 - 1, aoi_offset, fov, hypso_height_sensor)
-        mid_pixel_angle     = pixel_index_to_angle(  image_height / 2 - 1, aoi_offset, fov, hypso_height_sensor)
-        mid_bot_pixel_angle = pixel_index_to_angle(  image_height / 4 - 1, aoi_offset, fov, hypso_height_sensor)
-        bot_pixel_angle     = pixel_index_to_angle(                     0, aoi_offset, fov, hypso_height_sensor)
+        # (sample indices times row_step: their detector rows with spatial subsampling)
+        top_pixel_angle     = pixel_index_to_angle((  image_height     - 1) * row_step, aoi_offset, fov, hypso_height_sensor)
+        mid_top_pixel_angle = pixel_index_to_angle((3*image_height / 4 - 1) * row_step, aoi_offset, fov, hypso_height_sensor)
+        mid_pixel_angle     = pixel_index_to_angle((  image_height / 2 - 1) * row_step, aoi_offset, fov, hypso_height_sensor)
+        mid_bot_pixel_angle = pixel_index_to_angle((  image_height / 4 - 1) * row_step, aoi_offset, fov, hypso_height_sensor)
+        bot_pixel_angle     = pixel_index_to_angle(                       0,            aoi_offset, fov, hypso_height_sensor)
 
         # Computing direction vectors pointing from the satellite body axes in the direction of the pixel
         view_dir_top     = rotate_axis_angle(body_z_itrs[i, :], body_x_itrs[i, :], top_pixel_angle)
