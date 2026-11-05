@@ -321,7 +321,12 @@ cfg = dict(line.split(" = ", 1) for line in Path("OCSMART_Input.txt").read_text(
 l1b, l2 = Path(cfg["l1b_path"].strip()), Path(cfg["l2_path"].strip())
 staged = sorted(l1b.glob("*.nc"))
 assert len(staged) == 1 and staged[0].name.startswith(EXPECTED_PREFIX + "_"), staged
-assert cfg.get("hypso_water_mask", "").strip() == EXPECTED_WATER_MASK, cfg
+assert "hypso_water_mask" not in cfg, cfg           # no OC-SMART setting: the reader uses pixel_flags
+import h5py
+with h5py.File(staged[0], "r") as f:
+    flags = f["pixel_flags"].attrs["flag_meanings"] if "pixel_flags" in f else None
+flags = (flags.decode() if isinstance(flags, bytes) else flags).split() if flags is not None else None
+assert flags == EXPECTED_FLAGS, (flags, EXPECTED_FLAGS)
 print("fake OC-SMART processing", staged[0].name)
 shutil.copy(REAL_OUTPUT, l2 / staged[0].name.replace(".nc", "_L2_OCSMART.h5"))
 """
@@ -339,10 +344,11 @@ def test_ocsmart_with_fake_installation(l1d, tmp_path, per_satellite, masked):
     if per_satellite:
         (install / "auxdata" / "sensorinfo").mkdir(parents=True)
         (install / "auxdata" / "sensorinfo" / "HYPSO2_HSI.txt").write_text("")
-    # masked input on the fork: OC-SMART takes the water pixels from the input (lakes are not ocean)
-    water_mask = "input" if masked else ""
+    # masked input carries the applied flags in pixel_flags (the fork's HYPSO reader takes its
+    # land/water mask from them, so lakes are water); unmasked input carries none
+    expected_flags = ["land"] if masked else None
     (install / "OCSMART.py").write_text(f"REAL_OUTPUT = {str(OCSMART_OUTPUT)!r}\nEXPECTED_PREFIX = {prefix!r}\n"
-                                        f"EXPECTED_WATER_MASK = {water_mask!r}\n" + FAKE_OCSMART)
+                                        f"EXPECTED_FLAGS = {expected_flags!r}\n" + FAKE_OCSMART)
     (install / "OCSMART_Input.txt").write_text("original contents\n")
     config = {"ocsmart": {"dir": str(install), "python": __import__("sys").executable}}
 
@@ -656,7 +662,7 @@ def test_ocsmart_every_output_is_written(l1d, tmp_path):
     (install / "auxdata" / "sensorinfo").mkdir(parents=True)
     (install / "auxdata" / "sensorinfo" / "HYPSO2_HSI.txt").write_text("")
     (install / "OCSMART.py").write_text(f"REAL_OUTPUT = {str(OCSMART_OUTPUT)!r}\nEXPECTED_PREFIX = 'HYPSO2_HSI'\n"
-                                        f"EXPECTED_WATER_MASK = ''\n" + FAKE_OCSMART)
+                                        f"EXPECTED_FLAGS = None\n" + FAKE_OCSMART)
     (install / "OCSMART_Input.txt").write_text("original contents\n")
     config = {"ocsmart": {"dir": str(install), "python": __import__("sys").executable}}
     l2a = l1d.correct_atmosphere("ocsmart", config=config, work_dir=tmp_path / "work")
@@ -690,3 +696,21 @@ def test_ocsmart_every_output_is_written(l1d, tmp_path):
     assert not missing, missing
     lt = files["L2A.AUX"].variables["Lt_560"]
     assert lt.attrs["units"] == "sr-1" and lt.attrs["source_variable"] == "Lt/Lt_560nm"
+
+
+def test_ocsmart_input_carries_only_the_applied_flags(l1d):
+    """OC-SMART's HYPSO reader treats any set pixel_flags bit as not water, so
+    its input keeps only the flags that were applied; unmasked input has none."""
+    from hypso.masks.flags import decode_flags
+    from hypso.processing.atmospheric import _ocsmart_flags
+    shape = l1d.cube.shape[:2]
+    land, cloud = np.zeros(shape, bool), np.zeros(shape, bool)
+    land[0, :3], cloud[1, :5] = True, True
+    tree = l1d.with_masks(land=land, cloud=cloud).tree
+    assert list(decode_flags(_ocsmart_flags(tree, True, None).dataset["pixel_flags"])) == ["land", "cloud"]
+    only_cloud = _ocsmart_flags(tree, True, ["cloud"]).dataset["pixel_flags"]
+    assert list(decode_flags(only_cloud)) == ["cloud"] and int((only_cloud != 0).sum()) == 5
+    assert "pixel_flags" not in _ocsmart_flags(tree, False, None).dataset
+    assert "pixel_flags" in tree.dataset                    # the product itself is unchanged
+    with pytest.raises(KeyError, match="unknown flags"):
+        _ocsmart_flags(tree, True, ["snow"])

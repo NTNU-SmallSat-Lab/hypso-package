@@ -297,6 +297,10 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
      the OOD and glint flags as CF flag masks; provenance with the model file's sha256. Phase-1b constituents
      (CHL, TSM, aCDOM, adg, aph, bbp + sigmas) would be L2B.<GROUP>.toybox when the model has them.
    - Do not run on aulus2 while the user's reprocess is running (feedback); tests with a small mock model.
+4s. **Angle valid ranges**: `sensor_azimuth` (and the other azimuths) carry `valid_min=-180, valid_max=180`, but
+   the values are 0-360 (Erie 2025-07-05: sensor azimuth 284-285 deg), so CF readers that apply the range
+   (netCDF4 auto-mask, xarray with masking, Panoply, SNAP) show every pixel as missing. Production has the same
+   attributes. OC-SMART reads with h5py and is unaffected. Fix: 0-360 for azimuths, or wrap to -180..180 (×99).
 4r. **L2A.AUX for the other AC methods** (user, 2026-11-04: "add aux as todo for the other processors'
    products"; OC-SMART done ×98). The mechanism is generic (`_l2a_tree(..., intermediates=...)` -> the L2A's
    `ac_intermediates` node -> `...L2A.AUX.<method>.nc`); the other methods do not feed it yet:
@@ -375,6 +379,29 @@ windows (×60), demo (×61), docs site (×62), instrument field in names (×63),
 TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
+
+- **2026-11-05 (×99): OC-SMART water mask from `pixel_flags` in the fork's HYPSO reader; demo script options;
+  Erie** (user: the fork must not get a generic option, "it is a generic processor for multiple sensors").
+  - Fork: reverted 4d3fdc3 (`hypso_water_mask` setting). The HYPSO reader (`L1B.readl1b`) now sets
+    `l1b.landmask` from the input's `pixel_flags`: with a `land` flag, water = no flag set (lakes are water);
+    otherwise `globe.is_ocean` plus flagged pixels. `OCSMART.py`'s HYPSO branch only does
+    `mask_water = l1b.landmask == 0` (as SGLI/OLCI/OLI do with their readers' masks).
+  - Refactor: `_ocsmart_flags` stages only the applied flags (masked; `mask_flags` subset re-encoded) or no
+    `pixel_flags` (unmasked, OC-SMART's own ocean mask as in production); the setting is no longer written.
+    Test `test_ocsmart_input_carries_only_the_applied_flags`; fake OC-SMART checks the staged flags.
+  - Verified: real fork on Erie (masked) bit-identical to the ×98-mechanism run (120 Rrs bands, NaN pattern,
+    `ocsmart_l2_flags`, `pixel_flags`); OC-SMART tests 7 passed.
+  - Why production OC-SMART fails on Erie: it runs unmasked, its HYPSO mask is `global_land_mask.globe.is_ocean`
+    (GLOBE elevation; every lake is land), 0% of the scene is ocean, so no pixel survives and it dies on
+    `assert(l1_data.cos_solar_zenith.size != 0)`. (`landmask_GMT15ARC*` is for other sensors; it would call
+    Erie water.) Erie has no indirect georeferencing on the server (only `latitudes.dat`/`longitudes.dat`).
+  - `demo/process_capture.py`: several captures (positional) or `--list FILE` (one per line, `#` comments;
+    a failed capture is logged, the rest run, exit 1 if any failed); `--l1d-only`; `--unmasked`; SIGUSR1
+    dumps all thread stacks (faulthandler). The user's first Erie run hung writing the AUX file (all threads
+    on futexes, 0 CPU, AUX at 35.7 of 50.2 MB); a rerun of the same code and inputs finished in 7 min.
+    Not reproduced; cause unknown (HDF5 deadlock or this machine's memory errors).
+  - Launcher `~/hypso-package-refactor/process_capture.sh` (sets PYTHONPATH, `ac` env, `ac_tools.yaml` next
+    to it); `demo/ac_tools.yaml` left uncommitted (user paths). New TODO 4s (azimuth valid ranges).
 
 - **2026-11-04 (×98): every AC tool output is written; `L2A.AUX` file; Mjøsa against production OC-SMART** (user
   request: "make sure all the products are saved"; user chose a separate file over putting them in the L2A).

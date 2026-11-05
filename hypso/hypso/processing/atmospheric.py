@@ -54,7 +54,7 @@ from hypso.ac.config import tool_config
 from hypso.io.product import PRODUCT_DIMS, SPATIAL_DIMS, product_name, write_product
 from hypso.io.naming import quantity_token
 from hypso.io.provenance import ac_attrs, add_step
-from hypso.masks.flags import FLAGS_NAME, apply_flags
+from hypso.masks.flags import FLAGS_NAME, apply_flags, decode_flags, encode_flags
 
 logger = logging.getLogger(__name__)
 
@@ -496,6 +496,28 @@ def _ocsmart_lock(install_dir):
             fcntl.flock(lock_file, fcntl.LOCK_UN)
 
 
+def _ocsmart_flags(tree: xr.DataTree, masked: bool, mask_flags) -> xr.DataTree:
+    """The tree OC-SMART's input is staged from: with masked input, pixel_flags
+    reduced to the flags applied (OC-SMART's HYPSO reader treats any set flag as
+    not water); with unmasked input, no pixel_flags at all."""
+    if FLAGS_NAME not in tree.dataset:
+        return tree
+    staged = tree.copy()
+    root = staged.to_dataset(inherit=False)
+    if not masked:
+        root = root.drop_vars(FLAGS_NAME)
+    elif mask_flags:
+        flags = root[FLAGS_NAME]
+        decoded = decode_flags(flags)
+        missing = sorted(set(mask_flags) - set(decoded))
+        if missing:
+            raise KeyError(f"unknown flags {missing}; available: {sorted(decoded)}")
+        root[FLAGS_NAME] = encode_flags({name: decoded[name].values for name in decoded if name in mask_flags},
+                                        dims=flags.dims)
+    staged.dataset = root
+    return staged
+
+
 def _ocsmart(tree, masked, mask_flags, work_dir, config=None, **options):
     from hypso.api import Product
     from hypso.ac import load_ocsmart_h5
@@ -514,11 +536,12 @@ def _ocsmart(tree, masked, mask_flags, work_dir, config=None, **options):
     output_dir = work_dir.absolute() / "ocsmart"
     output_dir.mkdir(parents=True, exist_ok=True)
     prefix = _ocsmart_prefix(install_dir, tree)
-    # The fork's own HYPSO water mask counts only oceans as water (lakes are land); with masked input
-    # it takes the water pixels from the input instead (non-water pixels are NaN). v2.6.3 has no such
-    # option and keeps its ocean mask.
-    water_mask = "input" if masked and prefix != OCSMART_LEGACY_PREFIX else None
-    _stage_input(tree, masked, mask_flags, staging_dir, add_srfs=False, name=f"{prefix}_{capture_id}-l1d.nc")
+    # The fork's HYPSO reader takes its land/water mask from the input's pixel_flags: with a land
+    # flag, water is every pixel with no flag set (so lakes are water); otherwise OC-SMART's own
+    # ocean mask (lakes are land). So masked input carries only the chosen flags, and unmasked input
+    # none (OC-SMART's own mask, as for v2.6.3, which ignores pixel_flags).
+    _stage_input(_ocsmart_flags(tree, masked, mask_flags), masked, mask_flags, staging_dir, add_srfs=False,
+                 name=f"{prefix}_{capture_id}-l1d.nc")
     output_file = output_dir / f"{prefix}_{capture_id}-l1d_L2_OCSMART.h5"
 
     input_txt = install_dir / "OCSMART_Input.txt"
@@ -527,8 +550,7 @@ def _ocsmart(tree, masked, mask_flags, work_dir, config=None, **options):
         original = input_txt.read_text() if input_txt.is_file() else None
         try:
             input_txt.write_text(f"l1b_path = {staging_dir}/\nl2_path = {output_dir}/\nl2_prod = {l2_prod}\n"
-                                 f"solz_limit = {solz_limit}\nsenz_limit = {senz_limit}\n"
-                                 + (f"hypso_water_mask = {water_mask}\n" if water_mask else ""))
+                                 f"solz_limit = {solz_limit}\nsenz_limit = {senz_limit}\n")
             process = subprocess.Popen([str(cfg.get("python") or "python3"), "OCSMART.py"], cwd=install_dir,
                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
             for line in process.stdout:
@@ -567,8 +589,7 @@ def _ocsmart(tree, masked, mask_flags, work_dir, config=None, **options):
 
     parameters = {"masked": masked, "mask_flags": list(mask_flags) if mask_flags else "all" if masked else "",
                   "input_level": "L1D", "bands_returned": n_bands, "output_file": output_file.name}
-    settings = {"l2_prod": l2_prod, "solz_limit": solz_limit, "senz_limit": senz_limit,
-                **({"hypso_water_mask": water_mask} if water_mask else {})}
+    settings = {"l2_prod": l2_prod, "solz_limit": solz_limit, "senz_limit": senz_limit}
     ac = ac_attrs("ocsmart", version=_ocsmart_version(install_dir), git_commit=_git_commit(install_dir),
                   install_path=install_dir,
                   settings_effective=settings, settings_user=options)
