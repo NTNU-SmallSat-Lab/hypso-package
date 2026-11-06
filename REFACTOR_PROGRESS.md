@@ -387,6 +387,17 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-11-06 (×103): standalone L2 reader** `demo/hypso_l2_reader.py` (user: for a co-worker, no hypso
+  dependency; numpy, xarray, netCDF4 only). `open_l2(capture_dir, method=None, aux=False, lazy=False)` -> one
+  Dataset of a method's L2A.RRS/RHOS, L2B.BGC, L2B.IOP (and AUX): geometry and flags once (assigned, not
+  `xr.merge`d, which copies), per-band variables (`<q>_<nm>` with a `wavelength` attribute, 2+ bands) stacked:
+  reflectance on `wavelength` (+ `fwhm`), IOPs on `wavelength_iop`, aod on `wavelength_aod`, AUX on
+  `wavelength_aux`. Opened with `cache=False` (else every band is held twice). `flag_mask(ds, *names)` from
+  the CF flag attributes. CLI lists contents, `--merge out.nc` writes one file (eager, 64x128 x spectrum
+  chunks: 35 s for Venice OC-SMART vs 10 min lazily). Older L2B.CHL/TSM/KD/AOT files read too. Venice
+  OC-SMART: 1.55 GB in memory, ~3 GB peak RSS. `tests/test_l2_reader.py` (6) runs it on files the package
+  writes and checks it imports nothing from hypso.
+
 - **2026-11-06 (×102): L2 files grouped as PACE OCI's suites** (user: six L2 files per OC-SMART run is too
   many; a co-worker asked for one file with Rrs, IOPs and concentrations, the user chose PACE style + AUX).
   Before: L2A.RRS, L2A.AUX, L2B.CHL, L2B.TSM, L2B.IOP, L2B.AOT, each repeating geometry, flags and metadata

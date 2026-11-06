@@ -161,6 +161,27 @@ show in the Mask Manager; products from L1C on are geocoded through
 ``latitude`` and ``longitude``, and regridded products as map-projected
 rasters.
 
+Reading L2 files without the package
+------------------------------------
+
+``demo/hypso_l2_reader.py`` is a standalone script (numpy and xarray only,
+no ``hypso`` import) for users of the L2 files. It opens one method's
+L2A.RRS (or RHOS), L2B.BGC and L2B.IOP files of a capture directory as one
+``xarray.Dataset``, with the geometry and flags once and each per-band
+quantity stacked into a spectral variable (``Rrs`` on ``wavelength``,
+``aph`` ... ``bp`` on ``wavelength_iop``, ``aod`` on ``wavelength_aod``):
+
+.. code-block:: python
+
+   from hypso_l2_reader import open_l2, flag_mask
+   ds = open_l2("aeronetvenice_2025-03-04T10-38-05Z")      # method= if there are several
+   ds["chlor_a_oci"].where(~flag_mask(ds, "land", "cloud"))
+   ds["Rrs"].isel(lines=300, samples=500)                   # one spectrum
+
+``aux=True`` adds the L2A.AUX file, ``lazy=True`` reads with dask.
+``python hypso_l2_reader.py DIR`` lists the contents and ``--merge out.nc``
+writes them to one netCDF file.
+
 
 L2B products
 ------------
