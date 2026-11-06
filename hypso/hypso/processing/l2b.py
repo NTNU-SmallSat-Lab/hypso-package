@@ -1,16 +1,20 @@
 """L2A to L2B: geophysical products in their own files.
 
 An L2B product holds products derived from one L2A product, one group per
-file (:data:`hypso.io.naming.L2B_GROUPS`: ``CHL``, ``IOP``, ``TSM``, ``KD``, ``AOT``):
-2D variables only, no band cube; per-wavelength quantities are separate
+file (:data:`hypso.io.naming.L2B_GROUPS`), as PACE OCI's suites: ``BGC``
+holds chlorophyll-a and suspended matter, ``IOP`` absorption, scattering,
+backscattering and Kd. Like PACE's OC_AOP suite, the L2A keeps Rrs and the
+AC tool's aerosol optical depth. An L2B file has 2D variables only, no band cube; per-wavelength quantities are separate
 variables (``aph_443``, ``bbp_443``), as in NASA's OC_IOP files. It keeps
 the L2A's geometry, ``pixel_flags``, grid and metadata, so it can be
 regridded, windowed and read by Satpy like any other level. File names:
 ``...L2B.<GROUP>.<source>.nc``, where the source is the algorithm (e.g.
-``oc4``) or the AC tool whose own product it is (e.g. ``polymer``).
+``oc4``) or the AC tool whose own product it is (e.g. ``polymer``). An
+OC-SMART run thus writes ``L2A.RRS`` (Rrs, aod), ``L2B.BGC``, ``L2B.IOP``
+and ``L2A.AUX``.
 
 The AC tool's other per-band outputs (OC-SMART's Lt, Lr, Lrc, Lwp, tg_sol,
-tg_sen, ...) go to a third file next to the L2A, ``...L2A.AUX.<method>.nc``
+tg_sen, ...) go to another file next to the L2A, ``...L2A.AUX.<method>.nc``
 (:func:`split_intermediates`), built the same way: 2D variables only, one per
 quantity and band (``Lt_434``), with the L2A's geometry and flags.
 """
@@ -83,21 +87,20 @@ def make_l2b(tree: xr.DataTree, group: str, source: str, variables: dict, parame
 
 
 # The AC tools' own geophysical products, by variable name, and their L2B group.
-# Anything else an AC tool returns (e.g. Polymer's logfb, Rgli, Rnir) describes
-# the correction and stays in the L2A. The tools' flag variables (`*_flags`)
+# Anything else an AC tool returns (e.g. Polymer's logfb, Rgli, Rnir, OC-SMART's
+# aod_<nm>) describes the correction and stays in the L2A, as aot does in PACE's
+# OC_AOP suite. The tools' flag variables (`*_flags`)
 # stay in the L2A and are also copied into each L2B, for quality screening.
 _TOOL_PRODUCT_GROUPS = (
-    ("CHL", re.compile(r"^(chla|chl_.*|chlor_a.*|ndci)$", re.IGNORECASE)),
-    ("TSM", re.compile(r"^(spm.*|tsm.*|tur_.*|t_dogliotti.*|t_nechad.*)$", re.IGNORECASE)),
-    ("KD", re.compile(r"^kd.*$", re.IGNORECASE)),
-    # per-band IOPs, <quantity>_<nm> (OC-SMART's aph, adg, bbp, apg, bp; QAA's a, bbp)
-    ("IOP", re.compile(r"^(a|aph|adg|apg|bbp|bb|bp)_\d+$", re.IGNORECASE)),
-    ("AOT", re.compile(r"^(aod|aot)(_\d+)?$", re.IGNORECASE)),
+    ("BGC", re.compile(r"^(chla|chl_.*|chlor_a.*|ndci|spm.*|tsm.*|tur_.*|t_dogliotti.*|t_nechad.*)$",
+                       re.IGNORECASE)),
+    # per-band IOPs, <quantity>_<nm> (OC-SMART's aph, adg, bbp, apg, bp; QAA's a, bbp), and Kd
+    ("IOP", re.compile(r"^((a|aph|adg|apg|bbp|bb|bp)_\d+|kd.*)$", re.IGNORECASE)),
 )
 
 
 def tool_product_group(name: str):
-    """The L2B group of an AC tool's variable (e.g. ``"chla"`` -> ``"CHL"``),
+    """The L2B group of an AC tool's variable (e.g. ``"chla"`` -> ``"BGC"``),
     or None if it stays in the L2A."""
     for group, pattern in _TOOL_PRODUCT_GROUPS:
         if pattern.match(name):
@@ -119,7 +122,7 @@ def split_tool_products(tree: xr.DataTree) -> tuple:
     tuple
         ``(l2a_tree, {group: l2b_tree})``: the L2A without the products, and
         one L2B tree per group (:data:`hypso.io.naming.L2B_GROUPS`), named after
-        the AC tool (``L2B.CHL.polymer``). The tool's flag variables are kept
+        the AC tool (``L2B.BGC.polymer``). The tool's flag variables are kept
         in the L2A and copied into each L2B.
     """
     from hypso.io.naming import name_method
@@ -203,10 +206,10 @@ def derive(tree: xr.DataTree, group: str, algorithm: str = None) -> xr.DataTree:
     tree : xarray.DataTree
         An L2A tree; most algorithms need ``Rrs`` (``L2A.RRS.*``).
     group : str
-        L2B group, e.g. ``"CHL"`` or ``"TSM"``.
+        L2B group, ``"BGC"`` or ``"IOP"``.
     algorithm : str, optional
         See :data:`hypso.processing.l2b_algorithms.ALGORITHMS`; default the
-        group's default (CHL: ``"oci"``, TSM: ``"nechad2010"``).
+        group's default (BGC: ``"oci"``, IOP: ``"qaa"``).
 
     Returns
     -------

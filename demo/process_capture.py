@@ -17,8 +17,9 @@ it stops after writing the L1D.
 Output, in ``--out/<capture>/``::
 
     <SAT>_HSI.<time>.<target>.L1D.nc
-    <SAT>_HSI.<time>.<target>.L2A.RRS.<method>.nc
-    <SAT>_HSI.<time>.<target>.L2B.<GROUP>.<method>.nc   (the tool's CHL, TSM, ...)
+    <SAT>_HSI.<time>.<target>.L2A.RRS.<method>.nc       (Rrs; OC-SMART: also aod)
+    <SAT>_HSI.<time>.<target>.L2B.BGC.<method>.nc       (the tool's chlorophyll-a, suspended matter)
+    <SAT>_HSI.<time>.<target>.L2B.IOP.<method>.nc       (the tool's IOPs: OC-SMART's aph, adg, apg, bbp, bp)
     <SAT>_HSI.<time>.<target>.L2A.AUX.<method>.nc       (the tool's other per-band outputs:
                                                          OC-SMART's Lt, Lr, Lrc, Lwp, tg_sol, tg_sen)
     work/                                                (the AC tool's own files)

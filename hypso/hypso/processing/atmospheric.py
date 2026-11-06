@@ -572,7 +572,7 @@ def _ocsmart(tree, masked, mask_flags, work_dir, config=None, **options):
     rrs = raw.pop("Rrs")
     cube, n_bands = _onto_bands(tree, rrs.values, rrs["band"].values)
     shape = tree.dataset[product_name(tree)].shape[:2]
-    # per-band geophysical products (IOPs, AOD) become product variables (-> L2B.IOP, L2B.AOT);
+    # per-band geophysical products (IOPs, AOD) become product variables (-> L2B.IOP; aod stays in the L2A);
     # the other per-band groups are the correction's intermediates (-> L2A.AUX)
     band_products = _ocsmart_band_variables({g: raw.pop(g) for g in list(raw) if g in _OCSMART_PRODUCTS},
                                             shape, _OCSMART_PRODUCTS)
@@ -602,8 +602,8 @@ def _ocsmart(tree, masked, mask_flags, work_dir, config=None, **options):
     return _l2a_tree(tree, "ocsmart", "Rrs", cube, parameters, ac, variables, intermediates=intermediates)
 
 
-#: OC-SMART's default l2_prod here: Rrs, its chlorophyll and TSM (L2B.CHL, L2B.TSM), its
-#: IOPs (L2B.IOP) and AOD (L2B.AOT), and the correction's per-band intermediates (L2A.AUX).
+#: OC-SMART's default l2_prod here: Rrs and AOD (L2A.RRS), its chlorophyll and TSM (L2B.BGC),
+#: its IOPs (L2B.IOP), and the correction's per-band intermediates (L2A.AUX).
 OCSMART_L2_PROD = "Lt,Lr,Lrc,rrs,chl,tsm,aod,aph,adg,bbp,at,bt,tg_sol,tg_sen,Lwp"
 
 # OC-SMART's per-band outputs other than Rrs (its l2_prod). For HYPSO its input is

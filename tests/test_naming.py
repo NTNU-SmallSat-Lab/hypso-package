@@ -133,12 +133,16 @@ def test_names_before_quantity_field_still_parse(old, ac, grid, label):
 
 def test_l2b_names():
     # L2B: product group and source in the quantity/method fields (TODO 4i, x87)
+    # (x102: PACE-style groups BGC and IOP; the older one-product groups still parse)
     from hypso.io.naming import L2B_GROUPS
-    assert {"CHL", "IOP", "TSM", "KD"} <= set(L2B_GROUPS)
-    name = product_name("HYPSO-2", T, "aeronetvenice", "L2B", ac="oc4", quantity="CHL", grid="utm33n_880m")
-    assert name.filename() == "HYPSO2_HSI.20250612T095802.aeronetvenice.L2B.CHL.oc4.utm33n_880m.nc"
+    assert set(L2B_GROUPS) == {"BGC", "IOP"}
+    name = product_name("HYPSO-2", T, "aeronetvenice", "L2B", ac="oc4", quantity="BGC", grid="utm33n_880m")
+    assert name.filename() == "HYPSO2_HSI.20250612T095802.aeronetvenice.L2B.BGC.oc4.utm33n_880m.nc"
     assert parse_product_name(name.filename()) == name
-    for bad in (dict(quantity="RRS", ac="oc4"), dict(ac="oc4"), dict(quantity="CHL")):
+    for old in ("CHL", "TSM", "KD", "AOT"):
+        legacy = f"HYPSO2_HSI.20250612T095802.aeronetvenice.L2B.{old}.ocsmart.nc"
+        assert parse_product_name(legacy).quantity == old and parse_product_name(legacy).filename() == legacy
+    for bad in (dict(quantity="RRS", ac="oc4"), dict(ac="oc4"), dict(quantity="BGC")):
         with pytest.raises(ValueError):
             product_name("HYPSO-2", T, "aeronetvenice", "L2B", **bad).filename()
     with pytest.raises(ValueError):

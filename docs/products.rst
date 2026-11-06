@@ -15,8 +15,8 @@ L2A        ``rhos`` or     atmospherically corrected: surface reflectance   1 (`
            ``Rrs``         ``rhos`` (MACHI, the default; DPS; ACOLITE L2R)  sr-1 (``Rrs``)
                            or remote-sensing reflectance ``Rrs``
 L2B        none            geophysical products derived from an L2A, one    per variable
-                           group per file (chlorophyll, IOPs, TSM, Kd,
-                           aerosol optical thickness): 2D
+                           group per file (``BGC``: chlorophyll, TSM;
+                           ``IOP``: IOPs, Kd): 2D
                            variables only (``product.variables``)
 =========  ==============  ===============================================  ===================
 
@@ -33,7 +33,7 @@ File names
    HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.nc
    HYPSO2_HSI.20250304T103805.aeronetvenice.L2A.RHOS.machi.nc
    HYPSO2_HSI.20250304T103805.aeronetvenice.L2A.RRS.polymer.nc
-   HYPSO2_HSI.20250304T103805.aeronetvenice.L2B.CHL.oc4.nc
+   HYPSO2_HSI.20250304T103805.aeronetvenice.L2B.BGC.oc4.nc
    HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.utm33n_876m.nc      (regridded)
    HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.test.nc             (label)
 
@@ -52,9 +52,12 @@ per-band outputs next to an L2A (`AC tool intermediates (L2A.AUX)`_). The
 quantity is also the ``l2a_quantity`` global attribute. L2A
 names from before the quantity field (``L2A.<method>``) are still read; older
 POLYMER files hold ``rho_w`` (= pi Rrs) and are named ``RHOW`` when converted.
-L2B names its product group (``CHL``, ``IOP``, ``TSM``, ``KD``, ``AOT``;
-``hypso.io.naming.L2B_GROUPS``) and its source, the algorithm or the AC tool
-whose own product it is. A regridded product names its grid (:doc:`grid`),
+L2B names its product group (``hypso.io.naming.L2B_GROUPS``, as PACE OCI's
+suites: ``BGC`` chlorophyll-a and suspended matter, ``IOP`` absorption,
+scattering, backscattering and Kd) and its source, the algorithm or the AC
+tool whose own product it is. L2B files written before 2026-11-06 had one
+group per product (``CHL``, ``TSM``, ``KD``, ``IOP``, ``AOT``); they are
+still read. A regridded product names its grid (:doc:`grid`),
 at any level: a single capture on a map stays L1D, L2A or L2B (L3 is kept for
 future multi-capture composites);
 the optional label is for experiments. The calibration set and masking are
@@ -178,29 +181,27 @@ own algorithms run on an L2A, mostly on ``Rrs`` (an ``L2A.RRS`` product):
 
 .. code-block:: python
 
-   chl = l2a.derive("CHL")               # ...L2B.CHL.oci.nc: chlor_a, chl_oc4, chl_ci
-   tsm = l2a.derive("TSM")               # ...L2B.TSM.nechad2010.nc: spm_nechad2010_665
-   ndci = l2a.derive("CHL", "ndci")      # red-edge, turbid/eutrophic waters; also from rhos
-   iop = l2a.derive("IOP")               # ...L2B.IOP.qaa.nc: a_443 ... a_665, bbp_443 ... bbp_665
-   kd = l2a.derive("KD")                 # ...L2B.KD.qaa.nc: Kd_443 ... Kd_665
+   chl = l2a.derive("BGC")                 # ...L2B.BGC.oci.nc: chlor_a, chl_oc4, chl_ci
+   tsm = l2a.derive("BGC", "nechad2010")   # ...L2B.BGC.nechad2010.nc: spm_nechad2010_665
+   ndci = l2a.derive("BGC", "ndci")        # red-edge, turbid/eutrophic waters; also from rhos
+   iop = l2a.derive("IOP")                 # ...L2B.IOP.qaa.nc: a_, bbp_, Kd_<nm> at 443 ... 665 nm
 
 =====  ==============  ==================================================================
 Group  Algorithm       Products and reference
 =====  ==============  ==================================================================
-CHL    ``oci``         ``chlor_a``: NASA's blend of the colour index (Hu et al. 2012,
+BGC    ``oci``         ``chlor_a``: NASA's blend of the colour index (Hu et al. 2012,
        (default)       coefficients 2019) below 0.25 mg m-3 and OC4 above 0.35;
                        also ``chl_oc4``, ``chl_ci``
-CHL    ``oc4``         ``chl_oc4``: OC4 band ratio, OLCI coefficients (O'Reilly and
+BGC    ``oc4``         ``chl_oc4``: OC4 band ratio, OLCI coefficients (O'Reilly and
                        Werdell 2019)
-CHL    ``ci``          ``chl_ci``: colour index only
-CHL    ``ndci``        ``chl_ndci``, ``ndci``: Mishra and Mishra 2012 (turbid and
+BGC    ``ci``          ``chl_ci``: colour index only
+BGC    ``ndci``        ``chl_ndci``, ``ndci``: Mishra and Mishra 2012 (turbid and
                        eutrophic waters only; no validity mask)
-TSM    ``nechad2010``  ``spm_nechad2010_665`` (g m-3): Nechad et al. 2010 at 665 nm,
-       (default)       NaN where rhow >= 0.5 C
+BGC    ``nechad2010``  ``spm_nechad2010_665`` (g m-3): Nechad et al. 2010 at 665 nm,
+                       NaN where rhow >= 0.5 C
 IOP    ``qaa``         ``a_<nm>``, ``bbp_<nm>`` (m-1) at 443, 490, 560, 665 nm: Lee's QAA
-       (default)       v6, v5 where Rrs665 < 0.0015, as implemented in ACOLITE
-KD     ``qaa``         ``Kd_<nm>`` (m-1): from QAA's a and bbp, Lee et al. 2005 (30 degree
-       (default)       sun)
+       (default)       v6, v5 where Rrs665 < 0.0015, as implemented in ACOLITE;
+                       ``Kd_<nm>`` (m-1) from a and bbp, Lee et al. 2005 (30 degree sun)
 =====  ==============  ==================================================================
 
 Rrs at each algorithm's wavelength is interpolated between the two nearest
@@ -223,14 +224,13 @@ and flags, and ``l2a.write()`` writes it next to the L2A:
 
 .. code-block:: text
 
-   HYPSO2_HSI.20250528T101551.mjosa.L2A.RRS.ocsmart.nc     Rrs
-   HYPSO2_HSI.20250528T101551.mjosa.L2B.CHL.ocsmart.nc     chlor_a_oci, chlor_a_yoc
-   HYPSO2_HSI.20250528T101551.mjosa.L2B.TSM.ocsmart.nc     tsm_yoc
+   HYPSO2_HSI.20250528T101551.mjosa.L2A.RRS.ocsmart.nc     Rrs, aod_<nm>
+   HYPSO2_HSI.20250528T101551.mjosa.L2B.BGC.ocsmart.nc     chlor_a_oci, chlor_a_yoc, tsm_yoc
    HYPSO2_HSI.20250528T101551.mjosa.L2B.IOP.ocsmart.nc     aph_, adg_, bbp_, apg_, bp_<nm> (m-1)
-   HYPSO2_HSI.20250528T101551.mjosa.L2B.AOT.ocsmart.nc     aod_<nm>
    HYPSO2_HSI.20250528T101551.mjosa.L2A.AUX.ocsmart.nc     Lt_434 ... tg_sen_718 (6 x 83)
 
-OC-SMART's per-band geophysical products go to L2B, not AUX, named as NASA's
+OC-SMART's per-band geophysical products are not in AUX: the IOPs go to
+L2B.IOP and the aerosol optical depth stays in the L2A, named as NASA's
 OC IOP products (its user guide, 3.6.1): ``aph`` phytoplankton absorption,
 ``adg`` detritus + CDOM absorption, ``bbp`` particulate backscattering,
 ``apg`` (its ``at``) particulate + CDOM absorption without water, ``bp`` (its

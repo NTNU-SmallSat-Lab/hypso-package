@@ -50,7 +50,7 @@ def test_write_puts_intermediates_in_their_own_file(l2a, tmp_path):
     names = sorted(p.name for p in tmp_path.iterdir())
     assert names == ["HYPSO2_HSI.20250304T103805.aeronetvenice.L2A.AUX.dps.nc",
                      "HYPSO2_HSI.20250304T103805.aeronetvenice.L2A.RHOS.dps.nc",
-                     "HYPSO2_HSI.20250304T103805.aeronetvenice.L2B.CHL.dps.nc"]
+                     "HYPSO2_HSI.20250304T103805.aeronetvenice.L2B.BGC.dps.nc"]
     with netCDF4.Dataset(path) as f:                      # not in the L2A file
         assert INTERMEDIATES_NODE not in f.groups and "Lt_560" not in f.variables
     for name in names:

@@ -9,7 +9,7 @@ time, so a plain listing groups by satellite and sorts by time::
     HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.nc
     HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.RRS.polymer.nc
     HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.RHOS.machi.nc
-    HYPSO2_HSI.20250612T095802.aeronetvenice.L2B.CHL.oc4.nc
+    HYPSO2_HSI.20250612T095802.aeronetvenice.L2B.BGC.oc4.nc
     HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.adjusted.nc   (label: experiments)
     HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.RRS.polymer.utm33n_880m.nc   (regridded)
 
@@ -21,7 +21,7 @@ appears inside one. L2A always carries the quantity (:data:`QUANTITIES`:
 ``RRS`` remote-sensing reflectance, ``RHOS`` surface reflectance; ``AUX`` the
 AC tool's other per-band outputs, :data:`AUX_QUANTITY`) and the AC
 method, which produced it; L2B (products derived from an L2A) always carries
-its product group (:data:`L2B_GROUPS`, e.g. ``CHL``) and the source (the
+its product group (:data:`L2B_GROUPS`, e.g. ``BGC``) and the source (the
 algorithm or AC tool) in the same two fields; a regridded product carries its grid (hypso.grid.grid_name:
 utm<zone><n|s> or epsg<code>, then the pixel size, e.g. utm33n_880m,
 epsg4326_0p01deg); the optional free-text label is always last and may
@@ -54,11 +54,17 @@ QUANTITIES = {"RRS": "Rrs", "RHOS": "rhos", "RHOW": "rho_w"}
 #: outputs (OC-SMART's Lt, Lr, Lrc, Lwp, tg_sol, tg_sen, ...): one 2D variable
 #: per quantity and band, no cube (hypso.processing.l2b.split_intermediates).
 AUX_QUANTITY = "AUX"
-#: L2B product groups: geophysical products derived from an L2A, one group per file.
-L2B_GROUPS = {"CHL": "chlorophyll-a concentration", "IOP": "inherent optical properties (absorption, backscattering)",
-              "TSM": "total suspended matter", "KD": "diffuse attenuation coefficient",
-              "AOT": "aerosol optical thickness"}
-_PAIRED = {"L2A": {**QUANTITIES, AUX_QUANTITY: None}, "L2B": L2B_GROUPS}    # levels with the quantity/group and source fields
+#: L2B product groups: geophysical products derived from an L2A, one group per
+#: file, as PACE OCI's OC_BGC and OC_IOP suites (the AOP suite, Rrs and aerosol
+#: optical depth, is the L2A.RRS file).
+L2B_GROUPS = {"BGC": "biogeochemical products: chlorophyll-a, suspended matter",
+              "IOP": "inherent optical properties (absorption, scattering, backscattering) and diffuse attenuation"}
+#: Groups of L2B files written before 2026-11-06 (one per product: CHL, TSM, KD,
+#: AOT); their names still parse and name the product, new files use L2B_GROUPS.
+LEGACY_L2B_GROUPS = {"CHL": "chlorophyll-a concentration", "TSM": "total suspended matter",
+                     "KD": "diffuse attenuation coefficient", "AOT": "aerosol optical thickness"}
+# levels with the quantity/group and source fields
+_PAIRED = {"L2A": {**QUANTITIES, AUX_QUANTITY: None}, "L2B": {**L2B_GROUPS, **LEGACY_L2B_GROUPS}}
 _TIME_FORMAT = "%Y%m%dT%H%M%S"
 _CAPTURE_ID_TIME_FORMAT = "%Y-%m-%dT%H-%M-%SZ"
 
@@ -199,7 +205,7 @@ def product_name(sat_id: str, time: datetime, target: str, level: str,
     quantity : str, optional
         L2A quantity token (:data:`QUANTITIES`, e.g. ``"RRS"``, or the
         product variable ``"Rrs"``) or L2B group (:data:`L2B_GROUPS`, e.g.
-        ``"CHL"``); required for L2A and L2B.
+        ``"BGC"``); required for L2A and L2B.
 
     Returns
     -------

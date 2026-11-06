@@ -43,26 +43,30 @@ or glint correction), so the result is ``rhos``.
 
 Each method's 2D outputs are kept as variables next to the cube (in
 ``product.variables``), with the tool's own flags as an integer flag variable.
-The tool's geophysical products (chlorophyll, suspended matter, Kd) are L2B
-products (:doc:`products`): ``l2a.tool_products()`` returns them by group
-(``{"CHL": ..., "TSM": ...}``), and ``l2a.write()`` writes them as L2B files
-next to the L2A (``...L2B.CHL.polymer.nc``), each with the tool's flags; the
-L2A file keeps the reflectance, the correction's diagnostics (e.g. Polymer's
-``logfb``, ``Rgli``, ``Rnir``) and the flags. ``write(tool_products=False)``
+The tool's geophysical products are L2B products (:doc:`products`), grouped
+as PACE OCI's suites: chlorophyll and suspended matter in ``BGC``, IOPs and Kd
+in ``IOP``. ``l2a.tool_products()`` returns them by group
+(``{"BGC": ..., "IOP": ...}``), and ``l2a.write()`` writes them as L2B files
+next to the L2A (``...L2B.BGC.polymer.nc``), each with the tool's flags; the
+L2A file keeps the reflectance, the aerosol optical depth (as PACE's OC_AOP
+suite), the correction's diagnostics (e.g. Polymer's ``logfb``, ``Rgli``,
+``Rnir``) and the flags. ``write(tool_products=False)``
 drops them. Which variable goes where:
 
 ==============  ==================================================================
 Method          Variables
 ==============  ==================================================================
 ``dps``         none
-``polymer``     L2B CHL: ``chla`` (10**logchl, mg m-3); L2B TSM: ``SPM``; L2A:
+``polymer``     L2B BGC: ``chla`` (10**logchl, mg m-3), ``SPM``; L2A:
                 ``logfb``, ``Rgli``, ``Rnir``, ``polymer_flags`` (with Polymer's
                 flag table)
 ``acolite``     L2W: every 2D output except lat/lon/Rrs (what ``l2w_parameters``
-                asks for): chlorophyll and ``ndci`` to L2B CHL, ``SPM_*``/``TUR_*``
-                to L2B TSM, others in L2A; ``acolite_l2_flags``; L2R: none
-``ocsmart``     L2B CHL: ``chlor_a_oci``, ``chlor_a_yoc``; L2B TSM: ``tsm_yoc``
-                (when written); ``ocsmart_l2_flags``
+                asks for): chlorophyll, ``ndci``, ``SPM_*``/``TUR_*`` to L2B
+                BGC, ``kd*`` to L2B IOP, others in L2A; ``acolite_l2_flags``;
+                L2R: none
+``ocsmart``     L2B BGC: ``chlor_a_oci``, ``chlor_a_yoc``, ``tsm_yoc``; L2B IOP:
+                ``aph_``, ``adg_``, ``apg_``, ``bbp_``, ``bp_<nm>``; L2A:
+                ``aod_<nm>``, ``ocsmart_l2_flags``
 ==============  ==================================================================
 
 Tool standard names that are not CF names are kept as ``source_standard_name``;

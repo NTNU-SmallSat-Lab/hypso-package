@@ -387,6 +387,20 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-11-06 (×102): L2 files grouped as PACE OCI's suites** (user: six L2 files per OC-SMART run is too
+  many; a co-worker asked for one file with Rrs, IOPs and concentrations, the user chose PACE style + AUX).
+  Before: L2A.RRS, L2A.AUX, L2B.CHL, L2B.TSM, L2B.IOP, L2B.AOT, each repeating geometry, flags and metadata
+  (Venice: L2B.CHL 9.6 MB, L2B.TSM 9.3 MB for one or two variables). Now four:
+  - L2A.RRS: Rrs and OC-SMART's `aod_<nm>` (AOD stays in the L2A, like `aot` in PACE's OC_AOP);
+  - L2B.BGC (OC_BGC): chlorophyll-a and suspended matter (`chlor_a_*`, `tsm_yoc`, Polymer `chla`/`SPM`,
+    ACOLITE `chl_*`/`ndci`/`SPM_*`/`TUR_*`);
+  - L2B.IOP (OC_IOP): `aph`, `adg`, `apg`, `bbp`, `bp`, QAA `a`/`bbp`, and Kd (`kd*`; QAA's `Kd_<nm>` now in
+    the same file as its a and bbp);
+  - L2A.AUX unchanged.
+  - `naming.L2B_GROUPS` = {BGC, IOP}; `LEGACY_L2B_GROUPS` (CHL, TSM, KD, AOT) still parse and round-trip,
+    `make_l2b` refuses them. `derive("BGC")` (oci default; oc4, ci, ndci, nechad2010), `derive("IOP")` (qaa);
+    `derive("CHL"/"TSM"/"KD")` are gone. Docs, demo and tests updated; related tests 51 passed.
+
 - **2026-11-05 (×101): spatial subsampling** (user's co-worker: HYPSO-2 captures with readout skipping every
   2nd row along the slit, 1092 -> 546 samples, maybe from next week; the factor is
   `metadata/capture_config/spatial_subsampling`, so far always 1). Before: `capture_params` read `sample_div`

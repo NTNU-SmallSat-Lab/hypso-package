@@ -664,7 +664,7 @@ class Product:
             e.g. ``"HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.nc"``; L2A
             names carry the quantity (from the product variable) and the
             method, e.g. ``"...L2A.RHOS.machi.nc"``; L2B names the group
-            and source, e.g. ``"...L2B.CHL.oc4.nc"``.
+            and source, e.g. ``"...L2B.BGC.oc4.nc"``.
         """
         from hypso.io.naming import name_method
         from hypso.processing.capture import acquisition_time
@@ -746,22 +746,24 @@ class Product:
         Parameters
         ----------
         group : str
-            ``"CHL"`` (chlorophyll-a) or ``"TSM"`` (suspended matter).
+            ``"BGC"`` (chlorophyll-a, suspended matter) or ``"IOP"``
+            (absorption, backscattering, Kd).
         algorithm : str, optional
-            CHL: ``"oci"`` (default; NASA's chlor_a, CI and OC4 blend),
-            ``"oc4"``, ``"ci"``, ``"ndci"`` (turbid/eutrophic waters); TSM:
-            ``"nechad2010"`` (default). See
-            :mod:`hypso.processing.l2b_algorithms`.
+            BGC: ``"oci"`` (default; NASA's chlor_a, CI and OC4 blend),
+            ``"oc4"``, ``"ci"``, ``"ndci"`` (turbid/eutrophic waters),
+            ``"nechad2010"`` (suspended matter); IOP: ``"qaa"`` (default).
+            See :mod:`hypso.processing.l2b_algorithms`.
 
         Returns
         -------
         Product
-            Level L2B, e.g. ``...L2B.CHL.oci.nc``.
+            Level L2B, e.g. ``...L2B.BGC.oci.nc``.
 
         Examples
         --------
-        >>> chl = l2a.derive("CHL")                 # from an L2A.RRS product
+        >>> chl = l2a.derive("BGC")                 # from an L2A.RRS product
         >>> chl.variables["chlor_a"]
+        >>> tsm = l2a.derive("BGC", "nechad2010")
         """
         from hypso.processing.l2b import derive
         return Product(derive(self._tree, group, algorithm))
@@ -773,12 +775,12 @@ class Product:
         ``chlor_a_*``/``tsm_*``, ... grouped by
         :data:`hypso.io.naming.L2B_GROUPS`, each with the tool's flags. An
         L2A file does not keep them: :meth:`write` writes them as L2B files
-        (``...L2B.CHL.polymer.nc``) next to it.
+        (``...L2B.BGC.polymer.nc``) next to it.
 
         Returns
         -------
         dict
-            ``{group: Product}``, e.g. ``{"CHL": ..., "TSM": ...}``; empty
+            ``{group: Product}``, e.g. ``{"BGC": ..., "IOP": ...}``; empty
             for in-process methods (MACHI, DPS).
         """
         from hypso.processing.l2b import split_tool_products

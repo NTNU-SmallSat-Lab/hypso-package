@@ -13,23 +13,23 @@ ATBDs:
 - ``ci``: colour index (Hu et al. 2012; coefficients of Hu et al. 2019):
   CI = Rrs555 - (Rrs443 + (555 - 443) / (670 - 443) (Rrs670 - Rrs443)),
   chl = 10**(a0 + a1 CI).
-- ``oci`` (default for CHL): NASA's chlor_a - CI below 0.25 mg m-3, OC4
+- ``oci`` (default for BGC): NASA's chlor_a - CI below 0.25 mg m-3, OC4
   above 0.35, linear blend in between.
 - ``ndci``: red-edge index (Mishra and Mishra 2012),
   NDCI = (R705 - R670) / (R705 + R670), chl = 14.039 + 86.115 NDCI +
   194.325 NDCI**2; calibrated for turbid and eutrophic waters only, no
   validity mask is applied.
-- ``nechad2010`` (default for TSM): rhow = pi Rrs665,
+- ``nechad2010``: rhow = pi Rrs665,
   SPM = A rhow / (1 - rhow / C), A = 355.85 g m-3, C = 0.1728 (Nechad et
   al. 2010); NaN where rhow >= 0.5 C (ACOLITE's default limit).
 
-- ``qaa`` (IOP and KD groups): Lee's Quasi-Analytical Algorithm, as
+- ``qaa`` (IOP group): Lee's Quasi-Analytical Algorithm, as
   implemented in ACOLITE (``acolite/parameters/qaa/qaa_compute.py``, with its
   2025-04-29 fix, and ``data/Shared/algorithms/QAA/qaa_settings.txt``
   "standard" coefficients): QAA v6 (reference 665 nm), with QAA v5
   (reference 560 nm) where Rrs665 < 0.0015 sr-1, at 443, 490, 560 and 665 nm.
-  IOP: total absorption ``a_<nm>`` and particulate backscattering
-  ``bbp_<nm>`` (m-1). KD: ``Kd_<nm>`` from a and bbp with Lee et al. 2005's
+  Total absorption ``a_<nm>`` and particulate backscattering ``bbp_<nm>``
+  (m-1), and ``Kd_<nm>`` from a and bbp with Lee et al. 2005's
   model for a 30 degree sun (m-1). No split of absorption into phytoplankton
   and CDOM/detritus (QAA steps 7-10) yet.
 """
@@ -169,30 +169,25 @@ _QAA_REF = "Lee et al. 2002/2009 QAA v5/v6 as implemented in ACOLITE; Kd: Lee et
 
 def _qaa_iop(rrs, wavelengths):
     out = {}
-    for w, (a, bbp, _) in qaa(rrs, wavelengths).items():
+    for w, (a, bbp, kd) in qaa(rrs, wavelengths).items():
         out[f"a_{w}"] = (a, {"units": "m-1", "long_name": f"Total absorption coefficient at {w} nm (QAA)",
                              "standard_name": "volume_absorption_coefficient_of_radiative_flux_in_sea_water"})
         out[f"bbp_{w}"] = (bbp, {"units": "m-1", "long_name": f"Particulate backscattering coefficient at {w} nm "
                                                               "(QAA)"})
+        out[f"Kd_{w}"] = (kd, {"units": "m-1", "long_name": f"Diffuse attenuation coefficient of downwelling "
+                                                            f"irradiance at {w} nm (QAA, Lee et al. 2005)",
+                               "standard_name": "volume_attenuation_coefficient_of_downwelling_radiative_flux_in_sea_water"})
     return out
-
-
-def _qaa_kd(rrs, wavelengths):
-    return {f"Kd_{w}": (kd, {"units": "m-1", "long_name": f"Diffuse attenuation coefficient of downwelling "
-                                                          f"irradiance at {w} nm (QAA, Lee et al. 2005)",
-                              "standard_name": "volume_attenuation_coefficient_of_downwelling_radiative_flux_in_sea_water"})
-            for w, (_, _, kd) in qaa(rrs, wavelengths).items()}
 
 
 #: (group, algorithm) -> (function, cube variables it accepts, reference, default for the group)
 ALGORITHMS = {
-    ("CHL", "oci"): (_oci, ("Rrs",), "NASA OCI: Hu et al. 2012/2019 CI and O'Reilly and Werdell 2019 OC4", True),
-    ("CHL", "oc4"): (_oc4, ("Rrs",), "O'Reilly and Werdell 2019 (OLCI OC4)", False),
-    ("CHL", "ci"): (_ci, ("Rrs",), "Hu et al. 2012, coefficients Hu et al. 2019", False),
-    ("CHL", "ndci"): (_ndci, ("Rrs", "rhos"), "Mishra and Mishra 2012", False),
-    ("TSM", "nechad2010"): (_nechad2010, ("Rrs",), "Nechad et al. 2010", True),
+    ("BGC", "oci"): (_oci, ("Rrs",), "NASA OCI: Hu et al. 2012/2019 CI and O'Reilly and Werdell 2019 OC4", True),
+    ("BGC", "oc4"): (_oc4, ("Rrs",), "O'Reilly and Werdell 2019 (OLCI OC4)", False),
+    ("BGC", "ci"): (_ci, ("Rrs",), "Hu et al. 2012, coefficients Hu et al. 2019", False),
+    ("BGC", "ndci"): (_ndci, ("Rrs", "rhos"), "Mishra and Mishra 2012", False),
+    ("BGC", "nechad2010"): (_nechad2010, ("Rrs",), "Nechad et al. 2010", False),
     ("IOP", "qaa"): (_qaa_iop, ("Rrs",), _QAA_REF, True),
-    ("KD", "qaa"): (_qaa_kd, ("Rrs",), _QAA_REF, True),
 }
 
 

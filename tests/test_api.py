@@ -200,7 +200,7 @@ def test_polymer_mocked(l1c, monkeypatch, tmp_path):
     # 2D products: chla = 10**logchl (linear, mg m-3) and Polymer's own flags
     variables = l2a.variables
     assert {"chla", "logfb", "SPM", "Rgli", "Rnir", "polymer_flags"} <= set(variables)
-    assert set(l2a.tool_products()) == {"CHL", "TSM"}                 # chla, SPM -> L2B (x88)
+    assert set(l2a.tool_products()) == {"BGC"}                        # chla, SPM -> L2B (x88, x102)
     with nc.Dataset(POLYMER_OUTPUT) as f:
         logchl, flags = f["logchl"][:], f["flags"][:]
     np.testing.assert_allclose(variables["chla"].values, np.ma.filled(10.0 ** logchl.astype(np.float64), np.nan),
@@ -216,7 +216,7 @@ def test_polymer_mocked(l1c, monkeypatch, tmp_path):
     assert "chla" not in reread.variables
     assert reread.variables["polymer_flags"].dtype == flags.dtype
     assert reread.variables["polymer_flags"].attrs["flag_meanings"] == variables["polymer_flags"].attrs["flag_meanings"]
-    chl = hypso.open(tmp_path / l2a.tool_products()["CHL"].filename())
+    chl = hypso.open(tmp_path / l2a.tool_products()["BGC"].filename())
     assert chl.variables["chla"].attrs["standard_name"] == "mass_concentration_of_chlorophyll_a_in_sea_water"
     assert chl.variables["polymer_flags"].dtype == flags.dtype
 
@@ -290,7 +290,8 @@ def test_acolite_mocked(l1c, monkeypatch, tmp_path):
     # L2W's 2D products and flags, with CF standard names where ACOLITE's aren't
     variables = l2w.variables
     assert {"acolite_l2_flags", "SPM_Nechad2010_664", "chl_re_mishra", "ndci"} <= set(variables)
-    assert set(l2w.tool_products()["CHL"].variables.data_vars) >= {"chl_re_mishra", "ndci", "acolite_l2_flags"}
+    assert set(l2w.tool_products()["BGC"].variables.data_vars) >= {"chl_re_mishra", "ndci", "SPM_Nechad2010_664",
+                                                                   "acolite_l2_flags"}
     with nc.Dataset(ACOLITE_OUTPUTS["L2W"]) as f:
         np.testing.assert_array_equal(variables["acolite_l2_flags"].values, f["l2_flags"][:])
     chl = variables["chl_re_mishra"].attrs
@@ -367,7 +368,7 @@ def test_ocsmart_with_fake_installation(l1d, tmp_path, per_satellite, masked):
 
     variables = l2a.variables
     assert {"chlor_a_oci", "chlor_a_yoc", "ocsmart_l2_flags"} <= set(variables)
-    assert l2a.tool_products()["CHL"].filename().endswith(".L2B.CHL.ocsmart.nc")
+    assert l2a.tool_products()["BGC"].filename().endswith(".L2B.BGC.ocsmart.nc")
     assert not {"Latitude", "Solar_zenith"} & set(variables)
     assert variables["chlor_a_oci"].attrs["units"] == "mg m-3"
     assert variables["ocsmart_l2_flags"].dtype.kind == "i"
@@ -670,7 +671,7 @@ def test_ocsmart_every_output_is_written(l1d, tmp_path):
     out.mkdir()
     l2a.write(out_dir=out)
     files = {".".join(p.name.split(".")[3:5]): hypso.open(p) for p in out.glob("*.nc")}
-    assert set(files) == {"L2A.RRS", "L2A.AUX", "L2B.CHL"}, sorted(files)
+    assert set(files) == {"L2A.RRS", "L2A.AUX", "L2B.BGC"}, sorted(files)
     written = set().union(*(set(p.variables.data_vars) for p in files.values()))
     rrs_bands = set(np.floor(files["L2A.RRS"].wavelengths[~np.isnan(files["L2A.RRS"].cube.values).all(axis=(0, 1))])
                     .astype(int))
@@ -718,10 +719,10 @@ def test_ocsmart_input_carries_only_the_applied_flags(l1d):
 
 @requires_ac_outputs
 def test_ocsmart_iop_aod_tsm_go_to_l2b(l1d, tmp_path):
-    """OC-SMART's per-band geophysical products (aph, adg, bbp, at, bt, AOD)
-    and tsm(yoc) are written as L2B.IOP / L2B.AOT / L2B.TSM files, renamed as
-    NASA's OC IOP products (at -> apg, bt -> bp, AOD -> aod); the correction's
-    intermediates stay in the L2A.AUX file. The real Venice output with
+    """OC-SMART's IOPs (aph, adg, bbp, at, bt) are written as L2B.IOP, its
+    chlorophyll and tsm(yoc) as L2B.BGC, and its AOD stays in the L2A.RRS
+    file (PACE-style suites, x102), renamed as NASA's OC products (at -> apg,
+    bt -> bp, AOD -> aod); the correction's intermediates stay in the L2A.AUX file. The real Venice output with
     synthetic IOP groups added (it was run with the default l2_prod of the time)."""
     import h5py
     import netCDF4
@@ -744,12 +745,12 @@ def test_ocsmart_iop_aod_tsm_go_to_l2b(l1d, tmp_path):
     (install / "OCSMART_Input.txt").write_text("original contents\n")
     config = {"ocsmart": {"dir": str(install), "python": __import__("sys").executable}}
     l2a = l1d.correct_atmosphere("ocsmart", config=config, work_dir=tmp_path / "work")
-    assert set(l2a.tool_products()) == {"CHL", "TSM", "IOP", "AOT"}
+    assert set(l2a.tool_products()) == {"BGC", "IOP"}
     out = tmp_path / "out"
     out.mkdir()
     l2a.write(out_dir=out)
     expected = {"IOP": {f"{q}_{nm}" for q in ("aph", "adg", "bbp", "apg", "bp") for nm in (441, 490)},
-                "AOT": {"aod_441", "aod_490"}, "TSM": {"tsm_yoc"}}
+                "BGC": {"tsm_yoc", "chlor_a_oci", "chlor_a_yoc"}}
     for group, names in expected.items():
         path = next(p for p in out.glob(f"*.L2B.{group}.ocsmart.nc"))
         with netCDF4.Dataset(path) as f:
@@ -764,14 +765,18 @@ def test_ocsmart_iop_aod_tsm_go_to_l2b(l1d, tmp_path):
                        for n in f.variables)
         assert "whitecap" in f["Lwp_441"].long_name.lower()
     with netCDF4.Dataset(next(out.glob("*.L2A.RRS.ocsmart.nc"))) as f:
-        assert not {"aph_441", "aod_441", "tsm_yoc"} & set(f.variables)
+        assert not {"aph_441", "tsm_yoc", "chlor_a_oci"} & set(f.variables)
+        assert {"aod_441", "aod_490"} <= set(f.variables) and f["aod_441"].units == "1"
+    assert sorted(".".join(p.name.split(".")[3:5]) for p in out.glob("*.nc")) == \
+        ["L2A.AUX", "L2A.RRS", "L2B.BGC", "L2B.IOP"]
 
 
 def test_iop_and_aot_names_route_to_l2b():
     from hypso.processing.l2b import tool_product_group
-    for name in ("aph_441", "adg_490", "bbp_560", "apg_441", "bp_665", "a_443", "bb_443"):
+    for name in ("aph_441", "adg_490", "bbp_560", "apg_441", "bp_665", "a_443", "bb_443", "Kd_490"):
         assert tool_product_group(name) == "IOP", name
-    for name in ("aod_441", "aot_550", "aod"):
-        assert tool_product_group(name) == "AOT", name
-    for name in ("Lt_441", "tg_sol_441", "Rgli", "at_441", "bt_441", "logfb"):
+    for name in ("chlor_a_oci", "tsm_yoc", "SPM_Nechad2016_665"):
+        assert tool_product_group(name) == "BGC", name
+    # aerosol optical depth stays in the L2A (PACE's OC_AOP suite)
+    for name in ("aod_441", "aot_550", "aod", "Lt_441", "tg_sol_441", "Rgli", "at_441", "bt_441", "logfb"):
         assert tool_product_group(name) is None, name
