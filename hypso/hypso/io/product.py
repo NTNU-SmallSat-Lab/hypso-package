@@ -99,12 +99,12 @@ _GEOMETRY_ATTRS = {
     "sensor_azimuth": lambda: cf.azimuth_angle_attrs("Sensor Azimuth Angle"),
     "solar_zenith": lambda: cf.zenith_angle_attrs("Solar Zenith Angle"),
     "solar_azimuth": lambda: cf.azimuth_angle_attrs("Solar Azimuth Angle"),
-    "relative_azimuth": lambda: cf.azimuth_angle_attrs("Relative Azimuth Angle"),
+    "relative_azimuth": lambda: cf.azimuth_angle_attrs("Relative Azimuth Angle", valid_max=180.0),
     "sensor_zenith_direct": lambda: cf.zenith_angle_attrs("Sensor Zenith Angle (Indirect)"),
     "sensor_azimuth_direct": lambda: cf.azimuth_angle_attrs("Sensor Azimuth Angle (Indirect)"),
     "solar_zenith_direct": lambda: cf.zenith_angle_attrs("Solar Zenith Angle (Indirect)"),
     "solar_azimuth_direct": lambda: cf.azimuth_angle_attrs("Solar Azimuth Angle (Indirect)"),
-    "relative_azimuth_direct": lambda: cf.azimuth_angle_attrs("Relative Azimuth Angle (Indirect)"),
+    "relative_azimuth_direct": lambda: cf.azimuth_angle_attrs("Relative Azimuth Angle (Indirect)", valid_max=180.0),
 }
 
 # Legacy metadata/gcp names collided with root latitude/longitude in SNAP

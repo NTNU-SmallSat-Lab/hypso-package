@@ -69,12 +69,14 @@ def zenith_angle_attrs(long_name: str, standard_name: Optional[str] = None) -> d
     return attrs
 
 
-def azimuth_angle_attrs(long_name: str, standard_name: Optional[str] = None) -> dict:
-    """Azimuth angles are physically [0, 360) (or equivalently [-180,180]
-    with a wrap) - kept as [-180,180] here since that's the range HYPSO's
-    own angle computation (hypso.geometry) already produces, just no longer
-    sharing zenith's range by copy-paste."""
-    attrs = {"long_name": long_name, "units": "degree", "valid_min": -180.0, "valid_max": 180.0}
+def azimuth_angle_attrs(long_name: str, standard_name: Optional[str] = None, valid_max: float = 360.0) -> dict:
+    """Azimuth angles, clockwise from north: [0, 360], the range
+    hypso.geometry.compute_local_angles produces (astropy AltAz). The
+    relative azimuth is folded to [0, 180] (``valid_max=180``). Files written
+    before 2026-11-08 declared [-180, 180], so CF readers that apply the
+    valid range (netCDF4's auto-masking, Panoply, SNAP) hid every sensor
+    azimuth above 180 degrees (e.g. 286-288 at Venice 2025-03-04)."""
+    attrs = {"long_name": long_name, "units": "degree", "valid_min": 0.0, "valid_max": float(valid_max)}
     if standard_name:
         attrs["standard_name"] = standard_name
     return attrs

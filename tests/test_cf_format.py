@@ -79,12 +79,21 @@ def test_geolocated_levels(written_nc_files, open_nc, level, prefix):
     assert lon.units == "degrees_east"
     assert float(lon.valid_min) == -180.0 and float(lon.valid_max) == 180.0
 
-    # zenith vs azimuth ranges differentiated (bug: blanket [-180,180] on both)
+    # zenith vs azimuth ranges differentiated (bug: blanket [-180,180] on both),
+    # and the data inside them (bug: azimuths 0-360 declared [-180,180], x104)
     for name, var in ds.variables.items():
         if "zenith" in name:
             assert float(var.valid_min) == 0.0 and float(var.valid_max) == 180.0, name
+        elif "relative_azimuth" in name:
+            assert float(var.valid_min) == 0.0 and float(var.valid_max) == 180.0, name
         elif "azimuth" in name:
-            assert float(var.valid_min) == -180.0 and float(var.valid_max) == 180.0, name
+            assert float(var.valid_min) == 0.0 and float(var.valid_max) == 360.0, name
+        if "valid_min" in var.ncattrs() and var.ndim == 2:
+            var.set_auto_mask(False)
+            values = var[:]
+            values = values[np.isfinite(values)]
+            assert values.size and values.min() >= var.valid_min and values.max() <= var.valid_max, \
+                (name, values.min(), values.max())
 
     # every band variable's coordinates/grid_mapping resolves group-relative
     bands = band_variables(ds, prefix)

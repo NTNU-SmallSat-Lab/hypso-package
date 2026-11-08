@@ -60,11 +60,14 @@ def test_longitude_attrs():
 
 
 def test_zenith_and_azimuth_ranges_differentiated():
-    # Bug: every angle variable used to get the same blanket [-180,180].
+    # Bug: every angle variable used to get the same blanket [-180,180]; then
+    # azimuths kept [-180,180] while their values are 0-360 (TODO 4s, x104)
     zen = cf.zenith_angle_attrs("Sensor Zenith Angle")
     azi = cf.azimuth_angle_attrs("Sensor Azimuth Angle")
+    rel = cf.azimuth_angle_attrs("Relative Azimuth Angle", valid_max=180.0)
     assert (zen["valid_min"], zen["valid_max"]) == (0.0, 180.0)
-    assert (azi["valid_min"], azi["valid_max"]) == (-180.0, 180.0)
+    assert (azi["valid_min"], azi["valid_max"]) == (0.0, 360.0)
+    assert (rel["valid_min"], rel["valid_max"]) == (0.0, 180.0)
 
 
 def test_global_attrs_have_conventions():

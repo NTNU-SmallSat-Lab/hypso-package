@@ -304,7 +304,7 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    `metadata/corrections/rad_matrix` is on the `samples` dimension (1092), and a 1092-row matrix next to a
    546-sample cube makes xarray refuse the tree as unaligned; (4) the processing-temp indirect georeferencing
    files are 598 x 546.
-4s. **Angle valid ranges**: `sensor_azimuth` (and the other azimuths) carry `valid_min=-180, valid_max=180`, but
+4s. ~~**Angle valid ranges**~~ - done (×104). `sensor_azimuth` (and the other azimuths) carry `valid_min=-180, valid_max=180`, but
    the values are 0-360 (Erie 2025-07-05: sensor azimuth 284-285 deg), so CF readers that apply the range
    (netCDF4 auto-mask, xarray with masking, Panoply, SNAP) show every pixel as missing. Production has the same
    attributes. OC-SMART reads with h5py and is unaffected. Fix: 0-360 for azimuths, or wrap to -180..180 (×99).
@@ -386,6 +386,16 @@ windows (×60), demo (×61), docs site (×62), instrument field in names (×63),
 TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
+
+- **2026-11-08 (×104): azimuth valid ranges** (TODO 4s). Solar and sensor azimuths (and their `_direct`
+  versions) declared `valid_min=-180, valid_max=180`, but `compute_local_angles` gives astropy AltAz azimuths,
+  0-360 (Venice 2025-03-04: sensor azimuth 286-288), so readers that apply the range (netCDF4 auto-masking,
+  Panoply, SNAP) hid them. Now 0-360; relative azimuth (folded in `_angles`) 0-180.
+  `cf.azimuth_angle_attrs(..., valid_max=360)`. Values unchanged, so no reprocessing: rewriting an older file
+  (`hypso.open(...).write()`, `convert_product`) refreshes the attributes. `test_cf_format` now also checks the
+  written data lie inside every declared range. Not changed: the `*_direct` geometry's long names say
+  "(Indirect)" (a comment in `io/product.py` keeps it "for readers that key off it"; misleading, ask the user).
+  Production files carry the old range too.
 
 - **2026-11-06 (×103): standalone L2 reader** `demo/hypso_l2_reader.py` (user: for a co-worker, no hypso
   dependency; numpy, xarray, netCDF4 only). `open_l2(capture_dir, method=None, aux=False, lazy=False)` -> one
