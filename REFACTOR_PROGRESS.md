@@ -387,6 +387,15 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-11-08 (×105): `*_direct` long names say "(Direct)"**. The seven direct-georeferencing variables
+  (`latitude_direct`, ..., `relative_azimuth_direct`, from the ADCS telemetry) were labelled "(Indirect)", a
+  copy-paste slip in production's `geometry_group_writer.py` carried over in ×41; the comment claiming readers
+  key off it was wrong (no use in this package, the pipeline or OC-SMART; all read by variable name). Rewriting an
+  older file fixes the label. `test_cf_format::test_direct_georeferencing_attributes` writes an L1C with
+  `direct=True` (the shared fixture uses `direct=False`, so no other test saw these variables) and checks the
+  labels and that the data lie inside the valid ranges. Related tests 58 + 2 passed; full suite not rerun
+  (attribute text only, agreed with the user).
+
 - **2026-11-08 (×104): azimuth valid ranges** (TODO 4s). Solar and sensor azimuths (and their `_direct`
   versions) declared `valid_min=-180, valid_max=180`, but `compute_local_angles` gives astropy AltAz azimuths,
   0-360 (Venice 2025-03-04: sensor azimuth 286-288), so readers that apply the range (netCDF4 auto-masking,

@@ -88,23 +88,24 @@ ENCODING = {"zlib": True, "complevel": 4, "shuffle": True}
 # and Inf into -0.0 with it; BitRound keeps them, and is idempotent.
 SIGNIFICANT_BITS = 14
 
-# Root geometry variable -> CF attribute builder. ("Indirect" in the
-# *_direct long names is pre-existing naming, kept for readers that key off it.)
+# Root geometry variable -> CF attribute builder. The *_direct variables are
+# the package's direct georeferencing (ADCS telemetry); production's writer
+# labelled them "(Indirect)" by a copy-paste slip, corrected here (x105).
 _GEOMETRY_ATTRS = {
     "latitude": lambda: cf.latitude_attrs(),
     "longitude": lambda: cf.longitude_attrs(),
-    "latitude_direct": lambda: {**cf.latitude_attrs(), "long_name": "Latitude (Indirect)"},
-    "longitude_direct": lambda: {**cf.longitude_attrs(), "long_name": "Longitude (Indirect)"},
+    "latitude_direct": lambda: {**cf.latitude_attrs(), "long_name": "Latitude (Direct)"},
+    "longitude_direct": lambda: {**cf.longitude_attrs(), "long_name": "Longitude (Direct)"},
     "sensor_zenith": lambda: cf.zenith_angle_attrs("Sensor Zenith Angle"),
     "sensor_azimuth": lambda: cf.azimuth_angle_attrs("Sensor Azimuth Angle"),
     "solar_zenith": lambda: cf.zenith_angle_attrs("Solar Zenith Angle"),
     "solar_azimuth": lambda: cf.azimuth_angle_attrs("Solar Azimuth Angle"),
     "relative_azimuth": lambda: cf.azimuth_angle_attrs("Relative Azimuth Angle", valid_max=180.0),
-    "sensor_zenith_direct": lambda: cf.zenith_angle_attrs("Sensor Zenith Angle (Indirect)"),
-    "sensor_azimuth_direct": lambda: cf.azimuth_angle_attrs("Sensor Azimuth Angle (Indirect)"),
-    "solar_zenith_direct": lambda: cf.zenith_angle_attrs("Solar Zenith Angle (Indirect)"),
-    "solar_azimuth_direct": lambda: cf.azimuth_angle_attrs("Solar Azimuth Angle (Indirect)"),
-    "relative_azimuth_direct": lambda: cf.azimuth_angle_attrs("Relative Azimuth Angle (Indirect)", valid_max=180.0),
+    "sensor_zenith_direct": lambda: cf.zenith_angle_attrs("Sensor Zenith Angle (Direct)"),
+    "sensor_azimuth_direct": lambda: cf.azimuth_angle_attrs("Sensor Azimuth Angle (Direct)"),
+    "solar_zenith_direct": lambda: cf.zenith_angle_attrs("Solar Zenith Angle (Direct)"),
+    "solar_azimuth_direct": lambda: cf.azimuth_angle_attrs("Solar Azimuth Angle (Direct)"),
+    "relative_azimuth_direct": lambda: cf.azimuth_angle_attrs("Relative Azimuth Angle (Direct)", valid_max=180.0),
 }
 
 # Legacy metadata/gcp names collided with root latitude/longitude in SNAP

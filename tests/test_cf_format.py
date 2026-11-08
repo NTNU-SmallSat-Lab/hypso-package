@@ -88,6 +88,8 @@ def test_geolocated_levels(written_nc_files, open_nc, level, prefix):
             assert float(var.valid_min) == 0.0 and float(var.valid_max) == 180.0, name
         elif "azimuth" in name:
             assert float(var.valid_min) == 0.0 and float(var.valid_max) == 360.0, name
+        if name.endswith("_direct"):        # direct georeferencing, once mislabelled "(Indirect)" (x105)
+            assert var.long_name.endswith("(Direct)"), (name, var.long_name)
         if "valid_min" in var.ncattrs() and var.ndim == 2:
             var.set_auto_mask(False)
             values = var[:]
@@ -178,3 +180,22 @@ def test_l1a_is_uint16_without_calibration_attrs(written_nc_files, open_nc):
 def test_band_standard_names(written_nc_files, open_nc, level, prefix, name):
     ds = open_nc(written_nc_files[level])
     assert all(var.standard_name == name for var in band_variables(ds, prefix).values())
+
+
+@requires_real_capture
+def test_direct_georeferencing_attributes(l1b, tmp_path):
+    # the *_direct variables are direct georeferencing (ADCS telemetry); the
+    # production writer's "(Indirect)" label was a copy-paste slip (x105).
+    # Their data also lie inside the declared valid ranges (x104).
+    from conftest import LATS_PATH, LONS_PATH
+    l1c = l1b.georeference(latitudes=LATS_PATH, longitudes=LONS_PATH, direct=True)
+    with nc.Dataset(l1c.write(out_dir=tmp_path)) as ds:
+        direct = [name for name in ds.variables if name.endswith("_direct")]
+        assert len(direct) == 7, direct
+        for name in direct:
+            var = ds[name]
+            assert var.long_name.endswith("(Direct)"), (name, var.long_name)
+            var.set_auto_mask(False)
+            values = var[:]
+            values = values[np.isfinite(values)]
+            assert values.min() >= var.valid_min and values.max() <= var.valid_max, (name, values.min(), values.max())
