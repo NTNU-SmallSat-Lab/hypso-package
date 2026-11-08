@@ -304,6 +304,25 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    `metadata/corrections/rad_matrix` is on the `samples` dimension (1092), and a 1092-row matrix next to a
    546-sample cube makes xarray refuse the tree as unaligned; (4) the processing-temp indirect georeferencing
    files are 598 x 546.
+4u. **Footprint shapefiles and maps** (user, 2026-11-08: "I also want .shp files of the footprint as well as
+   maps (I want code in the package to create these things so add as a todo)"). Today the package has
+   `hypso.rgb.maps` (`regrid_camera`, `plot_rgb_map`: an RGB rendering on a map grid with graticule, scale bar,
+   north arrow, coastlines) but no footprint and no map of a product variable. Wanted, in the package:
+   - `Product.footprint()`: the swath outline as a shapely polygon in WGS84, from the product's own
+     `latitude`/`longitude` (indirect when present, else direct; record which), tracing the outer ring of the
+     pixel grid. Handle NaN edge pixels, the antimeridian, and optionally only the valid (e.g. water) pixels.
+   - `Product.write_footprint(path)` and a batch form (one feature per capture, for catalogues): ESRI Shapefile
+     (.shp/.shx/.dbf/.prj, EPSG:4326), possibly GeoJSON/GeoPackage too. Attributes: capture name, satellite,
+     start/end time (UTC), target, level, georeferencing method, calibration release, AC method for L2.
+     Shapefile field names are at most 10 characters.
+   - Maps: a product variable (Rrs at a wavelength, rhos, chlor_a, tsm, an IOP, flags) or an RGB rendering on a
+     map with the footprint outline, coastlines, graticule, scale bar, colour bar with units; and an overview
+     map of several footprints. Extend `hypso.rgb.maps` or add `hypso.maps`; reuse `regrid()` for gridding.
+   - Dependencies: shapely is already imported lazily in `rgb/maps.py`; writing shapefiles needs pyshp (pure
+     Python, small) or pyogrio/fiona (GDAL). Keep them optional (an extra, like matplotlib and cartopy).
+   - Ask the user before building: which variables and stretch on the maps, one map per capture or batch
+     overviews, which footprint (whole swath or valid pixels), and the attribute list. First use: the 6 HYPSO-1
+     and 10 HYPSO-2 captures processed 2026-11-08 into `~/HYPSO_DATA_REFACTOR`.
 4s. ~~**Angle valid ranges**~~ - done (×104). `sensor_azimuth` (and the other azimuths) carry `valid_min=-180, valid_max=180`, but
    the values are 0-360 (Erie 2025-07-05: sensor azimuth 284-285 deg), so CF readers that apply the range
    (netCDF4 auto-mask, xarray with masking, Panoply, SNAP) show every pixel as missing. Production has the same
