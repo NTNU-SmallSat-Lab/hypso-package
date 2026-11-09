@@ -48,6 +48,7 @@ L2A        atmospherically corrected reflectance            ``correct_atmosphere
    grid
    windows
    camera
+   maps
 
 .. toctree::
    :maxdepth: 1

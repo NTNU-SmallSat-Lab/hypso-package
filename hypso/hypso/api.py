@@ -301,6 +301,25 @@ class Product:
         from hypso.grid import swath_definition
         return swath_definition(self._tree, direct=direct)
 
+    def footprint(self, mask=None, step: int = 10, block: int = 8):
+        """The ground footprint as a shapely polygon in WGS84 longitude/latitude.
+
+        See :func:`hypso.maps.footprint` (``mask="data"`` for the pixels
+        with data only).
+        """
+        from hypso.maps import footprint
+        return footprint(self, mask=mask, step=step, block=block)
+
+    def write_footprint(self, path, mask=None, step: int = 10, block: int = 8):
+        """Write the footprint, with the capture's metadata, as an ESRI
+        Shapefile (``*.shp``, EPSG:4326) or GeoJSON.
+
+        See :func:`hypso.maps.write_footprints`, which also writes several
+        products to one file.
+        """
+        from hypso.maps import write_footprints
+        return write_footprints([self], path, mask=mask, step=step, block=block)
+
     def area_definition(self):
         """A gridded product's grid as a :class:`pyresample.geometry.AreaDefinition`.
 

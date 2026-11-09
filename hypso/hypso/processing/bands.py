@@ -106,6 +106,9 @@ def select_bands(tree: xr.DataTree, wavelength_range=None, wavelengths=None, ind
         result["metadata/srf"] = xr.DataTree(_subset_srf(tree["metadata/srf"].to_dataset(inherit=False), kept))
     if "metadata" in tree.children and "machi" in tree["metadata"].children:
         machi = tree["metadata/machi"].to_dataset(inherit=False)
+        if "bands_full" in machi.dims:
+            # read_product with a band selection renames full-band metadata to bands_full
+            machi = machi.rename_dims({"bands_full": "bands"})
         if machi.sizes.get("bands") != kept.size:
             own = band_indices(machi) if BAND_INDEX in machi.coords else np.arange(machi.sizes["bands"])
             machi = machi.isel(bands=[int(np.flatnonzero(own == i)[0]) for i in kept])

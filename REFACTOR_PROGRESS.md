@@ -304,7 +304,7 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    `metadata/corrections/rad_matrix` is on the `samples` dimension (1092), and a 1092-row matrix next to a
    546-sample cube makes xarray refuse the tree as unaligned; (4) the processing-temp indirect georeferencing
    files are 598 x 546.
-4u. **Footprint shapefiles and maps** (user, 2026-11-08: "I also want .shp files of the footprint as well as
+4u. ~~**Footprint shapefiles and maps**~~ - done (×106). (user, 2026-11-08: "I also want .shp files of the footprint as well as
    maps (I want code in the package to create these things so add as a todo)"). Today the package has
    `hypso.rgb.maps` (`regrid_camera`, `plot_rgb_map`: an RGB rendering on a map grid with graticule, scale bar,
    north arrow, coastlines) but no footprint and no map of a product variable. Wanted, in the package:
@@ -405,6 +405,27 @@ windows (×60), demo (×61), docs site (×62), instrument field in names (×63),
 TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
+
+- **2026-11-09 (×106): footprints, shapefiles, RGB images and maps** (TODO 4u). New `hypso.maps`:
+  `footprint()` (swath outline from the product's own lat/lon, a vertex every 10 pixels; `mask=` or `"data"` for
+  the outline of selected pixels, by 8 x 8 blocks; 0-360 longitudes across the antimeridian),
+  `footprint_attributes()` and `write_footprints()` (ESRI Shapefile via pyshp with .prj/.cpg, or GeoJSON; one
+  feature per product; fields capture, satellite, target, start_utc, level, product, georef (from the
+  georeference provenance step), calib, ac_method, lines, samples, area_km2, centre, source), `rgb_image()`/
+  `save_rgb()` (sensor geometry; L1: per-channel 2-98 stretch, gamma 2.2; L2A: one linear gain to the 99.5th
+  percentile, true colour (user: the first version, one gain + gamma 2.2, gave flat cyan Rrs RGBs); the servers'
+  quicklook orientation by default, `bin_samples=3` like their `-bin3`), `plot_map()` (RGB, a cube band or a 2D variable,
+  regridded after reducing the product to what is plotted; log scale for concentrations/IOPs; land grey and sea and
+  lakes light blue from Natural Earth (user request); footprint, coastlines and lake shores (Natural Earth's
+  coastline layer has no lakes: Erie had none), graticule, scale bar, north arrow, colour bar with the schema's
+  units) and `plot_overview()` (outlines, legend beside the map; make_maps `--group korea=koreanCalVal`).
+  `Product.footprint()`/`write_footprint()`. The map elements of `hypso.rgb.plot_rgb_map` moved to a shared
+  `hypso.rgb.decorate_map` (with an `ink` colour for light backgrounds); `plot_rgb_map` unchanged.
+  `demo/make_maps.py` does it all for processed capture folders (+ overview per target). docs/maps.rst.
+  Bug fixed on the way: `hypso.open(<MACHI L2A>, wavelengths=...)` raised KeyError 'bands' (read_product renames
+  full-band metadata to `bands_full` before `select_bands`, which looked for `bands` in `metadata/machi`).
+  tests/test_maps.py (9 tests incl. the MACHI regression on a real file); test_maps, camera_registration,
+  rgb_exposure, public_api, machi: 51 passed. First use: 13 captures in ~/HYPSO_DATA_REFACTOR.
 
 - **2026-11-08 (×105): `*_direct` long names say "(Direct)"**. The seven direct-georeferencing variables
   (`latitude_direct`, ..., `relative_azimuth_direct`, from the ADCS telemetry) were labelled "(Indirect)", a

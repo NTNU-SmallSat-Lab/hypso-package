@@ -4,6 +4,8 @@
   (:func:`hypso.rgb.georeference_camera`) on a map grid - the capture's UTM
   zone, any CRS, or another product's grid - by cell averaging (default; the
   camera's ~30 m pixels are finer than most grids) or nearest neighbour.
+- :func:`decorate_map`: graticule, scale bar, north arrow and coastlines on
+  axes in projected coordinates (shared with :mod:`hypso.maps`).
 - :func:`plot_rgb_map`: a gridded RGB image (from :func:`regrid_camera`, or a
   regridded hypso.Product) as a map, with optional map elements: latitude/
   longitude graticule, scale bar, north arrow, coastlines and title.
@@ -136,6 +138,130 @@ def _nice_length(span):
     return max(m * exponent for m in (1, 2, 5) if m * exponent <= span)
 
 
+def _fill_lonlat(ax, geometry, to_map, color):
+    """Fill a (Multi)Polygon in longitude/latitude on projected axes, holes
+    kept, below the data (zorder -1)."""
+    from matplotlib.path import Path as MplPath
+    from matplotlib.patches import PathPatch
+    import shapely
+    geometry = shapely.segmentize(geometry, 0.02)     # straight lon/lat edges curve in the projection
+    vertices, codes = [], []
+    for polygon in getattr(geometry, "geoms", [geometry]):
+        if polygon.geom_type != "Polygon" or polygon.is_empty:
+            continue
+        for ring in [polygon.exterior, *polygon.interiors]:
+            lon, lat = np.asarray(ring.coords).T
+            x, y = to_map.transform(lon, lat)
+            vertices += list(zip(x, y))
+            codes += [MplPath.MOVETO] + [MplPath.LINETO] * (len(x) - 2) + [MplPath.CLOSEPOLY]
+    if vertices:
+        ax.add_patch(PathPatch(MplPath(vertices, codes), facecolor=color, edgecolor="none", zorder=-1))
+
+
+def decorate_map(ax, extent, crs, graticule: bool = True, scale_bar: bool = True, north_arrow: bool = True,
+                 coastlines: bool = False, graticule_step: float = None, ink: str = "white",
+                 coast_color: str = "yellow", water: bool = False, water_color: str = "#c6dbef"):
+    """Map elements on axes in projected coordinates: latitude/longitude
+    graticule, scale bar, north arrow and Natural Earth coastlines.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+    extent : sequence of float
+        ``[xmin, xmax, ymin, ymax]`` in the CRS's units; the axes are set to it.
+    crs : pyproj.CRS
+        The axes' projection.
+    graticule, scale_bar, north_arrow, coastlines, graticule_step
+        As in :func:`plot_rgb_map`.
+    ink : str, default "white"
+        Colour of lines and labels ("white" on images, "black" on a light background).
+    coast_color : str, default "yellow"
+    water : bool, default False
+        Fill the sea and lakes (Natural Earth 10 m ocean and lakes) in
+        ``water_color``, below anything drawn at zorder >= 0 (images, data).
+    water_color : str, default "#c6dbef" (light blue)
+    """
+    from matplotlib import patheffects
+    halo = "black" if ink == "white" else "white"
+    outline = [patheffects.withStroke(linewidth=2.5, foreground=halo)]      # readable on any background
+    ax.set_xlim(extent[0], extent[1])
+    ax.set_ylim(extent[2], extent[3])
+    to_lonlat = pyproj.Transformer.from_crs(crs, "EPSG:4326", always_xy=True)
+    to_map = pyproj.Transformer.from_crs("EPSG:4326", crs, always_xy=True)
+    xx, yy = np.meshgrid(np.linspace(extent[0], extent[1], 50), np.linspace(extent[2], extent[3], 50))
+    lons, lats = to_lonlat.transform(xx, yy)
+
+    if graticule:
+        span = max(np.ptp(lons), np.ptp(lats))
+        step = graticule_step or _nice_length(span / 3)
+        for value in np.arange(np.ceil(lats.min() / step) * step, lats.max(), step):
+            lx, ly = to_map.transform(np.linspace(lons.min(), lons.max(), 200), np.full(200, value))
+            ax.plot(lx, ly, color=ink, lw=0.6, alpha=0.8, path_effects=[patheffects.withStroke(linewidth=1.4, foreground=halo, alpha=0.5)])
+            ax.annotate(f"{value:.6g}°N", (extent[0], ly[np.argmin(np.abs(lx - extent[0]))]), color=ink,
+                        fontsize=8, xytext=(3, 2), textcoords="offset points", path_effects=outline)
+        for value in np.arange(np.ceil(lons.min() / step) * step, lons.max(), step):
+            lx, ly = to_map.transform(np.full(200, value), np.linspace(lats.min(), lats.max(), 200))
+            ax.plot(lx, ly, color=ink, lw=0.6, alpha=0.8, path_effects=[patheffects.withStroke(linewidth=1.4, foreground=halo, alpha=0.5)])
+            ax.annotate(f"{value:.6g}°E", (lx[np.argmin(np.abs(ly - extent[2]))], extent[2]), color=ink,
+                        fontsize=8, xytext=(2, 3), textcoords="offset points", rotation=90, path_effects=outline)
+        ax.set_xlim(extent[0], extent[1])
+        ax.set_ylim(extent[2], extent[3])
+
+    if water or coastlines:
+        try:
+            from cartopy.io import shapereader
+            from shapely.geometry import box as lonlat_box
+            region = lonlat_box(lons.min() - 0.5, lats.min() - 0.5, lons.max() + 0.5, lats.max() + 0.5)
+            if water:
+                for name in ("ocean", "lakes"):
+                    path = shapereader.natural_earth(resolution="10m", category="physical", name=name)
+                    for geometry in shapereader.Reader(path).geometries():
+                        if geometry.intersects(region):
+                            _fill_lonlat(ax, geometry.intersection(region), to_map, water_color)
+            if coastlines:
+                lines = []
+                path = shapereader.natural_earth(resolution="10m", category="physical", name="coastline")
+                lines += [g for g in shapereader.Reader(path).geometries() if g.intersects(region)]
+                # lake shores (Natural Earth's coastline layer has only the sea's)
+                path = shapereader.natural_earth(resolution="10m", category="physical", name="lakes")
+                for lake in shapereader.Reader(path).geometries():
+                    if lake.intersects(region):
+                        lines += [ring for part in getattr(lake, "geoms", [lake])
+                                  for ring in [part.exterior, *part.interiors]]
+                for geometry in lines:
+                    for line in getattr(geometry, "geoms", [geometry]):
+                        lon_line, lat_line = np.asarray(line.coords).T
+                        cx, cy = to_map.transform(lon_line, lat_line)
+                        ax.plot(cx, cy, color=coast_color, lw=0.7)
+            ax.set_xlim(extent[0], extent[1])
+            ax.set_ylim(extent[2], extent[3])
+        except Exception as error:                    # cartopy or its data missing
+            warnings.warn(f"coastlines/water skipped: {error}", UserWarning, stacklevel=2)
+
+    width = extent[1] - extent[0]
+    if scale_bar:
+        length = _nice_length(width / 4)
+        x0, y0 = extent[0] + 0.05 * width, extent[2] + 0.05 * (extent[3] - extent[2])
+        ax.plot([x0, x0 + length], [y0, y0], color=ink, lw=3, solid_capstyle="butt")
+        ax.plot([x0, x0 + length], [y0, y0], color=halo, lw=1, solid_capstyle="butt")
+        ax.annotate(f"{length / 1000:g} km", (x0 + length / 2, y0), color=ink, ha="center", fontsize=9,
+                    xytext=(0, 5), textcoords="offset points", path_effects=outline)
+
+    if north_arrow:
+        cx, cy = extent[1] - 0.08 * width, extent[3] - 0.15 * (extent[3] - extent[2])
+        lon_c, lat_c = to_lonlat.transform(cx, cy)
+        nx, ny = to_map.transform(lon_c, lat_c + 0.01)
+        direction = np.array([nx - cx, ny - cy]) / np.hypot(nx - cx, ny - cy)
+        tip = np.array([cx, cy]) + direction * 0.06 * width
+        ax.annotate("N", tip, xytext=(cx, cy), color=ink, ha="center", fontsize=11, fontweight="bold",
+                    path_effects=outline,
+                    arrowprops={"arrowstyle": "-|>", "color": ink, "lw": 2, "path_effects": outline})
+
+    ax.set_xticks([])
+    ax.set_yticks([])
+    return ax
+
+
 def plot_rgb_map(source, ax=None, graticule: bool = True, scale_bar: bool = True, north_arrow: bool = True,
                  coastlines: bool = False, title: str = None, stretch=(2, 98), graticule_step: float = None,
                  exposure: dict = None):
@@ -174,10 +300,8 @@ def plot_rgb_map(source, ax=None, graticule: bool = True, scale_bar: bool = True
     """
     try:
         import matplotlib.pyplot as plt
-        from matplotlib import patheffects
     except ImportError as error:
         raise ImportError("plot_rgb_map needs matplotlib (pip install matplotlib)") from error
-    outline = [patheffects.withStroke(linewidth=2.5, foreground="black")]      # readable on any background
     image, x, y, crs = _rgb_and_grid(source, stretch, exposure)
     image = np.where(np.isnan(image), 1.0, image)
     if ax is None:
@@ -185,67 +309,8 @@ def plot_rgb_map(source, ax=None, graticule: bool = True, scale_bar: bool = True
     dx, dy = abs(x[1] - x[0]) if x.size > 1 else 1.0, abs(y[1] - y[0]) if y.size > 1 else 1.0
     extent = [x.min() - dx / 2, x.max() + dx / 2, y.min() - dy / 2, y.max() + dy / 2]
     ax.imshow(image, extent=extent, origin="upper" if y[0] > y[-1] else "lower", interpolation="nearest")
-    ax.set_xlim(extent[0], extent[1])
-    ax.set_ylim(extent[2], extent[3])
-    to_lonlat = pyproj.Transformer.from_crs(crs, "EPSG:4326", always_xy=True)
-    to_map = pyproj.Transformer.from_crs("EPSG:4326", crs, always_xy=True)
-    xx, yy = np.meshgrid(np.linspace(extent[0], extent[1], 50), np.linspace(extent[2], extent[3], 50))
-    lons, lats = to_lonlat.transform(xx, yy)
-
-    if graticule:
-        span = max(np.ptp(lons), np.ptp(lats))
-        step = graticule_step or _nice_length(span / 3)
-        for value in np.arange(np.ceil(lats.min() / step) * step, lats.max(), step):
-            lx, ly = to_map.transform(np.linspace(lons.min(), lons.max(), 200), np.full(200, value))
-            ax.plot(lx, ly, color="white", lw=0.6, alpha=0.8, path_effects=[patheffects.withStroke(linewidth=1.4, foreground="black", alpha=0.5)])
-            ax.annotate(f"{value:.6g}°N", (extent[0], ly[np.argmin(np.abs(lx - extent[0]))]), color="white",
-                        fontsize=8, xytext=(3, 2), textcoords="offset points", path_effects=outline)
-        for value in np.arange(np.ceil(lons.min() / step) * step, lons.max(), step):
-            lx, ly = to_map.transform(np.full(200, value), np.linspace(lats.min(), lats.max(), 200))
-            ax.plot(lx, ly, color="white", lw=0.6, alpha=0.8, path_effects=[patheffects.withStroke(linewidth=1.4, foreground="black", alpha=0.5)])
-            ax.annotate(f"{value:.6g}°E", (lx[np.argmin(np.abs(ly - extent[2]))], extent[2]), color="white",
-                        fontsize=8, xytext=(2, 3), textcoords="offset points", rotation=90, path_effects=outline)
-        ax.set_xlim(extent[0], extent[1])
-        ax.set_ylim(extent[2], extent[3])
-
-    if coastlines:
-        try:
-            from cartopy.io import shapereader
-            path = shapereader.natural_earth(resolution="10m", category="physical", name="coastline")
-            box = (lons.min() - 0.5, lats.min() - 0.5, lons.max() + 0.5, lats.max() + 0.5)
-            for geometry in shapereader.Reader(path).geometries():
-                if not geometry.intersects(__import__("shapely.geometry", fromlist=["box"]).box(*box)):
-                    continue
-                for line in getattr(geometry, "geoms", [geometry]):
-                    lon_line, lat_line = np.asarray(line.coords).T
-                    cx, cy = to_map.transform(lon_line, lat_line)
-                    ax.plot(cx, cy, color="yellow", lw=0.7)
-            ax.set_xlim(extent[0], extent[1])
-            ax.set_ylim(extent[2], extent[3])
-        except Exception as error:                    # cartopy or its data missing
-            warnings.warn(f"coastlines skipped: {error}", UserWarning, stacklevel=2)
-
-    width = extent[1] - extent[0]
-    if scale_bar:
-        length = _nice_length(width / 4)
-        x0, y0 = extent[0] + 0.05 * width, extent[2] + 0.05 * (extent[3] - extent[2])
-        ax.plot([x0, x0 + length], [y0, y0], color="white", lw=3, solid_capstyle="butt")
-        ax.plot([x0, x0 + length], [y0, y0], color="black", lw=1, solid_capstyle="butt")
-        ax.annotate(f"{length / 1000:g} km", (x0 + length / 2, y0), color="white", ha="center", fontsize=9,
-                    xytext=(0, 5), textcoords="offset points", path_effects=outline)
-
-    if north_arrow:
-        cx, cy = extent[1] - 0.08 * width, extent[3] - 0.15 * (extent[3] - extent[2])
-        lon_c, lat_c = to_lonlat.transform(cx, cy)
-        nx, ny = to_map.transform(lon_c, lat_c + 0.01)
-        direction = np.array([nx - cx, ny - cy]) / np.hypot(nx - cx, ny - cy)
-        tip = np.array([cx, cy]) + direction * 0.06 * width
-        ax.annotate("N", tip, xytext=(cx, cy), color="white", ha="center", fontsize=11, fontweight="bold",
-                    path_effects=outline,
-                    arrowprops={"arrowstyle": "-|>", "color": "white", "lw": 2, "path_effects": outline})
-
-    ax.set_xticks([])
-    ax.set_yticks([])
+    decorate_map(ax, extent, crs, graticule=graticule, scale_bar=scale_bar, north_arrow=north_arrow,
+                 coastlines=coastlines, graticule_step=graticule_step)
     if title:
         ax.set_title(title)
     return ax
