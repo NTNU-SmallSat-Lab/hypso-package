@@ -1,0 +1,289 @@
+"""Product file names.
+
+Current style, NASA OB.DAAC-like - satellite and instrument first, then
+time, so a plain listing groups by satellite and sorts by time::
+
+    {SAT}_{INSTRUMENT}.{YYYYMMDDTHHMMSS}.{target}.{LEVEL}[.{QUANTITY|GROUP}.{source}][.{grid}][.{label}].nc
+
+    HYPSO2_HSI.20250612T095802.aeronetvenice.L1A.nc
+    HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.nc
+    HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.RRS.polymer.nc
+    HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.RHOS.machi.nc
+    HYPSO2_HSI.20250612T095802.aeronetvenice.L2B.BGC.oc4.nc
+    HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.adjusted.nc   (label: experiments)
+    HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.RRS.polymer.utm33n_880m.nc   (regridded)
+
+The first field is the satellite and the instrument, like NASA's
+``{MISSION}_{INSTRUMENT}`` (``PACE_OCI``): ``HYPSO2_HSI`` is HYPSO-2's
+Hyperspectral Imager, the instrument every product so far comes from
+(:data:`INSTRUMENTS` lists the known ones). `.` separates fields and never
+appears inside one. L2A always carries the quantity (:data:`QUANTITIES`:
+``RRS`` remote-sensing reflectance, ``RHOS`` surface reflectance; ``AUX`` the
+AC tool's other per-band outputs, :data:`AUX_QUANTITY`) and the AC
+method, which produced it; L2B (products derived from an L2A) always carries
+its product group (:data:`L2B_GROUPS`, e.g. ``BGC``) and the source (the
+algorithm or AC tool) in the same two fields; a regridded product carries its grid (hypso.grid.grid_name:
+utm<zone><n|s> or epsg<code>, then the pixel size, e.g. utm33n_880m,
+epsg4326_0p01deg); the optional free-text label is always last and may
+not look like a grid. Calibration set and
+masking state are not part of the name - they are recorded in the file.
+Times are UTC.
+
+Legacy names (`{target}_{YYYY-MM-DDTHH-MM-SSZ}[-{label}]-{level}[-{ac}].nc`,
+where label mixed calibration set and masking, e.g. "moved_unmasked") are
+still parsed, so existing datasets stay readable. Capture directories keep
+the capture ID form `{target}_{YYYY-MM-DDTHH-MM-SSZ}`.
+"""
+import re
+from dataclasses import dataclass, replace
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Optional
+
+_TOKEN = re.compile(r"[A-Za-z0-9_-]+")
+_LEVEL = re.compile(r"L\d[A-Z]")
+_PLATFORM = re.compile(r"([A-Z]+)(\d+)_([A-Z][A-Z0-9]*)")
+#: Instrument tokens of the first name field, and what they stand for.
+INSTRUMENTS = {"HSI": "Hyperspectral Imager", "RGB": "RGB camera"}
+GRID_TOKEN = re.compile(r"(utm\d{1,2}[ns]|epsg\d+|custom)_\d+(p\d+)?(x\d+(p\d+)?)?(m|deg)")
+#: L2A quantity tokens and the product variable each names. RHOW (water-leaving
+#: reflectance, pi Rrs) only names files written before POLYMER's output was
+#: converted to Rrs; new products are RRS or RHOS.
+QUANTITIES = {"RRS": "Rrs", "RHOS": "rhos", "RHOW": "rho_w"}
+#: L2A token of the file next to an L2A that holds the AC tool's other per-band
+#: outputs (OC-SMART's Lt, Lr, Lrc, Lwp, tg_sol, tg_sen, ...): one 2D variable
+#: per quantity and band, no cube (hypso.processing.l2b.split_intermediates).
+AUX_QUANTITY = "AUX"
+#: L2B product groups: geophysical products derived from an L2A, one group per
+#: file, as PACE OCI's OC_BGC and OC_IOP suites (the AOP suite, Rrs and aerosol
+#: optical depth, is the L2A.RRS file).
+L2B_GROUPS = {"BGC": "biogeochemical products: chlorophyll-a, suspended matter",
+              "IOP": "inherent optical properties (absorption, scattering, backscattering) and diffuse attenuation"}
+#: Groups of L2B files written before 2026-11-06 (one per product: CHL, TSM, KD,
+#: AOT); their names still parse and name the product, new files use L2B_GROUPS.
+LEGACY_L2B_GROUPS = {"CHL": "chlorophyll-a concentration", "TSM": "total suspended matter",
+                     "KD": "diffuse attenuation coefficient", "AOT": "aerosol optical thickness"}
+# levels with the quantity/group and source fields
+_PAIRED = {"L2A": {**QUANTITIES, AUX_QUANTITY: None}, "L2B": {**L2B_GROUPS, **LEGACY_L2B_GROUPS}}
+_TIME_FORMAT = "%Y%m%dT%H%M%S"
+_CAPTURE_ID_TIME_FORMAT = "%Y-%m-%dT%H-%M-%SZ"
+
+_LEGACY = re.compile(
+    r"""
+    (?P<target>.+?)_
+    (?P<time>\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z)
+    -
+    (?:(?P<label>[^-]+)-)?
+    (?P<level>l\d[a-z])
+    (?:-(?P<ac>[^.]+))?
+    \.(?P<ext>\w+)
+    """,
+    re.VERBOSE,
+)
+
+
+def _check_token(kind: str, value: str) -> str:
+    if not _TOKEN.fullmatch(value):
+        raise ValueError(f"{kind} {value!r} may only contain letters, digits, '_' and '-'")
+    return value
+
+
+def platform_token(sat_id: str, instrument: str = "HSI") -> str:
+    """The satellite-and-instrument field: ``("HYPSO-2", "HSI")`` -> ``"HYPSO2_HSI"``."""
+    if instrument not in INSTRUMENTS:
+        raise ValueError(f"unknown instrument {instrument!r}; known: {sorted(INSTRUMENTS)}")
+    token = f"{sat_id.replace('-', '')}_{instrument}"
+    if not _PLATFORM.fullmatch(token):
+        raise ValueError(f"unsupported sat_id {sat_id!r}")
+    return token
+
+
+def parse_platform_token(token: str) -> tuple:
+    """``"HYPSO2_HSI"`` -> ``("HYPSO-2", "HSI")``: satellite and instrument."""
+    match = _PLATFORM.fullmatch(token)
+    if not match or match.group(3) not in INSTRUMENTS:
+        raise ValueError(f"not a satellite-and-instrument field: {token!r}")
+    return f"{match.group(1)}-{match.group(2)}", match.group(3)
+
+
+@dataclass(frozen=True)
+class ProductName:
+    """A parsed or composed product file name; :meth:`filename` renders it.
+
+    Build one with :func:`product_name`, or parse a file name with
+    :func:`parse_product_name`.
+    """
+    sat_id: Optional[str]           # "HYPSO-2"; None for legacy names (not encoded)
+    time: datetime                  # capture start, UTC
+    target: str
+    level: str                      # "L1A" ... "L1D", "L2A"
+    ac: Optional[str] = None        # L2A: AC method, e.g. "polymer"; L2B: source, e.g. "oc4"
+    grid: Optional[str] = None      # regridded only, e.g. "utm33n_880m"
+    label: Optional[str] = None     # experiments only
+    legacy_label: Optional[str] = None  # legacy names: e.g. "moved_unmasked"
+    instrument: str = "HSI"         # instrument token (INSTRUMENTS); legacy names: always HSI
+    extension: str = "nc"
+    style: str = "current"          # "current" | "legacy"
+    quantity: Optional[str] = None  # L2A: QUANTITIES (None from an older L2A name); L2B: L2B_GROUPS
+
+    @property
+    def capture_id(self) -> str:
+        """`{target}_{YYYY-MM-DDTHH-MM-SSZ}` - capture directory name."""
+        return f"{self.target}_{self.time.strftime(_CAPTURE_ID_TIME_FORMAT)}"
+
+    def filename(self) -> str:
+        """Current-style file name. Requires sat_id (a legacy name doesn't
+        carry one - use replace(name, sat_id=...))."""
+        if self.sat_id is None:
+            raise ValueError("sat_id is required for a current-style name")
+        if not _LEVEL.fullmatch(self.level):
+            raise ValueError(f"invalid level {self.level!r}")
+        paired = self.level in _PAIRED
+        if paired != (self.ac is not None) or paired != (self.quantity is not None):
+            raise ValueError("the quantity/group and method/source fields are required for L2A and L2B "
+                             "and only allowed there")
+        fields = [platform_token(self.sat_id, self.instrument), self.time.strftime(_TIME_FORMAT),
+                  _check_token("target", self.target), self.level]
+        if paired:
+            known = _PAIRED[self.level]
+            if self.quantity not in known:
+                raise ValueError(f"unknown {self.level} field {self.quantity!r}; known: {sorted(known)}")
+            fields += [self.quantity, _check_token("ac", self.ac)]
+        if self.grid is not None:
+            if not GRID_TOKEN.fullmatch(self.grid):
+                raise ValueError(f"invalid grid {self.grid!r}")
+            fields.append(self.grid)
+        if self.label is not None:
+            if GRID_TOKEN.fullmatch(self.label):
+                raise ValueError(f"label {self.label!r} would be read back as a grid")
+            fields.append(_check_token("label", self.label))
+        return ".".join(fields) + "." + self.extension
+
+    def with_level(self, level: str, ac: Optional[str] = None, quantity: Optional[str] = None) -> "ProductName":
+        """Same capture (label and grid), another level."""
+        return replace(self, level=level, ac=ac, quantity=quantity, legacy_label=None, style="current")
+
+
+def quantity_token(variable: str) -> str:
+    """The L2A quantity token of a product variable: ``"Rrs"`` -> ``"RRS"``."""
+    for token, name in QUANTITIES.items():
+        if name == variable:
+            return token
+    raise ValueError(f"no quantity token for product variable {variable!r}; known: {sorted(QUANTITIES.values())}")
+
+
+def name_method(ac: str) -> str:
+    """The AC field of an L2A name: the method, without ACOLITE's output
+    suffix (the quantity field says L2R or L2W): ``"acolite_l2w"`` -> ``"acolite"``."""
+    return re.sub(r"_l2[rw]$", "", ac)
+
+
+def product_name(sat_id: str, time: datetime, target: str, level: str,
+                 ac: str = None, label: str = None, grid: str = None, instrument: str = "HSI",
+                 quantity: str = None) -> ProductName:
+    """Compose a product name.
+
+    Parameters
+    ----------
+    sat_id : str
+        e.g. ``"HYPSO-2"``.
+    time : datetime.datetime
+        Capture start; converted to UTC if timezone-aware.
+    target : str
+        Capture target, e.g. ``"aeronetvenice"``.
+    level : str
+        ``"L1A"`` ... ``"L1D"``, ``"L2A"``.
+    ac : str, optional
+        Atmospheric correction method (L2A) or source (L2B: algorithm or
+        tool); required there, not allowed otherwise.
+    label : str, optional
+        Free-text label for experiments (letters, digits, ``_``, ``-``).
+    grid : str, optional
+        Grid name of a regridded product (:func:`hypso.grid.grid_name`).
+    instrument : str, default "HSI"
+        Instrument token (:data:`INSTRUMENTS`).
+    quantity : str, optional
+        L2A quantity token (:data:`QUANTITIES`, e.g. ``"RRS"``, or the
+        product variable ``"Rrs"``) or L2B group (:data:`L2B_GROUPS`, e.g.
+        ``"BGC"``); required for L2A and L2B.
+
+    Returns
+    -------
+    ProductName
+        ``product_name(...).filename()`` gives the file name.
+    """
+    if time.tzinfo is not None:
+        time = time.astimezone(timezone.utc).replace(tzinfo=None)
+    if quantity is not None and level.upper() == "L2A" and quantity not in _PAIRED["L2A"]:
+        quantity = quantity_token(quantity)
+    return ProductName(sat_id=sat_id, time=time, target=target, level=level.upper(), ac=ac, grid=grid,
+                       label=label, instrument=instrument, quantity=quantity)
+
+
+def _parse_current(name: str) -> Optional[ProductName]:
+    fields = name.split(".")
+    if len(fields) < 5:
+        return None
+    try:
+        sat_id, instrument = parse_platform_token(fields[0])
+    except ValueError:
+        return None
+    _, time, target, level, *rest, extension = fields
+    if not _LEVEL.fullmatch(level) or not _TOKEN.fullmatch(target):
+        return None
+    try:
+        time = datetime.strptime(time, _TIME_FORMAT)
+    except ValueError:
+        return None
+    ac = grid = label = quantity = None
+    if level in _PAIRED:
+        if rest and rest[0] in _PAIRED[level]:
+            quantity, *rest = rest
+        elif level == "L2B":
+            return None
+        # names from before the quantity field (L2A.<ac>) parse with quantity None
+        if not rest:
+            return None
+        ac, *rest = rest
+    if rest and GRID_TOKEN.fullmatch(rest[0]):
+        grid, *rest = rest
+    if len(rest) > 1 or not all(_TOKEN.fullmatch(f) for f in ([ac] if ac else []) + rest):
+        return None
+    if rest:
+        label = rest[0]
+    return ProductName(sat_id=sat_id, time=time, target=target, level=level, ac=ac, grid=grid, label=label,
+                       extension=extension, instrument=instrument, quantity=quantity)
+
+
+def _parse_legacy(name: str) -> Optional[ProductName]:
+    match = _LEGACY.fullmatch(name)
+    if not match:
+        return None
+    return ProductName(sat_id=None,
+                       time=datetime.strptime(match["time"], _CAPTURE_ID_TIME_FORMAT),
+                       target=match["target"], level=match["level"].upper(), ac=match["ac"],
+                       legacy_label=match["label"], extension=match["ext"], style="legacy")
+
+
+def parse_product_name(path) -> ProductName:
+    """Parse a current-style or legacy product file name.
+
+    Parameters
+    ----------
+    path : str or pathlib.Path
+        A file name or path; only the name is used.
+
+    Returns
+    -------
+    ProductName
+
+    Raises
+    ------
+    ValueError
+        If the name is not a HYPSO product name.
+    """
+    name = Path(path).name
+    parsed = _parse_current(name) or _parse_legacy(name)
+    if parsed is None:
+        raise ValueError(f"not a HYPSO product file name: {name}")
+    return parsed

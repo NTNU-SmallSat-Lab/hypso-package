@@ -7,9 +7,15 @@ def get_julian_day_number(date_time) -> float:
     """
     Get Julian Day Number from Date Time
 
-    :param date_time: Date Time
+    Parameters
+    ----------
+    date_time
+        Date Time
 
-    :return: Julian day as float
+    Returns
+    -------
+    out
+        Julian day as float
     """
     Y = date_time.year
     M = date_time.month
@@ -29,9 +35,15 @@ def get_greenwich_mean_sidereal_time_seconds(date_time) -> float:
     """
     Gets Greenwich mean sidereal time in seconds
 
-    :param date_time:
+    Parameters
+    ----------
+    date_time
+        Time (UTC).
 
-    :return: seconds since last midnight of a sidereal day
+    Returns
+    -------
+    out
+        seconds since last midnight of a sidereal day
     """
 
     JD = get_julian_day_number(date_time)

@@ -1,9 +1,0 @@
-name: docs-env
-channels:
-  - defaults 
-  - conda-forge
-dependencies:
-  - sphinx
-  - sphinx-rtd-theme
-  - sphinx-autoapi
-  - hypso

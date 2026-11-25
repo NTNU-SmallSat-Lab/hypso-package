@@ -25,3 +25,13 @@ __pycache__/
 /demo/demo_processing.ipynb # don't track changes
 /utils/*
 /notebooks/*
+# written at build time by setuptools_scm
+/hypso/hypso/_version.py
+/hypso1_calibration/hypso1_calibration/_version.py
+/hypso2_calibration/hypso2_calibration/_version.py
+
+# API pages sphinx-autoapi generates during the docs build
+/docs/api/
+
+# local AC tool paths (demo/ac_tools.example.yaml is the template)
+/demo/ac_tools.yaml

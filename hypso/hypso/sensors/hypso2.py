@@ -1,0 +1,75 @@
+"""HYPSO-2 sensor profile. fwhm/fwhm_lookup_wl/fwhm_lookup_fwhm values moved verbatim from
+the old hypso.hypso2.Hypso2.__init__ (unchanged - this is a relocation, not
+a recalibration)."""
+from importlib.resources import files
+
+import numpy as np
+import yaml
+
+from hypso2_calibration import get_hypso2_calibration_files
+
+from . import SensorProfile, register_sensor
+
+FWHM = np.array([5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46,
+                  5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46,
+                  5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 5.46, 3.34,
+                  3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34,
+                  3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34,
+                  3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34, 3.34,
+                  3.34, 3.34, 3.34, 3.34, 3.29, 3.29, 3.29, 3.29, 3.29, 3.29, 3.29,
+                  3.29, 3.29, 3.29, 3.29, 3.29, 3.29, 3.29, 3.29, 3.29, 3.29, 3.29,
+                  3.29, 3.29, 3.29, 3.29, 3.29, 3.32, 3.32, 3.32, 3.32, 3.32, 3.32,
+                  3.42, 3.42, 3.42, 3.42, 3.42, 3.42, 3.42, 3.54, 3.54, 3.54, 3.54,
+                  3.58, 3.58, 3.58, 3.59, 3.59, 3.59, 3.59, 3.59, 3.59, 3.59])
+
+FWHM_LOOKUP_WL = np.array([435.84, 546.07, 696.54, 706.72, 738.4, 751.46, 763.51, 772.38, 811.53, 826.45, 842.46, 871.68, 912])
+FWHM_LOOKUP_FWHM = np.array([5.46, 3.34, 3.29, 3.32, 3.42, 3.54, 3.58, 3.59, 4.16, 4.06, 4.66, 4.47, 5.06])
+
+
+def _calibration_files(capture_type: str, coeff_type: str = None, version=None) -> dict:
+    # coeff_type/version defaults (abs / V3) live in hypso2_calibration's
+    # data/coefficients.yaml.
+    return get_hypso2_calibration_files(capture_type, coeff_type=coeff_type, version=version)
+
+
+# Classification thresholds and calibration crop strategy per imaging mode -
+# declared in YAML (hypso2_modes.yaml, next to this module), not Python -
+# see hypso1.py/hypso1_modes.yaml for the full schema documentation.
+_MODES = yaml.safe_load(files(__package__).joinpath("hypso2_modes.yaml").read_text())
+
+CAPTURE_TYPE_THRESHOLDS = tuple(
+    (name, cfg["classify_attr"], cfg["classify_value"]) for name, cfg in _MODES.items()
+)
+CAPTURE_MODE_CROP_MODES = {name: cfg.get("crop_modes", {}) for name, cfg in _MODES.items()}
+
+
+HYPSO2_PROFILE = SensorProfile(
+    key="hypso2",
+    sat_id="HYPSO-2",
+    sensor="hypso2_hsi",
+    platform="hypso2",
+    fwhm=FWHM,
+    fwhm_lookup_wl=FWHM_LOOKUP_WL,
+    fwhm_lookup_fwhm=FWHM_LOOKUP_FWHM,
+    calibration_files=_calibration_files,
+    capture_type_thresholds=CAPTURE_TYPE_THRESHOLDS,
+    capture_mode_crop_modes=CAPTURE_MODE_CROP_MODES,
+)
+
+register_sensor(HYPSO2_PROFILE)
+
+
+def get_hypso2_wavelengths(aoi_x=428, column_count=1080, bin_factor=9):
+    """Nominal HYPSO-2 band-centre wavelengths (nm) for an AOI and binning."""
+    from hypso.calibration import read_coeffs_from_file
+
+    calibration_files = get_hypso2_calibration_files()
+    spectral_coeff_file = calibration_files["spectral"]
+
+    x_start = aoi_x
+    x_stop = aoi_x + column_count
+
+    return read_coeffs_from_file(
+        coeff_path=spectral_coeff_file, coeff_type="spectral",
+        x_start=x_start, x_stop=x_stop, bin_factor=bin_factor,
+    )

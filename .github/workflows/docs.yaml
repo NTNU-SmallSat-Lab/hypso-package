@@ -1,0 +1,32 @@
+name: Documentation
+
+# Builds the Sphinx site for every push and pull request, failing on any
+# warning so the docs cannot go stale; publishes it from main to the gh-pages
+# branch (GitHub Pages serves that branch).
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # tags, for the version shown in the docs
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Sphinx
+        run: pip install -r docs/requirements.txt
+      - name: Build
+        run: sphinx-build -W --keep-going -b html docs docs/_build/html
+      - name: Publish to gh-pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/_build/html

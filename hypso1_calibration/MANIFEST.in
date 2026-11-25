@@ -4,6 +4,7 @@ global-include *.dat
 global-include *.txt
 global-include *.xls
 global-include *.xlsx
-include hypso/_version.py
+global-include *.yaml
+include hypso1_calibration/_version.py
 
 

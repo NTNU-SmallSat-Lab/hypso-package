@@ -19,18 +19,21 @@
 A python package form NTNU HYPSO Hyperspectral Image Processing
 """
 
-__author__ = "Cameron Penne <cameron.l.penne@ntnu.no>, Alvaro Flores <alvaro.f.romero@ntnu.no>"
+__author__ = "Cameron Penne <cameron.l.penne@ntnu.no>"
 __credits__ = "Norwegian University of Science and Technology"
 
-from .Hypso import Hypso
-#from .HypsoBase import HypsoBase
-from .hypso1 import Hypso1, get_hypso1_wavelengths
-from .hypso2 import Hypso2, get_hypso2_wavelengths
-#from .DataArrayDict import DataArrayDict
-#from .DataArrayValidator import DataArrayValidator
+# Public API: hypso.open(path) -> immutable Product.
+from .api import Product, open  # noqa: A004
+from .io.product import read_product, write_product
+from .sensors.hypso1 import get_hypso1_wavelengths
+from .sensors.hypso2 import get_hypso2_wavelengths
 
 
-try:
-    from ._version import __version__  # noqa
-except:
-    pass
+def __getattr__(name):
+    # Resolved lazily (git is queried on first access, not at import) and
+    # from the code actually imported - see hypso.versioning for why the
+    # build-time _version.py / installed metadata alone can be wrong.
+    if name == "__version__":
+        from .versioning import package_info
+        return package_info("hypso")["version"]
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

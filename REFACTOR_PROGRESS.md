@@ -1,0 +1,2605 @@
+# hypso-package refactor: progress tracker
+
+**If you are picking this up cold:** read "Where things stand" and the TODO list below, then
+`docs/architecture.rst` (the current design; the docs site builds from `docs/`). The status log after that
+is history, newest first; entries are numbered ×N and other files refer to them. Superseded plans (the original proposal
+and the capture-object-era plan) were in `archive/`, removed 2026-10-28; read them from git history, e.g.
+`git show a416c3c9:archive/ARCHITECTURE_PROPOSAL.md` and `git show a416c3c9:archive/REFACTOR_PLAN_2026-08.md`. This workspace
+(`~/hypso-package-refactor/hypso-package`) is a git clone the user gave explicit permission to modify -
+unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
+
+## Where things stand (2026-10-27)
+
+- **Design**: an xarray DataTree product model (`hypso.io.product`) under an immutable `hypso.Product`
+  (`hypso.open(path)`, then `calibrate`, `georeference`, `toa_reflectance`, `correct_atmosphere`,
+  `regrid`, `window`, `write`, ...). Processing steps are tree functions in `hypso.processing`. Format 2.0:
+  flat CF-1.10/ACDD files that open in ESA SNAP, NASA-style names, provenance in `metadata/processing`.
+  The capture-object API is gone (×49-×52).
+- **Branch**: `refactor` on origin (NTNU-SmallSat-Lab/hypso-package). hypso-processing-pipeline still uses
+  production hypso-package; it moves to this API later, so no compatibility with the old API is kept.
+- **Scope rule**: edit this repository only. The AC tools (Polymer/eoread, ACOLITE, OC-SMART) and the pipeline
+  are changed separately by the user; flag what they need.
+- **Tests**: `python -m pytest tests/` in the `ac` conda env (about 11 minutes). Real-data tests use the
+  reference capture `~/HYPSO_DATA_AOC/aeronetvenice_2025-03-04T10-38-05Z` (HYPSO-2, wide) and compare with the
+  production outputs in `~/HYPSO_DATA_AOC_REPROCESS_AULUS2/` for the same capture; both skip when absent.
+- **Docs**: `pip install -r docs/requirements.txt; sphinx-build -W --keep-going -b html docs docs/_build/html`;
+  CI (`.github/workflows/docs.yaml`) builds on every push and publishes `main` to gh-pages.
+
+## TODO (one list, reviewed 2026-10-27; details in the referenced entries)
+
+1. ~~**Docstrings for the rest of the code**~~ - done (×82). Check the published site after the first push to
+   `main` (only `main` publishes).
+1b. ~~**Review the documentation, remove stale parts**~~ - done (×81).
+2. **Verification beyond the reference capture** (×68 did HYPSO-1 and a second HYPSO-2 site, now regression
+   tests). Left: the real Polymer, ACOLITE and OC-SMART runs through `correct_atmosphere` (when aulus2 is free;
+   the user's production installations are not to be touched - configure a separate one in HYPSO_AC_CONFIG);
+   a nominal (non-wide) capture, of which none was found in the local data folders (all are 598 x 1092).
+   With the AC work: whether `metadata/srf` can be stored on a coarser wavelength grid than the solar
+   spectrum's 0.005 nm (now float32, ×73; 3.7 MB -> less) - check what Polymer's SRF use needs first, since
+   F0 is computed on the fine grid (user, 2026-10-27).
+2b. ~~**HYPSO-1 calibration naming**~~ - done (×69): same scheme as HYPSO-2.
+3. ~~**Dependencies**~~ - done (×65).
+4. ~~**Satpy readers and gridded products**~~ - done (×66).
+4b. ~~**NetCDF file sizes**~~ - done (×71): bands BitRound 14 bits by default, L1D 218 -> about 135 MB.
+4c. ~~**Band subsets**~~ - done (×79).
+4d. ~~**Compute in float32**~~ - done (×75).
+4e. **RGB camera co-registration** (done ×84/×85; ×72; approach agreed with the user 2026-10-27). The camera image has no
+   georeferencing, and the ground processing does not register it. Plan: regrid the HSI L1D (an RGB rendering,
+   3 bands) onto a UTM grid at about 100-200 m (a true map plane, which removes the pushbroom geometry); SIFT
+   keypoints (scikit-image, already a dependency; ORB if accurate enough) on that map and the downsampled
+   camera image; RANSAC homography from camera pixels to UTM x/y (exact for a frame camera over flat ground);
+   check inliers, residual RMS (m) and a coastline overlay figure, recorded in provenance; leave unregistered
+   with the reason when too few matches survive (open ocean, cloud). Product: the camera image in its native
+   (y, x) frame, unresampled, with per-pixel 2D latitude/longitude of the same shape (user: wanted), like a
+   swath product - so `regrid()`, `window()`, `pixel()` and Satpy work unchanged; geometry lossless (measure
+   the compressed size, about 84 MB raw). Also a pixel mapping between the camera and HSI images in their
+   original dimensions (user): HSI -> camera (fractional camera row/col per HSI pixel, via UTM and the inverse
+   homography; exact) and camera -> HSI (HSI line/sample per camera pixel, via lat/lon and a kd-tree), computed
+   on demand from the stored homography (e.g. `camera.to_hsi_pixels(l1d)`, `l1d.to_camera_pixels(camera)`);
+   NaN outside the camera's field of view. No special common-grid support (user): the built-in `regrid()`
+   covers it once the camera product has per-pixel lat/lon. Estimated 10-30 s and a few hundred MB per capture. Then a camera
+   product (instrument token `RGB`), a Satpy `hypso_rgb` reader matching `_RGB` names and a `true_color`
+   composite. Start with a prototype on 2-3 captures (Ariake, Venice, a cloudy one) with verification figures.
+   When it lands, add the camera (reading, registration, overlay on the HSI image) to the demo (user).
+   **Prototype result (×83, 2026-10-27)**: HSI L1D read with 3 bands (`hypso.open(..., wavelengths=[640, 550,
+   460])`), regridded to UTM 150 m (nearest); camera demosaiced, rotated 180 degrees (no mirroring needed),
+   downsampled 4x; skimage SIFT on both, `match_descriptors` (ratio 0.8, cross-check), RANSAC
+   `ProjectiveTransform` (threshold 3 map px). Ariake 2025-04-04: 341/435 inliers, residual RMS 187 m; Venice
+   2025-06-12: 196/241, 198 m; Annapolis 2025-02-04 (snow, cloud, dark): 94/146, 223 m, inliers clustered in one
+   corner. All about 40 s (SIFT ~20 s, RANSAC 0.1 s). Accuracy ~1.3-1.5 map pixels, well below the HSI's
+   876 x 108 m pixels. The camera footprint extends beyond the HSI swath (those pixels are extrapolated - flag
+   them). To build: a quality check on inlier spread (coverage of the camera image), not only count; leave
+   unregistered with the reason below threshold; `register_camera` -> camera Product (native frame, per-pixel
+   lat/lon), homography and QC in provenance; the pixel mappings; RGB names, Satpy reader, composite, demo.
+4g. **HSI-RGB fusion (super-resolution)** (user, 2026-10-27; after the camera product, TODO 4e). Fuse the HSI
+   (120 bands, 876 x 108 m) with the co-registered RGB camera (3 bands, ~30 m) into a finer hyperspectral cube -
+   hyperspectral-multispectral fusion / "hyperspectral pansharpening" (e.g. CNMF, HySure, GSA, or learned
+   methods). Prerequisites, in order: (1) estimate the camera's spectral response by regressing camera colours
+   on HSI spectra where they overlap; (2) tighten registration well below an HSI pixel across-track (108 m; now
+   ~200 m): local refinement or full-resolution matching; (3) handle the time offset between the camera exposure and the HSI lines seeing the same ground (the
+   camera fires about mid-capture, not 2 s before it as the BMP name suggests; see 4h) for clouds and glint. Fusion
+   adds spatial detail, not real fine-scale spectral information: validate fused spectra against the original
+   HSI before any water-colour use. Not possible: spectral super-resolution (bands are binned 9x on board) or
+   multi-capture SR (repeat captures are days apart).
+4h. **Physical-model georeferencing for HSI and camera, two stages** (user, 2026-10-27). Today the package only
+   reads the ground processing's indirect georeferencing (`latitudes_indirectgeoref.dat` from `gcp.points`;
+   the ground processing matches coastlines with SIFT, user 2026-10-27) and camera registration is image-to-HSI homography
+   (fails on low-texture scenes: Galata 2025-01-02, Venice 2026-01-10, Annapolis 2025-02-04; geometry-guided
+   matching within 10 km did not rescue them, 0-9 inliers).
+   **Camera geometry prototype** (scratchpad camgeo/, ×85+): pinhole camera from the specs (iDS UI-1492LE,
+   MT9J003 1.67 um, 35 mm lens; FOV 10.5 x 7.5 deg) on the ADCS pose (slerp quaternion, spline position,
+   TEME->ITRS with astropy, WGS84 ellipsoid intersection; checked: HSI boresight matches the package's direct
+   georef to 0.001 deg). Finding: the camera is NOT exposed at the BMP-name time but about mid-capture
+   (best fit: HSI mid-time + ~1 s, ~42 s after the name time); mounting = the 180 deg image rotation plus
+   < 1 deg. Per-capture fit residual 100-370 m (the registration's own accuracy); leave-one-out with one
+   fixed model 1-4 km typical (median 2.1 km on 11 captures). Exposure time and pitch are nearly degenerate
+   along-track (the satellite pitches ~0.56 deg/s during captures); captures with other slews (annapolis
+   2025-11-05, `flip_rgb: false`) separate them. **Full set** (127 HYPSO-2 captures with a camera image,
+   89 registered = 70%): global mounting euler xyz (0.72, -0.08, 179.71) deg, exposure = HSI mid-time
+   + 1.75 s; leave-one-out RMS median 5.4 km, p90 14 km, max 20 km (the first 11 captures suggested 2 km:
+   too optimistic). Per-capture fits stay good (median 0.03 deg, ~0.3 km), but the per-capture
+   correction scatters: exposure -7..+11 s around mid-capture, pitch -6..+6 deg. Not attitude sampling
+   (86/89 have 0.25 s ADCS around mid-capture). Error mostly along-track (RMS 7.2 km: exposure-time jitter
+   of several seconds, std ~5 s; the slew slows the footprint to roughly 1 km/s, so seconds map to km) plus cross-track 3.7 km RMS (2.4 km mean bias - not timing; HSI
+   georef error in the ground truth or attitude). Good enough as a prior (search radius ~20 km) and a
+   flagged fallback (~5-15 km), not as georeferencing. Planner code: git.ntnu.no
+   NTNU-SmallSatLab/flight-scripts (needs NTNU login). The prototype (scripts, per-capture
+   registrations, analysis.csv, decompose.csv, footprints.png, galata_geometry.png) is kept in
+   `../camera_geometry_prototype/` next to this repository (not versioned; it was in a temporary session
+   folder). Ask HYPSO ops how the camera is triggered: a known rule beats a fitted one. Checked
+   (2026-10-27): no downlinked file records the exposure time. The BMP and its name come from the
+   satellite's `rgb-images` folder (ground_systems `process-capture.sh` only moves it to `<capture>-rgb`;
+   an onboard `logs` folder would go to `<capture>-logs`, none of the 127 captures has one).
+   `-hsi0/timestamps_services.txt` (capture start/end and per-frame times, services clock) and
+   `timestamps.txt` (system time base) have no camera entry; `telemetry.log` is binary. On Venice
+   2025-06-12 the BMP name (09:57:58) is 1.8 s before the `timestamps.txt` base time and 4.4 s before
+   capture start, so it marks the capture's start-up, not the exposure. Onboard software
+   (github.com/NTNU-SmallSat-Lab/hypso-sw, checked at c8e7f77): `rgb capture <HW trigger y/n> <raw/rgb>
+   <bmp/png/jpg> <file name>` is a separate command; the file name (and so the BMP time) is supplied by
+   the command, not stamped at exposure; software trigger fires immediately, HW trigger waits for a pulse
+   (`is_SetExternalTrigger(IS_SET_TRIGGER_HI_LO)`). The design (doc/plantUML/hsi_sequence.uml) takes the
+   RGB image after the first 50% of HSI frames - matching the fit (45-59% of the capture, HSI mid + ~1 s).
+   The HSI service code has no RGB call or trigger output, so in practice the mid-capture timing comes from
+   the uploaded command sequence (capture planner, not in hypso-sw or ground_systems). The exposure time is
+   not recorded in any downlinked file; the fitted rule stays, anchored on the design. Also seen: HSI frame intervals jitter (0.04-0.22 s at 8 fps nominal).
+   **Plan, two stages:**
+   (1) *Coarse, physical*: direct georeferencing (HSI per line, camera per frame) with a few per-capture pose
+   corrections (pointing offset 2-3 angles, time offset) fitted to control points, not a free 8-parameter
+   warp. Control points from a reference that works on water scenes: the coastline. Match the
+   sea-land-cloud classification's land/water boundary to an accurate coastline (OSM or GSHHG full
+   resolution, tens of metres; Natural Earth 10 m is too coarse) by chamfer / distance-transform
+   optimisation over the pose corrections. Joint HSI + camera fit: one attitude bias, two sensors.
+   (2) *Fine*: local refinement from the coarse result, e.g. feature or intensity (normalised
+   cross-correlation, optical flow) matching between camera and HSI or against the coastline, restricted to
+   a small search window, giving a smooth residual field (per-line correction for the pushbroom HSI).
+   Validate on AERONET-OC platform positions and against the ground processing's indirect georef.
+   **Better inputs to evaluate:**
+   - Attitude rate: some captures have 0.25 s ADCS sampling during the capture (Venice 2025-06-12: 540
+     samples), others only 30 s (Galata 2025-01-02: 33 samples). Check whether model error follows it;
+     `*-adcs.bin` (873 kB) may hold more than the extracted CSVs; `startracker.csv`, `angular_velocity.csv`
+     and `target_quaternion.csv` (commanded attitude) are unused so far.
+   - Orbit: HYPSO-2 has GPS (user). The processing-temp CSVs are extracted from the FM ADCS telemetry
+     (user's `strip_tm_with_bad_header`: timestamp col 245; position 246-248 and velocity 249-251, ECI;
+     estimated attitude quaternion 254-257 + control error 294; star tracker quaternion 230-233). Velocity
+     agrees with d(position)/dt to 1.3 m/s; positions are smooth enough that a cubic spline or Hermite
+     (position + velocity) reproduces held-out samples to ~0 m over 60 s gaps, where linear is off 3.7 km.
+     `position.csv` vs `position-tle.csv` differ almost purely along-track
+     (Venice 2025-06-12 418 m, Annapolis 2025-11-05 497 m, Galata 2025-01-02 3.3 km; radial/cross-track
+     < 0.1 km): the TLE error signature, so `position.csv` is the GPS track. The ground processing's
+     `frametime-pose.csv` uses `position.csv` (0 m difference) - good. Historical TLEs (CelesTrak /
+     Space-Track) would be worse, not better. But positions are interpolated linearly (ground processing and
+     the package's `interpolate_at_frame`): with 30 s sampling the chord sags up to ~0.9 km below the orbit
+     mid-gap, ~0.3 km on the ground at 20 deg off-nadir. Use a spline (the camera prototype does) or the
+     velocity; check the raw GPS rate in `*-adcs.bin`.
+   - Terrain: no DEM anywhere yet (both models intersect the ellipsoid). Land captures need one (Copernicus
+     GLO-30): 2 km relief at 20 deg off-nadir moves a pixel ~700 m. Earth curvature itself is already in
+     the ellipsoid intersection; the camera homography (a flat plane) ignores it, ~20-90 m over a footprint.
+   - Long-term: refit the mounting and timing over time to catch drift or onboard-software changes.
+4i. **L2B: geophysical products (IOPs, chlorophyll, ...) in their own files** (user, 2026-10-28). Today
+   the AC tools' 2D outputs ride inside the L2A file as extra variables (Polymer `chla`, `logfb`, `SPM`;
+   ACOLITE `chl_re_mishra`, `SPM_Nechad2010_664`, `ndci`; OC-SMART `chlor_a_oci`, `chlor_a_yoc`, `tsm_yoc`),
+   and nothing is derived by the package itself. Wanted: separate files, like NASA's L2 OC / OC_IOP suites.
+   Proposal (agreed with the user 2026-10-28):
+   - Level decision (user, 2026-10-28): L2B for products derived from an L2A (the level shows the
+     dependency); regridding stays a grid field, not a level (`L2B.CHL.oc4.utm33n_880m.nc`, as Sentinel-2
+     keeps L1C/L2A for map-projected scenes); L3 reserved for future multi-capture composites (mosaics, time
+     composites). NASA's single-level alternative (`L2.OC_AOP`/`L2.OC_IOP`) considered and not taken: L2A
+     is already in use.
+   - L2B files have no band cube: every product is a 2D variable, per-wavelength IOPs as separate
+     variables (`aph_443`, `adg_443`, `bbp_443`), as in NASA's OC_IOP files.
+   - Steps: (1) infrastructure: level L2B, naming, cube-less products through read/write/regrid/window/
+     pixel/to_satpy, Satpy `hypso_l2b`; (2) move the tool products out of L2A (done ×88); (3) package algorithms on `L2A.RRS` (done ×89; Kd490 via QAA ×90); (4) QAA IOPs (done ×90), GIOP later. Open: a
+     validity flag for negative input Rrs (TSM, QAA give negative values), QAA's aph/adg split.
+   - Level `L2B`, named like L2A with the product group first: `...L2B.<GROUP>.<source>.nc`, e.g.
+     `L2B.CHL.oc4.nc`, `L2B.IOP.qaa.nc`, `L2B.CHL.polymer.nc` (the tool's own product); one group per file,
+     several variables allowed (an IOP file holds a, bb, aph, adg at chosen wavelengths). Same geometry,
+     flags and provenance as the L2A input, input file and algorithm recorded; regriddable like L2A.
+   - Input: an `L2A.RRS.*` product (IOP and chlorophyll algorithms need Rrs, not rhos). From RHOS only
+     indices that tolerate it (e.g. NDCI), flagged as such.
+   - Algorithms in the package, from Rrs on HYPSO's bands: OCx band-ratio chlorophyll (OC4-style, coefficients
+     fitted or adopted for HYPSO band centres), Kd(490), QAA or GIOP for IOPs (a, bb, aph, adg), Nechad
+     TSM/turbidity, NDCI / red-edge chlorophyll for turbid and eutrophic waters. Each with its reference and
+     validity flags (out-of-range inputs, failed inversions).
+   - The tools' own products: copy them out of the L2A into L2B files (`L2B.CHL.polymer`, ...) so every
+     chlorophyll source is found the same way; keep them in L2A too, or move them (decide).
+   - CF standard names (chlorophyll, suspended matter, absorption/backscattering coefficients), units;
+     Satpy reader `hypso_l2b`; pipeline matchups against in situ chlorophyll where available.
+   - Note: strictly, IOPs are absorption and backscattering coefficients; chlorophyll and TSM are
+     concentrations derived from Rrs or IOPs. Group names should keep that clear (`IOP` vs `CHL`, `TSM`).
+4j. **Small fixes found 2026-10-27/28**:
+   - Pose interpolation in `hypso.geometry.interpolate_at_frame`: (a) positions are interpolated linearly
+     (up to ~0.9 km sag mid-gap with 30 s ADCS sampling; spline or Hermite with `velocity.csv` reproduces
+     held-out samples to ~0 m, see 4h); (b) some captures have repeated or out-of-order ADCS timestamps
+     (crashed the camera analysis's Slerp): sort and drop duplicates before interpolating. Both change direct
+     georeferencing output: compare before/after on a few captures.
+   - Satpy composites (`etc/composites/hypso1.yaml`, `hypso2.yaml`, `hypso2_rgb.yaml`) import
+     `satpy.composites.GenericCompositor`, deprecated (moved to `satpy.composites.core`, old path removed
+     in Satpy 1.0). Switch when the minimum Satpy version allows, or keep a fallback.
+4m. **Target calibration releases** (done ×92-×94; user, 2026-10-29): "ultimately there should be lab (v1), v2, and v3.1
+   coefficients in the refactored hypso package", both satellites. So:
+   - **V1 = the complete lab set** (resolves 4k's question: V1 itself, not a separate `lab` release): lab
+     radiometric (already identical), the corrected lab smile (replacing the row-reversed file), lab spectral
+     (production `polymer_v1`: lab polynomial / smile row 608, 86a29f7e, 2b560445). Changes V1 outputs (today
+     V1 = lab gains + V2 smile + V1 centre-row wavelengths).
+   - **V2** as now (`moved`, `abs`).
+   - **V3.1** (4l), the default.
+   - **V3 is superseded by V3.1** (user, 2026-10-29): remove the V3 release once V3.1 is in. Files V3.1 reuses
+     unchanged (V3 sobel smile, V3 spectral, V3 moved gains) stay, under V3.1. Products made with V3 keep
+     `release: V3` in their provenance; `release="V3"` maps to V3.1 with a deprecation warning that says
+     the abs gains are ~3% lower (user decision 2026-10-29), like the old `adjusted`/`original` names. Note it in coefficient_history.rst.
+   Order: 4l (V3.1, new default), V1 as the complete lab set, then remove V3.
+4k. **Original lab coefficients as an alternative** (done ×94 as V1; user, 2026-10-28: "Add the original lab coeffs back as
+   an alternative"). Current state: the lab set is still shipped and selectable for both satellites as
+   release V1, `coeff_type="lab"` (the old name `original` still works, with a deprecation warning); HYPSO-2 V1
+   = lab radiometric + V2 smile + V1 spectral, HYPSO-1 V1 = lab + V1 smile/destriping/spectral. V2 and V3 have
+   only `abs` and `moved`. To clarify with the user what "back" means: (a) a `lab` radiometric variant inside
+   V3 (with V3 smile and V2 spectral), (b) the lab set's own smile/spectral exactly as originally delivered
+   (the pre-catalog files), (c) lab as a selectable alternative in the pipeline/configs, or something removed
+   in the ×76 cleanup (the CSVs were identical to the shipped `.npz`).
+   Findings 2026-10-29 (vs the user's `~/AC/lab_coeffs_h2/` and `~/hypso2_calibration_versions/`): the
+   refactor's lab radiometric matrix is identical to the lab delivery; its `smile_correction_matrix_HYPSO-2_full.npz`
+   is production's row-reversed file (35340a9a), not the corrected lab smile (46e9aedd = `polymer_v1` fix), and
+   is unused (V1 takes the V2 smile); `h2_spectral_calibration_coefficients.npz` differs from the lab file
+   (384c3cd6 vs 3552c56e); the lab FWHM file is not included (user: keep the built-in table). Proposal:
+   replace the flipped smile with the lab smile as smile V1, add a `lab` release (lab radiometric, lab smile,
+   lab spectral: polynomial or smile row 608 as in `polymer_v1` 2b560445), keep V1 unchanged. Also: the V2
+   smile matrix has 1172 rows but is cropped as a 1216-row matrix (~25-30 rows off, < 0.17 nm; 4j).
+4l. **Bring over the V3.1 calibration and SRF modelling** (done ×92; user, 2026-10-29; V3.1 is production's default from
+   2026-10-29). Source: `~/hypso2_calibration_versions/v3.1/` (files as delivered + README) and
+   `~/AC/hypso-package-polymer_v3`, branch `polymer_v3`, commits c390ca27 (V3.1), 11756523 (SRF modelling,
+   from aria 368d16d9), af82d75c (`abs31` renamed `v31v2spec`); calibration packages 26.10.1. Read only;
+   production not touched. To port into the refactor (both satellites):
+   - **Radiometric:** V3.1 `abs` gains, HYPSO-2 x0.963 of V3 abs (wide x0.971; the wide matrix equals the full
+     V3.1 matrix binned), HYPSO-1 x0.972 of aria's HYPSO-1 V3 (full and wide). New release `V3.1` in both
+     catalogs (`coefficients.yaml`), as the default (production default `v31`); V3.1 `moved` = V3 moved
+     (not added); smile = V3 sobel, spectral = V3 (identical files). HYPSO-1 V3.1 also needs aria's HYPSO-1 V3
+     smile (`smile_correction_matrix_HYPSO-1_full_sobel_v3.npz`) and spectral array
+     (`spectral_array_calibrated_poly_full_v3.npz`).
+   - **Variant for OC-SMART** (production `v31v2spec`): V3.1 gains, V3 smile, pre-V3 spectral (HYPSO-2
+     `spectral_array_calibrated_poly_full`; HYPSO-1 its moved array), V3.1 FWHM. In the refactor: V3.1 with
+     `spectral: V2` (the catalog's per-component selection already allows it).
+   - **FWHM tables (new):** in-orbit FWHM at 8 lines 430-764 nm, `h{1,2}_srf_fwhm_v31.npz` (keys wavelength,
+     fwhm, fwhm_std); HYPSO-2 430.0: 6.64, 478.2: 3.68, 526.2: 3.40, 574.1: 3.55, 621.7: 3.40, 669.2: 3.42,
+     716.5: 3.47, 763.6: 4.28 nm. A catalog component (`fwhm: V3.1`), used by V3.1 releases; other releases
+     keep the sensor profile's built-in table. Today the refactor takes FWHM from the sensor profile only
+     (`sensors/`, `io.product._fwhm_from_profile`).
+   - **SRF modelling (all releases in production):** per-band FWHM interpolated linearly between the table's
+     lines (`np.interp`, constant outside) instead of the nearest line (refactor: nearest, in
+     `_fwhm_from_profile` and the capture FWHM); Gaussian SRFs and the solar-spectrum truncation over +-4
+     sigma instead of +-3 (refactor `srf/response.py` uses 3 in `gaussian_srfs` and the truncation;
+     `SRF_N_SIGMA = 4` in production, as h2-onboard-calibration); FWHM recomputed after an L1B made inside
+     L1D generation (check the refactor's equivalent path).
+   - **Default and raw L1A:** production resolves a missing `coeff_type` to `v31`; the refactor's default
+     release becomes V3.1.
+   - Downstream (record, pipeline side): Polymer via eoread maps `v31`/`v31v2spec` to `HYPSO-2_moved`; band
+     names V3 for V3.1, V2 for the OC-SMART variant; OC-SMART uses the V2-spectral variant.
+   - Checks: compare refactor V3.1 L1B/L1D and SRFs/F0 against production `polymer_v3` on the reference capture
+     (as ×55 did for V2); update docs/calibration.rst, coefficient_history.rst, manifests, tests
+     (test_sensors, release tables).
+   Related: 4k (lab set), 4j (V2 smile row offset). Production's other SRF items checked 2026-10-29: SRFs, F0
+   and d written to L1C/L1D (99172075) are already in the refactor; aria 6440034b (TSIS-1 full res) to compare.
+4n. **Destriping with V3.1 (for the calibration team)** (2026-11-04): HYPSO-1's only destriping matrices are
+   V1 (nominal, wide), derived with the V1 smile; V3.1 applies them after the V3 Sobel smile, as production
+   `v31` does. Is that combination valid, or is a V3/V3.1 destriping needed? HYPSO-2 has never had
+   destriping.
+4o. **V1 spectral for windows not centred on row 608** (×94): V1's band centres are the lab smile's row 608,
+   the smile correction's reference row for the AOC window only. For other windows (e.g. nominal captures)
+   the corrected cube's band wavelengths are the smile's centre row of that window; take V1's spectral
+   calibration from the lab smile at the capture's centre row instead of a fixed file (a catalog option such
+   as `spectral: {from_smile_centre_row: true}`). Differs from production polymer_v1, which ships row 608.
+4p. **OC-SMART with the refactor** (×95; user, 2026-11-04). Done: fork CameronLP/OC-SMART cloned to
+   `../OC-SMART-github`, branch `hypso-refactor` (3677966, pushed): sensors HYPSO1_HSI (placeholder, skipped
+   with a warning; no auxdata) and HYPSO2_HSI (the existing HYPSO auxdata, renamed), and the HYPSO reader reads
+   the refactor's flat layout. The three LFS auxdata files were copied from the patched v2.6.3 copy (sha256 =
+   the LFS pointer oids; `git update-index --skip-worktree`, no git-lfs installed). Conda env
+   `ocsmart-refactor` (Python 3.12, numpy 2.5, GDAL from conda-forge, l8angles 1.0.0 and lll-gas-corr-lib
+   0.2.4 wheels from Light-and-Life-Lab). Real runs on Venice verified (×96). Left: an `ocsmart` entry in the
+   user's HYPSO_AC_CONFIG (`dir: .../OC-SMART-github`, `python: .../envs/ocsmart-refactor/bin/python`);
+   more captures and V1v2spec; ancillary files are downloaded with the user's own `~/.netrc` (the two Venice
+   MERRA-2 files were copied from the v2.6.3 cache). Not touched on user
+   request: the fork's lat/lon subset typo in `latlon2linepixl` (`southeast_line` used for the pixel bounds,
+   from c9df10b; not HYPSO specific).
+4q. **toybox-ac as an AC method** (user, 2026-11-04: "add support for toybox-ac"). toybox-ac
+   (`~/AC/toybox-ac`, package `hypso2_rtm`, data `~/AC/toybox-ac-data`) is the user's HYPSO-2 RT-simulation
+   + NN-ensemble AC: numpy-only inference from one `.npz` (`hypso2_rtm.infer.HypsoOC`), Rrs per band with
+   aleatoric/epistemic/total sigmas and band covariance, AOT550, OOD flag bits, glint-risk flag. Today its
+   `scripts/05_run_toybox.py` reads pipeline-layout L1D files (`hypso2_rtm.hypso_l1.HypsoL1D`: /products,
+   /geometry) and writes pipeline-layout L2A. Wanted: `correct_atmosphere("toybox")` from L1D, HYPSO-2 only.
+   - Location of the code and model from HYPSO_AC_CONFIG (`toybox: {dir, model}`), like the other tools;
+     since inference is numpy-only it can run in process (import `hypso2_rtm` from `dir`) instead of a
+     subprocess. Pass rhot, geometry and SRFs from the Product rather than having toybox-ac read the file.
+   - Ancillary: the default model is ancillary-free (on-board); the ancillary variant (O3, H2O, pressure,
+     wind; uvspec gas transmittance) is a separate ground-processing mode (toybox-ac TODO 4b), an option here.
+   - Calibration: the model is trained on V3.1 (toybox-ac `config.yaml`, noise file `hypso2_noise_v31.csv`);
+     check the L1D's release (and band centres / SRFs) against the model's `band_centers_nm` and refuse or
+     warn on a mismatch.
+   - Output: `L2A.RRS.toybox` with Rrs, the sigmas as ancillary variables (CF `ancillary_variables`), AOT550,
+     the OOD and glint flags as CF flag masks; provenance with the model file's sha256. Phase-1b constituents
+     (CHL, TSM, aCDOM, adg, aph, bbp + sigmas) would be L2B.<GROUP>.toybox when the model has them.
+   - Do not run on aulus2 while the user's reprocess is running (feedback); tests with a small mock model.
+4t. **Spatial subsampling: check on the first real capture** (×101; HYPSO-2 captures with
+   `spatial_subsampling` 2 expected from ~mid-November 2026). Check: (1) which `row_count` the L1A records (the
+   AOI's 1092 detector rows or the 546 read out; both are handled); (2) that the kept rows are the AOI's first,
+   third, ... (sample i = detector row `aoi_y + 2i`; assumed); (3) that the file reads at all: the real L1A's
+   `metadata/corrections/rad_matrix` is on the `samples` dimension (1092), and a 1092-row matrix next to a
+   546-sample cube makes xarray refuse the tree as unaligned; (4) the processing-temp indirect georeferencing
+   files are 598 x 546.
+4u. ~~**Footprint shapefiles and maps**~~ - done (×106). (user, 2026-11-08: "I also want .shp files of the footprint as well as
+   maps (I want code in the package to create these things so add as a todo)"). Today the package has
+   `hypso.rgb.maps` (`regrid_camera`, `plot_rgb_map`: an RGB rendering on a map grid with graticule, scale bar,
+   north arrow, coastlines) but no footprint and no map of a product variable. Wanted, in the package:
+   - `Product.footprint()`: the swath outline as a shapely polygon in WGS84, from the product's own
+     `latitude`/`longitude` (indirect when present, else direct; record which), tracing the outer ring of the
+     pixel grid. Handle NaN edge pixels, the antimeridian, and optionally only the valid (e.g. water) pixels.
+   - `Product.write_footprint(path)` and a batch form (one feature per capture, for catalogues): ESRI Shapefile
+     (.shp/.shx/.dbf/.prj, EPSG:4326), possibly GeoJSON/GeoPackage too. Attributes: capture name, satellite,
+     start/end time (UTC), target, level, georeferencing method, calibration release, AC method for L2.
+     Shapefile field names are at most 10 characters.
+   - Maps: a product variable (Rrs at a wavelength, rhos, chlor_a, tsm, an IOP, flags) or an RGB rendering on a
+     map with the footprint outline, coastlines, graticule, scale bar, colour bar with units; and an overview
+     map of several footprints. Extend `hypso.rgb.maps` or add `hypso.maps`; reuse `regrid()` for gridding.
+   - Dependencies: shapely is already imported lazily in `rgb/maps.py`; writing shapefiles needs pyshp (pure
+     Python, small) or pyogrio/fiona (GDAL). Keep them optional (an extra, like matplotlib and cartopy).
+   - Ask the user before building: which variables and stretch on the maps, one map per capture or batch
+     overviews, which footprint (whole swath or valid pixels), and the attribute list. First use: the 6 HYPSO-1
+     and 10 HYPSO-2 captures processed 2026-11-08 into `~/HYPSO_DATA_REFACTOR`.
+4s. ~~**Angle valid ranges**~~ - done (×104). `sensor_azimuth` (and the other azimuths) carry `valid_min=-180, valid_max=180`, but
+   the values are 0-360 (Erie 2025-07-05: sensor azimuth 284-285 deg), so CF readers that apply the range
+   (netCDF4 auto-mask, xarray with masking, Panoply, SNAP) show every pixel as missing. Production has the same
+   attributes. OC-SMART reads with h5py and is unaffected. Fix: 0-360 for azimuths, or wrap to -180..180 (×99).
+4r. **L2A.AUX for the other AC methods** (user, 2026-11-04: "add aux as todo for the other processors'
+   products"; OC-SMART done ×98). The mechanism is generic (`_l2a_tree(..., intermediates=...)` -> the L2A's
+   `ac_intermediates` node -> `...L2A.AUX.<method>.nc`); the other methods do not feed it yet:
+   - **Polymer**: today only `rho_w` (as Rrs) and its 2D outputs (`Rgli`, `Rnir`, `logchl`, `logfb`, `SPM`,
+     flags) are read. Polymer can write more per-band quantities through its `outputs` setting (e.g. `Rprime`,
+     `Rtoa`, `Ratm`, `Rmol`, `Rw` uncertainties, per its Level2 options); decide which to request and put them
+     in AUX (also check `bands_oc` vs `bands_corr` band sets; memory note polymer_bands_oc_default_confound).
+   - **ACOLITE**: L2R also holds `rhot_<nm>` (its copy of the input; redundant but cheap to keep); ACOLITE can
+     export more with its settings (`l2r_export_*`, e.g. `rhorc`, `rhoray`, `rhoam`/path reflectance,
+     `tt_gas`, `aot`/`aot_<nm>`, `dark_spectrum`); decide which, request them, read them into AUX.
+   - **MACHI and DPS** (in process): their per-band internals (DPS: the dark spectrum; MACHI: the fitted path
+     reflectance, transmittances, the fit's per-band residuals; part of it is in `metadata/machi` already)
+     could go to AUX as 2D or as per-band metadata; decide what is worth a file.
+   - **toybox-ac** (4q): its per-band sigmas and covariance are planned as L2A ancillary variables; decide L2A
+     ancillary vs AUX there.
+   For each: extend `test_ocsmart_every_output_is_written`'s check (every variable of the tool's raw output is
+   in the L2A, an L2B or the AUX file) to that tool's real output.
+4f. **Keystone review** (×77, for the calibration team): HYPSO-2's distortion model (`h2_distortion_model_v1.npz`,
+   `optional: keystone` in coefficients.yaml, `enabled: false`) is applied only with `calibrate(keystone=True)`,
+   with a warning. Questions: is B_hat valid for the flight model; is the sample axis oriented as the detector
+   rows (a flipped L1A would mirror the correction); order relative to smile/crop/binning; should A_hat's smile
+   model replace the V2 smile matrix (agrees within ~2 nm). Figure on the reference capture: shift -1.4..+1.7
+   samples, image change median 0.35% (99th pct 15% at sharp edges). When reviewed: `enabled: true`, consider
+   it in a release.
+5. **Releases** (×46, ×48, ×52): tags `v26.10.0a1`-`a7` are on origin (a5 = ×84, a6 = ×90, a7 = ×94, 2026-11-04).
+   Tag the next alpha when wanted, especially after output-changing work; the final `vYY.M.0` on the merge
+   to `main` once the pipeline uses the refactor (item 6d).
+6. **Outside this repository, for the user**: eoread fork commit `3609d25` (F0 and d^2) on the flat-layout
+   reader, and ACOLITE's/OC-SMART's readers on new files (×37); **eoread's HYPSO reader must read the renamed
+   `metadata/srf/F0` / `F0_wavelengths`** (were `esun`/`esun_wavelengths` until ×74): it reads them by name and
+   otherwise silently falls back to a separate `<sensor>_esun.nc`, so until it is updated Polymer on new files
+   does not use the file's F0 (older files keep `esun`; reading both names covers both); moving
+   hypso-processing-pipeline to
+   `hypso.open` and the new names (×42, ×49), where `Product.window` can replace its HYPSO extraction and
+   `hypso.masks.sea_land_cloud_masks` its `decode_jon_cnn_*` calls (×70); reading PACE and OLCI through Satpy
+   instead of the pipeline's own file parsing (`olci_l1b`, `olci_l2`, `pace_oci_l1b_nc` exist in Satpy 0.60;
+   PACE OCI L2 **AOP** (Rrs, l2_flags) and L1C have no reader yet - write one, ideally contributed to Satpy;
+   user, 2026-10-27); the
+   pipeline's `find_window_indices` measures distance in degrees and can pick a farther pixel (×60).
+
+6b. **Pipeline (hypso-processing-pipeline) wishlist** (user, 2026-10-27; also in the pipeline's own TODO.md,
+   created then; checked against the pipeline at 5476f3d):
+   - **PACE and Sentinel-3 matchups.** AERONET-OC matchups (stages 3/5) support PACE only (OCI L2 AOP Rrs,
+     L1C Lwn, L1B rhot). OLCI exists only in the full-swath colocation (`colocation/sentinel3_source.py`,
+     `cdse.py`). Add OLCI L2 WFR to the matchups: search/download via `cdse.py`, window with WQSF flag
+     exclusion, via Satpy `olci_l2` (with the PACE AOP reader, item 6).
+   - **Tidy matchup tables (decided by the user 2026-10-27).** Today one wide CSV (1832 columns) with mixed names (`oci_` for PACE Rrs but
+     `oci_lwn_`/`oci_rhot_`; AC method inside the sensor prefix, `hypso_polymer_convolved_`; `_cv` both
+     aggregate and per band; `mean_sat_zenith_angle` vs `sensor_zenith`). Proposed: tidy `matchups.csv` (one row
+     per matchup and source: matchup_id, source, product, ac_method, time, lat/lon, distance, box_size,
+     pixel_valid, cv_median, angles, owt) + long `spectra.csv` (matchup_id, source, product, wavelength_nm,
+     mean, median, std, cv, valid_count) - new sensors/methods add rows, not columns; the wide table is a pivot.
+     Matches `Product.window()`'s output.
+   - **AC in parallel.** Stage 2 runs captures and AC tools strictly one after another. Across captures: a
+     process pool (`--workers N`; each AC tool already runs in its own process), with OC-SMART still serialised
+     per installation by the OCSMART_Input.txt lock and a memory guard (aulus2: mind the user's reprocess, about
+     6 heavy workers). Within Polymer: pass its `multiprocessing=N` through the tool settings.
+
+6d. **Refactor the matchup pipeline (hypso-processing-pipeline)** (user, 2026-11-04: "I will also want to
+   refactor the matchup pipeline"). Scope to agree with the user. Starting points: item 6 (move to
+   `hypso.open` / the new names, `Product.window`, `hypso.masks`, Satpy for PACE/OLCI) and the 6b wishlist
+   (OLCI matchups, tidy matchup tables, AC in parallel); the new L2A names (`L2A.RRS.<method>`,
+   `L2A.RHOS.<method>`) and L2B files; the AC tools through `correct_atmosphere` (OC-SMART fork, toybox-ac,
+   item 4q) instead of the pipeline's own adapters. Memory notes: the pipeline is the active repo
+   (hypso-processing-pipeline; hypso-matchup-processing is stale), 3-stage design with self-contained
+   capture folders, manifests must be cleared after schema changes.
+
+Parked until there is a concrete need: Zarr output (×29); HYPSO-2 RGB camera and future optical instruments (×14, ×63,
+×71; groundwork in place: an `INSTRUMENTS` entry in `hypso.io.naming` gives file names, and each instrument
+gets its own Satpy readers matching its token literally, as the HSI readers match `_HSI`; `hypso.rgb.HSI2RGB`
+gives the comparison image).
+
+Done since the rewrite (×41-×63): plan and TODO cleanup (×64), regridding with cell averaging (×58, ×59), pixel
+windows (×60), demo (×61), docs site (×62), instrument field in names (×63), L2A outputs (×57), TOA cleanup
+(×55), small cleanups (×56), V3 coefficients (×48, ×52), Product API (×50), capture objects removed (×49-×52),
+TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
+
+## Status log (most recent at top)
+
+- **2026-11-25 (×108): merge of origin/main for the pull request**. main had two commits the refactor lacked
+  (2026-05-20): "Bump version to 26.5.1" (static versions in the pyproject.toml files; MANIFEST.in excludes
+  for the two old smile files at data/ root) and "Rename npz_file_smile for spectral calibration" (HYPSO-2's
+  default "moved" smile -> h2_spectral_calibration_matrix_smoothed.npz). Resolved to the refactor's side: versions
+  come from git tags (setuptools_scm), the smile files moved to data/smile and data/reference, and **V2 keeps
+  smile_correction_matrix_HYPSO-2_full_v2.npz** (user decision 2026-11-25: "it should stay as-is"; the smoothed
+  matrix stays in reference/). The default release V3.1 uses its own V3 smile, so default output is unaffected.
+
+- **2026-11-25 (×107): overviews coloured by satellite; region groups**. `plot_overview(color_by=...)`: "capture"
+  (one colour and legend entry each), "satellite" (HYPSO-1 orange, HYPSO-2 blue, counts in the legend, thinner
+  lines) or "auto" (capture up to 8 footprints). make_maps `--group NAME=PREFIX[,PREFIX...]` (e.g.
+  `norway=trondheim,frohavet,...`); a group spanning more than 30 degrees gets its shapefile but no map (one UTM
+  map of several continents). test_maps: 9 passed.
+
+- **2026-11-09 (×106): footprints, shapefiles, RGB images and maps** (TODO 4u). New `hypso.maps`:
+  `footprint()` (swath outline from the product's own lat/lon, a vertex every 10 pixels; `mask=` or `"data"` for
+  the outline of selected pixels, by 8 x 8 blocks; 0-360 longitudes across the antimeridian),
+  `footprint_attributes()` and `write_footprints()` (ESRI Shapefile via pyshp with .prj/.cpg, or GeoJSON; one
+  feature per product; fields capture, satellite, target, start_utc, level, product, georef (from the
+  georeference provenance step), calib, ac_method, lines, samples, area_km2, centre, source), `rgb_image()`/
+  `save_rgb()` (sensor geometry; L1: per-channel 2-98 stretch, gamma 2.2; L2A: one linear gain to the 99.5th
+  percentile, true colour (user: the first version, one gain + gamma 2.2, gave flat cyan Rrs RGBs); the servers'
+  quicklook orientation by default, `bin_samples=3` like their `-bin3`), `plot_map()` (RGB, a cube band or a 2D variable,
+  regridded after reducing the product to what is plotted; log scale for concentrations/IOPs; land grey and sea and
+  lakes light blue from Natural Earth (user request); footprint, coastlines and lake shores (Natural Earth's
+  coastline layer has no lakes: Erie had none), graticule, scale bar, north arrow, colour bar with the schema's
+  units) and `plot_overview()` (outlines, legend beside the map; make_maps `--group korea=koreanCalVal`).
+  `Product.footprint()`/`write_footprint()`. The map elements of `hypso.rgb.plot_rgb_map` moved to a shared
+  `hypso.rgb.decorate_map` (with an `ink` colour for light backgrounds); `plot_rgb_map` unchanged.
+  `demo/make_maps.py` does it all for processed capture folders (+ overview per target). docs/maps.rst.
+  Bug fixed on the way: `hypso.open(<MACHI L2A>, wavelengths=...)` raised KeyError 'bands' (read_product renames
+  full-band metadata to `bands_full` before `select_bands`, which looked for `bands` in `metadata/machi`).
+  tests/test_maps.py (9 tests incl. the MACHI regression on a real file); test_maps, camera_registration,
+  rgb_exposure, public_api, machi: 51 passed. First use: 13 captures in ~/HYPSO_DATA_REFACTOR.
+
+- **2026-11-08 (×105): `*_direct` long names say "(Direct)"**. The seven direct-georeferencing variables
+  (`latitude_direct`, ..., `relative_azimuth_direct`, from the ADCS telemetry) were labelled "(Indirect)", a
+  copy-paste slip in production's `geometry_group_writer.py` carried over in ×41; the comment claiming readers
+  key off it was wrong (no use in this package, the pipeline or OC-SMART; all read by variable name). Rewriting an
+  older file fixes the label. `test_cf_format::test_direct_georeferencing_attributes` writes an L1C with
+  `direct=True` (the shared fixture uses `direct=False`, so no other test saw these variables) and checks the
+  labels and that the data lie inside the valid ranges. Related tests 58 + 2 passed; full suite not rerun
+  (attribute text only, agreed with the user).
+
+- **2026-11-08 (×104): azimuth valid ranges** (TODO 4s). Solar and sensor azimuths (and their `_direct`
+  versions) declared `valid_min=-180, valid_max=180`, but `compute_local_angles` gives astropy AltAz azimuths,
+  0-360 (Venice 2025-03-04: sensor azimuth 286-288), so readers that apply the range (netCDF4 auto-masking,
+  Panoply, SNAP) hid them. Now 0-360; relative azimuth (folded in `_angles`) 0-180.
+  `cf.azimuth_angle_attrs(..., valid_max=360)`. Values unchanged, so no reprocessing: rewriting an older file
+  (`hypso.open(...).write()`, `convert_product`) refreshes the attributes. `test_cf_format` now also checks the
+  written data lie inside every declared range. Not changed: the `*_direct` geometry's long names say
+  "(Indirect)" (a comment in `io/product.py` keeps it "for readers that key off it"; misleading, ask the user).
+  Production files carry the old range too.
+
+- **2026-11-06 (×103): standalone L2 reader** `demo/hypso_l2_reader.py` (user: for a co-worker, no hypso
+  dependency; numpy, xarray, netCDF4 only). `open_l2(capture_dir, method=None, aux=False, lazy=False)` -> one
+  Dataset of a method's L2A.RRS/RHOS, L2B.BGC, L2B.IOP (and AUX): geometry and flags once (assigned, not
+  `xr.merge`d, which copies), per-band variables (`<q>_<nm>` with a `wavelength` attribute, 2+ bands) stacked:
+  reflectance on `wavelength` (+ `fwhm`), IOPs on `wavelength_iop`, aod on `wavelength_aod`, AUX on
+  `wavelength_aux`. Opened with `cache=False` (else every band is held twice). `flag_mask(ds, *names)` from
+  the CF flag attributes. CLI lists contents, `--merge out.nc` writes one file (eager, 64x128 x spectrum
+  chunks: 35 s for Venice OC-SMART vs 10 min lazily). Older L2B.CHL/TSM/KD/AOT files read too. Venice
+  OC-SMART: 1.55 GB in memory, ~3 GB peak RSS. `tests/test_l2_reader.py` (6) runs it on files the package
+  writes and checks it imports nothing from hypso.
+
+- **2026-11-06 (×102): L2 files grouped as PACE OCI's suites** (user: six L2 files per OC-SMART run is too
+  many; a co-worker asked for one file with Rrs, IOPs and concentrations, the user chose PACE style + AUX).
+  Before: L2A.RRS, L2A.AUX, L2B.CHL, L2B.TSM, L2B.IOP, L2B.AOT, each repeating geometry, flags and metadata
+  (Venice: L2B.CHL 9.6 MB, L2B.TSM 9.3 MB for one or two variables). Now four:
+  - L2A.RRS: Rrs and OC-SMART's `aod_<nm>` (AOD stays in the L2A, like `aot` in PACE's OC_AOP);
+  - L2B.BGC (OC_BGC): chlorophyll-a and suspended matter (`chlor_a_*`, `tsm_yoc`, Polymer `chla`/`SPM`,
+    ACOLITE `chl_*`/`ndci`/`SPM_*`/`TUR_*`);
+  - L2B.IOP (OC_IOP): `aph`, `adg`, `apg`, `bbp`, `bp`, QAA `a`/`bbp`, and Kd (`kd*`; QAA's `Kd_<nm>` now in
+    the same file as its a and bbp);
+  - L2A.AUX unchanged.
+  - `naming.L2B_GROUPS` = {BGC, IOP}; `LEGACY_L2B_GROUPS` (CHL, TSM, KD, AOT) still parse and round-trip,
+    `make_l2b` refuses them. `derive("BGC")` (oci default; oc4, ci, ndci, nechad2010), `derive("IOP")` (qaa);
+    `derive("CHL"/"TSM"/"KD")` are gone. Docs, demo and tests updated; related tests 51 passed.
+
+- **2026-11-05 (×101): spatial subsampling** (user's co-worker: HYPSO-2 captures with readout skipping every
+  2nd row along the slit, 1092 -> 546 samples, maybe from next week; the factor is
+  `metadata/capture_config/spatial_subsampling`, so far always 1). Before: `capture_params` read `sample_div`
+  (the older name; 1 in all 400 2026 L1A files checked, none has `spatial_subsampling` yet) into
+  `image_height` only; coefficients, keystone and direct georeferencing assumed one sample per detector row.
+  - `capture.spatial_subsampling(attrs, samples)` -> `(sample_div, detector_rows)`: `spatial_subsampling`,
+    else `sample_div`, checked against the cube's `samples` size; `row_count` may count the AOI's detector
+    rows or the rows read out; a missing factor with a cube that is an exact fraction of `row_count` is inferred
+    with a warning; other mismatches raise. `CaptureParams.detector_rows` = `y_start + i * sample_div`.
+    Capture type classified on the AOI's detector rows (a subsampled wide capture stays wide).
+  - `read_coeffs_from_file(..., row_step)`: radiometric/smile/destriping matrices keep rows
+    `[y_start:y_stop:row_step]`; an `as_is` matrix for the full AOI is thinned the same way (V3.1 abs wide).
+    `correct_keystone`/`keystone_positions(row_step)`, `direct_georeference(row_step)`: detector rows for the
+    model and the viewing angles. `l1a_to_l1b` writes the factor used into the product's capture_config.
+  - Tests (`test_spatial_subsampling.py`, 11): unit cases; on the reference capture thinned to 546 samples,
+    L1B Lt equals the full L1B's every 2nd sample exactly (V3.1 abs as_is wide and V2 moved crop paths);
+    direct georeferencing within 1e-4 deg of the full one, ignoring the subsampling is >100x worse.
+    Open checks on the first real capture: TODO 4t.
+- **2026-11-05 (×100): OC-SMART IOPs, AOD and TSM as L2B files** (user: "keep Lt but implement the IOP and
+  TSM, and other L2b files"; user chose one AUX file per method, geophysical products to L2B).
+  - Default `l2_prod` is now `OCSMART_L2_PROD` = `Lt,Lr,Lrc,rrs,chl,tsm,aod,aph,adg,bbp,at,bt,tg_sol,tg_sen,Lwp`.
+    `aph`/`adg`/`bbp` keep their names; `at` -> `apg_<nm>` (particulate + CDOM absorption, water excluded, per
+    the OC-SMART user guide 3.6.1), `bt` -> `bp_<nm>` (particulate scattering), `AOD` -> `aod_<nm>`; units m-1
+    / 1; `source_variable` keeps OC-SMART's name. Routed by `_TOOL_PRODUCT_GROUPS` to `L2B.IOP` and the new
+    group `L2B.AOT`; `tsm(yoc)` -> `tsm_yoc` -> `L2B.TSM`. The rest stays in L2A.AUX.
+  - OC-SMART's `Lwp` is its whitecap radiance (`l1b_wcaps`), not water-leaving radiance: label and units
+    (sr-1) corrected; `Lrc` long name gives its formula `Lt/(tg_sol tg_sen) - whitecaps - Lr`.
+  - Tests: `test_ocsmart_iop_aod_tsm_go_to_l2b` (Venice output with synthetic IOP groups, end to end to
+    files), `test_iop_and_aot_names_route_to_l2b`.
+  - Real fork on Erie (masked): L2B.AOT 31 MB, CHL 12, IOP 103, TSM 12; Rrs unchanged. Medians at 441/560 nm:
+    aph 0.22/0.051, adg 0.51/0.11, bbp 0.42/0.19, apg 2.1/2.2 (664: 3.3), bp 21/10 m-1; aod 0.55/0.37;
+    tsm 2.8 g m-3; chl 2.3 mg m-3. **Not validated and partly inconsistent**: `apg` is ~3x aph+adg and rises
+    into the red, and bbp 0.4 m-1 is far above what TSM 2.8 g m-3 implies (bbp/TSM ~0.15 vs ~0.01-0.02
+    m2 g-1). Treat the HYPSO-2 IOP networks' output as unverified until checked against in situ.
+  - Commit ae98b018 (×99) went out with only the test summary as its message: commit_after_tests.sh read a
+    relative message path after cd'ing into the repo. Fixed (realpath, and it refuses a missing/empty file).
+
+- **2026-11-05 (×99): OC-SMART water mask from `pixel_flags` in the fork's HYPSO reader; demo script options;
+  Erie** (user: the fork must not get a generic option, "it is a generic processor for multiple sensors").
+  - Fork: reverted 4d3fdc3 (`hypso_water_mask` setting). The HYPSO reader (`L1B.readl1b`) now sets
+    `l1b.landmask` from the input's `pixel_flags`: with a `land` flag, water = no flag set (lakes are water);
+    otherwise `globe.is_ocean` plus flagged pixels. `OCSMART.py`'s HYPSO branch only does
+    `mask_water = l1b.landmask == 0` (as SGLI/OLCI/OLI do with their readers' masks).
+  - Refactor: `_ocsmart_flags` stages only the applied flags (masked; `mask_flags` subset re-encoded) or no
+    `pixel_flags` (unmasked, OC-SMART's own ocean mask as in production); the setting is no longer written.
+    Test `test_ocsmart_input_carries_only_the_applied_flags`; fake OC-SMART checks the staged flags.
+  - Verified: real fork on Erie (masked) bit-identical to the ×98-mechanism run (120 Rrs bands, NaN pattern,
+    `ocsmart_l2_flags`, `pixel_flags`); OC-SMART tests 7 passed.
+  - Why production OC-SMART fails on Erie: it runs unmasked, its HYPSO mask is `global_land_mask.globe.is_ocean`
+    (GLOBE elevation; every lake is land), 0% of the scene is ocean, so no pixel survives and it dies on
+    `assert(l1_data.cos_solar_zenith.size != 0)`. (`landmask_GMT15ARC*` is for other sensors; it would call
+    Erie water.) Erie has no indirect georeferencing on the server (only `latitudes.dat`/`longitudes.dat`).
+  - `demo/process_capture.py`: several captures (positional) or `--list FILE` (one per line, `#` comments;
+    a failed capture is logged, the rest run, exit 1 if any failed); `--l1d-only`; `--unmasked`; SIGUSR1
+    dumps all thread stacks (faulthandler). The user's first Erie run hung writing the AUX file (all threads
+    on futexes, 0 CPU, AUX at 35.7 of 50.2 MB); a rerun of the same code and inputs finished in 7 min.
+    Not reproduced; cause unknown (HDF5 deadlock or this machine's memory errors).
+  - Launcher `~/hypso-package-refactor/process_capture.sh` (sets PYTHONPATH, `ac` env, `ac_tools.yaml` next
+    to it); `demo/ac_tools.yaml` left uncommitted (user paths). New TODO 4s (azimuth valid ranges).
+
+- **2026-11-04 (×98): every AC tool output is written; `L2A.AUX` file; Mjøsa against production OC-SMART** (user
+  request: "make sure all the products are saved"; user chose a separate file over putting them in the L2A).
+  Found: the OC-SMART loader read a fixed list (no Lwp, tg_sol, tg_sen; the harmless `tsm(yoc)` warning) and the
+  L2A kept only Rrs and the 2D products, so Lt, Lr, Lrc, Lwp, tg_sol, tg_sen (6 x 83 bands) survived only in the
+  raw .h5 in work_dir (deleted when work_dir is temporary); production's pipeline appends them to its L2A.
+  Now: `load_ocsmart_h5` reads every root variable and group (float32); `_ocsmart` puts every per-band group
+  but Rrs into the L2A's `ac_intermediates` child node as 2D variables `<group>_<nm>` (attrs wavelength,
+  source_variable, units: Lt/Lr/Lrc sr-1 = radiance / F0, since OC-SMART's HYPSO input is rhot cos(sza)/pi
+  and its Lt equals that (checked on Mjøsa, ratio 1.0000 at 441/560/664 nm); tg_* 1; Lwp no units, all zero
+  for HYPSO here). `Product.write` writes them as `...L2A.AUX.<method>.nc` (naming token AUX_QUANTITY;
+  `is_cubeless`: L2B and L2A.AUX have no cube; 2D float variables 14-bit like L2B), `write(intermediates=False)`
+  skips it, `Product.intermediates()` returns it, `processing.l2b.split_intermediates` builds it. The node never
+  reaches the L2A or L2B files (write_product skips it; make_l2b drops it - it was copied into the L2B trees);
+  regrid drops it with an info message. Reader: a cube-less file keeps all its 2D variables. Satpy: the
+  hypso_l2a reader lists an AUX file's variables like hypso_l2b. Mjøsa: AUX 42 MB, L2A 25 MB, L2B 10 MB;
+  peak memory 4.2 GB for correct_atmosphere + write. Tests: test_intermediates.py (synthetic intermediates:
+  files, no leak into L2A/L2B, round trip at 14 bits, intermediates=False, regrid, Satpy);
+  test_ocsmart_every_output_is_written (Venice's real OC-SMART output through a fake installation: every root
+  variable and every band of every group is in one of the three files). Polymer and ACOLITE have no
+  intermediates (ACOLITE L2R's rhot is its copy of the input; Polymer writes only rho_w and 2D products,
+  which already stay in the L2A or go to L2B).
+  Mjøsa vs production OC-SMART (user allowed running it; ~/AC/OC-SMART/OC-SMART d37f9f0, env ocsmart, through
+  hypso-processing-pipeline's own `run_ocsmart_correction`, on production hypso-package's v31v2spec L1D, outputs
+  in the scratchpad; OCSMART_Input.txt restored under the lock): production returns 87828 pixels, all ocean
+  (the strip spans 58.3-63.1 N: Oslofjord/Skagerrak), none on Mjøsa. The fork with its default ocean mask on the
+  refactor's L1D file: 87826 pixels, max |dRrs| 2.7e-5 sr-1 (the L1D file's 14-bit rounding through OC-SMART).
+  process_capture.py (masked input, in-memory L1D) vs production on their 81216 common pixels: max |dRrs|
+  9.4e-7 sr-1, 99th pct 2.7e-5 relative; chlor_a_oci max rel 5.7e-5, chlor_a_yoc 3.7e-3; L2_flags equal.
+  Correction: an earlier claim (this session) that production would return nothing for the capture was wrong;
+  it returns nothing on the lake.
+- **2026-11-04 (×97): lakes with OC-SMART; `demo/process_capture.py`** (TODO 4p). The fork's HYPSO water mask
+  was global_land_mask's ocean mask, so lakes are land (checked: every Mjøsa point `is_ocean` False; OC-SMART's
+  GMT mask is 30" with a 0.95 water fraction, too coarse for a lake). Fork 4d3fdc3: OCSMART_Input.txt option
+  `hypso_water_mask` = `ocean` (default, unchanged) | `input` (pixels with valid input reflectance are water).
+  The refactor writes `input` when the AC input is masked and the installation is the fork (v2.6.3 unchanged);
+  recorded in settings_effective; fake-installation test covers it (fork-masked). New `demo/process_capture.py`:
+  capture URL on the data server or a local folder -> download L1A, meta and processing-temp's indirect
+  georeferencing and sea/land/cloud labels -> calibrate (default V3.1v2spec, abs) -> indirect georeferencing ->
+  L1D -> masks (land, cloud from the labels; saturated = a band >= 95% of bin_factor x 4095 counts) -> AC on
+  the unmasked pixels -> L1D, L2A, L2B files. Mjøsa 2025-05-28 (HYPSO-2): saturated 277359, cloud 349561, land
+  219459 pixels, 83992 (12.9%) to OC-SMART, Rrs for 83937 of them, median Rrs 0.0039/0.0063/0.0076/0.0012 at
+  442/491/560/664 nm (98% of those pixels are the Oslofjord/Skagerrak part of the strip, 58.3-59.9 N; the
+  1298 lake pixels: 0.0019/0.0028/0.0029/0.0010; corrected in ×98).
+  Against production hypso-package (polymer_v3 af82d75c, read only, run on a copy of the inputs with the
+  pipeline's stage-2 calls, coeff_type v31v2spec): same 120 band names, identical geometry, rhot within
+  3e-5 relative (the 14-bit write), no bias. Production OC-SMART not run (user rule; its ocean mask would
+  give no lake pixels). Follow-up: saturation flagging belongs in the package (today only the script does it;
+  `calibration.make_overexposed_mask` is unused).
+- **2026-11-04 (×96): real OC-SMART through the refactor, verified** (TODO 4p). The fork's `hypso-refactor`
+  branch in env `ocsmart-refactor`, run by `correct_atmosphere("ocsmart")` on Venice 2025-03-04 (about 280 s
+  per run). A: V2 moved with legacy SRF modelling (the reprocess's L1D) matches the production OC-SMART L2A
+  to 1.5e-7 sr-1 on every band and pixel (in memory; 1e-6 after 14-bit write), the same 83 bands and 132738
+  valid pixels: the fork's reader, the HYPSO2_HSI renaming and the refactor's staging/loading are right.
+  B: V3.1v2spec: Rrs 15-23% below A over the scene (median per band; V3.1 TOA about 14% below V2 moved,
+  amplified by the AC). At AAOT (3x3, the pipeline's matchup box) against AERONET-OC (F0-fixed matchup
+  table): A/AOC 0.85, 0.88, 0.92, 1.08, 1.69, 1.60 and B/AOC 1.10, 0.89, 0.90, 0.96, 1.42, 1.29 at 443, 490,
+  510, 560, 620, 667 nm (one matchup). Provenance: an installation without a version in its folder name
+  records `ac_version` `git:<branch>` and `ac_git_commit` (was "unknown" and empty). OC-SMART's `tsm(yoc)`
+  is absent in the fork's and production's output alike (not in `l2_prod`); the loader's warning is harmless.
+- **2026-11-04 (×95): OC-SMART input prefix follows the installation** (TODO 4p). Tagged v26.10.0a7 on ×94
+  (8c1fcd08). The OC-SMART fork's `hypso-refactor` branch now has one sensor per satellite (HYPSO1_HSI,
+  HYPSO2_HSI) instead of HYPSO_HSI. `_ocsmart_prefix` stages the L1D as `HYPSO<n>_HSI_<capture_id>-l1d.nc`
+  when the installation ships `auxdata/sensorinfo/HYPSO<n>_HSI.txt`, else as `HYPSO_HSI_...` (v2.6.3).
+  `test_ocsmart_with_fake_installation` covers both. The fork's patched reader was checked directly on a
+  refactor L1D (Venice, regridded): geometry and the capture time read, 83 of 83 OC-SMART bands found.
+- **2026-11-04 (×94): V1 = the complete HYPSO-2 lab calibration; V1v2spec** (TODO 4m/4k). As production
+  `polymer_v1` (413f770b, 86a29f7e, ad8866c7, 2b560445; read only) and the user's lab delivery
+  (`~/AC/lab_coeffs_h2/`): smile V1 = `smile/smile_correction_matrix_HYPSO-2_full_lab.npz` (the lab delivery,
+  sha 46e9aedd, = polymer_v1's fix of the row-reversed production file); spectral V1 =
+  `spectral/h2_spectral_array_lab_smile_row608.npz`, verified equal to row 608 of that smile (the centre row
+  smile correction resamples onto for the AOC window, aoi_y 62, 1092 rows; user decision 2026-10-28);
+  release V1 = lab gains + lab smile + row 608 (also full frame) + the sensor-profile FWHM table (user
+  decision); new release V1v2spec (V2 spectral, for OC-SMART; alias `v1v2spec`). The old V1 centre-row
+  wavelengths moved to `reference/`. Venice 2025-03-04: V1 and V1v2spec give identical radiance; V1 band
+  centres +1.11..+1.24 nm vs V2 (median 1.14), renaming all 120 bands. Corrected an earlier claim: the
+  package's `h2_spectral_calibration_coefficients.npz` has the same values as the lab delivery (key
+  `arr_0` vs `data`). HYPSO-1 V1 unchanged (already its lab set). Tests: release table, V1 spectral = lab
+  smile row 608, checksums. docs/calibration.rst. Changes V1 outputs (before: V2 smile, centre-row
+  wavelengths).
+- **2026-11-04 (×93): calibration data, docs and code organised** (user: "Data files, docs, and code"; keep
+  every file). `data/` in both calibration packages now has one folder per correction (`radiometric/`,
+  `smile/`, `destriping/` HYPSO-1, `spectral/`, `fwhm/`, `optional/`) and `reference/` for the 13 files no
+  release uses (HYPSO-2: the row-reversed lab smile, lab-era spectral matrices and coefficients, EQM and
+  pre-launch FM spectral coefficients, the moon and 2025 nominal/wide matrices, a band table; HYPSO-1:
+  pre-binned V1 nominal/wide gains, a band table); folders follow the catalog's own references (script, no
+  hand sorting). Catalog paths are relative to `data/`; a `reference_files` section describes each
+  reference file; header notes the layout; HYPSO-1's `spectral_calibration_matrix_HYPSO-1_full_v1.npz` noted
+  as the full-frame V1 smile. File names, contents and sha256 unchanged (provenance comparable). Test:
+  every data file is selected or a reference file, every catalog path exists. Code: `read_coeffs_from_file`
+  - the three copies of the 2D crop/check logic folded into `_matrix_for_capture` (same behaviour), stale
+  comments replaced (HYPSO-2 has smile since V2; CSV is for registered custom coefficients), unused imports
+  removed; calibration summary gains an `fwhm` line and no longer names the removed
+  `hypso.calibration.pipeline`; `l1a_to_l1b` and `Product.calibrate` docstrings, docs (architecture,
+  quickstart, calibration summary example), README and demo updated from the V3/HYPSO-1-moved defaults to
+  V3.1. docs/calibration.rst: "What the packages contain" (folders, destriping, optional keystone,
+  reference files). `commit_after_tests.sh` (outside the repo): skips paths already staged as deleted.
+- **2026-11-04 (×92): V3.1 calibration, V3.1v2spec, SRF modelling; V3 superseded** (user; TODO 4l, part of 4m).
+  From production `polymer_v3` (c390ca27, 11756523, af82d75c; read only): HYPSO-2 V3.1 abs full/wide gains
+  (x0.963 / x0.971 of V3 abs) and `h2_srf_fwhm_v31.npz`; HYPSO-1 V3.1 full/wide gains (x0.972 of aria's V3),
+  `h1_srf_fwhm_v31.npz`, aria's full-frame V3 sobel smile and V3 spectral. All byte-identical to production
+  (sha256 checked). Catalogs: releases `V3.1` (default, both satellites; smile V3, spectral V3, FWHM V3.1;
+  HYPSO-1 destriping V1, spectral_full_frame V2 as production) and `V3.1v2spec` (V2 spectral, for OC-SMART);
+  HYPSO-1 default variant now `abs` (V3.1 has only abs), was moved/V2; wide gains used as is; HYPSO-1's V3.1
+  smile is the full-frame matrix cropped per capture (`crop: crop_and_bin`). `release_aliases`: `V3` -> V3.1
+  with a DeprecationWarning (user decision), production names `v31`, `v31v2spec`. V3 abs files removed (V3
+  moved, smile, spectral carry on in V3.1). Catalog code (both packages): optional `fwhm` component,
+  release aliases, a variant without a version falls back to the newest release that has it (HYPSO-1
+  `moved` -> V2, `lab` -> V1), the band-name warning only for custom selections. SRF modelling (production
+  11756523, from aria 368d16d9), for every release: band FWHM interpolated between the table's lines
+  (`processing.capture.interpolate_fwhm`, `np.interp`, constant outside; was nearest line), the release's
+  FWHM table kept in `metadata/corrections` (`fwhm_table_wavelength`/`_fwhm`, read by `capture_params`) so
+  L1B FWHM, TOA reflectance and SRFs agree; Gaussian SRFs over +/-4 sigma (`srf.response.SRF_N_SIGMA`, was 3).
+  Provenance: `fwhm_version`, `fwhm_file`/sha256. Effect on Kemigawa 2025-12-28 L1D (V2 moved): FWHM
+  interpolation -0.45..+0.80% per band, 4 sigma +-0.05%; with the old modelling the refactor still equals
+  production's L1D to 1e-6 (so nothing else changed). Tests: `conftest.legacy_srf_modelling()` keeps the
+  baseline and production-parity comparisons exact; new test that the modelling moves L1D < 1% per band;
+  V3.1/V3.1v2spec/alias/fallback/FWHM-table tests. docs/calibration.rst (release tables, FWHM and SRFs),
+  coefficient_history.rst. Not done: production's HYPSO-2 `moved` uses V2 spectral and no FWHM table; here
+  `moved` under V3.1 gets V3 spectral and the V3.1 table (use V3.1v2spec or a custom selection for the
+  former).
+- **2026-11-04 (×91): RGB exposure adjustment** (user). `hypso.rgb.adjust_exposure(image, ev=None, percentile=99,
+  target=0.9, gamma=None, full_scale=255, normalize=False, black_point=None, black_percentile=1)`: one gain for
+  all channels (colours kept, unlike `plot_rgb_map`'s per-channel stretch), in stops or automatic (99th
+  percentile of Rec. 709 luminance -> 90% of full scale), optional black point (`"channel"`, `"common"`,
+  values) and display gamma; numpy, DataArray or camera Dataset; attrs `exposure_gain`/`_ev`/`_gamma`/`_black`.
+  `exposure_gain`, `black_level`; `plot_rgb_map(..., exposure={...})`. Galata 2025-01-02 (dark): auto +2.4
+  EV; plain gain looks washed out (dark offset and haze amplified), per-channel black point + auto looks
+  natural. Venice 2025-06-12: blue nearly saturated (1st percentile 239/255), so per-channel black points
+  turn it yellow; use "common" or none there. docs/camera.rst, tests/test_rgb_exposure.py.
+- **2026-10-28 (×90): QAA IOPs and Kd** (TODO 4i step 4). `l2b_algorithms.qaa`: Lee's QAA ported from ACOLITE
+  (`acolite/parameters/qaa/qaa_compute.py` incl. its 2025-04-29 Rrs fix; "standard" coefficients from
+  `data/Shared/algorithms/QAA/qaa_settings.txt`; read only, ACOLITE not run): v6 (reference 665/670 nm), v5
+  (560/555 nm) where Rrs665 < 0.0015, at 443/490/560/665 nm. `derive("IOP")` -> `L2B.IOP.qaa` (`a_<nm>`,
+  `bbp_<nm>`, m-1); `derive("KD")` -> `L2B.KD.qaa` (`Kd_<nm>` from a and bbp with Lee et al. 2005's model for a
+  30 degree sun, as ACOLITE). This also covers Kd(490), which step 3 left out. Tests: v6 a665/bbp665 and Kd490
+  by hand. Venice 2025-03-04 AAOT 5x5 median, OC-SMART Rrs: a443 0.090, a490 0.054, bbp443 0.0058, Kd490
+  0.069 m-1; Polymer Rrs: a665 -0.66, Kd665 -0.75 (negative Rrs665). Open: a validity flag for negative input
+  Rrs (TSM, QAA), aph/adg split (QAA steps 7-10).
+- **2026-10-28 (×89): the package's own L2B algorithms** (TODO 4i step 3). `hypso.processing.l2b_algorithms`
+  (coefficients from ACOLITE's tables `data/Shared/algorithms`, read-only, with references): CHL `oci`
+  (default; NASA chlor_a: Hu CI a0 -0.4287, a1 230.47 below 0.25 mg m-3, OC4 above 0.35, linear blend),
+  `oc4` (O'Reilly and Werdell 2019 OLCI: 0.42540, -3.21679, 2.86907, -0.62628, -1.09333; 443/490/510 vs
+  560), `ci`, `ndci` (Mishra and Mishra 2012: 14.039, 86.115, 194.325; 670/705; also from rhos; turbid
+  waters only, no mask); TSM `nechad2010` (A 355.85, C 0.1728 at 665 nm, NaN where pi Rrs >= 0.5 C).
+  Rrs interpolated between the nearest bands. `hypso.processing.derive(tree, group, algorithm)`,
+  `Product.derive("CHL")` -> `L2B.CHL.oci`. Venice 2025-03-04 (reprocessed L2A files, read only), AAOT 5x5
+  median chlor_a: OC-SMART 0.64, Polymer 0.56, ACOLITE L2W 0.18 mg m-3; Polymer TSM -0.46 g m-3 (negative
+  Rrs665 there; ACOLITE does not mask negatives either - candidate validity flag). Not done: Kd(490) (no
+  verified coefficient source found locally; not written from memory), QAA (step 4). docs/products.rst.
+- **2026-10-28 (×88): AC tools' products moved to L2B** (TODO 4i step 2, user chose move over copy).
+  `hypso.processing.split_tool_products(l2a_tree)` -> `(l2a_without, {group: l2b_tree})`, groups by variable
+  name (`tool_product_group`: CHL `chla|chl_*|chlor_a*|ndci`, TSM `spm*|tsm*|tur_*|t_dogliotti*|t_nechad*`,
+  KD `kd*`); the correction's diagnostics (Polymer `logfb`, `Rgli`, `Rnir`) stay in L2A; the tool's
+  `*_flags` stay in L2A and are copied into each L2B; L2B source = the tool (`L2B.CHL.polymer`).
+  `Product.tool_products()`; `Product.write()` for L2A writes the L2A without them plus their L2B files in
+  the same directory (`tool_products=False` drops them with a warning). In memory, a fresh L2A still
+  carries them in `variables` (so `tool_products()` works before writing); L2A files written before ×88
+  still hold them and split the same way. Pipeline impact (TODO 6b): it reads chlorophyll from L2B files now.
+  Docs (atmospheric_correction, products), demo comment, tests.
+- **2026-10-28 (×87): L2B infrastructure** (TODO 4i step 1). Level L2B: geophysical products derived from an
+  L2A, one group per file, no band cube (every product a 2D variable). Naming `...L2B.<GROUP>.<source>
+  [.grid][.label].nc` with `L2B_GROUPS` CHL, IOP, TSM, KD (same two fields as L2A's quantity and method).
+  `hypso.processing.make_l2b(l2a_tree, group, source, variables, parameters)` keeps geometry, flags, grid and
+  metadata, records an `l2b_<group>_<source>` step, attrs `l2b_group`/`l2b_source`. Cube-less products
+  through `io.product` (`CUBELESS_LEVELS`, `has_cube`; read, write with float variables quantized like
+  bands), `Product` (`shape`, `variables`, `filename`, repr; `cube` raises), `regrid`, `window` (stats per
+  variable over a `products` dim), `resample`, `to_satpy`, Satpy reader `hypso_l2b`
+  (`HypsoL2BFileHandler`, every 2D float variable). tests/test_l2b.py (synthetic band-ratio products), naming
+  tests, docs/products.rst. Next: step 2, the AC tools' own products moved into L2B.
+- **2026-10-28 (×86): L2A quantity in the file name** (user). L2A names carry the quantity before the
+  method: `...L2A.RRS.<method>[.grid][.label].nc` (remote-sensing reflectance `Rrs`, sr-1) or
+  `...L2A.RHOS.<method>...` (surface reflectance `rhos`); plain tokens named after the variable chosen over
+  NASA's suite names (AOP/SFREFL). `hypso.io.naming`: `QUANTITIES` (RRS, RHOS; RHOW only names older POLYMER
+  files holding `rho_w`), `ProductName.quantity`, `quantity_token`, `name_method` (ACOLITE's
+  `acolite_l2w`/`_l2r` become `acolite`; the quantity tells them apart; the `atmospheric_correction`
+  attribute keeps the full name). Names from before the field (`L2A.<method>`) still parse (quantity None).
+  New global attribute `l2a_quantity`. **POLYMER** output divided by pi and stored as `Rrs` (provenance
+  `converted = "Rrs = rho_w / pi"`). **DPS** now stores the dark-subtracted reflectance as `rhos` without
+  the pi division (reverses the 2026-10-26 decision: only the path signal is removed, so it is a surface
+  reflectance). L2A Satpy reader matches both name forms. Docs (products, atmospheric_correction,
+  architecture), demo, tests.
+- **2026-10-27 (×85): RGB camera products** (TODO 4e done). `hypso.rgb.product`: `camera_product(camera,
+  registration=None, hsi=None)` -> Dataset (not a hypso.Product: no wavelengths/levels/SRFs) with R/G/B uint8
+  (rounded demosaic) in the native frame, per-pixel float32 latitude/longitude and `in_hsi_swath` when
+  registered, a failed registration recorded with its reason; instrument `RGB`, level `L1A` (uncalibrated
+  counts), target from the HSI product or the BMP name. `camera_filename` (`HYPSO2_RGB.<time>.<target>.L1A
+  [.grid][.label].nc`, the camera's own time), `write_camera` (zlib 4), `open_camera`. Satpy: reader
+  `hypso_rgb_l1a` (`HypsoRGBFileHandler`, `_RGB` names only, swath or map grid), composite
+  etc/composites/hypso2_rgb.yaml `true_color` from R, G, B. Ariake 2025-04-04: 22.5 MB, Satpy true_color on
+  the swath (SwathDefinition) and on a 100 m regrid (AreaDefinition). Demo cell (skips when a capture has no
+  camera image; the Venice demo capture has none), docs/camera.rst, tests/test_camera_product.py
+  (synthetic). The hypso_handler module docstring updated (it still said L2A was not covered).
+- **2026-10-27 (×84): RGB camera registration and maps** (user; never run automatically on reading).
+  `hypso.rgb.registration`: `register_camera(camera, hsi)` (HSI 640/550/460 nm regridded to UTM 150 m; SIFT,
+  ratio 0.8, cross-check; RANSAC homography camera px -> map; seeded) returns a `CameraRegistration` (homography
+  to UTM metres, inliers, RMS m, inlier convex-hull coverage, ok/reason; quality check: >= 30 inliers,
+  coverage >= 25%, RMS <= 500 m); `georeference_camera` -> Dataset R/G/B + per-pixel latitude/longitude +
+  `in_hsi_swath` + registration attributes; `hsi_to_camera_pixels` (inverse homography) and
+  `camera_to_hsi_pixels` (kd-tree). `hypso.rgb.maps`: `regrid_camera` (any grid, e.g. the HSI's; "auto" averages
+  only when cells >= 2x the ~32 m camera pixel - averaging onto pixel-size cells left empty cells) and
+  `plot_rgb_map` (gridded camera or regridded Product; graticule, scale bar, north arrow true north, coastlines
+  via cartopy if present, outlined labels). Ariake 2025-04-04: ok, 344/435 inliers, 194 m, coverage 75%,
+  register 26 s, georeference 13 s; Natural Earth coastlines line up on camera and HSI maps. docs/camera.rst.
+  Still to do for TODO 4e: a camera Product (RGB names, levels), Satpy reader and composite, demo (done ×85).
+- **2026-10-27 (×82): internal docstrings** (TODO 1). The `:param x:` / `:return:` docstrings in
+  hypso.calibration, hypso.geometry and hypso.utils converted to NumPy sections (wording kept); the 38 empty
+  entries filled from the code; 13 undocumented functions documented (geometry bbox/gsd/resolution, frame
+  interpolation, the manifest CLI, LevelSchema/get_schema); the last `satobj` comments rewritten. A check of
+  every documented parameter against the signatures found and fixed wrong or missing names
+  (`run_radiometric_calibration`, `read_coeffs_from_file`, `direct_georeference`, `print_nc`), and reading the
+  code corrected three statements: `eci_lon_to_ecef_lon` works in radians; `interpolate_at_frame` returns an
+  array (not a DataFrame) or -1; `direct_georeference` returns three values (annotation fixed). io.cf and
+  sensors keep prose (summary-only) docstrings. Docs build with -W.
+- **2026-10-27 (×81): documentation review** (user). Read docs/*.rst, both READMEs and the demo against the code.
+  architecture.rst: overview (MACHI default, band selection, hypso.grid/window/rgb, keystone), product tree
+  (band_index, gridded layout, metadata/machi), Product methods (window, select_bands, to up to L2A; .tree is a
+  shallow copy), processing table (select_bands, regrid, keystone), file format (BitRound quantization), both
+  sensors' catalogs and the optional keystone model, the F0 leftover, in-process AC methods, extension recipe.
+  calibration.rst: both sensors' defaults, keystone section. products.rst: L2A rhos from MACHI, quantization.
+  README and index: MACHI default. Demo: matplotlib note (no longer a dependency), MACHI and its fitted spectra,
+  band subsets, quantization-aware round-trip check; notebook regenerated; runs end to end (24 cells, 5 figures).
+  Grid, windows, versioning, installation and coefficient history were current.
+- **2026-10-27 (×80): MACHI fit subsampling** (user: option, default unchanged). `fit_subsample=N` fits A and T on
+  every Nth finite pixel plus each band's darkest pixel; the correction is still applied to every pixel.
+  Measured on the reference capture: a plain 1-in-4 subsample shifts A by ~1e-3 (up to 4% of dark water at AAOT)
+  because MACHI starts A from, and caps it at, the per-band minimum; keeping the darkest pixels brings 1-in-16 to
+  ~7e-5 (0.3% of dark water) at 2.7 s and 0.8 GB instead of 34 s and 3.3 GB. Default 1 (all pixels, as upstream).
+  Recorded in provenance; documented with the table. One-capture check at AAOT (MACHI rhos/pi vs AERONET-OC,
+  Polymer, ACOLITE): MACHI 2-5x above AERONET in the blue, close to ACOLITE there - expected, as rhos keeps sky
+  reflection; the 67-capture study was stopped (user: confident in MACHI).
+- **2026-10-27 (×79): band subsets** (user). `Product.select_bands(wavelength_range | wavelengths | indices)` and
+  `hypso.processing.select_bands`, from L1B on (L1A raises: smile correction mixes bands). Each band keeps its
+  full-set index as a `band_index` coordinate (files: the band variables' `band` attribute, now written from it
+  and read back into it), so TOA reflectance picks F0 by it and `metadata/srf` (`srf_dataset(band_indices=...)`)
+  holds the kept bands' tables and `Band_<index>` SRFs: select-then-process equals process-then-select.
+  `metadata/srf`/`metadata/machi` are trimmed; other full-band metadata (`metadata/corrections`) stays complete
+  under a `bands_full` dimension (DataTree forbids a child reusing the parent's `bands` with another size).
+  `hypso.open(path, wavelength_range=...)` / `read_product(..., wavelengths=..., indices=...)` read only the
+  selected band variables from the file (reference L1D, peak memory: all 120 bands 691 MB, 72 bands 580 MB,
+  3 bands 374 MB, about 370 MB of which is geometry and metadata). `band_coords()` carries `band_index` through
+  regridding and windows. The external AC tools have not been tried on subsets. Lesson: the MACHI commit run
+  failed with ImportErrors because band-selection edits landed mid-run (test process had old modules
+  loaded) - never edit code while a suite runs.
+- **2026-10-27 (×78): MACHI is the default L1D -> L2A method** (user). `hypso.ac.machi`: MACHI's algorithm
+  (`atm_correction` and helpers) vendored from github.com/NTNU-SmallSat-Lab/MACHI `machi/base.py` at ebbc3e72
+  (MIT, Joseph Garrett), unchanged - identical T, A and objective history to upstream on synthetic data.
+  `correct_atmosphere("machi")` (now the default of `correct_atmosphere()`, `Product.correct_atmosphere()` and
+  `to("L2A")`): fits one scattering A and one transmission T spectrum on all finite pixels (user decision;
+  `fit_exclude_flags` optional), `solar=ones` since the input is reflectance, then `rhos = (rhot - A) / T`;
+  `est_min_R` 0.05 by default (user: as the code, configurable), `tol`, `approach_rate`; T, A and the objective
+  per iteration in `metadata/machi`; provenance with settings, fit pixels, bands and iterations. HYPSO's six
+  bands below 400 nm are zero after smile correction and stopped the fit after one iteration, so only bands
+  with signal are fitted (the others NaN). Reference capture: 7 iterations, 34 s, 4.2 GB; T shows O2-A/B and
+  water vapour, A falls with wavelength. Docs: AC guide MACHI section with upstream's limitations, quick start.
+  Upstream issues to report: TODO 6c.
+- **2026-10-27 (×77): keystone groundwork** (user: possible later, ship disabled for review). HYPSO-2's
+  smile/keystone model (the former H2_A-hat/H2_B-hat, Lawrence 2003, terms [1, x, y, xy, x2, y2], x spectral,
+  y spatial) ships as `hypso2_calibration/data/h2_distortion_model_v1.npz`, catalogued under a new `optional`
+  section (`keystone: V1`, `enabled: false`) outside the releases; `_catalog.optional_model` (both copies) and
+  `optional_model()` in both packages. `hypso.calibration.keystone.correct_keystone` maps band centres and
+  samples to full-frame x/y and resamples each band along samples at B(x, y) (linear). `calibrate(keystone=True)`
+  / `l1a_to_l1b(keystone=True)` applies it after radiometric and before smile; warns while the model is not
+  enabled; raises for sensors without one (HYPSO-1); provenance records version, enabled flag, file and sha256;
+  the summary has a keystone line ("off (opt-in)" by default). Default calibration unchanged. Reference capture:
+  shift -1.4..+1.7 samples, image change median 0.35%. docs/coefficient_history.rst describes the model.
+- **2026-10-27 (×76): coefficients folder removed.** The top-level `coefficients/` (about 400 MB: 23 CSVs
+  identical to the shipped `.npz` files, NaN included; `convert_csv_to_npz.py`; the HYPSO-1 version log;
+  `H2_A-hat`/`H2_B-hat`) is gone; nothing read it. The version log is now verbatim in
+  `docs/coefficient_history.rst` (linked from the index and the calibration guide), which also records where
+  the CSVs were. The two H2 files are HYPSO-2's smile/keystone distortion model and move into
+  `hypso2_calibration` with the keystone groundwork (next entry). History keeps the files.
+- **2026-10-27 (×75): float32 cubes in memory.** Calibration and AC now store their cube as float32 (the precision
+  files hold); calibration's corrections still run in float64 inside the step, so an L1B in memory equals what
+  its file holds. L1D cube 627 -> 313 MB; peak memory L1A -> L2A 2.3 GB on the reference capture.
+- **2026-10-27 (×74): esun renamed F0** (user). Python: `SpectralResponse.f0`, `toa_reflectance(radiance, f0, ...)`,
+  `band_irradiance` documented as F0. Files: `metadata/srf/F0` and `F0_wavelengths` (were `esun`,
+  `esun_wavelengths`); older files keep theirs (metadata passes through). eoread's HYPSO reader reads the old
+  names and must be updated (TODO 6; not touched here).
+- **2026-10-27 (×73): SRFs stored as float32.** `metadata/srf` Band_<i> values and wav_Band_<i> grids are now
+  float32 (were float64). Raw size halves, but the stored size barely changes (3.72 -> 3.65 MB on the reference
+  L1D): the SRFs are computed in float32, so the float64 copies' zero low bytes already compressed away. Kept
+  as the honest precision. TOA reflectance unchanged (it uses the in-memory SRFs); Polymer's getter still reads
+  all 120 bands. A coarser SRF grid waits for the AC work (TODO 2).
+- **2026-10-27 (×72): RGB camera groundwork.** Capture directories hold `<capture id>-rgb/<target>_<YYYY_MM_DD>
+  T<HH_MM_SS>.bmp`: an 8-bit raw Bayer mosaic, 3840 x 2748, taken about 2 s before the HSI capture, with no
+  camera metadata anywhere in the capture directory (capture_config.ini and the telemetry log are HSI-only;
+  processing-temp/SIFT_plot.png is the HSI's own coastline georeferencing). The pattern is RGGB (the only one
+  giving natural colours on the Ariake capture) and the ground processing's `processing-temp/rgb-camera-image-
+  debayered.png` is a bilinear RGGB demosaic rotated 180 degrees (ours matches it: correlation 0.9999, mean
+  difference 0.17 counts). New `hypso.rgb.camera`: `find_camera_image`, `read_camera_image` (demosaic and
+  rotation optional), `demosaic_bilinear`, `camera_image_time`; `INSTRUMENTS` gains `RGB`; pillow is a
+  dependency again (used directly now). Co-registration and a Satpy reader: TODO 4e.
+- **2026-10-27 (×71): band quantization.** Measured on the reference L1D (bands are 95% of the file; float32
+  noise bits do not compress: zlib 9 saves <1%, zstd is larger). `write()` now keeps 14 significant mantissa
+  bits of the float bands of L1B-L2A by default (netCDF BitRound; max relative error 3.1e-5, against at least
+  0.75% sensor noise from the window CV at AAOT): L1D bands 206 -> 123 MB. `significant_bits=None` writes
+  lossless; L1A counts, geometry, derived variables and metadata are always lossless; AC staging is always
+  lossless (AC amplifies input error about tenfold in Rrs); recorded in `band_quantization`. GranularBitRound
+  was rejected: netCDF-C 4.9.3 turns NaN and Inf into -0.0 with it. BitRound keeps them and is idempotent.
+  Found on the way: `Product.tree` is a shallow copy (arrays shared); docstring corrected.
+- **2026-10-27 (×70): masks reader, to("L2A"), Satpy L2A.** Removed `hypso/masks/jonas_svm_classifier.py`
+  (never called, here, in production or in the pipeline; its unused matplotlib import was the package's only
+  one, so matplotlib is no longer a dependency). The Jon CNN decoder is now `hypso.masks.sea_land_cloud`:
+  `read_sea_land_cloud(path, shape)` and `sea_land_cloud_masks(path, shape)` for the ground processing's
+  `processing-temp/sea-land-cloud.labels` (0 water, 1 land, 2 cloud; size checked against the shape). On the
+  reference capture: 22% water, 66% land, 13% cloud. The pipeline's `decode_jon_cnn_*` calls (production
+  API) need the new names when it moves over (TODO 6). `Product.to("L2A", correct_atmosphere={"method": ...})`
+  (no default method; raises without one). New Satpy reader `hypso_l2a` (Rrs/rho_w/rhos bands discovered per
+  file; gridded files on their map grid); unused per-level prefix table removed from the handler.
+- **2026-10-27 (×69): HYPSO-1 on HYPSO-2's calibration scheme** (user: yes). `hypso1_calibration` now has a
+  `data/coefficients.yaml` catalog: V2 = `moved` (default, unchanged) and `abs` (was `adjusted`), V1 = `lab` (was
+  `original`); smile/destriping per capture type and the moon radiometric matrix as `capture_types` entries
+  (replaces `capture_modes.yaml`); `known_capture_types` keeps unknown types getting no files, as before. No
+  coefficient file renamed; old names work with a DeprecationWarning; the old print messages are gone. The
+  selection logic moved into `_catalog.py`, identical in both calibration packages (they cannot share code;
+  a test checks the copies match); `get_hypso1/2_calibration_files` keep their signatures (production
+  hypso-package calls them). HYPSO-2's OC-SMART spectral warning is now catalog data (`spectral_note`).
+  Verified: all 12 old capture-type x coeff-type combinations select the same files as before; the HYPSO-1
+  production-parity test still passes. docs/calibration.rst gained a HYPSO-1 section; calibrate() docstrings
+  give both sensors' defaults.
+- **2026-10-27 (×68): verification beyond the reference capture.** A HYPSO-1 capture
+  (koreanCalValJL_2026-08-27, wide) and a second HYPSO-2 site (kemigawa_2025-12-28, from the reprocess set)
+  through the refactor with the production coefficients (`moved`; V2 for HYPSO-2), against the production
+  files: L1B identical to float32 precision (max rel 6e-8), L1C latitude exactly equal, solar zenith to float32
+  precision; kemigawa L1D identical to float32 precision; HYPSO-1 L1D (produced 2026-09-14, before the
+  Earth-Sun distance fix) a constant 0.958346 of ours = (d_old/d_new)^2 exactly (spread 1e-7). Now
+  `tests/test_production_parity.py` (skips without the data). No nominal (non-wide) capture exists locally.
+  The real-tool tests in `test_ac_subprocess.py` now take tool locations from HYPSO_AC_CONFIG instead of
+  hard-coded paths (the Polymer one had gone stale and skipped silently); they skip with the reason when it is
+  not configured. Note: before that change the real-ACOLITE test ran once against the user's production
+  checkout (import plus a missing-input run, log to a temporary directory; nothing modified). Production AC
+  installations are not to be used (user, 2026-10-27).
+- **2026-10-27 (×67): docstrings, user-facing modules.** NumPy-style docstrings for `hypso.srf`
+  (load_solar_irradiance, earth_sun_distance, compute_spectral_response, srf_dataset), `hypso.io.naming`
+  (ProductName, product_name, parse_product_name), `hypso.io.provenance` (add_step, calibration_attrs,
+  ac_attrs, redact, ...), `hypso.grid` (grid_area, utm_crs, resample_product) and the `hypso.ac` readers
+  (previously undocumented). Claims checked against the code (distance formula, redacted keys, attributes).
+- **2026-10-27 (×66): Satpy and gridded products.** The hypso_l1c/hypso_l1d readers recognise a regridded
+  file by its contents (`crs` + `x`/`y`; the name patterns already matched, the grid field landing in `label`)
+  and give its bands `get_area_def()`'s AreaDefinition instead of latitude/longitude coordinates;
+  `Product.to_satpy()` uses `area_definition()` for gridded products. Shared helper
+  `hypso.grid.areas.area_from_grid`. Verified on the 300 m UTM L1D: same extent as `area_definition()`, values
+  equal; swath files still load as SwathDefinition. Reader descriptions updated (no more io.writer).
+- **2026-10-27 (×65): dependencies trimmed.** `hypso/pyproject.toml` dropped 16 packages nothing in `hypso/hypso`
+  imports: cartopy, rasterio, py6s, pillow, shapely, tqdm, progressbar, requests, scikit-learn, xgboost, joblib,
+  global-land-mask, h5py, pvlib, earthaccess, seaborn. Kept: numpy, scipy, xarray, netcdf4, pandas, pyproj,
+  pyresample, satpy, astropy (geometry), scikit-image (destriping), matplotlib (masks module, imported with the
+  package), python-dateutil, pyyaml, the calibration packages. Fixed the xarray floor to 2024.10.0
+  (`xarray.DataTree`; was 2023.12). Verified: all 61 modules import with the dropped packages blocked for
+  direct imports from hypso. Calibration packages' lists (numpy, pyyaml) were already minimal.
+- **2026-10-27 (×64): plan and TODO cleanup.** TODO list reviewed and renumbered (above): closed items folded
+  into "Done", the old capture-dimension item merged into verification, new items for dependencies, Satpy and
+  gridded products, unpushed tags. Superseded plans archived verbatim: `archive/ARCHITECTURE_PROPOSAL.md`
+  (git mv) and `archive/REFACTOR_PLAN_2026-08.md` (the AC-connector notes, approved-plan summary, next steps
+  and full approved plan that used to follow this log), each with a banner. Header rewritten with a "where
+  things stand" summary; the pointer to `~/.claude/plans/rosy-frolicking-summit.md` dropped. References to
+  this file removed from package docstrings, which now appear on the public docs site.
+
+- **2026-10-27 (×63): instrument field in file names.** `HYPSO2_HSI`: satellite + instrument (Hyperspectral
+  Imager), like NASA's `{MISSION}_{INSTRUMENT}`. `hypso.io.naming`: `INSTRUMENTS = {"HSI": ...}`,
+  `ProductName.instrument` (default "HSI"), `platform_token(sat_id, instrument)`,
+  `parse_platform_token(token) -> (sat_id, instrument)` (replaces `sat_id_from_token`); unknown instrument
+  tokens are rejected both ways, so another instrument (e.g. the RGB camera) needs only an INSTRUMENTS
+  entry. Documented in the naming docstring and docs/products.rst. Names themselves unchanged.
+- **2026-10-26 (×62): documentation site.** Sphinx with pydata-sphinx-theme, version from `git describe`,
+  sphinx-autoapi from `hypso/hypso` (static, no package imports; AC drivers and the Satpy plugin left out),
+  napoleon for NumPy docstrings, intersphinx. New guides: installation, quick start, products and files
+  (format section moved here from architecture.rst, which keeps the design rationale), pixel windows,
+  documentation; index with levels table and grouped navigation; calibration.rst examples on the Product
+  API (dropped the removed satobj API). `docs/requirements.txt` (pinned; astroid<4, autoapi 3.4 breaks on
+  astroid 4) replaces the conda yaml. CI `.github/workflows/docs.yaml`: build with `-W --keep-going` on
+  every push/PR, publish main to gh-pages (peaceiris/actions-gh-pages) - replaces the stale apidoc action.
+  `hypso.grid.regrid` module renamed `regridding` (module and function shared a name). Builds with zero
+  warnings.
+- **2026-10-26 (×61): demo rewritten.** `demo/demo_processing.py` on the Product API with the reference
+  capture: L1A->L1D, writing/naming/provenance, contents and spectra, matchup windows, HSI2RGB, masks and
+  derived variables, DPS (other AC tools as comments), regridding (nearest 300 m, average 3 km, EPSG:4326),
+  resample, Satpy. `# %%` cells; `demo_processing.ipynb` generated by `demo/make_notebook.py`. Runs end to
+  end (5 figures checked). `frohavet_demo.yaml` (polar-stereographic area for another target, repeated 3x)
+  removed.
+- **2026-10-26 (×60): pixel windows.** `Product.window(lat, lon, size=3, exclude_flags=None,
+  cv_band_range=(405, 570))` / `hypso.window`: the product side of a matchup, with the statistics of
+  hypso-processing-pipeline's extraction.py (NaN-aware mean/median/std, CV = std/median, cv_median, any-finite
+  pixel_valid, edge clipping) - identical to the pipeline's functions for the same centre (3x3, 5x5, L1D and
+  Polymer L2A). Differences: optional flag exclusion, window (not scene) mean angles, geodesic nearest pixel.
+  Found: the pipeline's find_window_indices uses Euclidean distance in degrees, picking (308, 671) at 202 m
+  where (308, 670) is 194 m from AAOT (pipeline repo, not changed). Matchup logic (in-situ, time windows,
+  other sensors, QC) stays in the pipeline (user decision).
+- **2026-10-26 (×59): cell averaging.** `method="average"` in regrid/resample for grids at least as coarse
+  as the product: each cell = mean of the swath pixels whose centres fall in it (NaN ignored per band;
+  unweighted approximation of area weighting), `source_pixel_count` variable, bit flags OR-ed over the cell,
+  azimuths via sin/cos. `hypso.grid.GridOperators` now holds the per-variable rules for resample_product and
+  regrid alike. Verified (figure): every pixel lands in exactly one cell, no interior holes at 876 m-3 km,
+  a 3 km cell equals its 96 members' mean (6e-8); counts stripe gently along-track (3 or 4 lines per cell).
+- **2026-10-26 (×58): map grids (`hypso.grid`, TODO 2).** `geometry_definition/` and `resample/` merged
+  into `hypso.grid` (areas, resample, regrid); the old `generate_area_def` (polar stereographic, Bessel, fixed
+  300 m) replaced by `grid_area` / `utm_crs`.
+  - `Product.regrid(target="utm", resolution=None, method="nearest", max_gb=4)`: same level, gridded. Targets:
+    "utm" (scene-centre zone), any CRS, an AreaDefinition, a gridded Product. Default resolution = the
+    product's (coarser GSD; this capture 876 m along x 108 m across), extents snapped to multiples of the
+    pixel size. Nearest by default (user: HSI spectra must not be interpolated by default); bilinear opt-in,
+    azimuths then via sin/cos. Flags/integers always nearest; pixel_flags gains `outside_swath`; *_direct
+    dropped. Provenance step `regrid`. AC refuses gridded input.
+  - Format: dims (y, x), x/y CF projection coordinates, `crs` grid mapping (pyproj to_cf), bands'
+    grid_mapping="crs"; io/product.py now layout-generic (`spatial_dims`); file name grid field
+    (`...L1D.utm33n_876m.nc`, io/naming.py GRID_TOKEN; labels may not look like grids).
+  - `Product.resample(target, method)` keeps returning a bare Dataset; now also bilinear and swath targets.
+  - Fixed on the way: `decode_flags` failed on a one-flag variable read from file (scalar flag_masks).
+  - Verified: figure (swath vs UTM grid, outside_swath, angles, AAOT spectrum) on the reprocess L1D; regrid
+    onto its own grid is identity; L1C.regrid().toa_reflectance() == L1D.regrid() (nearest).
+- **2026-10-26 (×57): L2A outputs.** User decisions: DPS divides by pi and keeps the name Rrs; Polymer
+  chlorophyll as linear `chla` (10**logchl); every method's 2D products and flags kept as variables.
+  - Units/names: L2A cube attrs now come from `io.cf.L2A_PRODUCTS` - Rrs sr-1 with the CF Rrs standard
+    name, rho_w and rhos "1" (were all "1"). Tool variables pass through `cf.tool_variable_attrs`: ACOLITE's
+    non-CF chl/SPM standard names map to the CF `..._in_sea_water` names (originals kept as
+    `source_standard_name`), other non-CF names (e.g. ndci) move to `source_standard_name`.
+  - Polymer: `ac.polymer_output.read_polymer_reflectance` reads the per-band `rho_w_<nm>` that real v2
+    output uses (the old loader expected a 3D rho_w, hidden by a mock that wrote one). Variables: chla
+    (mg m-3, CF name), logfb, SPM (no unit: Polymer's source states none), Rgli, Rnir, polymer_flags with
+    Polymer's flag table as flag_masks/flag_meanings.
+  - ACOLITE L2W: all 2D outputs except lat/lon/Rrs_* (set depends on l2w_parameters), l2_flags ->
+    acolite_l2_flags. L2R: cube only.
+  - OC-SMART: chlor_a(oci)/chlor_a(yoc)/tsm(yoc) -> chlor_a_oci/chlor_a_yoc/tsm_yoc (mg m-3 / g m-3, CF
+    names), L2_flags -> ocsmart_l2_flags; geometry repeats dropped. Production also wrote the 3D Lr, Lrc,
+    Lt, Lwp, tg_sen, tg_sol - not kept (2D-only decision); add if wanted.
+  - Band mapping: `_band_map` returns (product, tool) index pairs - a dropped duplicate no longer shifts
+    later bands. Tool flags round-trip with their integer dtype (`_extra_variables` no longer drops them).
+  - Tests: the fake Polymer/ACOLITE/OC-SMART runners now return the real outputs from
+    HYPSO_DATA_AOC_REPROCESS_AULUS2/aeronetvenice_2025-03-04T10-38-05Z; cubes, chla and the chl products
+    match the production L2A files there (rtol 1e-6/1e-5).
+- **2026-10-26 (×56): small cleanups.** Removed `hypso.georeferencing` (GCPList/GCP/PointsCSV/Georeferencer
+  and utils had zero callers anywhere, incl. hypso-processing-pipeline; its README was a title only - the
+  georeferencing math lives in hypso.geometry). `hypso/README.md` (also the PyPI page) rewritten: product
+  levels incl. L2A, quick start with hypso.open, git-tag versioning; root README typo; ARCHITECTURE_PROPOSAL.md
+  marked historical. CF standard names on bands, checked against the CF standard name table v95:
+  `toa_outgoing_radiance_per_unit_wavelength` (Lt), `toa_bidirectional_reflectance` (rhot) - new
+  LevelSchema.product_standard_name; dropped the stale LevelSchema.source_cube_attr (satobj attribute names).
+  Found while checking L2A names: Rrs is sr-1 but L2A writes "1", and DPS output (dimensionless, the pipeline
+  divides it by pi) is named "Rrs" - carried into TODO 6.
+
+- **2026-10-26 (×55): TOA reflectance / SRF code consolidated (TODO 4).** `hypso/reflectance/` (toa_reflectance.py,
+  spectral_response.py, write_ssi_npz.py) replaced by `hypso/srf/`: `response.py` (SpectralResponse,
+  compute_spectral_response, gaussian_srfs, bin_srfs, band_irradiance, effective_fwhm, srf_dataset - the
+  metadata/srf builder, moved from processing/toa.py) and `solar.py` (load_solar_irradiance("tsis"|"thuillier"),
+  earth_sun_distance), with the TSIS npz and Thuillier csv in `srf/data/`. `processing/toa.py` holds the whole
+  TOA step: `toa_reflectance(radiance, esun, iso_time, sza)` (vectorised, same per-pixel arithmetic, input
+  dtype kept), `spectral_response(tree)`, `srf_node(tree)`, `l1c_to_l1d`. Removed: the legacy
+  `compute_toa_reflectance` wrapper and its CSV/PNG side effects, `generate_figures`/`visualize_srf_binning`,
+  the CSIRO `uniform-1000` grid (unused since csiro dropped), compute_esun's dead `method` argument, the tqdm
+  progress bar in binning, and `write_ssi_npz.py` (a one-off conversion script that ran at import and read a
+  file not in the repo). Verified: L1D files written before and after (TSIS/unbinned and Thuillier/binned) are
+  identical in every variable and attribute incl. metadata/srf. Then fixed: the esun description always named
+  TSIS-1, also for Thuillier runs. Tests: solar spectrum named correctly; reflectance formula by hand.
+
+- **2026-10-26 (×54): removed `hypso.classification` and `hypso.spectral_analysis`; HSI2RGB -> `hypso.rgb`.**
+  classification was a one-line alias for hypso.masks kept for hypso-processing-pipeline's
+  `from hypso.classification import decode_jon_cnn_*` (process_capture.py, bin/select_snr_rois.py); the
+  pipeline runs on production hypso-package, so it goes - when the pipeline moves to the refactor those imports
+  become `hypso.masks`. spectral_analysis's get/plot_spectrum and get_closest_wavelength_index duplicated
+  Product.spectrum/.wavelengths and were removed; HSI2RGB (Magnusson et al. 2020 colour-matching RGB; kept for
+  the HYPSO-2 RGB camera TODO) moved with its D_illuminants.mat to `hypso/rgb/` (MANIFEST.in updated). Test:
+  HSI2RGB on the fixture L1D gives a finite (lines, samples, 3) image in [0, 1].
+  Then fixed a real bug in HSI2RGB (found by looking at the rendered image, user request): its "gamma
+  correction" applied the inverse sRGB transfer function (sRGB -> linear) to already-linear RGB, roughly
+  squaring the values - images came out dark with a green cast (fixture mean 0.081, G dominant). Now the
+  forward encoding, as in the original Magnusson et al. code (it was there, commented out): mean 0.244,
+  R >= G > B. The bug predates the move (it was in the copy the package started from). Test asserts
+  plausible brightness and that green does not dominate.
+
+- **2026-10-26 (×53): the capture-object API is deleted.** Stage 1 (`183a6f63`) ported the surviving
+  satobj consumers to `hypso.Product`: `with_masks` (pixel_flags; replaces land_mask/cloud_mask/custom masks),
+  `with_variables`/`variables` (derived per-pixel products, passed through by read/write - replaces the
+  products/_products container the user wanted kept as infrastructure), `pixel`/`spectrum`, `resolution`
+  (same GSD computation; 876.38 m on the fixture, identical), `swath_definition`, `resample`, `to_satpy`;
+  spectral_analysis/geometry_definition/resample/satpy take a Product; the Satpy reader plugin uses
+  `io.product.list_band_variables` and its YAMLs also match NASA-style names. Stage 2 moved the tests to
+  session `products` fixtures built through the public API (same chain as the golden baseline); retired
+  test_capture_types/capture_tree/containers/geo_state/masking/metadata/ac_adapters/resample and the
+  capture-path parity tests (each step was verified identical before removal, ×47-×52); test_public_api
+  now pins the new surface and that the old names/modules are gone. Stage 3 deleted HypsoCapture,
+  Hypso/Hypso1/Hypso2, capture_types, containers, io/dispatch|reader|writer|metadata|capture_tree, load/
+  (AC output readers moved to hypso/ac/*_output.py), write/, calibration/pipeline, georeferencing/geo +
+  geo_state, masks/pipeline, the satobj AC adapter classes (drivers and run_subprocess_driver kept),
+  ac_dark_pixel_subtraction, ac/loading_acolite_output. ~8,100 lines removed; hypso/hypso is now ~7,900
+  lines. `processing.classify_capture_type` extracted for the sensor tests. Also removed Alvaro Flores-Romero
+  from __author__, docs/conf.py and the README authors list (user request).
+  Still stale (documentation TODO): docs/architecture.rst describes the old classes; reflectance/
+  toa_reflectance.py's legacy wrapper (TODO 4).
+
+- **2026-10-26 (×52): production 73eb6b8a wide-capture fix ported.** Production (`AC/hypso-package-polymer_v3`,
+  commit 73eb6b8a "HYPSO-2 V3 radiometric calibration; calibration packages 26.10.0"): V3 abs uses
+  `h2_radiometric_calibration_matrix_wide_v3_abs.npz` for wide captures, as is (derived from binned wide
+  data; ~1% below the binned full matrix). Ported as data, not file-name checks: coefficients.yaml file entries
+  can carry `capture_types: {<type>: {file, crop: as_is}}`; `get_hypso2_calibration_files` returns
+  `crop_modes` for the selected files; both calibration paths apply them over the sensor profile's per-mode
+  crop modes; `read_coeffs_from_file` honours `crop_mode="as_is"` for radiometric (with the same shape check as
+  smile/destriping). Also: the capture-object path no longer swallows a radiometric shape mismatch (it used to
+  continue without radiometric correction). Production's other change in that commit - testing the smile
+  wide/nominal condition on the file name instead of the full path - has no counterpart here (crop modes, not
+  names, decide). Verified: on the (wide) venice fixture the refactor's moved/V3 and abs/V3 L1B are identical
+  to production 73eb6b8a; abs/moved scene ratio median 0.885. Provenance records radiometric_capture_type and
+  radiometric_crop. Manifest updated; tagged v26.10.0a3.
+
+- **2026-10-26 (×51): atmospheric correction as tree functions - DPS, Polymer, ACOLITE, OC-SMART done.**
+  User decisions: AC tool locations are configuration only, no defaults; settings in a YAML file
+  (`hypso.ac.config`: `config=` path/dict or `HYPSO_AC_CONFIG`); no real AC runs on aulus2 for now (mocked
+  subprocesses only).
+  `hypso/processing/atmospheric.py` `correct_atmosphere(tree, method, masked, mask_flags, work_dir, config,
+  **options)` / `Product.correct_atmosphere(...)`: L2A tree with the method's cube on the input bands, input
+  geometry/flags/metadata, `atmospheric_correction` global attr (file name `...L2A.<method>.nc`),
+  `l2a_<method>` provenance (tool, version, install git commit, effective/user settings). `masked=True`
+  applies pixel_flags to the input (replaces NaN-masked product copies).
+  - DPS: NaN-aware statistics (old np.min made the whole spectrum NaN for masked input); identical to the old
+    function on unmasked input.
+  - Polymer: stages L1C/L1D into work_dir (temporary unless given), adds metadata/srf when missing (Polymer's
+    srf_getter reads Band_<i> from the input; an L1C straight from georeferencing has none), runs the existing
+    `_polymer_driver`, maps returned bands to the nearest input bands. Mocked tests only.
+  - Fixed: `run_subprocess_driver` now puts the hypso/calibration package roots on the child's PYTHONPATH and
+    runs it in its temp dir; this fixed the 3 long-failing test_ac_subprocess tests (repo-root namespace
+    collision, "No module named 'hypso.ac'").
+  - ACOLITE: `output="l2w"` (Rrs, default) / `"l2r"` (rhos); finds ACOLITE's own *_L2W/*_L2R.nc; the driver
+    now reports the settings ACOLITE actually used (credentials removed before writing) for
+    settings_effective; ac_version per ACOLITE's own rule (config.txt version, else "git checkout" + commit);
+    `reuse_output=True` with a kept work_dir avoids a second run for L2R. EARTHDATA via env vars only.
+  - OC-SMART: L1D staged as HYPSO_HSI_<capture_id>-l1d.nc (prefix required by its sensor autodetection);
+    OCSMART_Input.txt written/restored under the pipeline's lock file (.OCSMART_Input.lock) so refactor and
+    pipeline runs on one install exclude each other; console output relayed via logging; work_dir paths with
+    '.' rejected (OCSMART.py rewrites dots in path values; the staged file name itself has none besides .nc);
+    version from the install dir name (OCSMART_Linux_v2.6.3 -> v2.6.3). Tested against a fake installation
+    (real subprocess, fake OCSMART.py).
+  - All four tested without the real tools (user: no real AC runs on aulus2 for now). Real-run comparison
+    against HYPSO_DATA_AOC_REPROCESS_AULUS2 L2A outputs is a follow-up. docs/atmospheric_correction.rst.
+
+- **2026-10-26 (×50): public API = immutable `hypso.Product`; georeferencing as a tree function.**
+  User chose (over plain functions / a stateful convenience object) an immutable product object with verb
+  methods, built on the tree functions: `hypso.open(path)` -> `Product`; `.calibrate(coeff_type, version)`,
+  `.georeference(latitudes, longitudes, direct)`, `.toa_reflectance(...)`, `.to(level, <step>={...})`,
+  `.write(path | out_dir, label)` (NASA-style name from sat_id/location_description/timestamp_acquired),
+  `.filename()`; contents `.level`, `.sat_id`, `.target`, `.cube`, `.wavelengths`, `.geometry`, `.flags`,
+  `.provenance`, `.tree` (a copy). Every method returns a new Product; setting attributes raises; wrong-level
+  calls explain and suggest `.to(...)`. Module `hypso/api.py`; exported from `hypso/__init__.py` with
+  `read_product`/`write_product`. AC (`.correct_atmosphere`) still to come.
+  `hypso/processing/georeference.py` `l1b_to_l1c(tree, latitudes, longitudes, direct=True)`: frame
+  interpolation + indirect coordinates (arrays or raw float32 .dat paths) and/or direct georeferencing; direct
+  becomes the main geometry when no coordinates are given. Identical to the capture path (latitude/longitude,
+  all angles, direct variants, fallback). End-to-end: the chain through hypso.open -> calibrate(moved, V2) ->
+  georeference -> toa_reflectance reproduces the golden baseline recorded from the pre-refactor package
+  (tests/test_api.py).
+
+- **2026-10-26 (×49): no pipeline compatibility required (user: "Pipeline is not using this refactor").**
+  hypso-processing-pipeline keeps using production hypso-package and will be moved to the new API separately.
+  Consequences: the ×37 step-3 compatibility facade (keeping ~50 HypsoCapture names) is dropped;
+  HypsoCapture, Hypso1/Hypso2, capture_types.py, io/dispatch.py, containers.py, load/, write/ and the old
+  writer are deleted once l1b_to_l1c (georeferencing) and AC -> L2A exist as tree functions. Pipeline-driven
+  concessions go too: legacy file names by default, `masked=True` NaN-masked copies, write_l1x_nc_file
+  wrappers. Revised order: (1) l1b_to_l1c, (2) AC -> L2A tree functions (apply pixel_flags at staging when
+  masked input is requested), (3) delete old code, tests moved to the new API. Open (user): public API
+  shape after deletion - functions only (recommended) or functions plus a thin convenience wrapper.
+
+- **2026-10-26 (×48): HYPSO-2 calibration coefficient versions - implemented and verified.**
+  Source of V3 files: `/home/camerop/AC/hypso-package-polymer_v3` (uncommitted production copy, branch
+  `polymer_v3`; same 5 files, identical sha256, in `/home/camerop/AC/V3_Rad_Coeffs`). Production's copy deletes
+  the pre-V3 sets; the refactor keeps them.
+  - **Two arguments**: `coeff_type` = radiometric variant, `version` = coefficient release. Default
+    `coeff_type="abs"`, `version="V3"` (user: abs, not moved, is the default).
+  - **Releases** (per-correction defaults): V3 = radiometric V3, smile V3 (sobel), spectral **V2** (user:
+    V2 spectral with V3 is for OC-SMART compatibility - V3 spectral shifts band centres +0.3..+1.7 nm,
+    renaming the integer-wavelength bands OC-SMART's HYPSO band table and POLYMER band settings select by
+    name); V2 = today's pre-V3 sets (radiometric V2, smile full_v2, spectral poly_full); V1 = "original",
+    the lab coefficients (radiometric variant `lab`, spectral center_row, smile full_v2 as today).
+  - **Radiometric variants**: V3 {abs, moved}; V2 {abs (was "adjusted", adjusted_v11), moved}; V1 {lab}.
+  - **Mixing**: `version` may be a per-correction dict, e.g. {"radiometric": "V3", "smile": "V3",
+    "spectral": "V3"}; missing corrections come from the V3 release.
+  - Catalog in YAML (data-only edits for future sets); provenance records release, per-correction version
+    and variant, file and sha256. Pre-V3 files renamed with explicit versions. Deprecated aliases:
+    `adjusted` -> abs/V2, `original` -> lab/V1.
+  - Note: the pipeline passes coeff_type explicitly (reprocess config `rad_cal_coeffs_options: [moved]`), so
+    through the refactor it gets V3 moved unless its config changes.
+  - ~~Open: `wide_v3_abs` shipped but not selectable~~ - selected for wide captures with V3 abs (×52).
+  - Implemented: 5 V3 files copied from AC/V3_Rad_Coeffs (sha256 checked against both sources); pre-V3 files
+    renamed with explicit versions (git mv; sha256 pinned to the pre-rename manifest in
+    tests/test_coefficients.py); `hypso2_calibration/data/coefficients.yaml` catalog (in data/, so the
+    manifest covers it) read by `main.py` (`resolve_coefficients`, `get_hypso2_calibration_files(capture_type,
+    coeff_type, version)`, returns a `selection` entry); pyyaml added to hypso2_calibration deps. `version`
+    threaded through the sensor hook, `set_calibration_coeff_files` (satobj.coefficient_selection) and
+    `l1a_to_l1b`; provenance records coefficient_release + per-correction versions. Calibration summary logged
+    at INFO by both paths (hypso/calibration/summary.py). docs/calibration.rst.
+  - Verified: refactor `l1a_to_l1b(coeff_type, version="V3")` is identical (cube and wavelengths) to the
+    production V3 copy's own calibration for both moved and abs on the venice fixture L1A; abs/moved scene
+    radiance ratio median 0.893 (5-95% 0.851-0.921). Golden regression pinned to coeff_type moved / version V2
+    (= pre-V3 moved; conftest COEFF_VERSION).
+
+- **2026-10-26 (×46): ESA SNAP confirmed; first refactor tag `v26.10.0a1`.** User confirmed SNAP opens the
+  step-1 output (metadata dimensions inside their groups, pixel_flags as masks, NASA-style name). User
+  delegated the tag choice: `v26.10.0a1` (alpha) on the step-1-complete commit, because the format and API
+  can still change in steps 2-4 and the pipeline does not use the refactor yet; a plain `v26.10.0` would claim
+  a finished release in the tag namespace shared with production on origin. Annotated, local only (not
+  pushed). versioning.version_from_describe now handles pre-release tags as setuptools_scm does (bumps the
+  pre-release number: 26.10.0a2.dev2+g<sha>) and uses 9-character short hashes; both verified against wheels
+  built from a scratch clone tagged v26.10.0a1.
+
+- **2026-10-26 (×45): step 1 done - captures write through write_product.** `hypso/io/capture_tree.py`
+  `capture_to_tree(satobj, level, correction, masked)` mirrors io/writer.py group by group and adds
+  pixel_flags (land/cloud/custom masks) and a provenance step (input file, coeff_type, georeferencing,
+  ssi_source/srf_grid/bin_factor, calibration package + coefficient sha256; AC tool name for L2A). L1A gets no
+  calibration-file attrs. The pipeline-facing `write_l1b/l1c/l1d/l2a_nc_file` now write through it (same
+  signatures and legacy output paths; `masked=True` still writes the NaN-masked cube, flags added either
+  way). `write_level_nc`/`write_l2a_nc` keep the old implementation as the parity reference.
+  Verified on the real fixture capture (tests/test_capture_tree.py): L1B/L1C/L1D/L2A identical to the old
+  writer in every variable and attribute except the format-2 additions; wrappers tested with all outputs
+  redirected to tmp (asserts the capture's data directory is unchanged). Also checked read-only: the
+  refactor's POLYMER/eoread flat-layout reader opens a new-format L1C with pixel_flags (120 bands, Rtoa
+  plausible). ACOLITE's reader not checked.
+
+- **2026-10-26 (×44): masks as one CF flag variable (`hypso/masks/flags.py`).** `encode_flags` /
+  `decode_flags` / `apply_flags`: land(1), cloud(2), then custom masks as bits of `pixel_flags` (lines,
+  samples); `flag_masks` has the variable's dtype (CF), `flag_meanings` space-separated, uint8 widening to
+  uint16+ past 8 masks; optional `comment` with mask descriptions. read_product/write_product pass flag
+  variables through (detected by `flag_meanings`; coordinates/grid_mapping added when georeferenced). Real
+  check: CNN sea-land-cloud labels of aeronetvenice_2025-06-12T09-58-02Z (62% land, 26% cloud) encoded into
+  the refactor L1D, written as `HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.nc`, decode back identically.
+  (Its geospatial_lat range 42.9-47.7 looked large but is real: latitude is smooth, ~0.0077 deg/line over
+  598 lines, no outliers.) Not yet: producing flags from a capture's land_mask/cloud_mask/custom masks
+  (facade step) and applying them at AC staging (AC step).
+
+- **2026-10-26 (×43): step 1b (part 1) - provenance + format-2 file attributes + conversion.**
+  - `hypso/io/provenance.py`: `add_step(tree, step, input_file, parameters, calibration, ac)` writes
+    `metadata/processing/<step>` (date, hypso-package version/commit/dirty, input file, parameters; optional
+    calibration package version/commit + `<kind>_file`/`<kind>_sha256`; optional AC tool/version/commit/path +
+    `settings_effective`/`settings_user` JSON, credential keys removed and listed in `settings_redacted_keys`)
+    and appends one `history` line. Nodes survive later read+write, so files carry their lineage.
+  - `write_product` adds `product_format_version` "2.0", `date_created`, `Conventions` "CF-1.10, ACDD-1.3",
+    ACDD `geospatial_lat/lon_min/max` (+units) when georeferenced, and writes L2A as `processing_level` "L2A";
+    the reader maps format-1 "L2" to "L2A". Writing alone adds no history line (not a processing step).
+  - `convert_product(src, out_dir)`: any supported layout -> current format, NASA-style name (io/naming.py),
+    "convert" step recorded with `source_layout`; source untouched.
+  - read_product verified on every production product of aeronetvenice_2025-06-12T09-58-02Z (reprocess
+    dataset): ground-station L1A, legacy L1B/L1C/L1D, and L2A from acolite_l2r/acolite_l2w/dps/ocsmart/polymer.
+  - Still in 1b: CF flag variable for land/cloud/custom masks (unmasked product + flags), then building the
+    tree from a capture object so write_l1x_nc_file routes through write_product.
+
+- **2026-10-26 (×42): file naming + masking decisions (user).** Built in step 1b.
+  - Names, NASA OB.DAAC style (satellite first - the user's primary sort; time second, as PACE granules):
+    `{SAT}_HSI.{YYYYMMDDTHHMMSS}.{target}.{LEVEL}[.{ac}][.{label}].nc`, e.g.
+    `HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.nc`, `...aeronetvenice.L2A.polymer.nc`. `.` separates
+    fields only. L2A always carries the AC field; the optional free-text label (experiments only, e.g.
+    `adjusted`) is always last. Calibration set and masking state are NOT in the name - recorded in-file
+    (provenance). Capture directories keep `{target}_{YYYY-MM-DDTHH-MM-SSZ}`; the parser keeps reading legacy
+    names. Converted L1A can no longer collide with the ground-station `...-l1a.nc`.
+  - Masking: one UNMASKED product per level plus CF flag variable(s) (flag_masks/flag_meanings; SNAP turns
+    these into masks) instead of separate NaN-masked copies. AC runs that want masked input apply the flags
+    at staging time (AC step, later).
+  - Also for 1b: ACDD `geospatial_lat/lon_min/max` global attrs (location filtering is in-file, not in the
+    name); L2A `processing_level` "L2" -> "L2A" with the next product_format_version.
+  - hypso-processing-pipeline builds legacy paths (stage 3, collect_files.py, colocation) and needs updating
+    separately; AC processors do not read file names (ACOLITE: instrument attr; eoread: layout; OC-SMART's
+    HYPSO_HSI_ prefix is applied by the adapter when staging).
+
+- **2026-10-25 (×41): Dataset rewrite step 1a - `hypso/io/product.py` (read_product / write_product).**
+  In-memory model is an `xr.DataTree`: root holds the product cube `(lines, samples, bands)` with
+  `wavelength`/`radiation_wavelength`/`fwhm` band coords, geometry, global attrs; `metadata/*` are child nodes.
+  Reader accepts current flat files, legacy grouped files (/products + /geometry, pre-refactor and production;
+  gcp latitude/longitude/sourceX/sourceY renamed gcp_*), and ground-station L1A (3D uint16 /products/dn; fwhm
+  from the sensor profile). The writer is the single encoder: per-band SNAP layout via cf.band_attrs, CF
+  geometry attrs by variable name, zlib4+shuffle, whole-array chunks, no _FillValue, dn as uint16.
+  Verified on HYPSO_DATA_AOC_REPROCESS_AULUS2/aeronetvenice_2025-06-12T09-58-02Z:
+  - refactor-written L1D -> read -> write: all 396 variables identical (values, dtypes, attrs), all group and
+    global attrs identical except the new history line;
+  - production grouped L1D -> read -> write == refactor-writer format (only differences are 2 variables
+    production never wrote and 6 metadata arrays production stored as float32);
+  - ground-station L1A -> converted: dn identical in all 120 bands, uint16, no calibration-file attrs, reads
+    back and round-trips (107 MB vs 104.7 MB original; the satobj writer gave 119 MB).
+  Layout change to confirm in SNAP: dimensions used only by metadata groups (esun, radrows, bands_unbinned,
+  ...) are now defined in those groups, so the root has only lines/samples. tests/test_product_io.py: 6
+  synthetic + 4 real-data (L1B/L1C/L1D/L2A from the current writer survive read+write unchanged).
+  Not yet: provenance (×39) and product_format_version; building the tree from a capture object (facade step).
+
+- **2026-10-25 (×40): version scheme implemented (prerequisite for ×39 provenance).** See docs/versioning.rst.
+  - One shared CalVer `YY.M.N` for hypso + both calibration packages, from git tags via setuptools_scm
+    (re-enabled in all three pyproject.toml, `root = ".."`, `version_file = <pkg>/_version.py`, git-ignored).
+    Verified by building wheels in a scratch clone/venv: all three get `26.2.1.dev169+gc3c7c8c64.d20261025`
+    from tag `v26.02.0`; wheels contain `_version.py`, all coefficient files and the manifests. setuptools_scm
+    is a build requirement only (pip build isolation); nothing was installed into the `ac` env.
+  - `hypso.versioning.package_info(name)`: git (commit, dirty, describe) when the package dir is in a git
+    checkout -> `_version.py` -> installed metadata only if it contains the imported module -> `0.0.0+unknown`.
+    The metadata check matters: the `ac` env has production's hypso1/2_calibration (26.2.0/26.5.1) installed
+    while tests import this checkout's copies. `hypso.__version__` is a lazy PEP 562 attribute over it (the old
+    `from ._version import __version__` silently failed, so it never existed). Calibration packages get a plain
+    build-time `__version__`.
+  - `hypso.calibration.manifest` + `coefficients_manifest.yaml` per calibration package (sha256 of every
+    data/ file; 15 for HYPSO-1, 16 for HYPSO-2; all 31 files confirmed identical to their git blobs before
+    hashing, given this workstation's bit-flip history). `tests/test_versioning.py` fails on any unrecorded
+    coefficient change. CLI: `python -m hypso.calibration.manifest check|update [pkg]`.
+  - Also fixed: hypso1_calibration/MANIFEST.in included `hypso/_version.py` (copy-paste of hypso's path).
+  - No release tag created: tagging is the user's call (next one would be e.g. `v26.10.0`).
+  - `product_format_version` (×39 item 5) is still to be added with the provenance work in the rewrite.
+
+- **2026-10-25 (×39): provenance design agreed (build in the Dataset rewrite, step 1; not in current code).**
+  Purpose (user): compatible, ESA SNAP-compatible format with traceability of when/how each level was made.
+  - Global `history`: one line per step: UTC time, level, input file, hypso-package version + git commit (and
+    AC tool + version for L2A). CF-standard; SNAP shows global attributes.
+  - `metadata/processing/<step>` subgroups (l1a, l1b, l1c, l1d, l2a_<tool>), carried forward so each file holds
+    its full lineage: software, version, git_commit, git_dirty, date_utc, input_file, step parameters
+    (coeff_type; georeferencing indirect/direct-fallback; ssi_source, use_unbinned, masks_applied,
+    earth_sun_distance_au).
+  - **Calibration packages (user requirement)**: hypsoN_calibration name + version + git commit, AND sha256 of
+    every coefficient file actually loaded (radiometric/smile/destriping/spectral). Versions alone are not
+    enough: both packages are stuck at 26.02.0 and `04cd011f` replaced the HYPSO-2 smile matrix without a bump.
+  - AC (L2A): tool, version (Polymer polymer_version + checkout git commit; ACOLITE own version string or git
+    commit; OC-SMART install name), install path, input file/level, `settings_effective` (full JSON, ACOLITE
+    after layering) and `settings_user` (only user-set keys). Always written, no toggle (~10-20 KB). Credential
+    keys (EARTHDATA_u/p etc.) redacted. Recorded from hypso-package only; AC processors are not modified.
+  - Needs a real version scheme: hypso-package and both calibration packages are fixed at 26.02.0.
+  - Same step also adds the L1A fixes from ×38: flat-L1A reader, dn as uint16, no calibration-file attrs on L1A,
+    write_l1a_nc_file wrapper. Ground-station L1A stays the source of truth; new-format L1A is derived.
+
+- **2026-10-25 (×38): format verified against production output; ESA SNAP compatibility confirmed by the user.**
+  Diffed refactor-written L1B/L1C/L1D against HYPSO_DATA_AOC_REPROCESS_AULUS2/aeronetvenice_2025-06-12T09-58-02Z
+  (production code with the Earth-Sun fix). All values identical (Lt/rhot all bands, lat/lon, angles, in-file
+  SRFs, earth_sun_distance_au); differences are the intended CF changes. One unintended regression fixed
+  (`25f4c3bf`: per-band `parameter` was the wave label, restored to the variable name). User opened the
+  refactor L1D in ESA SNAP and confirmed it is compatible.
+  Open: pipeline's direct-georef fallback assigns satobj.solar_zenith_angles etc., read-only properties in the
+  refactor; the planned Hypso facade must accept these.
+  L1A in the new format: `write_level_nc(satobj, "L1A", ...)` works and is lossless (all 120 dn bands identical,
+  all metadata groups/variables kept), but cannot be read back (load/l1a_nc_loader.py expects /products/dn),
+  writes dn as float32 instead of uint16, and stamps calibration-file global attrs onto an uncalibrated product.
+  Pre-existing (production too): load/utils.py casts numeric group attrs to int (capture_config exposure 40.0 -> 40).
+
+- **2026-10-25 (×37): architecture decision + production back-port started.**
+  Architecture review (user-requested) concluded: move to a **plain `xr.Dataset` core, no level classes**
+  (user's explicit choice over thin typed wrappers). Target: `io/read` + `io/write` (one CF/SNAP encoder,
+  in-memory `(band,y,x)` split to per-band `Lt_<wave>` on disk), processing as pure Dataset->Dataset functions,
+  AC tools as `run`/`read` + YAML config, and a `Hypso(path)` compatibility facade for
+  hypso-processing-pipeline. Replaces HypsoCapture + capture_types + io/dispatch + load/ + write/ + containers.
+  Rollout: (1) Dataset read/write matching golden files, (2) processing functions, (3) facade, (4) delete old.
+
+  Before that: port the 6 production `polymer`-branch commits made since the fork point `5a249e29`
+  (none cherry-pick, all hand-ported). Status:
+  - `99172075` Earth-Sun distance + in-file SRFs: **ported**. `reflectance.earth_sun_distance()` (degrees);
+    `metadata/srf` on L1C and L1D gets `Band_<i>`/`wav_Band_<i>` SRFs, `esun` units/description,
+    `earth_sun_distance_au` (computed in the writer from `iso_time`, not stored on satobj, so it doesn't need
+    setting in both capture trees); `ac_polymer_srf_getter_from_l1` + `SRF_GETTER_FROM_L1_PATH`, wired into
+    `_polymer_driver.py`. Golden L1D baseline rescaled by the exact (d_correct/d_buggy)^2 = 0.98142 for DOY 63
+    (recorded in baseline.json `l1d_cube_earth_sun_rescale`), not re-recorded. Verified on the venice fixture:
+    implied d^2 from rhot/Lt/esun/cos(sza) equals 0.98243185 at three bands; getter returns Band_0..Band_119.
+  - Then ported, one commit each: `2efe4b35` -> `d94c5a25` (ACOLITE driver: `load(sensor)` then
+    `read(settings_file)`; config key `settings_arg` split into `sensor` + `settings_file`; `polymer_settings`
+    through config.json to run_polymer), `16b6a476` -> `7cbcd6af` (`_unmasked` strip in
+    `PolymerAdapter.get_id_sensor`), `8ef0166c` -> `80c86dd9` (`ancillary_source`/`era5_allow_preliminary`;
+    `eoread.era5.ERA5` built inside the driver), `89ac5e46` -> `8a9b858f` (OC-SMART loader on netCDF4,
+    identical output to the h5py version on the venice .h5; geometry write failures now warnings in both
+    writers), `2be4784e` -> `5740cac8` (solz >= 70 warning in `georeferencing/geo.run_angles_geometry`).
+  - **Deliberately not ported**: `2be4784e`'s Polymer import-preload hack. It worked around an in-process
+    PathFinder failure; the refactor imports Polymer in a fresh subprocess. Verified against
+    `/home/camerop/AC/Polymer/Polymer` (current pipeline install): polymer/eoread/eotools/core import in the
+    driver subprocess; the run fails only at Level1_HYPSO's missing-file assert.
+  - Scope rule from the user (2026-10-25): changes go in hypso-package-refactor only; the AC processors
+    (eoread/ACOLITE/OC-SMART/Polymer checkouts) are updated separately.
+  - **Not in this repo but needed for AC**: `hypso-package-refactor/POLYMER/eoread` (`refactor` branch) lacks
+    the fork's `3609d25` (F0 from file esun / d^2); Polymer still uses point-sampled F0 with no distance term
+    until that is merged onto the flat-layout reader.
+  - Pre-existing, unrelated: 3 `tests/test_ac_subprocess.py` failures. Cause: `hypso` is not installed in
+    the `ac` env (conftest only adds it to the parent's sys.path), so driver subprocesses can't import it.
+    Also `test_real_polymer_imports_succeed_through_subprocess` silently skips: its fixture path
+    `Polymer_HYPSO_SRF_Oct_2025` was renamed `..._DO_NOT_USE`; the pipeline now uses `AC/Polymer/Polymer`
+    (different layout: no `polymer-master-v5` container).
+
+- **2026-08-26 (×28): print() → logging conversion.** User request, independent of the HypsoCapture
+  rearchitecture. 174 live `print()` calls across 20 files converted to `logger.info`/`warning`/`error`/
+  `exception` (commit `03b604be`) - each file gets its own `logger = logging.getLogger(__name__)`, matching
+  the pattern already established in `HypsoCapture.py`/`io/dispatch.py`/`georeferencing/geo.py`.
+
+  Deliberately left as `print()`, not missed: `ac/adapters/ocsmart.py`'s `print(line, end="")` relays an
+  external subprocess's raw stdout back through `sys.stdout` in real time (documented in the surrounding
+  comment) - a logger call would add timestamp/formatting noise to output meant to pass through verbatim.
+  Also excluded: `reflectance/write_ssi_npz.py` and `utils/ncdebug.py` (developer scripts/inspection tools
+  whose whole purpose is direct console output) and `ac/loading_acolite_output.py` (a standalone personal
+  dev script, zero importers).
+
+  Small adjacent fixes made while touching this code (not a separate pass): several bare/unused-variable
+  `except:` narrowed to `except Exception:`; one re-raise in `calibration/correction.py` now chains with
+  `from ex`; a mismatched-variable bug in `load/ocsmart_h5_loader.py`'s error message (reported the wrong
+  loop variable) fixed; five `ac_*_open_output` call sites across the AC adapters switched from the
+  deprecated `l2a_cube` alias to `l2a_cubes`, avoiding a spurious `DeprecationWarning` on every AC correction
+  load.
+
+  138 tests pass (full suite, unchanged - no new tests needed, this is a pure diagnostics-output change with
+  no behavior difference for anything the test suite observes).
+
+- **2026-08-26 (×27): L1ACapture — the typed hierarchy now spans L1A through L2A.** User asked when
+  `HypsoCapture` splitting into per-level classes could begin; answered directly that additive `L1ACapture`
+  (mirroring `L1BCapture`/etc.) had no blocker and could start now, while retiring `HypsoCapture` itself needs
+  Phase C (pipeline migration, still blocked) first. User chose to add `L1ACapture` now (commit `db30f2c3`).
+
+  Reached via new `HypsoCapture.to_l1a()` — `Hypso(path)` is completely unchanged, still the load entry point;
+  `.to_l1a()` retypes an already-loaded object rather than adding a second loader. No generation step —
+  `spawn_l1a` just renames cube storage from the old class's `_l1a_cube` to the uniform `_cube` every class
+  other than `L2ACapture` uses. `spawn_l1b` generalized to accept either source shape (`_l1a_cube` from
+  `HypsoCapture`, or `_cube` from a new `L1ACapture`), since both are now real entry points into `to_l1b()`.
+  `L1ACapture` also gets `to_l1c()`/`to_l1d()` convenience one-hops, matching `HypsoCapture`'s own ergonomics.
+
+  138 tests pass (full suite; 3 new in `tests/test_capture_types.py`). `docs/architecture.rst`'s "Tracking
+  which level an object represents" section updated to mention `L1ACapture`.
+
+- **2026-08-26 (×26): georeferencing angle/track consolidation — the "HypsoBase → HypsoCapture" plan's last
+  remaining piece, closed out.** Re-scoped fresh (Explore + Plan agent, re-verified rather than executing the
+  stale original plan) since `capture_types.py` (×25) didn't exist when this was first drafted and turned out
+  to duplicate one of the two bugs fixed here.
+
+  New `hypso/georeferencing/geo_state.py`: `GeoAngles` (5 fields)/`TrackGeometry` (3 fields), frozen
+  dataclasses, held as `self.angles`/`angles_direct`/`track`/`track_direct` — frozen because
+  `capture_types.spawn_as`'s shallow `__dict__` copy would otherwise let a mutable instance's in-place field
+  mutation silently corrupt both the spawned object and its source. `framepose` (no direct variant) stays a
+  flat attribute, untouched. `HypsoCapture` gets 10 read-only compatibility properties (all 10 angle names,
+  not just the 3 confirmed externally-load-bearing ones) — the reason `io/writer.py`'s existing lookup table
+  and `write/geometry_group_writer.py`'s hardcoded reads needed **zero changes**, honoring the earlier
+  instruction to leave that specific writer alone. `georeferencing/geo.py`'s two writers and
+  `io/dispatch.py`'s load-path writer (`set_hypso_attributes`) updated to construct whole instances instead of
+  17 individual `setattr`s.
+
+  **Two real, independently-duplicated bugs fixed**: `HypsoCapture._generate_l1d_cube_impl` and
+  `capture_types._spawn_l1d` both had `hasattr(satobj, 'solar_zenith_angles_direct')` checks that would have
+  silently and permanently broken (always `True`) once that name became a property — fixed to
+  `angles_direct.solar_zenith is not None`. The `capture_types.py` copy was also a latent, already-real crash:
+  `L1BCapture` never had that property/attribute at all, so `use_direct_georef=True` would have raised
+  `AttributeError` the first time anyone exercised it (untested until this pass added coverage).
+
+  129 existing + 6 new tests (`tests/test_geo_state.py`) pass, verified in two separate runs. Commit
+  `bfc0d722`. This closes out the entire "HypsoBase → HypsoCapture" plan from ×24/×25 — nothing left pending
+  from it except Phase C/D (pipeline migration, blocked - see ×25's entry).
+
+- **New TODO (user request, ×29): Zarr support.** Not scoped or implemented - recorded with full architectural
+  thoughts in `ARCHITECTURE_PROPOSAL.md`'s new section 7. Short version: bigger than "add another writer" -
+  the current writer is netCDF4-API-native (not xarray-native), Zarr stores are directories not files (touches
+  every `*_nc_file`/`Path`/`.is_file()` assumption), the per-band-named-variable layout was chosen specifically
+  for SNAP (which doesn't read Zarr at all), and it would be additive alongside NetCDF, never a replacement
+  (SNAP/Polymer/ACOLITE only read NetCDF). Recommendation: don't take this on opportunistically - scope it on
+  its own, ideally after the eoread/ACOLITE NetCDF coordination below has landed, and only once there's a
+  concrete driving use case (vs. speculative future-proofing).
+
+- **2026-08-26 (×30): `compute_csiro_srfs`/`ac_dark_pixel_subtraction` cleanup — the ×24 TODO acted on.**
+  Before removing anything, widened the "zero external callers" check beyond `hypso-processing-pipeline` (the
+  only repo the ×24 TODO had actually verified) — found `compute_csiro_srfs()` still had a real, live caller:
+  `/home/camerop/AC/hypso-ac-processing/csiro.py`, `2b_process_capture.py`, and `aoc_pipeline/03_process_capture.py`
+  all called `satobj.compute_csiro_srfs()` and read the `csiro_*` attributes directly, and that repo had commits
+  as recent as 2026-08-02 — not obviously dead. Checked in with the user before removing anything (its own
+  `config.py` docstring says `hypso-processing-pipeline` "consolidates" `hypso-ac-processing`'s config system,
+  suggesting predecessor/superseded, but that alone wasn't proof it had actually stopped being run). **User
+  confirmed `hypso-ac-processing` is fully superseded** — with that, `compute_csiro_srfs` genuinely has zero
+  remaining callers anywhere.
+
+  Removed outright (not just re-deprecated): `compute_csiro_srfs()` itself (`reflectance/toa_reflectance.py`),
+  its export from `reflectance/__init__.py`, its `HypsoCapture` binding, the `csiro_*` attribute-restore loop in
+  `io/dispatch.py`'s `set_hypso_attributes` (the "missing comma" one — see the ×17 entry below for that bug's
+  history), and the five `csiro_*` NetCDF-variable write blocks in `write/metadata_srf_group_writer.py`.
+  `compute_spectral_response(grid="uniform-1000")` (already existed, verified equivalent) is the direct
+  replacement for anyone who still needs that exact grid/SSI combination. `spectral_response.py`'s module
+  docstring updated to stop claiming `compute_csiro_srfs` is "still a thin wrapper" (no longer true) and record
+  the removal + its replacement.
+
+  `ac_dark_pixel_subtraction`: still actively used (`hypso-processing-pipeline/stage2_ac/process_capture.py:421`,
+  `ac_runners_pace.py`'s direct import of `dark_pixel_subtraction_per_band`) — not removable, and the *move*
+  question (does it belong in the pipeline's own `ac_runners_hypso.py` instead) needs `hypso-processing-pipeline`
+  edits, off-limits right now. Did the packaging-consistency piece that's actionable within this repo alone:
+  `hypso/ac/adapters/__init__.py`'s `AC_ADAPTERS` namespace now also exposes `dark_pixel_subtraction` (a bare
+  function, not an `ACAdapter` instance — its own docstring already explained why DPS doesn't fit
+  run_correction/open_output: no external tool, no output file, pure in-memory computation from the L1D cube —
+  that reasoning stands, not overridden), so `self.ac.dark_pixel_subtraction(satobj, ...)` now reads consistently
+  alongside `self.ac.polymer/.acolite/.ocsmart`. `HypsoCapture.ac_dark_pixel_subtraction` changed from the
+  obscure `from X import fn; fn = fn` class-body binding to a real thin delegating method
+  (`return self.ac.dark_pixel_subtraction(self, ...)`), matching the `ac_polymer_run_correction ->
+  self.ac.polymer.run_correction(self, ...)` pattern already used for the three real adapters. Zero external
+  contract change — `satobj.ac_dark_pixel_subtraction()` still works exactly as before (confirmed by
+  `tests/test_public_api.py`'s existing callable-surface check, which already expected this exact name).
+
+  Full suite run after both changes to confirm no regressions.
+
+- **2026-08-26 (×31): capture-dimensions audit — the ×25/×26 TODO acted on, uncovered a live calibration
+  bug.** Audited every hardcoded dimension/capture-type assumption in `hypso-package`
+  (`spatial_dimensions`/`frame_count`/`row_count`/`column_count`/`bin_factor`/`check_capture_type`). Most of
+  these (`spatial_dimensions` etc.) are correctly *derived per-capture* from the loaded file's own metadata,
+  not hardcoded — not fragile. The one genuinely hardcoded, sensor-agnostic piece: `io/dispatch.py`'s
+  `check_capture_type()` classified every capture into `"nominal"`/`"moon"`/`"wide"`/`"custom"` via one flat
+  `if/elif` chain (`frame_count == 956`/`== 106`, `image_height == 1092`) with **no reference to
+  `satobj.sensor_profile`** — a design gap against `hypso/sensors/`'s own registry (built earlier this
+  session specifically so per-sensor differences don't need central dispatch code).
+
+  **Confirmed live bug, not just future-sensor risk**: `capture_type` feeds `sensor_profile.calibration_files(
+  capture_type, ...)`, which delegates to the installed `hypso1_calibration`/`hypso2_calibration` packages.
+  Reading their source: `hypso1_calibration.get_hypso1_calibration_files`'s `match capture_type:` had cases
+  for `"custom"`/`"nominal"`/`"wide"` but **none for `"moon"`** — fell through to the catch-all, returning
+  radiometric/smile/destriping/spectral coefficient files all as `None`. `calibration/pipeline.py`'s
+  `load_calibration_coeff_files` wraps each load in a bare `try/except: satobj.X = None`, and `run_calibration`
+  gates each step on `if satobj.X_coeffs is not None`, so **any HYPSO-1 capture with `frame_count == 106`
+  silently skipped all four calibration steps** — no error, no warning, uncalibrated L1B data. Found
+  `radiometric_calibration_matrix_HYPSO-1_moon.npz` already shipped, unused, in `hypso1_calibration`'s
+  `data/` — strong evidence a "moon" case was intended but never wired up.
+  (`hypso2_calibration.get_hypso2_calibration_files` has the opposite problem — it ignores `capture_type`
+  entirely, so the classification has zero effect on HYPSO-2's calibration file selection either way; left
+  as-is, no evidence this is wrong for HYPSO-2 specifically.)
+
+  Grepped `hypso-processing-pipeline`/`hypso-ac-processing` for "moon" — no hits, so this may be latent (moon/
+  lunar-calibration captures possibly processed out-of-band) rather than actively firing today; couldn't
+  confirm from code alone.
+
+  User directed both fixes:
+  1. **`hypso/sensors.SensorProfile`** gained a new `capture_type_thresholds: tuple[tuple[str, str, int], ...]`
+     field — ordered `(capture_type, satobj_attr, expected_value)` rules, first match wins, no match →
+     `"custom"`. `hypso1.py`/`hypso2.py` each now declare their own (currently identical — no evidence HYPSO-2's
+     frame geometry differs, so this preserves today's actual behavior exactly) `CAPTURE_TYPE_THRESHOLDS`.
+     `check_capture_type()` rewritten to iterate `satobj.sensor_profile.capture_type_thresholds` generically
+     instead of hardcoding — a future sensor with different dimensions now just declares its own thresholds at
+     registration, no central-dispatch-code change needed, matching the registry's existing design intent.
+  2. **`hypso1_calibration/hypso1_calibration/main.py`** (confirmed part of this same editable git clone,
+     `hypso-package-refactor/hypso-package/hypso1_calibration/` — not an external/off-limits package) gained a
+     `case "moon":` branch: radiometric uses the pre-existing unused moon file; smile falls back to the same
+     full-frame matrix the `"custom"` case already uses (`read_coeffs_from_file`'s `'smile'` branch in
+     `calibration/correction.py` crops full-frame matrices to the capture's actual AOI/bin_factor unless the
+     path contains `'wide'`/`'nominal'` — the existing, designed fallback path for non-standard geometries, not
+     a new mechanism); destriping skipped, same as `"custom"`. This is an inference by analogy to how `"custom"`
+     already handles unrecognized geometries, not verified against calibration domain documentation — flagged
+     to the user as a judgment call, not asserted as definitively correct science.
+
+  Found and worked around a real environment gotcha while verifying: `pip install -e .` for
+  `hypso1_calibration` switched it to setuptools' PEP 660 finder-based editable install, which broke resolution
+  when Python is invoked from `hypso-package`'s own repo root — that directory contains a bare
+  `hypso1_calibration/` subdirectory (the calibration package's own project root), which `PathFinder` resolves
+  as an empty namespace package *before* the custom editable finder (appended later in `sys.meta_path`) ever
+  gets consulted, since the prior real install (a plain, non-editable site-packages copy) no longer exists to
+  short-circuit that. Reverted to a normal non-editable reinstall (`pip install <path>`, no `-e`) to restore
+  the working configuration while keeping the fix.
+
+  New tests in `tests/test_sensors.py`: `capture_type_thresholds` well-formedness for both profiles,
+  `check_capture_type`'s classification against a fake capture (all four outcomes), and a regression test
+  confirming `hypso1_calibration`'s `"moon"` case now returns real (non-`None`) calibration files.
+
+- **2026-08-26 (×32): eoread/ACOLITE/OC-SMART reader coordination — the deferred format-migration TODO
+  acted on.** User set up sibling checkouts of Polymer/eoread/eotools/core, ACOLITE, and an OC-SMART
+  installation zip under `/home/camerop/hypso-package-refactor/` (all confirmed already on a `refactor`
+  branch/tag where applicable) and asked for the three readers' HYPSO-specific code to transparently support
+  both this package's current flat NetCDF layout (products/geometry at file root, since the ×20-era CF/SNAP
+  refactor) and the original grouped layout (`products`/`geometry` HDF5 groups) — `hypso-processing-pipeline`
+  hasn't migrated onto the new writer yet, so both are genuinely live (confirmed: a real pipeline output
+  dated 2026-08-25 is still grouped-layout).
+
+  Generated real reference files first (`hypso/io/writer.py`'s `write_level_nc`/`write_l2a_nc` against the
+  same reference capture the test suite uses, both `datacube=False` — the actual pipeline default — and
+  `datacube=True`) and inspected them with `h5py`/`xarray` directly, exactly as each external reader does,
+  rather than reasoning about netCDF4/HDF5 attribute serialization from writer-side code alone. Caught two
+  things this way that pure code-reading would have missed: scalar attributes round-trip through h5py as
+  1-element arrays in *both* layouts (so `att['wavelength'][0]`-style indexing in existing reader code needed
+  no change), and `xarray.open_dataset` auto-promotes `latitude`/`longitude` to coordinate variables once
+  they're resolvable in the same (root) group as the `coordinates=` attribute referencing them — new in the
+  flat layout, and the direct cause of a `MergeError` hit and fixed below.
+
+  - **`eoread/hypso.py`** (`Level1_HYPSO`): added `_hypso_format()` (cheap `h5py` open, checks for a
+    top-level `products` group) and `_read_hypso_l1c_products_and_geometry()`, which returns
+    `(ds_root, ds_nav, ltoa, wave_names, wavelengths)` for either layout — the only extraction step that
+    actually differs; F0/Rtoa computation and attribute assembly downstream are completely unchanged, since
+    they only depend on this unified result. Also handles a single stacked `(lines,samples,bands)` `Lt`
+    datacube variable (only possible in the flat layout, `write_level_nc(datacube=True)`), and sorts band
+    variables by each one's own `band` attribute rather than name/insertion order (matches the same
+    band-order-bug-avoidance convention this package's own reader already uses). Removed the speculative
+    `Level1_HYPSO_future` (targeted a `navigation`-group + stacked-`Lt` layout that never materialized — the
+    real new layout is flat-root, now handled by `Level1_HYPSO` directly, so keeping it would misrepresent
+    what layouts actually exist). Fixed a real bug found while verifying: reading `latitude`/`longitude` off
+    the flat root dataset raised `MergeError` (xarray couldn't tell if the assignment target should be a
+    coordinate) — `reset_coords()` demotes them back to plain data variables first. Verified end-to-end
+    (not just import) against three real files: the 2026-08-25 grouped-layout pipeline output, and both
+    per-band/datacube variants of a freshly-generated flat-layout file — sensible `Ltoa`/`Rtoa` values in all
+    three, non-zero away from a genuinely-low-response band confirmed identical in the real production file
+    too. Added `tests/test_hypso.py` coverage (skipped if the grouped-layout sample path isn't present).
+  - **`acolite/hypso/l1_convert.py`**: added `_hypso_products_and_geometry_groups(f)`, returning
+    `(products, geometry)` h5py group-like objects pointing at the real groups (old layout) or the file root
+    itself (new layout). Every `f['/products']`/`f['/geometry/']` reference replaced with these — the rest of
+    the function (band info, geolocation, the actual radiance→reflectance conversion, the per-band write
+    loop) is untouched. Also made per-band ordering explicit (sorted by each variable's `band` attribute,
+    same reasoning as eoread) instead of relying on h5py's iteration order happening to match — needed one
+    numpy-version fix along the way (`int()` on a genuinely 1-element array raises on this numpy; unwrap via
+    `.reshape(-1)[0]` first). Verified with real `l1_convert()` runs (not just import) against all three file
+    shapes for both L1C and L1D — real ACOLITE output files with sensible `rhot_*` reflectance values.
+  - **OC-SMART** (`OCSMART_Linux_v2.6.3/src/L1B.py`, not a git repo — edited in place, no commit possible):
+    found this file already had a `_2025`/`_2026`-dated fallback chain for HYPSO geometry lookups
+    (`/navigation/*_indirect` → `/navigation/*` → `/geometry/*`, with "keep these options here for backwards
+    compatibility" comments) — evidently NTNU's own prior attempt at exactly this kind of format-migration
+    resilience, just not yet extended to the flat layout. Added one more fallback tier (`latitude`/
+    `longitude`/`solar_zenith`/`solar_azimuth`/`sensor_zenith`/`sensor_azimuth` directly at file root) to each
+    of the six lookups, following the file's own established style. Also fixed the `rhot_<wavelength>`
+    product-variable lookup (`readl1b`'s HYPSO_HSI branch): was `np.array(f['/products'])`, unconditionally
+    assuming a `/products` group; now checks for it and falls back to filtering root keys by `rhot_` prefix
+    (the flat layout's root holds many other unrelated names a raw `/products` group never did). Since
+    OC-SMART needs its own pinned conda environment (basemap/GDAL/etc., confirmed incompatible with this
+    session's environment per the adapter's own docstring) full end-to-end execution wasn't feasible here —
+    verified by reproducing the exact modified lookup logic standalone (h5py/numpy/re only, no OC-SMART
+    class instantiation needed) against real old- and new-layout L1D files, confirming correct geometry
+    shapes and sensible reflectance-input values in both.
+
+  hypso-package itself: no changes — all edits landed in the three sibling tool checkouts.
+
+- **2026-08-26 (×33): fixed a real bug found opening hypso-package's own output in ESA SNAP — `metadata/
+  gcp/latitude`/`longitude` name-collided with the real per-pixel geolocation.** User reported SNAP couldn't
+  open a current-format L1D file and shared its log — `java.lang.ArrayIndexOutOfBoundsException: Index 321589
+  out of bounds for length 29` inside `org.esa.snap.core.dataio.geocoding.util.RasterUtils.
+  computeResolutionInKm`, called from `CfGeocodingPart.readPixelBasedGeoCoding`.
+
+  Diagnosed by elimination with real files rather than guessing: generated a minimal reproducer (just
+  `latitude`/`longitude` + one dummy CF-referencing band, real lat/lon values copied from an actual capture,
+  no groups/metadata at all) — opened fine, ruling out the earlier ×32-era worry that SNAP's CF reader
+  rejects netCDF4 group structure outright. Added back all 120 real bands with real per-band attributes —
+  still opened fine, ruling out band count. Then added just the `metadata/gcp` group (ground-control-point
+  tie points from HYPSO's raw georeferencing, carried through from L1A) — **crashed identically**. Its
+  `latitude`/`longitude` variables are exactly length 29 — the same 29 from the stack trace. Root cause:
+  those two variables carry no `standard_name`/`units` of their own to distinguish them from real coordinate
+  variables, so SNAP's CF/geocoding scanner finds them by bare name alone, treats them as a second candidate
+  geolocation source alongside the real per-pixel root `latitude`/`longitude` (598×1092 = 653,016 pixels),
+  and ends up indexing the 29-element GCP array with a full-raster pixel offset.
+
+  Confirmed zero consumers of the exact netCDF variable names anywhere — `load_gcp_from_nc_file` (load/
+  utils.py) reads whatever keys exist under `metadata/gcp` generically (`for key in group.variables.keys()`),
+  no code anywhere reads `satobj.metadata.gcp.vars["latitude"]` by that literal key, and grepping
+  `hypso-processing-pipeline`/eoread/ACOLITE/OC-SMART turned up nothing either. Fix: `write/
+  metadata_gcp_group_writer.py` now writes `metadata/gcp/gcp_<key>` instead of `metadata/gcp/<key>`
+  (`gcp_latitude`/`gcp_longitude`/`gcp_sourceX`/`gcp_sourceY`) — a one-line rename, no reader-side change
+  needed. Verified end-to-end, not just reasoned about: user confirmed a freshly-generated real L1D file (full
+  `metadata` group, `esun`/`effective_fwhm`, everything - not a stripped reproducer) now opens in their SNAP
+  install. Full test suite re-run after the change, no regressions.
+
+  Also corrected an unrelated false alarm from the same investigation: a reproducer script of mine displayed
+  string attributes as literal `b'...'` text in SNAP - that was `str()` called on a raw `numpy.bytes_` value
+  in *my own test script*, not a bug in hypso-package's actual writer (verified directly: the real file's
+  `long_name` etc. round-trip as clean Python `str` via both `netCDF4` and raw `h5py`).
+
+- **2026-08-26 (×34): added `effective_fwhm_unbinned`.** User asked to confirm `metadata/srf/effective_fwhm`
+  is post-binning FWHM (yes — confirmed from source: `spectral_response.py` computes it via
+  `compute_effective_fwhm(srfs_csr=binned_srfs_csr, ...)`, an empirical half-max-width measurement on the
+  *binned* SRF, distinct from the plain per-band `fwhm` product attribute, which is just the nominal
+  lookup-table value at binned band centers). User then asked whether "effective_fwhm" is a good name
+  (yes — it's standard hyperspectral-calibration terminology for "measured from the actual SRF," as opposed
+  to a nominal spec value) and pointed out there should be a pre-binning counterpart too — correct: no
+  unbinned effective FWHM existed anywhere; `fwhm_unbinned` was only ever the *nominal* value fed in to build
+  the unbinned Gaussian SRFs, never something empirically measured back out of them.
+
+  Added `SpectralResponse.effective_fwhm_unbinned` (`reflectance/spectral_response.py`) — the same
+  `compute_effective_fwhm` function, called against the pre-binning `srfs_csr` instead of `binned_srfs_csr`
+  (already in scope right before `bin_srf` runs, one extra line). Threaded through everywhere
+  `sr.effective_fwhm` already flowed: `HypsoCapture.spectral_response`'s lazy rebuild-from-file path,
+  `_generate_l1d_cube_impl`, and `capture_types._spawn_l1d`. Persisted to
+  `metadata/srf/effective_fwhm_unbinned` (`write/metadata_srf_group_writer.py`, mirrors the existing
+  `effective_fwhm` block exactly) and restored on load (`io/dispatch.py`, mirrors the existing
+  `effective_fwhm` restore exactly) — matches this codebase's established `_unbinned`-suffix convention
+  (`wavelengths`/`wavelengths_unbinned`, `spec_coeffs`/`spec_coeffs_unbinned`). Deliberately did NOT touch
+  `compute_toa_reflectance`'s legacy 7-tuple return (its docstring explicitly commits to "unchanged" for
+  existing callers) or `ac/adapters/polymer.py`'s per-band `effective_fwhm` lookup (no identified need for an
+  unbinned variant there).
+
+  Verified against real capture data, not just unit-level: `effective_fwhm_unbinned` (~5.46 nm) closely
+  recovers the nominal `fwhm_unbinned` value the Gaussian SRFs were built from (small discretization error,
+  as expected), while `effective_fwhm` (binned, ~6.0 nm) is measurably larger — correct physics, since binning
+  sums neighboring bands' SRFs together and widens the combined response. Confirmed the full write→read round
+  trip on a real L1D file. New test `test_effective_fwhm_unbinned_persisted` in `tests/test_cf_format.py`
+  asserts both the persistence and this binned-vs-unbinned relationship. Full suite re-run, no regressions.
+
+- **2026-08-27 (×35): capture-dimensions plan Fix 1 implemented + a second fwhm-staleness bug found while
+  verifying it; two review flags recorded.** Implemented the approved plan's Fix 1 (`HypsoCapture.__init__`
+  no longer pre-seeds `self.fwhm` from the fixed-length sensor-profile default; `io/dispatch.py`'s
+  `set_hypso_attributes` now unconditionally derives `fwhm`/`fwhm_unbinned` from this capture's own
+  wavelengths via `capture_types._get_fwhm`/`_get_fwhm_unbinned`, replacing the dead `UNBINNED_BAND_COUNT`
+  fallback). Verified against real capture data (not just unit-level): confirmed 88 of 120 bands genuinely
+  differ from the old sensor-default values (not a coincidental no-op) immediately after load.
+
+  **Writing a real L1B file to disk as part of that verification caught a second, related bug the plan
+  hadn't anticipated**: `calibration/pipeline.py`'s `run_calibration` has a "spectral correction" step
+  (lines ~178-190) that overwrites `satobj.wavelengths`/`wavelengths_unbinned` with calibration-refined
+  values — but nothing resynced `fwhm`/`fwhm_unbinned` afterward, so bands whose refined wavelength crossed
+  a `fwhm_lookup_wl` boundary kept the *load-time* fwhm value in the written L1B file (confirmed directly:
+  bands 60/100 wrote `5.46` instead of the correct `3.34`/`3.42`, while bands 0/32 happened to still match).
+  Same root cause as Fix 1 (fwhm going stale relative to wavelengths), different trigger. Fixed the same way:
+  both spectral-correction branches now call `_get_fwhm`/`_get_fwhm_unbinned` again immediately after
+  updating wavelengths. Re-verified: all four checked bands now write correctly. No circular-import issue
+  from adding `from hypso.capture_types import _get_fwhm, _get_fwhm_unbinned` to `calibration/pipeline.py`
+  (checked: `capture_types.py` only imports `calibration.pipeline` deferred, inside a function body).
+
+  **Four review flags recorded per user request, not acted on yet**:
+  - `hypso.containers`'s `DatasetDict`/`as_dataarray` (the ×21-era replacement for the deleted
+    `DataArrayDict`/`DataArrayValidator`) — user wants to review whether a less-custom (e.g. more directly
+    xarray-native) solution exists, despite this already being described as "the standard/generalizable
+    choice" in its own docstring. Not investigated yet - flagged for a future pass.
+  - `hypso/georeferencing/georeferencing.py` (593 lines: `GCPList`, `GCP`, `PointsCSV`, `Georeferencer`) —
+    user's instinct: should only need simplified code for applying GCPs. Checked before recording: **zero
+    callers found anywhere** for any of its four classes - not in this package (`geo.py`, the module that
+    actually does georeferencing work, never references them), not in `hypso-processing-pipeline`
+    (read-only grep). `GCP`/`GCPList`/`Georeferencer` (not `PointsCSV`) are re-exported as public API from
+    `georeferencing/__init__.py` despite this. Strong candidate for simplification or removal, but not
+    deleted - only public-API classes, and grep can't rule out external notebook/script usage outside this
+    workspace. Flagged for a future pass, not acted on yet.
+  - Combining `hypso/io/` and `hypso/load/` into one submodule — user noticed the overlap. Checked before
+    recording: `io/` (this session's schema-driven `dispatch.py`/`reader.py`/`writer.py`/`cf.py`/`schema.py`)
+    already reaches INTO `load/` today (`io/dispatch.py` imports `load_l1a_nc`/etc. from `hypso.load`;
+    `io/reader.py` imports from `hypso.load.utils`) and `io/writer.py` similarly reaches into a THIRD
+    directory, `hypso/write/` (`calibration_filenames_writer`/`metadata_gcp_group_writer`/
+    `metadata_srf_group_writer`). So the real shape is `io/` orchestrating two older, still-load-bearing
+    per-format/per-group helper directories (`load/`, `write/`), not two independent, equally-scoped
+    modules that happen to overlap - a genuine merge would need to reconcile three directories, not two,
+    and `load/`'s AC-tool-specific loaders (`acolite_l2_nc_loader.py`/`ocsmart_h5_loader.py`/
+    `polymer_l2_nc_loader.py`) look like a different concern (parsing OUTPUT from external AC tools) than
+    `io/`'s own per-level NetCDF schema. Flagged for a future architecture pass to actually decide the right
+    shape, not acted on yet.
+  - Removing `hypso/classification/` — user's instinct, checked before recording: this is already an
+    explicit, documented compatibility shim (`from hypso.masks import *`, one line), not accidentally-still-
+    there dead code - its own docstring says the real code moved to `hypso.masks`, kept solely because
+    `hypso-processing-pipeline/hypso_pipeline/stage2_ac/process_capture.py` still does `from hypso.
+    classification import decode_jon_cnn_*` (confirmed the only caller anywhere, read-only grep). Removing
+    it outright would break that import - needs either confirming the pipeline has migrated to `hypso.masks`
+    first, or a deprecation-warning period, before this repo can safely delete it. Flagged, not acted on yet.
+  - Integrating `hypso/resample/` more closely into `hypso-package` - user's instinct. Checked before
+    recording: `resample_cube`/`resample_products` (`datacube_resamplers.py`/`resamplers.py`, generalized
+    and real-data-tested in the ×21 pass) have **zero callers anywhere** - not re-exported from `hypso/
+    __init__.py`, no `HypsoCapture` method/property delegates to them (unlike calibration/georeferencing/
+    masks/AC, all composed onto the capture object as `self.X`), and zero external callers in
+    `hypso-processing-pipeline` either. Working, tested code that exists as orphaned free functions rather
+    than a first-class capability of the capture object. Flagged for a future pass to wire in properly
+    (e.g. a `satobj.resample.cube(...)`-style composition, matching the pattern already used elsewhere in
+    this package), not acted on yet.
+  - Two possibly-missing SNAP-specific NetCDF attributes for reflectance products - user's instinct.
+    Checked before recording: `units="1"` for L1D `rhot_<wave>` variables is already a deliberate, correct
+    CF choice (dimensionless ratio - `L1D_SCHEMA.product_units` in `io/schema.py`), not a gap. But the
+    reflectance variable's `standard_name` was flagged in this session's original SNAP research
+    (`ARCHITECTURE_PROPOSAL.md` §4.4) as "candidate: `toa_bidirectional_reflectance` - verify" and never
+    actually resolved - `cf.band_attrs()` still sets no `standard_name` on any band variable today. Separately,
+    no attribute for spectral bandwidth *distinct from* the already-written `fwhm` has ever been investigated -
+    worth checking given the precedent already found this session: SNAP's Spectral Viewer specifically needed
+    `radiation_wavelength`/`radiation_wavelength_unit` (not the generic `wavelength`) to auto-recognize
+    per-band wavelengths, confirmed against a real ACOLITE output file - a parallel SNAP-specific bandwidth
+    attribute name (distinct from CF's own `fwhm` convention) is plausible but unverified. Both need a real
+    SNAP install to check (same caveat the original research already carried), not something to guess at
+    from documentation alone. Flagged, not acted on yet.
+
+  **New TODO (user request): complete documentation/docstrings/comments across the package.** Quantified
+  before recording, not just asserted: of 85 `.py` files under `hypso/hypso/`, 54 have no module-level
+  docstring at all; of 373 functions/methods, 226 have no docstring (measured via a one-off `ast`-based
+  scan, not a permanent tool in this repo). This session's own new/heavily-touched modules (`capture_types.py`,
+  `io/`, `georeferencing/geo_state.py`, `containers.py`, etc.) are generally well-documented as part of the
+  work that created/modified them; the gap is concentrated in older, untouched parts of the package. Not
+  scoped or started - a real pass would need to decide priority (public API surface first vs. blanket
+  coverage) rather than mechanically stub docstrings everywhere.
+
+- **2026-08-27 (×36): capture-dimensions plan Fix 3 implemented — imaging-mode calibration schema, in
+  YAML, replacing filename-substring inference.** During Plan Mode review, user pushed back twice on the
+  originally-scoped Fix 3 (a bolted-on shape guard inferring "is this file pre-baked" from a `'wide' in
+  str(coeff_path)` filename check): first, that "nominal"/"wide"/"moon"/"custom" are HYPSO *imaging modes*
+  that the satellite may grow more of, so adding one should mean adding config/data, not new code branches;
+  second, that this schema should live outside `.py` files entirely if possible. Both landed: the plan's
+  Fix 3 became a declarative YAML schema, not a Python-dict one.
+
+  **`hypso/hypso/sensors/hypso1_modes.yaml`/`hypso2_modes.yaml`** (new, package data): per capture_type,
+  the classification rule (same `classify_attr`/`classify_value` `SensorProfile.capture_type_thresholds`
+  already used, now sourced from YAML) plus `crop_modes` (per coefficient type, `"as_is"` pre-baked vs the
+  default `"crop_and_bin"`). Loaded once at import time in `sensors/hypso1.py`/`hypso2.py` via
+  `importlib.resources` — the same mechanism this codebase already uses for SatPy's own reader/composite
+  YAML configs (`hypso/satpy/etc/*.yaml`), so this isn't a new pattern for the package. `SensorProfile`
+  gained the new frozen field `capture_mode_crop_modes: dict[str, dict[str, str]]`.
+  **Caught and fixed my own mistake before it shipped**: initially wrote `hypso2_modes.yaml` as an empty
+  document (matching HYPSO-2 having no crop-mode variation), which would have silently dropped HYPSO-2's
+  classification thresholds entirely (every capture reclassified as "custom") - fixed to carry the same
+  `nominal`/`moon`/`wide` thresholds HYPSO-1 has, just with empty `crop_modes`. Also preserved the exact
+  original threshold *order* (`nominal, moon, wide`) rather than the alphabetical order first written,
+  since first-match-wins ordering could matter for a hypothetical capture satisfying two rules from
+  different attrs (`frame_count` vs `image_height`) at once - documented inline in both YAML files so a
+  future edit doesn't silently reorder it.
+
+  **`hypso1_calibration/hypso1_calibration/data/capture_modes.yaml`** (new, co-located with the `.npz`
+  files it describes): per capture_type, which coefficient files this mode uses - replaces the `match
+  capture_type:` block in `hypso1_calibration/main.py` (including the `"moon"` case added earlier this
+  session) with a YAML lookup. Verified mechanical: captured golden filename selections for every
+  capture_type from the pre-refactor code, confirmed the YAML-driven version matches exactly (by filename -
+  absolute paths differ because the package physically reinstalls to a different location, expected).
+  `hypso2_calibration` left untouched (no per-capture_type file variation exists there to schema-ify).
+
+  **`calibration/correction.py`**: new `CalibrationShapeMismatchError`; `read_coeffs_from_file` gained an
+  explicit `crop_mode` parameter, replacing the filename-substring check entirely (`destriping` also wired
+  through symmetrically with `smile`, though no file shipped today exercises its `"crop_and_bin"` branch -
+  future-proofing, not new active behavior). Both `"as_is"` branches now check the loaded array's shape
+  against what this capture's own AOI/bin_factor implies, raising the new exception on mismatch.
+  **Found a real bug in the plan itself while re-verifying this pass**: `read_coeffs_from_file`'s own outer
+  `except BaseException: raise ValueError(...)` would have silently converted the new exception into a
+  generic `ValueError` *inside this function*, before it ever reached `pipeline.py`'s carve-out - needed a
+  `except CalibrationShapeMismatchError: raise` here too, not just at the caller.
+
+  **`calibration/pipeline.py`**: `set_calibration_coeff_files` resolves `smile_coeff_crop_mode`/
+  `destriping_coeff_crop_mode` from the new schema (defaulting to `"crop_and_bin"` for `coeff_files=`/
+  registered custom sets, preserving their existing behavior exactly - neither ever supported `"as_is"`).
+  `load_calibration_coeff_files` passes `crop_mode` through and re-raises the new exception past its bare
+  `except Exception` for smile/destriping only. **Found another real edge case while implementing**:
+  `run_calibration(set_coeffs=False)` skips `set_calibration_coeff_files` (the only place crop_mode gets
+  set) but still calls `load_calibration_coeff_files` unconditionally - used `getattr(..., 'crop_and_bin')`
+  defaults rather than a plain attribute read, so a second calibration call reusing previously-set file
+  paths doesn't `AttributeError`.
+
+  Verified end-to-end: a deliberately-mismatched fake capture (nominal's real row_count is 684, tested
+  against 500) raises `CalibrationShapeMismatchError` correctly; the matching case still succeeds with the
+  correct `(684, 120)` shape and no exception. New tests in `tests/test_sensors.py`: crop-mode structure
+  well-formedness for both profiles, the exact expected HYPSO-1 crop-mode values, the golden-filename
+  regression for `hypso1_calibration`'s YAML migration, and both the mismatch-raises and matching-succeeds
+  cases. 152 tests pass (full suite).
+
+  Packaging: both `MANIFEST.in`s gained `global-include *.yaml`; both `pyproject.toml`s gained an explicit
+  `pyyaml` dependency (already present transitively via `satpy` for hypso-package itself, but now imported
+  directly rather than only by SatPy internals; genuinely new for `hypso1_calibration`, which previously
+  depended on `numpy` only).
+
+- **New TODO (user request): update README and other user-facing docs.** Checked before recording:
+  top-level `README.md` (5 lines, last touched 2025-10-10) and `hypso/README.md` (70 lines, last touched
+  2025-10-22) both predate this entire refactor (which started 2026-08-25) — neither has been touched by
+  any of it. Concretely stale: `hypso/README.md` describes only L1A-L1D output ("The HYPSO package can
+  process the following data products... L1a/L1b/L1c/L1d") with no mention of L2A (AC-correction output -
+  `write_l2a_nc`, `capture_types.L2ACapture`, extensively supported); says nothing about the new flat
+  NetCDF layout (products/geometry at file root instead of `/products`/`/geometry` groups - a real
+  external-facing format change anyone reading these files with SNAP or writing their own reader needs to
+  know about, see ×32/×33) or the CF/SNAP compliance work generally; says nothing about the new
+  `capture_types.py` type-per-level architecture (`to_l1b()`/`to_l1d()`/etc.) added alongside the older
+  in-place `generate_l1b_cube()` family; says nothing about the YAML-based imaging-mode schema (×36) or
+  where `hypso1_calibration`/`hypso2_calibration`'s own capture-mode files now live. The "Important
+  Considerations" section's own file-loading example (`files('hypso.calibration').joinpath(...)`) may
+  also no longer reflect current patterns after the `io/`/`sensors/` schema work - not independently
+  re-verified line-by-line, flagged as likely stale too given how much moved.
+  **Not stale**: `docs/architecture.rst` (569 lines) - actively maintained throughout this entire refactor
+  (confirmed via git log, most recently touched alongside the ×27 L1ACapture entry), the actual technical
+  documentation of the current architecture. `docs/index.rst` is a thin Sphinx toctree wrapper around
+  `architecture.rst`, nothing to update there directly. Not scoped or started - a real pass would need to
+  decide whether the two `README.md`s should summarize architecture.rst's content or just point to it,
+  and whether the "out of date" hosted docs link (`hypso/README.md` line 13) should be addressed as part
+  of the same pass.
+
+- **2026-08-26 (×25): type-per-level capture objects.** Follow-on from ×24. User asked: "1 HypsoCapture = 1
+  cube, so why level-specific cube/mask accessor names, and why no validation preventing e.g. AC from L1B or
+  jumping L1A→L1D directly? Some way of tracking the processing level represented by the object?" First
+  drafted (in Plan Mode) as an incremental fix - make `product_level`/`product_symbol`/`cube_name` authoritative
+  via `_advance_product_level`/`_reset_product_level` helpers - but the user pushed back, asking whether that
+  was coherent given hypso-package's goal of being the foundation for `hypso-pipeline` (orchestrating AC +
+  downstream products, retrospective and possibly NRT). Correct answer: no - a driftable runtime string kept
+  in sync by convention is the same fragile pattern that produced the bugs being patched. Replanned as a real
+  architectural change instead: **type-per-level objects** (`hypso/capture_types.py`, new module) -
+  `L1BCapture`/`L1CCapture`/`L1DCapture`/`L2ACapture`, entered only via `to_l1b()`/`to_l1c()`/`to_l1d()`/
+  `to_l2a()` (added earlier this session, zero external callers before this - safe to change what they
+  return). "What level is this" becomes a fact of the object's *type* - an `L1BCapture` has no `l1a_cube`
+  attribute at all, `AttributeError` on wrong-level access instead of a silent stale `None`.
+
+  Deliberately does **not** touch `HypsoCapture`'s deprecated in-place `generate_l1b_cube()`/
+  `generate_l1c_cube()`/`generate_l1d_cube()` family (still what `hypso-processing-pipeline` calls today) -
+  fundamentally incompatible with strict type-per-level, since it mutates `self` and lets one object hold
+  `l1a_cube`/`l1b_cube`/`l1d_cube` simultaneously. Migrating the pipeline onto the typed family is a separate,
+  future effort (recorded in the plan file, not attempted - that repo is off-limits right now).
+
+  Technical wrinkles solved during implementation (both flagged in the plan up front, not discovered by
+  surprise): `copy.copy` can't change an object's type, so `_spawn_next_level` (removed - dead code once
+  nothing called it) is replaced by `capture_types.spawn_as` (`object.__new__` + `__dict__` update - the
+  standard mechanism, same aliasing semantics); and business logic reading a hardcoded old-class attribute
+  name (`calibration_pipeline.run_calibration`'s `satobj.l1a_cube`) needed a temporary plain-attribute alias
+  during the one call that needs it, removed immediately after, to keep the "no l1a_cube attribute afterward"
+  guarantee real.
+
+  **Two real bugs found and fixed only because the real-capture test suite caught them** (both would have
+  shipped silently otherwise): `_spawn_l1d` set `.cube` from `compute_reflectance`'s raw return value without
+  wrapping it through `_format_cube_dataarray` (the original `l1d_cube` property setter did this implicitly) -
+  `.cube` was a bare `numpy.ndarray`, not an `xr.DataArray`, until a test calling `.to_numpy()` on it caught
+  the `AttributeError`. `to_l2a`'s "did this succeed" gate checked "is `l2a_cubes` non-empty" instead of "did
+  THIS call add something new" - misfired (incorrectly cleared L1D-derived state on an actual no-op) whenever
+  a capture already had an unrelated correction registered from elsewhere - caught by a test exercising a
+  shared session-scoped fixture that legitimately has other tests' corrections already on it
+  (`conftest.py`'s `written_nc_files` fixture adds its own "testac" directly onto the shared `satobj`).
+
+  Also found and fixed: `masks.pipeline.format_mask_dataarray` called `satobj._update_dataarray_attrs(...)` -
+  a `HypsoCapture`-only method that doesn't exist on the new classes, which would have made `land_mask`/
+  `cloud_mask`/`.masked_cube` unusable on them. Inlined (the logic never needed `satobj` in the first place).
+
+  `docs/architecture.rst`'s "Cube memory" section explicitly revisited and reconciled, not silently
+  contradicted - added a new "Tracking which level an object represents" subsection explaining why the
+  original per-level-split rejection doesn't apply once spawning is by-value.
+
+  129 tests pass (full suite, including new `tests/test_capture_types.py`). Commits `f631a42a` (implementation),
+  `f1c741be` (unrelated: recorded a user-supplied ESA SNAP compatibility note in `ARCHITECTURE_PROPOSAL.md`
+  while working - `radiation_wavelength`/`radiation_wavelength_unit` must be kept for SNAP's Spectral Viewer,
+  not dropped as originally proposed there).
+
+- **2026-08-26 (×24): HypsoCapture rearchitecture.** User: "too many [attributes], really
+  chaotic," questioned the `api`/`_impl` split, asked to simplify AC interfaces and rename `HypsoBase`. Plan
+  drafted via Plan Mode and saved to `/home/camerop/.claude/plans/flickering-jumping-chipmunk.md` (durable copy
+  in case of disconnect, per user request), then expanded conversationally with several follow-on findings.
+  Done so far:
+  - `30f286e6`: renamed `HypsoBase` → `HypsoCapture` (zero external references, clean rename); removed 5
+    zero-external-caller AC wrapper methods (`ac_ocsmart_run_correction` + its only caller, a permanently-dead
+    `TOGGLE_OCSMART=False` branch; the 4 `ac_polymer_get_*` accessors, superseded by
+    `PolymerAdapter`/`SpectralResponse`); fixed a real bug where `l2a_cube` (singular property) returned the
+    multi-correction `DatasetDict` while `io/dispatch.py` already referenced the nonexistent plural
+    `l2a_cubes` — renamed the property, kept `l2a_cube` as a deprecated alias (confirmed external readers in
+    the pipeline's `extraction.py`/`2d_hypso_noise_snr.py`). 104 tests pass.
+  - `afd6df3c`: extracted masking (`land_mask`/`cloud_mask`/`custom_masks` state, the formatters,
+    `set_custom_mask`/`clear_custom_masks`/`load_mask_from_file`, `unified_mask`, and the four
+    `masked_l1x_cube` properties, collapsed into one `get_masked_cube`) into `hypso/masks/pipeline.py`,
+    alongside the existing `jon_cnn_classifier.py`/`jonas_svm_classifier.py` (the actual mask *algorithms* -
+    this new module is the *container* that applies masks regardless of which algorithm produced them, not a
+    duplicate of the already-removed dead `hypso/mask/` directory). **Found while generalizing the four
+    `masked_l1x_cube` bodies, preserved as-is rather than silently fixed**: `masked_l1c_cube` reads
+    `self._l1c_cube`, which is never actually populated — `_generate_l1c_cube_impl` never sets it; the
+    `l1c_cube` *property* instead returns a deepcopy of `_l1b_cube` relabeled. So `masked_l1c_cube` always
+    silently returns `None` today (or crashes if a mask is set). Needs a decision: should
+    `get_masked_cube(satobj, "l1c")` instead mirror `l1c_cube`'s own getter (read `_l1b_cube`)? Also fixed
+    `resample_cube(use_indirect_georef=True)` (read nonexistent `satobj.latitudes_indirect`/etc. - now reads
+    the same `satobj.latitudes`/`longitudes`/`resolution` the default path uses; a real, separately-flagged
+    finding is that the *default* `False` path might itself be semantically inverted - see the plan file's
+    step 5 note, not yet acted on). Added `to_l2a(correction, **kwargs)`: mirrors `to_l1b`/`to_l1c`/`to_l1d`'s
+    spawn-a-new-object pattern (cheap - same shallow-copy `_spawn_next_level` mechanism, no cube duplication),
+    dispatching through the existing `hypso.ac.adapters.get_ac_adapter` registry rather than a hardcoded
+    per-tool if/elif (caught by user review - the first draft hardcoded tool names redundantly with the
+    registry). `ac_polymer_open_output`/`ac_acolite_open_output`/`ac_ocsmart_open_output` are now deprecated
+    in favor of it (warn + delegate to a non-deprecated `_impl` sibling, matching `generate_l1b_cube`/`to_l1b`'s
+    existing pattern) - kept working unchanged for the pipeline's current in-place callers. 112 tests pass.
+  - `42532bcf`: **fixed** the `masked_l1c_cube` bug flagged above — `get_masked_cube(satobj, "l1c")` now mirrors
+    `l1c_cube`'s own getter (deepcopy of `_l1b_cube`, relabeled) instead of reading the never-populated
+    `_l1c_cube`, with a new regression test (`tests/test_masking.py`). Also consolidated the 23 scattered
+    `nc_*` attributes (`nc_adcs_vars`, `nc_capture_config_attrs`, ... `nc_dimensions`, `nc_attrs`,
+    `nc_cube_attrs`) into one `satobj.metadata: CaptureMetadata` instance (`hypso/io/metadata.py`, new) built
+    once during load — confirmed zero external readers of any of the 23 names, so no compatibility properties
+    needed; every internal reader updated (`calibration/pipeline.py`, `georeferencing/geo.py`, three
+    `write/*.py` files, `io/writer.py`, and `io/dispatch.py`'s own `set_hypso_attributes`/`check_capture_type`,
+    the bulk of the migration). 121 tests pass (golden-file regression against the pre-refactor baseline
+    included — the strongest signal this didn't change any numeric output).
+
+  Remaining: georeferencing angle/track consolidation (`GeoAngles`/`TrackGeometry` dataclasses, the `bbox`/
+  `gsd`/`framepose` attributes, `io/writer.py`/`write/geometry_group_writer.py`'s angle lookup rewrite) — see
+  the plan file's step 4 for full detail. Paused for a check-in before starting (largest/riskiest remaining
+  step) — the user instead moved on to the type-per-level question, see ×25 above; this piece is still
+  pending, not abandoned.
+
+  **`compute_csiro_srfs`/`ac_dark_pixel_subtraction` cleanup — resolved, see ×30 below.**
+
+
+- **2026-08-25 (continued further, ×23): srf_getter maintainability fix + a future Polymer-side wishlist.**
+  User asked for a plain-language explanation of the `srf_getter` dotted-string mechanism and why
+  `ac_polymer.py` sits outside `adapters/`. Investigated precisely (read `eotools/srf.py`'s actual
+  `srf_getter.rsplit(".", 1)` → `importlib.import_module` → `getattr` resolution) and corrected an
+  overstatement from an earlier turn: the location isn't "frozen by an external constraint" — checked, and
+  nothing outside this repo's own `_polymer_driver.py` hardcodes the string, so moving the function was always
+  technically possible, just required updating the string in lockstep with no functional upside.
+
+  User asked what would make this easiest to maintain: **derive the dotted path from the function object
+  instead of hand-typing it** (`5d5be8db`) — `ac_polymer.py` now has `SRF_GETTER_PATH = f"{fn.__module__}.
+  {fn.__qualname__}"`, imported by `_polymer_driver.py` instead of a retyped literal. Real finding while
+  making the change: the derived value (`"hypso.ac.ac_polymer.ac_polymer_srf_getter"`, the function's true
+  defining module) differs from the old hand-typed one (`"hypso.ac.ac_polymer_srf_getter"`, which only worked
+  via `hypso/ac/__init__.py`'s re-export) — both resolve to the same function (verified), but a new test that
+  first asserted the OLD literal failed immediately, which is exactly the drift class this fix exists to
+  prevent. Fixed by asserting resolvability (reproducing Polymer's own `rsplit`/`import_module`/`getattr`
+  mechanism) rather than any hardcoded string, in both a new test and a strengthened existing one. Verified
+  end-to-end against the real Polymer installation too. Full suite: 104 tests pass.
+
+  **Recorded per user request**: a wishlist item for Polymer's own side (not this repo) — add a native HYPSO
+  entry to Polymer's `eotools/srf.py` sensor/platform auto-lookup (the `srf.csv`-based mechanism `get_SRF()`
+  already uses for sensors it recognizes out of the box), so Polymer resolves HYPSO's SRF itself and
+  hypso-package's whole `srf_getter`/`generate_srf_nc` handoff mechanism becomes unnecessary. See the
+  AC-connector design-notes section above for the full note.
+
+- **2026-08-25 (continued further, ×22): submodule-layout audit acted on.** User asked "is everything in the
+  correct submodules?" — did a fresh survey (not from memory) of the current layout. Found: (1) a stray empty
+  `utils/data/` directory left over from the HSI2RGB move (×16) — removed; (2) `ac/loading_acolite_output.py`'s
+  default-on `TOGGLE_6SV1` branch had a confirmed-broken import (`hypso.ac.__init__.py`'s `ac_6sv1` import was
+  already commented out) — pre-existing, not introduced this session; (3) `ac/` had seven loose `ac_6sv1*.py`
+  files plus `ac_srem.py`/`ac_srem_oyam.py` sitting flat, unlike Polymer/ACOLITE/OC-SMART's clean `adapters/`
+  treatment; (4) `geo.py` sat at the top level while its siblings in the same "extracted orchestration"
+  pattern (`calibration/pipeline.py`, `io/dispatch.py`) live inside their subject subpackage.
+
+  User's answers: remove 6S and unused AC methods and loose files; move `geo.py`. Executed (`47ce75f3`,
+  `a9095d4f`):
+  - Deleted all 7 `ac_6sv1*.py` files and `ac_srem.py`/`ac_srem_oyam.py` — confirmed zero callers anywhere
+    (this repo or the pipeline) before removing; SREM/SREM-OYAM were only ever imported into `hypso.ac`'s own
+    namespace and never called.
+  - Fixed `loading_acolite_output.py`: removed the broken `TOGGLE_6SV1` branch and the dead, never-branched-on
+    `TOGGLE_SREM` declaration. While in there, also fixed two OTHER pre-existing stale references found along
+    the way (not part of what was asked, but left broken would have undermined the fix): `from hypso.write
+    import ... write_l2_nc_file` (that name never existed — real one is `write_l2a_nc_file`) and its three call
+    sites — this script's default config path would have raised `ImportError` at module load regardless of
+    which AC toggle was active, before and after the 6SV1/SREM removal.
+  - Moved `geo.py` → `georeferencing/geo.py` (one internal import site, confirmed via grep; no naming
+    collisions with `georeferencing.py`'s own classes) and updated every reference (`HypsoBase.py`,
+    `calibration/pipeline.py`, `io/dispatch.py` comments, `tests/test_public_api.py`'s
+    `test_composition_modules_import` — which would have started failing with `ModuleNotFoundError` on the
+    stale path if left unfixed, docs/architecture.rst).
+
+  Verified: `hypso.ac` no longer exposes any 6SV1/SREM names; `loading_acolite_output.py` parses cleanly; full
+  suite (103 tests) passes both after the AC-method removal and after the `geo.py` move.
+
+  **Still open, not acted on (judgment calls, not asked about yet)**: `ac_polymer.py`'s `ac_polymer_srf_getter`
+  correctly stays outside `adapters/` (Polymer resolves it by dotted string — frozen path regardless of
+  organization); `geometry/`/`geometry_definition/`/`georeferencing/`'s naming similarity was already
+  investigated and deliberately left alone earlier this session (real distinct responsibilities, one has a
+  real external consumer blocking a rename) — still the right call, not revisited.
+
+- **2026-08-25 (continued further, ×21): DataArrayDict/DataArrayValidator fully retired; resample
+  generalized.** Started from a user question ("why are DataArrayDict/DataArrayValidator still present?").
+  Answer had three parts: (1) `_products` — the standing "do not touch" exception; (2) `DataArrayValidator`
+  also had a second, independent live use — HypsoBase's five `_format_l1a/b/c/d_dataarray`/
+  `_format_mask_dataarray` single-array formatters, a different role than the dict-container problem
+  `DatasetDict` fixed, never in scope of that earlier work; (3) a bonus finding — `resample/
+  datacube_resamplers.py`'s `resample_products` referenced `DataArrayDict` but its import was commented out
+  — turned out to be a false alarm on first read (the reference is itself inside a commented-out block; the
+  function's real body was just `print("not yet implemented")` + `return None` — corrected this to the user
+  after initially calling it "broken").
+
+  User then reconsidered `_products` itself ("we have not used them... should be dropped/produced as a
+  separate object") — **checked before agreeing, and found the opposite**: `hypso-processing-pipeline`'s
+  Polymer stage does `satobj.products['chla'] = ...` then `write_products_nc_file(..., file_name=
+  "polymer_chl.nc")` on every Polymer run. Real, active, load-bearing usage — reported this back rather than
+  going along with the premise. **`products/` DEBATE — REVISIT LATER**: given this is real, load-bearing
+  infrastructure with a slightly awkward API shape (a property that raises `AttributeError` on direct
+  assignment, requiring `products[key] = value`), it may be worth a cleaner redesign at some point — e.g. a
+  more explicit "AC-tool-produced auxiliary product" object/API rather than a dict-property bolted onto
+  `HypsoBase`. Not scoped, not urgent — flagged here per user request so the discussion isn't lost.
+
+  Once `products`' real usage was established, user asked to reimplement it (not drop it) on `DatasetDict`
+  anyway — closing the loop `DatasetDict`'s own docstring had left open. Did all three pieces the user asked
+  for (`06abd02c`, `cb0519ba`):
+  1. **`_format_l1x_dataarray` → one method.** Collapsed the four near-identical formatters into
+     `_format_cube_dataarray(data, level)` + a `_CUBE_DATAARRAY_ATTRS` table; extracted the single-array
+     shape/dims logic `DataArrayValidator` provided into `hypso.containers.as_dataarray()`, now shared by
+     both `DatasetDict._as_dataarray` and the HypsoBase formatters.
+  2. **`products` → `DatasetDict`.** `HypsoBase._products` now matches `_custom_masks`'s construction;
+     validation raises instead of silently swallowing (a real fix, not just a container swap).
+     `write_products_nc_file` needed zero changes (only ever called `.items()`/`.to_numpy()`). With every
+     consumer moved, `DataArrayDict.py`/`DataArrayValidator.py` are **deleted outright** — confirmed zero
+     remaining references anywhere in the package.
+  3. **Resamplers generalized** (user: "resamplers could be generalized"). `resample_l1a/b/c/d_cube` collapsed
+     into one `resample_cube(cube, satobj, area_def, ...)` + thin per-level wrappers (zero external callers of
+     any of the four, confirmed, so free to collapse). `resample_products()` — previously the dead stub found
+     above — is now a real, working implementation reusing the same `resample_cube()`, returning a plain
+     `xr.Dataset`.
+
+  **All three verified against real data, not just structurally**: real-capture `products` round-trip through
+  `write_products_nc_file`; real-capture + real `pyresample.AreaDefinition` resampling for all four cube
+  levels and for `resample_products()` (confirmed non-trivial finite fraction in the output, i.e. it actually
+  resampled real data, not a shape-only check). 12 new tests total (`test_containers.py` `as_dataarray` tests,
+  a `test_cf_format.py` products test, `test_resample.py`). Full suite: **103 tests pass**. Docs
+  (architecture.rst) updated for containers and the new resample section.
+
+- **2026-08-25 (continued further, ×20): AC-connector pass, part 3 — OC-SMART, the last of the three.**
+  Resumed after a detour into `hypso-processing-pipeline` credential hygiene (hardcoded EARTHDATA secret
+  found in `hypso/ac/loading_acolite_output.py` while checking OC-SMART callers → led to a template-config
+  system + netrc/env-var credential resolution across both repos — see that repo's own history; paused
+  mid-way when told a different Claude session was concurrently working there, so **all of that work was
+  left uncommitted in that repo** and not touched further here). Folded `hypso-processing-pipeline`'s own
+  field-tested `ac_runners_hypso.run_ocsmart_correction` design into `OCSMARTAdapter` verbatim
+  (capture-local staging, `OCSMART_Input.txt` save/restore even on failure, output routed into
+  `capture_dir`, streamed console output, new `python_path`/`skip_existing`/`l2_prod`/`solz_limit`/
+  `senz_limit` params, `ACRunError` on failure — consistent exception type across all three adapters now).
+  **Found and fixed a real, previously-undocumented bug**: both the old adapter and
+  `io.dispatch.load_capture_file` staged/named OC-SMART files using `str(satobj.sensor).upper()` (e.g.
+  `"HYPSO2_HSI"`) — but OC-SMART's own autodetection only recognizes the satellite-agnostic `"HYPSO_HSI"`
+  prefix, confirmed independently by the pipeline's own prior debugging of the identical issue. Wrong
+  prefix → OC-SMART silently produces NO output at all (exit 0, no exception). Fixed at the source
+  (`OCSMARTAdapter.HYPSO_PREFIX = "HYPSO_HSI"`), and removed the two now-redundant path attributes from
+  `io/dispatch.py` entirely — output-path ownership moves into the adapter (`output_path()`), closing the
+  "coupling smell" the original AC-connector proposal flagged, confirmed zero other readers first. Merged
+  `stage_input`+`run_correction` into one call (the config save/restore has to wrap both together to
+  restore correctly on failure, so the two-call split was never actually independently safe) — confirmed
+  zero external callers of the split anywhere before merging; updated the one internal caller
+  (`loading_acolite_output.py`).
+
+  **Verified against the real OC-SMART installation and a real written L1D file**: staged correctly, and
+  OC-SMART's own console output showed `"Sensor : HYPSO HSI"` — direct proof the prefix fix actually works
+  (pre-fix, this exact scenario produced silent nothing). The run then failed inside OC-SMART's *own*
+  `src/L1B.py` (`AttributeError: 'L1B' object has no attribute 'latitude'`) reading geolocation from the
+  new flattened NetCDF layout — **the same class of breakage already known/accepted for eoread/ACOLITE, now
+  confirmed for a third external reader** (not a bug here — everything up to that point, staging through
+  config-restore-on-failure, worked correctly, separately confirmed via a mocked-subprocess test forcing a
+  non-zero exit). 4 new tests + 2 pre-existing tests updated for the removed `stage_input` API. Full suite:
+  90 tests pass. Committed (`b22388fe`), docs extended.
+
+  **All three AC connectors now share a consistent design**: subprocess-based (isolated for Polymer/ACOLITE,
+  always-was for OC-SMART), `ACRunError` on failure, `python_path`-configurable interpreter. Remaining AC-
+  connector proposal items: per-tool config dataclasses, a uniform `run_correction`/`open_output` *return*
+  shape, folding `_read_polymer_chla`'s v1/v2 handling into the Polymer adapter.
+
+  **New TODO (user request, ×20): variable capture dimensions/bands/sizes.** User wants `hypso-package` to
+  be able to handle captures with differing spatial dimensions, band counts, etc. — not yet scoped. Likely
+  touches: `hypso.sensors.SensorProfile` (currently assumes fixed `UNBINNED_BAND_COUNT`/fwhm arrays sized
+  for one specific configuration per sensor), `io.schema.LevelSchema` (dimension naming/sizing is currently
+  swath-specific and largely assumed-fixed per the `spatial_dims` seam left for L3), and anywhere `bin_factor`/
+  `image_height`/`image_width` are treated as constant across a session. Needs a real scoping pass before
+  implementation — flagging here so it isn't lost, not starting it yet.
+
+- **2026-08-25 (continued further, ×19): AC-connector pass, part 2 — ACOLITE subprocess isolation.** Same
+  `run_subprocess_driver`/`ACRunError` mechanism as Polymer (×18), applied to `ACOLITEAdapter.run_correction`
+  via a new `_acolite_driver.py`. Checked first whether ACOLITE has a Polymer-like multi-build conflict: it
+  doesn't — every config file in `hypso-processing-pipeline` (HYPSO-stage and PACE-stage alike) points
+  `acolite_path` at the same single checkout — so this isolation's justification is narrower and honestly
+  documented as such: crash containment (ACOLITE's gdal/pyresample/cartopy stack) + parallelism + consistency
+  with Polymer's pattern, not a demonstrated bug. Confirmed real imports work in the active `ac` env exactly
+  as Polymer's did (checked directly, not assumed) — no separate environment needed by default here either.
+  Dropped a dead `import acolite as ac` found while in this code (used only in an already-commented-out line).
+
+  **Security improvement made along the way**: `EARTHDATA_u`/`EARTHDATA_p` credentials no longer travel
+  through the JSON config file `run_subprocess_driver` writes to disk (even briefly, even in a private
+  per-call `TemporaryDirectory`) — `run_subprocess_driver` gained an `extra_env` parameter, and the driver
+  reads `HYPSO_ACOLITE_EARTHDATA_USERNAME`/`PASSWORD` from the subprocess's own environment instead. Pinned
+  by a test asserting `"EARTHDATA"` never appears in the written config.json.
+
+  **Verified against the real ACOLITE installation** (skipped if absent, same pattern as Polymer's real-tool
+  test): unlike Polymer's `Level1_HYPSO`, ACOLITE's own `acolite_run` does **not** raise on a missing input
+  file — it logs `"Path ... does not exist."` and returns normally. So the proof of real execution here isn't
+  an exception but a real ACOLITE-written run log file in the output directory (confirmed present, containing
+  the exact expected message) — proving the real `acolite`/`acolite.acolite.settings`/`acolite.acolite.
+  acolite_run` imports succeeded and real ACOLITE code actually ran. 6 new ACOLITE tests alongside the
+  existing 6 Polymer ones (12 total in `tests/test_ac_subprocess.py`). Full suite: 86 tests pass. Committed
+  (`d13127f2`), docs extended.
+
+  ~~**Remaining from the AC-connector proposal**: OC-SMART not yet migrated...~~ — OC-SMART done, see the
+  ×20 status entry below (`b22388fe`). Still open: per-tool config dataclasses; uniform `run_correction`/
+  `open_output` result *return* shape (the exception type is now uniform — `ACRunError` — across all three);
+  folding the pipeline's `_read_polymer_chla` v1/v2 chla-vs-logchl handling into the Polymer adapter.
+
+- **2026-08-25 (continued further, ×18): AC-connector pass, part 1 — Polymer subprocess isolation.**
+  Investigated two user questions before writing any code:
+  1. *Does Polymer need a separate Python env like OC-SMART?* Checked directly (not assumed): the real v1
+     (HYPSO-SRF) checkout's `environment.yml` pins Python 3.12, but the active `ac` env is 3.13. Tested the
+     actual import chain (`eoread.hypso.Level1_HYPSO`, `polymer.main_v5.run_polymer`) against the real
+     checkout in the `ac` env — **both import cleanly**. The environment.yml pin is aspirational, not a hard
+     requirement. **Original concern disproven.**
+  2. *Then why does subprocess isolation matter?* Reproduced the real problem live: imported v1's `polymer`,
+     deleted only `sys.modules['polymer']`/`['polymer.main_v5']` (an easy, natural mistake), then imported
+     v2 from a different checkout — got `ModuleNotFoundError: No module named 'core.process'` because v1's
+     `core` was still cached under that name and v2's `polymer.main_v5` needs a different, incompatible
+     `core` (with a `core.process.blockwise` submodule v1's lacks). **Confirmed, demonstrated justification**:
+     v1/v2 builds ship different same-named packages; Python's `sys.modules` cache makes switching between
+     them unsafe within one long-lived process — directly relevant since `hypso-processing-pipeline` supports
+     `polymer_version="v1"/"v2"` per call.
+  User approved proceeding on this basis. Built: `hypso/ac/adapters/base.py`'s `ACRunError`/
+  `run_subprocess_driver` (per-call `TemporaryDirectory` for config/result JSON — directly avoids the
+  concurrent-run collision class of bug already hand-worked-around for OC-SMART's staging dir) and
+  `hypso/ac/adapters/_polymer_driver.py` (the part of `run_correction` needing Polymer imported — version
+  selection + the `run_polymer()` call; path resolution/renaming stay in the parent). `run_correction` gained
+  an additive `python_path=None` param (→ `sys.executable`); threaded through the frozen
+  `ac_polymer_run_correction` wrapper. Also fixed, while in this code: `open_output`'s missing `case _`
+  (unrecognized `input_product_level` → unhelpful `AttributeError`, now a clear `ValueError`), the dead
+  `run_polymer_kwargs`/`srf_nc_path, srf_nc_path =` typo, and the unused `run_polymer_dataset` import.
+  **Verified with real evidence, not just structural checks**: `tests/test_ac_subprocess.py` (6 tests) —
+  driver-logic unit tests with stubbed Polymer, `ACRunError` propagation through a real subprocess spawn,
+  and (the strongest one) a real-subprocess run against the **actual Polymer v1 checkout on this machine**
+  with a deliberately-missing input file — confirmed it fails with a clean `FileNotFoundError`, proving
+  `eoread`/`polymer`/`core`/`eotools` all import correctly through the isolated subprocess, not with any
+  import error. Full suite: 80 tests pass. Committed (`8f0c2f98`), docs extended (architecture.rst).
+  ~~ACOLITE not yet subprocess-isolated~~ — done, see the ×19 status entry above (`d13127f2`).
+
+- **2026-08-25 (continued further, ×17): csiro path fully resolved — call removed from the pipeline (a
+  cross-repo change, NOT in this workspace).** Investigated two user questions before acting:
+  1. *Does `hypso-processing-pipeline` need to make the `compute_csiro_srfs()` call?* Traced the call site
+     (`stage2_ac/process_capture.py:193`, right before the three `ac_polymer_generate_*_nc()` calls) and
+     confirmed `_generate_l1d()` (called a few lines earlier) already populates `self.srf`/`self.spectral_
+     response` — the family those three calls actually read. `compute_csiro_srfs()` populates a *different*
+     attribute family that nothing downstream reads (confirmed by grepping the whole pipeline repo). **Dead
+     work, safe to delete.**
+  2. *Would the OLD, unmodified `hypso-package` (`/home/camerop/AC/hypso-package`, still the one actually
+     used for production processing per this file's own note) still function if the call is dropped?*
+     Checked that codebase directly (not this refactor workspace): `write/metadata_srf_group_writer.py`
+     guards every `csiro_*` write with `hasattr(satobj, 'csiro_ssi') and ... is not None`; the old
+     `HypsoBase.__init__` never defaults these attributes to `None`; and the only other `csiro`-named
+     functions in that package (`aeronet_oc/aeronet_oc.py`'s `aeronet_oc_calculate_rrs_csiro`/
+     `aeronet_oc_generate_csiro_gaussian_srfs`) are an unrelated, coincidentally-named Rrs helper family that
+     never touches `satobj.csiro_*`. **Confirmed safe** — the only effect of dropping the call is that L1D
+     files no longer carry the five `metadata/srf/csiro_*` variables, which nothing reads anyway.
+
+  User confirmed: **removed `satobj.compute_csiro_srfs()`** from `/home/camerop/AC/hypso-processing-
+  pipeline/hypso_pipeline/stage2_ac/process_capture.py` (a separate repo/git history from this workspace —
+  left the surrounding unrelated uncommitted work there, config edits + a new `colocation/`/`resampling.py`,
+  untouched and **not committed**, since that's the user's own in-progress work in a different repo). Replaced
+  with an explanatory comment (why it was there, why it's gone, cross-references this file). Left
+  `hypso.reflectance.compute_csiro_srfs()` itself as a `DeprecationWarning`-emitting function (×16 entry) rather
+  than deleting it outright, in case anything else outside this one pipeline still calls it — actual removal
+  from `hypso-package` is a separate future step once nothing calls it anywhere.
+
+- **2026-08-25 (continued further, ×16):** Three user-directed items (`753d9c99`, `7e5d7897`):
+  1. **Utils grab-bag split**: `utils/utils_file.py` deleted → `utils/ncdebug.py` (NetCDF inspection family,
+     kept as one interdependent toolset), `utils/misc.py` (`is_integer_num`, the only function with a caller),
+     `spectral_analysis/hsi2rgb.py` (**HSI2RGB moved per user question "better submodule?"** — rendering RGB
+     from spectra is spectral analysis; kept for the RGB-camera TODO; its `D_illuminants.mat` moved to
+     `spectral_analysis/data/`, MANIFEST updated). Running HSI2RGB for the first time ever revealed it was
+     already broken under NumPy 2.x (`np.trapz` removed) — fixed to `np.trapezoid`, smoke-tested. Deleted with
+     zero callers: `MyProgressBar`, `find_all_files`/`find_file`/`find_dir`, utils-local `haversine`,
+     `find_closest_water_lat_lon_match` (was already fully commented out).
+  2. **Lazy `spectral_response` rebuild for file-loaded captures** (`HypsoBase.spectral_response` is now a
+     property): closes the "file-loaded satobj can't generate the Polymer SRF nc" gap. Made EXACT (all three
+     Polymer ncs xr-identical to in-session references; pinned by
+     `test_spectral_response_lazy_rebuild_from_file`) by fixing three precision leaks: corrections spectral
+     arrays f4→f8 in `io/writer`, srf-group esun/effective_fwhm f4→f8 in `metadata_srf_group_writer`, and
+     `io/reader` now reconstructing `satobj.wavelengths` from precise `radiation_wavelength` instead of the
+     rounded `wavelength` label (fallback kept for old files). Rebuild mirrors the in-session `_get_fwhm()`
+     step (profile-default fwhm differs at lookup boundary bands). Files written pre-f8-fix rebuild to f4
+     precision only.
+  3. **csiro deprecated, not removed**: user said drop unless used — it IS called, by
+     `hypso-processing-pipeline/hypso_pipeline/stage2_ac/process_capture.py:193` (`satobj.compute_csiro_srfs()`),
+     though its results are consumed by nothing (the Polymer generate_* calls right after it read the OTHER
+     attribute family, and the persisted `csiro_*` file fields have no known readers). Added a
+     `DeprecationWarning` (still fully functional, same pattern as `generate_l1*_cube`); actual removal happens
+     when the pipeline drops that call in the AC-connector pass. **User also approved subprocess isolation**
+     for Polymer/ACOLITE (see the AC-connector design notes section) — queued as the next major work item.
+  Full suite: 73 tests pass.
+
+- **2026-08-25 (continued further, ×15):** Four user-directed changes, each committed separately:
+  1. **`classification/` → `masks/`** (`cabd8860`): the CNN/SVM classifiers exist to produce sea/land/cloud
+     masks, so the mask-oriented name fits; `hypso.classification` stays as a one-line compat shim (confirmed
+     external: pipeline imports `decode_jon_cnn_*` from it).
+  2. **Wavelength-based `true_color` Satpy composite** (`cabd8860`, same commit): user reconsidered the earlier
+     "composite not needed" — added `satpy/etc/composites/hypso1.yaml`+`hypso2.yaml` with WAVELENGTH
+     prerequisites (0.640/0.550/0.460 µm) resolved by Satpy against each band's `WavelengthRange` (works across
+     binning configs, unlike the removed position-based recipe), registered via a new `satpy.composites` entry
+     point (verified in satpy's own `composites/config_loader.py`). Editable install re-run to refresh
+     entry-point metadata. Verified `scn.load(["true_color"])` end-to-end against a real L1C file.
+  3. **`DatasetDict`** (`4b3e56b4`): option (b) from the container assessment — `hypso/containers.py`, a
+     `MutableMapping` over a real `xr.Dataset`, replacing `DataArrayDict` for `_l2a_cubes`/`_custom_masks`
+     (validation now raises; `update()` can't bypass; keys lowercase everywhere; `.dataset` exposes the backing
+     Dataset). **Trap found while testing**: xarray `Dataset.__setitem__` silently *reindexes/truncates* an
+     incoming array whose dims disagree with existing entries — DatasetDict guards with an explicit size check.
+     `DataArrayDict` kept only for the untouchable `_products`. 10 new unit tests (`tests/test_containers.py`).
+  4. **`SpectralResponse` redesign** (`d0580af0`): `hypso/reflectance/spectral_response.py` — one frozen
+     dataclass + one `compute_spectral_response()` builder superseding the two near-duplicate SRF paths and both
+     loose attribute families (see the module docstring, written as the canonical explanation of what it
+     supersedes). `compute_toa_reflectance`/`compute_csiro_srfs` stay as thin wrappers; HypsoBase populates
+     `satobj.spectral_response`/`spectral_response_csiro` AND the legacy attrs with identical values (Polymer
+     connector + srf metadata writer still read legacy names — migrating them is the later AC-connector pass;
+     **user explicitly said do not edit the AC processors themselves**). Confirmed from Polymer's own source
+     (`eotools/srf.py`, `main_v5.py`): only the SRF nc is load-bearing (`Band_<n>`/`wav_Band_<n>` format —
+     FROZEN); the SSI/ESUN ncs are read by nothing (eoread uses its own LISIRD F0). Also: renamed
+     `SensorProfile.srf_wl/srf_fwhm` → `fwhm_lookup_wl/fwhm_lookup_fwhm` (they're a FWHM lookup table, not
+     SRFs; zero external users), fixed the `get_esun_nc_path` copy-paste bug and the `io/dispatch` csiro_list
+     missing-comma bug, removed `compute_esun`'s two unused variants. **Verified bit-identical** against
+     pre-change reference outputs (both attr families, L1D mean, all three Polymer ncs via `xr.identical`).
+     Full suite: 72 tests pass.
+
+- **2026-08-25 (continued further, ×14):** Second cleanup pass at the user's request ("clean up the submodules,
+  some are un-used"), committed (`9b2f2903`). Deleted after function-level (not just module-level) zero-caller
+  confirmation across this repo + `hypso-processing-pipeline` + the original repo's demo:
+  `chlorophyll_estimation/` + `dimensionality_reduction/` (both user-confirmed mid-survey), `download/`,
+  `mask/` (live mask generation is `classification/`'s CNN decoders, which the pipeline imports - `hypso.mask`'s
+  land/cloud/water functions had zero callers anywhere), `plot/` including `composites/hypso1.yaml` (user:
+  **RGB composite not needed** - the Satpy integration's job is Scene loading, already covered by the reader
+  plugin + the `get_l1*_satpy_scene` converters, both kept; this also closes follow-ups (2) and (3) from the
+  ×13 entry), the four shadowed per-level loader files and four shadowed per-level writer files that
+  `hypso.io.reader`/`writer` replaced (previously "kept in case anything imports their internals" - now
+  confirmed nothing does), and dead `reflectance/` data: `toa_reflectance_v1.py`, the **58MB** p005nm source
+  `.nc` (only its derived 7.7MB `.npz` is read - by `toa_reflectance.py` AND `hypso-processing-pipeline`'s
+  `get_f0`, so the `.npz` is load-bearing external API), the p1nm `.nc` (only v1 read it), the `.xls` duplicate
+  of the used Thuillier `.csv`, and `f0.txt`. Kept deliberately: `classification/`, `resample/`,
+  `spectral_analysis/`, `geometry_definition/` (each has a real external consumer), `write_ssi_npz.py`
+  (provenance for the shipped `.npz`). Pruned MANIFEST.in entries pointing at directories that don't exist.
+  `hypso/hypso/` is now 9.1MB. Verified: all imports, 40 unit tests, baseline exact match.
+
+  **New TODO (user request, ×14): HYPSO-2 RGB camera support.** HYPSO-2 carries an RGB camera alongside the
+  HSI; the package should support loading its imagery and provide a method for mapping/registering the RGB
+  image onto the HSI image - both a fixed (calibrated/default) mapping and a custom (user-supplied) one.
+  Natural fits with existing seams: `SensorProfile` (HYPSO-2's profile can declare the RGB camera + default
+  mapping), `hypso.io` (loading), and the custom-mask-style registration API (user-supplied mappings). Not
+  started - design TBD with the user.
+
+- **2026-08-25 (continued further, ×13): ALL NUMBERED PLAN ITEMS COMPLETE.** Built the formal pytest suite (plan
+  item 10, the last open item): `tests/conftest.py` (session-scoped real-capture fixture running the exact
+  baseline pipeline; per-level written-NetCDF fixture; real-data tests auto-skip when `HYPSO_DATA_AOC` is absent
+  so the suite runs in a fresh clone) plus six test modules — `test_regression_real_capture.py` (golden-file vs
+  `baseline.json`), `test_cf_format.py` (one assertion per confirmed pre-refactor format bug + a full
+  write→read round trip), `test_sensors.py`/`test_io_schema_cf.py`/`test_ac_adapters.py` (registry/builder unit
+  tests, adapter checks structural-only per plan), `test_public_api.py` (frozen external surface incl. the
+  string-resolved `hypso.ac.ac_polymer_srf_getter` path and import-order independence). **62 tests, all
+  passing** (40 unit in ~4s; 22 real-data in ~2.5min). Installed `pytest` into the `ac` conda env (second
+  env-modifying action this session, after the earlier approved `pip install -e`). Committed (`f98f8549`).
+  Noted, not fixed (third-party): netCDF4-vs-NumPy-2.5 `DeprecationWarning`s from inside netCDF4's
+  `__setitem__` on the writer's `var[:] = ...` assignments.
+
+  **Remaining known follow-ups (all deliberate, none blocking):** (1) update `eoread/hypso.py` +
+  `acolite/hypso/l1_convert.py` for the new flat NetCDF layout — the plan's explicitly-accepted breakage,
+  separate later pass (plan verification item 5: confirmed still pending, expected); (2) re-point
+  `composites/hypso1.yaml`'s RGB recipe at real wavelengths for the new Satpy reader (needs the real HYPSO-1
+  band-to-wavelength mapping — flagged in `docs/architecture.rst`, not guessed); (3) `composites/hypso1.yaml`
+  has no MANIFEST.in entry (pre-existing packaging gap, noted ×6); (4) optional later migration of
+  `hypso-processing-pipeline` from `generate_l1*_cube()` to `to_l1*()` at the user's pace.
+
+- **2026-08-25 (continued further, ×12):** Completed plan item 8, the largest remaining piece: extracted all 14
+  `ac_polymer_*`/`ac_acolite_*`/`ac_ocsmart_*` methods plus the shared private `_get_inferred_wavelength_band_map`
+  helper out of `HypsoBase` into a new `hypso/ac/adapters/` package - `base.py` (the `ACAdapter`
+  `run_correction`/`open_output` interface + the wavelength-map helper, now public as
+  `get_inferred_wavelength_band_map(satobj, ...)`), `polymer.py`/`acolite.py`/`ocsmart.py` (one stateless adapter
+  class per tool, bodies **verbatim** per the plan's explicit decision #6 - prints deliberately NOT converted to
+  logging here, unlike the geo extraction, since this code can't be regression-tested locally and the diff should
+  stay purely mechanical), and a registry in `__init__.py` mirroring `hypso.sensors`
+  (`get_ac_adapter`/`registered_ac_adapters`/`AC_ADAPTERS`). **Unlike the calibration/dispatch extractions, every
+  public `ac_*` name stays on `HypsoBase` as a thin delegating wrapper** (all confirmed called by
+  `hypso-processing-pipeline`); `HypsoBase.ac = AC_ADAPTERS` (class attribute, adapters are stateless singletons)
+  gives the plan's `self.ac.polymer.run_correction(self, ...)` seam. Only the private band-map helper moved
+  wrapper-less (zero external callers). Deliberately NOT adapters: `ac_dark_pixel_subtraction` (no external
+  tool/output file, already a free function in `hypso/ac/`, still bound as a method) and `ac_polymer_srf_getter`
+  (Polymer resolves it BY DOTTED-STRING NAME - `"hypso.ac.ac_polymer_srf_getter"` - so its import path is frozen;
+  noted in the adapter docstrings). One dead commented-out block (ocsmart open_output's inline duplicate of the
+  wavelength mapper) dropped rather than moved. `HypsoBase.py`: 1,638 → **1,000 lines** (2,113 at refactor
+  start); `sys`, the five AC output-loader imports, and the never-used `find_file` import dropped from it.
+  Verified: adapter-registry structural checks, all import orders, baseline exact match, plus real-capture
+  functional checks *through the wrappers* (polymer id/path helpers set satobj attrs correctly; all three
+  `open_output` missing-file branches return their original sentinels without raising). Also extended
+  `docs/architecture.rst` (new "HypsoBase composition" + "Atmospheric-correction adapters" sections; fixed a
+  stale `_set_calibration_coeff_files` reference). Committed (`42be73d2`, docs `1c8b7247`).
+- **2026-08-25 (continued further, ×11):** Finished plan item 7 (`HypsoBase` composition) by extracting the
+  load-dispatch slice into `hypso/io/dispatch.py` — `load_capture_file`/`set_hypso_attributes`/
+  `check_capture_type`/`parse_filename`/`compose_capture_name`, moved verbatim, each taking `satobj` explicitly,
+  same convention as `hypso.geo` and `hypso.calibration.pipeline`. All five had zero external callers (checked
+  this repo and `/home/camerop/AC/hypso-processing-pipeline` — note the repo lives under `AC/`, not directly in
+  `~`, which cost a wasted grep this session), so no wrappers were kept on `HypsoBase`; `__init__` now calls
+  `io_dispatch.load_capture_file(self, path=..., load_cube=...)` directly. `HypsoBase.py` is down from 2,113 →
+  **1,638 lines**. The now-unused `re` and `trollsift.Parser` imports were removed with it, as was a
+  commented-out old `_parse_filename` variant that sat between the two moved methods (dead code, in git history).
+
+  **Found and fixed a pre-existing circular import** surfaced (not caused) by this change: `hypso.io.reader` does
+  `from hypso.load.utils import (...)` at module level, which initializes the `hypso.load` package, whose
+  `__init__.py` in turn did an eager `from hypso.io.reader import load_l1b_nc, ...`. Whichever of the two was
+  imported second failed with `partially initialized module`. This was masked before only because `HypsoBase.py`
+  always imported `hypso.load` (line 24) *before* anything pulled in `hypso.io` — `import hypso.io` on its own
+  was already broken at HEAD, confirmed by the traceback failing at `io/__init__.py`'s reader line, before the
+  new dispatch line. Fixed by deferring those four names in `hypso/load/__init__.py` behind a module-level
+  `__getattr__` (PEP 562) rather than reordering imports (which would have left the same trap for the next
+  entry point — e.g. the Satpy handler, which imports `hypso.io.reader` directly). `from hypso.load import
+  load_l1b_nc` still works unchanged for callers.
+
+  Verified: all three import orders (`hypso.io` first, `hypso.load` first, plain `hypso` first) succeed;
+  `satpy.available_readers()` still finds `hypso_l1c`/`hypso_l1d` and the file handler imports;
+  `tests/baseline/compare_to_baseline.py` passes with exact matches (`l1b_cube` mean=42.928984 as in every prior
+  run). Committed (`98a38c85`).
+- **2026-08-25 (continued further, ×10):** Resumed after a session disconnect that left the `self.calibration`
+  composition (plan item 7) mid-flight, uncommitted. Picked up the in-progress work as found: extracted
+  `HypsoBase._set_calibration_coeff_files`/`_run_calibration`/`_load_calibration_coeff_files` verbatim into new
+  module-level functions in `hypso/calibration/pipeline.py` (`set_calibration_coeff_files`/
+  `load_calibration_coeff_files`/`run_calibration`, each taking `satobj` explicitly) — same convention as
+  `hypso.geo`. Confirmed via grep the three original private methods had zero external callers, so (like the
+  private `_run_*` georeferencing helpers, unlike `run_georeferencing`/`run_direct_georeferencing`) no wrapper
+  methods were kept on `HypsoBase` — its `_generate_l1b_cube_impl` now calls
+  `calibration_pipeline.run_calibration(self, ...)` directly. Also found (already staged from before the
+  disconnect) the deletion of three scratch scripts — `calibration/calibration_pipeline.py`,
+  `calibration_pipeline_functions.py`, `make_destriping_matrix.py` — confirmed genuinely dead: hardcoded local
+  data paths (`../../../Data/HYPSO-1/frohavet/`), broken relative imports of modules that don't exist in this
+  package (`utilities`, `read_images`, `show_bip`), never importable as part of the installed package (same
+  pattern as the `georeferencing/example*.py` deletion earlier this session), and confirmed zero references
+  anywhere in this repo or `hypso-processing-pipeline` before finalizing. Cleaned up a leftover multi-blank-line
+  gap in `HypsoBase.py` left by the extraction. Verified: `from hypso import Hypso` imports cleanly (clean CWD),
+  `hypso.calibration.pipeline`'s three functions import and resolve correctly, and
+  `tests/baseline/compare_to_baseline.py` still passes with an exact match (`l1b_cube` mean=42.928984, matching
+  every prior run). Committed (`74990178`).
+- **2026-08-25 (continued further, ×9):** User asked (mid-cleanup, IDE had `dimensionality_reduction/__init__.py`
+  open, likely incidental) whether `hypso.aeronet_oc` is used by `hypso-processing-pipeline` and could be
+  removed if not. Confirmed via grep: NOT used by `hypso-processing-pipeline` (which reimplemented its own
+  AERONET-OC matchup logic independently in `hypso_pipeline/aeronet.py`/`extraction.py`, per that module's own
+  "Ported from hypso-matchup-processing" docstring) and NOT imported anywhere inside `hypso-package` itself
+  (`hypso/__init__.py`, `HypsoBase.py`) - **but** initially found it IS imported by a third repo,
+  `/home/camerop/AC/hypso-ac-processing/` (`2b_process_capture.py`/`2c_process_matchups.py`, last commit
+  2026-08-02) that this session had no prior context on. Flagged this to the user rather than assuming it was
+  safe to delete just because the *specifically-asked-about* repo didn't use it. User confirmed
+  `hypso-processing-pipeline` supersedes `hypso-ac-processing` and explicitly said not to worry about breaking
+  it (this is a refactor branch). Deleted `hypso/aeronet_oc/` (5 files: `aeronet_oc.py`, `aoc.py`,
+  `aoc_hypso.py`, `plotting.py`, `utils.py`, ~190KB) and `hypso/write/aeronet_oc_writer.py`, and removed the
+  latter's `write_aeronet_oc_matchup_nc_file` export from `hypso/write/__init__.py` (confirmed nothing else in
+  `hypso-package` imported it first). Verified: `from hypso import Hypso; from hypso.write import
+  write_l1c_nc_file` still imports cleanly, `tests/baseline/compare_to_baseline.py` still passes.
+
+  **Note for future sessions**: confirming "is X used by hypso-processing-pipeline" is not the same question as
+  "is X safe to delete" - there is at least one other repo (`hypso-ac-processing`) that historically depended on
+  parts of this package outside `hypso-processing-pipeline`. It's now confirmed superseded/not a concern per the
+  user, but the general lesson (check beyond the one repo you already have open) applies to any future
+  similar-looking cleanup question.
+- **2026-08-25 (continued further, ×8):** Continued the main refactor plan (composition work, item 7). Extracted
+  georeferencing orchestration (`run_direct_georeferencing`, `run_georeferencing`, and the private
+  `_run_frame_interpolation`/`_run_track_geometry`/`_run_angles_geometry` helpers) verbatim into a new
+  `hypso/geo.py` module - matches the plan's `self.geo` composition item, and the AC-adapter convention already
+  used elsewhere in this codebase (`hypso/ac/*.py`'s free functions taking `satobj` as an explicit first
+  parameter, rather than a stored back-reference, since these read many `HypsoBase` attributes).
+  `HypsoBase.run_direct_georeferencing()`/`run_georeferencing()` are now thin delegating wrappers (`return
+  geo.run_direct_georeferencing(self)` etc.) - kept as methods, not moved, since `run_direct_georeferencing()`
+  is called externally (`hypso/ac/loading_acolite_output.py`) and `run_georeferencing()` by
+  `hypso-processing-pipeline`; both names/signatures are unchanged. The private `_run_*` helpers had zero
+  external callers (confirmed by grep before moving) so they moved outright with no wrapper kept on
+  `HypsoBase`. Also converted this code's `print(...)` calls to `logger.info(...)` while it was already being
+  touched, consistent with the user's earlier logging-module request. Removed the now-unused `from
+  hypso.geometry import (...)` block from `HypsoBase.py` (confirmed via grep those six names had zero remaining
+  uses there) in favor of `from hypso import geo`.
+
+  **Hit and resolved a testing artifact (not a real bug)**: running a bare `python3 -c "from hypso import
+  Hypso; ..."` from CWD `hypso-package-refactor/hypso-package` (rather than with the `sys.path.insert(0,
+  'hypso')` used throughout this whole session, since the package is now `pip install -e`'d) returned an EMPTY
+  Python **namespace package** for `hypso` instead of the real package - because that CWD contains a
+  subdirectory literally named `hypso` (the project root, one level above the real `hypso/hypso/` package dir)
+  which Python's implicit-namespace-package resolution picks up via the CWD-on-sys.path entry, shadowing the
+  real editable-installed package. Confirmed by re-running the identical test from `/tmp` (a CWD without a
+  same-named subdirectory), which worked correctly. **Not a code bug** - purely an artifact of testing from that
+  specific directory now that the old `sys.path.insert` workaround is gone; future sessions testing this repo
+  post-`pip install -e` should `cd` somewhere without a `hypso/` subdirectory (or keep using
+  `sys.path.insert`) to avoid hitting this again.
+
+  Verified: `from hypso import Hypso` imports cleanly (from a clean CWD),
+  `tests/baseline/compare_to_baseline.py` still passes (this is the highest-risk area touched so far given it's
+  literally the geolocation math baseline compares latitude/longitude against), and separately verified
+  `run_direct_georeferencing()` (the direct-georef code path, NOT exercised by `compare_to_baseline.py` which
+  uses indirect georeferencing) still runs correctly and populates `latitudes_direct`/angle attributes.
+- **2026-08-25 (continued further, ×7 - back to the main refactor plan):** User asked to continue the plan and
+  clean up/reorganize submodules where it makes sense. Surveyed via an Explore agent (`.bak` files, the two
+  `ac_6sv1_luts_*` files, and the `geometry`/`geometry_definition`/`georeferencing` submodules for overlap and
+  dead code), confirmed each finding with a direct grep before acting rather than trusting the agent's report
+  blindly:
+  - Deleted `HypsoBase.py.bak` (confirmed `HypsoBase.py` itself is current/actively maintained; git history keeps
+    the `.bak` content anyway).
+  - Deleted `hypso/ac/ac_6sv1_luts_OLD.py` and `ac_6sv1_luts_deepthought.py` - confirmed zero references anywhere
+    in `hypso/hypso/` **and** in `hypso-processing-pipeline` (the known external consumer) before removing, per
+    the plan's explicit instruction.
+  - Deleted `hypso/georeferencing/example.py` and `example_image_mode_change.py` (confirmed both have a genuinely
+    broken bare `import georeferencing` - not `from . import`/`from hypso.georeferencing import` - meaning
+    they've never been runnable as part of the installed package) plus their three orphaned data assets
+    (`erie_2022_08_27T16_05_36-bin3.png`/`.points`, `transformation_settings.png`) that only those two scripts
+    referenced.
+  - **Did NOT touch `geometry_definition/`** despite it being unused anywhere inside `hypso/hypso/` (including
+    `HypsoBase.py`) - checked the read-only original `/home/camerop/AC/hypso-package/demo/demo_processing.py`
+    first (a real external consumer this refactor workspace doesn't otherwise touch) and found
+    `from hypso.geometry_definition import generate_area_def` there. Renaming/merging it into `geometry/` for
+    naming-clarity reasons alone would have broken that real, existing usage for a purely cosmetic gain - not
+    worth it, left as-is.
+  - **Did NOT rename `geometry`/`geometry_definition`/`georeferencing`** despite their similar names (flagged in
+    the original plan as worth a naming pass) - the survey confirmed they have genuinely distinct, non-
+    overlapping responsibilities (automated satellite-pose geolocation math / pyresample area-def builders /
+    manual GCP-based calibration respectively), so the "confusion" is naming-similarity only, and per the
+    `geometry_definition` finding above, at least one of these three has a real external import path that a
+    rename would break. Decided the risk wasn't justified by a purely cosmetic improvement.
+  - Consolidated `run_georeferencing`/`_run_custom_georeferencing` (the exact duplication flagged in the
+    original plan) by **deleting `_run_custom_georeferencing`** entirely, rather than merging: confirmed via
+    grep it had zero callers anywhere (internal or in `hypso-processing-pipeline`) and its body was a pure
+    duplicate of `run_georeferencing`'s "explicit latitudes/longitudes passed in" branch -
+    `run_georeferencing(latitudes=None, longitudes=None)` already covers both the override and
+    use-self.latitudes-as-is cases in one method, so there was nothing left to actually merge.
+  Verified after each deletion: `from hypso import Hypso` still imports cleanly and
+  `tests/baseline/compare_to_baseline.py` still passes.
+- **2026-08-25 (continued further, ×6 - separate plan-mode task):** User asked about Satpy compatibility, then
+  clarified they want it "more tightly integrated... working with other sensors as well as with visualization" -
+  a real registered Satpy reader plugin, not an extension of the existing hand-built-Scene converter functions
+  in `hypso/hypso/satpy/satpy.py` (left untouched, still valid for anyone with an already-loaded HypsoBase
+  object). This was planned separately in plan mode (approved plan written to
+  `/home/camerop/.claude/plans/rosy-frolicking-summit.md`, overwriting the completed sensor-generalization plan
+  that had lived there - that plan's content is preserved in this file's own approved-plan block further down,
+  so nothing was lost) since it's a distinct, non-trivial feature, not a continuation of the CF/NetCDF refactor
+  itself.
+
+  **Built and verified working end-to-end against real data:**
+  - `hypso/hypso/satpy/etc/readers/hypso_l1c.yaml` and `hypso_l1d.yaml` - reader configs, `file_patterns`
+    matching HYPSO's existing filename convention with `{start_time:...}` so Satpy's default `start_time`/
+    `end_time` (parsed straight from the filename, standard Satpy behavior) needed zero extra code.
+  - `hypso/hypso/satpy/hypso_handler.py` - `HypsoL1FileHandler(NetCDF4FileHandler)`, one class shared by both
+    readers (level implied by `self.filetype_info['file_type']`). `available_datasets()` dynamically discovers
+    per-band datasets (band count/wavelengths vary by binning/calibration config, unlike a fixed-band
+    instrument) by calling the newly-promoted-to-public `hypso.io.reader.list_band_datasets()` - reusing the
+    exact band-discovery-and-sort-by-`band`-attribute logic `io.reader`'s cube loader already had, not
+    reimplementing it. Sets `self.sensor = "hypso1"/"hypso2"` (confirmed this must match
+    `hypso.sensors.hypso1.HYPSO1_PROFILE.key`, NOT `.sensor` which is the different, already-used
+    `"hypso1_hsi"` string) so the existing `composites/hypso1.yaml`'s `sensor_name: hypso1` lookup finds it
+    with zero changes needed to that file.
+  - `hypso/pyproject.toml`: added `[project.entry-points."satpy.readers"]` (`hypso = "hypso.satpy"`) -
+    confirmed via reading Satpy's own `_config.py`/`readers/core/config.py` source that this is exactly how
+    third-party reader discovery works (resolves the entry point to a module, looks for `etc/` next to it).
+    `hypso/MANIFEST.in`: added `recursive-include hypso/satpy/etc/ *` so the reader YAMLs are actually included
+    in built distributions (noted along the way: the *existing* `composites/hypso1.yaml` doesn't have a
+    MANIFEST.in entry either - a pre-existing gap, not introduced by this work, not fixed here since it's out
+    of scope).
+  - **Ran `pip install -e hypso/`** in the `ac` conda environment (confirmed with the user first - this is the
+    first environment-modifying command run this session, everything before this used `sys.path.insert` for
+    testing) - required because Satpy's entry-point discovery reads installed package metadata, not just
+    sys.path importability. This also means `hypso1_calibration`/`hypso2_calibration` are now real installed
+    dependencies going forward, not just sys.path hacks.
+  - `hypso.io.reader`: renamed `_discover_product_variables` → `discover_product_variables` (now public, no
+    behavior change, confirmed no other references to the old name anywhere in the repo) and added
+    `list_band_datasets(nc_file_path, product_prefix_hint) -> list[dict]` (per-band `name`/`band`/`wavelength`/
+    `radiation_wavelength`/`fwhm`/`units`/`long_name`, sorted by `band` - metadata-only, no pixel data) - the
+    new public entry point `hypso_handler.py`'s `available_datasets()` needed, built as an addition alongside
+    the existing tested `_load_cube`/`_load_cube_attrs`, not a modification to them.
+
+  **Verified against a real capture** (generated L1C/L1D files via the already-tested `write_level_nc`, renamed
+  to match the real filename convention `aeronetvenice_2025-03-04T10-38-05Z-l1c.nc`/`-l1d.nc`): both
+  `hypso_l1c`/`hypso_l1d` appear in `satpy.available_readers()`; `Scene(reader="hypso_l1c", filenames=[...])`
+  finds 122 datasets (120 bands + latitude + longitude); loading a mid-spectrum band
+  (`Lt_588`) through the Satpy `Scene` gives a value matching a direct `netCDF4` read of the same variable
+  exactly; `scn.start_time` correctly parses from the filename; `hypso_l1d`'s `rhot_*` datasets load
+  correctly too. `tests/baseline/compare_to_baseline.py` still passes (confirms the `io.reader` rename/addition
+  didn't touch anything the core pipeline depends on).
+
+  **Known follow-up, not yet done** (documented in `docs/architecture.rst`, not silently left broken): the
+  existing `composites/hypso1.yaml` RGB recipe references `band_89`/`band_70`/`band_59` (the *old* converter
+  functions' position-based naming) which doesn't match this reader's `Lt_<wavelength>` dynamic naming - so
+  `scn.load(["rgb"])` won't resolve against the new reader yet. Re-pointing the recipe at real wavelengths
+  (ideally via Satpy's `DataQuery(wavelength=...)`, which would also make it portable across sensors) needs
+  HYPSO-1's actual band-to-wavelength mapping to get right - flagged rather than guessed, since getting this
+  wrong would produce a wrong-looking RGB composite silently.
+
+- **2026-08-25 (continued further, ×5):** User confirmed the eventual-deprecation direction from the previous
+  entry and asked to add the `DeprecationWarning` now (pipeline migration still deferred - the warning itself is
+  invisible in production by default, Python suppresses `DeprecationWarning` unless a caller opts in to seeing
+  it). Added `warnings.warn(..., DeprecationWarning, stacklevel=2)` to `generate_l1b_cube()`/`generate_l1c_cube()`/
+  `generate_l1d_cube()`, each pointing at its `to_l1*()` counterpart. To avoid the warning firing from *internal*
+  call sites (which would be noisy/wrong - it's meant for external mutating-API callers, not the library's own
+  plumbing), extracted the actual bodies into private `_generate_l1b_cube_impl()`/`_generate_l1c_cube_impl()`/
+  `_generate_l1d_cube_impl()`; the public `generate_*_cube()` methods now just warn then delegate. Updated every
+  internal caller to use the `_impl` versions directly: `generate_l1c_cube()`'s/`generate_l1d_cube()`'s own
+  internal L1B-fallback calls, and `to_l1b()`/`to_l1c()`/`to_l1d()` (added in the previous entry - these must
+  never trigger the warning, they're the *non-deprecated* path). Confirmed `hypso/ac/loading_acolite_output.py`
+  (the only other file calling `generate_l1b_cube()`/etc.) is a standalone personal script using the public API
+  like any external caller, not internal library code - correctly left alone, appropriate for it to warn too.
+  Verified against a real capture with `warnings.catch_warnings(record=True)`:
+  `generate_l1b_cube()`/`generate_l1c_cube()` each emit exactly one `DeprecationWarning` (not a duplicate from
+  the internal L1B fallback), `to_l1b()` emits zero, and cube values are unaffected (`l1b_cube` mean matches
+  baseline exactly in both the warned and unwarned paths). `tests/baseline/compare_to_baseline.py` still passes.
+- **2026-08-25 (continued further, ×4):** Continuation of the "separate objects per level" discussion below -
+  user kept pushing on it across several turns (memory concern, then "is `discard_cube` intuitive - shouldn't 1
+  object = 1 cube be simpler/more transparent?", then confirmed the operational `hypso-processing-pipeline`
+  should NOT need to change now, migration can happen later). Landed on: add `to_l1b()`/`to_l1c()`/`to_l1d()` as
+  new, *unconditionally non-mutating* counterparts to `generate_l1b_cube()`/`generate_l1c_cube()`/
+  `generate_l1d_cube()` - always return a new `Hypso1`/`Hypso2` instance holding only that level's cube (clearing
+  the levels it superseded on the new object - e.g. `to_l1b()`'s result has `l1a_cube=None`), leaving the object
+  called on completely untouched. Deliberately a distinctly-named method rather than a `mutate-vs-return` flag on
+  the existing methods (a flag makes the call site ambiguous; a new name doesn't). `generate_*_cube()` are
+  UNCHANGED - not replaced - so `hypso-processing-pipeline` needs zero changes; migrating to `to_l1*()` is
+  optional, later, at the user's pace.
+
+  Implementation: `_spawn_next_level()` does `copy.copy(self)` (cheap - cube/geometry/calibration-coefficient
+  arrays are only ever read, never mutated in place, anywhere in this class, so aliasing them between self and
+  the new object is safe) then re-copies the *mutable container* attributes one level deep
+  (`_custom_masks` dict, `_l2a_cubes` DataArrayDict) so a later mutation on one object's masks/l2a-corrections
+  can't silently bleed into the other's. Verified against the real capture:
+  `satobj.to_l1b(coeff_type='moved')` leaves `satobj.l1a_cube` populated and gives back a new object with
+  `l1a_cube=None`/`l1b_cube` matching the baseline mean exactly; `l1b_obj.to_l1d()` same pattern one level
+  further; `l1b_obj.set_custom_mask(...)` and `l1b_obj.l2a_cube['fake']=...` do NOT leak into `satobj` (confirms
+  the container re-copy is doing its job); `tests/baseline/compare_to_baseline.py` still passes. Documented in
+  `docs/architecture.rst` (rewrote the "Freeing cube memory" section to present both `discard_cube()`/`del` and
+  `to_l1*()` as the two opt-outs, explaining when each applies). **Not yet committed** — do this first on
+  resume.
+- **2026-08-25 (continued further, ×3):** User asked (across a few turns) whether product levels should live in
+  separate objects (L1a object produces an L1b object, discard the old one) given real memory concern - large
+  datacubes, several potentially resident at once. Discussed prior art (Satpy's one-Scene-per-capture model with
+  GC-based disposal; ACOLITE/POLYMER's own disk-per-stage model with no in-memory chain at all) and recommended
+  keeping the single coordinator object (levels share geometry/calibration/metadata state that a per-level split
+  would have to either duplicate or reference back to a shared container anyway) with an explicit opt-out for
+  memory-conscious workflows. Added `HypsoBase.discard_cube(level, correction=None)` plus property deleters
+  (`del satobj.l1a_cube`/`l1b_cube`/`l1c_cube`/`l1d_cube`) - `"l1b"`/`"l1c"` free the same underlying array (l1c
+  has no independent storage, see its property getter), and `discard_cube("l2a", correction=...)` removes one
+  registered AC correction's cube (or all of them, if `correction` omitted) from the `l2a_cube` dict. Verified
+  against the real capture: discarding l1a/l1b/l1d individually, discarding via `del satobj.l1c_cube` correctly
+  also frees `l1b_cube`, per-correction and discard-all l2a behavior, and an unknown level raising `ValueError` -
+  all pass; `tests/baseline/compare_to_baseline.py` still passes. Documented in `docs/architecture.rst`.
+- **2026-08-25 (continued further, ×2):** Built `hypso/io/reader.py` — `load_level_nc(nc_file_path, level,
+  load_cube=True)` + thin wrappers `load_l1b_nc`/`load_l1c_nc`/`load_l1d_nc`/`load_l2a_nc`, the read-side
+  counterpart to `io/writer.py`, resolving the ⚠️ inconsistency noted below. Reuses `load/utils.py`'s group
+  readers unchanged for `metadata/*` (unaffected by flattening) and `load_gcp_from_nc_file`; adds a new
+  root-level geometry reader (matches a fixed set of known geometry variable names against whatever's at root,
+  since geometry and product variables are now siblings there) and a new cube/cube_attrs reader that **sorts
+  per-band variables by their `band` attribute** before reconstructing the cube - fixes the plan's flagged
+  latent bug (the original per-level loaders used dict/insertion order instead). Also handles L2A's dynamic
+  product variable name (AC-tool-specific `l2_variable_name`, e.g. "chla" - the *old* `load_l2a_nc_cube` only
+  ever tried a hardcoded `['rrs','Rrs','rho_w']`, so it could never have found "chla" either): tries
+  `schema.product_prefix` first, falls back to auto-detecting the actual non-geometry root variable(s) present.
+  `load_l1a_nc` is untouched/not migrated - L1A is raw ground-segment input (no `write_l1a_nc_file` exists), not
+  something this package's own writer format change affects. Rewired `hypso/load/__init__.py` to source
+  `load_l1b_nc`/`load_l1c_nc`/`load_l1d_nc`/`load_l2a_nc` from `hypso.io.reader`.
+  **Found and fixed a circular import** introduced by this wiring: `hypso.io.writer` imported from
+  `hypso.write.*` at module level, but `hypso/write/__init__.py` imports `write_l1b_nc_file` etc. *from*
+  `hypso.io.writer` - triggering `hypso.write`'s init while `hypso.io.writer` was still mid-import raised
+  `ImportError: cannot import name 'write_l1b_nc_file' from partially initialized module`. Fixed by moving those
+  four `hypso.write.*` imports from module level into the two functions that use them (`_write_metadata_common`,
+  `_write_level_nc`) - deferred enough that `hypso.io.writer` is fully loaded by the time they run.
+  Verified end-to-end against the real capture: `tests/baseline/compare_to_baseline.py` still passes, and a full
+  write-then-read-back round trip (L1C and a fabricated `l2_variable_name="chla"` L2A correction, both
+  datacube=True/False) matches the in-memory cube/latitude/wavelengths exactly. **Not yet committed** — do this
+  first on resume.
+- **2026-08-25 (continued further):** User asked for the ability to load and apply custom masks (e.g. a
+  sea-land-cloud mask), beyond the existing hardcoded `land_mask`/`cloud_mask` slots. Added
+  `HypsoBase.set_custom_mask(name, value)`/`clear_custom_masks()`/`custom_masks` property (a
+  `dict[str, xr.DataArray]`, same validation path as land/cloud via a new shared `_format_mask_dataarray`
+  helper — `_format_land_mask_dataarray`/`_format_cloud_mask_dataarray` are now thin wrappers over it) and
+  `load_mask_from_file(path, name=..., variable=..., dtype=..., invert=...)` (`.nc`/`.npy`/`.dat`/`.bin`
+  supported). `_unified_mask()` now ORs land_mask + cloud_mask + every registered custom mask together, so
+  `masked_l1a/b/c/d_cube` pick up custom masks automatically with no other changes. Verified against the real
+  capture: no-mask baseline unchanged, a fabricated quadrant mask correctly NaNs only that region of
+  `masked_l1a_cube` and leaves the rest untouched, `clear_custom_masks()` reverts to unmasked, and
+  `load_mask_from_file(.npy)` round-trips correctly. `tests/baseline/compare_to_baseline.py` still passes
+  (confirms this is additive, not a change to the existing calibration/georeferencing path). Documented in
+  `docs/architecture.rst`. **Not yet committed** — do this first on resume, then continue to `io/reader.py`
+  (was in progress when this mask request interrupted it — see the ⚠️ note right below, still the current state
+  of this repo).
+
+  ✅ **Resolved** by the `io/reader.py` entry above (was: `hypso.write` and `hypso.load` disagreed on file
+  layout between `289521bd` and the reader landing). `hypso.write`/`hypso.load` are consistent again as of this
+  point.
+- **2026-08-25 (continued):** Built `hypso/io/writer.py` — `write_level_nc(satobj, level, dst_nc, ...)` and
+  `write_l2a_nc(satobj, correction, dst_nc, ...)`, the schema-driven replacement for
+  `write/l1b_nc_writer.py`/`l1c_nc_writer.py`/`l1d_nc_writer.py`/`l2a_nc_writer.py`. Implements the flattened
+  root-group layout (products + geometry at root, `metadata/*` stays nested), fixes the `radiation_wavelength`
+  tuple bug and lat/lon/angle CF attribute bugs via `io/cf.py`, and actually applies compression to geometry
+  variables (previously received but ignored). Reuses `calibration_filenames_writer`/`metadata_gcp_group_writer`/
+  `metadata_srf_group_writer` from `write/` unchanged (already generic, no bugs found there). Found and fixed
+  along the way: `write/l2a_nc_writer.py`'s product variable name/units/long_name are NOT fixed per level —
+  they come from `satobj.l2a_cube[correction].attrs['l2_variable_name']` (e.g. "chla" vs "Rrs", set per AC
+  adapter) — `write_l2a_nc` now reads this dynamically instead of hardcoding a prefix (`L2A_SCHEMA`'s
+  `product_prefix="Rrs"` is only the same-as-original fallback for a missing attribute). Also fixed a latent bug
+  in the original `write_l2a_nc_file` wrapper: when writing multiple corrections and only the *first* file
+  already existed, it `return`ed and silently skipped writing the rest too (should `continue`) — fixed.
+  Added thin backward-compat wrappers `write_l1b_nc_file`/`write_l1c_nc_file`/`write_l1d_nc_file`/
+  `write_l2a_nc_file` (exact original names/signatures) and rewired `hypso/write/__init__.py` to import these 4
+  from `hypso.io.writer` instead of the old per-level modules — `write_products_nc_file` still comes from
+  `write/products_writer.py`, untouched. Verified: all 5 confirmed-external names still importable from
+  `hypso.write` with the right `__module__`; every level × `datacube={True,False}` combination (L1B/L1C/L1D/L2A,
+  L2A using a fabricated `l2_variable_name="chla"` correction) writes successfully with `Conventions=CF-1.10` and
+  correct root-level variable naming; `tests/baseline/compare_to_baseline.py` **still passes** after wiring
+  `hypso.write` through the new writer (confirms `HypsoBase`'s calibration/georeferencing/cube-generation path is
+  untouched by this I/O change).
+  Mid-session, user asked to leave the door open for a future gridded Level 3 product (no L3 generation code
+  exists yet - not implemented). Added `LevelSchema.spatial_dims` (default `("lines", "samples")`, every current
+  schema keeps the default) and threaded it through `io/writer.py` in place of hardcoded `('lines','samples')`
+  dimension-name tuples, so a future L3 schema could declare `spatial_dims=("lat","lon")` and reuse the same
+  product/geometry-writing code - dimension *sizing* (currently swath-specific: frame_count/image_height) would
+  still need a real L3 branch when L3 is actually implemented; this only keeps that door open, not open it.
+  User also asked for docs "as I go along" rather than at the end - added `docs/architecture.rst` (Sphinx,
+  wired into `docs/index.rst`'s toctree) covering `hypso.sensors`, the calibration coefficient registry, and
+  `hypso.io`'s layout/CF rationale; will keep extending this page alongside each future piece rather than
+  writing it in one pass at the end. Not yet committed — next action is to commit `io/writer.py`,
+  `hypso/write/__init__.py`, the `io/schema.py` `spatial_dims` addition, and `docs/`.
+- **2026-08-25:** Built `hypso/io/cf.py` (CF attribute builders: `global_attrs`, `latitude_attrs`,
+  `longitude_attrs`, `zenith_angle_attrs`, `azimuth_angle_attrs`, `crs_wgs84_attrs`, `geolocation_ref_attrs`,
+  `band_attrs`) and `hypso/io/schema.py` (`LevelSchema` + `L1A_SCHEMA`/`L1B_SCHEMA`/`L1C_SCHEMA`/`L1D_SCHEMA`/
+  `L2A_SCHEMA` + `get_schema(level)`). Both smoke-tested importing/calling cleanly. Grounded in a full read of
+  `write/l1c_nc_writer.py`, `write/geometry_group_writer.py`, `write/calibration_filenames_writer.py`,
+  `write/metadata_gcp_group_writer.py`, `write/metadata_srf_group_writer.py`, `write/utils.py` — confirmed the
+  `radiation_wavelength` trailing-comma tuple bug, the lat/lon `units="degrees"`+blanket `valid_min/max=[-180,180]`
+  bug (shared incorrectly with azimuth/zenith), and that geometry compression params are received but never
+  applied (commented out). Also confirmed `write/products_writer.py` (backs the `products` property — **do not
+  touch**, user's explicit instruction) and `write/l2a_nc_writer.py` (the actual `write_l2a_nc_file` used by
+  `hypso-processing-pipeline`, distinct from `products_writer.py`) are separate code paths.
+  Mid-session, user asked for an easy way to **plug in custom calibration coefficient sets** — added
+  `hypso/calibration/registry.py` (`register_calibration_coeffs(sat_id, name, files)` /
+  `get_custom_calibration_coeffs(sat_id, name)`, dict shape matches the bundled `get_hypsoN_calibration_files`
+  resolvers: `radiometric`/`smile`/`destriping`/`spectral`/`spectral_full_frame`) and wired it into
+  `HypsoBase._set_calibration_coeff_files` with three tiers, checked in order: (1) explicit `coeff_files=...`
+  dict for a true one-off set, (2) a `coeff_type` name previously registered via `register_calibration_coeffs`,
+  (3) fallback to `self.sensor_profile.calibration_files(...)` (today's built-in "moved"/"adjusted"/"original"
+  presets) — unchanged for existing callers. `generate_l1b_cube`/`_run_calibration` already forward `**kwargs`
+  through to `_set_calibration_coeff_files`, so `generate_l1b_cube(coeff_files={...})` works with no further
+  wiring. Verified: registry smoke test + a full real-capture `generate_l1b_cube(coeff_type='moved')` run still
+  gives l1b_cube mean=42.92898... matching baseline exactly. Committed (`326aec45`).
+- **2026-08-25, earlier:** `hypso/sensors/` (SensorProfile + registry + hypso1/hypso2 profiles) built, `HypsoBase`
+  wired to `sensor_profile`, `Hypso1`/`Hypso2` shrunk to thin subclasses, pre-refactor baseline captured and
+  re-verified passing against this point (all committed: `9dfe2952`, `f080a61e`, `884b8d5f`).
+- **2026-08-25, session start:** Plan approved. Verified the repo imports cleanly with
+  `hypso1_calibration`/`hypso2_calibration` siblings on `sys.path` (no pip install needed).
+
+   - Since ×86/×88: L2A names are `L2A.RRS.<method>`/`L2A.RHOS.<method>` (POLYMER now Rrs, DPS rhos), and the
+     AC tools' chlorophyll/TSM are in `L2B.CHL.<tool>`/`L2B.TSM.<tool>` files, not in the L2A: update readers.

@@ -2,23 +2,27 @@
 
 #https://packaging.python.org/en/latest/specifications/core-metadata/
 
-#[tool.setuptools_scm]
-#write_to = "hypso/_version.py"
-#fallback_version = "2.0.0"
+# Version from git tags (vYY.M.N, shared by hypso, hypso1_calibration and
+# hypso2_calibration - one tag versions all three). root is the repo root, one
+# level up from this file. Untagged commits get YY.M.(N+1).devD+g<sha>, and a
+# dirty tree adds .dYYYYMMDD. See docs/versioning.rst.
+[tool.setuptools_scm]
+root = ".."
+version_file = "hypso/_version.py"
+fallback_version = "0.0.0+unknown"
 
 [build-system]
 requires=[
 #  "python >=3.10",
   "pip>=23.2.1",
   "setuptools>=69.2.0",
-#  "setuptools_scm[toml]>=8.1.0",
+  "setuptools_scm[toml]>=8.1.0",
   ]
   
 build-backend="setuptools.build_meta"
 
 [project]
 name="hypso"
-version = "26.05.1"
 authors = [
   { name="Cameron Penne", email="cameron.l.penne@ntnu.no" },
 ]
@@ -42,42 +46,43 @@ dependencies=[
   "hypso1-calibration >= 26.2.0",
   "hypso2-calibration >= 26.2.0",
   "numpy>=1.24",
-  #"gdal >=3.4.1",
-  "cartopy >=0.21.1",
-  "pandas",
-  "matplotlib >=3.8.3",
-  "rasterio >=1.3.4",
-  "pyproj >=3.4.1",
-  "netcdf4 >=1.6.3",
-  "scikit-image >=0.21.0",
-  "py6s >=1.9.2",
   "scipy >=1.11.2",
-  "pillow",
-  "shapely >=2.0.1",
-  "tqdm >=4.66.1",
-  "astropy >=5.3.4",
-  "progressbar >=2.5",
-  "requests",
-  "python-dateutil",
-  "scikit-learn >=1.4",
-  "xgboost",
-  "joblib",
+  "xarray >=2024.10.0",   # xarray.DataTree
+  "netcdf4 >=1.6.3",
+  "pandas",
+  "pyproj >=3.4.1",
   "pyresample >=1.28.2",
   "satpy >=0.45.0",
-  "xarray >=2023.12.0",
-  "global-land-mask >= 1.0.0",
-  "h5py",
-
+  "astropy >=5.3.4",
+  "scikit-image >=0.21.0",
+  "python-dateutil",
+  "pillow",               # RGB camera images (hypso.rgb.camera)
+  "pyyaml"
 ]
 
 # dynamic properties set by tools
-#dynamic = [
-#  "version",
-#]
+dynamic = [
+  "version",
+]
 
 [project.urls]
 "Homepage" = "https://github.com/NTNU-SmallSat-Lab/hypso-package"
 "Bug Tracker" = "https://github.com/NTNU-SmallSat-Lab/hypso-package/issues"
+
+[project.entry-points."satpy.readers"]
+# Registers hypso_l1c/hypso_l1d/hypso_l2a with Satpy's third-party reader discovery -
+# the module target (not the key) is what matters: Satpy looks for an etc/
+# directory next to hypso.satpy, i.e. hypso/hypso/satpy/etc/readers/*.yaml.
+# See hypso/hypso/satpy/hypso_handler.py and docs/architecture.rst.
+hypso = "hypso.satpy"
+
+[project.entry-points."satpy.composites"]
+# Same module target as satpy.readers above: Satpy's composite config loader
+# does the same etc/-next-to-module lookup (satpy/composites/config_loader.py's
+# get_entry_points_config_dirs("satpy.composites")), finding
+# hypso/hypso/satpy/etc/composites/hypso1.yaml / hypso2.yaml - the
+# wavelength-based true_color recipe.
+hypso = "hypso.satpy"
 
 [tool.setuptools]
 license-files = [ "LICENSE" ]

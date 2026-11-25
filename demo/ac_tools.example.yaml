@@ -1,0 +1,28 @@
+# AC tool configuration for process_capture.py and correct_atmosphere(config=...).
+# Copy to demo/ac_tools.yaml (not tracked) or anywhere else, fill in your paths, and pass it with
+# --ac-config / config=, or set HYPSO_AC_CONFIG. Only the sections for the tools you use are needed.
+# All sections and keys: hypso/hypso/ac/config.py and docs/atmospheric_correction.rst.
+
+ocsmart:
+  dir: /path/to/OC-SMART                    # the CameronLP/OC-SMART fork, branch hypso-refactor
+  python: /path/to/envs/ocsmart/bin/python  # its environment
+  # l2_prod: Lt,Lr,Lrc,rrs,chl,tsm,aod,aph,adg,bbp,at,bt,tg_sol,tg_sen,Lwp   # the default
+  # solz_limit: 70.0
+  # senz_limit: 70.0
+
+polymer:
+  python: /path/to/envs/polymer/bin/python  # optional, default: this interpreter
+  base_path: /path/to/Polymer
+  polymer_path: /path/to/Polymer/polymer
+  eoread_path: /path/to/Polymer/eoread
+  eotools_path: /path/to/Polymer/eotools
+  core_path: /path/to/Polymer/core
+  version: v2                               # v1 | v2
+  ancillary_source: nasa                    # nasa | era5
+  # settings:                               # Polymer Params overrides
+  #   bands_corr: [448, 459, 470]
+
+acolite:
+  python: /path/to/envs/acolite/bin/python
+  path: /path/to/acolite
+  # settings_file: /path/to/settings.txt

@@ -1,0 +1,142 @@
+"""hypso.processing: processing steps as tree -> tree functions, on the real
+reference capture. End-to-end values are checked against the pre-refactor
+baseline in test_regression_real_capture.py; each step was also checked
+identical to the removed capture-object path before it was deleted
+(REFACTOR_PROGRESS.md ×47-×52)."""
+from importlib.resources import files
+
+import numpy as np
+import pytest
+
+from conftest import COEFF_TYPE, COEFF_VERSION, LATS_PATH, LONS_PATH, requires_real_capture
+from hypso.processing import capture_params, l1a_to_l1b, l1b_to_l1c, l1c_to_l1d
+
+pytestmark = requires_real_capture
+
+
+def test_capture_params(l1a):
+    # Values the capture-object loader derived for this capture.
+    params = capture_params(l1a.tree)
+    assert (params.capture_type, params.sat_id) == ("wide", "HYPSO-2")
+    assert params.spatial_dimensions == (598, 1092)
+    assert (params.bin_factor, params.background_value, params.image_width) == (9, 72, 120)
+    assert np.isclose(params.exposure, 0.04)
+    assert params.iso_time == "2025-03-04T10:38:05.079200+00:00"
+
+
+def test_l1a_to_l1b_leaves_input_unchanged(l1a):
+    tree = l1a.tree
+    before = tree.dataset["dn"].values.copy()
+    corrections_attrs, root_attrs = dict(tree["metadata/corrections"].attrs), dict(tree.attrs)
+    out = l1a_to_l1b(tree, "moved", version="V3")
+    assert out["metadata/corrections"].attrs["radiometric_coefficients_version"] == "moved"
+    assert dict(tree["metadata/corrections"].attrs) == corrections_attrs
+    assert dict(tree.attrs) == root_attrs and tree.attrs["processing_level"] == "L1A"
+    np.testing.assert_array_equal(tree.dataset["dn"].values, before)
+
+
+def test_steps_reject_wrong_levels(l1a, l1b, l1c):
+    with pytest.raises(ValueError, match="L1A"):
+        l1a_to_l1b(l1b.tree)
+    with pytest.raises(ValueError, match="L1B"):
+        l1b_to_l1c(l1c.tree)
+    with pytest.raises(ValueError, match="L1C"):
+        l1c_to_l1d(l1a.tree)
+
+
+def test_l1b_provenance(l1b):
+    step = l1b.tree["metadata/processing/l1b"].attrs
+    assert step["coeff_type"] == COEFF_TYPE and step["coefficient_release"] == COEFF_VERSION
+    assert "radiometric" in step["corrections_applied"] and len(step["radiometric_sha256"]) == 64
+
+
+def test_l1b_to_l1c_direct_and_fallback(l1b):
+    with_direct = l1b_to_l1c(l1b.tree, latitudes=LATS_PATH, longitudes=LONS_PATH, direct=True).dataset
+    assert {"latitude_direct", "solar_zenith_direct"} <= set(with_direct.data_vars)
+    # Without coordinates the direct georeferencing becomes the main geometry.
+    fallback = l1b_to_l1c(l1b.tree).dataset
+    np.testing.assert_array_equal(fallback["latitude"].values, with_direct["latitude_direct"].values)
+    np.testing.assert_array_equal(fallback["solar_zenith"].values, with_direct["solar_zenith_direct"].values)
+
+
+def test_l1b_to_l1c_argument_errors(l1b):
+    with pytest.raises(ValueError, match="both"):
+        l1b_to_l1c(l1b.tree, latitudes=LATS_PATH)
+    with pytest.raises(ValueError, match="shape"):
+        l1b_to_l1c(l1b.tree, latitudes=np.zeros((2, 2)), longitudes=np.zeros((2, 2)))
+
+
+def test_l1d_provenance_and_srfs(l1d):
+    step = l1d.tree["metadata/processing/l1d"].attrs
+    assert step["ssi_source"] == "tsis" and step["solar_zenith"] == "solar_zenith"
+    srf = l1d.tree["metadata/srf"]
+    assert np.isclose(step["earth_sun_distance_au"], srf.attrs["earth_sun_distance_au"])
+    assert len([n for n in srf.dataset.data_vars if n.startswith("Band_")]) == 120
+
+
+def test_wide_capture_abs_v31_uses_wide_matrix_and_fwhm_table(l1a):
+    # The fixture is a wide capture: V3.1 abs uses the wide matrix as is (as V3 did, production
+    # 73eb6b8a), and its FWHM table travels with the product (×92)
+    from hypso.processing.capture import interpolate_fwhm
+    tree = l1a_to_l1b(l1a.tree, "abs", version="V3.1")
+    step = tree["metadata/processing/l1b"].attrs
+    assert step["radiometric_capture_type"] == "wide" and step["radiometric_crop"] == "as_is"
+    assert "wide_v31_abs" in step["radiometric_file"] and step["fwhm_version"] == "V3.1"
+    corrections = tree["metadata/corrections"].dataset
+    table = np.load(files("hypso2_calibration").joinpath("data/fwhm/h2_srf_fwhm_v31.npz"))
+    np.testing.assert_array_equal(corrections["fwhm_table_fwhm"].values, table["fwhm"])
+    cube = tree.dataset["Lt"]
+    np.testing.assert_allclose(cube["fwhm"].values, interpolate_fwhm(table["wavelength"], table["fwhm"],
+                                                                     cube["radiation_wavelength"].values))
+    v2 = l1a_to_l1b(l1a.tree, "abs", version="V2")
+    assert v2["metadata/processing/l1b"].attrs["fwhm_version"] == "sensor profile"
+    assert "fwhm_table_wavelength" not in v2["metadata/corrections"].dataset
+
+
+def test_as_is_radiometric_shape_mismatch_raises():
+    from hypso.calibration.correction import CalibrationShapeMismatchError, read_coeffs_from_file
+    wide = files("hypso2_calibration").joinpath("data/radiometric/h2_radiometric_calibration_matrix_wide_v31_abs.npz")
+    with pytest.raises(CalibrationShapeMismatchError):
+        # a nominal-sized AOI does not fit the pre-baked wide matrix
+        read_coeffs_from_file(wide, "radiometric", x_start=428, x_stop=1508, y_start=0, y_stop=684,
+                              bin_factor=9, crop_mode="as_is")
+
+
+def test_srf_metadata_names_the_solar_spectrum_used(l1c):
+    tsis = l1c_to_l1d(l1c.tree)["metadata/srf/F0"].attrs["description"]
+    thuillier = l1c_to_l1d(l1c.tree, ssi_source="thuillier")["metadata/srf/F0"].attrs["description"]
+    assert "TSIS-1" in tsis and "Thuillier" in thuillier and "TSIS" not in thuillier
+
+
+def test_toa_reflectance_formula():
+    from hypso.processing import toa_reflectance
+    from hypso.srf import earth_sun_distance
+    radiance = np.full((2, 3, 2), 100.0)
+    f0 = np.array([1800.0, 1500.0])
+    sza = np.full((2, 3), 60.0)
+    d = earth_sun_distance("2025-07-04T00:00:00+00:00")
+    rho = toa_reflectance(radiance, f0, "2025-07-04T00:00:00+00:00", sza)
+    np.testing.assert_allclose(rho[0, 0], np.pi * 100.0 * d ** 2 / (f0 * 0.5))
+    assert d > 1.016   # aphelion is in early July
+
+
+
+def test_keystone_is_opt_in_and_flagged_unreviewed(l1a):
+    # Groundwork (×77): off by default; HYPSO-2's model is shipped disabled, so it warns.
+    default = l1a_to_l1b(l1a.tree, "moved", version="V2")
+    assert "keystone" not in default["metadata/processing/l1b"].attrs["corrections_applied"]
+    with pytest.warns(UserWarning, match="not reviewed"):
+        corrected = l1a_to_l1b(l1a.tree, "moved", version="V2", keystone=True)
+    step = corrected["metadata/processing/l1b"].attrs
+    assert "keystone" in step["corrections_applied"] and step["keystone_version"] == "V1"
+    assert step["keystone_model_enabled"] == "false" and len(step["keystone_sha256"]) == 64
+    a, b = default.dataset["Lt"].values, corrected.dataset["Lt"].values
+    assert a.shape == b.shape and not np.array_equal(a, b)
+    assert np.median(np.abs(b - a) / np.maximum(np.abs(a), 1e-6)) < 0.02     # a sub-pixel resampling
+
+
+def test_keystone_needs_a_model():
+    from hypso.processing.calibrate import _keystone_model
+    from types import SimpleNamespace
+    with pytest.raises(ValueError, match="no keystone model"):
+        _keystone_model(SimpleNamespace(sat_id="HYPSO-1"))

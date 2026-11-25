@@ -1,0 +1,25 @@
+# HYPSO-2 imaging modes - see hypso1_modes.yaml for the full schema
+# documentation this follows.
+#
+# Same classify_attr/classify_value as HYPSO-1's - no evidence HYPSO-2's
+# frame geometry differs, so this preserves today's actual behavior exactly.
+# No crop_modes anywhere: unlike HYPSO-1, hypso2_calibration's
+# get_hypso2_calibration_files() ignores capture_type entirely (confirmed by
+# reading its source - one smile file regardless of nominal/wide/moon/
+# custom), so today these thresholds only affect satobj.capture_type itself
+# (read elsewhere, e.g. logging), not which calibration files get selected.
+
+# ORDER MATTERS - see hypso1_modes.yaml's comment on this exact point.
+# Preserved as nominal/moon/wide, matching the original hardcoded chain.
+
+nominal:
+  classify_attr: frame_count
+  classify_value: 956
+
+moon:
+  classify_attr: frame_count
+  classify_value: 106
+
+wide:
+  classify_attr: image_height
+  classify_value: 1092

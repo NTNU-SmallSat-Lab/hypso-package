@@ -7,10 +7,17 @@ def run_destriping_correction(cube: np.ndarray,
     """
     Apply destriping correction matrix.
 
-    :param cube: 3-channel spectral cube
-    :param destriping_coeffs: Dictionary containing the 2D coefficients for destriping
+    Parameters
+    ----------
+    cube
+        3-channel spectral cube
+    destriping_coeffs
+        Dictionary containing the 2D coefficients for destriping
 
-    :return: 3-channel array for destriping correction
+    Returns
+    -------
+    out
+        3-channel array for destriping correction
     """
 
     # From https://github.com/NTNU-SmallSat-Lab/cal-char-corr/

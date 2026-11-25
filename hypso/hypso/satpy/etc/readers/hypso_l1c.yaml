@@ -1,0 +1,35 @@
+reader:
+  name: hypso_l1c
+  short_name: HYPSO L1C
+  long_name: HYPSO Level 1C Top-of-Atmosphere Radiance (georeferenced)
+  description: >
+    Reader for HYPSO-1/HYPSO-2 L1C NetCDF files written by
+    hypso.io.product.write_product. Per-band datasets are discovered at load
+    time (the band set depends on binning and calibration). Regridded
+    products (hypso.grid) are read on their map grid, others as swaths.
+  reader: !!python/name:satpy.readers.core.yaml_reader.FileYAMLReader
+  sensors: [hypso1, hypso2]
+
+file_types:
+  hypso_l1c_nc:
+    file_reader: !!python/name:hypso.satpy.hypso_handler.HypsoL1FileHandler
+    file_patterns:
+    - '{capture_target}_{start_time:%Y-%m-%dT%H-%M-%SZ}-l1c.nc'
+    - '{capture_target}_{start_time:%Y-%m-%dT%H-%M-%SZ}-{label}-l1c.nc'
+    # current names (hypso.io.naming): {SAT}_{INSTRUMENT}.{time}.{target}.L1C[.{label}].nc
+    # _HSI is matched literally: these readers are for the hyperspectral imager only; another
+    # instrument (e.g. an RGB camera) gets its own reader matching its own token.
+    - '{platform}_HSI.{start_time:%Y%m%dT%H%M%S}.{capture_target}.L1C.nc'
+    - '{platform}_HSI.{start_time:%Y%m%dT%H%M%S}.{capture_target}.L1C.{label}.nc'
+
+datasets:
+  latitude:
+    name: latitude
+    standard_name: latitude
+    units: degree
+    file_type: hypso_l1c_nc
+  longitude:
+    name: longitude
+    standard_name: longitude
+    units: degree
+    file_type: hypso_l1c_nc

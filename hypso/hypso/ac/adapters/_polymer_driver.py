@@ -1,0 +1,125 @@
+"""Subprocess entry point for running Polymer atmospheric correction in an
+isolated process. See base.py's module docstring for the concrete, demonstrated
+reason: Polymer's v1 (HYPSO-SRF-patched) and v2 (stock) builds ship different,
+incompatible versions of the same-named top-level packages (`core` at least),
+and Python's sys.modules cache makes switching between them within one
+long-lived process unsafe.
+
+Not meant to be imported directly - invoked via
+`<python_path> -m hypso.ac.adapters._polymer_driver <config.json> <result.json>`
+by base.py's run_subprocess_driver(), which PolymerAdapter.run_correction calls.
+Everything here that doesn't need Polymer itself imported (path resolution,
+output-file renaming) stays in PolymerAdapter.run_correction, in the parent
+process - this driver's job is only the part that must happen after Polymer is
+imported: resolving the version-specific output_datasets/outputs_names kwargs
+(needs polymer.main_v5.default_output_datasets for v1) and calling run_polymer.
+
+config.json keys (all written by PolymerAdapter.run_correction):
+    polymer_base_path, polymer_path, eoread_path, eotools_path, core_path:
+        sys.path entries (base_path inserted last, so it wins on name clashes -
+        matches the original in-process code's insertion order). Any may be
+        null/omitted.
+    polymer_l1_input_nc_file, polymer_output_dir, if_exists:
+        passed straight through to run_polymer. polymer_l1_input_nc_file is
+        also the srf_getter argument (SRFs read from its metadata/srf group).
+    srf_nc_path: the <sensor>_srf.nc PolymerAdapter still generates, used
+        only as the srf_getter's fallback for older L1 files (found by
+        globbing next to the L1 file, not read from this key).
+    polymer_version: "v1" or "v2" - selects output_datasets vs outputs_names.
+    optional_output_datasets: appended to either selection list.
+    polymer_settings: dict of Params overrides, passed to run_polymer as
+        **kwargs (optional, default none).
+    ancillary_source: "nasa" (default, Polymer's own provider) or "era5".
+    era5_allow_preliminary: passed to eoread.era5.ERA5 when "era5".
+
+result.json: {"status": "ok", "output_file": "..."} or
+{"status": "error", "error_type": ..., "message": ..., "traceback": ...}.
+"""
+import json
+import sys
+import traceback
+from pathlib import Path
+
+from hypso.ac.ac_polymer import SRF_GETTER_FROM_L1_PATH
+
+
+def main(config_path: str, result_path: str) -> int:
+    config = json.loads(Path(config_path).read_text())
+
+    try:
+        for key in ("polymer_path", "eotools_path", "eoread_path", "core_path"):
+            value = config.get(key)
+            if value:
+                sys.path.insert(0, value)
+        if config.get("polymer_base_path"):
+            sys.path.insert(0, config["polymer_base_path"])
+
+        from eoread.hypso import Level1_HYPSO
+        from polymer.main_v5 import run_polymer, default_output_datasets
+
+        optional_output_datasets = config["optional_output_datasets"]
+
+        match config["polymer_version"]:
+            case "v1":
+                output_selection_kwargs = {
+                    "output_datasets": default_output_datasets + optional_output_datasets,
+                }
+            case "v2":
+                output_selection_kwargs = {
+                    "outputs": "named",
+                    "outputs_names": [
+                        "latitude", "longitude", "rho_w", "logchl", "logfb",
+                        "Rgli", "Rnir", "flags",
+                    ] + optional_output_datasets,
+                }
+            case other:
+                raise ValueError(f"Unknown polymer_version: {other!r}")
+
+        ancillary_kwargs = {}
+        ancillary_source = config.get("ancillary_source", "nasa")
+        if ancillary_source == "era5":
+            # main_v5's pipeline (ApplyAncillary) expects a provider with a
+            # single get(dt) -> Dataset interface (matching eoread.
+            # ancillary_nasa.Ancillary_NASA, main_v5's own default) - NOT
+            # polymer.ancillary_era5.Ancillary_ERA5's get(param, date) -> LUT
+            # interface, which belongs to the older main.py/level1_*.py
+            # pipeline. eoread.era5.ERA5 is the compatible one.
+            from eoread.era5 import ERA5
+            ancillary_kwargs["ancillary"] = ERA5(
+                allow_preliminary=config.get("era5_allow_preliminary", True))
+        elif ancillary_source != "nasa":
+            raise ValueError(f'Unknown ancillary_source "{ancillary_source}"; expected "nasa" or "era5"')
+
+        output_file = run_polymer(
+            Level1_HYPSO(config["polymer_l1_input_nc_file"]),
+            dir_out=config["polymer_output_dir"],
+            if_exists=config["if_exists"],
+            # SRFs from the L1 input file's own metadata/srf group
+            # (2026-10-23); ac_polymer_srf_getter_from_l1 falls back to the
+            # <sensor>_srf.nc sibling (srf_nc_path) for files written before
+            # the group held SRFs.
+            srf_getter=SRF_GETTER_FROM_L1_PATH,
+            srf_getter_arg=config["polymer_l1_input_nc_file"],
+            **output_selection_kwargs,
+            **ancillary_kwargs,
+            **(config.get("polymer_settings") or {}),
+        )
+
+        Path(result_path).write_text(json.dumps({
+            "status": "ok",
+            "output_file": str(output_file),
+        }))
+        return 0
+
+    except Exception as exc:
+        Path(result_path).write_text(json.dumps({
+            "status": "error",
+            "error_type": type(exc).__name__,
+            "message": str(exc),
+            "traceback": traceback.format_exc(),
+        }))
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1], sys.argv[2]))
