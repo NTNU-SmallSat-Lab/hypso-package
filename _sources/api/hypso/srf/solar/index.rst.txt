@@ -1,0 +1,51 @@
+hypso.srf.solar
+===============
+
+.. py:module:: hypso.srf.solar
+
+.. autoapi-nested-parse::
+
+   The Sun as the reflectance step needs it: reference solar spectral
+   irradiance (TSIS-1 HSRS or Thuillier 2002) and the Earth-Sun distance.
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.srf.solar.earth_sun_distance
+   hypso.srf.solar.load_solar_irradiance
+
+
+Module Contents
+---------------
+
+.. py:function:: earth_sun_distance(iso_time)
+
+   Earth-Sun distance in AU for a date.
+
+   ``1 - 0.01672 cos(0.9856 (doy - 4))`` with the cosine argument in degrees:
+   0.9856 deg/day is the mean orbital motion, day 4 is perihelion. (Until
+   2026-10-23 the argument was passed as radians, a date-dependent TOA
+   reflectance error of up to about 6%.)
+
+   :param iso_time: Acquisition time.
+   :type iso_time: str or datetime
+
+   :returns: Distance over the mean distance (R / R_0).
+   :rtype: float
+
+
+.. py:function:: load_solar_irradiance(source = 'tsis')
+
+   A reference solar irradiance spectrum.
+
+   :param source: TSIS-1 HSRS v2 (2022-11-30, 0.005 nm sampling) or Thuillier (2002).
+   :type source: {"tsis", "thuillier"}, default "tsis"
+
+   :returns: * **irradiance** (*numpy.ndarray*) -- In mW m-2 nm-1.
+             * **wavelengths** (*numpy.ndarray*) -- In nm.
+
+

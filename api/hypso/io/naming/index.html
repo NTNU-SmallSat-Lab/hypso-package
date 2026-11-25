@@ -1,0 +1,951 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>hypso.io.naming &#8212; hypso 26.10.0a7-20-g5e64121f</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../../_static/documentation_options.js?v=8e897651"></script>
+    <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/hypso/io/naming/index';</script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="hypso.io.product" href="../product/index.html" />
+    <link rel="prev" title="hypso.io.cf" href="../cf/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="26.10.0a7" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">hypso 26.10.0a7-20-g5e64121f</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="../../index.html">
+    hypso
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../index.html">
+    hypso
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../ac/index.html">hypso.ac</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../ac/adapters/index.html">hypso.ac.adapters</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../ac/adapters/base/index.html">hypso.ac.adapters.base</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ac/config/index.html">hypso.ac.config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ac/machi/index.html">hypso.ac.machi</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">hypso.api</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../grid/index.html">hypso.grid</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../grid/areas/index.html">hypso.grid.areas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../grid/regridding/index.html">hypso.grid.regridding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../grid/resample/index.html">hypso.grid.resample</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">hypso.io</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../cf/index.html">hypso.io.cf</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">hypso.io.naming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../product/index.html">hypso.io.product</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../provenance/index.html">hypso.io.provenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../schema/index.html">hypso.io.schema</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../maps/index.html">hypso.maps</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../processing/index.html">hypso.processing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../processing/atmospheric/index.html">hypso.processing.atmospheric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../processing/bands/index.html">hypso.processing.bands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../processing/calibrate/index.html">hypso.processing.calibrate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../processing/capture/index.html">hypso.processing.capture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../processing/georeference/index.html">hypso.processing.georeference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../processing/l2b/index.html">hypso.processing.l2b</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../processing/l2b_algorithms/index.html">hypso.processing.l2b_algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../processing/toa/index.html">hypso.processing.toa</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../rgb/index.html">hypso.rgb</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../rgb/camera/index.html">hypso.rgb.camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../rgb/exposure/index.html">hypso.rgb.exposure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../rgb/hsi2rgb/index.html">hypso.rgb.hsi2rgb</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../rgb/maps/index.html">hypso.rgb.maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../rgb/product/index.html">hypso.rgb.product</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../rgb/registration/index.html">hypso.rgb.registration</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../sensors/index.html">hypso.sensors</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../sensors/hypso1/index.html">hypso.sensors.hypso1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../sensors/hypso2/index.html">hypso.sensors.hypso2</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../srf/index.html">hypso.srf</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../srf/response/index.html">hypso.srf.response</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../srf/solar/index.html">hypso.srf.solar</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../versioning/index.html">hypso.versioning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../window/index.html">hypso.window</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">hypso</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">hypso.io</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">hypso.io.naming</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-hypso.io.naming">
+<span id="hypso-io-naming"></span><h1>hypso.io.naming<a class="headerlink" href="#module-hypso.io.naming" title="Link to this heading">#</a></h1>
+<p>Product file names.</p>
+<p>Current style, NASA OB.DAAC-like - satellite and instrument first, then
+time, so a plain listing groups by satellite and sorts by time:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="n">SAT</span><span class="p">}</span><span class="n">_</span><span class="p">{</span><span class="n">INSTRUMENT</span><span class="p">}</span><span class="o">.</span><span class="p">{</span><span class="n">YYYYMMDDTHHMMSS</span><span class="p">}</span><span class="o">.</span><span class="p">{</span><span class="n">target</span><span class="p">}</span><span class="o">.</span><span class="p">{</span><span class="n">LEVEL</span><span class="p">}[</span><span class="o">.</span><span class="p">{</span><span class="n">QUANTITY</span><span class="o">|</span><span class="n">GROUP</span><span class="p">}</span><span class="o">.</span><span class="p">{</span><span class="n">source</span><span class="p">}][</span><span class="o">.</span><span class="p">{</span><span class="n">grid</span><span class="p">}][</span><span class="o">.</span><span class="p">{</span><span class="n">label</span><span class="p">}]</span><span class="o">.</span><span class="n">nc</span>
+
+<span class="n">HYPSO2_HSI</span><span class="mf">.20250612</span><span class="n">T095802</span><span class="o">.</span><span class="n">aeronetvenice</span><span class="o">.</span><span class="n">L1A</span><span class="o">.</span><span class="n">nc</span>
+<span class="n">HYPSO2_HSI</span><span class="mf">.20250612</span><span class="n">T095802</span><span class="o">.</span><span class="n">aeronetvenice</span><span class="o">.</span><span class="n">L1D</span><span class="o">.</span><span class="n">nc</span>
+<span class="n">HYPSO2_HSI</span><span class="mf">.20250612</span><span class="n">T095802</span><span class="o">.</span><span class="n">aeronetvenice</span><span class="o">.</span><span class="n">L2A</span><span class="o">.</span><span class="n">RRS</span><span class="o">.</span><span class="n">polymer</span><span class="o">.</span><span class="n">nc</span>
+<span class="n">HYPSO2_HSI</span><span class="mf">.20250612</span><span class="n">T095802</span><span class="o">.</span><span class="n">aeronetvenice</span><span class="o">.</span><span class="n">L2A</span><span class="o">.</span><span class="n">RHOS</span><span class="o">.</span><span class="n">machi</span><span class="o">.</span><span class="n">nc</span>
+<span class="n">HYPSO2_HSI</span><span class="mf">.20250612</span><span class="n">T095802</span><span class="o">.</span><span class="n">aeronetvenice</span><span class="o">.</span><span class="n">L2B</span><span class="o">.</span><span class="n">BGC</span><span class="o">.</span><span class="n">oc4</span><span class="o">.</span><span class="n">nc</span>
+<span class="n">HYPSO2_HSI</span><span class="mf">.20250612</span><span class="n">T095802</span><span class="o">.</span><span class="n">aeronetvenice</span><span class="o">.</span><span class="n">L1D</span><span class="o">.</span><span class="n">adjusted</span><span class="o">.</span><span class="n">nc</span>   <span class="p">(</span><span class="n">label</span><span class="p">:</span> <span class="n">experiments</span><span class="p">)</span>
+<span class="n">HYPSO2_HSI</span><span class="mf">.20250612</span><span class="n">T095802</span><span class="o">.</span><span class="n">aeronetvenice</span><span class="o">.</span><span class="n">L2A</span><span class="o">.</span><span class="n">RRS</span><span class="o">.</span><span class="n">polymer</span><span class="o">.</span><span class="n">utm33n_880m</span><span class="o">.</span><span class="n">nc</span>   <span class="p">(</span><span class="n">regridded</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The first field is the satellite and the instrument, like NASA’s
+<code class="docutils literal notranslate"><span class="pre">{MISSION}_{INSTRUMENT}</span></code> (<code class="docutils literal notranslate"><span class="pre">PACE_OCI</span></code>): <code class="docutils literal notranslate"><span class="pre">HYPSO2_HSI</span></code> is HYPSO-2’s
+Hyperspectral Imager, the instrument every product so far comes from
+(<code class="xref py py-data docutils literal notranslate"><span class="pre">INSTRUMENTS</span></code> lists the known ones). <cite>.</cite> separates fields and never
+appears inside one. L2A always carries the quantity (<code class="xref py py-data docutils literal notranslate"><span class="pre">QUANTITIES</span></code>:
+<code class="docutils literal notranslate"><span class="pre">RRS</span></code> remote-sensing reflectance, <code class="docutils literal notranslate"><span class="pre">RHOS</span></code> surface reflectance; <code class="docutils literal notranslate"><span class="pre">AUX</span></code> the
+AC tool’s other per-band outputs, <code class="xref py py-data docutils literal notranslate"><span class="pre">AUX_QUANTITY</span></code>) and the AC
+method, which produced it; L2B (products derived from an L2A) always carries
+its product group (<code class="xref py py-data docutils literal notranslate"><span class="pre">L2B_GROUPS</span></code>, e.g. <code class="docutils literal notranslate"><span class="pre">BGC</span></code>) and the source (the
+algorithm or AC tool) in the same two fields; a regridded product carries its grid (hypso.grid.grid_name:
+utm&lt;zone&gt;&lt;n|s&gt; or epsg&lt;code&gt;, then the pixel size, e.g. utm33n_880m,
+epsg4326_0p01deg); the optional free-text label is always last and may
+not look like a grid. Calibration set and
+masking state are not part of the name - they are recorded in the file.
+Times are UTC.</p>
+<p>Legacy names (<cite>{target}_{YYYY-MM-DDTHH-MM-SSZ}[-{label}]-{level}[-{ac}].nc</cite>,
+where label mixed calibration set and masking, e.g. “moved_unmasked”) are
+still parsed, so existing datasets stay readable. Capture directories keep
+the capture ID form <cite>{target}_{YYYY-MM-DDTHH-MM-SSZ}</cite>.</p>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.io.naming.ProductName" title="hypso.io.naming.ProductName"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProductName</span></code></a></p></td>
+<td><p>A parsed or composed product file name; <code class="xref py py-meth docutils literal notranslate"><span class="pre">filename()</span></code> renders it.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.io.naming.name_method" title="hypso.io.naming.name_method"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name_method</span></code></a>(ac)</p></td>
+<td><p>The AC field of an L2A name: the method, without ACOLITE's output</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.io.naming.parse_platform_token" title="hypso.io.naming.parse_platform_token"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_platform_token</span></code></a>(token)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;HYPSO2_HSI&quot;</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">(&quot;HYPSO-2&quot;,</span> <span class="pre">&quot;HSI&quot;)</span></code>: satellite and instrument.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.io.naming.parse_product_name" title="hypso.io.naming.parse_product_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_product_name</span></code></a>(path)</p></td>
+<td><p>Parse a current-style or legacy product file name.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.io.naming.platform_token" title="hypso.io.naming.platform_token"><code class="xref py py-obj docutils literal notranslate"><span class="pre">platform_token</span></code></a>(sat_id[, instrument])</p></td>
+<td><p>The satellite-and-instrument field: <code class="docutils literal notranslate"><span class="pre">(&quot;HYPSO-2&quot;,</span> <span class="pre">&quot;HSI&quot;)</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">&quot;HYPSO2_HSI&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.io.naming.product_name" title="hypso.io.naming.product_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">product_name</span></code></a>(sat_id, time, target, level[, ac, label, ...])</p></td>
+<td><p>Compose a product name.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.io.naming.quantity_token" title="hypso.io.naming.quantity_token"><code class="xref py py-obj docutils literal notranslate"><span class="pre">quantity_token</span></code></a>(variable)</p></td>
+<td><p>The L2A quantity token of a product variable: <code class="docutils literal notranslate"><span class="pre">&quot;Rrs&quot;</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">&quot;RRS&quot;</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hypso.io.naming.ProductName">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hypso.io.naming.</span></span><span class="sig-name descname"><span class="pre">ProductName</span></span><a class="reference internal" href="../../../../_modules/hypso/io/naming.html#ProductName"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.io.naming.ProductName" title="Link to this definition">#</a></dt>
+<dd><p>A parsed or composed product file name; <a class="reference internal" href="#hypso.io.naming.ProductName.filename" title="hypso.io.naming.ProductName.filename"><code class="xref py py-meth docutils literal notranslate"><span class="pre">filename()</span></code></a> renders it.</p>
+<p>Build one with <a class="reference internal" href="#hypso.io.naming.product_name" title="hypso.io.naming.product_name"><code class="xref py py-func docutils literal notranslate"><span class="pre">product_name()</span></code></a>, or parse a file name with
+<a class="reference internal" href="#hypso.io.naming.parse_product_name" title="hypso.io.naming.parse_product_name"><code class="xref py py-func docutils literal notranslate"><span class="pre">parse_product_name()</span></code></a>.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.io.naming.ProductName.filename">
+<span class="sig-name descname"><span class="pre">filename</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/hypso/io/naming.html#ProductName.filename"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.io.naming.ProductName.filename" title="Link to this definition">#</a></dt>
+<dd><p>Current-style file name. Requires sat_id (a legacy name doesn’t
+carry one - use replace(name, sat_id=…)).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.io.naming.ProductName.with_level">
+<span class="sig-name descname"><span class="pre">with_level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/hypso/io/naming.html#ProductName.with_level"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.io.naming.ProductName.with_level" title="Link to this definition">#</a></dt>
+<dd><p>Same capture (label and grid), another level.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>)</p></li>
+<li><p><strong>ac</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>]</em>)</p></li>
+<li><p><strong>quantity</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#hypso.io.naming.ProductName" title="hypso.io.naming.ProductName">ProductName</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.io.naming.ProductName.capture_id">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">capture_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></em><a class="reference internal" href="../../../../_modules/hypso/io/naming.html#ProductName.capture_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.io.naming.ProductName.capture_id" title="Link to this definition">#</a></dt>
+<dd><p><cite>{target}_{YYYY-MM-DDTHH-MM-SSZ}</cite> - capture directory name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.io.naming.name_method">
+<span class="sig-prename descclassname"><span class="pre">hypso.io.naming.</span></span><span class="sig-name descname"><span class="pre">name_method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ac</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/hypso/io/naming.html#name_method"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.io.naming.name_method" title="Link to this definition">#</a></dt>
+<dd><p>The AC field of an L2A name: the method, without ACOLITE’s output
+suffix (the quantity field says L2R or L2W): <code class="docutils literal notranslate"><span class="pre">&quot;acolite_l2w&quot;</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">&quot;acolite&quot;</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ac</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.io.naming.parse_platform_token">
+<span class="sig-prename descclassname"><span class="pre">hypso.io.naming.</span></span><span class="sig-name descname"><span class="pre">parse_platform_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/hypso/io/naming.html#parse_platform_token"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.io.naming.parse_platform_token" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">&quot;HYPSO2_HSI&quot;</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">(&quot;HYPSO-2&quot;,</span> <span class="pre">&quot;HSI&quot;)</span></code>: satellite and instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>token</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.io.naming.parse_product_name">
+<span class="sig-prename descclassname"><span class="pre">hypso.io.naming.</span></span><span class="sig-name descname"><span class="pre">parse_product_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/hypso/io/naming.html#parse_product_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.io.naming.parse_product_name" title="Link to this definition">#</a></dt>
+<dd><p>Parse a current-style or legacy product file name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>) – A file name or path; only the name is used.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#hypso.io.naming.ProductName" title="hypso.io.naming.ProductName">ProductName</a></p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If the name is not a HYPSO product name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.io.naming.platform_token">
+<span class="sig-prename descclassname"><span class="pre">hypso.io.naming.</span></span><span class="sig-name descname"><span class="pre">platform_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sat_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instrument</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'HSI'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/hypso/io/naming.html#platform_token"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.io.naming.platform_token" title="Link to this definition">#</a></dt>
+<dd><p>The satellite-and-instrument field: <code class="docutils literal notranslate"><span class="pre">(&quot;HYPSO-2&quot;,</span> <span class="pre">&quot;HSI&quot;)</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">&quot;HYPSO2_HSI&quot;</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sat_id</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>)</p></li>
+<li><p><strong>instrument</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.io.naming.product_name">
+<span class="sig-prename descclassname"><span class="pre">hypso.io.naming.</span></span><span class="sig-name descname"><span class="pre">product_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sat_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instrument</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'HSI'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/hypso/io/naming.html#product_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.io.naming.product_name" title="Link to this definition">#</a></dt>
+<dd><p>Compose a product name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sat_id</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – e.g. <code class="docutils literal notranslate"><span class="pre">&quot;HYPSO-2&quot;</span></code>.</p></li>
+<li><p><strong>time</strong> (<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.15)"><em>datetime.datetime</em></a>) – Capture start; converted to UTC if timezone-aware.</p></li>
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – Capture target, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;aeronetvenice&quot;</span></code>.</p></li>
+<li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – <code class="docutils literal notranslate"><span class="pre">&quot;L1A&quot;</span></code> … <code class="docutils literal notranslate"><span class="pre">&quot;L1D&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;L2A&quot;</span></code>.</p></li>
+<li><p><strong>ac</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Atmospheric correction method (L2A) or source (L2B: algorithm or
+tool); required there, not allowed otherwise.</p></li>
+<li><p><strong>label</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Free-text label for experiments (letters, digits, <code class="docutils literal notranslate"><span class="pre">_</span></code>, <code class="docutils literal notranslate"><span class="pre">-</span></code>).</p></li>
+<li><p><strong>grid</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Grid name of a regridded product (<a class="reference internal" href="../../grid/index.html#hypso.grid.grid_name" title="hypso.grid.grid_name"><code class="xref py py-func docutils literal notranslate"><span class="pre">hypso.grid.grid_name()</span></code></a>).</p></li>
+<li><p><strong>instrument</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>default &quot;HSI&quot;</em>) – Instrument token (<code class="xref py py-data docutils literal notranslate"><span class="pre">INSTRUMENTS</span></code>).</p></li>
+<li><p><strong>quantity</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – L2A quantity token (<code class="xref py py-data docutils literal notranslate"><span class="pre">QUANTITIES</span></code>, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;RRS&quot;</span></code>, or the
+product variable <code class="docutils literal notranslate"><span class="pre">&quot;Rrs&quot;</span></code>) or L2B group (<code class="xref py py-data docutils literal notranslate"><span class="pre">L2B_GROUPS</span></code>, e.g.
+<code class="docutils literal notranslate"><span class="pre">&quot;BGC&quot;</span></code>); required for L2A and L2B.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">product_name(...).filename()</span></code> gives the file name.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hypso.io.naming.ProductName" title="hypso.io.naming.ProductName">ProductName</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.io.naming.quantity_token">
+<span class="sig-prename descclassname"><span class="pre">hypso.io.naming.</span></span><span class="sig-name descname"><span class="pre">quantity_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/hypso/io/naming.html#quantity_token"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.io.naming.quantity_token" title="Link to this definition">#</a></dt>
+<dd><p>The L2A quantity token of a product variable: <code class="docutils literal notranslate"><span class="pre">&quot;Rrs&quot;</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">&quot;RRS&quot;</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>variable</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../cf/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">hypso.io.cf</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../product/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">hypso.io.product</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.io.naming.ProductName"><code class="docutils literal notranslate"><span class="pre">ProductName</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.io.naming.ProductName.filename"><code class="docutils literal notranslate"><span class="pre">ProductName.filename()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.io.naming.ProductName.with_level"><code class="docutils literal notranslate"><span class="pre">ProductName.with_level()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.io.naming.ProductName.capture_id"><code class="docutils literal notranslate"><span class="pre">ProductName.capture_id</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.io.naming.name_method"><code class="docutils literal notranslate"><span class="pre">name_method()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.io.naming.parse_platform_token"><code class="docutils literal notranslate"><span class="pre">parse_platform_token()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.io.naming.parse_product_name"><code class="docutils literal notranslate"><span class="pre">parse_product_name()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.io.naming.platform_token"><code class="docutils literal notranslate"><span class="pre">platform_token()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.io.naming.product_name"><code class="docutils literal notranslate"><span class="pre">product_name()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.io.naming.quantity_token"><code class="docutils literal notranslate"><span class="pre">quantity_token()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../../_sources/api/hypso/io/naming/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Norwegian University of Science and Technology (NTNU).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

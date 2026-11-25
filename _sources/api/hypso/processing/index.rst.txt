@@ -1,0 +1,268 @@
+hypso.processing
+================
+
+.. py:module:: hypso.processing
+
+.. autoapi-nested-parse::
+
+   Processing steps as functions from one product tree to the next level's.
+
+   The trees are :mod:`hypso.io.product`'s in-memory model; :class:`hypso.Product`
+   calls these functions. Each step records itself in ``metadata/processing``
+   (:mod:`hypso.io.provenance`) and leaves its input tree unchanged.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/hypso/processing/atmospheric/index
+   /api/hypso/processing/bands/index
+   /api/hypso/processing/calibrate/index
+   /api/hypso/processing/capture/index
+   /api/hypso/processing/georeference/index
+   /api/hypso/processing/l2b/index
+   /api/hypso/processing/l2b_algorithms/index
+   /api/hypso/processing/toa/index
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.processing.capture_params
+   hypso.processing.classify_capture_type
+   hypso.processing.correct_atmosphere
+   hypso.processing.derive
+   hypso.processing.l1a_to_l1b
+   hypso.processing.l1b_to_l1c
+   hypso.processing.l1c_to_l1d
+   hypso.processing.make_l2b
+   hypso.processing.select_bands
+   hypso.processing.split_tool_products
+   hypso.processing.toa_reflectance
+
+
+Package Contents
+----------------
+
+.. py:function:: capture_params(tree)
+
+   Capture parameters (dimensions, binning, timing, sensor profile) from a
+   product tree's ``metadata/capture_config`` and global attributes.
+
+
+.. py:function:: classify_capture_type(profile, values)
+
+   The imaging mode ("nominal", "wide", "moon", ...): the first of the
+   sensor's capture_type_thresholds whose attribute (frame_count,
+   image_height, ...) has its value in `values`; "custom" otherwise.
+
+
+.. py:function:: correct_atmosphere(tree, method = 'machi', masked = False, mask_flags=None, work_dir=None, config=None, **options)
+
+   Atmospheric correction of an L1C or L1D tree.
+
+   :param tree: L1C or L1D product tree in sensor geometry (not regridded).
+   :type tree: xarray.DataTree
+   :param method: See the module description.
+   :type method: {"machi", "dps", "polymer", "acolite", "ocsmart"}, default "machi"
+   :param masked: Give the method NaN where ``pixel_flags`` are set (all flags, or only
+                  ``mask_flags``). The input product itself stays unmasked.
+   :type masked: bool, default False
+   :param mask_flags: Flags to mask with, e.g. ``["land", "cloud"]``.
+   :type mask_flags: list of str, optional
+   :param work_dir: External tools only: where the staged input and the tool's raw
+                    output go (kept); default a temporary directory, removed afterwards.
+   :type work_dir: str or path, optional
+   :param config: External tools only: AC tool configuration (:mod:`hypso.ac.config`);
+                  default the ``HYPSO_AC_CONFIG`` environment variable.
+   :type config: str, path or dict, optional
+   :param \*\*options: Method-specific. machi: ``est_min_R`` (expected minimum surface
+                       reflectance, default 0.05), ``tol`` (default 0.01), ``approach_rate``
+                       (default 1), ``fit_exclude_flags`` (pixel_flags names left out of the
+                       fit; default none, all finite pixels), ``fit_subsample`` (fit on every
+                       Nth pixel plus each band's darkest; default 1, all). dps: ``statistic`` (``"min"`` or
+                       ``"percentile"``), ``percentile``. polymer, acolite, ocsmart: any key
+                       of the tool's configuration section (e.g. ``settings={...}``),
+                       overriding it; acolite also ``output`` (``"l2w"`` or ``"l2r"``) and
+                       ``reuse_output``.
+
+   :returns: L2A tree.
+   :rtype: xarray.DataTree
+
+
+.. py:function:: derive(tree, group, algorithm = None)
+
+   An L2B tree from one of the package's algorithms on an L2A.
+
+   :param tree: An L2A tree; most algorithms need ``Rrs`` (``L2A.RRS.*``).
+   :type tree: xarray.DataTree
+   :param group: L2B group, ``"BGC"`` or ``"IOP"``.
+   :type group: str
+   :param algorithm: See :data:`hypso.processing.l2b_algorithms.ALGORITHMS`; default the
+                     group's default (BGC: ``"oci"``, IOP: ``"qaa"``).
+   :type algorithm: str, optional
+
+   :returns: ``...L2B.<group>.<algorithm>``.
+   :rtype: xarray.DataTree
+
+
+.. py:function:: l1a_to_l1b(tree, coeff_type = None, version=None, coeff_files = None, radiometric = True, smile = True, destripe = True, spectral = True, keystone = False)
+
+   Calibrate an L1A tree to L1B (top-of-atmosphere radiance ``Lt``).
+
+   :param tree: L1A product tree.
+   :type tree: xarray.DataTree
+   :param coeff_type: Radiometric variant: ``"abs"`` (default), ``"moved"`` or ``"lab"``, or a
+                      set registered with ``hypso.calibration.register_calibration_coeffs``.
+                      None uses the file's ``radiometric_coefficients_version`` if present,
+                      else the default. Without ``version``, a variant the default release
+                      lacks takes the newest release that has it (HYPSO-1 ``"moved"``: V2).
+   :type coeff_type: str, optional
+   :param version: Coefficient release - ``"V3.1"`` (default), ``"V3.1v2spec"`` (V2 band
+                   names, for OC-SMART), ``"V2"``, ``"V1"``; ``"V3"`` means V3.1 - or
+                   ``{correction: release}`` to mix them, e.g. ``{"smile": "V2"}`` (the
+                   calibration package's ``data/coefficients.yaml``).
+   :type version: str or dict, optional
+   :param coeff_files: Explicit ``{kind: path}`` instead of ``coeff_type`` and ``version``.
+   :type coeff_files: dict, optional
+   :param radiometric: False skips that correction.
+   :type radiometric: bool, default True
+   :param smile: False skips that correction.
+   :type smile: bool, default True
+   :param destripe: False skips that correction.
+   :type destripe: bool, default True
+   :param spectral: False skips that correction.
+   :type spectral: bool, default True
+   :param keystone: Also correct keystone (spatial misregistration across the spectrum)
+                    with the sensor's optional distortion model, after radiometric
+                    calibration and before smile (:mod:`hypso.calibration.keystone`).
+                    Groundwork, unreviewed: HYPSO-2's model is shipped disabled, so this
+                    warns; sensors without a model raise ValueError.
+   :type keystone: bool, default False
+
+   :returns: L1B tree. The files used, their checksums and the package versions
+             are recorded in ``metadata/processing/l1b``, and a summary is logged.
+   :rtype: xarray.DataTree
+
+
+.. py:function:: l1b_to_l1c(tree, latitudes=None, longitudes=None, direct = True)
+
+   Georeference an L1B tree to L1C.
+
+   :param tree: L1B product tree.
+   :type tree: xarray.DataTree
+   :param latitudes: Indirect pixel coordinates, ``(lines, samples)`` arrays or paths to
+                     raw float32 files. Omit both to use direct georeferencing as the
+                     main geometry.
+   :type latitudes: array_like or path, optional
+   :param longitudes: Indirect pixel coordinates, ``(lines, samples)`` arrays or paths to
+                      raw float32 files. Omit both to use direct georeferencing as the
+                      main geometry.
+   :type longitudes: array_like or path, optional
+   :param direct: Also compute direct georeferencing from the ADCS telemetry
+                  (``latitude_direct``, ``longitude_direct``, ``<angle>_direct``).
+                  Skipped with a warning if the telemetry points off the Earth.
+   :type direct: bool, default True
+
+   :returns: L1C tree.
+   :rtype: xarray.DataTree
+
+
+.. py:function:: l1c_to_l1d(tree, use_direct_georef = False, ssi_source = 'tsis', use_unbinned = True)
+
+   Top-of-atmosphere reflectance ``rhot`` from an L1C tree.
+
+   :param tree: L1C product tree (sensor geometry or gridded).
+   :type tree: xarray.DataTree
+   :param use_direct_georef: Use ``solar_zenith_direct`` instead of ``solar_zenith``, when present.
+   :type use_direct_georef: bool, default False
+   :param ssi_source: Solar irradiance spectrum: TSIS-1 HSRS or Thuillier (2002).
+   :type ssi_source: {"tsis", "thuillier"}, default "tsis"
+   :param use_unbinned: Build the spectral response functions from the unbinned wavelengths
+                        and bin them, instead of from the binned band centres.
+   :type use_unbinned: bool, default True
+
+   :returns: L1D tree with ``metadata/srf``.
+   :rtype: xarray.DataTree
+
+
+.. py:function:: make_l2b(tree, group, source, variables, parameters = None)
+
+   An L2B tree from an L2A tree and the derived variables.
+
+   :param tree: The L2A product the variables were derived from.
+   :type tree: xarray.DataTree
+   :param group: Product group, a key of :data:`hypso.io.naming.L2B_GROUPS`.
+   :type group: str
+   :param source: Algorithm or tool, e.g. ``"oc4"`` or ``"polymer"`` (a file-name token).
+   :type source: str
+   :param variables: ``{name: xarray.DataArray or (array, attrs)}``, each of the product's
+                     spatial shape; attributes should include ``units`` and ``long_name``.
+   :type variables: dict
+   :param parameters: Recorded in the ``l2b_<group>_<source>`` provenance step.
+   :type parameters: dict, optional
+
+   :rtype: xarray.DataTree
+
+
+.. py:function:: select_bands(tree, wavelength_range=None, wavelengths=None, indices=None)
+
+   A product tree with only some of its bands.
+
+   :param tree: L1B, L1C, L1D or L2A product tree.
+   :type tree: xarray.DataTree
+   :param wavelength_range: ``(min, max)`` in nm: the bands whose centre lies within it.
+   :type wavelength_range: tuple of float, optional
+   :param wavelengths: Wavelengths in nm: the nearest band to each.
+   :type wavelengths: array_like, optional
+   :param indices: Band indices in the sensor's full band set (``band_index``).
+   :type indices: array_like of int, optional
+
+   :returns: Same level, with the kept bands' ``band_index``, ``metadata/srf`` (and
+             ``metadata/machi``) trimmed to them, and a ``select_bands`` step.
+   :rtype: xarray.DataTree
+
+
+.. py:function:: split_tool_products(tree)
+
+   Separate an L2A's AC-tool products from its reflectance.
+
+   :param tree: An L2A tree, e.g. from :func:`hypso.processing.correct_atmosphere` or
+                an L2A file written before the products moved to L2B.
+   :type tree: xarray.DataTree
+
+   :returns: ``(l2a_tree, {group: l2b_tree})``: the L2A without the products, and
+             one L2B tree per group (:data:`hypso.io.naming.L2B_GROUPS`), named after
+             the AC tool (``L2B.BGC.polymer``). The tool's flag variables are kept
+             in the L2A and copied into each L2B.
+   :rtype: tuple
+
+
+.. py:function:: toa_reflectance(radiance, f0, iso_time, solar_zenith)
+
+   Top-of-atmosphere reflectance from radiance.
+
+   ``rho = pi L d^2 / (F0 cos(sza))``, with ``d`` the Earth-Sun distance in
+   AU (`Normalized reflectances
+   <https://oceanopticsbook.info/view/atmospheric-correction/normalized-reflectances>`_).
+
+   :param radiance: ``(lines, samples, bands)`` radiance in W m-2 um-1 sr-1.
+   :type radiance: numpy.ndarray
+   :param f0: Per-band solar irradiance F0 in mW m-2 nm-1 (numerically equal to
+              W m-2 um-1).
+   :type f0: array_like
+   :param iso_time: Acquisition time (ISO 8601), for the Earth-Sun distance.
+   :type iso_time: str
+   :param solar_zenith: ``(lines, samples)`` solar zenith angle in degrees.
+   :type solar_zenith: numpy.ndarray
+
+   :returns: Reflectance, in the radiance's dtype.
+   :rtype: numpy.ndarray
+
+

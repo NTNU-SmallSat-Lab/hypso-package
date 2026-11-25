@@ -1,0 +1,792 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Coefficient history &#8212; hypso 26.10.0a7-20-g5e64121f</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=8e897651"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'coefficient_history';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Atmospheric correction" href="atmospheric_correction.html" />
+    <link rel="prev" title="Calibration coefficients" href="calibration.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="26.10.0a7" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">hypso 26.10.0a7-20-g5e64121f</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Coefficient history
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Coefficient history
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Coefficient history</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="coefficient-history">
+<h1>Coefficient history<a class="headerlink" href="#coefficient-history" title="Link to this heading">#</a></h1>
+<p>How the calibration coefficient files came about, for the record. Which file
+each correction uses today, by version, is in each calibration package’s
+<code class="docutils literal notranslate"><span class="pre">data/coefficients.yaml</span></code> (<a class="reference internal" href="calibration.html"><span class="doc">Calibration coefficients</span></a>).</p>
+<section id="v3-1-and-v3-2026-11">
+<h2>V3.1 and V3 (2026-11)<a class="headerlink" href="#v3-1-and-v3-2026-11" title="Link to this heading">#</a></h2>
+<p>V3.1 (production’s default from 2026-10-29) came from production
+hypso-package <code class="docutils literal notranslate"><span class="pre">polymer_v3</span></code> commits c390ca27 (V3.1 calibration), 11756523
+(SRF modelling, from aria 368d16d9) and af82d75c (<code class="docutils literal notranslate"><span class="pre">v31v2spec</span></code>), with
+calibration packages 26.10.1. The files are byte-identical to production’s:</p>
+<ul class="simple">
+<li><p>HYPSO-2: <code class="docutils literal notranslate"><span class="pre">h2_radiometric_calibration_matrix_full_v31_abs.npz</span></code> (0.963 times
+V3 <code class="docutils literal notranslate"><span class="pre">abs</span></code>), <code class="docutils literal notranslate"><span class="pre">h2_radiometric_calibration_matrix_wide_v31_abs.npz</span></code> (0.971
+times V3 wide <code class="docutils literal notranslate"><span class="pre">abs</span></code>; the full V3.1 matrix binned), <code class="docutils literal notranslate"><span class="pre">h2_srf_fwhm_v31.npz</span></code>.</p></li>
+<li><p>HYPSO-1: <code class="docutils literal notranslate"><span class="pre">radiometric_calibration_matrix_HYPSO-1_full_v31.npz</span></code> and
+<code class="docutils literal notranslate"><span class="pre">..._wide_v31.npz</span></code> (0.972 times aria’s HYPSO-1 V3), <code class="docutils literal notranslate"><span class="pre">h1_srf_fwhm_v31.npz</span></code>,
+and aria’s <code class="docutils literal notranslate"><span class="pre">smile_correction_matrix_HYPSO-1_full_sobel_v3.npz</span></code> and
+<code class="docutils literal notranslate"><span class="pre">spectral_array_calibrated_poly_full_v3.npz</span></code>.</p></li>
+</ul>
+<p>V3 is superseded: its <code class="docutils literal notranslate"><span class="pre">abs</span></code> matrices (<code class="docutils literal notranslate"><span class="pre">h2_radiometric_calibration_matrix_full_v3_abs.npz</span></code>,
+<code class="docutils literal notranslate"><span class="pre">..._wide_v3_abs.npz</span></code>) were removed from the package and are in git
+history; V3 <code class="docutils literal notranslate"><span class="pre">moved</span></code>, the V3 smile and the V3 spectral calibration are
+unchanged in V3.1.</p>
+</section>
+<section id="hypso-1">
+<h2>HYPSO-1<a class="headerlink" href="#hypso-1" title="Link to this heading">#</a></h2>
+<p>The calibration team’s version log, verbatim (it describes the HYPSO-1 v0 and
+v1 coefficients; file names are the CSV names of the time, now shipped as
+<code class="docutils literal notranslate"><span class="pre">.npz</span></code> with the same base names):</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>#### HYPSO-1 calibration coefficient version descriptions ####
+
+---------------------------------------
+
+v0 (before version numbers were used):
+May 2023
+
+Spectral calibration:
+- Filename: spectral_bands_HYPSO-1_120bands.csv
+- Center wavelength of each band
+
+Radiometric calibration:
+- Either from 10 img avg cropped and binned (only nominal) calibration data or from single full calibration frame
+- With or without destriping
+- No spatial shift applied
+
+---------------------------------------
+
+v1:
+September 2023
+
+Spectral calibration:
+- Filename from script: spectral_bands_HYPSO-1_120bands.csv (same as v0)
+- Filename used: spectral_bands_HYPSO-1_v1.csv
+- Center wavelength of each band
+
+Radiometric calibration:
+- Nominal capture (684 pixels x 120 bands)
+    - Filename from script: radiometric_calibration_matrix_HYPSO-1_shifted_nominal.csv
+    - Filename used: radiometric_calibration_matrix_HYPSO-1_nominal_v1.csv
+    - Created using average of 10 cropped to AOI (nominal) calibration frames
+    - Background level: 8 counts
+    - Used spectral calibration matrix (same as used for smile correction) to determine correct wavelength for each pixel - to give correct radiance value regardless of smile
+    - Applied 7 pixel shift to correct for spatial shift (padding with zeros)
+    - Used data from single full frame radiometric calibration data (crop and bin) to exchange 0s resulting from pixel shift with non-averaged radiometric calibration values
+    - No destriping (is a separate matrix)
+- Wide capture (1092 pixels x 120 bands)
+    - Filename from script: radiometric_calibration_matrix_HYPSO-1_shifted_wide.csv
+    - Filename used: radiometric_calibration_matrix_HYPSO-1_wide_v1.csv
+    - Created from the single full frame radiometric calibration data
+    - Background level: 8 counts
+    - Used spectral calibration matrix (same as used for smile correction) to determine correct wavelength for each pixel - to give correct radiance value regardless of smile
+    - Applied 7 pixel shift to correct for spatial shift (padding with zeros)
+    - Cropped and binned using params:
+        -     row_count = 1092
+        -     column_count = 1080
+        -     bin_factor = 9
+        -     aoi_x = 428
+        -     aoi_y = 62
+    - No destriping (is a separate matrix)
+
+
+Smile correction:
+- Nominal capture (684 pixels x 120 bands)
+    - Filename from script: spectral_calibration_matrix_HYPSO-1_shifted_nominal.csv
+    - Filename used: smile_correction_matrix_HYPSO-1_nominal_v1.csv
+    - Used spectral calibration data from full frame
+    - Applied 7 pixel shift to correct for spatial shift (padding with zeros)
+    - Cropped and binned using params:
+        -     row_count = 684
+        -     column_count = 1080
+        -     bin_factor = 9
+        -     aoi_x = 428
+        -     aoi_y = 266
+- Wide capture (1092 pixels x 120 bands)
+    - Filename from script: spectral_calibration_matrix_HYPSO-1_shifted_wide.csv
+    - Filename used: smile_correction_matrix_HYPSO-1_wide_v1.csv
+    - Used spectral calibration data from full frame
+    - Applied 7 pixel shift to correct for spatial shift (padding with zeros)
+    - Cropped and binned using params:
+        -     row_count = 1092
+        -     column_count = 1080
+        -     bin_factor = 9
+        -     aoi_x = 428
+        -     aoi_y = 62
+
+
+Destriping correction:
+- Nominal capture (684 pixels x 120 bands)
+    - Filename from script: n/a
+    - Filename used: destriping_matrix_HYPSO-1_nominal_v1
+    - based off lacrau_2023-09-09
+    - compute along-track derivative after log transform over water pixels, for multiplicative correction
+- Wide capture (1092 pixels x 120 bands)
+    - Filename from script: n/a
+    - Filename used: destriping_matrix_HYPSO-1_wide_v1
+    - based off finnmark_2022-08-06_1035Z
+
+
+---------------------------------------
+</pre></div>
+</div>
+</section>
+<section id="hypso-2">
+<h2>HYPSO-2<a class="headerlink" href="#hypso-2" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">hypso2_calibration</span></code>’s <code class="docutils literal notranslate"><span class="pre">data/coefficients.yaml</span></code> records, for each file,
+what it is and its name before the V1-V3 releases (the <code class="docutils literal notranslate"><span class="pre">was</span> <span class="pre">...</span></code> notes).</p>
+</section>
+<section id="smile-and-keystone-model">
+<h2>Smile and keystone model<a class="headerlink" href="#smile-and-keystone-model" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">hypso2_calibration</span></code> also ships <code class="docutils literal notranslate"><span class="pre">h2_distortion_model_v1.npz</span></code>: the
+coefficients <code class="docutils literal notranslate"><span class="pre">A_hat</span></code> and <code class="docutils literal notranslate"><span class="pre">B_hat</span></code> (previously the files <code class="docutils literal notranslate"><span class="pre">H2_A-hat</span></code> and
+<code class="docutils literal notranslate"><span class="pre">H2_B-hat</span></code>) of HYPSO-2’s detector distortion model after Lawrence (2003), as
+used in the calibration team’s processing. For each detector pixel (<code class="docutils literal notranslate"><span class="pre">x</span></code>
+spectral, <code class="docutils literal notranslate"><span class="pre">y</span></code> spatial) the true position is a second-order polynomial with the
+terms <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">x,</span> <span class="pre">y,</span> <span class="pre">xy,</span> <span class="pre">x²,</span> <span class="pre">y²]</span></code>: <code class="docutils literal notranslate"><span class="pre">A_hat</span></code> gives the spectral shift (smile),
+<code class="docutils literal notranslate"><span class="pre">B_hat</span></code> the spatial shift (keystone, -2.9 to +1.8 pixels across the full
+frame). The shipped V2 smile matrix agrees with the <code class="docutils literal notranslate"><span class="pre">A_hat</span></code> model within about
+2 nm, so it was probably derived from it. The keystone correction is not applied
+by default; it is available for review (<code class="docutils literal notranslate"><span class="pre">keystone</span></code> in <code class="docutils literal notranslate"><span class="pre">coefficients.yaml</span></code>,
+disabled; <code class="docutils literal notranslate"><span class="pre">calibrate(keystone=True)</span></code> applies it, with a warning).</p>
+</section>
+<section id="removed-source-files">
+<h2>Removed source files<a class="headerlink" href="#removed-source-files" title="Link to this heading">#</a></h2>
+<p>Until 2026-10-27 the repository also held the coefficients as CSV files (a
+top-level <code class="docutils literal notranslate"><span class="pre">coefficients/</span></code> folder, about 400 MB) with a script converting them
+to <code class="docutils literal notranslate"><span class="pre">.npz</span></code>. Nothing read them, and the <code class="docutils literal notranslate"><span class="pre">.npz</span></code> files hold the same values
+(checked, NaN included). They are in the git history before that date.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="calibration.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Calibration coefficients</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="atmospheric_correction.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Atmospheric correction</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#v3-1-and-v3-2026-11">V3.1 and V3 (2026-11)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso-1">HYPSO-1</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso-2">HYPSO-2</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#smile-and-keystone-model">Smile and keystone model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#removed-source-files">Removed source files</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/coefficient_history.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Norwegian University of Science and Technology (NTNU).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

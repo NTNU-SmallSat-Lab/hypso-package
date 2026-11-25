@@ -1,0 +1,49 @@
+hypso.processing.bands
+======================
+
+.. py:module:: hypso.processing.bands
+
+.. autoapi-nested-parse::
+
+   Band subsets: keep some of a product's bands and drop the rest
+   (Product.select_bands).
+
+   From L1B on only: calibration needs every band (the smile correction resamples
+   each spectrum across bands), so L1A is always complete. Each kept band keeps
+   its index in the sensor's full band set (the ``band_index`` coordinate, and
+   each band variable's ``band`` attribute in files), which is what TOA
+   reflectance (F0) and ``metadata/srf`` (``Band_<index>``) look bands up by - so
+   selecting bands and then processing gives the same values as processing all
+   bands and selecting afterwards.
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.processing.bands.select_bands
+
+
+Module Contents
+---------------
+
+.. py:function:: select_bands(tree, wavelength_range=None, wavelengths=None, indices=None)
+
+   A product tree with only some of its bands.
+
+   :param tree: L1B, L1C, L1D or L2A product tree.
+   :type tree: xarray.DataTree
+   :param wavelength_range: ``(min, max)`` in nm: the bands whose centre lies within it.
+   :type wavelength_range: tuple of float, optional
+   :param wavelengths: Wavelengths in nm: the nearest band to each.
+   :type wavelengths: array_like, optional
+   :param indices: Band indices in the sensor's full band set (``band_index``).
+   :type indices: array_like of int, optional
+
+   :returns: Same level, with the kept bands' ``band_index``, ``metadata/srf`` (and
+             ``metadata/machi``) trimmed to them, and a ``select_bands`` step.
+   :rtype: xarray.DataTree
+
+

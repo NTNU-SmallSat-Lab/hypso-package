@@ -1,0 +1,85 @@
+hypso.rgb.camera
+================
+
+.. py:module:: hypso.rgb.camera
+
+.. autoapi-nested-parse::
+
+   HYPSO-2's RGB camera: reading its images (groundwork for camera support).
+
+   A capture directory holds the camera image as ``<capture id>-rgb/<target>_
+   <YYYY_MM_DD>T<HH_MM_SS>.bmp``: one 8-bit raw Bayer mosaic (3840 x 2748),
+   taken about 2 s before the HSI capture starts. The mosaic is RGGB; the ground
+   processing's demosaiced copy (``processing-temp/rgb-camera-image-debayered.png``)
+   is this module's bilinear RGGB demosaic rotated 180 degrees (checked on the
+   2025-04-04 Ariake capture: correlation 0.98-1.00 per channel). The file has
+   no georeferencing. Reading never registers it; that is an explicit step,
+   :func:`hypso.rgb.register_camera` (the HSI product gives the geolocation).
+
+   .. rubric:: Examples
+
+   >>> image = read_camera_image(find_camera_image(capture_dir))
+   >>> image.sel(channel="G")
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.rgb.camera.camera_image_time
+   hypso.rgb.camera.demosaic_bilinear
+   hypso.rgb.camera.find_camera_image
+   hypso.rgb.camera.read_camera_image
+
+
+Module Contents
+---------------
+
+.. py:function:: camera_image_time(path)
+
+   Acquisition time (UTC) from a camera image's file name.
+
+
+.. py:function:: demosaic_bilinear(mosaic, pattern = BAYER_PATTERN)
+
+   Bilinear demosaic of a Bayer mosaic.
+
+   :param mosaic: 2D raw values.
+   :type mosaic: numpy.ndarray
+   :param pattern: Colour filters of the top-left 2x2 cell, row by row.
+   :type pattern: {"RGGB", "BGGR", "GRBG", "GBRG"}
+
+   :returns: ``(rows, cols, 3)`` float32 R, G, B.
+   :rtype: numpy.ndarray
+
+
+.. py:function:: find_camera_image(capture_dir)
+
+   The RGB camera image of a capture directory, or None if it has none.
+
+   :param capture_dir:
+   :type capture_dir: str or pathlib.Path
+
+   :rtype: pathlib.Path or None
+
+
+.. py:function:: read_camera_image(path, demosaic = True, rotate = True)
+
+   Read an RGB camera image.
+
+   :param path: The ``.bmp`` (see :func:`find_camera_image`).
+   :type path: str or pathlib.Path
+   :param demosaic: Bilinear RGGB demosaic to R, G, B; False returns the raw mosaic.
+   :type demosaic: bool, default True
+   :param rotate: Rotate 180 degrees, the orientation of the ground processing's
+                  demosaiced image.
+   :type rotate: bool, default True
+
+   :returns: ``(y, x, channel)`` float32 R, G, B in raw counts (0-255), or the
+             ``(y, x)`` uint8 mosaic; attributes ``instrument`` ("RGB"),
+             ``acquisition_time`` (ISO 8601, UTC), ``bayer_pattern``, ``source``.
+   :rtype: xarray.DataArray
+
+

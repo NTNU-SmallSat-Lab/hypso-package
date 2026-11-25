@@ -1,0 +1,865 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>hypso.rgb.registration &#8212; hypso 26.10.0a7-20-g5e64121f</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=8e897651"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/hypso/rgb/registration';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="26.10.0a7" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">hypso 26.10.0a7-20-g5e64121f</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">hypso.rgb.registration</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for hypso.rgb.registration</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Registering HYPSO-2's RGB camera image to the HSI capture (TODO 4e).</span>
+
+<span class="sd">The camera image has no georeferencing. Registration is never run when an</span>
+<span class="sd">image is read (:func:`hypso.rgb.read_camera_image` only reads and demosaics);</span>
+<span class="sd">call :func:`register_camera` explicitly. It registers the image to the HSI</span>
+<span class="sd">capture's own geolocation:</span>
+
+<span class="sd">1. the HSI product (L1C or L1D, three bands near red, green and blue) is</span>
+<span class="sd">   regridded onto a UTM map - a true map plane, unlike the pushbroom swath;</span>
+<span class="sd">2. SIFT keypoints are matched between that map and the (downsampled) camera</span>
+<span class="sd">   image (scikit-image; ratio test and cross-check);</span>
+<span class="sd">3. RANSAC fits a homography from camera pixels to map coordinates - for a frame</span>
+<span class="sd">   camera looking at nearly flat ground, the right model;</span>
+<span class="sd">4. the fit is checked: enough inliers, spread over enough of the camera image</span>
+<span class="sd">   (a fit anchored in one corner is unreliable elsewhere), and a small enough</span>
+<span class="sd">   residual. A capture that fails is left unregistered, with the reason.</span>
+
+<span class="sd">On three test captures (Ariake, Venice, Annapolis) this gave residuals of</span>
+<span class="sd">about 190-220 m on a 150 m map, well below the HSI's 876 x 108 m pixels, in</span>
+<span class="sd">about 40 s each (REFACTOR_PROGRESS.md ×83).</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; from hypso.rgb import find_camera_image, read_camera_image</span>
+<span class="sd">&gt;&gt;&gt; camera = read_camera_image(find_camera_image(capture_dir))</span>
+<span class="sd">&gt;&gt;&gt; reg = register_camera(camera, l1d)</span>
+<span class="sd">&gt;&gt;&gt; geo = georeference_camera(camera, reg, l1d)       # per-pixel latitude/longitude</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyproj</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+
+<span class="c1"># HSI bands rendered for matching (nm): close to the camera's colours.</span>
+<span class="n">RGB_WAVELENGTHS</span> <span class="o">=</span> <span class="p">(</span><span class="mi">640</span><span class="p">,</span> <span class="mi">550</span><span class="p">,</span> <span class="mi">460</span><span class="p">)</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="viewcode-block" id="CameraRegistration">
+<a class="viewcode-back" href="../../../api/hypso/rgb/registration/index.html#hypso.rgb.CameraRegistration">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CameraRegistration</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Result of :func:`register_camera`."""</span>
+    <span class="c1">#: True if the fit passed the quality check.</span>
+    <span class="n">ok</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="c1">#: Why it failed the check ("" when ok).</span>
+    <span class="n">reason</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="c1">#: 3x3 homography from full-resolution camera pixel (col, row) to map</span>
+    <span class="c1">#: coordinates (x, y) in ``crs`` (metres); None if no fit was possible.</span>
+    <span class="n">homography</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="c1">#: Map CRS (WKT).</span>
+    <span class="n">crs</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="c1">#: Matched keypoints and RANSAC inliers.</span>
+    <span class="n">matches</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">inliers</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="c1">#: Residual RMS of the inliers, metres.</span>
+    <span class="n">rms_m</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="c1">#: Fraction of the camera image inside the convex hull of the inliers.</span>
+    <span class="n">coverage</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="c1">#: Settings used.</span>
+    <span class="n">settings</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CameraRegistration.attrs">
+<a class="viewcode-back" href="../../../api/hypso/rgb/registration/index.html#hypso.rgb.CameraRegistration.attrs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The registration as NetCDF attributes (provenance)."""</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"registration_ok"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ok</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="s2">"registration_reason"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">reason</span><span class="p">,</span>
+                <span class="s2">"registration_matches"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">matches</span><span class="p">,</span> <span class="s2">"registration_inliers"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">inliers</span><span class="p">,</span>
+                <span class="s2">"registration_rms_m"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rms_m</span><span class="p">,</span> <span class="s2">"registration_coverage"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">coverage</span><span class="p">,</span>
+                <span class="s2">"registration_homography"</span><span class="p">:</span> <span class="s2">""</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">homography</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span>
+                <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s2">.10g</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">homography</span><span class="o">.</span><span class="n">ravel</span><span class="p">()),</span>
+                <span class="s2">"registration_crs"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span>
+                <span class="o">**</span><span class="p">{</span><span class="sa">f</span><span class="s2">"registration_</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">"</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">items</span><span class="p">()}}</span></div>
+</div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_stretch</span><span class="p">(</span><span class="n">img</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">98</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">((</span><span class="n">img</span> <span class="o">-</span> <span class="n">low</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">high</span> <span class="o">-</span> <span class="n">low</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_hsi_map</span><span class="p">(</span><span class="n">hsi</span><span class="p">,</span> <span class="n">resolution</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The HSI product's three RGB bands on a UTM grid: (grey image, area)."""</span>
+    <span class="k">if</span> <span class="n">hsi</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="s2">"bands"</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">hsi</span> <span class="o">=</span> <span class="n">hsi</span><span class="o">.</span><span class="n">select_bands</span><span class="p">(</span><span class="n">wavelengths</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">RGB_WAVELENGTHS</span><span class="p">))</span>
+    <span class="n">grid</span> <span class="o">=</span> <span class="n">hsi</span><span class="o">.</span><span class="n">regrid</span><span class="p">(</span><span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_stretch</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">grid</span><span class="o">.</span><span class="n">area_definition</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="register_camera">
+<a class="viewcode-back" href="../../../api/hypso/rgb/registration/index.html#hypso.rgb.register_camera">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">register_camera</span><span class="p">(</span><span class="n">camera</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span> <span class="n">hsi</span><span class="p">,</span> <span class="n">resolution</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">150.0</span><span class="p">,</span> <span class="n">downsample</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.25</span><span class="p">,</span>
+                    <span class="n">min_inliers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span> <span class="n">min_coverage</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.25</span><span class="p">,</span> <span class="n">max_rms_m</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">500.0</span><span class="p">,</span>
+                    <span class="n">ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">ransac_threshold_px</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CameraRegistration</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Register a camera image to an HSI capture.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    camera : xarray.DataArray</span>
+<span class="sd">        ``(y, x, channel)`` image from :func:`hypso.rgb.read_camera_image`</span>
+<span class="sd">        (demosaiced, rotated as the ground processing does).</span>
+<span class="sd">    hsi : hypso.Product</span>
+<span class="sd">        The capture's L1C or L1D product (needs geolocation).</span>
+<span class="sd">    resolution : float, default 150</span>
+<span class="sd">        Pixel size (m) of the UTM map the camera is matched against.</span>
+<span class="sd">    downsample : float, default 0.25</span>
+<span class="sd">        Scale of the camera image used for matching.</span>
+<span class="sd">    min_inliers, min_coverage, max_rms_m</span>
+<span class="sd">        Quality check: at least this many RANSAC inliers, covering at least</span>
+<span class="sd">        this fraction of the camera image (convex hull), with at most this</span>
+<span class="sd">        residual RMS (m).</span>
+<span class="sd">    ratio : float, default 0.8</span>
+<span class="sd">        Lowe's ratio test for descriptor matching.</span>
+<span class="sd">    ransac_threshold_px : float, default 3</span>
+<span class="sd">        RANSAC inlier threshold, in map pixels.</span>
+<span class="sd">    seed : int, default 0</span>
+<span class="sd">        RANSAC random seed (reproducible results).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CameraRegistration</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.spatial</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvexHull</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">skimage.feature</span><span class="w"> </span><span class="kn">import</span> <span class="n">SIFT</span><span class="p">,</span> <span class="n">match_descriptors</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">skimage.measure</span><span class="w"> </span><span class="kn">import</span> <span class="n">ransac</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">skimage.transform</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProjectiveTransform</span><span class="p">,</span> <span class="n">rescale</span>
+
+    <span class="n">settings</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"resolution_m"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">resolution</span><span class="p">),</span> <span class="s2">"downsample"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">downsample</span><span class="p">),</span> <span class="s2">"min_inliers"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">min_inliers</span><span class="p">),</span>
+                <span class="s2">"min_coverage"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">min_coverage</span><span class="p">),</span> <span class="s2">"max_rms_m"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">max_rms_m</span><span class="p">),</span> <span class="s2">"ratio"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">ratio</span><span class="p">),</span>
+                <span class="s2">"ransac_threshold_px"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">ransac_threshold_px</span><span class="p">)}</span>
+    <span class="n">map_grey</span><span class="p">,</span> <span class="n">area</span> <span class="o">=</span> <span class="n">_hsi_map</span><span class="p">(</span><span class="n">hsi</span><span class="p">,</span> <span class="n">resolution</span><span class="p">)</span>
+    <span class="n">crs</span> <span class="o">=</span> <span class="n">area</span><span class="o">.</span><span class="n">crs</span><span class="o">.</span><span class="n">to_wkt</span><span class="p">()</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">rescale</span><span class="p">(</span><span class="n">_stretch</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">camera</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)),</span> <span class="n">downsample</span><span class="p">,</span> <span class="n">channel_axis</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">anti_aliasing</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">cam_grey</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">failed</span><span class="p">(</span><span class="n">reason</span><span class="p">,</span> <span class="n">matches</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">inliers</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rms</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="s2">"nan"</span><span class="p">),</span> <span class="n">coverage</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">homography</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">CameraRegistration</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="n">reason</span><span class="p">,</span> <span class="n">homography</span><span class="p">,</span> <span class="n">crs</span><span class="p">,</span> <span class="n">matches</span><span class="p">,</span> <span class="n">inliers</span><span class="p">,</span> <span class="n">rms</span><span class="p">,</span> <span class="n">coverage</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
+
+    <span class="n">sift_map</span><span class="p">,</span> <span class="n">sift_cam</span> <span class="o">=</span> <span class="n">SIFT</span><span class="p">(),</span> <span class="n">SIFT</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sift_map</span><span class="o">.</span><span class="n">detect_and_extract</span><span class="p">(</span><span class="n">map_grey</span><span class="p">)</span>
+        <span class="n">sift_cam</span><span class="o">.</span><span class="n">detect_and_extract</span><span class="p">(</span><span class="n">cam_grey</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>                     <span class="c1"># no keypoints at all (blank image)</span>
+        <span class="k">return</span> <span class="n">failed</span><span class="p">(</span><span class="sa">f</span><span class="s2">"no keypoints: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">matches</span> <span class="o">=</span> <span class="n">match_descriptors</span><span class="p">(</span><span class="n">sift_cam</span><span class="o">.</span><span class="n">descriptors</span><span class="p">,</span> <span class="n">sift_map</span><span class="o">.</span><span class="n">descriptors</span><span class="p">,</span> <span class="n">max_ratio</span><span class="o">=</span><span class="n">ratio</span><span class="p">,</span> <span class="n">cross_check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">failed</span><span class="p">(</span><span class="sa">f</span><span class="s2">"only </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span><span class="si">}</span><span class="s2"> matches"</span><span class="p">,</span> <span class="n">matches</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">))</span>
+    <span class="n">src</span> <span class="o">=</span> <span class="n">sift_cam</span><span class="o">.</span><span class="n">keypoints</span><span class="p">[</span><span class="n">matches</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]][:,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>          <span class="c1"># (col, row)</span>
+    <span class="n">dst</span> <span class="o">=</span> <span class="n">sift_map</span><span class="o">.</span><span class="n">keypoints</span><span class="p">[</span><span class="n">matches</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]][:,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">model</span><span class="p">,</span> <span class="n">inliers</span> <span class="o">=</span> <span class="n">ransac</span><span class="p">((</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">),</span> <span class="n">ProjectiveTransform</span><span class="p">,</span> <span class="n">min_samples</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">residual_threshold</span><span class="o">=</span><span class="n">ransac_threshold_px</span><span class="p">,</span>
+                            <span class="n">max_trials</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">inliers</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">inliers</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">failed</span><span class="p">(</span><span class="s2">"no consistent homography"</span><span class="p">,</span> <span class="n">matches</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">))</span>
+
+    <span class="c1"># full-resolution camera pixel -&gt; downsampled pixel -&gt; map pixel -&gt; map coordinates</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">([</span><span class="n">downsample</span><span class="p">,</span> <span class="n">downsample</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
+    <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">area</span><span class="o">.</span><span class="n">area_extent</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">area</span><span class="o">.</span><span class="n">area_extent</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">to_map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">area</span><span class="o">.</span><span class="n">pixel_size_x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">x0</span> <span class="o">+</span> <span class="n">area</span><span class="o">.</span><span class="n">pixel_size_x</span> <span class="o">/</span> <span class="mi">2</span><span class="p">],</span>
+                       <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">area</span><span class="o">.</span><span class="n">pixel_size_y</span><span class="p">,</span> <span class="n">y0</span> <span class="o">-</span> <span class="n">area</span><span class="o">.</span><span class="n">pixel_size_y</span> <span class="o">/</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+    <span class="n">homography</span> <span class="o">=</span> <span class="n">to_map</span> <span class="o">@</span> <span class="n">model</span><span class="o">.</span><span class="n">params</span> <span class="o">@</span> <span class="n">scale</span>
+    <span class="n">homography</span> <span class="o">/=</span> <span class="n">homography</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+
+    <span class="n">n_in</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">inliers</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+    <span class="n">residual</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(((</span><span class="n">model</span><span class="p">(</span><span class="n">src</span><span class="p">[</span><span class="n">inliers</span><span class="p">])</span> <span class="o">-</span> <span class="n">dst</span><span class="p">[</span><span class="n">inliers</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">resolution</span>
+    <span class="n">rms</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">residual</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)))</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">src</span><span class="p">[</span><span class="n">inliers</span><span class="p">]</span>
+    <span class="n">coverage</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">if</span> <span class="n">n_in</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">coverage</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ConvexHull</span><span class="p">(</span><span class="n">points</span><span class="p">)</span><span class="o">.</span><span class="n">volume</span> <span class="o">/</span> <span class="p">(</span><span class="n">cam_grey</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">cam_grey</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>                             <span class="c1"># collinear points</span>
+            <span class="n">coverage</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">problems</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">n_in</span> <span class="o">&lt;</span> <span class="n">min_inliers</span><span class="p">:</span>
+        <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">n_in</span><span class="si">}</span><span class="s2"> inliers &lt; </span><span class="si">{</span><span class="n">min_inliers</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">coverage</span> <span class="o">&lt;</span> <span class="n">min_coverage</span><span class="p">:</span>
+        <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"inliers cover </span><span class="si">{</span><span class="n">coverage</span><span class="si">:</span><span class="s2">.0%</span><span class="si">}</span><span class="s2"> of the image &lt; </span><span class="si">{</span><span class="n">min_coverage</span><span class="si">:</span><span class="s2">.0%</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rms</span> <span class="o">&gt;</span> <span class="n">max_rms_m</span><span class="p">:</span>
+        <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"residual </span><span class="si">{</span><span class="n">rms</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2"> m &gt; </span><span class="si">{</span><span class="n">max_rms_m</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2"> m"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">CameraRegistration</span><span class="p">(</span><span class="ow">not</span> <span class="n">problems</span><span class="p">,</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">problems</span><span class="p">),</span> <span class="n">homography</span><span class="p">,</span> <span class="n">crs</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">),</span> <span class="n">n_in</span><span class="p">,</span> <span class="n">rms</span><span class="p">,</span>
+                              <span class="n">coverage</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_apply</span><span class="p">(</span><span class="n">homography</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">rows</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">homography</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">h</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">cols</span> <span class="o">+</span> <span class="n">h</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">rows</span> <span class="o">+</span> <span class="n">h</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">h</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">cols</span> <span class="o">+</span> <span class="n">h</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">rows</span> <span class="o">+</span> <span class="n">h</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="n">w</span><span class="p">,</span> <span class="p">(</span><span class="n">h</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">cols</span> <span class="o">+</span> <span class="n">h</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">rows</span> <span class="o">+</span> <span class="n">h</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="n">w</span>
+
+
+<div class="viewcode-block" id="camera_lonlat">
+<a class="viewcode-back" href="../../../api/hypso/rgb/registration/index.html#hypso.rgb.camera_lonlat">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">camera_lonlat</span><span class="p">(</span><span class="n">registration</span><span class="p">:</span> <span class="n">CameraRegistration</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Latitude and longitude (degrees, float32) of every camera pixel centre,</span>
+<span class="sd">    ``(rows, cols)`` arrays for an image of ``shape``."""</span>
+    <span class="k">if</span> <span class="n">registration</span><span class="o">.</span><span class="n">homography</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"camera image not registered: </span><span class="si">{</span><span class="n">registration</span><span class="o">.</span><span class="n">reason</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">:</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">_apply</span><span class="p">(</span><span class="n">registration</span><span class="o">.</span><span class="n">homography</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">rows</span><span class="p">)</span>
+    <span class="n">to_lonlat</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">Transformer</span><span class="o">.</span><span class="n">from_crs</span><span class="p">(</span><span class="n">registration</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span> <span class="s2">"EPSG:4326"</span><span class="p">,</span> <span class="n">always_xy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="n">to_lonlat</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">lat</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">lon</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="hsi_to_camera_pixels">
+<a class="viewcode-back" href="../../../api/hypso/rgb/registration/index.html#hypso.rgb.hsi_to_camera_pixels">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">hsi_to_camera_pixels</span><span class="p">(</span><span class="n">registration</span><span class="p">:</span> <span class="n">CameraRegistration</span><span class="p">,</span> <span class="n">hsi</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""For every HSI pixel, the fractional camera ``(row, col)`` it falls on</span>
+<span class="sd">    (via the inverse homography; exact for the model), NaN outside the</span>
+<span class="sd">    camera image of ``shape``. Arrays of the HSI's spatial shape."""</span>
+    <span class="k">if</span> <span class="n">registration</span><span class="o">.</span><span class="n">homography</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"camera image not registered: </span><span class="si">{</span><span class="n">registration</span><span class="o">.</span><span class="n">reason</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span> <span class="o">=</span> <span class="n">hsi</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">"latitude"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">hsi</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">"longitude"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">Transformer</span><span class="o">.</span><span class="n">from_crs</span><span class="p">(</span><span class="s2">"EPSG:4326"</span><span class="p">,</span> <span class="n">registration</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span> <span class="n">always_xy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+    <span class="n">cols</span><span class="p">,</span> <span class="n">rows</span> <span class="o">=</span> <span class="n">_apply</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">registration</span><span class="o">.</span><span class="n">homography</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="n">outside</span> <span class="o">=</span> <span class="p">(</span><span class="n">rows</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">cols</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">rows</span> <span class="o">&gt;</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">cols</span> <span class="o">&gt;</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">outside</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">rows</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">outside</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="camera_to_hsi_pixels">
+<a class="viewcode-back" href="../../../api/hypso/rgb/registration/index.html#hypso.rgb.camera_to_hsi_pixels">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">camera_to_hsi_pixels</span><span class="p">(</span><span class="n">registration</span><span class="p">:</span> <span class="n">CameraRegistration</span><span class="p">,</span> <span class="n">hsi</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">max_distance_m</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""For every camera pixel, the nearest HSI pixel ``(line, sample)`` (-1</span>
+<span class="sd">    where it is farther than ``max_distance_m``, default the HSI's</span>
+<span class="sd">    resolution, i.e. outside the swath). Arrays of the camera's ``shape``."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.spatial</span><span class="w"> </span><span class="kn">import</span> <span class="n">cKDTree</span>
+    <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span> <span class="o">=</span> <span class="n">camera_lonlat</span><span class="p">(</span><span class="n">registration</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+    <span class="n">to_map</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">Transformer</span><span class="o">.</span><span class="n">from_crs</span><span class="p">(</span><span class="s2">"EPSG:4326"</span><span class="p">,</span> <span class="n">registration</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span> <span class="n">always_xy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">hx</span><span class="p">,</span> <span class="n">hy</span> <span class="o">=</span> <span class="n">to_map</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">hsi</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">"longitude"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">hsi</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">"latitude"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+    <span class="n">tree</span> <span class="o">=</span> <span class="n">cKDTree</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">hx</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">hy</span><span class="o">.</span><span class="n">ravel</span><span class="p">()]))</span>
+    <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span> <span class="o">=</span> <span class="n">to_map</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">lon</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="n">lat</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span>
+    <span class="n">distance</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">cx</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">cy</span><span class="o">.</span><span class="n">ravel</span><span class="p">()]))</span>
+    <span class="n">limit</span> <span class="o">=</span> <span class="n">hsi</span><span class="o">.</span><span class="n">resolution</span> <span class="k">if</span> <span class="n">max_distance_m</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">max_distance_m</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">distance</span> <span class="o">&lt;=</span> <span class="n">limit</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">line</span><span class="p">,</span> <span class="n">sample</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divmod</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">hx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">line</span><span class="p">,</span> <span class="n">sample</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">line</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">sample</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">line</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span> <span class="n">sample</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="georeference_camera">
+<a class="viewcode-back" href="../../../api/hypso/rgb/registration/index.html#hypso.rgb.georeference_camera">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">georeference_camera</span><span class="p">(</span><span class="n">camera</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span> <span class="n">registration</span><span class="p">:</span> <span class="n">CameraRegistration</span><span class="p">,</span> <span class="n">hsi</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The camera image in its own frame with per-pixel geolocation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    camera : xarray.DataArray</span>
+<span class="sd">        ``(y, x, channel)`` image (:func:`hypso.rgb.read_camera_image`).</span>
+<span class="sd">    registration : CameraRegistration</span>
+<span class="sd">        From :func:`register_camera`; must be ``ok``.</span>
+<span class="sd">    hsi : hypso.Product, optional</span>
+<span class="sd">        The HSI product, to flag camera pixels outside its swath (their</span>
+<span class="sd">        geolocation is extrapolated from the fit).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    xarray.Dataset</span>
+<span class="sd">        ``R``, ``G``, ``B`` (y, x), ``latitude``, ``longitude``, optionally</span>
+<span class="sd">        ``in_hsi_swath``, and the registration in the attributes; writable</span>
+<span class="sd">        with ``to_netcdf``.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">registration</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"camera image not registered: </span><span class="si">{</span><span class="n">registration</span><span class="o">.</span><span class="n">reason</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">camera</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span> <span class="o">=</span> <span class="n">camera_lonlat</span><span class="p">(</span><span class="n">registration</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="p">:</span> <span class="p">((</span><span class="s2">"y"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">camera</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">channel</span><span class="o">=</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                <span class="p">{</span><span class="s2">"long_name"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"RGB camera </span><span class="si">{</span><span class="n">c</span><span class="si">}</span><span class="s2"> channel"</span><span class="p">,</span> <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"1 (counts)"</span><span class="p">})</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"R"</span><span class="p">,</span> <span class="s2">"G"</span><span class="p">,</span> <span class="s2">"B"</span><span class="p">)}</span>
+    <span class="n">data</span><span class="p">[</span><span class="s2">"latitude"</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="s2">"y"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">),</span> <span class="n">lat</span><span class="p">,</span> <span class="p">{</span><span class="s2">"standard_name"</span><span class="p">:</span> <span class="s2">"latitude"</span><span class="p">,</span> <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"degrees_north"</span><span class="p">})</span>
+    <span class="n">data</span><span class="p">[</span><span class="s2">"longitude"</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="s2">"y"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">),</span> <span class="n">lon</span><span class="p">,</span> <span class="p">{</span><span class="s2">"standard_name"</span><span class="p">:</span> <span class="s2">"longitude"</span><span class="p">,</span> <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"degrees_east"</span><span class="p">})</span>
+    <span class="k">if</span> <span class="n">hsi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">line</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">camera_to_hsi_pixels</span><span class="p">(</span><span class="n">registration</span><span class="p">,</span> <span class="n">hsi</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"in_hsi_swath"</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="s2">"y"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">),</span> <span class="p">(</span><span class="n">line</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">),</span>
+                                <span class="p">{</span><span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"1 where the pixel lies within the HSI swath (geolocation "</span>
+                                              <span class="s2">"interpolated), 0 where it is extrapolated"</span><span class="p">,</span> <span class="s2">"flag_values"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]})</span>
+    <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">camera</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">registration</span><span class="o">.</span><span class="n">attrs</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Norwegian University of Science and Technology (NTNU).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

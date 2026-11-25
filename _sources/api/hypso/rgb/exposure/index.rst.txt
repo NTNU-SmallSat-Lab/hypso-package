@@ -1,0 +1,89 @@
+hypso.rgb.exposure
+==================
+
+.. py:module:: hypso.rgb.exposure
+
+.. autoapi-nested-parse::
+
+   Exposure adjustment of RGB images: one gain for all channels, so colours
+   are kept (unlike a per-channel percentile stretch, which also white-balances).
+
+   Works on any RGB here: a camera image (:func:`hypso.rgb.read_camera_image`),
+   a camera product (:func:`hypso.rgb.camera_product`, R/G/B variables), an
+   :func:`hypso.rgb.HSI2RGB` rendering or any ``(..., 3)`` array.
+
+   .. rubric:: Examples
+
+   >>> brighter = adjust_exposure(camera, ev=1.5)          # +1.5 stops
+   >>> auto = adjust_exposure(camera)                      # 99th percentile of brightness -> 90% of full scale
+   >>> display = adjust_exposure(camera, gamma=2.2, normalize=True)   # 0-1 floats for plotting
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.rgb.exposure.adjust_exposure
+   hypso.rgb.exposure.black_level
+   hypso.rgb.exposure.exposure_gain
+
+
+Module Contents
+---------------
+
+.. py:function:: adjust_exposure(image, ev = None, percentile = 99.0, target = 0.9, gamma = None, full_scale = 255.0, normalize = False, black_point=None, black_percentile = 1.0)
+
+   Brighten or darken an RGB image with one gain for all channels.
+
+   :param image: ``(y, x, channel)`` DataArray, a Dataset with ``R``, ``G``, ``B``
+                 variables, or an array whose last axis is R, G, B.
+   :type image: xarray.DataArray, xarray.Dataset or numpy.ndarray
+   :param ev: Exposure change in stops (gain 2**ev): +1 doubles, -1 halves. Default:
+              automatic, so the ``percentile`` of the luminance lands at ``target``
+              of ``full_scale``.
+   :type ev: float, optional
+   :param percentile: Automatic exposure only.
+   :type percentile: float, default 99 and 0.9
+   :param target: Automatic exposure only.
+   :type target: float, default 99 and 0.9
+   :param gamma: Display gamma applied after the gain (e.g. 2.2 lifts dark water);
+                 None keeps the result linear.
+   :type gamma: float, optional
+   :param full_scale: The value of white: 255 for the camera's 8-bit counts, 1 for 0-1
+                      images such as HSI2RGB output.
+   :type full_scale: float, default 255
+   :param normalize: Return 0-1 values instead of 0-``full_scale``.
+   :type normalize: bool, default False
+   :param black_point: Subtract a black level before the gain: ``"channel"`` the
+                       ``black_percentile`` of each channel (removes haze and the camera's
+                       dark offset; usually the most natural look over water), ``"common"``
+                       one level for all channels (keeps the colour balance), or given
+                       value(s) in the image's units. None (default): gain only. A channel
+                       that is saturated (e.g. blue in a bright summer capture) cannot be
+                       restored, and per-channel levels then shift the colour.
+   :type black_point: {None, "common", "channel"} or float or 3 floats, optional
+   :param black_percentile: For ``"common"``/``"channel"``.
+   :type black_percentile: float, default 1
+
+   :returns: Float32, clipped at full scale (saturated pixels stay white). Xarray
+             results carry ``exposure_gain``, ``exposure_ev``, ``exposure_gamma``
+             and ``exposure_black`` attributes.
+   :rtype: Same type as ``image``
+
+
+.. py:function:: black_level(rgb, mode='channel', percentile = 1.0)
+
+   Black level(s) to subtract: the ``percentile`` of each channel
+   (``"channel"``: removes a colour cast such as atmospheric haze, like dark
+   object subtraction) or its smallest value over the channels
+   (``"common"``: keeps the colour balance).
+
+
+.. py:function:: exposure_gain(rgb, percentile = 99.0, target = 0.9, full_scale = 255.0)
+
+   The gain that maps the ``percentile`` of the image's luminance to
+   ``target`` of ``full_scale`` (NaN pixels ignored).
+
+

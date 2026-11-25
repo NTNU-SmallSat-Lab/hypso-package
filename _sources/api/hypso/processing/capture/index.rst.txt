@@ -1,0 +1,84 @@
+hypso.processing.capture
+========================
+
+.. py:module:: hypso.processing.capture
+
+.. autoapi-nested-parse::
+
+   Capture parameters derived from a product tree's metadata/capture_config -
+   the values io/dispatch.py's set_hypso_attributes/check_capture_type put on a
+   capture object, computed the same way.
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.processing.capture.acquisition_time
+   hypso.processing.capture.capture_params
+   hypso.processing.capture.classify_capture_type
+   hypso.processing.capture.fwhm_table
+   hypso.processing.capture.interpolate_fwhm
+   hypso.processing.capture.spatial_subsampling
+   hypso.processing.capture.subsampled_rows
+
+
+Module Contents
+---------------
+
+.. py:function:: acquisition_time(global_attrs)
+
+   io/dispatch.py's iso_time: the date_aquired (sic) or timestamp_acquired
+   global attribute, as an ISO 8601 UTC string.
+
+
+.. py:function:: capture_params(tree)
+
+   Capture parameters (dimensions, binning, timing, sensor profile) from a
+   product tree's ``metadata/capture_config`` and global attributes.
+
+
+.. py:function:: classify_capture_type(profile, values)
+
+   The imaging mode ("nominal", "wide", "moon", ...): the first of the
+   sensor's capture_type_thresholds whose attribute (frame_count,
+   image_height, ...) has its value in `values`; "custom" otherwise.
+
+
+.. py:function:: fwhm_table(tree)
+
+   The calibration's FWHM table from ``metadata/corrections``, or None.
+
+
+.. py:function:: interpolate_fwhm(lines, values, wavelengths)
+
+   FWHM at ``wavelengths`` from a table of lines: linear interpolation,
+   constant outside the table (``numpy.interp``).
+
+
+.. py:function:: spatial_subsampling(attrs, samples = None)
+
+   ``(sample_div, detector_rows)``: the capture's spatial subsampling and
+   the number of detector rows its AOI spans.
+
+   Readout keeps every ``sample_div``-th detector row along the slit, so a
+   1092-row AOI with subsampling 2 gives 546 samples; sample ``i`` is
+   detector row ``aoi_y + i * sample_div``. The factor is capture_config's
+   ``spatial_subsampling``, else the older ``sample_div`` (1 in every file
+   so far; a different value next to ``spatial_subsampling`` is warned about).
+
+   ``samples``, the cube's size along the slit, decides what ``row_count``
+   counts: the AOI's detector rows (1092 -> 546 samples) or the rows read
+   out (546 samples, spanning 1092 detector rows). If the config gives no
+   subsampling (or 1) but the cube is an exact fraction of ``row_count``,
+   that fraction is used, with a warning. Any other mismatch is an error.
+
+
+.. py:function:: subsampled_rows(row_count, sample_div)
+
+   Samples along the slit when readout keeps every ``sample_div``-th of
+   ``row_count`` detector rows (the first, the (1 + sample_div)-th, ...).
+
+

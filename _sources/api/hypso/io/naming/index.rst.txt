@@ -1,0 +1,160 @@
+hypso.io.naming
+===============
+
+.. py:module:: hypso.io.naming
+
+.. autoapi-nested-parse::
+
+   Product file names.
+
+   Current style, NASA OB.DAAC-like - satellite and instrument first, then
+   time, so a plain listing groups by satellite and sorts by time::
+
+       {SAT}_{INSTRUMENT}.{YYYYMMDDTHHMMSS}.{target}.{LEVEL}[.{QUANTITY|GROUP}.{source}][.{grid}][.{label}].nc
+
+       HYPSO2_HSI.20250612T095802.aeronetvenice.L1A.nc
+       HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.nc
+       HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.RRS.polymer.nc
+       HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.RHOS.machi.nc
+       HYPSO2_HSI.20250612T095802.aeronetvenice.L2B.BGC.oc4.nc
+       HYPSO2_HSI.20250612T095802.aeronetvenice.L1D.adjusted.nc   (label: experiments)
+       HYPSO2_HSI.20250612T095802.aeronetvenice.L2A.RRS.polymer.utm33n_880m.nc   (regridded)
+
+   The first field is the satellite and the instrument, like NASA's
+   ``{MISSION}_{INSTRUMENT}`` (``PACE_OCI``): ``HYPSO2_HSI`` is HYPSO-2's
+   Hyperspectral Imager, the instrument every product so far comes from
+   (:data:`INSTRUMENTS` lists the known ones). `.` separates fields and never
+   appears inside one. L2A always carries the quantity (:data:`QUANTITIES`:
+   ``RRS`` remote-sensing reflectance, ``RHOS`` surface reflectance; ``AUX`` the
+   AC tool's other per-band outputs, :data:`AUX_QUANTITY`) and the AC
+   method, which produced it; L2B (products derived from an L2A) always carries
+   its product group (:data:`L2B_GROUPS`, e.g. ``BGC``) and the source (the
+   algorithm or AC tool) in the same two fields; a regridded product carries its grid (hypso.grid.grid_name:
+   utm<zone><n|s> or epsg<code>, then the pixel size, e.g. utm33n_880m,
+   epsg4326_0p01deg); the optional free-text label is always last and may
+   not look like a grid. Calibration set and
+   masking state are not part of the name - they are recorded in the file.
+   Times are UTC.
+
+   Legacy names (`{target}_{YYYY-MM-DDTHH-MM-SSZ}[-{label}]-{level}[-{ac}].nc`,
+   where label mixed calibration set and masking, e.g. "moved_unmasked") are
+   still parsed, so existing datasets stay readable. Capture directories keep
+   the capture ID form `{target}_{YYYY-MM-DDTHH-MM-SSZ}`.
+
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   hypso.io.naming.ProductName
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.io.naming.name_method
+   hypso.io.naming.parse_platform_token
+   hypso.io.naming.parse_product_name
+   hypso.io.naming.platform_token
+   hypso.io.naming.product_name
+   hypso.io.naming.quantity_token
+
+
+Module Contents
+---------------
+
+.. py:class:: ProductName
+
+   A parsed or composed product file name; :meth:`filename` renders it.
+
+   Build one with :func:`product_name`, or parse a file name with
+   :func:`parse_product_name`.
+
+
+   .. py:method:: filename()
+
+      Current-style file name. Requires sat_id (a legacy name doesn't
+      carry one - use replace(name, sat_id=...)).
+
+
+
+   .. py:method:: with_level(level, ac = None, quantity = None)
+
+      Same capture (label and grid), another level.
+
+
+
+   .. py:property:: capture_id
+      :type: str
+
+
+      `{target}_{YYYY-MM-DDTHH-MM-SSZ}` - capture directory name.
+
+
+.. py:function:: name_method(ac)
+
+   The AC field of an L2A name: the method, without ACOLITE's output
+   suffix (the quantity field says L2R or L2W): ``"acolite_l2w"`` -> ``"acolite"``.
+
+
+.. py:function:: parse_platform_token(token)
+
+   ``"HYPSO2_HSI"`` -> ``("HYPSO-2", "HSI")``: satellite and instrument.
+
+
+.. py:function:: parse_product_name(path)
+
+   Parse a current-style or legacy product file name.
+
+   :param path: A file name or path; only the name is used.
+   :type path: str or pathlib.Path
+
+   :rtype: ProductName
+
+   :raises ValueError: If the name is not a HYPSO product name.
+
+
+.. py:function:: platform_token(sat_id, instrument = 'HSI')
+
+   The satellite-and-instrument field: ``("HYPSO-2", "HSI")`` -> ``"HYPSO2_HSI"``.
+
+
+.. py:function:: product_name(sat_id, time, target, level, ac = None, label = None, grid = None, instrument = 'HSI', quantity = None)
+
+   Compose a product name.
+
+   :param sat_id: e.g. ``"HYPSO-2"``.
+   :type sat_id: str
+   :param time: Capture start; converted to UTC if timezone-aware.
+   :type time: datetime.datetime
+   :param target: Capture target, e.g. ``"aeronetvenice"``.
+   :type target: str
+   :param level: ``"L1A"`` ... ``"L1D"``, ``"L2A"``.
+   :type level: str
+   :param ac: Atmospheric correction method (L2A) or source (L2B: algorithm or
+              tool); required there, not allowed otherwise.
+   :type ac: str, optional
+   :param label: Free-text label for experiments (letters, digits, ``_``, ``-``).
+   :type label: str, optional
+   :param grid: Grid name of a regridded product (:func:`hypso.grid.grid_name`).
+   :type grid: str, optional
+   :param instrument: Instrument token (:data:`INSTRUMENTS`).
+   :type instrument: str, default "HSI"
+   :param quantity: L2A quantity token (:data:`QUANTITIES`, e.g. ``"RRS"``, or the
+                    product variable ``"Rrs"``) or L2B group (:data:`L2B_GROUPS`, e.g.
+                    ``"BGC"``); required for L2A and L2B.
+   :type quantity: str, optional
+
+   :returns: ``product_name(...).filename()`` gives the file name.
+   :rtype: ProductName
+
+
+.. py:function:: quantity_token(variable)
+
+   The L2A quantity token of a product variable: ``"Rrs"`` -> ``"RRS"``.
+
+

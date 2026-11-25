@@ -1,0 +1,64 @@
+hypso.ac.machi
+==============
+
+.. py:module:: hypso.ac.machi
+
+.. autoapi-nested-parse::
+
+   MACHI - Minimal Atmospheric Compensation for Hyperspectral Imagers.
+
+   Vendored, unchanged in behaviour, from https://github.com/NTNU-SmallSat-Lab/MACHI
+   (machi/base.py at commit ebbc3e72, 2026-01-29), by Joseph Garrett (NTNU SmallSat
+   Lab), under the MIT licence below. Only the functions the correction needs are
+   included (atm_correction and its helpers); upstream's AC class, plotting and
+   solar-spectrum loader are not.
+
+   Model: R_surface = (R_TOA - A) / (solar T), with one scattering term A and one
+   transmission T per band for the whole image. A starts from the per-band minimum
+   (dark pixel subtraction), T from 1 - 2 min; T and A are then updated alternately
+   on the odd and even bands to minimise the image-averaged squared spectral
+   derivative of the corrected spectra (surface spectra are smooth, gas absorption
+   is not). See upstream's README for its known limitations.
+
+   hypso.processing.atmospheric's "machi" method wraps this for products.
+
+   MIT License
+
+   Copyright (c) 2024 NTNU SmallSat Lab
+
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights
+   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+   copies of the Software, and to permit persons to whom the Software is
+   furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.ac.machi.T_update
+
+
+Module Contents
+---------------
+
+.. py:function:: T_update(raw_data, lattice, A, T, weights=1, solar=1)
+
+   update t
+
+

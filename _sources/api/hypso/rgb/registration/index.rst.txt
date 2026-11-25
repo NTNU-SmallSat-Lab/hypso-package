@@ -1,0 +1,141 @@
+hypso.rgb.registration
+======================
+
+.. py:module:: hypso.rgb.registration
+
+.. autoapi-nested-parse::
+
+   Registering HYPSO-2's RGB camera image to the HSI capture (TODO 4e).
+
+   The camera image has no georeferencing. Registration is never run when an
+   image is read (:func:`hypso.rgb.read_camera_image` only reads and demosaics);
+   call :func:`register_camera` explicitly. It registers the image to the HSI
+   capture's own geolocation:
+
+   1. the HSI product (L1C or L1D, three bands near red, green and blue) is
+      regridded onto a UTM map - a true map plane, unlike the pushbroom swath;
+   2. SIFT keypoints are matched between that map and the (downsampled) camera
+      image (scikit-image; ratio test and cross-check);
+   3. RANSAC fits a homography from camera pixels to map coordinates - for a frame
+      camera looking at nearly flat ground, the right model;
+   4. the fit is checked: enough inliers, spread over enough of the camera image
+      (a fit anchored in one corner is unreliable elsewhere), and a small enough
+      residual. A capture that fails is left unregistered, with the reason.
+
+   On three test captures (Ariake, Venice, Annapolis) this gave residuals of
+   about 190-220 m on a 150 m map, well below the HSI's 876 x 108 m pixels, in
+   about 40 s each (REFACTOR_PROGRESS.md ×83).
+
+   .. rubric:: Examples
+
+   >>> from hypso.rgb import find_camera_image, read_camera_image
+   >>> camera = read_camera_image(find_camera_image(capture_dir))
+   >>> reg = register_camera(camera, l1d)
+   >>> geo = georeference_camera(camera, reg, l1d)       # per-pixel latitude/longitude
+
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   hypso.rgb.registration.CameraRegistration
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.rgb.registration.camera_lonlat
+   hypso.rgb.registration.camera_to_hsi_pixels
+   hypso.rgb.registration.georeference_camera
+   hypso.rgb.registration.hsi_to_camera_pixels
+   hypso.rgb.registration.register_camera
+
+
+Module Contents
+---------------
+
+.. py:class:: CameraRegistration
+
+   Result of :func:`register_camera`.
+
+
+   .. py:method:: attrs()
+
+      The registration as NetCDF attributes (provenance).
+
+
+
+.. py:function:: camera_lonlat(registration, shape)
+
+   Latitude and longitude (degrees, float32) of every camera pixel centre,
+   ``(rows, cols)`` arrays for an image of ``shape``.
+
+
+.. py:function:: camera_to_hsi_pixels(registration, hsi, shape, max_distance_m = None)
+
+   For every camera pixel, the nearest HSI pixel ``(line, sample)`` (-1
+   where it is farther than ``max_distance_m``, default the HSI's
+   resolution, i.e. outside the swath). Arrays of the camera's ``shape``.
+
+
+.. py:function:: georeference_camera(camera, registration, hsi=None)
+
+   The camera image in its own frame with per-pixel geolocation.
+
+   :param camera: ``(y, x, channel)`` image (:func:`hypso.rgb.read_camera_image`).
+   :type camera: xarray.DataArray
+   :param registration: From :func:`register_camera`; must be ``ok``.
+   :type registration: CameraRegistration
+   :param hsi: The HSI product, to flag camera pixels outside its swath (their
+               geolocation is extrapolated from the fit).
+   :type hsi: hypso.Product, optional
+
+   :returns: ``R``, ``G``, ``B`` (y, x), ``latitude``, ``longitude``, optionally
+             ``in_hsi_swath``, and the registration in the attributes; writable
+             with ``to_netcdf``.
+   :rtype: xarray.Dataset
+
+
+.. py:function:: hsi_to_camera_pixels(registration, hsi, shape)
+
+   For every HSI pixel, the fractional camera ``(row, col)`` it falls on
+   (via the inverse homography; exact for the model), NaN outside the
+   camera image of ``shape``. Arrays of the HSI's spatial shape.
+
+
+.. py:function:: register_camera(camera, hsi, resolution = 150.0, downsample = 0.25, min_inliers = 30, min_coverage = 0.25, max_rms_m = 500.0, ratio = 0.8, ransac_threshold_px = 3.0, seed = 0)
+
+   Register a camera image to an HSI capture.
+
+   :param camera: ``(y, x, channel)`` image from :func:`hypso.rgb.read_camera_image`
+                  (demosaiced, rotated as the ground processing does).
+   :type camera: xarray.DataArray
+   :param hsi: The capture's L1C or L1D product (needs geolocation).
+   :type hsi: hypso.Product
+   :param resolution: Pixel size (m) of the UTM map the camera is matched against.
+   :type resolution: float, default 150
+   :param downsample: Scale of the camera image used for matching.
+   :type downsample: float, default 0.25
+   :param min_inliers: Quality check: at least this many RANSAC inliers, covering at least
+                       this fraction of the camera image (convex hull), with at most this
+                       residual RMS (m).
+   :param min_coverage: Quality check: at least this many RANSAC inliers, covering at least
+                        this fraction of the camera image (convex hull), with at most this
+                        residual RMS (m).
+   :param max_rms_m: Quality check: at least this many RANSAC inliers, covering at least
+                     this fraction of the camera image (convex hull), with at most this
+                     residual RMS (m).
+   :param ratio: Lowe's ratio test for descriptor matching.
+   :type ratio: float, default 0.8
+   :param ransac_threshold_px: RANSAC inlier threshold, in map pixels.
+   :type ransac_threshold_px: float, default 3
+   :param seed: RANSAC random seed (reproducible results).
+   :type seed: int, default 0
+
+   :rtype: CameraRegistration
+
+

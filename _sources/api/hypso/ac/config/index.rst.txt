@@ -1,0 +1,70 @@
+hypso.ac.config
+===============
+
+.. py:module:: hypso.ac.config
+
+.. autoapi-nested-parse::
+
+   Where the external atmospheric-correction tools are installed and how to
+   run them: one YAML file, one section per tool.
+
+   The package has no built-in tool locations. The file is found from, in
+   order: the `config` argument (a path or an already-loaded dict), or the
+   HYPSO_AC_CONFIG environment variable. Example (only the sections for the
+   tools you use are needed)::
+
+       polymer:
+         python: /path/to/envs/ac/bin/python      # optional, default: this interpreter
+         base_path: /path/to/Polymer
+         polymer_path: /path/to/Polymer/polymer
+         eoread_path: /path/to/Polymer/eoread
+         eotools_path: /path/to/Polymer/eotools
+         core_path: /path/to/Polymer/core
+         version: v2                              # which Polymer build: v1 | v2
+         ancillary_source: nasa                   # nasa | era5
+         settings:                                # Polymer Params overrides
+           bands_corr: [448, 459, ...]
+
+   Per-call options override the file's values; `settings` dicts are merged
+   key by key.
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.ac.config.load_ac_config
+   hypso.ac.config.tool_config
+
+
+Module Contents
+---------------
+
+.. py:function:: load_ac_config(config=None)
+
+   The AC tool configuration as a dict.
+
+   :param config: A YAML file, or an already-loaded dict. Default: the file named by
+                  the ``HYPSO_AC_CONFIG`` environment variable.
+   :type config: str, path or dict, optional
+
+   :raises ValueError: If neither is given.
+
+
+.. py:function:: tool_config(tool, config=None, overrides = None)
+
+   One tool's section of the AC tool configuration.
+
+   :param tool: ``"polymer"``, ``"acolite"`` or ``"ocsmart"``.
+   :type tool: str
+   :param config: As in :func:`load_ac_config`.
+   :type config: str, path or dict, optional
+   :param overrides: Values replacing the section's; a ``settings`` dict is merged key by
+                     key.
+   :type overrides: dict, optional
+
+   :rtype: dict
+
+

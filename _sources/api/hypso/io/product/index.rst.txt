@@ -1,0 +1,166 @@
+hypso.io.product
+================
+
+.. py:module:: hypso.io.product
+
+.. autoapi-nested-parse::
+
+   One reader and one writer for every HYPSO product level, on
+   :class:`xarray.DataTree`.
+
+   In-memory model (what :func:`read_product` returns and :func:`write_product`
+   takes)::
+
+       /                     root Dataset
+           <prefix>          product cube, dims (lines, samples, bands), or
+                             (y, x, bands) on a map grid (hypso.grid): "dn"
+                             (L1A), "Lt" (L1B/L1C), "rhot" (L1D), or the AC
+                             variable for L2A (e.g. "Rrs", "rhos")
+           wavelength        coord (bands): nominal band centre, 0.1 nm rounded
+           radiation_wavelength  coord (bands): precise as-calibrated centre
+           fwhm              coord (bands)
+           latitude, longitude, crs_wgs84, <angles>   only when georeferenced
+           pixel_flags       optional CF flag variable (hypso.masks.flags);
+                             the product itself is unmasked
+           <other>           any other 2D variable - derived products such as
+                             a chlorophyll map - with its attributes
+           x, y, crs         gridded products only: projection coordinates and
+                             the CF grid-mapping variable (latitude/longitude
+                             stay, as 2D auxiliary coordinates)
+           attrs             global attributes; processing_level is required
+       /metadata/<group>     one child node per metadata group
+
+   On disk the cube is one 2D variable per band (``Lt_378``, ...), the layout
+   ESA SNAP reads, with geometry at the root and ``metadata/*`` nested. All CF
+   attributes come from :mod:`hypso.io.cf`, so a file read in any supported
+   layout is written back in the current one. Supported layouts: current flat
+   files, older grouped files (``/products`` and ``/geometry``), and
+   ground-station L1A files (one ``uint16`` ``/products/dn`` cube).
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.io.product.band_coords
+   hypso.io.product.band_indices
+   hypso.io.product.convert_product
+   hypso.io.product.has_cube
+   hypso.io.product.is_cubeless
+   hypso.io.product.list_band_variables
+   hypso.io.product.read_product
+   hypso.io.product.source_layout
+   hypso.io.product.spatial_dims
+   hypso.io.product.write_product
+
+
+Module Contents
+---------------
+
+.. py:function:: band_coords(cube)
+
+   The cube's band coordinates (including ``band_index`` when present), to
+   carry over to a new cube on the same bands.
+
+
+.. py:function:: band_indices(cube)
+
+   Each band's index in the sensor's full band set (``band_index``
+   coordinate, else ``0..n-1``).
+
+
+.. py:function:: convert_product(src, out_dir=None)
+
+   Convert a product file of any supported layout to the current format.
+
+   :param src:
+   :type src: str or pathlib.Path
+   :param out_dir: Default: next to ``src``.
+   :type out_dir: str or pathlib.Path, optional
+
+   :returns: The new file, named by :mod:`hypso.io.naming`. A ``convert`` step is
+             recorded; the source file is left untouched.
+   :rtype: pathlib.Path
+
+
+.. py:function:: has_cube(tree)
+
+   Whether the product has a band cube (every level but L2B and L2A.AUX).
+
+
+.. py:function:: is_cubeless(attrs)
+
+   Whether a product with these global attributes has no band cube: L2B,
+   and the L2A.AUX file of an AC tool's other outputs.
+
+
+.. py:function:: list_band_variables(path)
+
+   Per-band metadata of a product file, without reading pixel data.
+
+   :returns: ``{"name", "band", "wavelength", "radiation_wavelength", "fwhm",
+             "units", "long_name"}`` sorted by band index, or one entry with band
+             None for a single-cube (datacube) file. Used by the Satpy readers.
+   :rtype: list of dict
+
+
+.. py:function:: read_product(path, wavelength_range=None, wavelengths=None, indices=None)
+
+   Read any supported HYPSO product file into the in-memory model.
+
+   :param path:
+   :type path: str or pathlib.Path
+   :param wavelength_range: Read only some bands, selected as in
+                            :func:`hypso.processing.bands.select_bands` (at most one of them).
+                            Only the selected band variables are read from the file; a file
+                            holding the cube as one variable is read whole and then subset.
+   :type wavelength_range: optional
+   :param wavelengths: Read only some bands, selected as in
+                       :func:`hypso.processing.bands.select_bands` (at most one of them).
+                       Only the selected band variables are read from the file; a file
+                       holding the cube as one variable is read whole and then subset.
+   :type wavelengths: optional
+   :param indices: Read only some bands, selected as in
+                   :func:`hypso.processing.bands.select_bands` (at most one of them).
+                   Only the selected band variables are read from the file; a file
+                   holding the cube as one variable is read whole and then subset.
+   :type indices: optional
+
+   :returns: See the module description. ``tree.encoding["source"]`` holds the
+             path (not written back).
+   :rtype: xarray.DataTree
+
+   :raises ValueError: If no product cube or processing level is found.
+
+
+.. py:function:: source_layout(path)
+
+   A product file's layout: ``"current"``, ``"legacy"`` (``/products`` and ``/geometry`` groups) or ``"ground_station_l1a"``.
+
+
+.. py:function:: spatial_dims(ds)
+
+   (y, x) for a gridded product, else (lines, samples).
+
+
+.. py:function:: write_product(tree, path, datacube = False, significant_bits=SIGNIFICANT_BITS)
+
+   Write a product tree in the current file format.
+
+   :param tree: In-memory model (see the module description).
+   :type tree: xarray.DataTree
+   :param path:
+   :type path: str or pathlib.Path
+   :param datacube: Write the cube as one 3D variable instead of one variable per band.
+   :type datacube: bool, default False
+   :param significant_bits: Keep this many significant mantissa bits of the float band variables
+                            (L1B-L2A; netCDF BitRound, max relative error ``2**-(bits + 1)``;
+                            values stay float32, NaN is kept, readers need nothing special). None
+                            writes them lossless. L1A counts, geometry, derived variables and
+                            metadata are always lossless. Recorded in the ``band_quantization``
+                            global attribute.
+   :type significant_bits: int or None, default 14
+
+

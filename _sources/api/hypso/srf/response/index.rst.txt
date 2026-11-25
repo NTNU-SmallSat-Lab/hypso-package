@@ -1,0 +1,112 @@
+hypso.srf.response
+==================
+
+.. py:module:: hypso.srf.response
+
+.. autoapi-nested-parse::
+
+   Spectral response of HYPSO's bands: Gaussian spectral response functions
+   (SRFs) per unbinned band, sampled on the solar irradiance spectrum's
+   wavelength grid and binned like the image; and what follows from them -
+   per-band solar irradiance (F0) and effective FWHM.
+
+   compute_spectral_response() builds all of it into one SpectralResponse;
+   srf_dataset() turns that into a product's metadata/srf group.
+
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   hypso.srf.response.SpectralResponse
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.srf.response.band_irradiance
+   hypso.srf.response.bin_srfs
+   hypso.srf.response.compute_spectral_response
+   hypso.srf.response.effective_fwhm
+   hypso.srf.response.gaussian_srfs
+   hypso.srf.response.srf_dataset
+
+
+Module Contents
+---------------
+
+.. py:class:: SpectralResponse
+
+   SRFs and what is derived from them. Shapes: n_bands = binned band
+   count, n_unbinned = pre-binning band count, n_grid = wavelength grid.
+
+
+.. py:function:: band_irradiance(srfs, ssi)
+
+   Per-band solar irradiance F0: the irradiance averaged with
+   each band's SRF as weights.
+
+
+.. py:function:: bin_srfs(srfs, bin_factor)
+
+   Sum each group of bin_factor neighbouring SRFs and renormalise to a
+   peak of 1 (extra bands beyond a whole number of bins are dropped).
+
+
+.. py:function:: compute_spectral_response(band_centers_unbinned, fwhm_unbinned, bin_factor, ssi_source = 'tsis')
+
+   Spectral response of a sensor's bands.
+
+   :param band_centers_unbinned: Band centres and FWHM in nm before spectral binning.
+   :type band_centers_unbinned: array_like
+   :param fwhm_unbinned: Band centres and FWHM in nm before spectral binning.
+   :type fwhm_unbinned: array_like
+   :param bin_factor: Spectral binning factor of the image.
+   :type bin_factor: int
+   :param ssi_source: Solar irradiance spectrum for the per-band F0.
+   :type ssi_source: {"tsis", "thuillier"}, default "tsis"
+
+   :rtype: SpectralResponse
+
+
+.. py:function:: effective_fwhm(srfs, wavelengths)
+
+   Width (nm) of each SRF at half its maximum.
+
+
+.. py:function:: gaussian_srfs(ssi, solar_wavelengths, sensor_wavelengths, sensor_fwhm)
+
+   One Gaussian SRF (peak 1, +/- :data:`SRF_N_SIGMA` sigma) per band on the irradiance
+   spectrum's wavelength grid, truncated to the first band's start and the
+   last band's end. Returns (srfs as sparse CSR, truncated irradiance,
+   truncated wavelengths).
+
+
+.. py:function:: srf_dataset(sr, wavelengths, fwhm, iso_time=None, band_indices=None)
+
+   A product's ``metadata/srf`` group.
+
+   :param sr:
+   :type sr: SpectralResponse
+   :param wavelengths: The product's band centres and FWHM (nm).
+   :type wavelengths: array_like
+   :param fwhm: The product's band centres and FWHM (nm).
+   :type fwhm: array_like
+   :param iso_time: Acquisition time, for ``earth_sun_distance_au``.
+   :type iso_time: str, optional
+   :param band_indices: Each band's index in ``sr`` (the sensor's full band set), for a
+                        product with a subset of bands (``Product.select_bands``); default
+                        ``0..n-1``. The per-band tables and ``Band_<index>`` SRFs follow it.
+   :type band_indices: array_like of int, optional
+
+   :returns: ``F0``, ``F0_wavelengths``, ``effective_fwhm(_unbinned)``, and one
+             ``Band_<i>`` variable per band (the non-zero part of its binned SRF,
+             on its own ``wav_Band_<i>`` coordinate). Polymer reads its SRFs from
+             here (:func:`hypso.ac.ac_polymer.ac_polymer_srf_getter_from_l1`).
+   :rtype: xarray.Dataset
+
+

@@ -1,0 +1,116 @@
+hypso.processing.l2b
+====================
+
+.. py:module:: hypso.processing.l2b
+
+.. autoapi-nested-parse::
+
+   L2A to L2B: geophysical products in their own files.
+
+   An L2B product holds products derived from one L2A product, one group per
+   file (:data:`hypso.io.naming.L2B_GROUPS`), as PACE OCI's suites: ``BGC``
+   holds chlorophyll-a and suspended matter, ``IOP`` absorption, scattering,
+   backscattering and Kd. Like PACE's OC_AOP suite, the L2A keeps Rrs and the
+   AC tool's aerosol optical depth. An L2B file has 2D variables only, no band cube; per-wavelength quantities are separate
+   variables (``aph_443``, ``bbp_443``), as in NASA's OC_IOP files. It keeps
+   the L2A's geometry, ``pixel_flags``, grid and metadata, so it can be
+   regridded, windowed and read by Satpy like any other level. File names:
+   ``...L2B.<GROUP>.<source>.nc``, where the source is the algorithm (e.g.
+   ``oc4``) or the AC tool whose own product it is (e.g. ``polymer``). An
+   OC-SMART run thus writes ``L2A.RRS`` (Rrs, aod), ``L2B.BGC``, ``L2B.IOP``
+   and ``L2A.AUX``.
+
+   The AC tool's other per-band outputs (OC-SMART's Lt, Lr, Lrc, Lwp, tg_sol,
+   tg_sen, ...) go to another file next to the L2A, ``...L2A.AUX.<method>.nc``
+   (:func:`split_intermediates`), built the same way: 2D variables only, one per
+   quantity and band (``Lt_434``), with the L2A's geometry and flags.
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.processing.l2b.derive
+   hypso.processing.l2b.make_l2b
+   hypso.processing.l2b.split_intermediates
+   hypso.processing.l2b.split_tool_products
+   hypso.processing.l2b.tool_product_group
+
+
+Module Contents
+---------------
+
+.. py:function:: derive(tree, group, algorithm = None)
+
+   An L2B tree from one of the package's algorithms on an L2A.
+
+   :param tree: An L2A tree; most algorithms need ``Rrs`` (``L2A.RRS.*``).
+   :type tree: xarray.DataTree
+   :param group: L2B group, ``"BGC"`` or ``"IOP"``.
+   :type group: str
+   :param algorithm: See :data:`hypso.processing.l2b_algorithms.ALGORITHMS`; default the
+                     group's default (BGC: ``"oci"``, IOP: ``"qaa"``).
+   :type algorithm: str, optional
+
+   :returns: ``...L2B.<group>.<algorithm>``.
+   :rtype: xarray.DataTree
+
+
+.. py:function:: make_l2b(tree, group, source, variables, parameters = None)
+
+   An L2B tree from an L2A tree and the derived variables.
+
+   :param tree: The L2A product the variables were derived from.
+   :type tree: xarray.DataTree
+   :param group: Product group, a key of :data:`hypso.io.naming.L2B_GROUPS`.
+   :type group: str
+   :param source: Algorithm or tool, e.g. ``"oc4"`` or ``"polymer"`` (a file-name token).
+   :type source: str
+   :param variables: ``{name: xarray.DataArray or (array, attrs)}``, each of the product's
+                     spatial shape; attributes should include ``units`` and ``long_name``.
+   :type variables: dict
+   :param parameters: Recorded in the ``l2b_<group>_<source>`` provenance step.
+   :type parameters: dict, optional
+
+   :rtype: xarray.DataTree
+
+
+.. py:function:: split_intermediates(tree)
+
+   Separate an L2A's AC-tool intermediates (its other per-band outputs).
+
+   :param tree: An L2A tree from :func:`hypso.processing.correct_atmosphere`; the
+                intermediates are its :data:`hypso.io.product.INTERMEDIATES_NODE`
+                child (2D variables such as ``Lt_434``).
+   :type tree: xarray.DataTree
+
+   :returns: ``(l2a_tree, aux_tree or None)``: the L2A without the intermediates,
+             and an L2A.AUX tree (``l2a_quantity`` ``AUX``, no cube) holding them
+             with the L2A's geometry, flags and metadata, or None when there are
+             none.
+   :rtype: tuple
+
+
+.. py:function:: split_tool_products(tree)
+
+   Separate an L2A's AC-tool products from its reflectance.
+
+   :param tree: An L2A tree, e.g. from :func:`hypso.processing.correct_atmosphere` or
+                an L2A file written before the products moved to L2B.
+   :type tree: xarray.DataTree
+
+   :returns: ``(l2a_tree, {group: l2b_tree})``: the L2A without the products, and
+             one L2B tree per group (:data:`hypso.io.naming.L2B_GROUPS`), named after
+             the AC tool (``L2B.BGC.polymer``). The tool's flag variables are kept
+             in the L2A and copied into each L2B.
+   :rtype: tuple
+
+
+.. py:function:: tool_product_group(name)
+
+   The L2B group of an AC tool's variable (e.g. ``"chla"`` -> ``"BGC"``),
+   or None if it stays in the L2A.
+
+

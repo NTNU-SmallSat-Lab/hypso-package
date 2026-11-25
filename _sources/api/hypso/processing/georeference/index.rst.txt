@@ -1,0 +1,57 @@
+hypso.processing.georeference
+=============================
+
+.. py:module:: hypso.processing.georeference
+
+.. autoapi-nested-parse::
+
+   L1B to L1C: pixel latitude and longitude, and sun and sensor angles.
+
+   Two sources of pixel coordinates:
+
+   - indirect: latitude and longitude arrays you supply (e.g. the
+     GCP-corrected ``processing-temp/latitudes_indirectgeoref.dat`` files),
+     written as ``latitude``/``longitude``;
+   - direct: from ADCS attitude and position telemetry alone, written as
+     ``latitude_direct``/``longitude_direct``.
+
+   Without indirect coordinates the direct ones become ``latitude`` and
+   ``longitude`` too. Frame interpolation, direct georeferencing and the angles
+   use :mod:`hypso.geometry`.
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.processing.georeference.l1b_to_l1c
+
+
+Module Contents
+---------------
+
+.. py:function:: l1b_to_l1c(tree, latitudes=None, longitudes=None, direct = True)
+
+   Georeference an L1B tree to L1C.
+
+   :param tree: L1B product tree.
+   :type tree: xarray.DataTree
+   :param latitudes: Indirect pixel coordinates, ``(lines, samples)`` arrays or paths to
+                     raw float32 files. Omit both to use direct georeferencing as the
+                     main geometry.
+   :type latitudes: array_like or path, optional
+   :param longitudes: Indirect pixel coordinates, ``(lines, samples)`` arrays or paths to
+                      raw float32 files. Omit both to use direct georeferencing as the
+                      main geometry.
+   :type longitudes: array_like or path, optional
+   :param direct: Also compute direct georeferencing from the ADCS telemetry
+                  (``latitude_direct``, ``longitude_direct``, ``<angle>_direct``).
+                  Skipped with a warning if the telemetry points off the Earth.
+   :type direct: bool, default True
+
+   :returns: L1C tree.
+   :rtype: xarray.DataTree
+
+

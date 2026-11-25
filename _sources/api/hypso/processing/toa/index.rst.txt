@@ -1,0 +1,84 @@
+hypso.processing.toa
+====================
+
+.. py:module:: hypso.processing.toa
+
+.. autoapi-nested-parse::
+
+   L1C to L1D: top-of-atmosphere radiance to reflectance.
+
+   The L1D tree also carries ``metadata/srf`` (per-band spectral response
+   functions, solar irradiance and Earth-Sun distance, from
+   :func:`hypso.srf.srf_dataset`) for readers that convert radiance
+   themselves, such as Polymer. The spectral response and solar spectra are in
+   :mod:`hypso.srf`.
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.processing.toa.l1c_to_l1d
+   hypso.processing.toa.spectral_response
+   hypso.processing.toa.srf_node
+   hypso.processing.toa.toa_reflectance
+
+
+Module Contents
+---------------
+
+.. py:function:: l1c_to_l1d(tree, use_direct_georef = False, ssi_source = 'tsis', use_unbinned = True)
+
+   Top-of-atmosphere reflectance ``rhot`` from an L1C tree.
+
+   :param tree: L1C product tree (sensor geometry or gridded).
+   :type tree: xarray.DataTree
+   :param use_direct_georef: Use ``solar_zenith_direct`` instead of ``solar_zenith``, when present.
+   :type use_direct_georef: bool, default False
+   :param ssi_source: Solar irradiance spectrum: TSIS-1 HSRS or Thuillier (2002).
+   :type ssi_source: {"tsis", "thuillier"}, default "tsis"
+   :param use_unbinned: Build the spectral response functions from the unbinned wavelengths
+                        and bin them, instead of from the binned band centres.
+   :type use_unbinned: bool, default True
+
+   :returns: L1D tree with ``metadata/srf``.
+   :rtype: xarray.DataTree
+
+
+.. py:function:: spectral_response(tree, ssi_source = 'tsis', use_unbinned = True)
+
+   The :class:`~hypso.srf.SpectralResponse` of a calibrated tree's bands.
+
+   Spectral response functions, solar irradiance and effective FWHM: what
+   L1D reflectance and ``metadata/srf`` use.
+
+
+.. py:function:: srf_node(tree, ssi_source = 'tsis', use_unbinned = True)
+
+   The ``metadata/srf`` group for a calibrated tree, computed (not read from it).
+
+
+.. py:function:: toa_reflectance(radiance, f0, iso_time, solar_zenith)
+
+   Top-of-atmosphere reflectance from radiance.
+
+   ``rho = pi L d^2 / (F0 cos(sza))``, with ``d`` the Earth-Sun distance in
+   AU (`Normalized reflectances
+   <https://oceanopticsbook.info/view/atmospheric-correction/normalized-reflectances>`_).
+
+   :param radiance: ``(lines, samples, bands)`` radiance in W m-2 um-1 sr-1.
+   :type radiance: numpy.ndarray
+   :param f0: Per-band solar irradiance F0 in mW m-2 nm-1 (numerically equal to
+              W m-2 um-1).
+   :type f0: array_like
+   :param iso_time: Acquisition time (ISO 8601), for the Earth-Sun distance.
+   :type iso_time: str
+   :param solar_zenith: ``(lines, samples)`` solar zenith angle in degrees.
+   :type solar_zenith: numpy.ndarray
+
+   :returns: Reflectance, in the radiance's dtype.
+   :rtype: numpy.ndarray
+
+

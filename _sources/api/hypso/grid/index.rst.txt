@@ -1,0 +1,221 @@
+hypso.grid
+==========
+
+.. py:module:: hypso.grid
+
+.. autoapi-nested-parse::
+
+   Map grids for hypso products: swath and grid definitions (pyresample),
+   resampling onto any target as a bare Dataset, and regridding a product onto
+   a map grid as a product of the same level (Product.regrid).
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/hypso/grid/areas/index
+   /api/hypso/grid/regridding/index
+   /api/hypso/grid/resample/index
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   hypso.grid.Averager
+   hypso.grid.GridOperators
+   hypso.grid.Resampler
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.grid.area_definition
+   hypso.grid.grid_area
+   hypso.grid.grid_name
+   hypso.grid.regrid
+   hypso.grid.resample_product
+   hypso.grid.resolution
+   hypso.grid.source_definition
+   hypso.grid.swath_definition
+   hypso.grid.utm_crs
+
+
+Package Contents
+----------------
+
+.. py:class:: Averager(latitudes, longitudes, target)
+
+   Cell averages on a grid: each target cell gets the mean of the
+   source pixels whose centres fall in it (NaN ignored per band) - an
+   unweighted approximation of area-weighted averaging, close when source
+   pixels are much smaller than the cells. Only for targets coarser than
+   the source; finer ones leave empty cells inside the swath.
+
+
+   .. py:method:: bitwise_or(data)
+
+      Integer flags (rows, cols) -> per cell, every flag set in any of
+      its pixels (0 for empty cells).
+
+
+
+   .. py:method:: mean(data)
+
+      Float (rows, cols[, bands]) -> cell means in the input's float dtype.
+
+
+
+.. py:class:: GridOperators(tree, target, method, radius_of_influence = None)
+
+   How each kind of variable goes from a product onto `target` with
+   `method`, so resample_product and regrid treat variables alike:
+
+   - floats(): the cube and float variables - nearest, bilinear, or cell
+     average; azimuths (by name) through their sine and cosine unless
+     nearest, so 0/360 does not average to 180;
+   - integers(): nearest neighbour, except bit flags with "average", which
+     are OR-ed over the cell;
+   - covered(): target pixels that received data.
+
+
+   .. py:method:: parameters()
+
+      What was done, for provenance.
+
+
+
+.. py:class:: Resampler(source, target, radius_of_influence, bilinear)
+
+   Nearest-neighbour and (optionally) bilinear resampling from `source`
+   to `target`; radius_of_influence in metres.
+
+
+   .. py:method:: coverage(method)
+
+      True where the target has data from the source with `method`.
+
+
+
+   .. py:method:: nearest(data, fill_value=np.nan)
+
+      (rows, cols[, bands]); integer data keeps its dtype (fill 0).
+
+
+
+.. py:function:: area_definition(tree)
+
+   AreaDefinition of a gridded product, from its x/y coordinates
+   (pixel centres) and `crs` grid-mapping variable.
+
+
+.. py:function:: grid_area(crs, resolution, latitudes, longitudes, area_id = 'hypso_grid')
+
+   A grid covering the given coordinates, snapped to the pixel size.
+
+   :param crs: Anything pyproj accepts, e.g. ``"EPSG:32633"``.
+   :type crs: str, int or pyproj.CRS
+   :param resolution: Square pixel size in the CRS's units.
+   :type resolution: float
+   :param latitudes: Coordinates to cover (NaN ignored).
+   :type latitudes: array_like
+   :param longitudes: Coordinates to cover (NaN ignored).
+   :type longitudes: array_like
+   :param area_id:
+   :type area_id: str, default "hypso_grid"
+
+   :returns: Extent snapped to whole multiples of ``resolution``, so grids of two
+             captures in the same CRS and resolution share pixel boundaries.
+   :rtype: pyresample.geometry.AreaDefinition
+
+
+.. py:function:: grid_name(crs, size_x, size_y)
+
+   File-name token for a grid (io/naming.py GRID_TOKEN): utm33n_880m,
+   epsg4326_0p01deg, custom_30m; "AxB" for non-square pixels.
+
+
+.. py:function:: regrid(tree, target='utm', resolution = None, method = 'nearest', radius_of_influence = None, max_gb = 4.0)
+
+   A product tree on a map grid, at the same level.
+
+   :param tree: L1C, L1D or L2A product tree.
+   :type tree: xarray.DataTree
+   :param target: ``"utm"`` (WGS84 UTM zone of the scene centre), a CRS pyproj accepts
+                  (e.g. ``"EPSG:3035"``, ``4326``), or an AreaDefinition (e.g. another
+                  product's grid).
+   :type target: str, int, pyproj.CRS or pyresample.geometry.AreaDefinition, default "utm"
+   :param resolution: Pixel size in the CRS's units (m, or degrees for a geographic CRS);
+                      default the product's resolution. Not with an AreaDefinition.
+   :type resolution: float, optional
+   :param method: See the module description.
+   :type method: {"nearest", "bilinear", "average"}, default "nearest"
+   :param radius_of_influence: In m; default 1.5 times the coarser of source and target pixel size.
+   :type radius_of_influence: float, optional
+   :param max_gb: Refuse grids whose cube would exceed this many GB (a fine grid over
+                  a long capture gets large quickly).
+   :type max_gb: float, default 4.0
+
+   :rtype: xarray.DataTree
+
+
+.. py:function:: resample_product(tree, target, method = 'nearest', radius_of_influence = None)
+
+   A product's contents on any pyresample target, as a bare Dataset.
+
+   :param tree: A georeferenced product tree.
+   :type tree: xarray.DataTree
+   :param target:
+   :type target: pyresample.geometry.AreaDefinition or SwathDefinition
+   :param method: Per kind of variable as in :class:`GridOperators`; ``"average"`` only
+                  onto grids coarser than the product.
+   :type method: {"nearest", "bilinear", "average"}, default "nearest"
+   :param radius_of_influence: In m; default :func:`default_radius`.
+   :type radius_of_influence: float, optional
+
+   :returns: The cube ``(y, x, band)`` with the source band wavelengths, each
+             derived variable ``(y, x)``, each flag as boolean ``flag_<name>``,
+             and the target's latitude and longitude.
+   :rtype: xarray.Dataset
+
+
+.. py:function:: resolution(tree)
+
+   Ground resolution (m): a gridded product's pixel size (converted from
+   degrees for a geographic grid), else the larger of the mean along- and
+   across-track GSD.
+
+
+.. py:function:: source_definition(tree)
+
+   What to resample from: a gridded product's AreaDefinition, else its
+   swath (as numpy arrays, which pyresample's kd-tree needs).
+
+
+.. py:function:: swath_definition(tree, direct = False)
+
+   SwathDefinition of a product's per-pixel geolocation (direct or not).
+
+
+.. py:function:: utm_crs(latitudes, longitudes)
+
+   The WGS84 UTM CRS of the zone containing the scene centre.
+
+   EPSG 326xx (north) or 327xx (south); standard 6-degree zones, without the
+   Norway and Svalbard exceptions.
+
+   :param latitudes:
+   :type latitudes: array_like
+   :param longitudes:
+   :type longitudes: array_like
+
+   :rtype: pyproj.CRS
+
+

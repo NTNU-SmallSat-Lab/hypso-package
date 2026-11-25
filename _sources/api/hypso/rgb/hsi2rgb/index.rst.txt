@@ -1,0 +1,54 @@
+hypso.rgb.hsi2rgb
+=================
+
+.. py:module:: hypso.rgb.hsi2rgb
+
+.. autoapi-nested-parse::
+
+   HSI-cube-to-RGB rendering via CIE color matching functions (Magnusson et
+   al., IGARSS 2020 - see the docstring's citation). No in-package callers yet;
+   kept as the comparison for the planned HYPSO-2 RGB camera support: an RGB
+   rendered from the HSI cube to hold up against the RGB camera image. The D_illuminants.mat data file is in this
+   package's data/ directory.
+
+       from hypso.rgb import HSI2RGB
+       rgb = HSI2RGB(product.wavelengths, product.cube.values)
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.rgb.hsi2rgb.HSI2RGB
+
+
+Module Contents
+---------------
+
+.. py:function:: HSI2RGB(wY, HSI, d = 65, threshold=0.002)
+
+   Calculate a colore accurate RGB image with HSI values. Original function used for the paper
+   "Creating RGB Images from Hyperspectral Images Using a Color Matching Function" by
+   M. Magnusson, J. Sigurdsson, S. E. Armansson, M. O. Ulfarsson, H. Deborah and J. R. Sveinsson,
+
+   If you use this method, please cite the following paper:
+   @INPROCEEDINGS{hsi2rgb,
+   author={M. {Magnusson} and J. {Sigurdsson} and S. E. {Armansson}
+   and M. O. {Ulfarsson} and H. {Deborah} and J. R. {Sveinsson}},
+   booktitle={IEEE International Geoscience and Remote Sensing Symposium},
+   title={Creating {RGB} Images from Hyperspectral Images using a Color Matching Function},
+   year={2020}, volume={}, number={}, pages={}}
+
+   Paper is available at
+   https://www.researchgate.net/profile/Jakob_Sigurdsson
+
+   :param wY: Wavelengths in nm
+   :param HSI: Hyperspectral image, a (lines, samples, bands) array
+   :param d: Determines the illuminant used, if in doubt use d65. Values of  50, 55, 65, 75
+   :param threshold: True if RGB thesholding should be done to increase contrast
+
+   :return: RGB Image array
+
+

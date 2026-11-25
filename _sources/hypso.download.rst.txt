@@ -1,7 +1,0 @@
-hypso.download module
-=====================
-
-.. automodule:: hypso.download
-   :members:
-   :undoc-members:
-   :show-inheritance:

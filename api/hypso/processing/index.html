@@ -1,0 +1,1053 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>hypso.processing &#8212; hypso 26.10.0a7-20-g5e64121f</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=8e897651"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/hypso/processing/index';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="hypso.processing.atmospheric" href="atmospheric/index.html" />
+    <link rel="prev" title="hypso.maps" href="../maps/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="26.10.0a7" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">hypso 26.10.0a7-20-g5e64121f</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="../index.html">
+    hypso
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    hypso
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../ac/index.html">hypso.ac</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../ac/adapters/index.html">hypso.ac.adapters</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../ac/adapters/base/index.html">hypso.ac.adapters.base</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../ac/config/index.html">hypso.ac.config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ac/machi/index.html">hypso.ac.machi</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">hypso.api</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../grid/index.html">hypso.grid</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../grid/areas/index.html">hypso.grid.areas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../grid/regridding/index.html">hypso.grid.regridding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../grid/resample/index.html">hypso.grid.resample</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../io/index.html">hypso.io</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../io/cf/index.html">hypso.io.cf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io/naming/index.html">hypso.io.naming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io/product/index.html">hypso.io.product</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io/provenance/index.html">hypso.io.provenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io/schema/index.html">hypso.io.schema</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../maps/index.html">hypso.maps</a></li>
+<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">hypso.processing</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="atmospheric/index.html">hypso.processing.atmospheric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bands/index.html">hypso.processing.bands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calibrate/index.html">hypso.processing.calibrate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="capture/index.html">hypso.processing.capture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="georeference/index.html">hypso.processing.georeference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l2b/index.html">hypso.processing.l2b</a></li>
+<li class="toctree-l2"><a class="reference internal" href="l2b_algorithms/index.html">hypso.processing.l2b_algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="toa/index.html">hypso.processing.toa</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../rgb/index.html">hypso.rgb</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../rgb/camera/index.html">hypso.rgb.camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rgb/exposure/index.html">hypso.rgb.exposure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rgb/hsi2rgb/index.html">hypso.rgb.hsi2rgb</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rgb/maps/index.html">hypso.rgb.maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rgb/product/index.html">hypso.rgb.product</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rgb/registration/index.html">hypso.rgb.registration</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../sensors/index.html">hypso.sensors</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../sensors/hypso1/index.html">hypso.sensors.hypso1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sensors/hypso2/index.html">hypso.sensors.hypso2</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../srf/index.html">hypso.srf</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../srf/response/index.html">hypso.srf.response</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../srf/solar/index.html">hypso.srf.solar</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../versioning/index.html">hypso.versioning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../window/index.html">hypso.window</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">hypso</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">hypso.processing</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-hypso.processing">
+<span id="hypso-processing"></span><h1>hypso.processing<a class="headerlink" href="#module-hypso.processing" title="Link to this heading">#</a></h1>
+<p>Processing steps as functions from one product tree to the next level’s.</p>
+<p>The trees are <a class="reference internal" href="../io/product/index.html#module-hypso.io.product" title="hypso.io.product"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.io.product</span></code></a>’s in-memory model; <a class="reference internal" href="../index.html#hypso.Product" title="hypso.Product"><code class="xref py py-class docutils literal notranslate"><span class="pre">hypso.Product</span></code></a>
+calls these functions. Each step records itself in <code class="docutils literal notranslate"><span class="pre">metadata/processing</span></code>
+(<a class="reference internal" href="../io/provenance/index.html#module-hypso.io.provenance" title="hypso.io.provenance"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.io.provenance</span></code></a>) and leaves its input tree unchanged.</p>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">#</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="atmospheric/index.html">hypso.processing.atmospheric</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bands/index.html">hypso.processing.bands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calibrate/index.html">hypso.processing.calibrate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="capture/index.html">hypso.processing.capture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="georeference/index.html">hypso.processing.georeference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="l2b/index.html">hypso.processing.l2b</a></li>
+<li class="toctree-l1"><a class="reference internal" href="l2b_algorithms/index.html">hypso.processing.l2b_algorithms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="toa/index.html">hypso.processing.toa</a></li>
+</ul>
+</div>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.processing.capture_params" title="hypso.processing.capture_params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">capture_params</span></code></a>(tree)</p></td>
+<td><p>Capture parameters (dimensions, binning, timing, sensor profile) from a</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.processing.classify_capture_type" title="hypso.processing.classify_capture_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">classify_capture_type</span></code></a>(profile, values)</p></td>
+<td><p>The imaging mode (&quot;nominal&quot;, &quot;wide&quot;, &quot;moon&quot;, ...): the first of the</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.processing.correct_atmosphere" title="hypso.processing.correct_atmosphere"><code class="xref py py-obj docutils literal notranslate"><span class="pre">correct_atmosphere</span></code></a>(tree[, method, masked, mask_flags, ...])</p></td>
+<td><p>Atmospheric correction of an L1C or L1D tree.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.processing.derive" title="hypso.processing.derive"><code class="xref py py-obj docutils literal notranslate"><span class="pre">derive</span></code></a>(tree, group[, algorithm])</p></td>
+<td><p>An L2B tree from one of the package's algorithms on an L2A.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.processing.l1a_to_l1b" title="hypso.processing.l1a_to_l1b"><code class="xref py py-obj docutils literal notranslate"><span class="pre">l1a_to_l1b</span></code></a>(tree[, coeff_type, version, coeff_files, ...])</p></td>
+<td><p>Calibrate an L1A tree to L1B (top-of-atmosphere radiance <code class="docutils literal notranslate"><span class="pre">Lt</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.processing.l1b_to_l1c" title="hypso.processing.l1b_to_l1c"><code class="xref py py-obj docutils literal notranslate"><span class="pre">l1b_to_l1c</span></code></a>(tree[, latitudes, longitudes, direct])</p></td>
+<td><p>Georeference an L1B tree to L1C.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.processing.l1c_to_l1d" title="hypso.processing.l1c_to_l1d"><code class="xref py py-obj docutils literal notranslate"><span class="pre">l1c_to_l1d</span></code></a>(tree[, use_direct_georef, ssi_source, ...])</p></td>
+<td><p>Top-of-atmosphere reflectance <code class="docutils literal notranslate"><span class="pre">rhot</span></code> from an L1C tree.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.processing.make_l2b" title="hypso.processing.make_l2b"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_l2b</span></code></a>(tree, group, source, variables[, parameters])</p></td>
+<td><p>An L2B tree from an L2A tree and the derived variables.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.processing.select_bands" title="hypso.processing.select_bands"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_bands</span></code></a>(tree[, wavelength_range, wavelengths, ...])</p></td>
+<td><p>A product tree with only some of its bands.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.processing.split_tool_products" title="hypso.processing.split_tool_products"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_tool_products</span></code></a>(tree)</p></td>
+<td><p>Separate an L2A's AC-tool products from its reflectance.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.processing.toa_reflectance" title="hypso.processing.toa_reflectance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">toa_reflectance</span></code></a>(radiance, f0, iso_time, solar_zenith)</p></td>
+<td><p>Top-of-atmosphere reflectance from radiance.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="package-contents">
+<h2>Package Contents<a class="headerlink" href="#package-contents" title="Link to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.processing.capture_params">
+<span class="sig-prename descclassname"><span class="pre">hypso.processing.</span></span><span class="sig-name descname"><span class="pre">capture_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/hypso/processing/capture.html#capture_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.processing.capture_params" title="Link to this definition">#</a></dt>
+<dd><p>Capture parameters (dimensions, binning, timing, sensor profile) from a
+product tree’s <code class="docutils literal notranslate"><span class="pre">metadata/capture_config</span></code> and global attributes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tree</strong> (<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataTree.html#xarray.DataTree" title="(in xarray v2026.9.0)"><em>xarray.DataTree</em></a>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>CaptureParams</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.processing.classify_capture_type">
+<span class="sig-prename descclassname"><span class="pre">hypso.processing.</span></span><span class="sig-name descname"><span class="pre">classify_capture_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">profile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/hypso/processing/capture.html#classify_capture_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.processing.classify_capture_type" title="Link to this definition">#</a></dt>
+<dd><p>The imaging mode (“nominal”, “wide”, “moon”, …): the first of the
+sensor’s capture_type_thresholds whose attribute (frame_count,
+image_height, …) has its value in <cite>values</cite>; “custom” otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>profile</strong> (<a class="reference internal" href="../sensors/index.html#hypso.sensors.SensorProfile" title="hypso.sensors.SensorProfile"><em>hypso.sensors.SensorProfile</em></a>)</p></li>
+<li><p><strong>values</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.processing.correct_atmosphere">
+<span class="sig-prename descclassname"><span class="pre">hypso.processing.</span></span><span class="sig-name descname"><span class="pre">correct_atmosphere</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'machi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masked</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_flags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">work_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/hypso/processing/atmospheric.html#correct_atmosphere"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.processing.correct_atmosphere" title="Link to this definition">#</a></dt>
+<dd><p>Atmospheric correction of an L1C or L1D tree.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tree</strong> (<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataTree.html#xarray.DataTree" title="(in xarray v2026.9.0)"><em>xarray.DataTree</em></a>) – L1C or L1D product tree in sensor geometry (not regridded).</p></li>
+<li><p><strong>method</strong> (<em>{&quot;machi&quot;</em><em>, </em><em>&quot;dps&quot;</em><em>, </em><em>&quot;polymer&quot;</em><em>, </em><em>&quot;acolite&quot;</em><em>, </em><em>&quot;ocsmart&quot;}</em><em>, </em><em>default &quot;machi&quot;</em>) – See the module description.</p></li>
+<li><p><strong>masked</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default False</em>) – Give the method NaN where <code class="docutils literal notranslate"><span class="pre">pixel_flags</span></code> are set (all flags, or only
+<code class="docutils literal notranslate"><span class="pre">mask_flags</span></code>). The input product itself stays unmasked.</p></li>
+<li><p><strong>mask_flags</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><em>list</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Flags to mask with, e.g. <code class="docutils literal notranslate"><span class="pre">[&quot;land&quot;,</span> <span class="pre">&quot;cloud&quot;]</span></code>.</p></li>
+<li><p><strong>work_dir</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><em>path</em><em>, </em><em>optional</em>) – External tools only: where the staged input and the tool’s raw
+output go (kept); default a temporary directory, removed afterwards.</p></li>
+<li><p><strong>config</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>path</em><em> or </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a><em>, </em><em>optional</em>) – External tools only: AC tool configuration (<a class="reference internal" href="../ac/config/index.html#module-hypso.ac.config" title="hypso.ac.config"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.ac.config</span></code></a>);
+default the <code class="docutils literal notranslate"><span class="pre">HYPSO_AC_CONFIG</span></code> environment variable.</p></li>
+<li><p><strong>**options</strong> – Method-specific. machi: <code class="docutils literal notranslate"><span class="pre">est_min_R</span></code> (expected minimum surface
+reflectance, default 0.05), <code class="docutils literal notranslate"><span class="pre">tol</span></code> (default 0.01), <code class="docutils literal notranslate"><span class="pre">approach_rate</span></code>
+(default 1), <code class="docutils literal notranslate"><span class="pre">fit_exclude_flags</span></code> (pixel_flags names left out of the
+fit; default none, all finite pixels), <code class="docutils literal notranslate"><span class="pre">fit_subsample</span></code> (fit on every
+Nth pixel plus each band’s darkest; default 1, all). dps: <code class="docutils literal notranslate"><span class="pre">statistic</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;min&quot;</span></code> or
+<code class="docutils literal notranslate"><span class="pre">&quot;percentile&quot;</span></code>), <code class="docutils literal notranslate"><span class="pre">percentile</span></code>. polymer, acolite, ocsmart: any key
+of the tool’s configuration section (e.g. <code class="docutils literal notranslate"><span class="pre">settings={...}</span></code>),
+overriding it; acolite also <code class="docutils literal notranslate"><span class="pre">output</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;l2w&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;l2r&quot;</span></code>) and
+<code class="docutils literal notranslate"><span class="pre">reuse_output</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>L2A tree.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataTree.html#xarray.DataTree" title="(in xarray v2026.9.0)">xarray.DataTree</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.processing.derive">
+<span class="sig-prename descclassname"><span class="pre">hypso.processing.</span></span><span class="sig-name descname"><span class="pre">derive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/hypso/processing/l2b.html#derive"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.processing.derive" title="Link to this definition">#</a></dt>
+<dd><p>An L2B tree from one of the package’s algorithms on an L2A.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tree</strong> (<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataTree.html#xarray.DataTree" title="(in xarray v2026.9.0)"><em>xarray.DataTree</em></a>) – An L2A tree; most algorithms need <code class="docutils literal notranslate"><span class="pre">Rrs</span></code> (<code class="docutils literal notranslate"><span class="pre">L2A.RRS.*</span></code>).</p></li>
+<li><p><strong>group</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – L2B group, <code class="docutils literal notranslate"><span class="pre">&quot;BGC&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;IOP&quot;</span></code>.</p></li>
+<li><p><strong>algorithm</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – See <code class="xref py py-data docutils literal notranslate"><span class="pre">hypso.processing.l2b_algorithms.ALGORITHMS</span></code>; default the
+group’s default (BGC: <code class="docutils literal notranslate"><span class="pre">&quot;oci&quot;</span></code>, IOP: <code class="docutils literal notranslate"><span class="pre">&quot;qaa&quot;</span></code>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">...L2B.&lt;group&gt;.&lt;algorithm&gt;</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataTree.html#xarray.DataTree" title="(in xarray v2026.9.0)">xarray.DataTree</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.processing.l1a_to_l1b">
+<span class="sig-prename descclassname"><span class="pre">hypso.processing.</span></span><span class="sig-name descname"><span class="pre">l1a_to_l1b</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coeff_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coeff_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radiometric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destripe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spectral</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keystone</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/hypso/processing/calibrate.html#l1a_to_l1b"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.processing.l1a_to_l1b" title="Link to this definition">#</a></dt>
+<dd><p>Calibrate an L1A tree to L1B (top-of-atmosphere radiance <code class="docutils literal notranslate"><span class="pre">Lt</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tree</strong> (<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataTree.html#xarray.DataTree" title="(in xarray v2026.9.0)"><em>xarray.DataTree</em></a>) – L1A product tree.</p></li>
+<li><p><strong>coeff_type</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Radiometric variant: <code class="docutils literal notranslate"><span class="pre">&quot;abs&quot;</span></code> (default), <code class="docutils literal notranslate"><span class="pre">&quot;moved&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;lab&quot;</span></code>, or a
+set registered with <code class="docutils literal notranslate"><span class="pre">hypso.calibration.register_calibration_coeffs</span></code>.
+None uses the file’s <code class="docutils literal notranslate"><span class="pre">radiometric_coefficients_version</span></code> if present,
+else the default. Without <code class="docutils literal notranslate"><span class="pre">version</span></code>, a variant the default release
+lacks takes the newest release that has it (HYPSO-1 <code class="docutils literal notranslate"><span class="pre">&quot;moved&quot;</span></code>: V2).</p></li>
+<li><p><strong>version</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a><em>, </em><em>optional</em>) – Coefficient release - <code class="docutils literal notranslate"><span class="pre">&quot;V3.1&quot;</span></code> (default), <code class="docutils literal notranslate"><span class="pre">&quot;V3.1v2spec&quot;</span></code> (V2 band
+names, for OC-SMART), <code class="docutils literal notranslate"><span class="pre">&quot;V2&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;V1&quot;</span></code>; <code class="docutils literal notranslate"><span class="pre">&quot;V3&quot;</span></code> means V3.1 - or
+<code class="docutils literal notranslate"><span class="pre">{correction:</span> <span class="pre">release}</span></code> to mix them, e.g. <code class="docutils literal notranslate"><span class="pre">{&quot;smile&quot;:</span> <span class="pre">&quot;V2&quot;}</span></code> (the
+calibration package’s <code class="docutils literal notranslate"><span class="pre">data/coefficients.yaml</span></code>).</p></li>
+<li><p><strong>coeff_files</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a><em>, </em><em>optional</em>) – Explicit <code class="docutils literal notranslate"><span class="pre">{kind:</span> <span class="pre">path}</span></code> instead of <code class="docutils literal notranslate"><span class="pre">coeff_type</span></code> and <code class="docutils literal notranslate"><span class="pre">version</span></code>.</p></li>
+<li><p><strong>radiometric</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default True</em>) – False skips that correction.</p></li>
+<li><p><strong>smile</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default True</em>) – False skips that correction.</p></li>
+<li><p><strong>destripe</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default True</em>) – False skips that correction.</p></li>
+<li><p><strong>spectral</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default True</em>) – False skips that correction.</p></li>
+<li><p><strong>keystone</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default False</em>) – Also correct keystone (spatial misregistration across the spectrum)
+with the sensor’s optional distortion model, after radiometric
+calibration and before smile (<code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.calibration.keystone</span></code>).
+Groundwork, unreviewed: HYPSO-2’s model is shipped disabled, so this
+warns; sensors without a model raise ValueError.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>L1B tree. The files used, their checksums and the package versions
+are recorded in <code class="docutils literal notranslate"><span class="pre">metadata/processing/l1b</span></code>, and a summary is logged.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataTree.html#xarray.DataTree" title="(in xarray v2026.9.0)">xarray.DataTree</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.processing.l1b_to_l1c">
+<span class="sig-prename descclassname"><span class="pre">hypso.processing.</span></span><span class="sig-name descname"><span class="pre">l1b_to_l1c</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latitudes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">longitudes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/hypso/processing/georeference.html#l1b_to_l1c"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.processing.l1b_to_l1c" title="Link to this definition">#</a></dt>
+<dd><p>Georeference an L1B tree to L1C.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tree</strong> (<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataTree.html#xarray.DataTree" title="(in xarray v2026.9.0)"><em>xarray.DataTree</em></a>) – L1B product tree.</p></li>
+<li><p><strong>latitudes</strong> (<em>array_like</em><em> or </em><em>path</em><em>, </em><em>optional</em>) – Indirect pixel coordinates, <code class="docutils literal notranslate"><span class="pre">(lines,</span> <span class="pre">samples)</span></code> arrays or paths to
+raw float32 files. Omit both to use direct georeferencing as the
+main geometry.</p></li>
+<li><p><strong>longitudes</strong> (<em>array_like</em><em> or </em><em>path</em><em>, </em><em>optional</em>) – Indirect pixel coordinates, <code class="docutils literal notranslate"><span class="pre">(lines,</span> <span class="pre">samples)</span></code> arrays or paths to
+raw float32 files. Omit both to use direct georeferencing as the
+main geometry.</p></li>
+<li><p><strong>direct</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default True</em>) – Also compute direct georeferencing from the ADCS telemetry
+(<code class="docutils literal notranslate"><span class="pre">latitude_direct</span></code>, <code class="docutils literal notranslate"><span class="pre">longitude_direct</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;angle&gt;_direct</span></code>).
+Skipped with a warning if the telemetry points off the Earth.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>L1C tree.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataTree.html#xarray.DataTree" title="(in xarray v2026.9.0)">xarray.DataTree</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.processing.l1c_to_l1d">
+<span class="sig-prename descclassname"><span class="pre">hypso.processing.</span></span><span class="sig-name descname"><span class="pre">l1c_to_l1d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_direct_georef</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ssi_source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tsis'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_unbinned</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/hypso/processing/toa.html#l1c_to_l1d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.processing.l1c_to_l1d" title="Link to this definition">#</a></dt>
+<dd><p>Top-of-atmosphere reflectance <code class="docutils literal notranslate"><span class="pre">rhot</span></code> from an L1C tree.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tree</strong> (<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataTree.html#xarray.DataTree" title="(in xarray v2026.9.0)"><em>xarray.DataTree</em></a>) – L1C product tree (sensor geometry or gridded).</p></li>
+<li><p><strong>use_direct_georef</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default False</em>) – Use <code class="docutils literal notranslate"><span class="pre">solar_zenith_direct</span></code> instead of <code class="docutils literal notranslate"><span class="pre">solar_zenith</span></code>, when present.</p></li>
+<li><p><strong>ssi_source</strong> (<em>{&quot;tsis&quot;</em><em>, </em><em>&quot;thuillier&quot;}</em><em>, </em><em>default &quot;tsis&quot;</em>) – Solar irradiance spectrum: TSIS-1 HSRS or Thuillier (2002).</p></li>
+<li><p><strong>use_unbinned</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default True</em>) – Build the spectral response functions from the unbinned wavelengths
+and bin them, instead of from the binned band centres.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>L1D tree with <code class="docutils literal notranslate"><span class="pre">metadata/srf</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataTree.html#xarray.DataTree" title="(in xarray v2026.9.0)">xarray.DataTree</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.processing.make_l2b">
+<span class="sig-prename descclassname"><span class="pre">hypso.processing.</span></span><span class="sig-name descname"><span class="pre">make_l2b</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variables</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/hypso/processing/l2b.html#make_l2b"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.processing.make_l2b" title="Link to this definition">#</a></dt>
+<dd><p>An L2B tree from an L2A tree and the derived variables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tree</strong> (<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataTree.html#xarray.DataTree" title="(in xarray v2026.9.0)"><em>xarray.DataTree</em></a>) – The L2A product the variables were derived from.</p></li>
+<li><p><strong>group</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – Product group, a key of <code class="xref py py-data docutils literal notranslate"><span class="pre">hypso.io.naming.L2B_GROUPS</span></code>.</p></li>
+<li><p><strong>source</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – Algorithm or tool, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;oc4&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;polymer&quot;</span></code> (a file-name token).</p></li>
+<li><p><strong>variables</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a>) – <code class="docutils literal notranslate"><span class="pre">{name:</span> <span class="pre">xarray.DataArray</span> <span class="pre">or</span> <span class="pre">(array,</span> <span class="pre">attrs)}</span></code>, each of the product’s
+spatial shape; attributes should include <code class="docutils literal notranslate"><span class="pre">units</span></code> and <code class="docutils literal notranslate"><span class="pre">long_name</span></code>.</p></li>
+<li><p><strong>parameters</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a><em>, </em><em>optional</em>) – Recorded in the <code class="docutils literal notranslate"><span class="pre">l2b_&lt;group&gt;_&lt;source&gt;</span></code> provenance step.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataTree.html#xarray.DataTree" title="(in xarray v2026.9.0)">xarray.DataTree</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.processing.select_bands">
+<span class="sig-prename descclassname"><span class="pre">hypso.processing.</span></span><span class="sig-name descname"><span class="pre">select_bands</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelength_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelengths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/hypso/processing/bands.html#select_bands"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.processing.select_bands" title="Link to this definition">#</a></dt>
+<dd><p>A product tree with only some of its bands.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tree</strong> (<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataTree.html#xarray.DataTree" title="(in xarray v2026.9.0)"><em>xarray.DataTree</em></a>) – L1B, L1C, L1D or L2A product tree.</p></li>
+<li><p><strong>wavelength_range</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><em>tuple</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>, </em><em>optional</em>) – <code class="docutils literal notranslate"><span class="pre">(min,</span> <span class="pre">max)</span></code> in nm: the bands whose centre lies within it.</p></li>
+<li><p><strong>wavelengths</strong> (<em>array_like</em><em>, </em><em>optional</em>) – Wavelengths in nm: the nearest band to each.</p></li>
+<li><p><strong>indices</strong> (<em>array_like</em><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>optional</em>) – Band indices in the sensor’s full band set (<code class="docutils literal notranslate"><span class="pre">band_index</span></code>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Same level, with the kept bands’ <code class="docutils literal notranslate"><span class="pre">band_index</span></code>, <code class="docutils literal notranslate"><span class="pre">metadata/srf</span></code> (and
+<code class="docutils literal notranslate"><span class="pre">metadata/machi</span></code>) trimmed to them, and a <code class="docutils literal notranslate"><span class="pre">select_bands</span></code> step.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataTree.html#xarray.DataTree" title="(in xarray v2026.9.0)">xarray.DataTree</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.processing.split_tool_products">
+<span class="sig-prename descclassname"><span class="pre">hypso.processing.</span></span><span class="sig-name descname"><span class="pre">split_tool_products</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/hypso/processing/l2b.html#split_tool_products"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.processing.split_tool_products" title="Link to this definition">#</a></dt>
+<dd><p>Separate an L2A’s AC-tool products from its reflectance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tree</strong> (<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataTree.html#xarray.DataTree" title="(in xarray v2026.9.0)"><em>xarray.DataTree</em></a>) – An L2A tree, e.g. from <a class="reference internal" href="#hypso.processing.correct_atmosphere" title="hypso.processing.correct_atmosphere"><code class="xref py py-func docutils literal notranslate"><span class="pre">hypso.processing.correct_atmosphere()</span></code></a> or
+an L2A file written before the products moved to L2B.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">(l2a_tree,</span> <span class="pre">{group:</span> <span class="pre">l2b_tree})</span></code>: the L2A without the products, and
+one L2B tree per group (<code class="xref py py-data docutils literal notranslate"><span class="pre">hypso.io.naming.L2B_GROUPS</span></code>), named after
+the AC tool (<code class="docutils literal notranslate"><span class="pre">L2B.BGC.polymer</span></code>). The tool’s flag variables are kept
+in the L2A and copied into each L2B.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.processing.toa_reflectance">
+<span class="sig-prename descclassname"><span class="pre">hypso.processing.</span></span><span class="sig-name descname"><span class="pre">toa_reflectance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">radiance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iso_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solar_zenith</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/hypso/processing/toa.html#toa_reflectance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.processing.toa_reflectance" title="Link to this definition">#</a></dt>
+<dd><p>Top-of-atmosphere reflectance from radiance.</p>
+<p><code class="docutils literal notranslate"><span class="pre">rho</span> <span class="pre">=</span> <span class="pre">pi</span> <span class="pre">L</span> <span class="pre">d^2</span> <span class="pre">/</span> <span class="pre">(F0</span> <span class="pre">cos(sza))</span></code>, with <code class="docutils literal notranslate"><span class="pre">d</span></code> the Earth-Sun distance in
+AU (<a class="reference external" href="https://oceanopticsbook.info/view/atmospheric-correction/normalized-reflectances">Normalized reflectances</a>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>radiance</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>numpy.ndarray</em></a>) – <code class="docutils literal notranslate"><span class="pre">(lines,</span> <span class="pre">samples,</span> <span class="pre">bands)</span></code> radiance in W m-2 um-1 sr-1.</p></li>
+<li><p><strong>f0</strong> (<em>array_like</em>) – Per-band solar irradiance F0 in mW m-2 nm-1 (numerically equal to
+W m-2 um-1).</p></li>
+<li><p><strong>iso_time</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – Acquisition time (ISO 8601), for the Earth-Sun distance.</p></li>
+<li><p><strong>solar_zenith</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>numpy.ndarray</em></a>) – <code class="docutils literal notranslate"><span class="pre">(lines,</span> <span class="pre">samples)</span></code> solar zenith angle in degrees.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Reflectance, in the radiance’s dtype.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../maps/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">hypso.maps</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="atmospheric/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">hypso.processing.atmospheric</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#package-contents">Package Contents</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.processing.capture_params"><code class="docutils literal notranslate"><span class="pre">capture_params()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.processing.classify_capture_type"><code class="docutils literal notranslate"><span class="pre">classify_capture_type()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.processing.correct_atmosphere"><code class="docutils literal notranslate"><span class="pre">correct_atmosphere()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.processing.derive"><code class="docutils literal notranslate"><span class="pre">derive()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.processing.l1a_to_l1b"><code class="docutils literal notranslate"><span class="pre">l1a_to_l1b()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.processing.l1b_to_l1c"><code class="docutils literal notranslate"><span class="pre">l1b_to_l1c()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.processing.l1c_to_l1d"><code class="docutils literal notranslate"><span class="pre">l1c_to_l1d()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.processing.make_l2b"><code class="docutils literal notranslate"><span class="pre">make_l2b()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.processing.select_bands"><code class="docutils literal notranslate"><span class="pre">select_bands()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.processing.split_tool_products"><code class="docutils literal notranslate"><span class="pre">split_tool_products()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.processing.toa_reflectance"><code class="docutils literal notranslate"><span class="pre">toa_reflectance()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../_sources/api/hypso/processing/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Norwegian University of Science and Technology (NTNU).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

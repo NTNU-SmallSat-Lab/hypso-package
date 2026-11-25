@@ -1,0 +1,130 @@
+hypso.rgb.maps
+==============
+
+.. py:module:: hypso.rgb.maps
+
+.. autoapi-nested-parse::
+
+   RGB images on map grids, and map figures.
+
+   - :func:`regrid_camera`: a georeferenced RGB camera image
+     (:func:`hypso.rgb.georeference_camera`) on a map grid - the capture's UTM
+     zone, any CRS, or another product's grid - by cell averaging (default; the
+     camera's ~30 m pixels are finer than most grids) or nearest neighbour.
+   - :func:`decorate_map`: graticule, scale bar, north arrow and coastlines on
+     axes in projected coordinates (shared with :mod:`hypso.maps`).
+   - :func:`plot_rgb_map`: a gridded RGB image (from :func:`regrid_camera`, or a
+     regridded hypso.Product) as a map, with optional map elements: latitude/
+     longitude graticule, scale bar, north arrow, coastlines and title.
+
+   matplotlib is needed for the figures, and cartopy (with its Natural Earth
+   data) for coastlines; neither is a dependency of the package.
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.rgb.maps.camera_gsd
+   hypso.rgb.maps.decorate_map
+   hypso.rgb.maps.plot_rgb_map
+   hypso.rgb.maps.regrid_camera
+
+
+Module Contents
+---------------
+
+.. py:function:: camera_gsd(geo)
+
+   Median distance (m) between neighbouring camera pixel centres.
+
+
+.. py:function:: decorate_map(ax, extent, crs, graticule = True, scale_bar = True, north_arrow = True, coastlines = False, graticule_step = None, ink = 'white', coast_color = 'yellow', water = False, water_color = '#c6dbef')
+
+   Map elements on axes in projected coordinates: latitude/longitude
+   graticule, scale bar, north arrow and Natural Earth coastlines.
+
+   :param ax:
+   :type ax: matplotlib.axes.Axes
+   :param extent: ``[xmin, xmax, ymin, ymax]`` in the CRS's units; the axes are set to it.
+   :type extent: sequence of float
+   :param crs: The axes' projection.
+   :type crs: pyproj.CRS
+   :param graticule: As in :func:`plot_rgb_map`.
+   :param scale_bar: As in :func:`plot_rgb_map`.
+   :param north_arrow: As in :func:`plot_rgb_map`.
+   :param coastlines: As in :func:`plot_rgb_map`.
+   :param graticule_step: As in :func:`plot_rgb_map`.
+   :param ink: Colour of lines and labels ("white" on images, "black" on a light background).
+   :type ink: str, default "white"
+   :param coast_color:
+   :type coast_color: str, default "yellow"
+   :param water: Fill the sea and lakes (Natural Earth 10 m ocean and lakes) in
+                 ``water_color``, below anything drawn at zorder >= 0 (images, data).
+   :type water: bool, default False
+   :param water_color:
+   :type water_color: str, default "#c6dbef" (light blue)
+
+
+.. py:function:: plot_rgb_map(source, ax=None, graticule = True, scale_bar = True, north_arrow = True, coastlines = False, title = None, stretch=(2, 98), graticule_step = None, exposure = None)
+
+   Plot a gridded RGB image as a map.
+
+   :param source: A gridded camera image (:func:`regrid_camera`) or a regridded product
+                  (its bands nearest 640, 550 and 460 nm).
+   :type source: xarray.Dataset or hypso.Product
+   :param ax: Axes to draw on; default a new figure.
+   :type ax: matplotlib.axes.Axes, optional
+   :param graticule: Latitude/longitude lines with labels.
+   :type graticule: bool, default True
+   :param scale_bar: A scale bar (km) in the lower left.
+   :type scale_bar: bool, default True
+   :param north_arrow: An arrow to true north (in a UTM grid, true north is not straight up).
+   :type north_arrow: bool, default True
+   :param coastlines: Natural Earth 10 m coastlines (needs cartopy and its data; skipped
+                      with a warning otherwise).
+   :type coastlines: bool, default False
+   :param title:
+   :type title: str, optional
+   :param stretch: Percentiles mapped to black and white per channel.
+   :type stretch: tuple of float, default (2, 98)
+   :param graticule_step: Degrees between graticule lines; default chosen from the extent.
+   :type graticule_step: float, optional
+   :param exposure: Use :func:`hypso.rgb.adjust_exposure` (one gain for all channels,
+                    colours kept) instead of the per-channel ``stretch``, with these
+                    arguments, e.g. ``{}`` (automatic), ``{"ev": 1}`` or
+                    ``{"gamma": 2.2}``.
+   :type exposure: dict, optional
+
+   :rtype: matplotlib.axes.Axes
+
+
+.. py:function:: regrid_camera(geo, target='utm', resolution = None, method = 'auto', max_gb = 2.0)
+
+   A georeferenced camera image on a map grid.
+
+   :param geo: From :func:`hypso.rgb.georeference_camera` (R, G, B, latitude, longitude).
+   :type geo: xarray.Dataset
+   :param target: ``"utm"`` (zone of the image centre), any CRS, or a grid - e.g. the HSI
+                  product's after regridding, ``l1d.regrid(...).area_definition()``, to
+                  put both on the same grid.
+   :type target: str, int, pyproj.CRS or pyresample.geometry.AreaDefinition, default "utm"
+   :param resolution: Pixel size in the CRS's units; default the camera's own (~30 m). Not
+                      with an AreaDefinition.
+   :type resolution: float, optional
+   :param method: Cell means of the camera pixels in each cell, or the nearest pixel;
+                  "auto" averages when cells are at least twice the camera's pixel
+                  size and takes the nearest pixel otherwise (averaging onto cells as
+                  small as the pixels leaves empty cells).
+   :type method: {"auto", "average", "nearest"}, default "auto"
+   :param max_gb: Refuse grids larger than this.
+   :type max_gb: float, default 2
+
+   :returns: ``R``, ``G``, ``B`` on ``(y, x)`` with CF projection coordinates and a
+             ``crs`` grid mapping (NaN where the camera has no data), and the
+             camera's attributes plus ``grid``.
+   :rtype: xarray.Dataset
+
+

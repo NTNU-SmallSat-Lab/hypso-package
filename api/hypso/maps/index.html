@@ -1,0 +1,988 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>hypso.maps &#8212; hypso 26.10.0a7-20-g5e64121f</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=8e897651"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/hypso/maps/index';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="hypso.processing" href="../processing/index.html" />
+    <link rel="prev" title="hypso.io.schema" href="../io/schema/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="26.10.0a7" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">hypso 26.10.0a7-20-g5e64121f</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="../index.html">
+    hypso
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    hypso
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../ac/index.html">hypso.ac</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../ac/adapters/index.html">hypso.ac.adapters</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../ac/adapters/base/index.html">hypso.ac.adapters.base</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../ac/config/index.html">hypso.ac.config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ac/machi/index.html">hypso.ac.machi</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">hypso.api</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../grid/index.html">hypso.grid</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../grid/areas/index.html">hypso.grid.areas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../grid/regridding/index.html">hypso.grid.regridding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../grid/resample/index.html">hypso.grid.resample</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../io/index.html">hypso.io</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../io/cf/index.html">hypso.io.cf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io/naming/index.html">hypso.io.naming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io/product/index.html">hypso.io.product</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io/provenance/index.html">hypso.io.provenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io/schema/index.html">hypso.io.schema</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">hypso.maps</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../processing/index.html">hypso.processing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../processing/atmospheric/index.html">hypso.processing.atmospheric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../processing/bands/index.html">hypso.processing.bands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../processing/calibrate/index.html">hypso.processing.calibrate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../processing/capture/index.html">hypso.processing.capture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../processing/georeference/index.html">hypso.processing.georeference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../processing/l2b/index.html">hypso.processing.l2b</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../processing/l2b_algorithms/index.html">hypso.processing.l2b_algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../processing/toa/index.html">hypso.processing.toa</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../rgb/index.html">hypso.rgb</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../rgb/camera/index.html">hypso.rgb.camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rgb/exposure/index.html">hypso.rgb.exposure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rgb/hsi2rgb/index.html">hypso.rgb.hsi2rgb</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rgb/maps/index.html">hypso.rgb.maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rgb/product/index.html">hypso.rgb.product</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rgb/registration/index.html">hypso.rgb.registration</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../sensors/index.html">hypso.sensors</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../sensors/hypso1/index.html">hypso.sensors.hypso1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sensors/hypso2/index.html">hypso.sensors.hypso2</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../srf/index.html">hypso.srf</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../srf/response/index.html">hypso.srf.response</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../srf/solar/index.html">hypso.srf.solar</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../versioning/index.html">hypso.versioning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../window/index.html">hypso.window</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">hypso</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">hypso.maps</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-hypso.maps">
+<span id="hypso-maps"></span><h1>hypso.maps<a class="headerlink" href="#module-hypso.maps" title="Link to this heading">#</a></h1>
+<p>Footprints, shapefiles, RGB images and maps of HYPSO products.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#hypso.maps.footprint" title="hypso.maps.footprint"><code class="xref py py-func docutils literal notranslate"><span class="pre">footprint()</span></code></a>: a product’s ground footprint as a shapely polygon in
+WGS84 longitude/latitude: the outline of the whole swath, or of the pixels
+in a mask (e.g. those with data).</p></li>
+<li><p><a class="reference internal" href="#hypso.maps.footprint_attributes" title="hypso.maps.footprint_attributes"><code class="xref py py-func docutils literal notranslate"><span class="pre">footprint_attributes()</span></code></a>: the capture’s metadata for a footprint
+(capture, satellite, time, level, georeferencing, calibration, AC method).</p></li>
+<li><p><a class="reference internal" href="#hypso.maps.write_footprints" title="hypso.maps.write_footprints"><code class="xref py py-func docutils literal notranslate"><span class="pre">write_footprints()</span></code></a>: one or several footprints as an ESRI Shapefile
+(.shp/.shx/.dbf/.prj/.cpg, EPSG:4326) or GeoJSON, one feature per product.</p></li>
+<li><p><a class="reference internal" href="#hypso.maps.rgb_image" title="hypso.maps.rgb_image"><code class="xref py py-func docutils literal notranslate"><span class="pre">rgb_image()</span></code></a> and <a class="reference internal" href="#hypso.maps.save_rgb" title="hypso.maps.save_rgb"><code class="xref py py-func docutils literal notranslate"><span class="pre">save_rgb()</span></code></a>: an RGB rendering (bands nearest 640,
+550 and 460 nm; percentile stretch, per channel for L1, one gain for L2A;
+display gamma) in sensor geometry, as an array or a PNG (in the HYPSO
+servers’ orientation by default); from any product with a cube (L1B-L1D
+radiance or rhot, L2A Rrs or rhos).</p></li>
+<li><p><a class="reference internal" href="#hypso.maps.plot_map" title="hypso.maps.plot_map"><code class="xref py py-func docutils literal notranslate"><span class="pre">plot_map()</span></code></a>: a product variable (a band of the cube, a 2D variable such
+as <code class="docutils literal notranslate"><span class="pre">chlor_a</span></code>) or an RGB rendering on a map grid (<a class="reference internal" href="../index.html#hypso.Product.regrid" title="hypso.Product.regrid"><code class="xref py py-meth docutils literal notranslate"><span class="pre">hypso.Product.regrid()</span></code></a>),
+with the footprint outline, coastlines, graticule, scale bar, north arrow
+and colour bar.</p></li>
+<li><p><a class="reference internal" href="#hypso.maps.plot_overview" title="hypso.maps.plot_overview"><code class="xref py py-func docutils literal notranslate"><span class="pre">plot_overview()</span></code></a>: the footprints of several captures on one map.</p></li>
+</ul>
+<p>Optional dependencies: shapely (footprints), pyshp (shapefiles), matplotlib
+(figures), cartopy and its Natural Earth data (coastlines); pillow writes the
+PNGs.</p>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.maps.footprint" title="hypso.maps.footprint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">footprint</span></code></a>(product[, mask, step, block])</p></td>
+<td><p>The product's ground footprint, in WGS84 longitude/latitude.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.maps.footprint_attributes" title="hypso.maps.footprint_attributes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">footprint_attributes</span></code></a>(product[, source])</p></td>
+<td><p>The capture's metadata for a footprint feature (<code class="xref py py-data docutils literal notranslate"><span class="pre">FOOTPRINT_FIELDS</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.maps.georeferencing" title="hypso.maps.georeferencing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">georeferencing</span></code></a>(product)</p></td>
+<td><p>How the product's latitude/longitude were made: &quot;indirect&quot; (ground</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.maps.plot_map" title="hypso.maps.plot_map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_map</span></code></a>(source[, variable, wavelength, ax, ...])</p></td>
+<td><p>Plot a product variable, a band, or an RGB rendering on a map.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.maps.plot_overview" title="hypso.maps.plot_overview"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_overview</span></code></a>(sources[, ax, labels, margin, ...])</p></td>
+<td><p>Plot the footprints of several products on one map.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.maps.rgb_image" title="hypso.maps.rgb_image"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rgb_image</span></code></a>(product[, stretch, wavelengths, ...])</p></td>
+<td><p>An RGB rendering of a product's cube, in sensor geometry.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.maps.save_rgb" title="hypso.maps.save_rgb"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_rgb</span></code></a>(product, path[, stretch, wavelengths, ...])</p></td>
+<td><p>Write <a class="reference internal" href="#hypso.maps.rgb_image" title="hypso.maps.rgb_image"><code class="xref py py-func docutils literal notranslate"><span class="pre">rgb_image()</span></code></a> as a PNG (transparent where there is no data).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.maps.write_footprints" title="hypso.maps.write_footprints"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_footprints</span></code></a>(sources, path[, mask, step, block])</p></td>
+<td><p>Write footprints to an ESRI Shapefile or GeoJSON, one feature per product.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.maps.footprint">
+<span class="sig-prename descclassname"><span class="pre">hypso.maps.</span></span><span class="sig-name descname"><span class="pre">footprint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/hypso/maps.html#footprint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.maps.footprint" title="Link to this definition">#</a></dt>
+<dd><p>The product’s ground footprint, in WGS84 longitude/latitude.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>product</strong> (<a class="reference internal" href="../index.html#hypso.Product" title="hypso.Product"><em>hypso.Product</em></a><em> or </em><em>path</em>) – Any georeferenced product (L1C and later), in sensor geometry.</p></li>
+<li><p><strong>mask</strong> (<em>array_like</em><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em> or </em><em>&quot;data&quot;</em><em>, </em><em>optional</em>) – Outline only these pixels (lines x samples) instead of the whole
+swath; <code class="docutils literal notranslate"><span class="pre">&quot;data&quot;</span></code> for pixels with data (any finite band of the cube,
+else any finite 2D variable). Pixels are taken in blocks of
+<code class="docutils literal notranslate"><span class="pre">block</span></code> x <code class="docutils literal notranslate"><span class="pre">block</span></code>: a block is in when any of its pixels is.</p></li>
+<li><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>default 10</em>) – Swath outline: a vertex every <code class="docutils literal notranslate"><span class="pre">step</span></code> pixels along the edges (and at
+the corners).</p></li>
+<li><p><strong>block</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>default 8</em>) – Block size for <code class="docutils literal notranslate"><span class="pre">mask</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Longitudes in -180..180, or 0..360 for a footprint across the
+antimeridian.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>shapely.geometry.Polygon or MultiPolygon</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.maps.footprint_attributes">
+<span class="sig-prename descclassname"><span class="pre">hypso.maps.</span></span><span class="sig-name descname"><span class="pre">footprint_attributes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/hypso/maps.html#footprint_attributes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.maps.footprint_attributes" title="Link to this definition">#</a></dt>
+<dd><p>The capture’s metadata for a footprint feature (<code class="xref py py-data docutils literal notranslate"><span class="pre">FOOTPRINT_FIELDS</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>product</strong> (<a class="reference internal" href="../index.html#hypso.Product" title="hypso.Product"><em>hypso.Product</em></a>)</p></li>
+<li><p><strong>source</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><em>path</em><em>, </em><em>optional</em>) – The file the product was read from (its name is recorded).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.maps.georeferencing">
+<span class="sig-prename descclassname"><span class="pre">hypso.maps.</span></span><span class="sig-name descname"><span class="pre">georeferencing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/hypso/maps.html#georeferencing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.maps.georeferencing" title="Link to this definition">#</a></dt>
+<dd><p>How the product’s latitude/longitude were made: “indirect” (ground
+processing’s GCP-corrected coordinates), “direct” (from attitude and
+position), or “unknown” (no record, e.g. a product from older software).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.maps.plot_map">
+<span class="sig-prename descclassname"><span class="pre">hypso.maps.</span></span><span class="sig-name descname"><span class="pre">plot_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelength</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2,</span> <span class="pre">98)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stretch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">per_channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">water</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coastlines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">graticule</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_bar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">north_arrow</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colorbar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/hypso/maps.html#plot_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.maps.plot_map" title="Link to this definition">#</a></dt>
+<dd><p>Plot a product variable, a band, or an RGB rendering on a map.</p>
+<p>The product is regridded (<a class="reference internal" href="../index.html#hypso.Product.regrid" title="hypso.Product.regrid"><code class="xref py py-meth docutils literal notranslate"><span class="pre">hypso.Product.regrid()</span></code></a>, nearest
+neighbour, default the UTM zone of the scene at the product’s own
+resolution) after reducing it to what is plotted.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source</strong> (<a class="reference internal" href="../index.html#hypso.Product" title="hypso.Product"><em>hypso.Product</em></a><em> or </em><em>path</em>) – A product in sensor geometry or already gridded.</p></li>
+<li><p><strong>variable</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – A 2D variable (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;chlor_a_oci&quot;</span></code>) or the cube’s name (<code class="docutils literal notranslate"><span class="pre">&quot;Rrs&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;rhos&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;rhot&quot;</span></code>) with <code class="docutils literal notranslate"><span class="pre">wavelength</span></code>; default an RGB rendering
+of the cube (bands nearest 640, 550 and 460 nm).</p></li>
+<li><p><strong>wavelength</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>, </em><em>optional</em>) – For a band of the cube (nearest).</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>)</p></li>
+<li><p><strong>resolution</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>, </em><em>optional</em>) – Grid pixel size in m; default the product’s.</p></li>
+<li><p><strong>cmap</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Default “viridis” (“turbo” is avoided: not perceptually uniform).</p></li>
+<li><p><strong>log</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>optional</em>) – Logarithmic colour scale; default on for concentrations and IOPs
+(<code class="docutils literal notranslate"><span class="pre">chl*</span></code>, <code class="docutils literal notranslate"><span class="pre">tsm*</span></code>, <code class="docutils literal notranslate"><span class="pre">a_*</span></code>, <code class="docutils literal notranslate"><span class="pre">bbp_*</span></code>, <code class="docutils literal notranslate"><span class="pre">kd*</span></code>…).</p></li>
+<li><p><strong>vmin</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>, </em><em>optional</em>) – Colour range; default the <code class="docutils literal notranslate"><span class="pre">percentiles</span></code> of the data.</p></li>
+<li><p><strong>vmax</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>, </em><em>optional</em>) – Colour range; default the <code class="docutils literal notranslate"><span class="pre">percentiles</span></code> of the data.</p></li>
+<li><p><strong>percentiles</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><em>tuple</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>, </em><em>default</em><em> (</em><em>2</em><em>, </em><em>98</em><em>)</em>)</p></li>
+<li><p><strong>stretch</strong> – RGB rendering, as in <a class="reference internal" href="#hypso.maps.rgb_image" title="hypso.maps.rgb_image"><code class="xref py py-func docutils literal notranslate"><span class="pre">rgb_image()</span></code></a>.</p></li>
+<li><p><strong>per_channel</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – RGB rendering, as in <a class="reference internal" href="#hypso.maps.rgb_image" title="hypso.maps.rgb_image"><code class="xref py py-func docutils literal notranslate"><span class="pre">rgb_image()</span></code></a>.</p></li>
+<li><p><strong>gamma</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – RGB rendering, as in <a class="reference internal" href="#hypso.maps.rgb_image" title="hypso.maps.rgb_image"><code class="xref py py-func docutils literal notranslate"><span class="pre">rgb_image()</span></code></a>.</p></li>
+<li><p><strong>outline</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default True</em>) – Draw the swath footprint (needs shapely).</p></li>
+<li><p><strong>water</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default True</em>) – Shade the sea and lakes (Natural Earth) light blue under the data;
+land is light grey.</p></li>
+<li><p><strong>coastlines</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – Map elements (<a class="reference internal" href="../rgb/index.html#hypso.rgb.decorate_map" title="hypso.rgb.decorate_map"><code class="xref py py-func docutils literal notranslate"><span class="pre">hypso.rgb.decorate_map()</span></code></a>).</p></li>
+<li><p><strong>graticule</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – Map elements (<a class="reference internal" href="../rgb/index.html#hypso.rgb.decorate_map" title="hypso.rgb.decorate_map"><code class="xref py py-func docutils literal notranslate"><span class="pre">hypso.rgb.decorate_map()</span></code></a>).</p></li>
+<li><p><strong>scale_bar</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – Map elements (<a class="reference internal" href="../rgb/index.html#hypso.rgb.decorate_map" title="hypso.rgb.decorate_map"><code class="xref py py-func docutils literal notranslate"><span class="pre">hypso.rgb.decorate_map()</span></code></a>).</p></li>
+<li><p><strong>north_arrow</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – Map elements (<a class="reference internal" href="../rgb/index.html#hypso.rgb.decorate_map" title="hypso.rgb.decorate_map"><code class="xref py py-func docutils literal notranslate"><span class="pre">hypso.rgb.decorate_map()</span></code></a>).</p></li>
+<li><p><strong>title</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Default: target, time, product and variable.</p></li>
+<li><p><strong>colorbar</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default True</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>matplotlib.axes.Axes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.maps.plot_overview">
+<span class="sig-prename descclassname"><span class="pre">hypso.maps.</span></span><span class="sig-name descname"><span class="pre">plot_overview</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sources</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">margin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coastlines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">graticule</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_bar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">north_arrow</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">water</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fill</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/hypso/maps.html#plot_overview"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.maps.plot_overview" title="Link to this definition">#</a></dt>
+<dd><p>Plot the footprints of several products on one map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sources</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><em>list</em></a><em> of </em><a class="reference internal" href="../index.html#hypso.Product" title="hypso.Product"><em>hypso.Product</em></a><em>, </em><em>paths</em><em> or </em><em>shapely polygons</em>) – Polygons in WGS84 longitude/latitude (e.g. from <a class="reference internal" href="#hypso.maps.footprint" title="hypso.maps.footprint"><code class="xref py py-func docutils literal notranslate"><span class="pre">footprint()</span></code></a>)
+are drawn as they are.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>)</p></li>
+<li><p><strong>labels</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><em>list</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Legend labels; default each product’s acquisition time (UTC),
+after its target when the products have several targets.</p></li>
+<li><p><strong>margin</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>, </em><em>default 0.1</em>) – Space around the footprints, as a fraction of their extent.</p></li>
+<li><p><strong>coastlines</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – Map elements (<a class="reference internal" href="../rgb/index.html#hypso.rgb.decorate_map" title="hypso.rgb.decorate_map"><code class="xref py py-func docutils literal notranslate"><span class="pre">hypso.rgb.decorate_map()</span></code></a>).</p></li>
+<li><p><strong>graticule</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – Map elements (<a class="reference internal" href="../rgb/index.html#hypso.rgb.decorate_map" title="hypso.rgb.decorate_map"><code class="xref py py-func docutils literal notranslate"><span class="pre">hypso.rgb.decorate_map()</span></code></a>).</p></li>
+<li><p><strong>scale_bar</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – Map elements (<a class="reference internal" href="../rgb/index.html#hypso.rgb.decorate_map" title="hypso.rgb.decorate_map"><code class="xref py py-func docutils literal notranslate"><span class="pre">hypso.rgb.decorate_map()</span></code></a>).</p></li>
+<li><p><strong>north_arrow</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – Map elements (<a class="reference internal" href="../rgb/index.html#hypso.rgb.decorate_map" title="hypso.rgb.decorate_map"><code class="xref py py-func docutils literal notranslate"><span class="pre">hypso.rgb.decorate_map()</span></code></a>).</p></li>
+<li><p><strong>title</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>)</p></li>
+<li><p><strong>crs</strong> (<em>optional</em>) – Map projection; default the UTM zone of the footprints’ centre.</p></li>
+<li><p><strong>water</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default True</em>) – Shade the sea and lakes light blue; land is light grey.</p></li>
+<li><p><strong>fill</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default False</em>) – Tint the inside of each footprint in its colour (outlines only by
+default).</p></li>
+<li><p><strong>color_by</strong> (<em>{&quot;auto&quot;</em><em>, </em><em>&quot;capture&quot;</em><em>, </em><em>&quot;satellite&quot;}</em><em>, </em><em>default &quot;auto&quot;</em>) – One colour and legend entry per footprint (“capture”), or per
+satellite with the number of captures in the legend (“satellite”,
+thinner lines, for many footprints); “auto” is “capture” up to 8
+footprints and “satellite” beyond. <code class="docutils literal notranslate"><span class="pre">labels</span></code> applies to “capture”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>matplotlib.axes.Axes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.maps.rgb_image">
+<span class="sig-prename descclassname"><span class="pre">hypso.maps.</span></span><span class="sig-name descname"><span class="pre">rgb_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stretch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelengths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">RGB_WAVELENGTHS</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">per_channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/hypso/maps.html#rgb_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.maps.rgb_image" title="Link to this definition">#</a></dt>
+<dd><p>An RGB rendering of a product’s cube, in sensor geometry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>product</strong> (<a class="reference internal" href="../index.html#hypso.Product" title="hypso.Product"><em>hypso.Product</em></a><em> or </em><em>path</em>) – A product with a cube (L1B-L1D, L2A); a path is opened with only the
+three bands.</p></li>
+<li><p><strong>stretch</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><em>tuple</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>, </em><em>optional</em>) – Percentiles over the pixels with data that map to 0 and 1 (with one
+gain for all channels, only the upper one is used: 0 maps to 0).
+Default (2, 98) for L1, (0, 99.5) for L2A.</p></li>
+<li><p><strong>wavelengths</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><em>tuple</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>, </em><em>default</em><em> (</em><em>640</em><em>, </em><em>550</em><em>, </em><em>460</em><em>)</em>) – The bands (nearest) for red, green and blue.</p></li>
+<li><p><strong>per_channel</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>optional</em>) – Stretch each channel on its own (default for L1 products: one gain
+for all channels renders TOA land pink) or use one gain for all
+channels from 0 (default for L2A surface reflectance, whose colours
+a per-channel stretch distorts).</p></li>
+<li><p><strong>gamma</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>, </em><em>optional</em>) – Display gamma (<code class="docutils literal notranslate"><span class="pre">image</span> <span class="pre">**</span> <span class="pre">(1</span> <span class="pre">/</span> <span class="pre">gamma)</span></code>): default 2.2 for L1, 1
+(linear) for L2A.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(lines, samples, 3) in 0-1, NaN where the product has no data (e.g.
+masked pixels of an L2A).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.maps.save_rgb">
+<span class="sig-prename descclassname"><span class="pre">hypso.maps.</span></span><span class="sig-name descname"><span class="pre">save_rgb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stretch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelengths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">RGB_WAVELENGTHS</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">per_channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orientation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'server'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bin_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/hypso/maps.html#save_rgb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.maps.save_rgb" title="Link to this definition">#</a></dt>
+<dd><p>Write <a class="reference internal" href="#hypso.maps.rgb_image" title="hypso.maps.rgb_image"><code class="xref py py-func docutils literal notranslate"><span class="pre">rgb_image()</span></code></a> as a PNG (transparent where there is no data).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>product</strong> – As in <a class="reference internal" href="#hypso.maps.rgb_image" title="hypso.maps.rgb_image"><code class="xref py py-func docutils literal notranslate"><span class="pre">rgb_image()</span></code></a>.</p></li>
+<li><p><strong>stretch</strong> – As in <a class="reference internal" href="#hypso.maps.rgb_image" title="hypso.maps.rgb_image"><code class="xref py py-func docutils literal notranslate"><span class="pre">rgb_image()</span></code></a>.</p></li>
+<li><p><strong>wavelengths</strong> – As in <a class="reference internal" href="#hypso.maps.rgb_image" title="hypso.maps.rgb_image"><code class="xref py py-func docutils literal notranslate"><span class="pre">rgb_image()</span></code></a>.</p></li>
+<li><p><strong>per_channel</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – As in <a class="reference internal" href="#hypso.maps.rgb_image" title="hypso.maps.rgb_image"><code class="xref py py-func docutils literal notranslate"><span class="pre">rgb_image()</span></code></a>.</p></li>
+<li><p><strong>gamma</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – As in <a class="reference internal" href="#hypso.maps.rgb_image" title="hypso.maps.rgb_image"><code class="xref py py-func docutils literal notranslate"><span class="pre">rgb_image()</span></code></a>.</p></li>
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><em>path</em>)</p></li>
+<li><p><strong>orientation</strong> (<em>{&quot;server&quot;</em><em>, </em><em>&quot;product&quot;}</em><em>, </em><em>default &quot;server&quot;</em>) – “server”: as the HYPSO servers’ quicklooks (lines across, samples
+up); “product”: the arrays as stored (lines down, samples across).</p></li>
+<li><p><strong>bin_samples</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>default 1</em>) – Average this many neighbouring samples (the servers’ <code class="docutils literal notranslate"><span class="pre">-bin3</span></code>
+images use 3, for pixels closer to square on the ground).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)">pathlib.Path</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.maps.write_footprints">
+<span class="sig-prename descclassname"><span class="pre">hypso.maps.</span></span><span class="sig-name descname"><span class="pre">write_footprints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sources</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/hypso/maps.html#write_footprints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.maps.write_footprints" title="Link to this definition">#</a></dt>
+<dd><p>Write footprints to an ESRI Shapefile or GeoJSON, one feature per product.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sources</strong> (<a class="reference internal" href="../index.html#hypso.Product" title="hypso.Product"><em>hypso.Product</em></a><em>, </em><em>path</em><em>, or </em><em>a list</em><em> of </em><em>them</em>) – Products in sensor geometry; paths are opened (all their bands are
+read, so prefer the smallest file of a capture, e.g. the L2B.BGC or
+the L1D opened with a few bands).</p></li>
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><em>path</em>) – <code class="docutils literal notranslate"><span class="pre">*.shp</span></code> (writes .shp, .shx, .dbf, .prj and .cpg; needs pyshp) or
+<code class="docutils literal notranslate"><span class="pre">*.geojson</span></code>/<code class="docutils literal notranslate"><span class="pre">*.json</span></code>.</p></li>
+<li><p><strong>mask</strong> – As in <a class="reference internal" href="#hypso.maps.footprint" title="hypso.maps.footprint"><code class="xref py py-func docutils literal notranslate"><span class="pre">footprint()</span></code></a>; <code class="docutils literal notranslate"><span class="pre">mask</span></code> must be <code class="docutils literal notranslate"><span class="pre">None</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;data&quot;</span></code> here.</p></li>
+<li><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – As in <a class="reference internal" href="#hypso.maps.footprint" title="hypso.maps.footprint"><code class="xref py py-func docutils literal notranslate"><span class="pre">footprint()</span></code></a>; <code class="docutils literal notranslate"><span class="pre">mask</span></code> must be <code class="docutils literal notranslate"><span class="pre">None</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;data&quot;</span></code> here.</p></li>
+<li><p><strong>block</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – As in <a class="reference internal" href="#hypso.maps.footprint" title="hypso.maps.footprint"><code class="xref py py-func docutils literal notranslate"><span class="pre">footprint()</span></code></a>; <code class="docutils literal notranslate"><span class="pre">mask</span></code> must be <code class="docutils literal notranslate"><span class="pre">None</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;data&quot;</span></code> here.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The .shp or GeoJSON file.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)">pathlib.Path</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../io/schema/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">hypso.io.schema</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../processing/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">hypso.processing</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.maps.footprint"><code class="docutils literal notranslate"><span class="pre">footprint()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.maps.footprint_attributes"><code class="docutils literal notranslate"><span class="pre">footprint_attributes()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.maps.georeferencing"><code class="docutils literal notranslate"><span class="pre">georeferencing()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.maps.plot_map"><code class="docutils literal notranslate"><span class="pre">plot_map()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.maps.plot_overview"><code class="docutils literal notranslate"><span class="pre">plot_overview()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.maps.rgb_image"><code class="docutils literal notranslate"><span class="pre">rgb_image()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.maps.save_rgb"><code class="docutils literal notranslate"><span class="pre">save_rgb()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.maps.write_footprints"><code class="docutils literal notranslate"><span class="pre">write_footprints()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../_sources/api/hypso/maps/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Norwegian University of Science and Technology (NTNU).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

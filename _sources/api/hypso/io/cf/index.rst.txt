@@ -1,0 +1,126 @@
+hypso.io.cf
+===========
+
+.. py:module:: hypso.io.cf
+
+.. autoapi-nested-parse::
+
+   CF (Climate and Forecast) attribute builders for every product level,
+   used by the one writer (hypso.io.product.write_product). Keeping them in
+   one place fixed several bugs of the earlier per-level writers, which each
+   set these attributes inline (wrong latitude units and ranges, a tuple
+   radiation_wavelength, missing Conventions).
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.io.cf.azimuth_angle_attrs
+   hypso.io.cf.band_attrs
+   hypso.io.cf.crs_wgs84_attrs
+   hypso.io.cf.geolocation_ref_attrs
+   hypso.io.cf.global_attrs
+   hypso.io.cf.latitude_attrs
+   hypso.io.cf.longitude_attrs
+   hypso.io.cf.tool_variable_attrs
+   hypso.io.cf.zenith_angle_attrs
+
+
+Module Contents
+---------------
+
+.. py:function:: azimuth_angle_attrs(long_name, standard_name = None, valid_max = 360.0)
+
+   Azimuth angles, clockwise from north: [0, 360], the range
+   hypso.geometry.compute_local_angles produces (astropy AltAz). The
+   relative azimuth is folded to [0, 180] (``valid_max=180``). Files written
+   before 2026-11-08 declared [-180, 180], so CF readers that apply the
+   valid range (netCDF4's auto-masking, Panoply, SNAP) hid every sensor
+   azimuth above 180 degrees (e.g. 286-288 at Venice 2025-03-04).
+
+
+.. py:function:: band_attrs(long_name, units, wavelength_nm, radiation_wavelength_nm, fwhm, wave_name, band_index, include_geolocation, *, var_name, standard_name = None)
+
+   Per-band product variable attrs (e.g. for Lt_378 or rhot_378).
+
+   wavelength vs. radiation_wavelength: kept as two distinct attributes,
+   not collapsed into one - they carry genuinely different values in real
+   files (wavelength is the nominal/rounded band-center label,
+   radiation_wavelength is the precise as-calibrated value; e.g. 378.5 vs
+   378.54673723 for the same band). radiation_wavelength is the CF-flavored
+   name (maps to CF's "sensor_band_central_radiation_wavelength" concept,
+   per Unidata's EC-netCDF-CF swath convention) - but standard_name is a
+   property CF only defines for a *variable*, not for one attribute among
+   several on a variable. The variable's own standard_name (its radiance or
+   reflectance quantity) comes from `standard_name`, set per level in
+   io/schema.py from the CF standard name table. `wave` (a third,
+   truly-redundant duplicate of `wavelength`) is dropped.
+
+   var_name is the variable's own name (e.g. "Lt_378"), written as
+   `parameter` as the pre-refactor writers did; wave_name is the bare
+   wavelength label (e.g. "378").
+
+
+.. py:function:: crs_wgs84_attrs()
+
+   Unchanged from the previous writer - this one was already correctly
+   CF-formed (grid_mapping_name="latitude_longitude" + the WGS84
+   ellipsoid parameters).
+
+
+.. py:function:: geolocation_ref_attrs()
+
+   coordinates/grid_mapping attrs for a per-band product variable, valid
+   now that geometry variables (latitude/longitude/crs_wgs84) live in the
+   same (root) group as the product variables referencing them - CF's
+   group-relative name resolution only walks up to ancestor groups, never
+   sideways to siblings, so this only works because the writer no longer
+   nests products and geometry into separate groups (docs/architecture.rst,
+   "File format").
+
+
+.. py:function:: global_attrs(processing_level, title)
+
+   Global attributes CF recommends and that were confirmed absent from
+   every level's output before this refactor (no `Conventions` attribute
+   anywhere meant CF-aware tooling had no signal to even attempt CF-aware
+   parsing).
+
+   "history" is deliberately NOT included here - unlike the other globals,
+   CF wants it to be an append-only provenance trail (one line per
+   processing step, not a value that gets overwritten each time a new
+   level is written), which needs the *existing* value from whatever was
+   already on the source product - see hypso.io.provenance.add_step,
+   which appends each processing step's line to the product's existing
+   ``history``.
+
+
+.. py:function:: latitude_attrs()
+
+   Fixes a confirmed bug: the previous geometry writer set
+   units="degrees" (not CF's required "degrees_north" for a variable to be
+   recognized as a latitude coordinate) and valid_min/valid_max=[-180,180]
+   (copy-pasted from longitude - latitude's real range is [-90,90]).
+
+
+.. py:function:: longitude_attrs()
+
+   CF attributes of the longitude variable.
+
+
+.. py:function:: tool_variable_attrs(attrs)
+
+   An AC tool's variable attributes with its standard_name made CF-valid:
+   mapped to the CF equivalent, or moved to source_standard_name.
+
+
+.. py:function:: zenith_angle_attrs(long_name, standard_name = None)
+
+   Zenith angles are physically [0, 180] (nadir to anti-nadir) - the
+   previous writer gave every angle variable (zenith AND azimuth alike) the
+   same blanket valid_min/valid_max=[-180,180].
+
+

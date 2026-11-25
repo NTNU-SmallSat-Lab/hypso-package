@@ -1,0 +1,1295 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>hypso.maps &#8212; hypso 26.10.0a7-20-g5e64121f</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=8e897651"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/hypso/maps';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="26.10.0a7" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">hypso 26.10.0a7-20-g5e64121f</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">hypso.maps</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for hypso.maps</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Footprints, shapefiles, RGB images and maps of HYPSO products.</span>
+
+<span class="sd">- :func:`footprint`: a product's ground footprint as a shapely polygon in</span>
+<span class="sd">  WGS84 longitude/latitude: the outline of the whole swath, or of the pixels</span>
+<span class="sd">  in a mask (e.g. those with data).</span>
+<span class="sd">- :func:`footprint_attributes`: the capture's metadata for a footprint</span>
+<span class="sd">  (capture, satellite, time, level, georeferencing, calibration, AC method).</span>
+<span class="sd">- :func:`write_footprints`: one or several footprints as an ESRI Shapefile</span>
+<span class="sd">  (.shp/.shx/.dbf/.prj/.cpg, EPSG:4326) or GeoJSON, one feature per product.</span>
+<span class="sd">- :func:`rgb_image` and :func:`save_rgb`: an RGB rendering (bands nearest 640,</span>
+<span class="sd">  550 and 460 nm; percentile stretch, per channel for L1, one gain for L2A;</span>
+<span class="sd">  display gamma) in sensor geometry, as an array or a PNG (in the HYPSO</span>
+<span class="sd">  servers' orientation by default); from any product with a cube (L1B-L1D</span>
+<span class="sd">  radiance or rhot, L2A Rrs or rhos).</span>
+<span class="sd">- :func:`plot_map`: a product variable (a band of the cube, a 2D variable such</span>
+<span class="sd">  as ``chlor_a``) or an RGB rendering on a map grid (:meth:`hypso.Product.regrid`),</span>
+<span class="sd">  with the footprint outline, coastlines, graticule, scale bar, north arrow</span>
+<span class="sd">  and colour bar.</span>
+<span class="sd">- :func:`plot_overview`: the footprints of several captures on one map.</span>
+
+<span class="sd">Optional dependencies: shapely (footprints), pyshp (shapefiles), matplotlib</span>
+<span class="sd">(figures), cartopy and its Natural Earth data (coastlines); pillow writes the</span>
+<span class="sd">PNGs.</span>
+<span class="sd">"""</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyproj</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">hypso.rgb.maps</span><span class="w"> </span><span class="kn">import</span> <span class="n">RGB_WAVELENGTHS</span><span class="p">,</span> <span class="n">decorate_map</span>
+
+<span class="c1">#: Shapefile attribute fields (names at most 10 characters): (name, type, size, decimals).</span>
+<span class="n">FOOTPRINT_FIELDS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">(</span><span class="s2">"capture"</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>      <span class="c1"># &lt;target&gt;_&lt;YYYY-MM-DDTHH-MM-SSZ&gt;, as on the HYPSO servers</span>
+    <span class="p">(</span><span class="s2">"satellite"</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"target"</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">,</span> <span class="mi">48</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"start_utc"</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>    <span class="c1"># acquisition start, ISO 8601</span>
+    <span class="p">(</span><span class="s2">"level"</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"product"</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>      <span class="c1"># e.g. L1D, L2A.RRS.ocsmart, L2B.BGC.ocsmart</span>
+    <span class="p">(</span><span class="s2">"georef"</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>       <span class="c1"># indirect (GCP-corrected), direct, unknown</span>
+    <span class="p">(</span><span class="s2">"calib"</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>        <span class="c1"># radiometric calibration file</span>
+    <span class="p">(</span><span class="s2">"ac_method"</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"lines"</span><span class="p">,</span> <span class="s2">"N"</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"samples"</span><span class="p">,</span> <span class="s2">"N"</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"area_km2"</span><span class="p">,</span> <span class="s2">"N"</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"centre_lat"</span><span class="p">,</span> <span class="s2">"N"</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"centre_lon"</span><span class="p">,</span> <span class="s2">"N"</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">"source"</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>      <span class="c1"># file name, when read from a file</span>
+<span class="p">)</span>
+
+<span class="c1"># 2D variables shown on a logarithmic colour scale by default (concentrations and IOPs).</span>
+<span class="n">_LOG_VARIABLES</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^(chl|chlor|tsm|spm|tur|t_|a_|aph|adg|apg|bbp|bb_|bp_|kd|ndci)"</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_product</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="o">**</span><span class="n">open_kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A hypso.Product from a Product or a path (opened with open_kwargs)."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">Product</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">Product</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">source</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">hypso</span>
+    <span class="k">return</span> <span class="n">hypso</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="o">**</span><span class="n">open_kwargs</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_lonlat</span><span class="p">(</span><span class="n">product</span><span class="p">):</span>
+    <span class="n">geometry</span> <span class="o">=</span> <span class="n">product</span><span class="o">.</span><span class="n">geometry</span>
+    <span class="k">if</span> <span class="s2">"latitude"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">geometry</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">product</span><span class="o">.</span><span class="n">level</span><span class="si">}</span><span class="s2"> product has no latitude/longitude: georeference it first"</span><span class="p">)</span>
+    <span class="n">lat</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">"latitude"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">lon</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">"longitude"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">lon</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">lon</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">180</span><span class="p">:</span>          <span class="c1"># across the antimeridian: 0-360</span>
+        <span class="n">lon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="mf">360.0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span>
+
+
+<div class="viewcode-block" id="georeferencing">
+<a class="viewcode-back" href="../../api/hypso/maps/index.html#hypso.maps.georeferencing">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">georeferencing</span><span class="p">(</span><span class="n">product</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""How the product's latitude/longitude were made: "indirect" (ground</span>
+<span class="sd">    processing's GCP-corrected coordinates), "direct" (from attitude and</span>
+<span class="sd">    position), or "unknown" (no record, e.g. a product from older software)."""</span>
+    <span class="n">product</span> <span class="o">=</span> <span class="n">_product</span><span class="p">(</span><span class="n">product</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">product</span><span class="o">.</span><span class="n">provenance</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">"georeferencing"</span> <span class="ow">in</span> <span class="n">step</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">step</span><span class="p">[</span><span class="s2">"georeferencing"</span><span class="p">])</span>
+    <span class="k">return</span> <span class="s2">"unknown"</span></div>
+
+
+
+<div class="viewcode-block" id="footprint">
+<a class="viewcode-back" href="../../api/hypso/maps/index.html#hypso.maps.footprint">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">footprint</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The product's ground footprint, in WGS84 longitude/latitude.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    product : hypso.Product or path</span>
+<span class="sd">        Any georeferenced product (L1C and later), in sensor geometry.</span>
+<span class="sd">    mask : array_like of bool or "data", optional</span>
+<span class="sd">        Outline only these pixels (lines x samples) instead of the whole</span>
+<span class="sd">        swath; ``"data"`` for pixels with data (any finite band of the cube,</span>
+<span class="sd">        else any finite 2D variable). Pixels are taken in blocks of</span>
+<span class="sd">        ``block`` x ``block``: a block is in when any of its pixels is.</span>
+<span class="sd">    step : int, default 10</span>
+<span class="sd">        Swath outline: a vertex every ``step`` pixels along the edges (and at</span>
+<span class="sd">        the corners).</span>
+<span class="sd">    block : int, default 8</span>
+<span class="sd">        Block size for ``mask``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    shapely.geometry.Polygon or MultiPolygon</span>
+<span class="sd">        Longitudes in -180..180, or 0..360 for a footprint across the</span>
+<span class="sd">        antimeridian.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">shapely.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">Polygon</span><span class="p">,</span> <span class="n">box</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">shapely.ops</span><span class="w"> </span><span class="kn">import</span> <span class="n">unary_union</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">shapely.validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_valid</span>
+    <span class="n">product</span> <span class="o">=</span> <span class="n">_product</span><span class="p">(</span><span class="n">product</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">product</span><span class="o">.</span><span class="n">grid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"footprint needs a product in sensor geometry, not a gridded one"</span><span class="p">)</span>
+    <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span> <span class="o">=</span> <span class="n">_lonlat</span><span class="p">(</span><span class="n">product</span><span class="p">)</span>
+    <span class="n">finite</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">lon</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">finite</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">finite</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">rows</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"the product has no finite latitude/longitude"</span><span class="p">)</span>
+        <span class="n">r0</span><span class="p">,</span> <span class="n">r1</span><span class="p">,</span> <span class="n">c0</span><span class="p">,</span> <span class="n">c1</span> <span class="o">=</span> <span class="n">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">rows</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">cols</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cols</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">along</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">step</span><span class="p">),</span> <span class="n">stop</span><span class="p">])</span>
+        <span class="n">rr</span><span class="p">,</span> <span class="n">cc</span> <span class="o">=</span> <span class="n">along</span><span class="p">(</span><span class="n">r0</span><span class="p">,</span> <span class="n">r1</span><span class="p">),</span> <span class="n">along</span><span class="p">(</span><span class="n">c0</span><span class="p">,</span> <span class="n">c1</span><span class="p">)</span>
+        <span class="n">ring</span> <span class="o">=</span> <span class="p">([(</span><span class="n">r0</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cc</span><span class="p">]</span> <span class="o">+</span> <span class="p">[(</span><span class="n">r</span><span class="p">,</span> <span class="n">c1</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rr</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span>
+                <span class="o">+</span> <span class="p">[(</span><span class="n">r1</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cc</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:]]</span> <span class="o">+</span> <span class="p">[(</span><span class="n">r</span><span class="p">,</span> <span class="n">c0</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rr</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:]])</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="p">[(</span><span class="n">lon</span><span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">],</span> <span class="n">lat</span><span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">])</span> <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">ring</span> <span class="k">if</span> <span class="n">finite</span><span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">]]</span>
+        <span class="n">polygon</span> <span class="o">=</span> <span class="n">Polygon</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">polygon</span> <span class="k">if</span> <span class="n">polygon</span><span class="o">.</span><span class="n">is_valid</span> <span class="k">else</span> <span class="n">make_valid</span><span class="p">(</span><span class="n">polygon</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">mask</span> <span class="o">!=</span> <span class="s2">"data"</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"mask must be a boolean array or 'data', not </span><span class="si">{</span><span class="n">mask</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">_data_mask</span><span class="p">(</span><span class="n">product</span><span class="p">)</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">finite</span>
+    <span class="k">if</span> <span class="n">mask</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">lat</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"mask has shape </span><span class="si">{</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, expected </span><span class="si">{</span><span class="n">lat</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">mask</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"the mask selects no pixels"</span><span class="p">)</span>
+    <span class="n">n_lines</span><span class="p">,</span> <span class="n">n_samples</span> <span class="o">=</span> <span class="n">lat</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">quads</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_lines</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+        <span class="n">r1</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">r</span> <span class="o">+</span> <span class="n">block</span><span class="p">,</span> <span class="n">n_lines</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">mask</span><span class="p">[</span><span class="n">r</span><span class="p">:</span><span class="n">r</span> <span class="o">+</span> <span class="n">block</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span><span class="n">c</span> <span class="o">+</span> <span class="n">block</span><span class="p">]</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                <span class="k">continue</span>
+            <span class="n">c1</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">c</span> <span class="o">+</span> <span class="n">block</span><span class="p">,</span> <span class="n">n_samples</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">corners</span> <span class="o">=</span> <span class="p">[(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">),</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c1</span><span class="p">),</span> <span class="p">(</span><span class="n">r1</span><span class="p">,</span> <span class="n">c1</span><span class="p">),</span> <span class="p">(</span><span class="n">r1</span><span class="p">,</span> <span class="n">c</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">finite</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">corners</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">quad</span> <span class="o">=</span> <span class="n">Polygon</span><span class="p">([(</span><span class="n">lon</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">lat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">corners</span><span class="p">])</span>
+            <span class="n">quads</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">quad</span> <span class="k">if</span> <span class="n">quad</span><span class="o">.</span><span class="n">is_valid</span> <span class="k">else</span> <span class="n">quad</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">quads</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"no block of the mask has finite corner coordinates"</span><span class="p">)</span>
+    <span class="c1"># a tiny buffer closes the slivers between neighbouring quads (float rounding)</span>
+    <span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-7</span>
+    <span class="k">return</span> <span class="n">make_valid</span><span class="p">(</span><span class="n">unary_union</span><span class="p">([</span><span class="n">q</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="n">eps</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">quads</span><span class="p">])</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="o">-</span><span class="n">eps</span><span class="p">))</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_data_mask</span><span class="p">(</span><span class="n">product</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.product</span><span class="w"> </span><span class="kn">import</span> <span class="n">has_cube</span>
+    <span class="k">if</span> <span class="n">has_cube</span><span class="p">(</span><span class="n">product</span><span class="o">.</span><span class="n">tree</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">product</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">variables</span> <span class="o">=</span> <span class="n">product</span><span class="o">.</span><span class="n">variables</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">data_vars</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">variables</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">names</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"the product has neither a cube nor float variables to take 'data' from"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="o">.</span><span class="n">reduce</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">variables</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="p">])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_product_label</span><span class="p">(</span><span class="n">product</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""e.g. L1D, L2A.RRS.ocsmart, L2B.BGC.ocsmart (the file name's product fields)."""</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">product</span><span class="o">.</span><span class="n">filename</span><span class="p">()</span>
+    <span class="n">stem</span> <span class="o">=</span> <span class="n">name</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">".nc"</span><span class="p">)</span> <span class="k">else</span> <span class="n">name</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">stem</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="n">product</span><span class="o">.</span><span class="n">level</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">"."</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="n">i</span><span class="p">:])</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">product</span><span class="o">.</span><span class="n">level</span>
+
+
+<div class="viewcode-block" id="footprint_attributes">
+<a class="viewcode-back" href="../../api/hypso/maps/index.html#hypso.maps.footprint_attributes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">footprint_attributes</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The capture's metadata for a footprint feature (:data:`FOOTPRINT_FIELDS`).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    product : hypso.Product</span>
+<span class="sd">    source : str or path, optional</span>
+<span class="sd">        The file the product was read from (its name is recorded).</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.processing.capture</span><span class="w"> </span><span class="kn">import</span> <span class="n">acquisition_time</span>
+    <span class="n">attrs</span> <span class="o">=</span> <span class="n">product</span><span class="o">.</span><span class="n">tree</span><span class="o">.</span><span class="n">attrs</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">acquisition_time</span><span class="p">(</span><span class="n">attrs</span><span class="p">))</span>
+    <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span> <span class="o">=</span> <span class="n">_lonlat</span><span class="p">(</span><span class="n">product</span><span class="p">)</span>
+    <span class="n">level</span> <span class="o">=</span> <span class="n">product</span><span class="o">.</span><span class="n">level</span>
+    <span class="n">ac</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"atmospheric_correction"</span><span class="p">)</span> <span class="k">if</span> <span class="n">level</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"L2A"</span><span class="p">,</span> <span class="s2">"L2B"</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="s2">"L2B"</span><span class="p">:</span>
+        <span class="n">ac</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"l2b_source"</span><span class="p">,</span> <span class="n">ac</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"capture"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">product</span><span class="o">.</span><span class="n">target</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">start</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">'%Y-%m-</span><span class="si">%d</span><span class="s1">T%H-%M-%SZ'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="s2">"satellite"</span><span class="p">:</span> <span class="n">product</span><span class="o">.</span><span class="n">sat_id</span><span class="p">,</span>
+        <span class="s2">"target"</span><span class="p">:</span> <span class="n">product</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
+        <span class="s2">"start_utc"</span><span class="p">:</span> <span class="n">start</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2">T%H:%M:%S.</span><span class="si">%f</span><span class="s2">Z"</span><span class="p">),</span>
+        <span class="s2">"level"</span><span class="p">:</span> <span class="n">level</span><span class="p">,</span>
+        <span class="s2">"product"</span><span class="p">:</span> <span class="n">_product_label</span><span class="p">(</span><span class="n">product</span><span class="p">),</span>
+        <span class="s2">"georef"</span><span class="p">:</span> <span class="n">georeferencing</span><span class="p">(</span><span class="n">product</span><span class="p">),</span>
+        <span class="s2">"calib"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"radiometric_file"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)),</span>
+        <span class="s2">"ac_method"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">ac</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">),</span>
+        <span class="s2">"lines"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+        <span class="s2">"samples"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">lat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="s2">"area_km2"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>                                  <span class="c1"># filled in from the polygon</span>
+        <span class="s2">"centre_lat"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">lat</span><span class="p">)),</span>
+        <span class="s2">"centre_lon"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">lon</span><span class="p">)),</span>
+        <span class="s2">"source"</span><span class="p">:</span> <span class="n">Path</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">source</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_area_km2</span><span class="p">(</span><span class="n">geometry</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="n">geod</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">Geod</span><span class="p">(</span><span class="n">ellps</span><span class="o">=</span><span class="s2">"WGS84"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">geod</span><span class="o">.</span><span class="n">geometry_area_perimeter</span><span class="p">(</span><span class="n">geometry</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mf">1e6</span>
+
+
+<div class="viewcode-block" id="write_footprints">
+<a class="viewcode-back" href="../../api/hypso/maps/index.html#hypso.maps.write_footprints">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_footprints</span><span class="p">(</span><span class="n">sources</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Write footprints to an ESRI Shapefile or GeoJSON, one feature per product.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sources : hypso.Product, path, or a list of them</span>
+<span class="sd">        Products in sensor geometry; paths are opened (all their bands are</span>
+<span class="sd">        read, so prefer the smallest file of a capture, e.g. the L2B.BGC or</span>
+<span class="sd">        the L1D opened with a few bands).</span>
+<span class="sd">    path : str or path</span>
+<span class="sd">        ``*.shp`` (writes .shp, .shx, .dbf, .prj and .cpg; needs pyshp) or</span>
+<span class="sd">        ``*.geojson``/``*.json``.</span>
+<span class="sd">    mask, step, block</span>
+<span class="sd">        As in :func:`footprint`; ``mask`` must be ``None`` or ``"data"`` here.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pathlib.Path</span>
+<span class="sd">        The .shp or GeoJSON file.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">shapely.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">mapping</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">shapely.geometry.polygon</span><span class="w"> </span><span class="kn">import</span> <span class="n">orient</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sources</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="n">sources</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">mask</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"data"</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"write_footprints takes mask=None or 'data'; for an array use footprint()"</span><span class="p">)</span>
+    <span class="n">features</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
+        <span class="n">product</span> <span class="o">=</span> <span class="n">_product</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+        <span class="n">geometry</span> <span class="o">=</span> <span class="n">footprint</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="n">block</span><span class="p">)</span>
+        <span class="n">record</span> <span class="o">=</span> <span class="n">footprint_attributes</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="s2">"tree"</span><span class="p">)</span> <span class="k">else</span> <span class="n">source</span><span class="p">)</span>
+        <span class="n">record</span><span class="p">[</span><span class="s2">"area_km2"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">_area_km2</span><span class="p">(</span><span class="n">geometry</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">features</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">geometry</span><span class="p">,</span> <span class="n">record</span><span class="p">))</span>
+
+    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">".geojson"</span><span class="p">,</span> <span class="s2">".json"</span><span class="p">):</span>
+        <span class="n">collection</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"FeatureCollection"</span><span class="p">,</span>
+                      <span class="s2">"features"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"Feature"</span><span class="p">,</span> <span class="s2">"geometry"</span><span class="p">:</span> <span class="n">mapping</span><span class="p">(</span><span class="n">g</span><span class="p">),</span> <span class="s2">"properties"</span><span class="p">:</span> <span class="n">r</span><span class="p">}</span> <span class="k">for</span> <span class="n">g</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">features</span><span class="p">]}</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">path</span>
+    <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">".shp"</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: write a .shp or .geojson file"</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">shapefile</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">"writing shapefiles needs pyshp (pip install pyshp)"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+    <span class="k">with</span> <span class="n">shapefile</span><span class="o">.</span><span class="n">Writer</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">""</span><span class="p">)),</span> <span class="n">shapeType</span><span class="o">=</span><span class="n">shapefile</span><span class="o">.</span><span class="n">POLYGON</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">decimals</span> <span class="ow">in</span> <span class="n">FOOTPRINT_FIELDS</span><span class="p">:</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span> <span class="n">decimal</span><span class="o">=</span><span class="n">decimals</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">features</span><span class="p">:</span>
+            <span class="n">parts</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">polygon</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="s2">"geoms"</span><span class="p">,</span> <span class="p">[</span><span class="n">geometry</span><span class="p">]):</span>
+                <span class="k">if</span> <span class="n">polygon</span><span class="o">.</span><span class="n">geom_type</span> <span class="o">!=</span> <span class="s2">"Polygon"</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">polygon</span> <span class="o">=</span> <span class="n">orient</span><span class="p">(</span><span class="n">polygon</span><span class="p">,</span> <span class="n">sign</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">)</span>      <span class="c1"># shapefile: outer rings clockwise, holes anticlockwise</span>
+                <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">list</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">polygon</span><span class="o">.</span><span class="n">exterior</span><span class="o">.</span><span class="n">coords</span><span class="p">])</span>
+                <span class="n">parts</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="nb">list</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">ring</span><span class="o">.</span><span class="n">coords</span><span class="p">]</span> <span class="k">for</span> <span class="n">ring</span> <span class="ow">in</span> <span class="n">polygon</span><span class="o">.</span><span class="n">interiors</span><span class="p">)</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">poly</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">record</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span> <span class="ow">in</span> <span class="n">FOOTPRINT_FIELDS</span><span class="p">})</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">".prj"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">pyproj</span><span class="o">.</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">4326</span><span class="p">)</span><span class="o">.</span><span class="n">to_wkt</span><span class="p">(</span><span class="n">pyproj</span><span class="o">.</span><span class="n">enums</span><span class="o">.</span><span class="n">WktVersion</span><span class="o">.</span><span class="n">WKT1_ESRI</span><span class="p">))</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">".cpg"</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s2">"UTF-8"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span></div>
+
+
+
+<span class="c1"># -- RGB images in sensor geometry ----------------------------------------------------------------</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_stretch</span><span class="p">(</span><span class="n">rgb</span><span class="p">,</span> <span class="n">stretch</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">98</span><span class="p">),</span> <span class="n">per_channel</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.2</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Scale an (..., 3) image to 0-1 (NaN kept).</span>
+
+<span class="sd">    per_channel: each channel from its own low to high percentile (TOA</span>
+<span class="sd">    reflectance: one gain for all channels renders land pink); otherwise one</span>
+<span class="sd">    gain for all channels from 0 to the high percentile of all values (keeps</span>
+<span class="sd">    the colours of surface reflectance). Then ``** (1 / gamma)``.</span>
+<span class="sd">    """</span>
+    <span class="n">rgb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">rgb</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">rgb</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">per_channel</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+            <span class="n">channel</span> <span class="o">=</span> <span class="n">rgb</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span>
+            <span class="n">finite</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">channel</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">finite</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                <span class="k">continue</span>
+            <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">channel</span><span class="p">[</span><span class="n">finite</span><span class="p">],</span> <span class="n">stretch</span><span class="p">)</span>
+            <span class="n">out</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">((</span><span class="n">channel</span> <span class="o">-</span> <span class="n">low</span><span class="p">)</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">high</span> <span class="o">-</span> <span class="n">low</span><span class="p">,</span> <span class="mf">1e-12</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">finite</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">rgb</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">finite</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="n">high</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">rgb</span><span class="p">[</span><span class="n">finite</span><span class="p">],</span> <span class="n">stretch</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">rgb</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">high</span><span class="p">,</span> <span class="mf">1e-12</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span> <span class="o">**</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">gamma</span><span class="p">)</span> <span class="k">if</span> <span class="n">gamma</span> <span class="k">else</span> <span class="n">out</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rgb_settings</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">stretch</span><span class="p">,</span> <span class="n">per_channel</span><span class="p">,</span> <span class="n">gamma</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Defaults by level. L1 (TOA): per-channel (2, 98) percentile stretch</span>
+<span class="sd">    and gamma 2.2 (one gain for all channels renders TOA land pink). L2A</span>
+<span class="sd">    (surface reflectance): one gain for all channels to the 99.5th</span>
+<span class="sd">    percentile, linear, which keeps the true colour of water (gamma or a</span>
+<span class="sd">    per-channel stretch wash it out to flat cyan or distort it)."""</span>
+    <span class="n">surface</span> <span class="o">=</span> <span class="n">product</span><span class="o">.</span><span class="n">level</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"L2A"</span><span class="p">,</span> <span class="s2">"L2B"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"stretch"</span><span class="p">:</span> <span class="n">stretch</span> <span class="k">if</span> <span class="n">stretch</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mf">99.5</span><span class="p">)</span> <span class="k">if</span> <span class="n">surface</span> <span class="k">else</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">98</span><span class="p">)),</span>
+            <span class="s2">"per_channel"</span><span class="p">:</span> <span class="n">per_channel</span> <span class="k">if</span> <span class="n">per_channel</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="ow">not</span> <span class="n">surface</span><span class="p">,</span>
+            <span class="s2">"gamma"</span><span class="p">:</span> <span class="n">gamma</span> <span class="k">if</span> <span class="n">gamma</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="mf">1.0</span> <span class="k">if</span> <span class="n">surface</span> <span class="k">else</span> <span class="mf">2.2</span><span class="p">)}</span>
+
+
+<div class="viewcode-block" id="rgb_image">
+<a class="viewcode-back" href="../../api/hypso/maps/index.html#hypso.maps.rgb_image">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">rgb_image</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">stretch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wavelengths</span><span class="o">=</span><span class="n">RGB_WAVELENGTHS</span><span class="p">,</span> <span class="n">per_channel</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+              <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""An RGB rendering of a product's cube, in sensor geometry.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    product : hypso.Product or path</span>
+<span class="sd">        A product with a cube (L1B-L1D, L2A); a path is opened with only the</span>
+<span class="sd">        three bands.</span>
+<span class="sd">    stretch : tuple of float, optional</span>
+<span class="sd">        Percentiles over the pixels with data that map to 0 and 1 (with one</span>
+<span class="sd">        gain for all channels, only the upper one is used: 0 maps to 0).</span>
+<span class="sd">        Default (2, 98) for L1, (0, 99.5) for L2A.</span>
+<span class="sd">    wavelengths : tuple of float, default (640, 550, 460)</span>
+<span class="sd">        The bands (nearest) for red, green and blue.</span>
+<span class="sd">    per_channel : bool, optional</span>
+<span class="sd">        Stretch each channel on its own (default for L1 products: one gain</span>
+<span class="sd">        for all channels renders TOA land pink) or use one gain for all</span>
+<span class="sd">        channels from 0 (default for L2A surface reflectance, whose colours</span>
+<span class="sd">        a per-channel stretch distorts).</span>
+<span class="sd">    gamma : float, optional</span>
+<span class="sd">        Display gamma (``image ** (1 / gamma)``): default 2.2 for L1, 1</span>
+<span class="sd">        (linear) for L2A.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        (lines, samples, 3) in 0-1, NaN where the product has no data (e.g.</span>
+<span class="sd">        masked pixels of an L2A).</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.product</span><span class="w"> </span><span class="kn">import</span> <span class="n">has_cube</span>
+    <span class="n">product</span> <span class="o">=</span> <span class="n">_product</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">wavelengths</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">wavelengths</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">has_cube</span><span class="p">(</span><span class="n">product</span><span class="o">.</span><span class="n">tree</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"a </span><span class="si">{</span><span class="n">product</span><span class="o">.</span><span class="n">level</span><span class="si">}</span><span class="s2"> product without a cube has no bands for an RGB image"</span><span class="p">)</span>
+    <span class="n">bands</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">product</span><span class="o">.</span><span class="n">wavelengths</span> <span class="o">-</span> <span class="n">w</span><span class="p">)))</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">wavelengths</span><span class="p">]</span>
+    <span class="n">rgb</span> <span class="o">=</span> <span class="n">product</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">bands</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_stretch</span><span class="p">(</span><span class="n">rgb</span><span class="p">,</span> <span class="o">**</span><span class="n">_rgb_settings</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">stretch</span><span class="p">,</span> <span class="n">per_channel</span><span class="p">,</span> <span class="n">gamma</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="save_rgb">
+<a class="viewcode-back" href="../../api/hypso/maps/index.html#hypso.maps.save_rgb">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">save_rgb</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">stretch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wavelengths</span><span class="o">=</span><span class="n">RGB_WAVELENGTHS</span><span class="p">,</span> <span class="n">per_channel</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+             <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">orientation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"server"</span><span class="p">,</span> <span class="n">bin_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Write :func:`rgb_image` as a PNG (transparent where there is no data).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    product, stretch, wavelengths, per_channel, gamma</span>
+<span class="sd">        As in :func:`rgb_image`.</span>
+<span class="sd">    path : str or path</span>
+<span class="sd">    orientation : {"server", "product"}, default "server"</span>
+<span class="sd">        "server": as the HYPSO servers' quicklooks (lines across, samples</span>
+<span class="sd">        up); "product": the arrays as stored (lines down, samples across).</span>
+<span class="sd">    bin_samples : int, default 1</span>
+<span class="sd">        Average this many neighbouring samples (the servers' ``-bin3``</span>
+<span class="sd">        images use 3, for pixels closer to square on the ground).</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">rgb_image</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">stretch</span><span class="o">=</span><span class="n">stretch</span><span class="p">,</span> <span class="n">wavelengths</span><span class="o">=</span><span class="n">wavelengths</span><span class="p">,</span> <span class="n">per_channel</span><span class="o">=</span><span class="n">per_channel</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="n">gamma</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">bin_samples</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="n">bin_samples</span> <span class="o">*</span> <span class="n">bin_samples</span>
+        <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>       <span class="c1"># all-NaN bins</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">image</span><span class="p">[:,</span> <span class="p">:</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">bin_samples</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">image</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">rgba</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">image</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">*</span> <span class="mi">255</span><span class="p">])</span><span class="o">.</span><span class="n">round</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">orientation</span> <span class="o">==</span> <span class="s2">"server"</span><span class="p">:</span>
+        <span class="n">rgba</span> <span class="o">=</span> <span class="n">rgba</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">orientation</span> <span class="o">!=</span> <span class="s2">"product"</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"orientation must be 'server' or 'product', not </span><span class="si">{</span><span class="n">orientation</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">rgba</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"RGBA"</span><span class="p">)</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span></div>
+
+
+
+<span class="c1"># -- maps -----------------------------------------------------------------------------------------</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_cube_units</span><span class="p">(</span><span class="n">product</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""(units, long_name) of the product's cube, as written to files (the</span>
+<span class="sd">    cube read back from per-band variables carries no attributes)."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">cf</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.product</span><span class="w"> </span><span class="kn">import</span> <span class="n">_level_key</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_schema</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">product</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">name</span>
+    <span class="k">if</span> <span class="n">product</span><span class="o">.</span><span class="n">level</span> <span class="o">==</span> <span class="s2">"L2A"</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">cf</span><span class="o">.</span><span class="n">L2A_PRODUCTS</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">cf</span><span class="o">.</span><span class="n">L2A_PRODUCTS</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">"units"</span><span class="p">],</span> <span class="n">cf</span><span class="o">.</span><span class="n">L2A_PRODUCTS</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">"long_name"</span><span class="p">]</span>
+    <span class="n">schema</span> <span class="o">=</span> <span class="n">get_schema</span><span class="p">(</span><span class="n">_level_key</span><span class="p">(</span><span class="n">product</span><span class="o">.</span><span class="n">level</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">schema</span><span class="o">.</span><span class="n">product_units</span><span class="p">,</span> <span class="n">schema</span><span class="o">.</span><span class="n">product_long_name</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_subset</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">wavelength</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The product reduced to what the map needs (regridding all bands of a</span>
+<span class="sd">    cube or every IOP variable would be slow and large), and what is plotted:</span>
+<span class="sd">    "rgb", "band" or "variable"."""</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">Product</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.product</span><span class="w"> </span><span class="kn">import</span> <span class="n">has_cube</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.masks.flags</span><span class="w"> </span><span class="kn">import</span> <span class="n">FLAGS_NAME</span>
+    <span class="n">cube</span> <span class="o">=</span> <span class="n">has_cube</span><span class="p">(</span><span class="n">product</span><span class="o">.</span><span class="n">tree</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">variable</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>                              <span class="c1"># RGB</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">cube</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"a </span><span class="si">{</span><span class="n">product</span><span class="o">.</span><span class="n">level</span><span class="si">}</span><span class="s2"> product without a cube has no bands for an RGB map"</span><span class="p">)</span>
+        <span class="n">product</span> <span class="o">=</span> <span class="n">product</span><span class="o">.</span><span class="n">select_bands</span><span class="p">(</span><span class="n">wavelengths</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">RGB_WAVELENGTHS</span><span class="p">))</span>
+        <span class="n">keep</span><span class="p">,</span> <span class="n">mode</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(),</span> <span class="s2">"rgb"</span>
+    <span class="k">elif</span> <span class="n">cube</span> <span class="ow">and</span> <span class="n">variable</span> <span class="o">==</span> <span class="n">product</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">wavelength</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"give the wavelength of </span><span class="si">{</span><span class="n">variable</span><span class="si">!r}</span><span class="s2"> to map"</span><span class="p">)</span>
+        <span class="n">product</span> <span class="o">=</span> <span class="n">product</span><span class="o">.</span><span class="n">select_bands</span><span class="p">(</span><span class="n">wavelengths</span><span class="o">=</span><span class="p">[</span><span class="n">wavelength</span><span class="p">])</span>
+        <span class="n">keep</span><span class="p">,</span> <span class="n">mode</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(),</span> <span class="s2">"band"</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">variable</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">product</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">variable</span><span class="si">!r}</span><span class="s2"> is not a variable of the product; it has "</span>
+                           <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">product</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">data_vars</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cube</span><span class="p">:</span>
+            <span class="n">product</span> <span class="o">=</span> <span class="n">product</span><span class="o">.</span><span class="n">select_bands</span><span class="p">(</span><span class="n">wavelengths</span><span class="o">=</span><span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">product</span><span class="o">.</span><span class="n">wavelengths</span><span class="p">[</span><span class="mi">0</span><span class="p">])])</span>   <span class="c1"># one band, any subset</span>
+        <span class="n">keep</span><span class="p">,</span> <span class="n">mode</span> <span class="o">=</span> <span class="p">{</span><span class="n">variable</span><span class="p">},</span> <span class="s2">"variable"</span>
+    <span class="n">tree</span> <span class="o">=</span> <span class="n">product</span><span class="o">.</span><span class="n">tree</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">to_dataset</span><span class="p">(</span><span class="n">inherit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">extras</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">product</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">data_vars</span><span class="p">)</span> <span class="o">-</span> <span class="n">keep</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">drop_vars</span><span class="p">([</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">extras</span> <span class="k">if</span> <span class="n">n</span> <span class="o">!=</span> <span class="n">FLAGS_NAME</span> <span class="ow">and</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">root</span><span class="p">])</span>
+    <span class="n">tree</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">root</span>
+    <span class="k">return</span> <span class="n">Product</span><span class="p">(</span><span class="n">tree</span><span class="p">),</span> <span class="n">mode</span>
+
+
+<div class="viewcode-block" id="plot_map">
+<a class="viewcode-back" href="../../api/hypso/maps/index.html#hypso.maps.plot_map">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_map</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">wavelength</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">resolution</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+             <span class="n">cmap</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">log</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">vmin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">vmax</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+             <span class="n">percentiles</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">98</span><span class="p">),</span> <span class="n">stretch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">per_channel</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+             <span class="n">outline</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">water</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">coastlines</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+             <span class="n">graticule</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">scale_bar</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">north_arrow</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+             <span class="n">colorbar</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Plot a product variable, a band, or an RGB rendering on a map.</span>
+
+<span class="sd">    The product is regridded (:meth:`hypso.Product.regrid`, nearest</span>
+<span class="sd">    neighbour, default the UTM zone of the scene at the product's own</span>
+<span class="sd">    resolution) after reducing it to what is plotted.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    source : hypso.Product or path</span>
+<span class="sd">        A product in sensor geometry or already gridded.</span>
+<span class="sd">    variable : str, optional</span>
+<span class="sd">        A 2D variable (e.g. ``"chlor_a_oci"``) or the cube's name (``"Rrs"``,</span>
+<span class="sd">        ``"rhos"``, ``"rhot"``) with ``wavelength``; default an RGB rendering</span>
+<span class="sd">        of the cube (bands nearest 640, 550 and 460 nm).</span>
+<span class="sd">    wavelength : float, optional</span>
+<span class="sd">        For a band of the cube (nearest).</span>
+<span class="sd">    ax : matplotlib.axes.Axes, optional</span>
+<span class="sd">    resolution : float, optional</span>
+<span class="sd">        Grid pixel size in m; default the product's.</span>
+<span class="sd">    cmap : str, optional</span>
+<span class="sd">        Default "viridis" ("turbo" is avoided: not perceptually uniform).</span>
+<span class="sd">    log : bool, optional</span>
+<span class="sd">        Logarithmic colour scale; default on for concentrations and IOPs</span>
+<span class="sd">        (``chl*``, ``tsm*``, ``a_*``, ``bbp_*``, ``kd*``...).</span>
+<span class="sd">    vmin, vmax : float, optional</span>
+<span class="sd">        Colour range; default the ``percentiles`` of the data.</span>
+<span class="sd">    percentiles : tuple of float, default (2, 98)</span>
+<span class="sd">    stretch, per_channel, gamma</span>
+<span class="sd">        RGB rendering, as in :func:`rgb_image`.</span>
+<span class="sd">    outline : bool, default True</span>
+<span class="sd">        Draw the swath footprint (needs shapely).</span>
+<span class="sd">    water : bool, default True</span>
+<span class="sd">        Shade the sea and lakes (Natural Earth) light blue under the data;</span>
+<span class="sd">        land is light grey.</span>
+<span class="sd">    coastlines, graticule, scale_bar, north_arrow</span>
+<span class="sd">        Map elements (:func:`hypso.rgb.decorate_map`).</span>
+<span class="sd">    title : str, optional</span>
+<span class="sd">        Default: target, time, product and variable.</span>
+<span class="sd">    colorbar : bool, default True</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    matplotlib.axes.Axes</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogNorm</span><span class="p">,</span> <span class="n">Normalize</span>
+    <span class="n">product</span> <span class="o">=</span> <span class="n">_product</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+    <span class="n">gridded</span> <span class="o">=</span> <span class="n">product</span><span class="o">.</span><span class="n">grid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">gridded</span> <span class="k">else</span> <span class="n">product</span>
+    <span class="n">reduced</span><span class="p">,</span> <span class="n">mode</span> <span class="o">=</span> <span class="n">_subset</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">wavelength</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">gridded</span><span class="p">:</span>
+        <span class="n">reduced</span> <span class="o">=</span> <span class="n">reduced</span><span class="o">.</span><span class="n">regrid</span><span class="p">(</span><span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">)</span>
+    <span class="n">area</span> <span class="o">=</span> <span class="n">reduced</span><span class="o">.</span><span class="n">area_definition</span><span class="p">()</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">area</span><span class="o">.</span><span class="n">get_proj_vectors</span><span class="p">())</span>
+    <span class="n">crs</span> <span class="o">=</span> <span class="n">area</span><span class="o">.</span><span class="n">crs</span>
+    <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">extent</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">-</span> <span class="n">dx</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="n">dx</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">-</span> <span class="n">dy</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="n">dy</span> <span class="o">/</span> <span class="mi">2</span><span class="p">]</span>
+    <span class="n">origin</span> <span class="o">=</span> <span class="s2">"upper"</span> <span class="k">if</span> <span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">y</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">else</span> <span class="s2">"lower"</span>
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="n">LAND_COLOR</span><span class="p">)</span>                      <span class="c1"># land (and no data off the water)</span>
+    <span class="n">ink</span><span class="p">,</span> <span class="n">coast</span> <span class="o">=</span> <span class="s2">"black"</span><span class="p">,</span> <span class="s2">"#333333"</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">"rgb"</span><span class="p">:</span>
+        <span class="n">bands</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">reduced</span><span class="o">.</span><span class="n">wavelengths</span> <span class="o">-</span> <span class="n">w</span><span class="p">)))</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">RGB_WAVELENGTHS</span><span class="p">]</span>
+        <span class="n">rgb</span> <span class="o">=</span> <span class="n">_stretch</span><span class="p">(</span><span class="n">reduced</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">bands</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span>
+                       <span class="o">**</span><span class="n">_rgb_settings</span><span class="p">(</span><span class="n">reduced</span><span class="p">,</span> <span class="n">stretch</span><span class="p">,</span> <span class="n">per_channel</span><span class="p">,</span> <span class="n">gamma</span><span class="p">))</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">rgb</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">rgb</span><span class="p">),</span> <span class="n">alpha</span><span class="p">]),</span> <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="n">origin</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">"nearest"</span><span class="p">,</span>
+                  <span class="n">zorder</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="s2">"RGB"</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">"band"</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">reduced</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">units</span><span class="p">,</span> <span class="n">long_name</span> <span class="o">=</span> <span class="n">_cube_units</span><span class="p">(</span><span class="n">reduced</span><span class="p">)</span>
+            <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"units"</span><span class="p">:</span> <span class="n">units</span><span class="p">,</span> <span class="s2">"long_name"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">long_name</span><span class="si">}</span><span class="s2"> at </span><span class="si">{</span><span class="n">reduced</span><span class="o">.</span><span class="n">wavelengths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2"> nm"</span><span class="p">}</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">variable</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">reduced</span><span class="o">.</span><span class="n">wavelengths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2"> nm"</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">reduced</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">attrs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">reduced</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="n">variable</span>
+        <span class="n">finite</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">data</span><span class="p">)]</span>
+        <span class="n">use_log</span> <span class="o">=</span> <span class="n">log</span> <span class="k">if</span> <span class="n">log</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">"variable"</span> <span class="ow">and</span> <span class="nb">bool</span><span class="p">(</span><span class="n">_LOG_VARIABLES</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">variable</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">use_log</span><span class="p">:</span>
+            <span class="n">finite</span> <span class="o">=</span> <span class="n">finite</span><span class="p">[</span><span class="n">finite</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">finite</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">finite</span><span class="p">,</span> <span class="n">percentiles</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="k">if</span> <span class="n">use_log</span> <span class="k">else</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">vmin</span> <span class="k">if</span> <span class="n">vmin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">low</span><span class="p">,</span> <span class="n">vmax</span> <span class="k">if</span> <span class="n">vmax</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">high</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">LogNorm</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span> <span class="k">if</span> <span class="n">use_log</span> <span class="k">else</span> <span class="n">Normalize</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_invalid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">data</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span> <span class="k">if</span> <span class="n">use_log</span> <span class="k">else</span> <span class="n">data</span><span class="p">),</span>
+                          <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="n">origin</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">"nearest"</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span> <span class="ow">or</span> <span class="s2">"viridis"</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">colorbar</span><span class="p">:</span>
+            <span class="n">units</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"units"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"long_name"</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+            <span class="n">bar</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">shrink</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span> <span class="n">extend</span><span class="o">=</span><span class="s2">"both"</span><span class="p">)</span>
+            <span class="n">bar</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">units</span><span class="si">}</span><span class="s2">]"</span> <span class="k">if</span> <span class="n">units</span> <span class="k">else</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">outline</span> <span class="ow">and</span> <span class="n">shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">polygon</span> <span class="o">=</span> <span class="n">footprint</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+            <span class="n">to_map</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">Transformer</span><span class="o">.</span><span class="n">from_crs</span><span class="p">(</span><span class="s2">"EPSG:4326"</span><span class="p">,</span> <span class="n">crs</span><span class="p">,</span> <span class="n">always_xy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">polygon</span><span class="p">,</span> <span class="s2">"geoms"</span><span class="p">,</span> <span class="p">[</span><span class="n">polygon</span><span class="p">]):</span>
+                <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">geom_type</span> <span class="o">==</span> <span class="s2">"Polygon"</span><span class="p">:</span>
+                    <span class="n">px</span><span class="p">,</span> <span class="n">py</span> <span class="o">=</span> <span class="n">to_map</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">exterior</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">px</span><span class="p">,</span> <span class="n">py</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"black"</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>                    <span class="c1"># shapely missing</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">"footprint outline skipped: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="ne">UserWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">decorate_map</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">extent</span><span class="p">,</span> <span class="n">crs</span><span class="p">,</span> <span class="n">graticule</span><span class="o">=</span><span class="n">graticule</span><span class="p">,</span> <span class="n">scale_bar</span><span class="o">=</span><span class="n">scale_bar</span><span class="p">,</span> <span class="n">north_arrow</span><span class="o">=</span><span class="n">north_arrow</span><span class="p">,</span>
+                 <span class="n">coastlines</span><span class="o">=</span><span class="n">coastlines</span><span class="p">,</span> <span class="n">ink</span><span class="o">=</span><span class="n">ink</span><span class="p">,</span> <span class="n">coast_color</span><span class="o">=</span><span class="n">coast</span><span class="p">,</span> <span class="n">water</span><span class="o">=</span><span class="n">water</span><span class="p">,</span> <span class="n">water_color</span><span class="o">=</span><span class="n">WATER_COLOR</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">title</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">record</span> <span class="o">=</span> <span class="n">footprint_attributes</span><span class="p">(</span><span class="n">product</span><span class="p">)</span>
+        <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">record</span><span class="p">[</span><span class="s1">'capture'</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">record</span><span class="p">[</span><span class="s1">'product'</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">if</span> <span class="n">title</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ax</span></div>
+
+
+
+<span class="n">LAND_COLOR</span><span class="p">,</span> <span class="n">WATER_COLOR</span> <span class="o">=</span> <span class="s2">"#e3e3e3"</span><span class="p">,</span> <span class="s2">"#c6dbef"</span>
+<span class="n">_SATELLITE_COLOURS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"HYPSO-1"</span><span class="p">:</span> <span class="s2">"#d8552b"</span><span class="p">,</span> <span class="s2">"HYPSO-2"</span><span class="p">:</span> <span class="s2">"#2a78b5"</span><span class="p">}</span>
+<span class="n">_OVERVIEW_COLOURS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"#2a78b5"</span><span class="p">,</span> <span class="s2">"#d8552b"</span><span class="p">,</span> <span class="s2">"#3a9a5b"</span><span class="p">,</span> <span class="s2">"#8a5cc2"</span><span class="p">,</span> <span class="s2">"#c79a14"</span><span class="p">,</span> <span class="s2">"#1d9fa6"</span><span class="p">,</span> <span class="s2">"#c2477f"</span><span class="p">,</span> <span class="s2">"#6b6b6b"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="plot_overview">
+<a class="viewcode-back" href="../../api/hypso/maps/index.html#hypso.maps.plot_overview">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_overview</span><span class="p">(</span><span class="n">sources</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">margin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">coastlines</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                  <span class="n">graticule</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">scale_bar</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">north_arrow</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                  <span class="n">crs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">water</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">fill</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">color_by</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"auto"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Plot the footprints of several products on one map.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sources : list of hypso.Product, paths or shapely polygons</span>
+<span class="sd">        Polygons in WGS84 longitude/latitude (e.g. from :func:`footprint`)</span>
+<span class="sd">        are drawn as they are.</span>
+<span class="sd">    ax : matplotlib.axes.Axes, optional</span>
+<span class="sd">    labels : list of str, optional</span>
+<span class="sd">        Legend labels; default each product's acquisition time (UTC),</span>
+<span class="sd">        after its target when the products have several targets.</span>
+<span class="sd">    margin : float, default 0.1</span>
+<span class="sd">        Space around the footprints, as a fraction of their extent.</span>
+<span class="sd">    coastlines, graticule, scale_bar, north_arrow</span>
+<span class="sd">        Map elements (:func:`hypso.rgb.decorate_map`).</span>
+<span class="sd">    title : str, optional</span>
+<span class="sd">    crs : optional</span>
+<span class="sd">        Map projection; default the UTM zone of the footprints' centre.</span>
+<span class="sd">    water : bool, default True</span>
+<span class="sd">        Shade the sea and lakes light blue; land is light grey.</span>
+<span class="sd">    fill : bool, default False</span>
+<span class="sd">        Tint the inside of each footprint in its colour (outlines only by</span>
+<span class="sd">        default).</span>
+<span class="sd">    color_by : {"auto", "capture", "satellite"}, default "auto"</span>
+<span class="sd">        One colour and legend entry per footprint ("capture"), or per</span>
+<span class="sd">        satellite with the number of captures in the legend ("satellite",</span>
+<span class="sd">        thinner lines, for many footprints); "auto" is "capture" up to 8</span>
+<span class="sd">        footprints and "satellite" beyond. ``labels`` applies to "capture".</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    matplotlib.axes.Axes</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.grid.areas</span><span class="w"> </span><span class="kn">import</span> <span class="n">utm_crs</span>
+    <span class="n">polygons</span><span class="p">,</span> <span class="n">records</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">source</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sources</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="s2">"geom_type"</span><span class="p">):</span>
+            <span class="n">polygons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+            <span class="n">records</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"target"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">"start_utc"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">"satellite"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"footprint </span><span class="si">{</span><span class="n">k</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">})</span>
+            <span class="k">continue</span>
+        <span class="n">product</span> <span class="o">=</span> <span class="n">_product</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+        <span class="n">polygons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">footprint</span><span class="p">(</span><span class="n">product</span><span class="p">))</span>
+        <span class="n">records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">footprint_attributes</span><span class="p">(</span><span class="n">product</span><span class="p">))</span>
+    <span class="n">several_targets</span> <span class="o">=</span> <span class="nb">len</span><span class="p">({</span><span class="n">r</span><span class="p">[</span><span class="s2">"target"</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s2">"target"</span><span class="p">]})</span> <span class="o">&gt;</span> <span class="mi">1</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">'target'</span><span class="p">]</span><span class="si">}</span><span class="s2">  "</span> <span class="k">if</span> <span class="n">several_targets</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
+             <span class="o">+</span> <span class="n">r</span><span class="p">[</span><span class="s2">"start_utc"</span><span class="p">][:</span><span class="mi">16</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"T"</span><span class="p">,</span> <span class="s2">" "</span><span class="p">)</span> <span class="o">+</span> <span class="s2">" UTC"</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span><span class="p">]</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span> <span class="ow">or</span> <span class="n">names</span>
+    <span class="k">if</span> <span class="n">color_by</span> <span class="o">==</span> <span class="s2">"auto"</span><span class="p">:</span>
+        <span class="n">color_by</span> <span class="o">=</span> <span class="s2">"capture"</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">polygons</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">_OVERVIEW_COLOURS</span><span class="p">)</span> <span class="k">else</span> <span class="s2">"satellite"</span>
+    <span class="k">if</span> <span class="n">color_by</span> <span class="o">==</span> <span class="s2">"satellite"</span><span class="p">:</span>
+        <span class="n">satellites</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"satellite"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"other"</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span><span class="p">})</span>
+        <span class="n">counts</span> <span class="o">=</span> <span class="p">{</span><span class="n">sat</span><span class="p">:</span> <span class="nb">sum</span><span class="p">((</span><span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"satellite"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"other"</span><span class="p">)</span> <span class="o">==</span> <span class="n">sat</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span><span class="p">)</span> <span class="k">for</span> <span class="n">sat</span> <span class="ow">in</span> <span class="n">satellites</span><span class="p">}</span>
+        <span class="n">colours</span> <span class="o">=</span> <span class="p">[</span><span class="n">_SATELLITE_COLOURS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"satellite"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"other"</span><span class="p">,</span>
+                                          <span class="n">_OVERVIEW_COLOURS</span><span class="p">[</span><span class="n">satellites</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"satellite"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"other"</span><span class="p">)</span>
+                                                            <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">_OVERVIEW_COLOURS</span><span class="p">)])</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span><span class="p">]</span>
+        <span class="n">first</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">records</span><span class="p">):</span>
+            <span class="n">first</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"satellite"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"other"</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">sat</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">counts</span><span class="p">[</span><span class="n">sat</span><span class="p">]</span><span class="si">}</span><span class="s2"> captures)"</span> <span class="k">if</span> <span class="n">first</span><span class="p">[</span><span class="n">sat</span><span class="p">]</span> <span class="o">==</span> <span class="n">k</span> <span class="k">else</span> <span class="kc">None</span>
+                  <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">sat</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"satellite"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"other"</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">records</span><span class="p">)]</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="k">elif</span> <span class="n">color_by</span> <span class="o">==</span> <span class="s2">"capture"</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">polygons</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">_OVERVIEW_COLOURS</span><span class="p">):</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">polygons</span><span class="p">)</span><span class="si">}</span><span class="s2"> footprints and </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">_OVERVIEW_COLOURS</span><span class="p">)</span><span class="si">}</span><span class="s2"> colours: colours repeat"</span><span class="p">,</span>
+                          <span class="ne">UserWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">colours</span> <span class="o">=</span> <span class="p">[</span><span class="n">_OVERVIEW_COLOURS</span><span class="p">[</span><span class="n">k</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">_OVERVIEW_COLOURS</span><span class="p">)]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">polygons</span><span class="p">))]</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="mf">1.8</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"color_by must be 'auto', 'capture' or 'satellite', not </span><span class="si">{</span><span class="n">color_by</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">bounds</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">polygons</span><span class="p">])</span>
+    <span class="n">centre_lon</span> <span class="o">=</span> <span class="p">(</span><span class="n">bounds</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">+</span> <span class="n">bounds</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">centre_lat</span> <span class="o">=</span> <span class="p">(</span><span class="n">bounds</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">+</span> <span class="n">bounds</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">crs</span> <span class="o">=</span> <span class="n">utm_crs</span><span class="p">([</span><span class="n">centre_lat</span><span class="p">],</span> <span class="p">[</span><span class="n">centre_lon</span><span class="p">])</span> <span class="k">if</span> <span class="n">crs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_user_input</span><span class="p">(</span><span class="n">crs</span><span class="p">)</span>
+    <span class="n">to_map</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">Transformer</span><span class="o">.</span><span class="n">from_crs</span><span class="p">(</span><span class="s2">"EPSG:4326"</span><span class="p">,</span> <span class="n">crs</span><span class="p">,</span> <span class="n">always_xy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="n">LAND_COLOR</span> <span class="k">if</span> <span class="n">water</span> <span class="k">else</span> <span class="s2">"white"</span><span class="p">)</span>
+    <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">polygon</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">colour</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">polygons</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">colours</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">part</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">polygon</span><span class="p">,</span> <span class="s2">"geoms"</span><span class="p">,</span> <span class="p">[</span><span class="n">polygon</span><span class="p">])):</span>
+            <span class="k">if</span> <span class="n">part</span><span class="o">.</span><span class="n">geom_type</span> <span class="o">!=</span> <span class="s2">"Polygon"</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">px</span><span class="p">,</span> <span class="n">py</span> <span class="o">=</span> <span class="n">to_map</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">exterior</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">fill</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">px</span><span class="p">,</span> <span class="n">py</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="n">colour</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.12</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">"none"</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">px</span><span class="p">,</span> <span class="n">py</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">colour</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.9</span> <span class="k">if</span> <span class="n">color_by</span> <span class="o">==</span> <span class="s2">"satellite"</span> <span class="k">else</span> <span class="mf">1.0</span><span class="p">,</span>
+                    <span class="n">label</span><span class="o">=</span><span class="n">label</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">xs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">px</span><span class="p">)</span>
+            <span class="n">ys</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">py</span><span class="p">)</span>
+    <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">xs</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ys</span><span class="p">)</span>
+    <span class="n">pad</span> <span class="o">=</span> <span class="n">margin</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ptp</span><span class="p">(</span><span class="n">xs</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">ptp</span><span class="p">(</span><span class="n">ys</span><span class="p">))</span>
+    <span class="n">extent</span> <span class="o">=</span> <span class="p">[</span><span class="n">xs</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">-</span> <span class="n">pad</span><span class="p">,</span> <span class="n">xs</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="n">pad</span><span class="p">,</span> <span class="n">ys</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">-</span> <span class="n">pad</span><span class="p">,</span> <span class="n">ys</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="n">pad</span><span class="p">]</span>
+    <span class="n">decorate_map</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">extent</span><span class="p">,</span> <span class="n">crs</span><span class="p">,</span> <span class="n">graticule</span><span class="o">=</span><span class="n">graticule</span><span class="p">,</span> <span class="n">scale_bar</span><span class="o">=</span><span class="n">scale_bar</span><span class="p">,</span> <span class="n">north_arrow</span><span class="o">=</span><span class="n">north_arrow</span><span class="p">,</span>
+                 <span class="n">coastlines</span><span class="o">=</span><span class="n">coastlines</span><span class="p">,</span> <span class="n">ink</span><span class="o">=</span><span class="s2">"black"</span><span class="p">,</span> <span class="n">coast_color</span><span class="o">=</span><span class="s2">"#555555"</span><span class="p">,</span> <span class="n">water</span><span class="o">=</span><span class="n">water</span><span class="p">,</span>
+                 <span class="n">water_color</span><span class="o">=</span><span class="n">WATER_COLOR</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s2">"equal"</span><span class="p">)</span>
+    <span class="c1"># outside the map, so it never hides a footprint</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">"upper left"</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">1.02</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="n">borderaxespad</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">title</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ax</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Norwegian University of Science and Technology (NTNU).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

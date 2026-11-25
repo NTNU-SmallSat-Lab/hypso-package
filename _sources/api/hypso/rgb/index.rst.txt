@@ -1,0 +1,400 @@
+hypso.rgb
+=========
+
+.. py:module:: hypso.rgb
+
+.. autoapi-nested-parse::
+
+   RGB images: colour-accurate renderings of hyperspectral cubes (CIE colour
+   matching functions, Magnusson et al. 2020), and HYPSO-2's RGB camera images.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/hypso/rgb/camera/index
+   /api/hypso/rgb/exposure/index
+   /api/hypso/rgb/hsi2rgb/index
+   /api/hypso/rgb/maps/index
+   /api/hypso/rgb/product/index
+   /api/hypso/rgb/registration/index
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   hypso.rgb.CameraRegistration
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.rgb.HSI2RGB
+   hypso.rgb.adjust_exposure
+   hypso.rgb.black_level
+   hypso.rgb.camera_filename
+   hypso.rgb.camera_gsd
+   hypso.rgb.camera_image_time
+   hypso.rgb.camera_lonlat
+   hypso.rgb.camera_product
+   hypso.rgb.camera_to_hsi_pixels
+   hypso.rgb.decorate_map
+   hypso.rgb.demosaic_bilinear
+   hypso.rgb.exposure_gain
+   hypso.rgb.find_camera_image
+   hypso.rgb.georeference_camera
+   hypso.rgb.hsi_to_camera_pixels
+   hypso.rgb.open_camera
+   hypso.rgb.plot_rgb_map
+   hypso.rgb.read_camera_image
+   hypso.rgb.register_camera
+   hypso.rgb.regrid_camera
+   hypso.rgb.write_camera
+
+
+Package Contents
+----------------
+
+.. py:class:: CameraRegistration
+
+   Result of :func:`register_camera`.
+
+
+   .. py:method:: attrs()
+
+      The registration as NetCDF attributes (provenance).
+
+
+
+.. py:function:: HSI2RGB(wY, HSI, d = 65, threshold=0.002)
+
+   Calculate a colore accurate RGB image with HSI values. Original function used for the paper
+   "Creating RGB Images from Hyperspectral Images Using a Color Matching Function" by
+   M. Magnusson, J. Sigurdsson, S. E. Armansson, M. O. Ulfarsson, H. Deborah and J. R. Sveinsson,
+
+   If you use this method, please cite the following paper:
+   @INPROCEEDINGS{hsi2rgb,
+   author={M. {Magnusson} and J. {Sigurdsson} and S. E. {Armansson}
+   and M. O. {Ulfarsson} and H. {Deborah} and J. R. {Sveinsson}},
+   booktitle={IEEE International Geoscience and Remote Sensing Symposium},
+   title={Creating {RGB} Images from Hyperspectral Images using a Color Matching Function},
+   year={2020}, volume={}, number={}, pages={}}
+
+   Paper is available at
+   https://www.researchgate.net/profile/Jakob_Sigurdsson
+
+   :param wY: Wavelengths in nm
+   :param HSI: Hyperspectral image, a (lines, samples, bands) array
+   :param d: Determines the illuminant used, if in doubt use d65. Values of  50, 55, 65, 75
+   :param threshold: True if RGB thesholding should be done to increase contrast
+
+   :return: RGB Image array
+
+
+.. py:function:: adjust_exposure(image, ev = None, percentile = 99.0, target = 0.9, gamma = None, full_scale = 255.0, normalize = False, black_point=None, black_percentile = 1.0)
+
+   Brighten or darken an RGB image with one gain for all channels.
+
+   :param image: ``(y, x, channel)`` DataArray, a Dataset with ``R``, ``G``, ``B``
+                 variables, or an array whose last axis is R, G, B.
+   :type image: xarray.DataArray, xarray.Dataset or numpy.ndarray
+   :param ev: Exposure change in stops (gain 2**ev): +1 doubles, -1 halves. Default:
+              automatic, so the ``percentile`` of the luminance lands at ``target``
+              of ``full_scale``.
+   :type ev: float, optional
+   :param percentile: Automatic exposure only.
+   :type percentile: float, default 99 and 0.9
+   :param target: Automatic exposure only.
+   :type target: float, default 99 and 0.9
+   :param gamma: Display gamma applied after the gain (e.g. 2.2 lifts dark water);
+                 None keeps the result linear.
+   :type gamma: float, optional
+   :param full_scale: The value of white: 255 for the camera's 8-bit counts, 1 for 0-1
+                      images such as HSI2RGB output.
+   :type full_scale: float, default 255
+   :param normalize: Return 0-1 values instead of 0-``full_scale``.
+   :type normalize: bool, default False
+   :param black_point: Subtract a black level before the gain: ``"channel"`` the
+                       ``black_percentile`` of each channel (removes haze and the camera's
+                       dark offset; usually the most natural look over water), ``"common"``
+                       one level for all channels (keeps the colour balance), or given
+                       value(s) in the image's units. None (default): gain only. A channel
+                       that is saturated (e.g. blue in a bright summer capture) cannot be
+                       restored, and per-channel levels then shift the colour.
+   :type black_point: {None, "common", "channel"} or float or 3 floats, optional
+   :param black_percentile: For ``"common"``/``"channel"``.
+   :type black_percentile: float, default 1
+
+   :returns: Float32, clipped at full scale (saturated pixels stay white). Xarray
+             results carry ``exposure_gain``, ``exposure_ev``, ``exposure_gamma``
+             and ``exposure_black`` attributes.
+   :rtype: Same type as ``image``
+
+
+.. py:function:: black_level(rgb, mode='channel', percentile = 1.0)
+
+   Black level(s) to subtract: the ``percentile`` of each channel
+   (``"channel"``: removes a colour cast such as atmospheric haze, like dark
+   object subtraction) or its smallest value over the channels
+   (``"common"``: keeps the colour balance).
+
+
+.. py:function:: camera_filename(ds, label = None)
+
+   The product's file name, e.g. ``HYPSO2_RGB.20250404T022723.ariake.L1A.nc``
+   (with the grid token for a :func:`hypso.rgb.regrid_camera` result).
+
+
+.. py:function:: camera_gsd(geo)
+
+   Median distance (m) between neighbouring camera pixel centres.
+
+
+.. py:function:: camera_image_time(path)
+
+   Acquisition time (UTC) from a camera image's file name.
+
+
+.. py:function:: camera_lonlat(registration, shape)
+
+   Latitude and longitude (degrees, float32) of every camera pixel centre,
+   ``(rows, cols)`` arrays for an image of ``shape``.
+
+
+.. py:function:: camera_product(camera, registration=None, hsi=None, sat_id = 'HYPSO-2', target = None)
+
+   A camera product from a camera image, georeferenced if registered.
+
+   :param camera: ``(y, x, channel)`` image from :func:`hypso.rgb.read_camera_image`.
+   :type camera: xarray.DataArray
+   :param registration: From :func:`hypso.rgb.register_camera`; when ``ok``, latitude and
+                        longitude are added. A failed registration is recorded, without
+                        geolocation.
+   :type registration: hypso.rgb.CameraRegistration, optional
+   :param hsi: The capture's HSI product: target, satellite and ``in_hsi_swath``.
+   :type hsi: hypso.Product, optional
+   :param sat_id: Used when no ``hsi`` is given (HYPSO-2 carries the camera).
+   :type sat_id: str, default "HYPSO-2"
+   :param target: Capture target; default from ``hsi``, else from the image file name.
+   :type target: str, optional
+
+   :rtype: xarray.Dataset
+
+
+.. py:function:: camera_to_hsi_pixels(registration, hsi, shape, max_distance_m = None)
+
+   For every camera pixel, the nearest HSI pixel ``(line, sample)`` (-1
+   where it is farther than ``max_distance_m``, default the HSI's
+   resolution, i.e. outside the swath). Arrays of the camera's ``shape``.
+
+
+.. py:function:: decorate_map(ax, extent, crs, graticule = True, scale_bar = True, north_arrow = True, coastlines = False, graticule_step = None, ink = 'white', coast_color = 'yellow', water = False, water_color = '#c6dbef')
+
+   Map elements on axes in projected coordinates: latitude/longitude
+   graticule, scale bar, north arrow and Natural Earth coastlines.
+
+   :param ax:
+   :type ax: matplotlib.axes.Axes
+   :param extent: ``[xmin, xmax, ymin, ymax]`` in the CRS's units; the axes are set to it.
+   :type extent: sequence of float
+   :param crs: The axes' projection.
+   :type crs: pyproj.CRS
+   :param graticule: As in :func:`plot_rgb_map`.
+   :param scale_bar: As in :func:`plot_rgb_map`.
+   :param north_arrow: As in :func:`plot_rgb_map`.
+   :param coastlines: As in :func:`plot_rgb_map`.
+   :param graticule_step: As in :func:`plot_rgb_map`.
+   :param ink: Colour of lines and labels ("white" on images, "black" on a light background).
+   :type ink: str, default "white"
+   :param coast_color:
+   :type coast_color: str, default "yellow"
+   :param water: Fill the sea and lakes (Natural Earth 10 m ocean and lakes) in
+                 ``water_color``, below anything drawn at zorder >= 0 (images, data).
+   :type water: bool, default False
+   :param water_color:
+   :type water_color: str, default "#c6dbef" (light blue)
+
+
+.. py:function:: demosaic_bilinear(mosaic, pattern = BAYER_PATTERN)
+
+   Bilinear demosaic of a Bayer mosaic.
+
+   :param mosaic: 2D raw values.
+   :type mosaic: numpy.ndarray
+   :param pattern: Colour filters of the top-left 2x2 cell, row by row.
+   :type pattern: {"RGGB", "BGGR", "GRBG", "GBRG"}
+
+   :returns: ``(rows, cols, 3)`` float32 R, G, B.
+   :rtype: numpy.ndarray
+
+
+.. py:function:: exposure_gain(rgb, percentile = 99.0, target = 0.9, full_scale = 255.0)
+
+   The gain that maps the ``percentile`` of the image's luminance to
+   ``target`` of ``full_scale`` (NaN pixels ignored).
+
+
+.. py:function:: find_camera_image(capture_dir)
+
+   The RGB camera image of a capture directory, or None if it has none.
+
+   :param capture_dir:
+   :type capture_dir: str or pathlib.Path
+
+   :rtype: pathlib.Path or None
+
+
+.. py:function:: georeference_camera(camera, registration, hsi=None)
+
+   The camera image in its own frame with per-pixel geolocation.
+
+   :param camera: ``(y, x, channel)`` image (:func:`hypso.rgb.read_camera_image`).
+   :type camera: xarray.DataArray
+   :param registration: From :func:`register_camera`; must be ``ok``.
+   :type registration: CameraRegistration
+   :param hsi: The HSI product, to flag camera pixels outside its swath (their
+               geolocation is extrapolated from the fit).
+   :type hsi: hypso.Product, optional
+
+   :returns: ``R``, ``G``, ``B`` (y, x), ``latitude``, ``longitude``, optionally
+             ``in_hsi_swath``, and the registration in the attributes; writable
+             with ``to_netcdf``.
+   :rtype: xarray.Dataset
+
+
+.. py:function:: hsi_to_camera_pixels(registration, hsi, shape)
+
+   For every HSI pixel, the fractional camera ``(row, col)`` it falls on
+   (via the inverse homography; exact for the model), NaN outside the
+   camera image of ``shape``. Arrays of the HSI's spatial shape.
+
+
+.. py:function:: open_camera(path)
+
+   Read a camera product written by :func:`write_camera`.
+
+
+.. py:function:: plot_rgb_map(source, ax=None, graticule = True, scale_bar = True, north_arrow = True, coastlines = False, title = None, stretch=(2, 98), graticule_step = None, exposure = None)
+
+   Plot a gridded RGB image as a map.
+
+   :param source: A gridded camera image (:func:`regrid_camera`) or a regridded product
+                  (its bands nearest 640, 550 and 460 nm).
+   :type source: xarray.Dataset or hypso.Product
+   :param ax: Axes to draw on; default a new figure.
+   :type ax: matplotlib.axes.Axes, optional
+   :param graticule: Latitude/longitude lines with labels.
+   :type graticule: bool, default True
+   :param scale_bar: A scale bar (km) in the lower left.
+   :type scale_bar: bool, default True
+   :param north_arrow: An arrow to true north (in a UTM grid, true north is not straight up).
+   :type north_arrow: bool, default True
+   :param coastlines: Natural Earth 10 m coastlines (needs cartopy and its data; skipped
+                      with a warning otherwise).
+   :type coastlines: bool, default False
+   :param title:
+   :type title: str, optional
+   :param stretch: Percentiles mapped to black and white per channel.
+   :type stretch: tuple of float, default (2, 98)
+   :param graticule_step: Degrees between graticule lines; default chosen from the extent.
+   :type graticule_step: float, optional
+   :param exposure: Use :func:`hypso.rgb.adjust_exposure` (one gain for all channels,
+                    colours kept) instead of the per-channel ``stretch``, with these
+                    arguments, e.g. ``{}`` (automatic), ``{"ev": 1}`` or
+                    ``{"gamma": 2.2}``.
+   :type exposure: dict, optional
+
+   :rtype: matplotlib.axes.Axes
+
+
+.. py:function:: read_camera_image(path, demosaic = True, rotate = True)
+
+   Read an RGB camera image.
+
+   :param path: The ``.bmp`` (see :func:`find_camera_image`).
+   :type path: str or pathlib.Path
+   :param demosaic: Bilinear RGGB demosaic to R, G, B; False returns the raw mosaic.
+   :type demosaic: bool, default True
+   :param rotate: Rotate 180 degrees, the orientation of the ground processing's
+                  demosaiced image.
+   :type rotate: bool, default True
+
+   :returns: ``(y, x, channel)`` float32 R, G, B in raw counts (0-255), or the
+             ``(y, x)`` uint8 mosaic; attributes ``instrument`` ("RGB"),
+             ``acquisition_time`` (ISO 8601, UTC), ``bayer_pattern``, ``source``.
+   :rtype: xarray.DataArray
+
+
+.. py:function:: register_camera(camera, hsi, resolution = 150.0, downsample = 0.25, min_inliers = 30, min_coverage = 0.25, max_rms_m = 500.0, ratio = 0.8, ransac_threshold_px = 3.0, seed = 0)
+
+   Register a camera image to an HSI capture.
+
+   :param camera: ``(y, x, channel)`` image from :func:`hypso.rgb.read_camera_image`
+                  (demosaiced, rotated as the ground processing does).
+   :type camera: xarray.DataArray
+   :param hsi: The capture's L1C or L1D product (needs geolocation).
+   :type hsi: hypso.Product
+   :param resolution: Pixel size (m) of the UTM map the camera is matched against.
+   :type resolution: float, default 150
+   :param downsample: Scale of the camera image used for matching.
+   :type downsample: float, default 0.25
+   :param min_inliers: Quality check: at least this many RANSAC inliers, covering at least
+                       this fraction of the camera image (convex hull), with at most this
+                       residual RMS (m).
+   :param min_coverage: Quality check: at least this many RANSAC inliers, covering at least
+                        this fraction of the camera image (convex hull), with at most this
+                        residual RMS (m).
+   :param max_rms_m: Quality check: at least this many RANSAC inliers, covering at least
+                     this fraction of the camera image (convex hull), with at most this
+                     residual RMS (m).
+   :param ratio: Lowe's ratio test for descriptor matching.
+   :type ratio: float, default 0.8
+   :param ransac_threshold_px: RANSAC inlier threshold, in map pixels.
+   :type ransac_threshold_px: float, default 3
+   :param seed: RANSAC random seed (reproducible results).
+   :type seed: int, default 0
+
+   :rtype: CameraRegistration
+
+
+.. py:function:: regrid_camera(geo, target='utm', resolution = None, method = 'auto', max_gb = 2.0)
+
+   A georeferenced camera image on a map grid.
+
+   :param geo: From :func:`hypso.rgb.georeference_camera` (R, G, B, latitude, longitude).
+   :type geo: xarray.Dataset
+   :param target: ``"utm"`` (zone of the image centre), any CRS, or a grid - e.g. the HSI
+                  product's after regridding, ``l1d.regrid(...).area_definition()``, to
+                  put both on the same grid.
+   :type target: str, int, pyproj.CRS or pyresample.geometry.AreaDefinition, default "utm"
+   :param resolution: Pixel size in the CRS's units; default the camera's own (~30 m). Not
+                      with an AreaDefinition.
+   :type resolution: float, optional
+   :param method: Cell means of the camera pixels in each cell, or the nearest pixel;
+                  "auto" averages when cells are at least twice the camera's pixel
+                  size and takes the nearest pixel otherwise (averaging onto cells as
+                  small as the pixels leaves empty cells).
+   :type method: {"auto", "average", "nearest"}, default "auto"
+   :param max_gb: Refuse grids larger than this.
+   :type max_gb: float, default 2
+
+   :returns: ``R``, ``G``, ``B`` on ``(y, x)`` with CF projection coordinates and a
+             ``crs`` grid mapping (NaN where the camera has no data), and the
+             camera's attributes plus ``grid``.
+   :rtype: xarray.Dataset
+
+
+.. py:function:: write_camera(ds, path=None, out_dir=None, label = None)
+
+   Write a camera product (default name from :func:`camera_filename` in
+   ``out_dir``). Channels uint8, geolocation float32, zlib level 4.
+
+

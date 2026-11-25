@@ -1,0 +1,812 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>hypso.processing.calibrate &#8212; hypso 26.10.0a7-20-g5e64121f</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=8e897651"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/hypso/processing/calibrate';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="26.10.0a7" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">hypso 26.10.0a7-20-g5e64121f</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">hypso.processing.calibrate</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for hypso.processing.calibrate</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""L1A to L1B: radiometric, smile, destriping and spectral calibration.</span>
+
+<span class="sd">Coefficient files come from the sensor's calibration package</span>
+<span class="sd">(``hypso1_calibration``, ``hypso2_calibration``); see the calibration guide</span>
+<span class="sd">for the variants and releases.</span>
+<span class="sd">"""</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">replace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">hypso.calibration.correction</span><span class="w"> </span><span class="kn">import</span> <span class="n">CalibrationShapeMismatchError</span><span class="p">,</span> <span class="n">read_coeffs_from_file</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hypso.calibration.destriping</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_destriping_correction</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hypso.calibration.keystone</span><span class="w"> </span><span class="kn">import</span> <span class="n">correct_keystone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hypso.calibration.radiometric</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_radiometric_calibration</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hypso.calibration.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_custom_calibration_coeffs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hypso.calibration.smile</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_smile_correction</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hypso.calibration.summary</span><span class="w"> </span><span class="kn">import</span> <span class="n">format_calibration_summary</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.product</span><span class="w"> </span><span class="kn">import</span> <span class="n">PRODUCT_DIMS</span><span class="p">,</span> <span class="n">product_name</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.provenance</span><span class="w"> </span><span class="kn">import</span> <span class="n">add_step</span><span class="p">,</span> <span class="n">calibration_attrs</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.capture</span><span class="w"> </span><span class="kn">import</span> <span class="n">SUBSAMPLING_ATTRS</span><span class="p">,</span> <span class="n">CaptureParams</span><span class="p">,</span> <span class="n">capture_params</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">_FILE_KINDS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"radiometric"</span><span class="p">,</span> <span class="s2">"smile"</span><span class="p">,</span> <span class="s2">"destriping"</span><span class="p">,</span> <span class="s2">"spectral"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_calibration_files</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">CaptureParams</span><span class="p">,</span> <span class="n">coeff_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">coeff_files</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="c1"># set_calibration_coeff_files: explicit files, then a registered custom</span>
+    <span class="c1"># set, then the sensor's built-in coefficients. Returns (files, selection);</span>
+    <span class="c1"># selection is the versioned choice when the sensor provides one.</span>
+    <span class="k">if</span> <span class="n">coeff_files</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">coeff_files</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">_FILE_KINDS</span><span class="p">},</span> <span class="kc">None</span>
+    <span class="n">custom</span> <span class="o">=</span> <span class="n">get_custom_calibration_coeffs</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">sat_id</span><span class="p">,</span> <span class="n">coeff_type</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">custom</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">custom</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">_FILE_KINDS</span><span class="p">},</span> <span class="kc">None</span>
+    <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"coeff_type"</span><span class="p">,</span> <span class="n">coeff_type</span><span class="p">),</span> <span class="p">(</span><span class="s2">"version"</span><span class="p">,</span> <span class="n">version</span><span class="p">))</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">sensor_profile</span><span class="o">.</span><span class="n">calibration_files</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">capture_type</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">selected</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">files</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">_FILE_KINDS</span><span class="p">}</span>
+    <span class="n">selected</span><span class="p">[</span><span class="s2">"fwhm"</span><span class="p">]</span> <span class="o">=</span> <span class="n">files</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fwhm"</span><span class="p">)</span>
+    <span class="n">selected</span><span class="p">[</span><span class="s2">"crop_modes"</span><span class="p">]</span> <span class="o">=</span> <span class="n">files</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"crop_modes"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="k">return</span> <span class="n">selected</span><span class="p">,</span> <span class="n">files</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"selection"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_load</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">CaptureParams</span><span class="p">,</span> <span class="n">bin_factor</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">crop_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># load_calibration_coeff_files: a missing or unreadable file skips that</span>
+    <span class="c1"># correction, except a shape mismatch, which is an error.</span>
+    <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">crop_mode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{</span><span class="s2">"crop_mode"</span><span class="p">:</span> <span class="n">crop_mode</span><span class="p">}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">read_coeffs_from_file</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">x_start</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">x_stop</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">y_start</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">y_stop</span><span class="p">,</span>
+                                     <span class="n">params</span><span class="o">.</span><span class="n">bin_factor</span> <span class="k">if</span> <span class="n">bin_factor</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">bin_factor</span><span class="p">,</span>
+                                     <span class="n">row_step</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">sample_div</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">CalibrationShapeMismatchError</span><span class="p">:</span>
+        <span class="k">raise</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_keystone_model</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">CaptureParams</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""(path, entry, B_hat) of the sensor's optional keystone model; raises if</span>
+<span class="sd">    it has none, warns if it is not enabled (reviewed) for use."""</span>
+    <span class="n">package</span> <span class="o">=</span> <span class="s2">"hypso</span><span class="si">{}</span><span class="s2">_calibration"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">sat_id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"-"</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">main</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">package</span><span class="si">}</span><span class="s2">.main"</span><span class="p">)</span>
+    <span class="n">path</span><span class="p">,</span> <span class="n">entry</span> <span class="o">=</span> <span class="n">main</span><span class="o">.</span><span class="n">optional_model</span><span class="p">(</span><span class="s2">"keystone"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">main</span><span class="p">,</span> <span class="s2">"optional_model"</span><span class="p">)</span> <span class="k">else</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">params</span><span class="o">.</span><span class="n">sat_id</span><span class="si">}</span><span class="s2"> has no keystone model in </span><span class="si">{</span><span class="n">package</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"enabled"</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">"keystone correction: </span><span class="si">{</span><span class="n">package</span><span class="si">}</span><span class="s2">'s model </span><span class="si">{</span><span class="n">entry</span><span class="p">[</span><span class="s1">'version'</span><span class="p">]</span><span class="si">}</span><span class="s2"> is not reviewed for use yet "</span>
+                      <span class="sa">f</span><span class="s2">"(enabled: false); results are experimental"</span><span class="p">,</span> <span class="ne">UserWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span><span class="p">,</span> <span class="n">entry</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="s2">"B_hat"</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="l1a_to_l1b">
+<a class="viewcode-back" href="../../../api/hypso/processing/index.html#hypso.processing.calibrate.l1a_to_l1b">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">l1a_to_l1b</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">,</span> <span class="n">coeff_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">coeff_files</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+               <span class="n">radiometric</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">smile</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">destripe</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+               <span class="n">spectral</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">keystone</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Calibrate an L1A tree to L1B (top-of-atmosphere radiance ``Lt``).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tree : xarray.DataTree</span>
+<span class="sd">        L1A product tree.</span>
+<span class="sd">    coeff_type : str, optional</span>
+<span class="sd">        Radiometric variant: ``"abs"`` (default), ``"moved"`` or ``"lab"``, or a</span>
+<span class="sd">        set registered with ``hypso.calibration.register_calibration_coeffs``.</span>
+<span class="sd">        None uses the file's ``radiometric_coefficients_version`` if present,</span>
+<span class="sd">        else the default. Without ``version``, a variant the default release</span>
+<span class="sd">        lacks takes the newest release that has it (HYPSO-1 ``"moved"``: V2).</span>
+<span class="sd">    version : str or dict, optional</span>
+<span class="sd">        Coefficient release - ``"V3.1"`` (default), ``"V3.1v2spec"`` (V2 band</span>
+<span class="sd">        names, for OC-SMART), ``"V2"``, ``"V1"``; ``"V3"`` means V3.1 - or</span>
+<span class="sd">        ``{correction: release}`` to mix them, e.g. ``{"smile": "V2"}`` (the</span>
+<span class="sd">        calibration package's ``data/coefficients.yaml``).</span>
+<span class="sd">    coeff_files : dict, optional</span>
+<span class="sd">        Explicit ``{kind: path}`` instead of ``coeff_type`` and ``version``.</span>
+<span class="sd">    radiometric, smile, destripe, spectral : bool, default True</span>
+<span class="sd">        False skips that correction.</span>
+<span class="sd">    keystone : bool, default False</span>
+<span class="sd">        Also correct keystone (spatial misregistration across the spectrum)</span>
+<span class="sd">        with the sensor's optional distortion model, after radiometric</span>
+<span class="sd">        calibration and before smile (:mod:`hypso.calibration.keystone`).</span>
+<span class="sd">        Groundwork, unreviewed: HYPSO-2's model is shipped disabled, so this</span>
+<span class="sd">        warns; sensors without a model raise ValueError.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    xarray.DataTree</span>
+<span class="sd">        L1B tree. The files used, their checksums and the package versions</span>
+<span class="sd">        are recorded in ``metadata/processing/l1b``, and a summary is logged.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"processing_level"</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"L1A"</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"l1a_to_l1b needs an L1A tree, got </span><span class="si">{</span><span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'processing_level'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">capture_params</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
+    <span class="n">corrections</span> <span class="o">=</span> <span class="n">tree</span><span class="p">[</span><span class="s2">"metadata/corrections"</span><span class="p">]</span><span class="o">.</span><span class="n">to_dataset</span><span class="p">(</span><span class="n">inherit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">coeff_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">coeff_type</span> <span class="o">=</span> <span class="n">corrections</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"radiometric_coefficients_version"</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">corrections</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"radiometric_coefficients_version"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">coeff_type</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="n">files</span><span class="p">,</span> <span class="n">selection</span> <span class="o">=</span> <span class="n">_calibration_files</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">coeff_type</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">coeff_files</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">selection</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">coeff_type</span> <span class="o">=</span> <span class="n">selection</span><span class="p">[</span><span class="s2">"coeff_type"</span><span class="p">]</span>
+    <span class="c1"># Per capture type (sensor profile), overridden by what the selected file</span>
+    <span class="c1"># itself declares (calibration catalog, e.g. the V3 wide matrix).</span>
+    <span class="n">crop_modes</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">params</span><span class="o">.</span><span class="n">sensor_profile</span><span class="o">.</span><span class="n">capture_mode_crop_modes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">capture_type</span><span class="p">,</span> <span class="p">{}),</span>
+                  <span class="o">**</span><span class="n">files</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"crop_modes"</span><span class="p">,</span> <span class="p">{})}</span>
+    <span class="n">rad_coeffs</span> <span class="o">=</span> <span class="n">_load</span><span class="p">(</span><span class="n">files</span><span class="p">[</span><span class="s2">"radiometric"</span><span class="p">],</span> <span class="s2">"radiometric"</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span>
+                       <span class="n">crop_mode</span><span class="o">=</span><span class="n">crop_modes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"radiometric"</span><span class="p">,</span> <span class="s2">"crop_and_bin"</span><span class="p">))</span>
+    <span class="n">smile_coeffs</span> <span class="o">=</span> <span class="n">_load</span><span class="p">(</span><span class="n">files</span><span class="p">[</span><span class="s2">"smile"</span><span class="p">],</span> <span class="s2">"smile"</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">crop_mode</span><span class="o">=</span><span class="n">crop_modes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"smile"</span><span class="p">,</span> <span class="s2">"crop_and_bin"</span><span class="p">))</span>
+    <span class="n">destriping_coeffs</span> <span class="o">=</span> <span class="n">_load</span><span class="p">(</span><span class="n">files</span><span class="p">[</span><span class="s2">"destriping"</span><span class="p">],</span> <span class="s2">"destriping"</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span>
+                              <span class="n">crop_mode</span><span class="o">=</span><span class="n">crop_modes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"destriping"</span><span class="p">,</span> <span class="s2">"crop_and_bin"</span><span class="p">))</span>
+    <span class="n">spectral_coeffs</span> <span class="o">=</span> <span class="n">_load</span><span class="p">(</span><span class="n">files</span><span class="p">[</span><span class="s2">"spectral"</span><span class="p">],</span> <span class="s2">"spectral"</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+    <span class="n">spectral_coeffs_unbinned</span> <span class="o">=</span> <span class="n">_load</span><span class="p">(</span><span class="n">files</span><span class="p">[</span><span class="s2">"spectral"</span><span class="p">],</span> <span class="s2">"spectral"</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">bin_factor</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">files</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fwhm"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">files</span><span class="p">[</span><span class="s2">"fwhm"</span><span class="p">])</span> <span class="k">as</span> <span class="n">npz</span><span class="p">:</span>
+            <span class="n">table</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">npz</span><span class="p">[</span><span class="s2">"wavelength"</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">npz</span><span class="p">[</span><span class="s2">"fwhm"</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">fwhm_table</span><span class="o">=</span><span class="n">table</span><span class="p">)</span>
+    <span class="n">keystone_entry</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">keystone</span><span class="p">:</span>
+        <span class="n">files</span><span class="p">[</span><span class="s2">"keystone"</span><span class="p">],</span> <span class="n">keystone_entry</span><span class="p">,</span> <span class="n">keystone_b_hat</span> <span class="o">=</span> <span class="n">_keystone_model</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+
+    <span class="n">root</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">to_dataset</span><span class="p">(</span><span class="n">inherit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">cube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">root</span><span class="p">[</span><span class="n">product_name</span><span class="p">(</span><span class="n">tree</span><span class="p">)]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"double"</span><span class="p">)</span>   <span class="c1"># load_l1a_nc_cube reads doubles</span>
+    <span class="n">applied</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">rad_coeffs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">radiometric</span><span class="p">:</span>
+        <span class="n">cube</span> <span class="o">=</span> <span class="n">run_radiometric_calibration</span><span class="p">(</span><span class="n">cube</span><span class="o">=</span><span class="n">cube</span><span class="p">,</span> <span class="n">background_value</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">background_value</span><span class="p">,</span>
+                                           <span class="n">exp</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">exposure</span><span class="p">,</span> <span class="n">image_height</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">image_height</span><span class="p">,</span>
+                                           <span class="n">image_width</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">image_width</span><span class="p">,</span> <span class="n">frame_count</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">frame_count</span><span class="p">,</span>
+                                           <span class="n">bin_factor</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">bin_factor</span><span class="p">,</span> <span class="n">rad_coeffs</span><span class="o">=</span><span class="n">rad_coeffs</span><span class="p">)</span>
+        <span class="n">applied</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"radiometric"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">keystone_entry</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># The model describes raw detector geometry: before smile, on the AOI's full-frame offsets.</span>
+        <span class="n">cube</span> <span class="o">=</span> <span class="n">correct_keystone</span><span class="p">(</span><span class="n">cube</span><span class="p">,</span> <span class="n">keystone_b_hat</span><span class="p">,</span> <span class="n">x_start</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">x_start</span><span class="p">,</span> <span class="n">y_start</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">y_start</span><span class="p">,</span>
+                                <span class="n">bin_factor</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">bin_factor</span><span class="p">,</span> <span class="n">row_step</span><span class="o">=</span><span class="n">params</span><span class="o">.</span><span class="n">sample_div</span><span class="p">)</span>
+        <span class="n">applied</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"keystone"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">smile_coeffs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">smile</span><span class="p">:</span>
+        <span class="n">cube</span> <span class="o">=</span> <span class="n">run_smile_correction</span><span class="p">(</span><span class="n">cube</span><span class="o">=</span><span class="n">cube</span><span class="p">,</span> <span class="n">smile_coeffs</span><span class="o">=</span><span class="n">smile_coeffs</span><span class="p">)</span>
+        <span class="n">applied</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"smile"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">destriping_coeffs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">destripe</span><span class="p">:</span>
+        <span class="n">cube</span> <span class="o">=</span> <span class="n">run_destriping_correction</span><span class="p">(</span><span class="n">cube</span><span class="o">=</span><span class="n">cube</span><span class="p">,</span> <span class="n">destriping_coeffs</span><span class="o">=</span><span class="n">destriping_coeffs</span><span class="p">)</span>
+        <span class="n">applied</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"destriping"</span><span class="p">)</span>
+
+    <span class="n">wavelengths</span> <span class="o">=</span> <span class="n">root</span><span class="p">[</span><span class="s2">"radiation_wavelength"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="k">if</span> <span class="n">spectral_coeffs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">spectral</span><span class="p">:</span>
+        <span class="n">wavelengths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">spectral_coeffs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">applied</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"spectral"</span><span class="p">)</span>
+
+    <span class="n">out</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">drop_vars</span><span class="p">([</span><span class="n">product_name</span><span class="p">(</span><span class="n">tree</span><span class="p">),</span> <span class="s2">"wavelength"</span><span class="p">,</span> <span class="s2">"radiation_wavelength"</span><span class="p">,</span> <span class="s2">"fwhm"</span><span class="p">])</span>
+    <span class="c1"># float32 from here on: the precision files hold anyway, half the memory of</span>
+    <span class="c1"># float64 (REFACTOR_PROGRESS.md ×75); the corrections above run in float64.</span>
+    <span class="n">out</span><span class="p">[</span><span class="s2">"Lt"</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cube</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">dims</span><span class="o">=</span><span class="n">PRODUCT_DIMS</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">"wavelength"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">wavelengths</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+        <span class="s2">"radiation_wavelength"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,</span> <span class="n">wavelengths</span><span class="p">),</span>
+        <span class="s2">"fwhm"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">fwhm</span><span class="p">(</span><span class="n">wavelengths</span><span class="p">))})</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"processing_level"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"L1B"</span>
+    <span class="k">for</span> <span class="n">kind</span> <span class="ow">in</span> <span class="n">_FILE_KINDS</span><span class="p">:</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">_file"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">files</span><span class="p">[</span><span class="n">kind</span><span class="p">])</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">if</span> <span class="n">files</span><span class="p">[</span><span class="n">kind</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">"None"</span>
+
+    <span class="c1"># metadata/corrections: the coefficients applied, kept with the product.</span>
+    <span class="k">if</span> <span class="n">rad_coeffs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">corrections</span><span class="p">[</span><span class="s2">"rad_matrix"</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="s2">"radrows"</span><span class="p">,</span> <span class="s2">"radcols"</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">rad_coeffs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"f4"</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">spectral_coeffs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">corrections</span><span class="p">[</span><span class="s2">"wavelengths"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">spectral_coeffs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"f8"</span><span class="p">))</span>
+        <span class="n">corrections</span><span class="p">[</span><span class="s2">"spec_coeffs"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"specrows"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">spectral_coeffs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"f8"</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">table</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># the FWHM table travels with the product (TOA reflectance and SRFs use it)</span>
+        <span class="n">corrections</span><span class="p">[</span><span class="s2">"fwhm_table_wavelength"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"fwhm_lines"</span><span class="p">,</span> <span class="n">table</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">corrections</span><span class="p">[</span><span class="s2">"fwhm_table_fwhm"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"fwhm_lines"</span><span class="p">,</span> <span class="n">table</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">spectral_coeffs_unbinned</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">corrections</span><span class="p">[</span><span class="s2">"wavelengths_unbinned"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"bands_unbinned"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">spectral_coeffs_unbinned</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"f8"</span><span class="p">))</span>
+        <span class="n">corrections</span><span class="p">[</span><span class="s2">"spec_coeffs_unbinned"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"specrows_unbinned"</span><span class="p">,</span>
+                                               <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">spectral_coeffs_unbinned</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"f8"</span><span class="p">))</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">out</span>
+    <span class="n">result</span><span class="p">[</span><span class="s2">"metadata/corrections"</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">(</span><span class="n">corrections</span><span class="p">)</span>
+    <span class="c1"># the spatial subsampling as used (it may have been inferred from the cube's size)</span>
+    <span class="n">capture_config</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">"metadata/capture_config"</span><span class="p">]</span><span class="o">.</span><span class="n">to_dataset</span><span class="p">(</span><span class="n">inherit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">SUBSAMPLING_ATTRS</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">capture_config</span><span class="o">.</span><span class="n">attrs</span><span class="p">]</span> <span class="ow">or</span> <span class="p">[</span><span class="s2">"spatial_subsampling"</span><span class="p">]:</span>
+        <span class="n">capture_config</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">sample_div</span><span class="p">)</span>
+    <span class="n">result</span><span class="p">[</span><span class="s2">"metadata/capture_config"</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">(</span><span class="n">capture_config</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"</span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">format_calibration_summary</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">sat_id</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">capture_type</span><span class="p">,</span> <span class="n">files</span><span class="p">,</span> <span class="n">applied</span><span class="p">,</span> <span class="n">selection</span><span class="p">))</span>
+    <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"coeff_type"</span><span class="p">:</span> <span class="n">coeff_type</span> <span class="ow">or</span> <span class="s2">"custom"</span><span class="p">,</span> <span class="s2">"capture_type"</span><span class="p">:</span> <span class="n">params</span><span class="o">.</span><span class="n">capture_type</span><span class="p">,</span>
+                  <span class="s2">"corrections_applied"</span><span class="p">:</span> <span class="n">applied</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">selection</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">parameters</span><span class="p">[</span><span class="s2">"coefficient_release"</span><span class="p">]</span> <span class="o">=</span> <span class="n">selection</span><span class="p">[</span><span class="s2">"release"</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"radiometric"</span><span class="p">,</span> <span class="s2">"smile"</span><span class="p">,</span> <span class="s2">"spectral"</span><span class="p">):</span>
+            <span class="n">parameters</span><span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">_version"</span><span class="p">]</span> <span class="o">=</span> <span class="n">selection</span><span class="p">[</span><span class="n">kind</span><span class="p">]</span>
+        <span class="n">parameters</span><span class="p">[</span><span class="s2">"fwhm_version"</span><span class="p">]</span> <span class="o">=</span> <span class="n">selection</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"fwhm"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"sensor profile"</span>
+        <span class="k">if</span> <span class="s2">"radiometric_capture_type"</span> <span class="ow">in</span> <span class="n">selection</span><span class="p">:</span>
+            <span class="n">parameters</span><span class="p">[</span><span class="s2">"radiometric_capture_type"</span><span class="p">]</span> <span class="o">=</span> <span class="n">selection</span><span class="p">[</span><span class="s2">"radiometric_capture_type"</span><span class="p">]</span>
+    <span class="n">parameters</span><span class="p">[</span><span class="s2">"radiometric_crop"</span><span class="p">]</span> <span class="o">=</span> <span class="n">crop_modes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"radiometric"</span><span class="p">,</span> <span class="s2">"crop_and_bin"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">keystone_entry</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">parameters</span><span class="p">[</span><span class="s2">"keystone_version"</span><span class="p">]</span> <span class="o">=</span> <span class="n">keystone_entry</span><span class="p">[</span><span class="s2">"version"</span><span class="p">]</span>
+        <span class="n">parameters</span><span class="p">[</span><span class="s2">"keystone_model_enabled"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">keystone_entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"enabled"</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">encoding</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"source"</span><span class="p">)</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">encoding</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"source"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_step</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">"l1b"</span><span class="p">,</span> <span class="n">input_file</span><span class="o">=</span><span class="n">source</span> <span class="ow">or</span> <span class="s2">"L1A (in memory)"</span><span class="p">,</span>
+             <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span>
+             <span class="n">calibration</span><span class="o">=</span><span class="n">calibration_attrs</span><span class="p">(</span><span class="s2">"hypso</span><span class="si">{}</span><span class="s2">_calibration"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">sat_id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"-"</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">files</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Norwegian University of Science and Technology (NTNU).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

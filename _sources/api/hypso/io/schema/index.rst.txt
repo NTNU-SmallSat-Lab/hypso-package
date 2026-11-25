@@ -1,0 +1,51 @@
+hypso.io.schema
+===============
+
+.. py:module:: hypso.io.schema
+
+.. autoapi-nested-parse::
+
+   Per-level NetCDF schema: what differs between product levels (product
+   variable name, units, CF standard name, title, whether there is geometry),
+   so one reader and writer (hypso.io.product) serve every level.
+
+   The single most load-bearing thing this schema captures: whether a level
+   has geometry at all. L1A/L1B are pre-georeferencing and genuinely have no
+   geometry data - encoding that as `has_geometry=False` here means the writer
+   structurally cannot write a dangling `coordinates`/`grid_mapping` reference
+   for those levels (the confirmed bug this whole refactor started from), the
+   same way every other per-level writer file could each independently forget
+   to check.
+
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   hypso.io.schema.LevelSchema
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.io.schema.get_schema
+
+
+Module Contents
+---------------
+
+.. py:class:: LevelSchema
+
+   What differs between product levels: product variable name, units,
+   CF standard name, title and whether the level has geometry.
+
+
+.. py:function:: get_schema(level)
+
+   The :class:`LevelSchema` of a level ("L1A" ... "L1D", "L2A"/"L2", "L2B").
+
+

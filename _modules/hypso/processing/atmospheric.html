@@ -1,0 +1,1309 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>hypso.processing.atmospheric &#8212; hypso 26.10.0a7-20-g5e64121f</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=8e897651"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/hypso/processing/atmospheric';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="26.10.0a7" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">hypso 26.10.0a7-20-g5e64121f</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">hypso.processing.atmospheric</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for hypso.processing.atmospheric</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""L1C or L1D to L2A: atmospheric correction.</span>
+
+<span class="sd">:func:`correct_atmosphere` returns an L2A tree: the method's product cube on</span>
+<span class="sd">the input's bands, its 2D products and flags, the input's geometry,</span>
+<span class="sd">``pixel_flags`` and metadata, an ``atmospheric_correction`` global attribute</span>
+<span class="sd">(used in file names), and an ``l2a_&lt;method&gt;`` provenance step.</span>
+
+<span class="sd">Methods:</span>
+
+<span class="sd">- "machi" (default): MACHI, Minimal Atmospheric Compensation for Hyperspectral</span>
+<span class="sd">  Imagers (hypso.ac.machi, vendored from NTNU SmallSat Lab), in-process on the</span>
+<span class="sd">  L1D cube: one scattering and one transmission spectrum for the whole image,</span>
+<span class="sd">  fitted so corrected spectra are smooth; surface reflectance ``rhos``.</span>
+<span class="sd">- "dps": dark pixel subtraction, in-process on the L1D cube; surface</span>
+<span class="sd">  reflectance ``rhos``.</span>
+<span class="sd">- "polymer": Polymer in a subprocess (hypso.ac.adapters._polymer_driver),</span>
+<span class="sd">  from L1C (default) or L1D; Polymer's water reflectance divided by pi, Rrs.</span>
+<span class="sd">  Installation and settings come from the AC</span>
+<span class="sd">  tool configuration (hypso.ac.config).</span>
+<span class="sd">- "acolite": ACOLITE in a subprocess (hypso.ac.adapters._acolite_driver),</span>
+<span class="sd">  from L1C (default) or L1D; output="l2w" (Rrs, default) or "l2r" (rhos).</span>
+<span class="sd">  EARTHDATA credentials (for ancillary data) are read from the</span>
+<span class="sd">  HYPSO_ACOLITE_EARTHDATA_USERNAME/_PASSWORD environment variables, never</span>
+<span class="sd">  from the configuration file.</span>
+<span class="sd">- "ocsmart": OC-SMART (`python OCSMART.py` in its installation directory),</span>
+<span class="sd">  from L1D; Rrs. OC-SMART reads its paths from a shared OCSMART_Input.txt</span>
+<span class="sd">  in that directory: the file is written and restored under the same lock</span>
+<span class="sd">  hypso-processing-pipeline uses (.OCSMART_Input.lock), so concurrent runs</span>
+<span class="sd">  on one installation wait for each other.</span>
+
+<span class="sd">The product variable is ``Rrs`` or ``rhos`` and gives the quantity field of</span>
+<span class="sd">the file name (hypso.io.naming: ``L2A.RRS.&lt;method&gt;`` or ``L2A.RHOS.&lt;method&gt;``).</span>
+
+<span class="sd">External tools read a file: the input is written (masked if requested,</span>
+<span class="sd">with metadata/srf added if missing) into `work_dir`, which is a temporary</span>
+<span class="sd">directory removed afterwards unless given.</span>
+<span class="sd">"""</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">fcntl</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">hypso.ac.adapters.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ACRunError</span><span class="p">,</span> <span class="n">run_subprocess_driver</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hypso.ac.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">tool_config</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.product</span><span class="w"> </span><span class="kn">import</span> <span class="n">PRODUCT_DIMS</span><span class="p">,</span> <span class="n">SPATIAL_DIMS</span><span class="p">,</span> <span class="n">product_name</span><span class="p">,</span> <span class="n">write_product</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.naming</span><span class="w"> </span><span class="kn">import</span> <span class="n">quantity_token</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.provenance</span><span class="w"> </span><span class="kn">import</span> <span class="n">ac_attrs</span><span class="p">,</span> <span class="n">add_step</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hypso.masks.flags</span><span class="w"> </span><span class="kn">import</span> <span class="n">FLAGS_NAME</span><span class="p">,</span> <span class="n">apply_flags</span><span class="p">,</span> <span class="n">decode_flags</span><span class="p">,</span> <span class="n">encode_flags</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">_INPUT_LEVELS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"machi"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"L1D"</span><span class="p">,),</span> <span class="s2">"dps"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"L1D"</span><span class="p">,),</span> <span class="s2">"polymer"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"L1C"</span><span class="p">,</span> <span class="s2">"L1D"</span><span class="p">),</span> <span class="s2">"acolite"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"L1C"</span><span class="p">,</span> <span class="s2">"L1D"</span><span class="p">),</span> <span class="s2">"ocsmart"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"L1D"</span><span class="p">,)}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_input_cube</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">,</span> <span class="n">masked</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">mask_flags</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">:</span>
+    <span class="n">cube</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">product_name</span><span class="p">(</span><span class="n">tree</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">masked</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">cube</span>
+    <span class="k">if</span> <span class="n">FLAGS_NAME</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">dataset</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"masked=True but the product has no pixel_flags"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">apply_flags</span><span class="p">(</span><span class="n">cube</span><span class="p">,</span> <span class="n">tree</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">FLAGS_NAME</span><span class="p">],</span> <span class="n">mask_flags</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_l2a_tree</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">variable</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">cube</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+              <span class="n">ac</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">intermediates</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">:</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">to_dataset</span><span class="p">(</span><span class="n">inherit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="n">root</span><span class="p">[</span><span class="n">product_name</span><span class="p">(</span><span class="n">tree</span><span class="p">)]</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">drop_vars</span><span class="p">([</span><span class="n">product_name</span><span class="p">(</span><span class="n">tree</span><span class="p">),</span> <span class="s2">"wavelength"</span><span class="p">,</span> <span class="s2">"radiation_wavelength"</span><span class="p">,</span> <span class="s2">"fwhm"</span><span class="p">])</span>
+    <span class="n">out</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cube</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">dims</span><span class="o">=</span><span class="n">PRODUCT_DIMS</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="p">{</span>
+        <span class="n">name</span><span class="p">:</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,</span> <span class="n">source</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"wavelength"</span><span class="p">,</span> <span class="s2">"radiation_wavelength"</span><span class="p">,</span> <span class="s2">"fwhm"</span><span class="p">)})</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">attrs</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="n">variables</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">SPATIAL_DIMS</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">attrs</span><span class="p">)</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"processing_level"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"L2A"</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"atmospheric_correction"</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"l2a_quantity"</span><span class="p">]</span> <span class="o">=</span> <span class="n">quantity_token</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">out</span>
+    <span class="n">input_source</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">encoding</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"source"</span><span class="p">)</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">encoding</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"source"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_step</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"l2a_</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">input_file</span><span class="o">=</span><span class="n">input_source</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">'processing_level'</span><span class="p">]</span><span class="si">}</span><span class="s2"> (in memory)"</span><span class="p">,</span>
+             <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span> <span class="n">ac</span><span class="o">=</span><span class="n">ac</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">intermediates</span><span class="p">:</span>
+        <span class="c1"># The tool's other per-band outputs: kept out of the L2A's own variables;</span>
+        <span class="c1"># Product.write writes them as the L2A.AUX file (processing.l2b.split_intermediates).</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.product</span><span class="w"> </span><span class="kn">import</span> <span class="n">INTERMEDIATES_NODE</span><span class="p">,</span> <span class="n">spatial_dims</span>
+        <span class="n">dims</span> <span class="o">=</span> <span class="n">spatial_dims</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="n">result</span><span class="p">[</span><span class="n">INTERMEDIATES_NODE</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">(</span><span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span>
+            <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">attrs</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">attrs</span><span class="p">)</span> <span class="ow">in</span> <span class="n">intermediates</span><span class="o">.</span><span class="n">items</span><span class="p">()}))</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_dps</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">masked</span><span class="p">,</span> <span class="n">mask_flags</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s2">"min"</span><span class="p">,</span> <span class="n">percentile</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># hypso.ac.ac_dark_pixel_subtraction's math, with NaN-aware statistics so</span>
+    <span class="c1"># masked (NaN) pixels are ignored instead of making the whole dark</span>
+    <span class="c1"># spectrum NaN; identical on unmasked input.</span>
+    <span class="n">cube</span> <span class="o">=</span> <span class="n">_input_cube</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">masked</span><span class="p">,</span> <span class="n">mask_flags</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+    <span class="k">if</span> <span class="n">statistic</span> <span class="o">==</span> <span class="s2">"min"</span><span class="p">:</span>
+        <span class="n">dark_spectrum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">cube</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">statistic</span> <span class="o">==</span> <span class="s2">"percentile"</span><span class="p">:</span>
+        <span class="n">percentile</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">percentile</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">percentile</span>
+        <span class="n">dark_spectrum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">cube</span><span class="p">,</span> <span class="n">percentile</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"statistic must be 'min' or 'percentile'"</span><span class="p">)</span>
+    <span class="c1"># Subtracting the dark spectrum removes the path signal only (no</span>
+    <span class="c1"># transmittance, glint or sky-reflection correction), so the result is a</span>
+    <span class="c1"># surface reflectance, rhos (user decision 2026-10-28, reversing the</span>
+    <span class="c1"># 2026-10-26 one that divided by pi and stored it as Rrs).</span>
+    <span class="n">corrected</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">cube</span> <span class="o">-</span> <span class="n">dark_spectrum</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"masked"</span><span class="p">:</span> <span class="n">masked</span><span class="p">,</span> <span class="s2">"mask_flags"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">mask_flags</span><span class="p">)</span> <span class="k">if</span> <span class="n">mask_flags</span> <span class="k">else</span> <span class="s2">"all"</span> <span class="k">if</span> <span class="n">masked</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+                  <span class="s2">"statistic"</span><span class="p">:</span> <span class="n">statistic</span><span class="p">,</span> <span class="s2">"dark_spectrum"</span><span class="p">:</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">dark_spectrum</span><span class="p">]}</span>
+    <span class="k">if</span> <span class="n">percentile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">parameters</span><span class="p">[</span><span class="s2">"percentile"</span><span class="p">]</span> <span class="o">=</span> <span class="n">percentile</span>
+    <span class="k">return</span> <span class="n">_l2a_tree</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="s2">"dps"</span><span class="p">,</span> <span class="s2">"rhos"</span><span class="p">,</span> <span class="n">corrected</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span>
+                     <span class="n">ac_attrs</span><span class="p">(</span><span class="s2">"dps"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"hypso-package"</span><span class="p">,</span> <span class="n">settings_effective</span><span class="o">=</span><span class="p">{</span><span class="s2">"statistic"</span><span class="p">:</span> <span class="n">statistic</span><span class="p">,</span>
+                                                                                  <span class="s2">"percentile"</span><span class="p">:</span> <span class="n">percentile</span><span class="p">}))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_machi</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">masked</span><span class="p">,</span> <span class="n">mask_flags</span><span class="p">,</span> <span class="n">est_min_R</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">approach_rate</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">fit_exclude_flags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+           <span class="n">fit_subsample</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="c1"># MACHI (hypso.ac.machi, vendored unchanged from upstream ebbc3e72): fit one</span>
+    <span class="c1"># scattering (A) and one transmission (T) spectrum on the image's finite</span>
+    <span class="c1"># pixels (all of them, as upstream - user decision 2026-10-27 - or without</span>
+    <span class="c1"># those flagged in fit_exclude_flags), then rhos = (rhot - A) / T for every</span>
+    <span class="c1"># pixel. The input is reflectance, so MACHI's solar spectrum is ones.</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.ac</span><span class="w"> </span><span class="kn">import</span> <span class="n">machi</span>
+    <span class="n">cube</span> <span class="o">=</span> <span class="n">_input_cube</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">masked</span><span class="p">,</span> <span class="n">mask_flags</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">lines</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">bands</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">pixels</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">bands</span><span class="p">)</span>
+    <span class="n">fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">pixels</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fit_exclude_flags</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">FLAGS_NAME</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">dataset</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"fit_exclude_flags given but the product has no pixel_flags"</span><span class="p">)</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.masks.flags</span><span class="w"> </span><span class="kn">import</span> <span class="n">decode_flags</span>
+        <span class="n">flags</span> <span class="o">=</span> <span class="n">decode_flags</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">FLAGS_NAME</span><span class="p">])</span>
+        <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">fit_exclude_flags</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">flags</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"unknown flags </span><span class="si">{</span><span class="n">unknown</span><span class="si">}</span><span class="s2">; the product has </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">flags</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">fit_exclude_flags</span><span class="p">:</span>
+            <span class="n">fit</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="n">flags</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">fit</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"MACHI needs finite pixels to fit; none are left"</span><span class="p">)</span>
+    <span class="c1"># Bands without signal (all zero: HYPSO's smile correction blanks &lt; 400 nm)</span>
+    <span class="c1"># make MACHI's update divide by zero and stop at once; fit the others only.</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">fit</span><span class="p">)</span>
+    <span class="n">used</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">pixels</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="n">b</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">bands</span><span class="p">)])</span>
+    <span class="k">if</span> <span class="n">fit_subsample</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># Every Nth fit pixel, plus each band's darkest one: MACHI starts A from</span>
+        <span class="c1"># (and caps it at) the per-band minimum, and a plain subsample misses it</span>
+        <span class="c1"># (A then shifts by ~1e-3, ~4% of dark water). With the minima kept, a</span>
+        <span class="c1"># 1-in-16 fit changes rhos by ~7e-5 for 1/12 of the time and 1/4 of the</span>
+        <span class="c1"># memory (reference capture, REFACTOR_PROGRESS.md ×80).</span>
+        <span class="n">darkest</span> <span class="o">=</span> <span class="p">[</span><span class="n">rows</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">pixels</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="n">b</span><span class="p">]))]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">used</span><span class="p">]</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">union1d</span><span class="p">(</span><span class="n">rows</span><span class="p">[::</span><span class="nb">int</span><span class="p">(</span><span class="n">fit_subsample</span><span class="p">)],</span> <span class="n">darkest</span><span class="p">)</span>
+    <span class="n">t_fit</span><span class="p">,</span> <span class="n">a_fit</span><span class="p">,</span> <span class="n">objective</span> <span class="o">=</span> <span class="n">machi</span><span class="o">.</span><span class="n">atm_correction</span><span class="p">(</span><span class="n">pixels</span><span class="p">[</span><span class="n">rows</span><span class="p">][:,</span> <span class="n">used</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="n">solar</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">used</span><span class="o">.</span><span class="n">size</span><span class="p">),</span>
+                                                   <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">est_min_R</span><span class="o">=</span><span class="n">est_min_R</span><span class="p">,</span> <span class="n">approach_rate</span><span class="o">=</span><span class="n">approach_rate</span><span class="p">)</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">bands</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">bands</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="n">T</span><span class="p">[</span><span class="n">used</span><span class="p">],</span> <span class="n">A</span><span class="p">[</span><span class="n">used</span><span class="p">]</span> <span class="o">=</span> <span class="n">t_fit</span><span class="p">,</span> <span class="n">a_fit</span>
+    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">):</span>
+        <span class="n">corrected</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">T</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">cube</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="o">/</span> <span class="n">T</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="n">settings</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"est_min_R"</span><span class="p">:</span> <span class="n">est_min_R</span><span class="p">,</span> <span class="s2">"tol"</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span> <span class="s2">"approach_rate"</span><span class="p">:</span> <span class="n">approach_rate</span><span class="p">,</span>
+                <span class="s2">"fit_exclude_flags"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">fit_exclude_flags</span> <span class="ow">or</span> <span class="p">[]),</span> <span class="s2">"fit_subsample"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">fit_subsample</span><span class="p">)}</span>
+    <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">settings</span><span class="p">,</span> <span class="s2">"masked"</span><span class="p">:</span> <span class="n">masked</span><span class="p">,</span> <span class="s2">"mask_flags"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">mask_flags</span><span class="p">)</span> <span class="k">if</span> <span class="n">mask_flags</span> <span class="k">else</span> <span class="s2">"all"</span> <span class="k">if</span> <span class="n">masked</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+                  <span class="s2">"fit_pixels"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">rows</span><span class="o">.</span><span class="n">size</span><span class="p">),</span> <span class="s2">"bands_fitted"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">used</span><span class="o">.</span><span class="n">size</span><span class="p">),</span>
+                  <span class="s2">"bands_without_signal"</span><span class="p">:</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">setdiff1d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">bands</span><span class="p">),</span> <span class="n">used</span><span class="p">)],</span>
+                  <span class="s2">"iterations"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">objective</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                  <span class="s2">"objective_final"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">objective</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])}</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">_l2a_tree</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="s2">"machi"</span><span class="p">,</span> <span class="s2">"rhos"</span><span class="p">,</span> <span class="n">corrected</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span>
+                       <span class="n">ac_attrs</span><span class="p">(</span><span class="s2">"machi"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">MACHI_VERSION</span><span class="p">,</span> <span class="n">settings_effective</span><span class="o">=</span><span class="n">settings</span><span class="p">))</span>
+    <span class="n">wavelengths</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="s2">"radiation_wavelength"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">result</span><span class="p">[</span><span class="s2">"metadata/machi"</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">(</span><span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span>
+        <span class="p">{</span><span class="s2">"T"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"f8"</span><span class="p">),</span> <span class="p">{</span><span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"Atmospheric transmission fitted by MACHI"</span><span class="p">,</span>
+                                                   <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"1"</span><span class="p">}),</span>
+         <span class="s2">"A"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"f8"</span><span class="p">),</span> <span class="p">{</span><span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"Atmospheric scattering (path reflectance) "</span>
+                                                                 <span class="s2">"fitted by MACHI"</span><span class="p">,</span> <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"1"</span><span class="p">}),</span>
+         <span class="s2">"objective"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"iteration"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">objective</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"f8"</span><span class="p">),</span>
+                       <span class="p">{</span><span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"MACHI objective (mean squared spectral derivative) per iteration"</span><span class="p">})},</span>
+        <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s2">"wavelength"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">wavelengths</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"f8"</span><span class="p">),</span> <span class="p">{</span><span class="s2">"units"</span><span class="p">:</span> <span class="s2">"nm"</span><span class="p">})},</span>
+        <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="s2">"rhos = (rhot - A) / T"</span><span class="p">,</span> <span class="s2">"source"</span><span class="p">:</span> <span class="n">MACHI_VERSION</span><span class="p">}))</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="c1"># Vendored MACHI version (hypso/ac/machi.py).</span>
+<span class="n">MACHI_VERSION</span> <span class="o">=</span> <span class="s2">"MACHI ebbc3e72 (vendored)"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_band_map</span><span class="p">(</span><span class="n">source_wavelengths</span><span class="p">,</span> <span class="n">tool_wavelengths</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""(source indices, tool indices): each tool band paired with the</span>
+<span class="sd">    nearest source band. A tool band whose nearest source band is already</span>
+<span class="sd">    taken is dropped. Returned as pairs so a dropped band cannot shift the</span>
+<span class="sd">    ones after it (the removed capture-object adapters assigned the first N</span>
+<span class="sd">    tool bands, misplacing every band after a dropped one)."""</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">source_wavelengths</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">seen</span><span class="p">,</span> <span class="n">source_idx</span><span class="p">,</span> <span class="n">tool_idx</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(),</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">wavelength</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">tool_wavelengths</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)):</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">source</span> <span class="o">-</span> <span class="n">wavelength</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"Duplicate prevented: </span><span class="si">%s</span><span class="s2"> mapped to </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">wavelength</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">source_idx</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">tool_idx</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">source_idx</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tool_idx</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_onto_bands</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">tool_cube</span><span class="p">,</span> <span class="n">tool_wavelengths</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The tool's (y, x, n) cube on the input product's bands (NaN where it</span>
+<span class="sd">    has none), and how many bands it filled."""</span>
+    <span class="n">source_idx</span><span class="p">,</span> <span class="n">tool_idx</span> <span class="o">=</span> <span class="n">_band_map</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="s2">"radiation_wavelength"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">tool_wavelengths</span><span class="p">)</span>
+    <span class="n">cube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">product_name</span><span class="p">(</span><span class="n">tree</span><span class="p">)]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">cube</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">source_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">tool_cube</span><span class="p">)[:,</span> <span class="p">:,</span> <span class="n">tool_idx</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">cube</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">source_idx</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_tool_variables</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">keep</span><span class="p">,</span> <span class="n">renames</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">overrides</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""{name: (2D array, attrs)} for an AC tool's 2D output variables for</span>
+<span class="sd">    which keep(name) is true, read with their own dtype (flags stay</span>
+<span class="sd">    integer; masked float values become NaN), renamed per `renames`, with</span>
+<span class="sd">    attributes made CF-valid (io.cf.tool_variable_attrs) and `overrides`</span>
+<span class="sd">    applied. Variables of another shape than `shape` are skipped."""</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">netCDF4</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">cf</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">with</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">keep</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">var</span><span class="p">[:]</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span> <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"f"</span>
+                    <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">getdata</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">shape</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"Skipping </span><span class="si">%s</span><span class="s2"> from </span><span class="si">%s</span><span class="s2">: shape </span><span class="si">%s</span><span class="s2">, product is </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">attrs</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">tool_variable_attrs</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">var</span><span class="o">.</span><span class="n">getncattr</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">var</span><span class="o">.</span><span class="n">ncattrs</span><span class="p">()})</span>
+            <span class="n">attrs</span><span class="p">[</span><span class="s2">"source_variable"</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+            <span class="n">new_name</span> <span class="o">=</span> <span class="p">(</span><span class="n">renames</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+            <span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">((</span><span class="n">overrides</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">new_name</span><span class="p">,</span> <span class="p">{}))</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">new_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">attrs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_git_commit</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"-C"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="s2">"rev-parse"</span><span class="p">,</span> <span class="s2">"HEAD"</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                             <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">SubprocessError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">""</span>
+    <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">""</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_stage_input</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">,</span> <span class="n">masked</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">mask_flags</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">add_srfs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                 <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Write the tool's input file into work_dir (named `name`, default the</span>
+<span class="sd">    product's own file name)."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">Product</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.processing.toa</span><span class="w"> </span><span class="kn">import</span> <span class="n">srf_node</span>
+
+    <span class="n">staged</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">masked</span><span class="p">:</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">staged</span><span class="o">.</span><span class="n">to_dataset</span><span class="p">(</span><span class="n">inherit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">root</span><span class="p">[</span><span class="n">product_name</span><span class="p">(</span><span class="n">tree</span><span class="p">)]</span> <span class="o">=</span> <span class="n">_input_cube</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">masked</span><span class="p">,</span> <span class="n">mask_flags</span><span class="p">)</span>
+        <span class="n">staged</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">root</span>
+    <span class="n">has_srfs</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"metadata"</span> <span class="ow">in</span> <span class="n">staged</span><span class="o">.</span><span class="n">children</span> <span class="ow">and</span> <span class="s2">"srf"</span> <span class="ow">in</span> <span class="n">staged</span><span class="p">[</span><span class="s2">"metadata"</span><span class="p">]</span><span class="o">.</span><span class="n">children</span>
+                <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"Band_"</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">staged</span><span class="p">[</span><span class="s2">"metadata/srf"</span><span class="p">]</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">data_vars</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">add_srfs</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">has_srfs</span><span class="p">:</span>
+        <span class="c1"># Polymer reads per-band SRFs from metadata/srf (its srf_getter); an</span>
+        <span class="c1"># L1C straight from georeferencing has none yet.</span>
+        <span class="n">staged</span><span class="p">[</span><span class="s2">"metadata/srf"</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">(</span><span class="n">srf_node</span><span class="p">(</span><span class="n">staged</span><span class="p">))</span>
+    <span class="n">work_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">work_dir</span> <span class="o">/</span> <span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="n">Product</span><span class="p">(</span><span class="n">staged</span><span class="p">)</span><span class="o">.</span><span class="n">filename</span><span class="p">())</span>
+    <span class="c1"># Lossless: AC amplifies input errors about tenfold in Rrs (×71).</span>
+    <span class="n">write_product</span><span class="p">(</span><span class="n">staged</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">significant_bits</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span>
+
+
+<span class="c1"># Polymer's flag bits (polymer/common.py: L2FLAGS and L2FLAGS_POLYMER). Its</span>
+<span class="c1"># output's own flag_meanings attribute lists only the first three.</span>
+<span class="n">POLYMER_FLAGS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"LAND"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"CLOUD_BASE"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"L1_INVALID"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">"OUT_OF_BOUNDS"</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span> <span class="s2">"EXCEPTION"</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span>
+                 <span class="s2">"THICK_AEROSOL"</span><span class="p">:</span> <span class="mi">64</span><span class="p">,</span> <span class="s2">"HIGH_AIR_MASS"</span><span class="p">:</span> <span class="mi">128</span><span class="p">,</span> <span class="s2">"EXTERNAL_MASK"</span><span class="p">:</span> <span class="mi">512</span><span class="p">,</span> <span class="s2">"CASE2"</span><span class="p">:</span> <span class="mi">1024</span><span class="p">,</span>
+                 <span class="s2">"INCONSISTENCY"</span><span class="p">:</span> <span class="mi">2048</span><span class="p">,</span> <span class="s2">"ANOMALY_RWMOD_BLUE"</span><span class="p">:</span> <span class="mi">4096</span><span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_polymer_variables</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Polymer's 2D outputs: chla (10**logchl, user decision 2026-10-26),</span>
+<span class="sd">    logfb, SPM, Rgli, Rnir and its flags (polymer_flags, with Polymer's full</span>
+<span class="sd">    flag table)."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">cf</span>
+    <span class="n">variables</span> <span class="o">=</span> <span class="n">_tool_variables</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"latitude"</span><span class="p">,</span> <span class="s2">"longitude"</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"rho_w"</span><span class="p">),</span>
+                                <span class="n">renames</span><span class="o">=</span><span class="p">{</span><span class="s2">"flags"</span><span class="p">:</span> <span class="s2">"polymer_flags"</span><span class="p">},</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"logchl"</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+        <span class="n">logchl</span><span class="p">,</span> <span class="n">attrs</span> <span class="o">=</span> <span class="n">variables</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"logchl"</span><span class="p">)</span>
+        <span class="n">variables</span><span class="p">[</span><span class="s2">"chla"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">logchl</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                             <span class="p">{</span><span class="s2">"units"</span><span class="p">:</span> <span class="s2">"mg m-3"</span><span class="p">,</span> <span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"Chlorophyll-a concentration (Polymer, 10**logchl)"</span><span class="p">,</span>
+                              <span class="s2">"standard_name"</span><span class="p">:</span> <span class="n">cf</span><span class="o">.</span><span class="n">CHLA_STANDARD_NAME</span><span class="p">,</span> <span class="s2">"source_variable"</span><span class="p">:</span> <span class="s2">"logchl"</span><span class="p">})</span>
+    <span class="n">descriptions</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"logfb"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"1"</span><span class="p">,</span> <span class="s2">"log10 of the particle backscattering factor (Polymer)"</span><span class="p">),</span>
+                    <span class="s2">"SPM"</span><span class="p">:</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"Suspended particulate matter (Polymer)"</span><span class="p">),</span>
+                    <span class="s2">"Rgli"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"1"</span><span class="p">,</span> <span class="s2">"Sun glint reflectance (Polymer)"</span><span class="p">),</span>
+                    <span class="s2">"Rnir"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"1"</span><span class="p">,</span> <span class="s2">"Reflectance at the NIR band used for aerosol correction (Polymer)"</span><span class="p">)}</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="n">long_name</span><span class="p">)</span> <span class="ow">in</span> <span class="n">descriptions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">,</span> <span class="n">attrs</span> <span class="o">=</span> <span class="n">variables</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="n">attrs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"long_name"</span><span class="p">,</span> <span class="n">long_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">units</span><span class="p">:</span>
+                <span class="n">attrs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"units"</span><span class="p">,</span> <span class="n">units</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"polymer_flags"</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">attrs</span> <span class="o">=</span> <span class="n">variables</span><span class="p">[</span><span class="s2">"polymer_flags"</span><span class="p">]</span>
+        <span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">long_name</span><span class="o">=</span><span class="s2">"Polymer flags"</span><span class="p">,</span> <span class="n">flag_masks</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">POLYMER_FLAGS</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span>
+                     <span class="n">flag_meanings</span><span class="o">=</span><span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">POLYMER_FLAGS</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">variables</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_polymer</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">masked</span><span class="p">,</span> <span class="n">mask_flags</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.ac.polymer_output</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_polymer_reflectance</span>
+
+    <span class="n">cfg</span> <span class="o">=</span> <span class="n">tool_config</span><span class="p">(</span><span class="s2">"polymer"</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"version"</span><span class="p">,</span> <span class="s2">"v2"</span><span class="p">)</span>
+    <span class="n">input_file</span> <span class="o">=</span> <span class="n">_stage_input</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">masked</span><span class="p">,</span> <span class="n">mask_flags</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">)</span>
+    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">work_dir</span> <span class="o">/</span> <span class="s2">"polymer"</span>
+    <span class="n">output_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">driver_config</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"polymer_base_path"</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"base_path"</span><span class="p">),</span>
+        <span class="s2">"polymer_path"</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"polymer_path"</span><span class="p">),</span>
+        <span class="s2">"eoread_path"</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"eoread_path"</span><span class="p">),</span>
+        <span class="s2">"eotools_path"</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"eotools_path"</span><span class="p">),</span>
+        <span class="s2">"core_path"</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"core_path"</span><span class="p">),</span>
+        <span class="s2">"polymer_l1_input_nc_file"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_file</span><span class="p">),</span>
+        <span class="s2">"polymer_output_dir"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">output_dir</span><span class="p">),</span>
+        <span class="s2">"if_exists"</span><span class="p">:</span> <span class="s2">"overwrite"</span><span class="p">,</span>
+        <span class="s2">"srf_nc_path"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>   <span class="c1"># SRFs are read from the input file's metadata/srf</span>
+        <span class="s2">"polymer_version"</span><span class="p">:</span> <span class="n">version</span><span class="p">,</span>
+        <span class="s2">"optional_output_datasets"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"optional_outputs"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"SPM"</span><span class="p">])),</span>
+        <span class="s2">"polymer_settings"</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"settings"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{},</span>
+        <span class="s2">"ancillary_source"</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ancillary_source"</span><span class="p">,</span> <span class="s2">"nasa"</span><span class="p">),</span>
+        <span class="s2">"era5_allow_preliminary"</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"era5_allow_preliminary"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">run_subprocess_driver</span><span class="p">(</span><span class="n">python_path</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"python"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span>
+                                   <span class="n">driver_module</span><span class="o">=</span><span class="s2">"hypso.ac.adapters._polymer_driver"</span><span class="p">,</span>
+                                   <span class="n">config</span><span class="o">=</span><span class="n">driver_config</span><span class="p">,</span> <span class="n">tool_name</span><span class="o">=</span><span class="s2">"polymer"</span><span class="p">)</span>
+    <span class="n">output_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">"output_file"</span><span class="p">])</span>
+    <span class="n">tool_cube</span><span class="p">,</span> <span class="n">tool_wavelengths</span> <span class="o">=</span> <span class="n">read_polymer_reflectance</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span>
+    <span class="n">cube</span><span class="p">,</span> <span class="n">n_bands</span> <span class="o">=</span> <span class="n">_onto_bands</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">tool_cube</span><span class="p">,</span> <span class="n">tool_wavelengths</span><span class="p">)</span>
+    <span class="n">variables</span> <span class="o">=</span> <span class="n">_polymer_variables</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">tree</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">product_name</span><span class="p">(</span><span class="n">tree</span><span class="p">)]</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="n">settings</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">driver_config</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"polymer_version"</span><span class="p">,</span> <span class="s2">"optional_output_datasets"</span><span class="p">,</span> <span class="s2">"polymer_settings"</span><span class="p">,</span>
+                                              <span class="s2">"ancillary_source"</span><span class="p">,</span> <span class="s2">"era5_allow_preliminary"</span><span class="p">)}</span>
+    <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"masked"</span><span class="p">:</span> <span class="n">masked</span><span class="p">,</span> <span class="s2">"mask_flags"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">mask_flags</span><span class="p">)</span> <span class="k">if</span> <span class="n">mask_flags</span> <span class="k">else</span> <span class="s2">"all"</span> <span class="k">if</span> <span class="n">masked</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+                  <span class="s2">"input_level"</span><span class="p">:</span> <span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"processing_level"</span><span class="p">],</span> <span class="s2">"bands_returned"</span><span class="p">:</span> <span class="n">n_bands</span><span class="p">,</span>
+                  <span class="s2">"output_file"</span><span class="p">:</span> <span class="n">output_file</span><span class="o">.</span><span class="n">name</span><span class="p">}</span>
+    <span class="c1"># Polymer returns water-leaving reflectance rho_w = pi Rrs; stored as Rrs</span>
+    <span class="c1"># (sr-1) like the other water products (user decision 2026-10-28).</span>
+    <span class="n">cube</span> <span class="o">=</span> <span class="n">cube</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+    <span class="n">parameters</span><span class="p">[</span><span class="s2">"converted"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Rrs = rho_w / pi"</span>
+    <span class="n">ac</span> <span class="o">=</span> <span class="n">ac_attrs</span><span class="p">(</span><span class="s2">"polymer"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span> <span class="n">git_commit</span><span class="o">=</span><span class="n">_git_commit</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"polymer_path"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"base_path"</span><span class="p">)),</span>
+                  <span class="n">install_path</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"base_path"</span><span class="p">),</span> <span class="n">settings_effective</span><span class="o">=</span><span class="n">settings</span><span class="p">,</span>
+                  <span class="n">settings_user</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"settings"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}),</span> <span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">options</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s2">"settings"</span><span class="p">}})</span>
+    <span class="k">return</span> <span class="n">_l2a_tree</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="s2">"polymer"</span><span class="p">,</span> <span class="s2">"Rrs"</span><span class="p">,</span> <span class="n">cube</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">ac</span><span class="p">,</span> <span class="n">variables</span><span class="p">)</span>
+
+
+<span class="c1"># hypso.ac.adapters.acolite.ACOLITEAdapter's settings, applied over the</span>
+<span class="c1"># sensor defaults and the configuration's settings_file.</span>
+<span class="n">ACOLITE_SETTINGS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"polygon"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"rgb_rhot"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"rgb_rhos"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="s2">"map_l2w"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>  <span class="c1"># produces blank .pngs</span>
+    <span class="s2">"l2w_mask"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"l2w_mask_threshold"</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span>
+    <span class="s2">"l2w_parameters"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"Rrs_*"</span><span class="p">,</span> <span class="s2">"spm_nechad2010"</span><span class="p">,</span> <span class="s2">"spm_nechad2016"</span><span class="p">,</span> <span class="s2">"chl_re_mishra"</span><span class="p">,</span> <span class="s2">"chl_oc2"</span><span class="p">,</span> <span class="s2">"chl_oc3"</span><span class="p">,</span>
+                       <span class="s2">"chl_re_moses3b"</span><span class="p">,</span> <span class="s2">"chl_re_moses3b740"</span><span class="p">,</span> <span class="s2">"fai"</span><span class="p">,</span> <span class="s2">"fai_rhot"</span><span class="p">,</span> <span class="s2">"fait"</span><span class="p">,</span> <span class="s2">"ndci"</span><span class="p">],</span>
+<span class="p">}</span>
+<span class="n">_ACOLITE_OUTPUTS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"l2w"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"L2W"</span><span class="p">,</span> <span class="s2">"Rrs"</span><span class="p">),</span> <span class="s2">"l2r"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"L2R"</span><span class="p">,</span> <span class="s2">"rhos"</span><span class="p">)}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_acolite_version</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="c1"># ACOLITE's own rule (acolite/__init__.py): config/config.txt's</span>
+    <span class="c1"># `version`, otherwise it is a git clone.</span>
+    <span class="n">config_txt</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">"config"</span><span class="p">,</span> <span class="s2">"config.txt"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">config_txt</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">config_txt</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+            <span class="n">key</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">"="</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"version"</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">return</span> <span class="s2">"git checkout"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_acolite</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">masked</span><span class="p">,</span> <span class="n">mask_flags</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="s2">"l2w"</span><span class="p">,</span> <span class="n">reuse_output</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.ac</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_acolite_l2r_nc</span><span class="p">,</span> <span class="n">load_acolite_l2w_nc</span>
+
+    <span class="k">if</span> <span class="n">output</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_ACOLITE_OUTPUTS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"output must be one of </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_ACOLITE_OUTPUTS</span><span class="p">)</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">output</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">suffix</span><span class="p">,</span> <span class="n">variable</span> <span class="o">=</span> <span class="n">_ACOLITE_OUTPUTS</span><span class="p">[</span><span class="n">output</span><span class="p">]</span>
+    <span class="n">cfg</span> <span class="o">=</span> <span class="n">tool_config</span><span class="p">(</span><span class="s2">"acolite"</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">work_dir</span> <span class="o">/</span> <span class="s2">"acolite"</span>
+    <span class="n">existing</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">output_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">"*_</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">.nc"</span><span class="p">))</span> <span class="k">if</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span> <span class="k">else</span> <span class="p">[]</span>
+    <span class="n">sensor</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sat_id"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"-"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>     <span class="c1"># HYPSO-2 -&gt; HYPSO2</span>
+    <span class="n">settings</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">ACOLITE_SETTINGS</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"settings"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{})}</span>
+
+    <span class="n">effective</span> <span class="o">=</span> <span class="kc">None</span>   <span class="c1"># the settings ACOLITE reports it used (None when reusing an earlier run)</span>
+    <span class="k">if</span> <span class="n">reuse_output</span> <span class="ow">and</span> <span class="n">existing</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Reusing ACOLITE output </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">existing</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">input_file</span> <span class="o">=</span> <span class="n">_stage_input</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">masked</span><span class="p">,</span> <span class="n">mask_flags</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">,</span> <span class="n">add_srfs</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
+        <span class="n">output_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">run_subprocess_driver</span><span class="p">(</span>
+            <span class="n">python_path</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"python"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">,</span> <span class="n">driver_module</span><span class="o">=</span><span class="s2">"hypso.ac.adapters._acolite_driver"</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">=</span><span class="p">{</span><span class="s2">"acolite_path"</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">),</span> <span class="s2">"sensor"</span><span class="p">:</span> <span class="n">sensor</span><span class="p">,</span> <span class="s2">"settings_file"</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"settings_file"</span><span class="p">),</span>
+                    <span class="s2">"settings_overrides"</span><span class="p">:</span> <span class="p">{</span><span class="o">**</span><span class="n">settings</span><span class="p">,</span> <span class="s2">"inputfile"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_file</span><span class="p">),</span> <span class="s2">"output"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)}},</span>
+            <span class="n">tool_name</span><span class="o">=</span><span class="s2">"acolite"</span><span class="p">)</span>
+        <span class="n">existing</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">output_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">"*_</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">.nc"</span><span class="p">))</span>
+        <span class="n">effective</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"settings"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">existing</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"expected one ACOLITE *_</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">.nc in </span><span class="si">{</span><span class="n">output_dir</span><span class="si">}</span><span class="s2">, found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">existing</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="n">load_acolite_l2w_nc</span> <span class="k">if</span> <span class="n">output</span> <span class="o">==</span> <span class="s2">"l2w"</span> <span class="k">else</span> <span class="n">load_acolite_l2r_nc</span><span class="p">)(</span><span class="n">existing</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="n">variable</span><span class="p">]</span>
+    <span class="n">cube</span><span class="p">,</span> <span class="n">n_bands</span> <span class="o">=</span> <span class="n">_onto_bands</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s2">"band"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+    <span class="c1"># L2W carries ACOLITE's water products (chlorophyll, SPM, NDCI, ... - the</span>
+    <span class="c1"># set depends on l2w_parameters) and l2_flags.</span>
+    <span class="n">variables</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">output</span> <span class="o">==</span> <span class="s2">"l2w"</span><span class="p">:</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="n">_tool_variables</span><span class="p">(</span><span class="n">existing</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">keep</span><span class="o">=</span><span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"lat"</span><span class="p">,</span> <span class="s2">"lon"</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"Rrs"</span><span class="p">),</span>
+                                    <span class="n">renames</span><span class="o">=</span><span class="p">{</span><span class="s2">"l2_flags"</span><span class="p">:</span> <span class="s2">"acolite_l2_flags"</span><span class="p">},</span>
+                                    <span class="n">overrides</span><span class="o">=</span><span class="p">{</span><span class="s2">"acolite_l2_flags"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"ACOLITE L2W flags (l2_flags)"</span><span class="p">}},</span>
+                                    <span class="n">shape</span><span class="o">=</span><span class="n">tree</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">product_name</span><span class="p">(</span><span class="n">tree</span><span class="p">)]</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"masked"</span><span class="p">:</span> <span class="n">masked</span><span class="p">,</span> <span class="s2">"mask_flags"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">mask_flags</span><span class="p">)</span> <span class="k">if</span> <span class="n">mask_flags</span> <span class="k">else</span> <span class="s2">"all"</span> <span class="k">if</span> <span class="n">masked</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+                  <span class="s2">"input_level"</span><span class="p">:</span> <span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"processing_level"</span><span class="p">],</span> <span class="s2">"output"</span><span class="p">:</span> <span class="n">output</span><span class="p">,</span> <span class="s2">"output_file"</span><span class="p">:</span> <span class="n">existing</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                  <span class="s2">"bands_returned"</span><span class="p">:</span> <span class="n">n_bands</span><span class="p">,</span> <span class="s2">"reused_output"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">reuse_output</span> <span class="ow">and</span> <span class="n">existing</span><span class="p">)}</span>
+    <span class="n">settings_file</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"settings_file"</span><span class="p">)</span>
+    <span class="n">ac</span> <span class="o">=</span> <span class="n">ac_attrs</span><span class="p">(</span><span class="s2">"acolite"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">_acolite_version</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">)),</span> <span class="n">git_commit</span><span class="o">=</span><span class="n">_git_commit</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">)),</span>
+                  <span class="n">install_path</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">),</span>
+                  <span class="n">settings_effective</span><span class="o">=</span><span class="n">effective</span> <span class="k">if</span> <span class="n">effective</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span>
+                  <span class="p">{</span><span class="s2">"sensor"</span><span class="p">:</span> <span class="n">sensor</span><span class="p">,</span> <span class="s2">"settings_file"</span><span class="p">:</span> <span class="n">Path</span><span class="p">(</span><span class="n">settings_file</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">settings_file</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span> <span class="o">**</span><span class="n">settings</span><span class="p">,</span>
+                   <span class="s2">"note"</span><span class="p">:</span> <span class="s2">"reused an earlier run's output; requested settings, not ACOLITE's report"</span><span class="p">},</span>
+                  <span class="n">settings_user</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"settings"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}),</span>
+                                 <span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">options</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s2">"settings"</span><span class="p">}})</span>
+    <span class="k">return</span> <span class="n">_l2a_tree</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"acolite_</span><span class="si">{</span><span class="n">output</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">cube</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">ac</span><span class="p">,</span> <span class="n">variables</span><span class="p">)</span>
+
+
+<span class="c1"># OC-SMART's sensor autodetection (src/sensorinfo.py) recognises HYPSO input</span>
+<span class="c1"># files by their name prefix. Installations from the CameronLP/OC-SMART fork's</span>
+<span class="c1"># hypso-refactor branch have one sensor per satellite (HYPSO1_HSI, HYPSO2_HSI;</span>
+<span class="c1"># HYPSO-1 is a placeholder there, skipped until it has auxdata) and ship</span>
+<span class="c1"># auxdata/sensorinfo/HYPSO&lt;n&gt;_HSI.txt; older installations (v2.6.3) have the</span>
+<span class="c1"># single sensor HYPSO_HSI.</span>
+<span class="n">OCSMART_LEGACY_PREFIX</span> <span class="o">=</span> <span class="s2">"HYPSO_HSI"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ocsmart_prefix</span><span class="p">(</span><span class="n">install_dir</span><span class="p">,</span> <span class="n">tree</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">sensorinfo</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">install_dir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"auxdata"</span> <span class="o">/</span> <span class="s2">"sensorinfo"</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">sensorinfo</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">"HYPSO[0-9]_HSI.txt"</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">OCSMART_LEGACY_PREFIX</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sat_id"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"-"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">+</span> <span class="s2">"_HSI"</span>     <span class="c1"># HYPSO-2 -&gt; HYPSO2_HSI</span>
+
+
+<span class="c1"># OC-SMART output variables that repeat the input's geometry.</span>
+<span class="n">_OCSMART_GEOMETRY</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"Latitude"</span><span class="p">,</span> <span class="s2">"Longitude"</span><span class="p">,</span> <span class="s2">"Relative_azimuth"</span><span class="p">,</span> <span class="s2">"Sensor_zenith"</span><span class="p">,</span> <span class="s2">"Solar_zenith"</span><span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ocsmart_version</span><span class="p">(</span><span class="n">install_dir</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="c1"># Release installations are named like OCSMART_Linux_v2.6.3; a git checkout</span>
+    <span class="c1"># (e.g. the CameronLP/OC-SMART fork) is identified by its branch, with the</span>
+    <span class="c1"># commit recorded separately (ac_git_commit).</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"v\d+(\.\d+)+"</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="n">install_dir</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">"git"</span><span class="p">,</span> <span class="s2">"-C"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">install_dir</span><span class="p">),</span> <span class="s2">"rev-parse"</span><span class="p">,</span> <span class="s2">"--abbrev-ref"</span><span class="p">,</span> <span class="s2">"HEAD"</span><span class="p">],</span>
+                             <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">SubprocessError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">"unknown"</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"git:</span><span class="si">{</span><span class="n">out</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">out</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">else</span> <span class="s2">"unknown"</span>
+
+
+<span class="nd">@contextmanager</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_ocsmart_lock</span><span class="p">(</span><span class="n">install_dir</span><span class="p">):</span>
+    <span class="c1"># Same lock file as hypso-processing-pipeline's ocsmart_config_lock.</span>
+    <span class="n">lock_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">install_dir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">".OCSMART_Input.lock"</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">lock_path</span><span class="p">,</span> <span class="s2">"a"</span><span class="p">)</span> <span class="k">as</span> <span class="n">lock_file</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">fcntl</span><span class="o">.</span><span class="n">flock</span><span class="p">(</span><span class="n">lock_file</span><span class="p">,</span> <span class="n">fcntl</span><span class="o">.</span><span class="n">LOCK_EX</span> <span class="o">|</span> <span class="n">fcntl</span><span class="o">.</span><span class="n">LOCK_NB</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">BlockingIOError</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Waiting for another OC-SMART run to release </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">lock_path</span><span class="p">)</span>
+            <span class="n">fcntl</span><span class="o">.</span><span class="n">flock</span><span class="p">(</span><span class="n">lock_file</span><span class="p">,</span> <span class="n">fcntl</span><span class="o">.</span><span class="n">LOCK_EX</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">yield</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">fcntl</span><span class="o">.</span><span class="n">flock</span><span class="p">(</span><span class="n">lock_file</span><span class="p">,</span> <span class="n">fcntl</span><span class="o">.</span><span class="n">LOCK_UN</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ocsmart_flags</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">,</span> <span class="n">masked</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">mask_flags</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The tree OC-SMART's input is staged from: with masked input, pixel_flags</span>
+<span class="sd">    reduced to the flags applied (OC-SMART's HYPSO reader treats any set flag as</span>
+<span class="sd">    not water); with unmasked input, no pixel_flags at all."""</span>
+    <span class="k">if</span> <span class="n">FLAGS_NAME</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">dataset</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">tree</span>
+    <span class="n">staged</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">staged</span><span class="o">.</span><span class="n">to_dataset</span><span class="p">(</span><span class="n">inherit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">masked</span><span class="p">:</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">drop_vars</span><span class="p">(</span><span class="n">FLAGS_NAME</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">mask_flags</span><span class="p">:</span>
+        <span class="n">flags</span> <span class="o">=</span> <span class="n">root</span><span class="p">[</span><span class="n">FLAGS_NAME</span><span class="p">]</span>
+        <span class="n">decoded</span> <span class="o">=</span> <span class="n">decode_flags</span><span class="p">(</span><span class="n">flags</span><span class="p">)</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">mask_flags</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">decoded</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"unknown flags </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2">; available: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">decoded</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">root</span><span class="p">[</span><span class="n">FLAGS_NAME</span><span class="p">]</span> <span class="o">=</span> <span class="n">encode_flags</span><span class="p">({</span><span class="n">name</span><span class="p">:</span> <span class="n">decoded</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">decoded</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">mask_flags</span><span class="p">},</span>
+                                        <span class="n">dims</span><span class="o">=</span><span class="n">flags</span><span class="o">.</span><span class="n">dims</span><span class="p">)</span>
+    <span class="n">staged</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">root</span>
+    <span class="k">return</span> <span class="n">staged</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ocsmart</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">masked</span><span class="p">,</span> <span class="n">mask_flags</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">Product</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.ac</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_ocsmart_h5</span>
+
+    <span class="n">cfg</span> <span class="o">=</span> <span class="n">tool_config</span><span class="p">(</span><span class="s2">"ocsmart"</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+    <span class="n">install_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">cfg</span><span class="p">[</span><span class="s2">"dir"</span><span class="p">])</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span>
+    <span class="k">if</span> <span class="s2">"."</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">work_dir</span><span class="o">.</span><span class="n">absolute</span><span class="p">()):</span>
+        <span class="c1"># OCSMART.py replaces every "." in its configured path values with its</span>
+        <span class="c1"># own directory, so these paths must not contain one.</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"OC-SMART cannot use a work_dir whose path contains '.': </span><span class="si">{</span><span class="n">work_dir</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">l2_prod</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"l2_prod"</span><span class="p">,</span> <span class="n">OCSMART_L2_PROD</span><span class="p">)</span>
+    <span class="n">solz_limit</span><span class="p">,</span> <span class="n">senz_limit</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"solz_limit"</span><span class="p">,</span> <span class="mf">70.0</span><span class="p">),</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"senz_limit"</span><span class="p">,</span> <span class="mf">70.0</span><span class="p">)</span>
+
+    <span class="n">capture_id</span> <span class="o">=</span> <span class="n">_capture_id</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
+    <span class="n">staging_dir</span> <span class="o">=</span> <span class="n">work_dir</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span> <span class="o">/</span> <span class="s2">"ocsmart_staging"</span> <span class="o">/</span> <span class="s2">"l1b"</span>
+    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">work_dir</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span> <span class="o">/</span> <span class="s2">"ocsmart"</span>
+    <span class="n">output_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">prefix</span> <span class="o">=</span> <span class="n">_ocsmart_prefix</span><span class="p">(</span><span class="n">install_dir</span><span class="p">,</span> <span class="n">tree</span><span class="p">)</span>
+    <span class="c1"># The fork's HYPSO reader takes its land/water mask from the input's pixel_flags: with a land</span>
+    <span class="c1"># flag, water is every pixel with no flag set (so lakes are water); otherwise OC-SMART's own</span>
+    <span class="c1"># ocean mask (lakes are land). So masked input carries only the chosen flags, and unmasked input</span>
+    <span class="c1"># none (OC-SMART's own mask, as for v2.6.3, which ignores pixel_flags).</span>
+    <span class="n">_stage_input</span><span class="p">(</span><span class="n">_ocsmart_flags</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">masked</span><span class="p">,</span> <span class="n">mask_flags</span><span class="p">),</span> <span class="n">masked</span><span class="p">,</span> <span class="n">mask_flags</span><span class="p">,</span> <span class="n">staging_dir</span><span class="p">,</span> <span class="n">add_srfs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">capture_id</span><span class="si">}</span><span class="s2">-l1d.nc"</span><span class="p">)</span>
+    <span class="n">output_file</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">capture_id</span><span class="si">}</span><span class="s2">-l1d_L2_OCSMART.h5"</span>
+
+    <span class="n">input_txt</span> <span class="o">=</span> <span class="n">install_dir</span> <span class="o">/</span> <span class="s2">"OCSMART_Input.txt"</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="n">_ocsmart_lock</span><span class="p">(</span><span class="n">install_dir</span><span class="p">):</span>
+        <span class="n">original</span> <span class="o">=</span> <span class="n">input_txt</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span> <span class="k">if</span> <span class="n">input_txt</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">input_txt</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="sa">f</span><span class="s2">"l1b_path = </span><span class="si">{</span><span class="n">staging_dir</span><span class="si">}</span><span class="s2">/</span><span class="se">\n</span><span class="s2">l2_path = </span><span class="si">{</span><span class="n">output_dir</span><span class="si">}</span><span class="s2">/</span><span class="se">\n</span><span class="s2">l2_prod = </span><span class="si">{</span><span class="n">l2_prod</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span>
+                                 <span class="sa">f</span><span class="s2">"solz_limit = </span><span class="si">{</span><span class="n">solz_limit</span><span class="si">}</span><span class="se">\n</span><span class="s2">senz_limit = </span><span class="si">{</span><span class="n">senz_limit</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"python"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">"python3"</span><span class="p">),</span> <span class="s2">"OCSMART.py"</span><span class="p">],</span> <span class="n">cwd</span><span class="o">=</span><span class="n">install_dir</span><span class="p">,</span>
+                                       <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">STDOUT</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bufsize</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">process</span><span class="o">.</span><span class="n">stdout</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"OC-SMART: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="n">returncode</span> <span class="o">=</span> <span class="n">process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">original</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">input_txt</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">original</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ACRunError</span><span class="p">(</span><span class="n">tool</span><span class="o">=</span><span class="s2">"ocsmart"</span><span class="p">,</span> <span class="n">returncode</span><span class="o">=</span><span class="n">returncode</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">),</span> <span class="n">stderr</span><span class="o">=</span><span class="s2">""</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">output_file</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">ACRunError</span><span class="p">(</span><span class="n">tool</span><span class="o">=</span><span class="s2">"ocsmart"</span><span class="p">,</span> <span class="n">returncode</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">),</span> <span class="n">stderr</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span>
+                         <span class="n">error_type</span><span class="o">=</span><span class="s2">"FileNotFoundError"</span><span class="p">,</span>
+                         <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">"no OC-SMART output at </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2"> after a zero-exit run - it likely did not "</span>
+                                 <span class="sa">f</span><span class="s2">"recognise the sensor from the staged file name; see its output above"</span><span class="p">)</span>
+
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">load_ocsmart_h5</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span>
+    <span class="n">rrs</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"Rrs"</span><span class="p">)</span>
+    <span class="n">cube</span><span class="p">,</span> <span class="n">n_bands</span> <span class="o">=</span> <span class="n">_onto_bands</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">rrs</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">rrs</span><span class="p">[</span><span class="s2">"band"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">product_name</span><span class="p">(</span><span class="n">tree</span><span class="p">)]</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="c1"># per-band geophysical products (IOPs, AOD) become product variables (-&gt; L2B.IOP; aod stays in the L2A);</span>
+    <span class="c1"># the other per-band groups are the correction's intermediates (-&gt; L2A.AUX)</span>
+    <span class="n">band_products</span> <span class="o">=</span> <span class="n">_ocsmart_band_variables</span><span class="p">({</span><span class="n">g</span><span class="p">:</span> <span class="n">raw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span> <span class="k">if</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">_OCSMART_PRODUCTS</span><span class="p">},</span>
+                                            <span class="n">shape</span><span class="p">,</span> <span class="n">_OCSMART_PRODUCTS</span><span class="p">)</span>
+    <span class="n">intermediates</span> <span class="o">=</span> <span class="n">_ocsmart_band_variables</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">_OCSMART_INTERMEDIATES</span><span class="p">)</span>
+    <span class="k">del</span> <span class="n">raw</span>
+    <span class="c1"># OC-SMART writes no attributes; units/names per its documentation.</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">cf</span>
+    <span class="n">chl</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"units"</span><span class="p">:</span> <span class="s2">"mg m-3"</span><span class="p">,</span> <span class="s2">"standard_name"</span><span class="p">:</span> <span class="n">cf</span><span class="o">.</span><span class="n">CHLA_STANDARD_NAME</span><span class="p">}</span>
+    <span class="n">variables</span> <span class="o">=</span> <span class="n">_tool_variables</span><span class="p">(</span>
+        <span class="n">output_file</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_OCSMART_GEOMETRY</span><span class="p">,</span>
+        <span class="n">renames</span><span class="o">=</span><span class="p">{</span><span class="s2">"L2_flags"</span><span class="p">:</span> <span class="s2">"ocsmart_l2_flags"</span><span class="p">,</span> <span class="s2">"chlor_a(oci)"</span><span class="p">:</span> <span class="s2">"chlor_a_oci"</span><span class="p">,</span> <span class="s2">"chlor_a(yoc)"</span><span class="p">:</span> <span class="s2">"chlor_a_yoc"</span><span class="p">,</span>
+                 <span class="s2">"tsm(yoc)"</span><span class="p">:</span> <span class="s2">"tsm_yoc"</span><span class="p">},</span>
+        <span class="n">overrides</span><span class="o">=</span><span class="p">{</span><span class="s2">"ocsmart_l2_flags"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"OC-SMART L2 flags (L2_flags)"</span><span class="p">},</span>
+                   <span class="s2">"chlor_a_oci"</span><span class="p">:</span> <span class="p">{</span><span class="o">**</span><span class="n">chl</span><span class="p">,</span> <span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"Chlorophyll-a concentration, OCI algorithm (OC-SMART)"</span><span class="p">},</span>
+                   <span class="s2">"chlor_a_yoc"</span><span class="p">:</span> <span class="p">{</span><span class="o">**</span><span class="n">chl</span><span class="p">,</span> <span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"Chlorophyll-a concentration, YOC algorithm (OC-SMART)"</span><span class="p">},</span>
+                   <span class="s2">"tsm_yoc"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"units"</span><span class="p">:</span> <span class="s2">"g m-3"</span><span class="p">,</span> <span class="s2">"standard_name"</span><span class="p">:</span> <span class="n">cf</span><span class="o">.</span><span class="n">SPM_STANDARD_NAME</span><span class="p">,</span>
+                               <span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"Total suspended matter, YOC algorithm (OC-SMART)"</span><span class="p">}},</span>
+        <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">variables</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">band_products</span><span class="p">)</span>
+
+    <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"masked"</span><span class="p">:</span> <span class="n">masked</span><span class="p">,</span> <span class="s2">"mask_flags"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">mask_flags</span><span class="p">)</span> <span class="k">if</span> <span class="n">mask_flags</span> <span class="k">else</span> <span class="s2">"all"</span> <span class="k">if</span> <span class="n">masked</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+                  <span class="s2">"input_level"</span><span class="p">:</span> <span class="s2">"L1D"</span><span class="p">,</span> <span class="s2">"bands_returned"</span><span class="p">:</span> <span class="n">n_bands</span><span class="p">,</span> <span class="s2">"output_file"</span><span class="p">:</span> <span class="n">output_file</span><span class="o">.</span><span class="n">name</span><span class="p">}</span>
+    <span class="n">settings</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"l2_prod"</span><span class="p">:</span> <span class="n">l2_prod</span><span class="p">,</span> <span class="s2">"solz_limit"</span><span class="p">:</span> <span class="n">solz_limit</span><span class="p">,</span> <span class="s2">"senz_limit"</span><span class="p">:</span> <span class="n">senz_limit</span><span class="p">}</span>
+    <span class="n">ac</span> <span class="o">=</span> <span class="n">ac_attrs</span><span class="p">(</span><span class="s2">"ocsmart"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">_ocsmart_version</span><span class="p">(</span><span class="n">install_dir</span><span class="p">),</span> <span class="n">git_commit</span><span class="o">=</span><span class="n">_git_commit</span><span class="p">(</span><span class="n">install_dir</span><span class="p">),</span>
+                  <span class="n">install_path</span><span class="o">=</span><span class="n">install_dir</span><span class="p">,</span>
+                  <span class="n">settings_effective</span><span class="o">=</span><span class="n">settings</span><span class="p">,</span> <span class="n">settings_user</span><span class="o">=</span><span class="n">options</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_l2a_tree</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="s2">"ocsmart"</span><span class="p">,</span> <span class="s2">"Rrs"</span><span class="p">,</span> <span class="n">cube</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">ac</span><span class="p">,</span> <span class="n">variables</span><span class="p">,</span> <span class="n">intermediates</span><span class="o">=</span><span class="n">intermediates</span><span class="p">)</span>
+
+
+<span class="c1">#: OC-SMART's default l2_prod here: Rrs and AOD (L2A.RRS), its chlorophyll and TSM (L2B.BGC),</span>
+<span class="c1">#: its IOPs (L2B.IOP), and the correction's per-band intermediates (L2A.AUX).</span>
+<span class="n">OCSMART_L2_PROD</span> <span class="o">=</span> <span class="s2">"Lt,Lr,Lrc,rrs,chl,tsm,aod,aph,adg,bbp,at,bt,tg_sol,tg_sen,Lwp"</span>
+
+<span class="c1"># OC-SMART's per-band outputs other than Rrs (its l2_prod). For HYPSO its input is</span>
+<span class="c1"># rhot cos(solar zenith) / pi, i.e. radiance divided by the extraterrestrial</span>
+<span class="c1"># solar irradiance F0 (checked: Lt equals it, 2026-11-04), so its radiances are</span>
+<span class="c1"># normalised (sr-1). Group -&gt; (variable prefix, long name, units); a group not</span>
+<span class="c1"># listed keeps OC-SMART's name and gets no units.</span>
+<span class="n">_OCSMART_INTERMEDIATES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"Lt"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"Lt"</span><span class="p">,</span> <span class="s2">"Top-of-atmosphere radiance divided by F0"</span><span class="p">,</span> <span class="s2">"sr-1"</span><span class="p">),</span>
+    <span class="s2">"Lr"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"Lr"</span><span class="p">,</span> <span class="s2">"Rayleigh radiance divided by F0"</span><span class="p">,</span> <span class="s2">"sr-1"</span><span class="p">),</span>
+    <span class="s2">"Lrc"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"Lrc"</span><span class="p">,</span> <span class="s2">"Rayleigh-corrected radiance divided by F0 (Lt/(tg_sol tg_sen) - whitecaps - Lr)"</span><span class="p">,</span> <span class="s2">"sr-1"</span><span class="p">),</span>
+    <span class="c1"># OC-SMART's "Lwp" is its whitecap radiance (l1b_wcaps in OCSMART.py), not water-leaving radiance</span>
+    <span class="s2">"Lwp"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"Lwp"</span><span class="p">,</span> <span class="s2">"Whitecap radiance divided by F0"</span><span class="p">,</span> <span class="s2">"sr-1"</span><span class="p">),</span>
+    <span class="s2">"tg_sol"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"tg_sol"</span><span class="p">,</span> <span class="s2">"Gas transmittance, sun to surface"</span><span class="p">,</span> <span class="s2">"1"</span><span class="p">),</span>
+    <span class="s2">"tg_sen"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"tg_sen"</span><span class="p">,</span> <span class="s2">"Gas transmittance, surface to sensor"</span><span class="p">,</span> <span class="s2">"1"</span><span class="p">),</span>
+<span class="p">}</span>
+<span class="c1"># Its geophysical per-band products (OC-SMART user guide 3.6.1), named as NASA's OC IOP products.</span>
+<span class="n">_OCSMART_PRODUCTS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"AOD"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"aod"</span><span class="p">,</span> <span class="s2">"Aerosol optical depth"</span><span class="p">,</span> <span class="s2">"1"</span><span class="p">),</span>
+    <span class="s2">"aph"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"aph"</span><span class="p">,</span> <span class="s2">"Absorption by phytoplankton"</span><span class="p">,</span> <span class="s2">"m-1"</span><span class="p">),</span>
+    <span class="s2">"adg"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"adg"</span><span class="p">,</span> <span class="s2">"Absorption by detritus and gelbstoff (CDOM)"</span><span class="p">,</span> <span class="s2">"m-1"</span><span class="p">),</span>
+    <span class="s2">"bbp"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"bbp"</span><span class="p">,</span> <span class="s2">"Backscattering by particulates"</span><span class="p">,</span> <span class="s2">"m-1"</span><span class="p">),</span>
+    <span class="s2">"at"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"apg"</span><span class="p">,</span> <span class="s2">"Absorption by particulates and CDOM (water excluded)"</span><span class="p">,</span> <span class="s2">"m-1"</span><span class="p">),</span>
+    <span class="s2">"bt"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"bp"</span><span class="p">,</span> <span class="s2">"Scattering by particulates"</span><span class="p">,</span> <span class="s2">"m-1"</span><span class="p">),</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ocsmart_band_variables</span><span class="p">(</span><span class="n">raw</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">table</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""{name: (2D float32, attrs)}, one per band of each per-band group in an</span>
+<span class="sd">    OC-SMART output: ``Lt_434``, ``aph_441``, ... (names and units from</span>
+<span class="sd">    ``table``, {group: (prefix, long name, units)})."""</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">group</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">raw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">shape</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"Skipping OC-SMART </span><span class="si">%s</span><span class="s2">: shape </span><span class="si">%s</span><span class="s2">, product is </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span> <span class="n">shape</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">prefix</span><span class="p">,</span> <span class="n">long_name</span><span class="p">,</span> <span class="n">units</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"OC-SMART </span><span class="si">{</span><span class="n">group</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">nm</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"band"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">):</span>
+            <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"long_name"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">long_name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">nm</span><span class="p">)</span><span class="si">}</span><span class="s2"> nm, OC-SMART)"</span><span class="p">,</span> <span class="s2">"wavelength"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">nm</span><span class="p">),</span>
+                     <span class="s2">"wavelength_units"</span><span class="p">:</span> <span class="s2">"nanometers"</span><span class="p">,</span> <span class="s2">"source_variable"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">group</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">group</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">nm</span><span class="p">)</span><span class="si">}</span><span class="s2">nm"</span><span class="p">}</span>
+            <span class="k">if</span> <span class="n">units</span><span class="p">:</span>
+                <span class="n">attrs</span><span class="p">[</span><span class="s2">"units"</span><span class="p">]</span> <span class="o">=</span> <span class="n">units</span>
+            <span class="n">out</span><span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">nm</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">j</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">attrs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_capture_id</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""{target}_{YYYY-MM-DDTHH-MM-SSZ}, the capture directory name."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.naming</span><span class="w"> </span><span class="kn">import</span> <span class="n">product_name</span> <span class="k">as</span> <span class="n">make_name</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.capture</span><span class="w"> </span><span class="kn">import</span> <span class="n">acquisition_time</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">acquisition_time</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">make_name</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sat_id"</span><span class="p">),</span> <span class="n">time</span><span class="p">,</span> <span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"location_description"</span><span class="p">),</span> <span class="s2">"L1D"</span><span class="p">)</span><span class="o">.</span><span class="n">capture_id</span>
+
+
+<span class="n">_METHODS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"machi"</span><span class="p">:</span> <span class="n">_machi</span><span class="p">,</span> <span class="s2">"dps"</span><span class="p">:</span> <span class="n">_dps</span><span class="p">,</span> <span class="s2">"polymer"</span><span class="p">:</span> <span class="n">_polymer</span><span class="p">,</span> <span class="s2">"acolite"</span><span class="p">:</span> <span class="n">_acolite</span><span class="p">,</span> <span class="s2">"ocsmart"</span><span class="p">:</span> <span class="n">_ocsmart</span><span class="p">}</span>
+<span class="n">_EXTERNAL</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"polymer"</span><span class="p">,</span> <span class="s2">"acolite"</span><span class="p">,</span> <span class="s2">"ocsmart"</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="correct_atmosphere">
+<a class="viewcode-back" href="../../../api/hypso/processing/index.html#hypso.processing.atmospheric.correct_atmosphere">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">correct_atmosphere</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"machi"</span><span class="p">,</span> <span class="n">masked</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">mask_flags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                       <span class="n">work_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Atmospheric correction of an L1C or L1D tree.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tree : xarray.DataTree</span>
+<span class="sd">        L1C or L1D product tree in sensor geometry (not regridded).</span>
+<span class="sd">    method : {"machi", "dps", "polymer", "acolite", "ocsmart"}, default "machi"</span>
+<span class="sd">        See the module description.</span>
+<span class="sd">    masked : bool, default False</span>
+<span class="sd">        Give the method NaN where ``pixel_flags`` are set (all flags, or only</span>
+<span class="sd">        ``mask_flags``). The input product itself stays unmasked.</span>
+<span class="sd">    mask_flags : list of str, optional</span>
+<span class="sd">        Flags to mask with, e.g. ``["land", "cloud"]``.</span>
+<span class="sd">    work_dir : str or path, optional</span>
+<span class="sd">        External tools only: where the staged input and the tool's raw</span>
+<span class="sd">        output go (kept); default a temporary directory, removed afterwards.</span>
+<span class="sd">    config : str, path or dict, optional</span>
+<span class="sd">        External tools only: AC tool configuration (:mod:`hypso.ac.config`);</span>
+<span class="sd">        default the ``HYPSO_AC_CONFIG`` environment variable.</span>
+<span class="sd">    **options</span>
+<span class="sd">        Method-specific. machi: ``est_min_R`` (expected minimum surface</span>
+<span class="sd">        reflectance, default 0.05), ``tol`` (default 0.01), ``approach_rate``</span>
+<span class="sd">        (default 1), ``fit_exclude_flags`` (pixel_flags names left out of the</span>
+<span class="sd">        fit; default none, all finite pixels), ``fit_subsample`` (fit on every</span>
+<span class="sd">        Nth pixel plus each band's darkest; default 1, all). dps: ``statistic`` (``"min"`` or</span>
+<span class="sd">        ``"percentile"``), ``percentile``. polymer, acolite, ocsmart: any key</span>
+<span class="sd">        of the tool's configuration section (e.g. ``settings={...}``),</span>
+<span class="sd">        overriding it; acolite also ``output`` (``"l2w"`` or ``"l2r"``) and</span>
+<span class="sd">        ``reuse_output``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    xarray.DataTree</span>
+<span class="sd">        L2A tree.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_METHODS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"unknown method </span><span class="si">{</span><span class="n">method</span><span class="si">!r}</span><span class="s2">; available: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_METHODS</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">level</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"processing_level"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">level</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_INPUT_LEVELS</span><span class="p">[</span><span class="n">method</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2"> needs an </span><span class="si">{</span><span class="s1">' or '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_INPUT_LEVELS</span><span class="p">[</span><span class="n">method</span><span class="p">])</span><span class="si">}</span><span class="s2"> product, got </span><span class="si">{</span><span class="n">level</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"grid"</span><span class="p">):</span>
+        <span class="c1"># The AC tools read sensor geometry; correct first, then regrid.</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"correct_atmosphere needs a product in sensor geometry, this one is on grid "</span>
+                         <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">'grid'</span><span class="p">]</span><span class="si">!r}</span><span class="s2">: run it before regrid()"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_EXTERNAL</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_METHODS</span><span class="p">[</span><span class="n">method</span><span class="p">](</span><span class="n">tree</span><span class="p">,</span> <span class="n">masked</span><span class="p">,</span> <span class="n">mask_flags</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+    <span class="n">keep</span> <span class="o">=</span> <span class="n">work_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="n">work_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">work_dir</span><span class="p">)</span> <span class="k">if</span> <span class="n">keep</span> <span class="k">else</span> <span class="n">Path</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">"hypso_</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">_"</span><span class="p">))</span>
+    <span class="n">work_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_METHODS</span><span class="p">[</span><span class="n">method</span><span class="p">](</span><span class="n">tree</span><span class="p">,</span> <span class="n">masked</span><span class="p">,</span> <span class="n">mask_flags</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">keep</span><span class="p">:</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">work_dir</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Norwegian University of Science and Technology (NTNU).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

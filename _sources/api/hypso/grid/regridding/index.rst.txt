@@ -1,0 +1,66 @@
+hypso.grid.regridding
+=====================
+
+.. py:module:: hypso.grid.regridding
+
+.. autoapi-nested-parse::
+
+   Regridding: a product (L1C, L1D or L2A) from sensor geometry onto a map
+   grid, as a product of the same level.
+
+   The gridded product has dims (y, x[, bands]) with CF projection coordinates
+   x/y and a `crs` grid-mapping variable, which ESA SNAP and GIS tools read as
+   a map-projected raster; latitude/longitude are kept as 2D auxiliary
+   coordinates. Per variable:
+
+   - product cube and float variables: `method` - "nearest" by default, so
+     every grid pixel holds one measured spectrum, unmixed; "bilinear" on
+     request (it blends neighbouring pixels' spectra); "average" for grids
+     coarser than the product (each cell the mean of the pixels whose centres
+     fall in it, plus a source_pixel_count variable);
+   - azimuth angles: like the rest, but through their sine and cosine unless
+     nearest (no 0/360 wrap artefacts);
+   - integer variables: nearest neighbour; bit flags with "average": OR-ed
+     over the cell (flagged if any of its pixels is);
+   - pixel_flags gains an `outside_swath` flag for grid pixels the capture
+     does not cover;
+   - ``*_direct`` geolocation and angles are dropped (the grid's latitude and
+     longitude replace both georeferencings).
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.grid.regridding.regrid
+
+
+Module Contents
+---------------
+
+.. py:function:: regrid(tree, target='utm', resolution = None, method = 'nearest', radius_of_influence = None, max_gb = 4.0)
+
+   A product tree on a map grid, at the same level.
+
+   :param tree: L1C, L1D or L2A product tree.
+   :type tree: xarray.DataTree
+   :param target: ``"utm"`` (WGS84 UTM zone of the scene centre), a CRS pyproj accepts
+                  (e.g. ``"EPSG:3035"``, ``4326``), or an AreaDefinition (e.g. another
+                  product's grid).
+   :type target: str, int, pyproj.CRS or pyresample.geometry.AreaDefinition, default "utm"
+   :param resolution: Pixel size in the CRS's units (m, or degrees for a geographic CRS);
+                      default the product's resolution. Not with an AreaDefinition.
+   :type resolution: float, optional
+   :param method: See the module description.
+   :type method: {"nearest", "bilinear", "average"}, default "nearest"
+   :param radius_of_influence: In m; default 1.5 times the coarser of source and target pixel size.
+   :type radius_of_influence: float, optional
+   :param max_gb: Refuse grids whose cube would exceed this many GB (a fine grid over
+                  a long capture gets large quickly).
+   :type max_gb: float, default 4.0
+
+   :rtype: xarray.DataTree
+
+

@@ -1,0 +1,728 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>hypso.processing.toa &#8212; hypso 26.10.0a7-20-g5e64121f</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=8e897651"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/hypso/processing/toa';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="26.10.0a7" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">hypso 26.10.0a7-20-g5e64121f</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">hypso.processing.toa</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for hypso.processing.toa</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""L1C to L1D: top-of-atmosphere radiance to reflectance.</span>
+
+<span class="sd">The L1D tree also carries ``metadata/srf`` (per-band spectral response</span>
+<span class="sd">functions, solar irradiance and Earth-Sun distance, from</span>
+<span class="sd">:func:`hypso.srf.srf_dataset`) for readers that convert radiance</span>
+<span class="sd">themselves, such as Polymer. The spectral response and solar spectra are in</span>
+<span class="sd">:mod:`hypso.srf`.</span>
+<span class="sd">"""</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.product</span><span class="w"> </span><span class="kn">import</span> <span class="n">BAND_INDEX</span><span class="p">,</span> <span class="n">band_indices</span><span class="p">,</span> <span class="n">product_name</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.provenance</span><span class="w"> </span><span class="kn">import</span> <span class="n">add_step</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hypso.srf</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_spectral_response</span><span class="p">,</span> <span class="n">earth_sun_distance</span><span class="p">,</span> <span class="n">srf_dataset</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.capture</span><span class="w"> </span><span class="kn">import</span> <span class="n">capture_params</span>
+
+
+<div class="viewcode-block" id="toa_reflectance">
+<a class="viewcode-back" href="../../../api/hypso/processing/toa/index.html#hypso.processing.toa_reflectance">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">toa_reflectance</span><span class="p">(</span><span class="n">radiance</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">f0</span><span class="p">,</span> <span class="n">iso_time</span><span class="p">,</span> <span class="n">solar_zenith</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Top-of-atmosphere reflectance from radiance.</span>
+
+<span class="sd">    ``rho = pi L d^2 / (F0 cos(sza))``, with ``d`` the Earth-Sun distance in</span>
+<span class="sd">    AU (`Normalized reflectances</span>
+<span class="sd">    &lt;https://oceanopticsbook.info/view/atmospheric-correction/normalized-reflectances&gt;`_).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    radiance : numpy.ndarray</span>
+<span class="sd">        ``(lines, samples, bands)`` radiance in W m-2 um-1 sr-1.</span>
+<span class="sd">    f0 : array_like</span>
+<span class="sd">        Per-band solar irradiance F0 in mW m-2 nm-1 (numerically equal to</span>
+<span class="sd">        W m-2 um-1).</span>
+<span class="sd">    iso_time : str</span>
+<span class="sd">        Acquisition time (ISO 8601), for the Earth-Sun distance.</span>
+<span class="sd">    solar_zenith : numpy.ndarray</span>
+<span class="sd">        ``(lines, samples)`` solar zenith angle in degrees.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        Reflectance, in the radiance's dtype.</span>
+<span class="sd">    """</span>
+    <span class="n">distance</span> <span class="o">=</span> <span class="n">earth_sun_distance</span><span class="p">(</span><span class="n">iso_time</span><span class="p">)</span>
+    <span class="n">multiplier</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">f0</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">solar_zenith</span><span class="p">))[:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">])</span> \
+        <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">distance</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">radiance</span> <span class="o">/</span> <span class="n">multiplier</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">radiance</span><span class="p">)</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="spectral_response">
+<a class="viewcode-back" href="../../../api/hypso/processing/toa/index.html#hypso.processing.spectral_response">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">spectral_response</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">,</span> <span class="n">ssi_source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"tsis"</span><span class="p">,</span> <span class="n">use_unbinned</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The :class:`~hypso.srf.SpectralResponse` of a calibrated tree's bands.</span>
+
+<span class="sd">    Spectral response functions, solar irradiance and effective FWHM: what</span>
+<span class="sd">    L1D reflectance and ``metadata/srf`` use.</span>
+<span class="sd">    """</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">capture_params</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">use_unbinned</span><span class="p">:</span>
+        <span class="n">unbinned</span> <span class="o">=</span> <span class="n">tree</span><span class="p">[</span><span class="s2">"metadata/corrections"</span><span class="p">]</span><span class="o">.</span><span class="n">to_dataset</span><span class="p">(</span><span class="n">inherit</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="s2">"wavelengths_unbinned"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">band_centers</span><span class="p">,</span> <span class="n">band_fwhm</span><span class="p">,</span> <span class="n">bin_factor</span> <span class="o">=</span> <span class="n">unbinned</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">fwhm</span><span class="p">(</span><span class="n">unbinned</span><span class="p">),</span> <span class="n">params</span><span class="o">.</span><span class="n">bin_factor</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">wavelengths</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="s2">"radiation_wavelength"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">band_centers</span><span class="p">,</span> <span class="n">band_fwhm</span><span class="p">,</span> <span class="n">bin_factor</span> <span class="o">=</span> <span class="n">wavelengths</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">fwhm</span><span class="p">(</span><span class="n">wavelengths</span><span class="p">),</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">compute_spectral_response</span><span class="p">(</span><span class="n">band_centers_unbinned</span><span class="o">=</span><span class="n">band_centers</span><span class="p">,</span> <span class="n">fwhm_unbinned</span><span class="o">=</span><span class="n">band_fwhm</span><span class="p">,</span>
+                                     <span class="n">bin_factor</span><span class="o">=</span><span class="n">bin_factor</span><span class="p">,</span> <span class="n">ssi_source</span><span class="o">=</span><span class="n">ssi_source</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="srf_node">
+<a class="viewcode-back" href="../../../api/hypso/processing/toa/index.html#hypso.processing.srf_node">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">srf_node</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">,</span> <span class="n">ssi_source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"tsis"</span><span class="p">,</span> <span class="n">use_unbinned</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The ``metadata/srf`` group for a calibrated tree, computed (not read from it)."""</span>
+    <span class="n">wavelengths</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="s2">"radiation_wavelength"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">capture_params</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">srf_dataset</span><span class="p">(</span><span class="n">spectral_response</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">ssi_source</span><span class="p">,</span> <span class="n">use_unbinned</span><span class="p">),</span> <span class="n">wavelengths</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">fwhm</span><span class="p">(</span><span class="n">wavelengths</span><span class="p">),</span>
+                       <span class="n">params</span><span class="o">.</span><span class="n">iso_time</span><span class="p">,</span> <span class="n">band_indices</span><span class="o">=</span><span class="n">_sr_indices</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">use_unbinned</span><span class="p">))</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_sr_indices</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">,</span> <span class="n">use_unbinned</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="c1"># The spectral response covers the sensor's full band set when built from</span>
+    <span class="c1"># the unbinned wavelengths (metadata/corrections), so a band subset</span>
+    <span class="c1"># (Product.select_bands) picks its bands by band_index; built from the</span>
+    <span class="c1"># product's own bands it is already on them.</span>
+    <span class="n">cube</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">product_name</span><span class="p">(</span><span class="n">tree</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">band_indices</span><span class="p">(</span><span class="n">cube</span><span class="p">)</span> <span class="k">if</span> <span class="n">use_unbinned</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">cube</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="s2">"bands"</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="l1c_to_l1d">
+<a class="viewcode-back" href="../../../api/hypso/processing/toa/index.html#hypso.processing.l1c_to_l1d">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">l1c_to_l1d</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">,</span> <span class="n">use_direct_georef</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">ssi_source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"tsis"</span><span class="p">,</span>
+               <span class="n">use_unbinned</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Top-of-atmosphere reflectance ``rhot`` from an L1C tree.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tree : xarray.DataTree</span>
+<span class="sd">        L1C product tree (sensor geometry or gridded).</span>
+<span class="sd">    use_direct_georef : bool, default False</span>
+<span class="sd">        Use ``solar_zenith_direct`` instead of ``solar_zenith``, when present.</span>
+<span class="sd">    ssi_source : {"tsis", "thuillier"}, default "tsis"</span>
+<span class="sd">        Solar irradiance spectrum: TSIS-1 HSRS or Thuillier (2002).</span>
+<span class="sd">    use_unbinned : bool, default True</span>
+<span class="sd">        Build the spectral response functions from the unbinned wavelengths</span>
+<span class="sd">        and bin them, instead of from the binned band centres.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    xarray.DataTree</span>
+<span class="sd">        L1D tree with ``metadata/srf``.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"processing_level"</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"L1C"</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"l1c_to_l1d needs an L1C tree, got </span><span class="si">{</span><span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'processing_level'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">capture_params</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">to_dataset</span><span class="p">(</span><span class="n">inherit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">radiance</span> <span class="o">=</span> <span class="n">root</span><span class="p">[</span><span class="n">product_name</span><span class="p">(</span><span class="n">tree</span><span class="p">)]</span>
+    <span class="n">wavelengths</span> <span class="o">=</span> <span class="n">root</span><span class="p">[</span><span class="s2">"radiation_wavelength"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">fwhm</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">fwhm</span><span class="p">(</span><span class="n">wavelengths</span><span class="p">)</span>
+
+    <span class="n">zenith_name</span> <span class="o">=</span> <span class="s2">"solar_zenith_direct"</span> <span class="k">if</span> <span class="n">use_direct_georef</span> <span class="ow">and</span> <span class="s2">"solar_zenith_direct"</span> <span class="ow">in</span> <span class="n">root</span> <span class="k">else</span> <span class="s2">"solar_zenith"</span>
+    <span class="n">sr</span> <span class="o">=</span> <span class="n">spectral_response</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">ssi_source</span><span class="o">=</span><span class="n">ssi_source</span><span class="p">,</span> <span class="n">use_unbinned</span><span class="o">=</span><span class="n">use_unbinned</span><span class="p">)</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="n">_sr_indices</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">use_unbinned</span><span class="p">)</span>
+    <span class="n">reflectance</span> <span class="o">=</span> <span class="n">toa_reflectance</span><span class="p">(</span><span class="n">radiance</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">sr</span><span class="o">.</span><span class="n">f0</span><span class="p">[</span><span class="n">indices</span><span class="p">],</span> <span class="n">params</span><span class="o">.</span><span class="n">iso_time</span><span class="p">,</span> <span class="n">root</span><span class="p">[</span><span class="n">zenith_name</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
+    <span class="n">out</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">drop_vars</span><span class="p">([</span><span class="n">product_name</span><span class="p">(</span><span class="n">tree</span><span class="p">),</span> <span class="s2">"wavelength"</span><span class="p">,</span> <span class="s2">"radiation_wavelength"</span><span class="p">,</span> <span class="s2">"fwhm"</span><span class="p">])</span>
+    <span class="n">out</span><span class="p">[</span><span class="s2">"rhot"</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">reflectance</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">radiance</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">"wavelength"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">wavelengths</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+        <span class="s2">"radiation_wavelength"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,</span> <span class="n">wavelengths</span><span class="p">),</span>
+        <span class="s2">"fwhm"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,</span> <span class="n">fwhm</span><span class="p">)})</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"processing_level"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"L1D"</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">out</span>
+    <span class="n">result</span><span class="p">[</span><span class="s2">"metadata/srf"</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">(</span><span class="n">srf_dataset</span><span class="p">(</span><span class="n">sr</span><span class="p">,</span> <span class="n">wavelengths</span><span class="p">,</span> <span class="n">fwhm</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">iso_time</span><span class="p">,</span> <span class="n">band_indices</span><span class="o">=</span><span class="n">indices</span><span class="p">))</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">encoding</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"source"</span><span class="p">)</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">encoding</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"source"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_step</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">"l1d"</span><span class="p">,</span> <span class="n">input_file</span><span class="o">=</span><span class="n">source</span> <span class="ow">or</span> <span class="s2">"L1C (in memory)"</span><span class="p">,</span>
+             <span class="n">parameters</span><span class="o">=</span><span class="p">{</span><span class="s2">"ssi_source"</span><span class="p">:</span> <span class="n">ssi_source</span><span class="p">,</span> <span class="s2">"srf_grid"</span><span class="p">:</span> <span class="n">sr</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="s2">"bin_factor"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">sr</span><span class="o">.</span><span class="n">bin_factor</span><span class="p">),</span>
+                         <span class="s2">"use_unbinned"</span><span class="p">:</span> <span class="n">use_unbinned</span><span class="p">,</span> <span class="s2">"solar_zenith"</span><span class="p">:</span> <span class="n">zenith_name</span><span class="p">,</span>
+                         <span class="s2">"earth_sun_distance_au"</span><span class="p">:</span> <span class="n">earth_sun_distance</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">iso_time</span><span class="p">)})</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Norwegian University of Science and Technology (NTNU).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

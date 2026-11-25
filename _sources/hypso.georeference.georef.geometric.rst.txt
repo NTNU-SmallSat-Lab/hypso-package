@@ -1,7 +1,0 @@
-hypso.georeference.georef.geometric module
-==========================================
-
-.. automodule:: hypso.georeference.georef.geometric
-   :members:
-   :undoc-members:
-   :show-inheritance:

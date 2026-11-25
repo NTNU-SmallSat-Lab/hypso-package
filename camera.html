@@ -1,0 +1,763 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>RGB camera &#8212; hypso 26.10.0a7-20-g5e64121f</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=8e897651"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'camera';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Footprints and maps" href="maps.html" />
+    <link rel="prev" title="Pixel windows" href="windows.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="26.10.0a7" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">hypso 26.10.0a7-20-g5e64121f</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#">
+    RGB camera
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    RGB camera
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">RGB camera</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="rgb-camera">
+<h1>RGB camera<a class="headerlink" href="#rgb-camera" title="Link to this heading">#</a></h1>
+<p>HYPSO-2 carries an RGB camera next to the hyperspectral imager. Each capture
+directory holds its image as <code class="docutils literal notranslate"><span class="pre">&lt;capture</span> <span class="pre">id&gt;-rgb/&lt;target&gt;_&lt;time&gt;.bmp</span></code>: one 8-bit
+raw RGGB Bayer mosaic, 3840 x 2748 pixels (about 30 m), taken about 2 s before
+the HSI capture. It has no georeferencing of its own.</p>
+<section id="reading">
+<h2>Reading<a class="headerlink" href="#reading" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hypso.rgb</span><span class="w"> </span><span class="kn">import</span> <span class="n">find_camera_image</span><span class="p">,</span> <span class="n">read_camera_image</span>
+
+<span class="n">camera</span> <span class="o">=</span> <span class="n">read_camera_image</span><span class="p">(</span><span class="n">find_camera_image</span><span class="p">(</span><span class="n">capture_dir</span><span class="p">))</span>   <span class="c1"># (y, x, channel) R, G, B</span>
+</pre></div>
+</div>
+<p>The mosaic is demosaiced (bilinear, RGGB) and rotated 180 degrees, as the
+ground processing’s <code class="docutils literal notranslate"><span class="pre">rgb-camera-image-debayered.png</span></code>. Reading never
+registers the image.</p>
+</section>
+<section id="registration">
+<h2>Registration<a class="headerlink" href="#registration" title="Link to this heading">#</a></h2>
+<p>Registration is an explicit step that takes the geolocation from the HSI
+capture:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hypso.rgb</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_camera</span><span class="p">,</span> <span class="n">georeference_camera</span>
+
+<span class="n">l1d</span> <span class="o">=</span> <span class="n">hypso</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">l1d_path</span><span class="p">,</span> <span class="n">wavelengths</span><span class="o">=</span><span class="p">[</span><span class="mi">640</span><span class="p">,</span> <span class="mi">550</span><span class="p">,</span> <span class="mi">460</span><span class="p">])</span>   <span class="c1"># three bands suffice</span>
+<span class="n">reg</span> <span class="o">=</span> <span class="n">register_camera</span><span class="p">(</span><span class="n">camera</span><span class="p">,</span> <span class="n">l1d</span><span class="p">)</span>
+<span class="n">reg</span><span class="o">.</span><span class="n">ok</span><span class="p">,</span> <span class="n">reg</span><span class="o">.</span><span class="n">inliers</span><span class="p">,</span> <span class="n">reg</span><span class="o">.</span><span class="n">rms_m</span><span class="p">,</span> <span class="n">reg</span><span class="o">.</span><span class="n">coverage</span>
+<span class="n">geo</span> <span class="o">=</span> <span class="n">georeference_camera</span><span class="p">(</span><span class="n">camera</span><span class="p">,</span> <span class="n">reg</span><span class="p">,</span> <span class="n">l1d</span><span class="p">)</span>      <span class="c1"># R, G, B, latitude, longitude, in_hsi_swath</span>
+</pre></div>
+</div>
+<p>How it works: the HSI bands near red, green and blue are regridded onto a UTM
+map (150 m); SIFT keypoints are matched between that map and the camera image;
+RANSAC fits a homography from camera pixels to map coordinates (a frame camera
+looking at nearly flat ground maps onto the ground plane by a homography). The
+fit must have at least 30 inliers, cover at least a quarter of the camera
+image (a fit anchored in one corner is unreliable elsewhere) and have a
+residual RMS of at most 500 m; otherwise <code class="docutils literal notranslate"><span class="pre">reg.ok</span></code> is false with the reason
+and the image is not georeferenced. On the test captures the residual is about
+190-220 m, well below the HSI’s 876 x 108 m pixels, in about 40 s.</p>
+<p><code class="docutils literal notranslate"><span class="pre">hsi_to_camera_pixels</span></code> and <code class="docutils literal notranslate"><span class="pre">camera_to_hsi_pixels</span></code> map between the two
+images in their own pixel coordinates. Camera pixels outside the HSI swath are
+georeferenced by extrapolating the fit (<code class="docutils literal notranslate"><span class="pre">in_hsi_swath</span></code> is 0 there).</p>
+</section>
+<section id="maps">
+<h2>Maps<a class="headerlink" href="#maps" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hypso.rgb</span><span class="w"> </span><span class="kn">import</span> <span class="n">regrid_camera</span><span class="p">,</span> <span class="n">plot_rgb_map</span>
+
+<span class="n">on_hsi_grid</span> <span class="o">=</span> <span class="n">regrid_camera</span><span class="p">(</span><span class="n">geo</span><span class="p">,</span> <span class="n">l1d</span><span class="o">.</span><span class="n">regrid</span><span class="p">(</span><span class="n">resolution</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span><span class="o">.</span><span class="n">area_definition</span><span class="p">())</span>
+<span class="n">own_grid</span> <span class="o">=</span> <span class="n">regrid_camera</span><span class="p">(</span><span class="n">geo</span><span class="p">)</span>                     <span class="c1"># UTM, the camera's ~30 m</span>
+<span class="n">plot_rgb_map</span><span class="p">(</span><span class="n">own_grid</span><span class="p">,</span> <span class="n">graticule</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">scale_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">north_arrow</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">coastlines</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">regrid_camera</span></code> averages the camera pixels in each cell when cells are at
+least twice the camera’s pixel size and takes the nearest pixel otherwise.
+<code class="docutils literal notranslate"><span class="pre">plot_rgb_map</span></code> draws any gridded RGB image (a regridded camera image or a
+regridded hypso.Product) with optional latitude/longitude graticule, scale bar,
+north arrow, coastlines (needs cartopy and its Natural Earth data) and title.
+Both need matplotlib, which the package does not depend on.</p>
+</section>
+<section id="exposure">
+<h2>Exposure<a class="headerlink" href="#exposure" title="Link to this heading">#</a></h2>
+<p>The camera’s exposure varies a lot between captures: a winter capture can be
+2-3 stops too dark, a bright summer one saturated in blue.
+<a class="reference internal" href="api/hypso/rgb/index.html#hypso.rgb.adjust_exposure" title="hypso.rgb.adjust_exposure"><code class="xref py py-func docutils literal notranslate"><span class="pre">adjust_exposure()</span></code></a> changes the brightness of any RGB image
+(camera image, camera product, <code class="docutils literal notranslate"><span class="pre">HSI2RGB</span></code> output) with one gain for all
+channels, so colours are kept:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hypso.rgb</span><span class="w"> </span><span class="kn">import</span> <span class="n">adjust_exposure</span>
+
+<span class="n">brighter</span> <span class="o">=</span> <span class="n">adjust_exposure</span><span class="p">(</span><span class="n">camera</span><span class="p">,</span> <span class="n">ev</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>                       <span class="c1"># +1.5 stops</span>
+<span class="n">auto</span> <span class="o">=</span> <span class="n">adjust_exposure</span><span class="p">(</span><span class="n">camera</span><span class="p">)</span>                                   <span class="c1"># 99th percentile -&gt; 90% of full scale</span>
+<span class="n">natural</span> <span class="o">=</span> <span class="n">adjust_exposure</span><span class="p">(</span><span class="n">camera</span><span class="p">,</span> <span class="n">black_point</span><span class="o">=</span><span class="s2">"channel"</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>   <span class="c1"># 0-1, for plotting</span>
+<span class="n">plot_rgb_map</span><span class="p">(</span><span class="n">own_grid</span><span class="p">,</span> <span class="n">exposure</span><span class="o">=</span><span class="p">{</span><span class="s2">"black_point"</span><span class="p">:</span> <span class="s2">"channel"</span><span class="p">})</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">ev</span></code> is in stops (gain 2**ev); without it the gain is automatic.
+<code class="docutils literal notranslate"><span class="pre">black_point</span></code> subtracts a dark level first: <code class="docutils literal notranslate"><span class="pre">&quot;channel&quot;</span></code> each channel’s
+1st percentile (removes the camera’s dark offset and atmospheric haze,
+usually the most natural look over water), <code class="docutils literal notranslate"><span class="pre">&quot;common&quot;</span></code> one level for all
+channels (keeps the colour balance), or values. <code class="docutils literal notranslate"><span class="pre">gamma</span></code> applies a display
+gamma. A saturated channel cannot be restored: on a capture whose blue is
+clipped, per-channel black levels turn the image yellow, so use <code class="docutils literal notranslate"><span class="pre">&quot;common&quot;</span></code>
+or none there. The result is for display; it is float32 and records
+<code class="docutils literal notranslate"><span class="pre">exposure_gain</span></code>, <code class="docutils literal notranslate"><span class="pre">exposure_ev</span></code>, <code class="docutils literal notranslate"><span class="pre">exposure_gamma</span></code> and
+<code class="docutils literal notranslate"><span class="pre">exposure_black</span></code>. <code class="docutils literal notranslate"><span class="pre">plot_rgb_map(...,</span> <span class="pre">exposure={...})</span></code> uses it instead of
+its per-channel percentile <code class="docutils literal notranslate"><span class="pre">stretch</span></code>.</p>
+</section>
+<section id="camera-products">
+<h2>Camera products<a class="headerlink" href="#camera-products" title="Link to this heading">#</a></h2>
+<p>The camera is not a <code class="docutils literal notranslate"><span class="pre">hypso.Product</span></code> (no wavelengths, calibration levels or
+SRFs); a camera product is an xarray Dataset in the same CF/ACDD conventions:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hypso.rgb</span><span class="w"> </span><span class="kn">import</span> <span class="n">camera_product</span><span class="p">,</span> <span class="n">write_camera</span><span class="p">,</span> <span class="n">open_camera</span>
+
+<span class="n">camera_l1a</span> <span class="o">=</span> <span class="n">camera_product</span><span class="p">(</span><span class="n">camera</span><span class="p">,</span> <span class="n">reg</span><span class="p">,</span> <span class="n">l1d</span><span class="p">)</span>    <span class="c1"># reg may be None or failed</span>
+<span class="n">path</span> <span class="o">=</span> <span class="n">write_camera</span><span class="p">(</span><span class="n">camera_l1a</span><span class="p">,</span> <span class="n">out_dir</span><span class="o">=</span><span class="s2">"."</span><span class="p">)</span>     <span class="c1"># HYPSO2_RGB.20250404T022723.ariake.L1A.nc</span>
+<span class="n">camera_l1a</span> <span class="o">=</span> <span class="n">open_camera</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">R</span></code>, <code class="docutils literal notranslate"><span class="pre">G</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code> are the demosaiced counts in the camera’s own frame,
+stored as uint8 (the bilinear demosaic rounded). <code class="docutils literal notranslate"><span class="pre">L1A</span></code> means uncalibrated
+counts. A registered product adds float32 <code class="docutils literal notranslate"><span class="pre">latitude</span></code>/<code class="docutils literal notranslate"><span class="pre">longitude</span></code> per pixel,
+<code class="docutils literal notranslate"><span class="pre">in_hsi_swath</span></code> (when the HSI product is given) and the registration
+attributes; an unregistered one records why, without geolocation
+(<code class="docutils literal notranslate"><span class="pre">georeferenced</span> <span class="pre">=</span> <span class="pre">&quot;false&quot;</span></code>). The file name uses the <code class="docutils literal notranslate"><span class="pre">RGB</span></code> instrument token
+(<a class="reference internal" href="products.html"><span class="doc">Products and files</span></a>); a <a class="reference internal" href="api/hypso/rgb/index.html#hypso.rgb.regrid_camera" title="hypso.rgb.regrid_camera"><code class="xref py py-func docutils literal notranslate"><span class="pre">regrid_camera()</span></code></a> result gets the grid
+token too (<code class="docutils literal notranslate"><span class="pre">...L1A.utm52n_100m.nc</span></code>). About 22 MB for a registered
+3840 x 2748 image.</p>
+</section>
+<section id="satpy">
+<h2>Satpy<a class="headerlink" href="#satpy" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">hypso_rgb_l1a</span></code> reader matches <code class="docutils literal notranslate"><span class="pre">_RGB</span></code> names only (the HSI readers match
+<code class="docutils literal notranslate"><span class="pre">_HSI</span></code>) and has a <code class="docutils literal notranslate"><span class="pre">true_color</span></code> composite from R, G and B:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">satpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Scene</span>
+
+<span class="n">scene</span> <span class="o">=</span> <span class="n">Scene</span><span class="p">(</span><span class="n">reader</span><span class="o">=</span><span class="s2">"hypso_rgb_l1a"</span><span class="p">,</span> <span class="n">filenames</span><span class="o">=</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">)])</span>
+<span class="n">scene</span><span class="o">.</span><span class="n">load</span><span class="p">([</span><span class="s2">"true_color"</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>A native-frame product is a swath (per-pixel latitude/longitude), a regridded
+one is read on its map grid. Unregistered products cannot be placed by Satpy.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="windows.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Pixel windows</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="maps.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Footprints and maps</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading">Reading</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#registration">Registration</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#maps">Maps</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exposure">Exposure</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#camera-products">Camera products</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#satpy">Satpy</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/camera.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Norwegian University of Science and Technology (NTNU).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,90 @@
+hypso.processing.atmospheric
+============================
+
+.. py:module:: hypso.processing.atmospheric
+
+.. autoapi-nested-parse::
+
+   L1C or L1D to L2A: atmospheric correction.
+
+   :func:`correct_atmosphere` returns an L2A tree: the method's product cube on
+   the input's bands, its 2D products and flags, the input's geometry,
+   ``pixel_flags`` and metadata, an ``atmospheric_correction`` global attribute
+   (used in file names), and an ``l2a_<method>`` provenance step.
+
+   Methods:
+
+   - "machi" (default): MACHI, Minimal Atmospheric Compensation for Hyperspectral
+     Imagers (hypso.ac.machi, vendored from NTNU SmallSat Lab), in-process on the
+     L1D cube: one scattering and one transmission spectrum for the whole image,
+     fitted so corrected spectra are smooth; surface reflectance ``rhos``.
+   - "dps": dark pixel subtraction, in-process on the L1D cube; surface
+     reflectance ``rhos``.
+   - "polymer": Polymer in a subprocess (hypso.ac.adapters._polymer_driver),
+     from L1C (default) or L1D; Polymer's water reflectance divided by pi, Rrs.
+     Installation and settings come from the AC
+     tool configuration (hypso.ac.config).
+   - "acolite": ACOLITE in a subprocess (hypso.ac.adapters._acolite_driver),
+     from L1C (default) or L1D; output="l2w" (Rrs, default) or "l2r" (rhos).
+     EARTHDATA credentials (for ancillary data) are read from the
+     HYPSO_ACOLITE_EARTHDATA_USERNAME/_PASSWORD environment variables, never
+     from the configuration file.
+   - "ocsmart": OC-SMART (`python OCSMART.py` in its installation directory),
+     from L1D; Rrs. OC-SMART reads its paths from a shared OCSMART_Input.txt
+     in that directory: the file is written and restored under the same lock
+     hypso-processing-pipeline uses (.OCSMART_Input.lock), so concurrent runs
+     on one installation wait for each other.
+
+   The product variable is ``Rrs`` or ``rhos`` and gives the quantity field of
+   the file name (hypso.io.naming: ``L2A.RRS.<method>`` or ``L2A.RHOS.<method>``).
+
+   External tools read a file: the input is written (masked if requested,
+   with metadata/srf added if missing) into `work_dir`, which is a temporary
+   directory removed afterwards unless given.
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.processing.atmospheric.correct_atmosphere
+
+
+Module Contents
+---------------
+
+.. py:function:: correct_atmosphere(tree, method = 'machi', masked = False, mask_flags=None, work_dir=None, config=None, **options)
+
+   Atmospheric correction of an L1C or L1D tree.
+
+   :param tree: L1C or L1D product tree in sensor geometry (not regridded).
+   :type tree: xarray.DataTree
+   :param method: See the module description.
+   :type method: {"machi", "dps", "polymer", "acolite", "ocsmart"}, default "machi"
+   :param masked: Give the method NaN where ``pixel_flags`` are set (all flags, or only
+                  ``mask_flags``). The input product itself stays unmasked.
+   :type masked: bool, default False
+   :param mask_flags: Flags to mask with, e.g. ``["land", "cloud"]``.
+   :type mask_flags: list of str, optional
+   :param work_dir: External tools only: where the staged input and the tool's raw
+                    output go (kept); default a temporary directory, removed afterwards.
+   :type work_dir: str or path, optional
+   :param config: External tools only: AC tool configuration (:mod:`hypso.ac.config`);
+                  default the ``HYPSO_AC_CONFIG`` environment variable.
+   :type config: str, path or dict, optional
+   :param \*\*options: Method-specific. machi: ``est_min_R`` (expected minimum surface
+                       reflectance, default 0.05), ``tol`` (default 0.01), ``approach_rate``
+                       (default 1), ``fit_exclude_flags`` (pixel_flags names left out of the
+                       fit; default none, all finite pixels), ``fit_subsample`` (fit on every
+                       Nth pixel plus each band's darkest; default 1, all). dps: ``statistic`` (``"min"`` or
+                       ``"percentile"``), ``percentile``. polymer, acolite, ocsmart: any key
+                       of the tool's configuration section (e.g. ``settings={...}``),
+                       overriding it; acolite also ``output`` (``"l2w"`` or ``"l2r"``) and
+                       ``reuse_output``.
+
+   :returns: L2A tree.
+   :rtype: xarray.DataTree
+
+

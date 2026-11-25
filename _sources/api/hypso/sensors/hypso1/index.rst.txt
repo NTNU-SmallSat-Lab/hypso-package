@@ -1,0 +1,29 @@
+hypso.sensors.hypso1
+====================
+
+.. py:module:: hypso.sensors.hypso1
+
+.. autoapi-nested-parse::
+
+   HYPSO-1 sensor profile. fwhm/fwhm_lookup_wl/fwhm_lookup_fwhm values moved verbatim from
+   the old hypso.hypso1.Hypso1.__init__ (unchanged - this is a relocation, not
+   a recalibration).
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.sensors.hypso1.get_hypso1_wavelengths
+
+
+Module Contents
+---------------
+
+.. py:function:: get_hypso1_wavelengths(aoi_x=428, column_count=1080, bin_factor=9)
+
+   Nominal HYPSO-1 band-centre wavelengths (nm) for an AOI and binning.
+
+

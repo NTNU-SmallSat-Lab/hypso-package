@@ -1,0 +1,797 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>hypso.io.cf &#8212; hypso 26.10.0a7-20-g5e64121f</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=8e897651"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/hypso/io/cf';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="26.10.0a7" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">hypso 26.10.0a7-20-g5e64121f</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">hypso.io.cf</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for hypso.io.cf</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""CF (Climate and Forecast) attribute builders for every product level,</span>
+<span class="sd">used by the one writer (hypso.io.product.write_product). Keeping them in</span>
+<span class="sd">one place fixed several bugs of the earlier per-level writers, which each</span>
+<span class="sd">set these attributes inline (wrong latitude units and ranges, a tuple</span>
+<span class="sd">radiation_wavelength, missing Conventions).</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="n">CONVENTIONS</span> <span class="o">=</span> <span class="s2">"CF-1.10"</span>
+
+
+<span class="n">REFERENCES</span> <span class="o">=</span> <span class="s2">"https://hypso.space"</span>
+
+
+<div class="viewcode-block" id="global_attrs">
+<a class="viewcode-back" href="../../../api/hypso/io/cf/index.html#hypso.io.cf.global_attrs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">global_attrs</span><span class="p">(</span><span class="n">processing_level</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Global attributes CF recommends and that were confirmed absent from</span>
+<span class="sd">    every level's output before this refactor (no `Conventions` attribute</span>
+<span class="sd">    anywhere meant CF-aware tooling had no signal to even attempt CF-aware</span>
+<span class="sd">    parsing).</span>
+
+<span class="sd">    "history" is deliberately NOT included here - unlike the other globals,</span>
+<span class="sd">    CF wants it to be an append-only provenance trail (one line per</span>
+<span class="sd">    processing step, not a value that gets overwritten each time a new</span>
+<span class="sd">    level is written), which needs the *existing* value from whatever was</span>
+<span class="sd">    already on the source product - see hypso.io.provenance.add_step,</span>
+<span class="sd">    which appends each processing step's line to the product's existing</span>
+<span class="sd">    ``history``."""</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"Conventions"</span><span class="p">:</span> <span class="n">CONVENTIONS</span><span class="p">,</span>
+        <span class="s2">"title"</span><span class="p">:</span> <span class="n">title</span><span class="p">,</span>
+        <span class="s2">"source"</span><span class="p">:</span> <span class="s2">"HYPSO Hyperspectral Imager"</span><span class="p">,</span>
+        <span class="s2">"processing_level"</span><span class="p">:</span> <span class="n">processing_level</span><span class="p">,</span>
+        <span class="s2">"references"</span><span class="p">:</span> <span class="n">REFERENCES</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="latitude_attrs">
+<a class="viewcode-back" href="../../../api/hypso/io/cf/index.html#hypso.io.cf.latitude_attrs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">latitude_attrs</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Fixes a confirmed bug: the previous geometry writer set</span>
+<span class="sd">    units="degrees" (not CF's required "degrees_north" for a variable to be</span>
+<span class="sd">    recognized as a latitude coordinate) and valid_min/valid_max=[-180,180]</span>
+<span class="sd">    (copy-pasted from longitude - latitude's real range is [-90,90])."""</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"Latitude"</span><span class="p">,</span>
+        <span class="s2">"standard_name"</span><span class="p">:</span> <span class="s2">"latitude"</span><span class="p">,</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"degrees_north"</span><span class="p">,</span>
+        <span class="s2">"valid_min"</span><span class="p">:</span> <span class="o">-</span><span class="mf">90.0</span><span class="p">,</span>
+        <span class="s2">"valid_max"</span><span class="p">:</span> <span class="mf">90.0</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="longitude_attrs">
+<a class="viewcode-back" href="../../../api/hypso/io/cf/index.html#hypso.io.cf.longitude_attrs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">longitude_attrs</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""CF attributes of the longitude variable."""</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"Longitude"</span><span class="p">,</span>
+        <span class="s2">"standard_name"</span><span class="p">:</span> <span class="s2">"longitude"</span><span class="p">,</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"degrees_east"</span><span class="p">,</span>
+        <span class="s2">"valid_min"</span><span class="p">:</span> <span class="o">-</span><span class="mf">180.0</span><span class="p">,</span>
+        <span class="s2">"valid_max"</span><span class="p">:</span> <span class="mf">180.0</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="zenith_angle_attrs">
+<a class="viewcode-back" href="../../../api/hypso/io/cf/index.html#hypso.io.cf.zenith_angle_attrs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">zenith_angle_attrs</span><span class="p">(</span><span class="n">long_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">standard_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Zenith angles are physically [0, 180] (nadir to anti-nadir) - the</span>
+<span class="sd">    previous writer gave every angle variable (zenith AND azimuth alike) the</span>
+<span class="sd">    same blanket valid_min/valid_max=[-180,180]."""</span>
+    <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"long_name"</span><span class="p">:</span> <span class="n">long_name</span><span class="p">,</span> <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"degree"</span><span class="p">,</span> <span class="s2">"valid_min"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">"valid_max"</span><span class="p">:</span> <span class="mf">180.0</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">standard_name</span><span class="p">:</span>
+        <span class="n">attrs</span><span class="p">[</span><span class="s2">"standard_name"</span><span class="p">]</span> <span class="o">=</span> <span class="n">standard_name</span>
+    <span class="k">return</span> <span class="n">attrs</span></div>
+
+
+
+<div class="viewcode-block" id="azimuth_angle_attrs">
+<a class="viewcode-back" href="../../../api/hypso/io/cf/index.html#hypso.io.cf.azimuth_angle_attrs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">azimuth_angle_attrs</span><span class="p">(</span><span class="n">long_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">standard_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">valid_max</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">360.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Azimuth angles, clockwise from north: [0, 360], the range</span>
+<span class="sd">    hypso.geometry.compute_local_angles produces (astropy AltAz). The</span>
+<span class="sd">    relative azimuth is folded to [0, 180] (``valid_max=180``). Files written</span>
+<span class="sd">    before 2026-11-08 declared [-180, 180], so CF readers that apply the</span>
+<span class="sd">    valid range (netCDF4's auto-masking, Panoply, SNAP) hid every sensor</span>
+<span class="sd">    azimuth above 180 degrees (e.g. 286-288 at Venice 2025-03-04)."""</span>
+    <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"long_name"</span><span class="p">:</span> <span class="n">long_name</span><span class="p">,</span> <span class="s2">"units"</span><span class="p">:</span> <span class="s2">"degree"</span><span class="p">,</span> <span class="s2">"valid_min"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">"valid_max"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">valid_max</span><span class="p">)}</span>
+    <span class="k">if</span> <span class="n">standard_name</span><span class="p">:</span>
+        <span class="n">attrs</span><span class="p">[</span><span class="s2">"standard_name"</span><span class="p">]</span> <span class="o">=</span> <span class="n">standard_name</span>
+    <span class="k">return</span> <span class="n">attrs</span></div>
+
+
+
+<div class="viewcode-block" id="crs_wgs84_attrs">
+<a class="viewcode-back" href="../../../api/hypso/io/cf/index.html#hypso.io.cf.crs_wgs84_attrs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">crs_wgs84_attrs</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Unchanged from the previous writer - this one was already correctly</span>
+<span class="sd">    CF-formed (grid_mapping_name="latitude_longitude" + the WGS84</span>
+<span class="sd">    ellipsoid parameters)."""</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"grid_mapping_name"</span><span class="p">:</span> <span class="s2">"latitude_longitude"</span><span class="p">,</span>
+        <span class="s2">"longitude_of_prime_meridian"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="s2">"semi_major_axis"</span><span class="p">:</span> <span class="mf">6378137.0</span><span class="p">,</span>
+        <span class="s2">"inverse_flattening"</span><span class="p">:</span> <span class="mf">298.257223563</span><span class="p">,</span>
+        <span class="s2">"geographic_crs_name"</span><span class="p">:</span> <span class="s2">"WGS84"</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="geolocation_ref_attrs">
+<a class="viewcode-back" href="../../../api/hypso/io/cf/index.html#hypso.io.cf.geolocation_ref_attrs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">geolocation_ref_attrs</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""coordinates/grid_mapping attrs for a per-band product variable, valid</span>
+<span class="sd">    now that geometry variables (latitude/longitude/crs_wgs84) live in the</span>
+<span class="sd">    same (root) group as the product variables referencing them - CF's</span>
+<span class="sd">    group-relative name resolution only walks up to ancestor groups, never</span>
+<span class="sd">    sideways to siblings, so this only works because the writer no longer</span>
+<span class="sd">    nests products and geometry into separate groups (docs/architecture.rst,</span>
+<span class="sd">    "File format")."""</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"coordinates"</span><span class="p">:</span> <span class="s2">"latitude longitude"</span><span class="p">,</span>
+        <span class="s2">"grid_mapping"</span><span class="p">:</span> <span class="s2">"crs_wgs84"</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="band_attrs">
+<a class="viewcode-back" href="../../../api/hypso/io/cf/index.html#hypso.io.cf.band_attrs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">band_attrs</span><span class="p">(</span><span class="n">long_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">units</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">wavelength_nm</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">radiation_wavelength_nm</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                <span class="n">fwhm</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">wave_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">band_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">include_geolocation</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+                <span class="o">*</span><span class="p">,</span> <span class="n">var_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">standard_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Per-band product variable attrs (e.g. for Lt_378 or rhot_378).</span>
+
+<span class="sd">    wavelength vs. radiation_wavelength: kept as two distinct attributes,</span>
+<span class="sd">    not collapsed into one - they carry genuinely different values in real</span>
+<span class="sd">    files (wavelength is the nominal/rounded band-center label,</span>
+<span class="sd">    radiation_wavelength is the precise as-calibrated value; e.g. 378.5 vs</span>
+<span class="sd">    378.54673723 for the same band). radiation_wavelength is the CF-flavored</span>
+<span class="sd">    name (maps to CF's "sensor_band_central_radiation_wavelength" concept,</span>
+<span class="sd">    per Unidata's EC-netCDF-CF swath convention) - but standard_name is a</span>
+<span class="sd">    property CF only defines for a *variable*, not for one attribute among</span>
+<span class="sd">    several on a variable. The variable's own standard_name (its radiance or</span>
+<span class="sd">    reflectance quantity) comes from `standard_name`, set per level in</span>
+<span class="sd">    io/schema.py from the CF standard name table. `wave` (a third,</span>
+<span class="sd">    truly-redundant duplicate of `wavelength`) is dropped.</span>
+
+<span class="sd">    var_name is the variable's own name (e.g. "Lt_378"), written as</span>
+<span class="sd">    `parameter` as the pre-refactor writers did; wave_name is the bare</span>
+<span class="sd">    wavelength label (e.g. "378").</span>
+<span class="sd">    """</span>
+    <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"long_name"</span><span class="p">:</span> <span class="n">long_name</span><span class="p">,</span>
+        <span class="s2">"units"</span><span class="p">:</span> <span class="n">units</span><span class="p">,</span>
+        <span class="s2">"wavelength_units"</span><span class="p">:</span> <span class="s2">"nanometers"</span><span class="p">,</span>
+        <span class="s2">"wavelength"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">wavelength_nm</span><span class="p">),</span>
+        <span class="s2">"radiation_wavelength"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">radiation_wavelength_nm</span><span class="p">),</span>
+        <span class="s2">"radiation_wavelength_unit"</span><span class="p">:</span> <span class="s2">"nm"</span><span class="p">,</span>
+        <span class="s2">"fwhm"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">fwhm</span><span class="p">),</span>
+        <span class="s2">"parameter"</span><span class="p">:</span> <span class="n">var_name</span><span class="p">,</span>
+        <span class="s2">"wave_name"</span><span class="p">:</span> <span class="n">wave_name</span><span class="p">,</span>
+        <span class="s2">"band"</span><span class="p">:</span> <span class="n">band_index</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">standard_name</span><span class="p">:</span>
+        <span class="n">attrs</span><span class="p">[</span><span class="s2">"standard_name"</span><span class="p">]</span> <span class="o">=</span> <span class="n">standard_name</span>
+    <span class="k">if</span> <span class="n">include_geolocation</span><span class="p">:</span>
+        <span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">geolocation_ref_attrs</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">attrs</span></div>
+
+
+
+<span class="c1"># Standard names used in products, all checked against the CF standard name</span>
+<span class="c1"># table (v95, cfconventions.org).</span>
+<span class="n">RRS_STANDARD_NAME</span> <span class="o">=</span> <span class="s2">"surface_ratio_of_upwelling_radiance_emerging_from_sea_water_to_downwelling_radiative_flux_in_air"</span>
+<span class="n">CHLA_STANDARD_NAME</span> <span class="o">=</span> <span class="s2">"mass_concentration_of_chlorophyll_a_in_sea_water"</span>
+<span class="n">SPM_STANDARD_NAME</span> <span class="o">=</span> <span class="s2">"mass_concentration_of_suspended_matter_in_sea_water"</span>
+
+<span class="c1"># L2A product cube attributes by variable name (the product's quantity</span>
+<span class="c1"># depends on the atmospheric-correction method, so it is not a per-level</span>
+<span class="c1"># schema constant).</span>
+<span class="n">L2A_PRODUCTS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"Rrs"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"units"</span><span class="p">:</span> <span class="s2">"sr-1"</span><span class="p">,</span> <span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"Remote Sensing Reflectance"</span><span class="p">,</span> <span class="s2">"standard_name"</span><span class="p">:</span> <span class="n">RRS_STANDARD_NAME</span><span class="p">},</span>
+    <span class="s2">"rho_w"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"units"</span><span class="p">:</span> <span class="s2">"1"</span><span class="p">,</span> <span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"Water-Leaving Reflectance (pi Rrs)"</span><span class="p">},</span>
+    <span class="s2">"rhos"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"units"</span><span class="p">:</span> <span class="s2">"1"</span><span class="p">,</span> <span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"Surface Reflectance"</span><span class="p">},</span>
+<span class="p">}</span>
+
+<span class="c1"># AC tools write some standard_names that are not CF names; their CF</span>
+<span class="c1"># equivalents. Others not in CF are kept only as source_standard_name.</span>
+<span class="n">TOOL_STANDARD_NAMES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"mass_concentration_of_chlorophyll_a_in_water"</span><span class="p">:</span> <span class="n">CHLA_STANDARD_NAME</span><span class="p">,</span>
+    <span class="s2">"concentration_of_suspended_matter_in_water"</span><span class="p">:</span> <span class="n">SPM_STANDARD_NAME</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">CF_STANDARD_NAMES</span> <span class="o">=</span> <span class="p">{</span><span class="n">RRS_STANDARD_NAME</span><span class="p">,</span> <span class="n">CHLA_STANDARD_NAME</span><span class="p">,</span> <span class="n">SPM_STANDARD_NAME</span><span class="p">,</span> <span class="s2">"latitude"</span><span class="p">,</span> <span class="s2">"longitude"</span><span class="p">,</span>
+                     <span class="s2">"toa_outgoing_radiance_per_unit_wavelength"</span><span class="p">,</span> <span class="s2">"toa_bidirectional_reflectance"</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="tool_variable_attrs">
+<a class="viewcode-back" href="../../../api/hypso/io/cf/index.html#hypso.io.cf.tool_variable_attrs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">tool_variable_attrs</span><span class="p">(</span><span class="n">attrs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""An AC tool's variable attributes with its standard_name made CF-valid:</span>
+<span class="sd">    mapped to the CF equivalent, or moved to source_standard_name."""</span>
+    <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">attrs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"_FillValue"</span><span class="p">,</span> <span class="s2">"coordinates"</span><span class="p">,</span> <span class="s2">"grid_mapping"</span><span class="p">)}</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"standard_name"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">CF_STANDARD_NAMES</span><span class="p">:</span>
+        <span class="n">attrs</span><span class="p">[</span><span class="s2">"source_standard_name"</span><span class="p">]</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"standard_name"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">TOOL_STANDARD_NAMES</span><span class="p">:</span>
+            <span class="n">attrs</span><span class="p">[</span><span class="s2">"standard_name"</span><span class="p">]</span> <span class="o">=</span> <span class="n">TOOL_STANDARD_NAMES</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">attrs</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Norwegian University of Science and Technology (NTNU).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

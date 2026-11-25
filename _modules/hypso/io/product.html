@@ -1,0 +1,1171 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>hypso.io.product &#8212; hypso 26.10.0a7-20-g5e64121f</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=8e897651"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/hypso/io/product';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="26.10.0a7" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">hypso 26.10.0a7-20-g5e64121f</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">hypso.io.product</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for hypso.io.product</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""One reader and one writer for every HYPSO product level, on</span>
+<span class="sd">:class:`xarray.DataTree`.</span>
+
+<span class="sd">In-memory model (what :func:`read_product` returns and :func:`write_product`</span>
+<span class="sd">takes)::</span>
+
+<span class="sd">    /                     root Dataset</span>
+<span class="sd">        &lt;prefix&gt;          product cube, dims (lines, samples, bands), or</span>
+<span class="sd">                          (y, x, bands) on a map grid (hypso.grid): "dn"</span>
+<span class="sd">                          (L1A), "Lt" (L1B/L1C), "rhot" (L1D), or the AC</span>
+<span class="sd">                          variable for L2A (e.g. "Rrs", "rhos")</span>
+<span class="sd">        wavelength        coord (bands): nominal band centre, 0.1 nm rounded</span>
+<span class="sd">        radiation_wavelength  coord (bands): precise as-calibrated centre</span>
+<span class="sd">        fwhm              coord (bands)</span>
+<span class="sd">        latitude, longitude, crs_wgs84, &lt;angles&gt;   only when georeferenced</span>
+<span class="sd">        pixel_flags       optional CF flag variable (hypso.masks.flags);</span>
+<span class="sd">                          the product itself is unmasked</span>
+<span class="sd">        &lt;other&gt;           any other 2D variable - derived products such as</span>
+<span class="sd">                          a chlorophyll map - with its attributes</span>
+<span class="sd">        x, y, crs         gridded products only: projection coordinates and</span>
+<span class="sd">                          the CF grid-mapping variable (latitude/longitude</span>
+<span class="sd">                          stay, as 2D auxiliary coordinates)</span>
+<span class="sd">        attrs             global attributes; processing_level is required</span>
+<span class="sd">    /metadata/&lt;group&gt;     one child node per metadata group</span>
+
+<span class="sd">On disk the cube is one 2D variable per band (``Lt_378``, ...), the layout</span>
+<span class="sd">ESA SNAP reads, with geometry at the root and ``metadata/*`` nested. All CF</span>
+<span class="sd">attributes come from :mod:`hypso.io.cf`, so a file read in any supported</span>
+<span class="sd">layout is written back in the current one. Supported layouts: current flat</span>
+<span class="sd">files, older grouped files (``/products`` and ``/geometry``), and</span>
+<span class="sd">ground-station L1A files (one ``uint16`` ``/products/dn`` cube).</span>
+<span class="sd">"""</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">cf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.naming</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_product_name</span><span class="p">,</span> <span class="n">product_name</span> <span class="k">as</span> <span class="n">make_product_name</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.provenance</span><span class="w"> </span><span class="kn">import</span> <span class="n">PRODUCT_FORMAT_VERSION</span><span class="p">,</span> <span class="n">add_step</span><span class="p">,</span> <span class="n">utc_now</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_schema</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">PRODUCT_DIMS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"lines"</span><span class="p">,</span> <span class="s2">"samples"</span><span class="p">,</span> <span class="s2">"bands"</span><span class="p">)</span>
+<span class="n">SPATIAL_DIMS</span> <span class="o">=</span> <span class="n">PRODUCT_DIMS</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+<span class="c1"># Gridded products (hypso.grid.regrid): CF projection dims, with x/y</span>
+<span class="c1"># coordinate variables and the `crs` grid-mapping variable.</span>
+<span class="n">GRID_DIMS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"y"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">)</span>
+<span class="n">GRID_MAPPING</span> <span class="o">=</span> <span class="s2">"crs"</span>
+
+
+<div class="viewcode-block" id="spatial_dims">
+<a class="viewcode-back" href="../../../api/hypso/io/product/index.html#hypso.spatial_dims">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">spatial_dims</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""(y, x) for a gridded product, else (lines, samples)."""</span>
+    <span class="k">return</span> <span class="n">GRID_DIMS</span> <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">d</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">dims</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">GRID_DIMS</span><span class="p">)</span> <span class="k">else</span> <span class="n">SPATIAL_DIMS</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">product_dims</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">spatial_dims</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,)</span>
+<span class="n">BAND_COORDS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"wavelength"</span><span class="p">,</span> <span class="s2">"radiation_wavelength"</span><span class="p">,</span> <span class="s2">"fwhm"</span><span class="p">)</span>
+<span class="c1"># Optional band coordinate: each band's index in the sensor's full band set,</span>
+<span class="c1"># present after Product.select_bands (and on any product read from a file,</span>
+<span class="c1"># from the bands' `band` attribute). Without it, bands are 0..n-1.</span>
+<span class="n">BAND_INDEX</span> <span class="o">=</span> <span class="s2">"band_index"</span>
+
+
+<div class="viewcode-block" id="band_indices">
+<a class="viewcode-back" href="../../../api/hypso/io/product/index.html#hypso.band_indices">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">band_indices</span><span class="p">(</span><span class="n">cube</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Each band's index in the sensor's full band set (``band_index``</span>
+<span class="sd">    coordinate, else ``0..n-1``)."""</span>
+    <span class="k">if</span> <span class="n">BAND_INDEX</span> <span class="ow">in</span> <span class="n">cube</span><span class="o">.</span><span class="n">coords</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cube</span><span class="p">[</span><span class="n">BAND_INDEX</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">cube</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="s2">"bands"</span><span class="p">])</span></div>
+
+
+
+<div class="viewcode-block" id="band_coords">
+<a class="viewcode-back" href="../../../api/hypso/io/product/index.html#hypso.band_coords">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">band_coords</span><span class="p">(</span><span class="n">cube</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The cube's band coordinates (including ``band_index`` when present), to</span>
+<span class="sd">    carry over to a new cube on the same bands."""</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="n">BAND_COORDS</span> <span class="o">+</span> <span class="p">((</span><span class="n">BAND_INDEX</span><span class="p">,)</span> <span class="k">if</span> <span class="n">BAND_INDEX</span> <span class="ow">in</span> <span class="n">cube</span><span class="o">.</span><span class="n">coords</span> <span class="k">else</span> <span class="p">())</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,</span> <span class="n">cube</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">}</span></div>
+
+
+<span class="n">ENCODING</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"zlib"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"complevel"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">"shuffle"</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+<span class="c1"># Float band variables (L1B-L2A) keep this many significant mantissa bits by</span>
+<span class="c1"># default (netCDF BitRound; values stay float32): about 40% smaller L1D bands</span>
+<span class="c1"># at most 2**-15 (3.1e-5) relative error, far below the sensor noise</span>
+<span class="c1"># (REFACTOR_PROGRESS.md ×71). Not GranularBitRound: netCDF-C 4.9.3 turns NaN</span>
+<span class="c1"># and Inf into -0.0 with it; BitRound keeps them, and is idempotent.</span>
+<span class="n">SIGNIFICANT_BITS</span> <span class="o">=</span> <span class="mi">14</span>
+
+<span class="c1"># Root geometry variable -&gt; CF attribute builder. The *_direct variables are</span>
+<span class="c1"># the package's direct georeferencing (ADCS telemetry); production's writer</span>
+<span class="c1"># labelled them "(Indirect)" by a copy-paste slip, corrected here (x105).</span>
+<span class="n">_GEOMETRY_ATTRS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"latitude"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">cf</span><span class="o">.</span><span class="n">latitude_attrs</span><span class="p">(),</span>
+    <span class="s2">"longitude"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">cf</span><span class="o">.</span><span class="n">longitude_attrs</span><span class="p">(),</span>
+    <span class="s2">"latitude_direct"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="p">{</span><span class="o">**</span><span class="n">cf</span><span class="o">.</span><span class="n">latitude_attrs</span><span class="p">(),</span> <span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"Latitude (Direct)"</span><span class="p">},</span>
+    <span class="s2">"longitude_direct"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="p">{</span><span class="o">**</span><span class="n">cf</span><span class="o">.</span><span class="n">longitude_attrs</span><span class="p">(),</span> <span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"Longitude (Direct)"</span><span class="p">},</span>
+    <span class="s2">"sensor_zenith"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">cf</span><span class="o">.</span><span class="n">zenith_angle_attrs</span><span class="p">(</span><span class="s2">"Sensor Zenith Angle"</span><span class="p">),</span>
+    <span class="s2">"sensor_azimuth"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">cf</span><span class="o">.</span><span class="n">azimuth_angle_attrs</span><span class="p">(</span><span class="s2">"Sensor Azimuth Angle"</span><span class="p">),</span>
+    <span class="s2">"solar_zenith"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">cf</span><span class="o">.</span><span class="n">zenith_angle_attrs</span><span class="p">(</span><span class="s2">"Solar Zenith Angle"</span><span class="p">),</span>
+    <span class="s2">"solar_azimuth"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">cf</span><span class="o">.</span><span class="n">azimuth_angle_attrs</span><span class="p">(</span><span class="s2">"Solar Azimuth Angle"</span><span class="p">),</span>
+    <span class="s2">"relative_azimuth"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">cf</span><span class="o">.</span><span class="n">azimuth_angle_attrs</span><span class="p">(</span><span class="s2">"Relative Azimuth Angle"</span><span class="p">,</span> <span class="n">valid_max</span><span class="o">=</span><span class="mf">180.0</span><span class="p">),</span>
+    <span class="s2">"sensor_zenith_direct"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">cf</span><span class="o">.</span><span class="n">zenith_angle_attrs</span><span class="p">(</span><span class="s2">"Sensor Zenith Angle (Direct)"</span><span class="p">),</span>
+    <span class="s2">"sensor_azimuth_direct"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">cf</span><span class="o">.</span><span class="n">azimuth_angle_attrs</span><span class="p">(</span><span class="s2">"Sensor Azimuth Angle (Direct)"</span><span class="p">),</span>
+    <span class="s2">"solar_zenith_direct"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">cf</span><span class="o">.</span><span class="n">zenith_angle_attrs</span><span class="p">(</span><span class="s2">"Solar Zenith Angle (Direct)"</span><span class="p">),</span>
+    <span class="s2">"solar_azimuth_direct"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">cf</span><span class="o">.</span><span class="n">azimuth_angle_attrs</span><span class="p">(</span><span class="s2">"Solar Azimuth Angle (Direct)"</span><span class="p">),</span>
+    <span class="s2">"relative_azimuth_direct"</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">cf</span><span class="o">.</span><span class="n">azimuth_angle_attrs</span><span class="p">(</span><span class="s2">"Relative Azimuth Angle (Direct)"</span><span class="p">,</span> <span class="n">valid_max</span><span class="o">=</span><span class="mf">180.0</span><span class="p">),</span>
+<span class="p">}</span>
+
+<span class="c1"># Legacy metadata/gcp names collided with root latitude/longitude in SNAP</span>
+<span class="c1"># (b5ff9508); current files use the gcp_ prefix.</span>
+<span class="n">_GCP_RENAMES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"latitude"</span><span class="p">:</span> <span class="s2">"gcp_latitude"</span><span class="p">,</span> <span class="s2">"longitude"</span><span class="p">:</span> <span class="s2">"gcp_longitude"</span><span class="p">,</span>
+                <span class="s2">"sourceX"</span><span class="p">:</span> <span class="s2">"gcp_sourceX"</span><span class="p">,</span> <span class="s2">"sourceY"</span><span class="p">:</span> <span class="s2">"gcp_sourceY"</span><span class="p">}</span>
+
+<span class="n">_LEVEL_ALIASES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"L2"</span><span class="p">:</span> <span class="s2">"L2A"</span><span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_level_key</span><span class="p">(</span><span class="n">processing_level</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">level</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">processing_level</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">_LEVEL_ALIASES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
+
+
+<span class="c1"># --------------------------------------------------------------------------</span>
+<span class="c1"># read</span>
+<span class="c1"># --------------------------------------------------------------------------</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_scalar</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="c1"># radiation_wavelength was a 1-element tuple in pre-refactor files</span>
+    <span class="c1"># (trailing-comma bug) - accept either form.</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">value</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_band_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Per-band 2D product variables (carry both `band` and `wavelength`</span>
+<span class="sd">    attrs), sorted by their `band` index - never by name or file order."""</span>
+    <span class="n">dims</span> <span class="o">=</span> <span class="n">spatial_dims</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">data_vars</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+             <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">dims</span> <span class="o">==</span> <span class="n">dims</span> <span class="ow">and</span> <span class="s2">"band"</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">attrs</span> <span class="ow">and</span> <span class="s2">"wavelength"</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">attrs</span><span class="p">]</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"band"</span><span class="p">]))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_flag_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""CF flag variables (masks, see hypso.masks.flags), by their</span>
+<span class="sd">    flag_meanings attribute."""</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">data_vars</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">dims</span> <span class="o">==</span> <span class="n">spatial_dims</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"flag_meanings"</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">attrs</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_extra_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">exclude</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Other (lines, samples) variables - derived products, including an AC</span>
+<span class="sd">    tool's own flags - excluding band, geometry, grid-mapping and</span>
+<span class="sd">    pixel_flags variables."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.masks.flags</span><span class="w"> </span><span class="kn">import</span> <span class="n">FLAGS_NAME</span>
+    <span class="n">skip</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">exclude</span><span class="p">)</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">_GEOMETRY_ATTRS</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span><span class="s2">"crs_wgs84"</span><span class="p">,</span> <span class="n">GRID_MAPPING</span><span class="p">,</span> <span class="n">FLAGS_NAME</span><span class="p">}</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">data_vars</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">dims</span> <span class="o">==</span> <span class="n">spatial_dims</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span> <span class="ow">and</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">skip</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="list_band_variables">
+<a class="viewcode-back" href="../../../api/hypso/io/product/index.html#hypso.list_band_variables">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_band_variables</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Per-band metadata of a product file, without reading pixel data.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of dict</span>
+<span class="sd">        ``{"name", "band", "wavelength", "radiation_wavelength", "fwhm",</span>
+<span class="sd">        "units", "long_name"}`` sorted by band index, or one entry with band</span>
+<span class="sd">        None for a single-cube (datacube) file. Used by the Satpy readers.</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">netCDF4</span>
+    <span class="k">with</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">group</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">"products"</span><span class="p">]</span> <span class="k">if</span> <span class="s2">"products"</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">groups</span> <span class="k">else</span> <span class="n">f</span>
+        <span class="n">bands</span> <span class="o">=</span> <span class="p">[(</span><span class="n">n</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                 <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">dimensions</span> <span class="ow">in</span> <span class="p">(</span><span class="n">SPATIAL_DIMS</span><span class="p">,</span> <span class="n">GRID_DIMS</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"band"</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">ncattrs</span><span class="p">()</span>
+                 <span class="ow">and</span> <span class="s2">"wavelength"</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">ncattrs</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">bands</span><span class="p">:</span>
+            <span class="n">cubes</span> <span class="o">=</span> <span class="p">[(</span><span class="n">n</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">dimensions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">]</span>
+            <span class="k">return</span> <span class="p">[{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">n</span><span class="p">,</span> <span class="s2">"band"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"wavelength"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"radiation_wavelength"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"fwhm"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                     <span class="s2">"units"</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s2">"units"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span> <span class="s2">"long_name"</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s2">"long_name"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)}</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">cubes</span><span class="p">]</span>
+        <span class="n">bands</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">band</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">[{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">n</span><span class="p">,</span> <span class="s2">"band"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">band</span><span class="p">),</span> <span class="s2">"wavelength"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">wavelength</span><span class="p">),</span>
+                 <span class="s2">"radiation_wavelength"</span><span class="p">:</span> <span class="n">_scalar</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s2">"radiation_wavelength"</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">wavelength</span><span class="p">)),</span>
+                 <span class="s2">"fwhm"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">fwhm</span><span class="p">),</span> <span class="s2">"units"</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s2">"units"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span> <span class="s2">"long_name"</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s2">"long_name"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)}</span>
+                <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">bands</span><span class="p">]</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_fwhm_from_profile</span><span class="p">(</span><span class="n">sat_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">wavelengths</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="c1"># The sensor profile's table, interpolated as CaptureParams.fwhm, for</span>
+    <span class="c1"># files that store no per-band fwhm (ground-station L1A).</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.processing.capture</span><span class="w"> </span><span class="kn">import</span> <span class="n">interpolate_fwhm</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.sensors</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_sensor_profile</span>
+    <span class="n">profile</span> <span class="o">=</span> <span class="n">get_sensor_profile</span><span class="p">(</span><span class="n">sat_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">interpolate_fwhm</span><span class="p">(</span><span class="n">profile</span><span class="o">.</span><span class="n">fwhm_lookup_wl</span><span class="p">,</span> <span class="n">profile</span><span class="o">.</span><span class="n">fwhm_lookup_fwhm</span><span class="p">,</span> <span class="n">wavelengths</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_product_from_bands</span><span class="p">(</span><span class="n">ds</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+    <span class="n">prefix</span> <span class="o">=</span> <span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">"_"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">cube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">ds</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"wavelength"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"wavelength"</span><span class="p">])</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]),</span>
+        <span class="s2">"radiation_wavelength"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,</span> <span class="p">[</span><span class="n">_scalar</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"radiation_wavelength"</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"wavelength"</span><span class="p">]))</span>
+                                           <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]),</span>
+        <span class="s2">"fwhm"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"fwhm"</span><span class="p">])</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]),</span>
+        <span class="n">BAND_INDEX</span><span class="p">:</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"band"</span><span class="p">])</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]),</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">cube</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">product_dims</span><span class="p">(</span><span class="n">ds</span><span class="p">),</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_product_from_cube</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span> <span class="n">wavelengths</span><span class="p">,</span> <span class="n">sat_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="n">wavelengths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">wavelengths</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"fwhm"</span> <span class="ow">in</span> <span class="n">var</span><span class="o">.</span><span class="n">attrs</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"fwhm"</span><span class="p">])</span> <span class="o">==</span> <span class="n">wavelengths</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+        <span class="n">fwhm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"fwhm"</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fwhm</span> <span class="o">=</span> <span class="n">_fwhm_from_profile</span><span class="p">(</span><span class="n">sat_id</span><span class="p">,</span> <span class="n">wavelengths</span><span class="p">)</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"wavelength"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">wavelengths</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+              <span class="s2">"radiation_wavelength"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,</span> <span class="n">wavelengths</span><span class="p">),</span>
+              <span class="s2">"fwhm"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,</span> <span class="n">fwhm</span><span class="p">)}</span>
+    <span class="k">return</span> <span class="n">name</span><span class="p">,</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">SPATIAL_DIMS</span> <span class="o">+</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,),</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="source_layout">
+<a class="viewcode-back" href="../../../api/hypso/io/product/index.html#hypso.source_layout">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">source_layout</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A product file's layout: ``"current"``, ``"legacy"`` (``/products`` and ``/geometry`` groups) or ``"ground_station_l1a"``."""</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">netCDF4</span>
+    <span class="k">with</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">"products"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">"current"</span>
+        <span class="k">return</span> <span class="s2">"ground_station_l1a"</span> <span class="k">if</span> <span class="s2">"dn"</span> <span class="ow">in</span> <span class="n">f</span><span class="p">[</span><span class="s2">"products"</span><span class="p">]</span><span class="o">.</span><span class="n">variables</span> <span class="k">else</span> <span class="s2">"legacy"</span></div>
+
+
+
+<div class="viewcode-block" id="read_product">
+<a class="viewcode-back" href="../../../api/hypso/io/product/index.html#hypso.read_product">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_product</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">wavelength_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wavelengths</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Read any supported HYPSO product file into the in-memory model.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path : str or pathlib.Path</span>
+<span class="sd">    wavelength_range, wavelengths, indices : optional</span>
+<span class="sd">        Read only some bands, selected as in</span>
+<span class="sd">        :func:`hypso.processing.bands.select_bands` (at most one of them).</span>
+<span class="sd">        Only the selected band variables are read from the file; a file</span>
+<span class="sd">        holding the cube as one variable is read whole and then subset.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    xarray.DataTree</span>
+<span class="sd">        See the module description. ``tree.encoding["source"]`` holds the</span>
+<span class="sd">        path (not written back).</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If no product cube or processing level is found.</span>
+<span class="sd">    """</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_datatree</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">"netcdf4"</span><span class="p">,</span> <span class="n">mask_and_scale</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">decode_times</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                           <span class="n">decode_coords</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">decode_timedelta</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">raw</span><span class="o">.</span><span class="n">to_dataset</span><span class="p">(</span><span class="n">inherit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">legacy</span> <span class="o">=</span> <span class="s2">"products"</span> <span class="ow">in</span> <span class="n">raw</span><span class="o">.</span><span class="n">children</span>
+        <span class="n">products</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="s2">"products"</span><span class="p">]</span><span class="o">.</span><span class="n">to_dataset</span><span class="p">(</span><span class="n">inherit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">if</span> <span class="n">legacy</span> <span class="k">else</span> <span class="n">root</span>
+        <span class="n">geometry</span> <span class="o">=</span> <span class="p">(</span><span class="n">raw</span><span class="p">[</span><span class="s2">"geometry"</span><span class="p">]</span><span class="o">.</span><span class="n">to_dataset</span><span class="p">(</span><span class="n">inherit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">legacy</span> <span class="ow">and</span> <span class="s2">"geometry"</span> <span class="ow">in</span> <span class="n">raw</span><span class="o">.</span><span class="n">children</span> <span class="k">else</span> <span class="n">root</span><span class="p">)</span>
+
+        <span class="n">sat_id</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sat_id"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">root</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"instrument"</span><span class="p">)</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="n">_band_variables</span><span class="p">(</span><span class="n">products</span><span class="p">)</span>
+        <span class="n">selection</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"wavelength_range"</span><span class="p">,</span> <span class="n">wavelength_range</span><span class="p">),</span> <span class="p">(</span><span class="s2">"wavelengths"</span><span class="p">,</span> <span class="n">wavelengths</span><span class="p">),</span>
+                                       <span class="p">(</span><span class="s2">"indices"</span><span class="p">,</span> <span class="n">indices</span><span class="p">))</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">selection</span> <span class="ow">and</span> <span class="n">names</span><span class="p">:</span>
+            <span class="c1"># Choose the band variables from their attributes; only these are read below.</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.processing.bands</span><span class="w"> </span><span class="kn">import</span> <span class="n">_positions</span>
+            <span class="n">proxy</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)),</span> <span class="n">dims</span><span class="o">=</span><span class="s2">"bands"</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"radiation_wavelength"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,</span> <span class="p">[</span><span class="n">_scalar</span><span class="p">(</span><span class="n">products</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"radiation_wavelength"</span><span class="p">,</span>
+                                                                                   <span class="n">products</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"wavelength"</span><span class="p">]))</span>
+                                                   <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]),</span>
+                <span class="n">BAND_INDEX</span><span class="p">:</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">products</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"band"</span><span class="p">])</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="p">])})</span>
+            <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">_positions</span><span class="p">(</span><span class="n">proxy</span><span class="p">,</span> <span class="n">wavelength_range</span><span class="p">,</span> <span class="n">wavelengths</span><span class="p">,</span> <span class="n">indices</span><span class="p">)]</span>
+        <span class="n">cubeless</span> <span class="o">=</span> <span class="n">is_cubeless</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cubeless</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">selection</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: a </span><span class="si">{</span><span class="n">root</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'processing_level'</span><span class="p">)</span><span class="si">}</span><span class="s2"> product without a cube has no "</span>
+                                 <span class="s2">"bands to select"</span><span class="p">)</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="n">cube</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="n">names</span><span class="p">:</span>
+            <span class="n">prefix</span><span class="p">,</span> <span class="n">cube</span> <span class="o">=</span> <span class="n">_product_from_bands</span><span class="p">(</span><span class="n">products</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cubes</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">products</span><span class="o">.</span><span class="n">data_vars</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cubes</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: no per-band product variables and </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cubes</span><span class="p">)</span><span class="si">}</span><span class="s2"> 3D cubes"</span><span class="p">)</span>
+            <span class="n">var</span> <span class="o">=</span> <span class="n">products</span><span class="p">[</span><span class="n">cubes</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="n">wavelengths</span> <span class="o">=</span> <span class="n">var</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"wavelengths"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">wavelengths</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">wavelengths</span><span class="p">)</span> <span class="o">!=</span> <span class="n">var</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">wavelengths</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="s2">"metadata/corrections"</span><span class="p">]</span><span class="o">.</span><span class="n">to_dataset</span><span class="p">(</span><span class="n">inherit</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="s2">"wavelengths"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">prefix</span><span class="p">,</span> <span class="n">cube</span> <span class="o">=</span> <span class="n">_product_from_cube</span><span class="p">(</span><span class="n">cubes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">var</span><span class="p">,</span> <span class="n">wavelengths</span><span class="p">,</span> <span class="n">sat_id</span><span class="p">)</span>
+
+        <span class="n">level</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"processing_level"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="s2">"L1A"</span> <span class="k">if</span> <span class="n">prefix</span> <span class="o">==</span> <span class="s2">"dn"</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: no processing_level attribute"</span><span class="p">)</span>
+
+        <span class="n">dims</span> <span class="o">=</span> <span class="n">spatial_dims</span><span class="p">(</span><span class="n">products</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">({}</span> <span class="k">if</span> <span class="n">cubeless</span> <span class="k">else</span> <span class="p">{</span><span class="n">prefix</span><span class="p">:</span> <span class="n">cube</span><span class="p">},</span>
+                         <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="n">root</span><span class="o">.</span><span class="n">attrs</span><span class="p">,</span> <span class="s2">"processing_level"</span><span class="p">:</span> <span class="n">_level_key</span><span class="p">(</span><span class="n">level</span><span class="p">)})</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_GEOMETRY_ATTRS</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">geometry</span><span class="o">.</span><span class="n">data_vars</span><span class="p">:</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="n">geometry</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dims</span> <span class="o">==</span> <span class="n">GRID_DIMS</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">GRID_DIMS</span><span class="p">:</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">products</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">products</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">))</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">GRID_MAPPING</span><span class="p">]</span> <span class="o">=</span> <span class="p">((),</span> <span class="n">products</span><span class="p">[</span><span class="n">GRID_MAPPING</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">products</span><span class="p">[</span><span class="n">GRID_MAPPING</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="s2">"latitude"</span> <span class="ow">in</span> <span class="n">out</span> <span class="ow">and</span> <span class="s2">"crs_wgs84"</span> <span class="ow">in</span> <span class="n">geometry</span><span class="o">.</span><span class="n">data_vars</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">"crs_wgs84"</span><span class="p">]</span> <span class="o">=</span> <span class="p">((),</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">"crs_wgs84"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">_flag_variables</span><span class="p">(</span><span class="n">products</span><span class="p">)</span> <span class="o">+</span> <span class="n">_extra_variables</span><span class="p">(</span><span class="n">products</span><span class="p">,</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">cubeless</span> <span class="k">else</span> <span class="n">names</span><span class="p">)):</span>
+            <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">products</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"coordinates"</span><span class="p">,</span> <span class="s2">"grid_mapping"</span><span class="p">)}</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="n">products</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">attrs</span><span class="p">)</span>
+
+        <span class="n">tree</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">"metadata"</span> <span class="ow">in</span> <span class="n">raw</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">raw</span><span class="p">[</span><span class="s2">"metadata"</span><span class="p">]</span><span class="o">.</span><span class="n">subtree</span><span class="p">:</span>
+                <span class="n">ds</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">to_dataset</span><span class="p">(</span><span class="n">inherit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"/gcp"</span><span class="p">):</span>
+                    <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">_GCP_RENAMES</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="p">})</span>
+                <span class="k">if</span> <span class="s2">"bands"</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">dims</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">cubeless</span> <span class="ow">and</span> <span class="n">ds</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="s2">"bands"</span><span class="p">]</span> <span class="o">!=</span> <span class="n">out</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="s2">"bands"</span><span class="p">]:</span>
+                    <span class="c1"># full-band metadata under a band subset (see select_bands)</span>
+                    <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">rename_dims</span><span class="p">({</span><span class="s2">"bands"</span><span class="p">:</span> <span class="s2">"bands_full"</span><span class="p">})</span>
+                <span class="n">tree</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">path</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">selection</span><span class="p">:</span>
+            <span class="c1"># Same bookkeeping as select_bands (band_index, metadata/srf trimmed,</span>
+            <span class="c1"># processing step); the cube already holds only the read bands.</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.processing.bands</span><span class="w"> </span><span class="kn">import</span> <span class="n">select_bands</span>
+            <span class="k">if</span> <span class="n">names</span><span class="p">:</span>
+                <span class="n">selection</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"indices"</span><span class="p">:</span> <span class="n">tree</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">prefix</span><span class="p">][</span><span class="n">BAND_INDEX</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">}</span>
+            <span class="n">tree</span><span class="o">.</span><span class="n">encoding</span><span class="p">[</span><span class="s2">"source"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="n">tree</span> <span class="o">=</span> <span class="n">select_bands</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="o">**</span><span class="n">selection</span><span class="p">)</span>
+        <span class="c1"># Not written to files; processing steps record it as their input.</span>
+        <span class="n">tree</span><span class="o">.</span><span class="n">encoding</span><span class="p">[</span><span class="s2">"source"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tree</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">raw</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+
+<span class="c1"># --------------------------------------------------------------------------</span>
+<span class="c1"># write</span>
+<span class="c1"># --------------------------------------------------------------------------</span>
+
+<span class="c1">#: Levels whose products are 2D variables only, without a band cube.</span>
+<span class="n">CUBELESS_LEVELS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"L2B"</span><span class="p">,)</span>
+
+
+<span class="c1">#: Child node of an in-memory L2A holding the AC tool's other per-band outputs</span>
+<span class="c1">#: (2D variables); Product.write writes it as the L2A.AUX file, never into the L2A.</span>
+<span class="n">INTERMEDIATES_NODE</span> <span class="o">=</span> <span class="s2">"ac_intermediates"</span>
+
+
+<div class="viewcode-block" id="is_cubeless">
+<a class="viewcode-back" href="../../../api/hypso/io/product/index.html#hypso.is_cubeless">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_cubeless</span><span class="p">(</span><span class="n">attrs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Whether a product with these global attributes has no band cube: L2B,</span>
+<span class="sd">    and the L2A.AUX file of an AC tool's other outputs."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.naming</span><span class="w"> </span><span class="kn">import</span> <span class="n">AUX_QUANTITY</span>
+    <span class="n">level</span> <span class="o">=</span> <span class="n">_level_key</span><span class="p">(</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"processing_level"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">CUBELESS_LEVELS</span> <span class="ow">or</span> <span class="p">(</span><span class="n">level</span> <span class="o">==</span> <span class="s2">"L2A"</span> <span class="ow">and</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"l2a_quantity"</span><span class="p">)</span> <span class="o">==</span> <span class="n">AUX_QUANTITY</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="has_cube">
+<a class="viewcode-back" href="../../../api/hypso/io/product/index.html#hypso.has_cube">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">has_cube</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Whether the product has a band cube (every level but L2B and L2A.AUX)."""</span>
+    <span class="k">return</span> <span class="ow">not</span> <span class="n">is_cubeless</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">product_name</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">has_cube</span><span class="p">(</span><span class="n">tree</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">'processing_level'</span><span class="p">]</span><span class="si">}</span><span class="s2"> products have no band cube; their products are "</span>
+                         <span class="s2">"2D variables"</span><span class="p">)</span>
+    <span class="n">dims</span> <span class="o">=</span> <span class="n">product_dims</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+    <span class="n">cubes</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">data_vars</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">dims</span> <span class="o">==</span> <span class="n">dims</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cubes</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"expected one </span><span class="si">{</span><span class="n">dims</span><span class="si">}</span><span class="s2"> product cube at the root, found </span><span class="si">{</span><span class="n">cubes</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cubes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_encoding</span><span class="p">(</span><span class="n">var</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="n">enc</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"_FillValue"</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+        <span class="n">enc</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ENCODING</span><span class="p">,</span> <span class="n">chunksizes</span><span class="o">=</span><span class="n">var</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">enc</span><span class="p">[</span><span class="s2">"dtype"</span><span class="p">]</span> <span class="o">=</span> <span class="n">dtype</span>
+    <span class="k">return</span> <span class="n">enc</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_root_dataset</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">,</span> <span class="n">datacube</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">significant_bits</span><span class="o">=</span><span class="n">SIGNIFICANT_BITS</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Root Dataset as written, plus its encoding."""</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">dataset</span>
+    <span class="n">cubeless</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">has_cube</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
+    <span class="n">prefix</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">cubeless</span> <span class="k">else</span> <span class="n">product_name</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
+    <span class="n">schema</span> <span class="o">=</span> <span class="n">get_schema</span><span class="p">(</span><span class="n">_level_key</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"processing_level"</span><span class="p">]))</span>
+    <span class="n">cube</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">cubeless</span> <span class="k">else</span> <span class="n">ds</span><span class="p">[</span><span class="n">prefix</span><span class="p">]</span>
+    <span class="n">has_geometry</span> <span class="o">=</span> <span class="s2">"latitude"</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">data_vars</span>
+    <span class="n">dims</span> <span class="o">=</span> <span class="n">spatial_dims</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
+    <span class="n">gridded</span> <span class="o">=</span> <span class="n">dims</span> <span class="o">==</span> <span class="n">GRID_DIMS</span>
+    <span class="c1"># Gridded: x/y + `crs` define the grid; latitude/longitude are auxiliary.</span>
+    <span class="n">geolocation</span> <span class="o">=</span> <span class="p">({</span><span class="o">**</span><span class="n">cf</span><span class="o">.</span><span class="n">geolocation_ref_attrs</span><span class="p">(),</span> <span class="s2">"grid_mapping"</span><span class="p">:</span> <span class="n">GRID_MAPPING</span><span class="p">}</span> <span class="k">if</span> <span class="n">gridded</span>
+                   <span class="k">else</span> <span class="n">cf</span><span class="o">.</span><span class="n">geolocation_ref_attrs</span><span class="p">())</span>
+    <span class="n">units</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">product_units</span>
+    <span class="n">long_name</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">product_long_name</span>
+    <span class="n">standard_name</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">product_standard_name</span>
+    <span class="k">if</span> <span class="n">schema</span><span class="o">.</span><span class="n">processing_level</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"L2"</span><span class="p">,</span> <span class="s2">"L2A"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">prefix</span> <span class="ow">in</span> <span class="n">cf</span><span class="o">.</span><span class="n">L2A_PRODUCTS</span><span class="p">:</span>
+        <span class="n">product</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">L2A_PRODUCTS</span><span class="p">[</span><span class="n">prefix</span><span class="p">]</span>
+        <span class="n">units</span><span class="p">,</span> <span class="n">long_name</span><span class="p">,</span> <span class="n">standard_name</span> <span class="o">=</span> <span class="n">product</span><span class="p">[</span><span class="s2">"units"</span><span class="p">],</span> <span class="n">product</span><span class="p">[</span><span class="s2">"long_name"</span><span class="p">],</span> <span class="n">product</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"standard_name"</span><span class="p">)</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="s2">"u2"</span> <span class="k">if</span> <span class="n">prefix</span> <span class="o">==</span> <span class="s2">"dn"</span> <span class="k">else</span> <span class="s2">"f4"</span>
+    <span class="n">quantize</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">significant_bits</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s2">"f4"</span><span class="p">:</span>
+        <span class="c1"># netCDF4's significant_digits means bits for BitRound</span>
+        <span class="n">quantize</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"significant_digits"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">significant_bits</span><span class="p">),</span> <span class="s2">"quantize_mode"</span><span class="p">:</span> <span class="s2">"BitRound"</span><span class="p">}</span>
+
+    <span class="n">out</span><span class="p">,</span> <span class="n">encoding</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">cubeless</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">elif</span> <span class="n">datacube</span><span class="p">:</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"units"</span><span class="p">:</span> <span class="n">units</span><span class="p">,</span> <span class="s2">"long_name"</span><span class="p">:</span> <span class="n">long_name</span><span class="p">,</span> <span class="s2">"wavelength_units"</span><span class="p">:</span> <span class="s2">"nanometers"</span><span class="p">,</span>
+                 <span class="o">**</span><span class="p">({</span><span class="s2">"standard_name"</span><span class="p">:</span> <span class="n">standard_name</span><span class="p">}</span> <span class="k">if</span> <span class="n">standard_name</span> <span class="k">else</span> <span class="p">{}),</span>
+                 <span class="s2">"fwhm"</span><span class="p">:</span> <span class="n">cube</span><span class="p">[</span><span class="s2">"fwhm"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="s2">"wavelengths"</span><span class="p">:</span> <span class="n">cube</span><span class="p">[</span><span class="s2">"wavelength"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">has_geometry</span><span class="p">:</span>
+            <span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">geolocation</span><span class="p">)</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">prefix</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">dims</span> <span class="o">+</span> <span class="p">(</span><span class="s2">"bands"</span><span class="p">,),</span> <span class="n">cube</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">attrs</span><span class="p">)</span>
+        <span class="n">encoding</span><span class="p">[</span><span class="n">prefix</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">_encoding</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="n">prefix</span><span class="p">],</span> <span class="n">dtype</span><span class="p">),</span> <span class="o">**</span><span class="n">quantize</span><span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">band_indices</span><span class="p">(</span><span class="n">cube</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">band</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cube</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="s2">"bands"</span><span class="p">]):</span>
+            <span class="n">wave</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">cube</span><span class="p">[</span><span class="s2">"wavelength"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">band</span><span class="p">])</span>
+            <span class="n">wave_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">wave</span><span class="p">))</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">wave_name</span><span class="si">}</span><span class="s2">"</span>
+            <span class="n">attrs</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">band_attrs</span><span class="p">(</span>
+                <span class="n">long_name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">long_name</span><span class="si">}</span><span class="s2"> Band </span><span class="si">{</span><span class="n">indices</span><span class="p">[</span><span class="n">band</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">wave_name</span><span class="si">}</span><span class="s2"> nm)"</span><span class="p">,</span>
+                <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span>
+                <span class="n">wavelength_nm</span><span class="o">=</span><span class="n">wave</span><span class="p">,</span>
+                <span class="n">radiation_wavelength_nm</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">cube</span><span class="p">[</span><span class="s2">"radiation_wavelength"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">band</span><span class="p">]),</span>
+                <span class="n">fwhm</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">cube</span><span class="p">[</span><span class="s2">"fwhm"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">band</span><span class="p">]),</span>
+                <span class="n">wave_name</span><span class="o">=</span><span class="n">wave_name</span><span class="p">,</span>
+                <span class="n">band_index</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">indices</span><span class="p">[</span><span class="n">band</span><span class="p">]),</span>
+                <span class="n">include_geolocation</span><span class="o">=</span><span class="n">has_geometry</span><span class="p">,</span>
+                <span class="n">var_name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">standard_name</span><span class="o">=</span><span class="n">standard_name</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">has_geometry</span><span class="p">:</span>
+                <span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">geolocation</span><span class="p">)</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="n">cube</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">band</span><span class="p">],</span> <span class="n">attrs</span><span class="p">)</span>
+            <span class="n">encoding</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">_encoding</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">dtype</span><span class="p">),</span> <span class="o">**</span><span class="n">quantize</span><span class="p">}</span>
+
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">builder</span> <span class="ow">in</span> <span class="n">_GEOMETRY_ATTRS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">data_vars</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">builder</span><span class="p">())</span>
+            <span class="n">encoding</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_encoding</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="s2">"f4"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">_flag_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span> <span class="o">+</span> <span class="n">_extra_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">prefix</span><span class="p">])):</span>
+        <span class="n">var_attrs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"coordinates"</span><span class="p">,</span> <span class="s2">"grid_mapping"</span><span class="p">)}</span>
+        <span class="k">if</span> <span class="n">has_geometry</span><span class="p">:</span>
+            <span class="n">var_attrs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">geolocation</span><span class="p">)</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">var_attrs</span><span class="p">)</span>
+        <span class="n">encoding</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_encoding</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">cubeless</span> <span class="ow">and</span> <span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"f"</span><span class="p">:</span>
+            <span class="c1"># L2B's products are its float variables: written as float32, quantized like band variables</span>
+            <span class="n">encoding</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">_encoding</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="s2">"f4"</span><span class="p">),</span> <span class="o">**</span><span class="n">quantize</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">gridded</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">GRID_DIMS</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Variable</span><span class="p">((</span><span class="n">name</span><span class="p">,),</span> <span class="n">ds</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">))</span>
+            <span class="n">encoding</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_encoding</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">GRID_MAPPING</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Variable</span><span class="p">((),</span> <span class="n">ds</span><span class="p">[</span><span class="n">GRID_MAPPING</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">GRID_MAPPING</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">))</span>
+        <span class="n">encoding</span><span class="p">[</span><span class="n">GRID_MAPPING</span><span class="p">]</span> <span class="o">=</span> <span class="n">_encoding</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="n">GRID_MAPPING</span><span class="p">],</span> <span class="s2">"i4"</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">has_geometry</span><span class="p">:</span>
+        <span class="c1"># The grid-mapping variable's value carries no meaning (CF reads only</span>
+        <span class="c1"># its attrs); keep the source file's, else 0.</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s2">"crs_wgs84"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> <span class="k">if</span> <span class="s2">"crs_wgs84"</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">variables</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">out</span><span class="p">[</span><span class="s2">"crs_wgs84"</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Variable</span><span class="p">((),</span> <span class="n">value</span><span class="p">,</span> <span class="n">cf</span><span class="o">.</span><span class="n">crs_wgs84_attrs</span><span class="p">())</span>
+        <span class="n">encoding</span><span class="p">[</span><span class="s2">"crs_wgs84"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_encoding</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="s2">"crs_wgs84"</span><span class="p">],</span> <span class="s2">"i4"</span><span class="p">)</span>
+
+    <span class="c1"># Writing is not a processing step: history lines come from</span>
+    <span class="c1"># provenance.add_step, not from here.</span>
+    <span class="n">level</span> <span class="o">=</span> <span class="n">_level_key</span><span class="p">(</span><span class="n">schema</span><span class="o">.</span><span class="n">processing_level</span><span class="p">)</span>
+    <span class="n">attrs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+    <span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">global_attrs</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">schema</span><span class="o">.</span><span class="n">title</span><span class="p">))</span>
+    <span class="n">attrs</span><span class="p">[</span><span class="s2">"Conventions"</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">cf</span><span class="o">.</span><span class="n">CONVENTIONS</span><span class="si">}</span><span class="s2">, ACDD-1.3"</span>
+    <span class="n">attrs</span><span class="p">[</span><span class="s2">"processing_level"</span><span class="p">]</span> <span class="o">=</span> <span class="n">level</span>   <span class="c1"># "L2A", not the format-1 "L2"</span>
+    <span class="n">attrs</span><span class="p">[</span><span class="s2">"product_format_version"</span><span class="p">]</span> <span class="o">=</span> <span class="n">PRODUCT_FORMAT_VERSION</span>
+    <span class="n">attrs</span><span class="p">[</span><span class="s2">"date_created"</span><span class="p">]</span> <span class="o">=</span> <span class="n">utc_now</span><span class="p">()</span>
+    <span class="c1"># Lossless files say so too, so a reader never has to guess.</span>
+    <span class="n">attrs</span><span class="p">[</span><span class="s2">"band_quantization"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">"BitRound, </span><span class="si">{</span><span class="n">quantize</span><span class="p">[</span><span class="s1">'significant_digits'</span><span class="p">]</span><span class="si">}</span><span class="s2"> significant bits (max relative "</span>
+                                  <span class="sa">f</span><span class="s2">"error </span><span class="si">{</span><span class="mf">2.0</span><span class="w"> </span><span class="o">**</span><span class="w"> </span><span class="o">-</span><span class="p">(</span><span class="n">quantize</span><span class="p">[</span><span class="s1">'significant_digits'</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">)"</span>
+                                  <span class="k">if</span> <span class="n">quantize</span> <span class="k">else</span> <span class="s2">"none (lossless)"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">has_geometry</span><span class="p">:</span>
+        <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s2">"latitude"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="s2">"longitude"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">geospatial_lat_min</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">lat</span><span class="p">)),</span> <span class="n">geospatial_lat_max</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">lat</span><span class="p">)),</span>
+                     <span class="n">geospatial_lon_min</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">lon</span><span class="p">)),</span> <span class="n">geospatial_lon_max</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">lon</span><span class="p">)),</span>
+                     <span class="n">geospatial_lat_units</span><span class="o">=</span><span class="s2">"degrees_north"</span><span class="p">,</span> <span class="n">geospatial_lon_units</span><span class="o">=</span><span class="s2">"degrees_east"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">),</span> <span class="n">encoding</span>
+
+
+<div class="viewcode-block" id="write_product">
+<a class="viewcode-back" href="../../../api/hypso/io/product/index.html#hypso.write_product">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_product</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">datacube</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                  <span class="n">significant_bits</span><span class="o">=</span><span class="n">SIGNIFICANT_BITS</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Write a product tree in the current file format.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tree : xarray.DataTree</span>
+<span class="sd">        In-memory model (see the module description).</span>
+<span class="sd">    path : str or pathlib.Path</span>
+<span class="sd">    datacube : bool, default False</span>
+<span class="sd">        Write the cube as one 3D variable instead of one variable per band.</span>
+<span class="sd">    significant_bits : int or None, default 14</span>
+<span class="sd">        Keep this many significant mantissa bits of the float band variables</span>
+<span class="sd">        (L1B-L2A; netCDF BitRound, max relative error ``2**-(bits + 1)``;</span>
+<span class="sd">        values stay float32, NaN is kept, readers need nothing special). None</span>
+<span class="sd">        writes them lossless. L1A counts, geometry, derived variables and</span>
+<span class="sd">        metadata are always lossless. Recorded in the ``band_quantization``</span>
+<span class="sd">        global attribute.</span>
+<span class="sd">    """</span>
+    <span class="n">root</span><span class="p">,</span> <span class="n">root_encoding</span> <span class="o">=</span> <span class="n">_root_dataset</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">datacube</span><span class="p">,</span> <span class="n">significant_bits</span><span class="p">)</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"/"</span><span class="p">:</span> <span class="n">root</span><span class="p">}</span>
+    <span class="n">encoding</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"/"</span><span class="p">:</span> <span class="n">root_encoding</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">subtree</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">is_root</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">INTERMEDIATES_NODE</span><span class="p">:</span>
+            <span class="c1"># written as their own L2A.AUX file by Product.write</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">is_root</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"write_product does not write the AC tool's intermediates (</span><span class="si">%d</span><span class="s2"> variables); "</span>
+                               <span class="s2">"Product.write writes them as an L2A.AUX file"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">data_vars</span><span class="p">))</span>
+            <span class="k">continue</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">to_dataset</span><span class="p">(</span><span class="n">inherit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">path</span><span class="p">]</span> <span class="o">=</span> <span class="n">ds</span>
+        <span class="n">encoding</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">path</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">_encoding</span><span class="p">(</span><span class="n">var</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span><span class="o">.</span><span class="n">to_netcdf</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">"netcdf4"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="convert_product">
+<a class="viewcode-back" href="../../../api/hypso/io/product/index.html#hypso.convert_product">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_product</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">out_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Convert a product file of any supported layout to the current format.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    src : str or pathlib.Path</span>
+<span class="sd">    out_dir : str or pathlib.Path, optional</span>
+<span class="sd">        Default: next to ``src``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pathlib.Path</span>
+<span class="sd">        The new file, named by :mod:`hypso.io.naming`. A ``convert`` step is</span>
+<span class="sd">        recorded; the source file is left untouched.</span>
+<span class="sd">    """</span>
+    <span class="n">src</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+    <span class="n">tree</span> <span class="o">=</span> <span class="n">read_product</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+    <span class="n">attrs</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">attrs</span>
+    <span class="n">level</span> <span class="o">=</span> <span class="n">_level_key</span><span class="p">(</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"processing_level"</span><span class="p">])</span>
+    <span class="n">sat_id</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sat_id"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"instrument"</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">parse_product_name</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
+    <span class="n">ac</span> <span class="o">=</span> <span class="n">quantity</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="s2">"L2A"</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.naming</span><span class="w"> </span><span class="kn">import</span> <span class="n">name_method</span>
+        <span class="n">ac</span> <span class="o">=</span> <span class="n">name_method</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">ac</span> <span class="ow">or</span> <span class="n">attrs</span><span class="p">[</span><span class="s2">"atmospheric_correction"</span><span class="p">])</span>
+        <span class="n">quantity</span> <span class="o">=</span> <span class="n">product_name</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
+    <span class="n">dst</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_dir</span> <span class="ow">or</span> <span class="n">src</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span> <span class="o">/</span> <span class="n">make_product_name</span><span class="p">(</span><span class="n">sat_id</span><span class="p">,</span> <span class="n">name</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">name</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span>
+                                                          <span class="n">ac</span><span class="o">=</span><span class="n">ac</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="n">name</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">name</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+                                                          <span class="n">quantity</span><span class="o">=</span><span class="n">quantity</span><span class="p">)</span><span class="o">.</span><span class="n">filename</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">dst</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span> <span class="o">==</span> <span class="n">src</span><span class="o">.</span><span class="n">resolve</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">src</span><span class="si">}</span><span class="s2"> is already a current-format product name"</span><span class="p">)</span>
+    <span class="n">add_step</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="s2">"convert"</span><span class="p">,</span> <span class="n">input_file</span><span class="o">=</span><span class="n">src</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="p">{</span><span class="s2">"source_layout"</span><span class="p">:</span> <span class="n">source_layout</span><span class="p">(</span><span class="n">src</span><span class="p">)})</span>
+    <span class="n">write_product</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">dst</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dst</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Norwegian University of Science and Technology (NTNU).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

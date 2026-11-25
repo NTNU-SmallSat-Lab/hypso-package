@@ -1,0 +1,114 @@
+hypso.io.provenance
+===================
+
+.. py:module:: hypso.io.provenance
+
+.. autoapi-nested-parse::
+
+   Processing provenance carried in every product.
+
+   Each processing step adds a `metadata/processing/<step>` node (one per
+   step, kept when the product is read and written again, so a file holds its
+   whole lineage) and one line to the global `history` attribute:
+
+       2026-10-26T10:02:11Z: l1d from HYPSO2_HSI.20250612T095802.aeronetvenice.L1C.nc,
+           hypso-package 26.10.0 (git 25f4c3bf)
+
+   Node attributes: date_utc, software / software_version /
+   software_git_commit / software_git_dirty, input_file, the step's parameters
+   (scalars as attributes, anything else as JSON), and optionally:
+
+   - calibration: package / version / git commit, and `<kind>_file` +
+     `<kind>_sha256` for every coefficient file loaded (versions alone don't
+     identify coefficients - see docs/versioning.rst);
+   - ac: tool, version, git commit, install path, `settings_effective` (full
+     settings actually used, JSON) and `settings_user` (only what the user
+     set). Credential-like keys are removed and listed in
+     `settings_redacted_keys`.
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.io.provenance.ac_attrs
+   hypso.io.provenance.add_step
+   hypso.io.provenance.attr_value
+   hypso.io.provenance.calibration_attrs
+   hypso.io.provenance.redact
+   hypso.io.provenance.software_attrs
+   hypso.io.provenance.utc_now
+
+
+Module Contents
+---------------
+
+.. py:function:: ac_attrs(tool, version = None, git_commit = None, install_path=None, settings_effective = None, settings_user = None)
+
+   Provenance attributes for an atmospheric correction tool run.
+
+   Settings are stored as JSON with credential-like keys removed
+   (:func:`redact`).
+
+
+.. py:function:: add_step(tree, step, *, input_file=None, parameters = None, calibration = None, ac = None)
+
+   Record a processing step on a product tree, in place.
+
+   Adds ``metadata/processing/<step>`` and a line to the ``history``
+   attribute.
+
+   :param tree:
+   :type tree: xarray.DataTree
+   :param step: Step name, e.g. ``"l1b"``, ``"regrid"``.
+   :type step: str
+   :param input_file: What the step read (only its name is kept).
+   :type input_file: str or path, optional
+   :param parameters: The step's parameters.
+   :type parameters: dict, optional
+   :param calibration: From :func:`calibration_attrs` and :func:`ac_attrs`.
+   :type calibration: dict, optional
+   :param ac: From :func:`calibration_attrs` and :func:`ac_attrs`.
+   :type ac: dict, optional
+
+
+.. py:function:: attr_value(value)
+
+   A NetCDF-storable attribute value: bools as "true"/"false", None as
+   "", containers as JSON, numbers and strings unchanged.
+
+
+.. py:function:: calibration_attrs(package, files)
+
+   Provenance attributes for the calibration files used.
+
+   :param package: Calibration package, e.g. ``"hypso2_calibration"``.
+   :type package: str
+   :param files: ``{kind: path}``, e.g. ``{"radiometric": ..., "smile": ...}``; None
+                 entries (a correction not applied) are skipped.
+   :type files: dict
+
+   :returns: The package's version and commit, and each file's name and sha256.
+   :rtype: dict
+
+
+.. py:function:: redact(settings)
+
+   Remove credential-like keys (user names, passwords, tokens, secrets, API keys) from settings.
+
+   :returns: * **settings** (*dict*) -- Without those keys.
+             * **removed** (*list of str*) -- The removed keys, sorted.
+
+
+.. py:function:: software_attrs()
+
+   hypso-package's name, version and git commit, for a provenance step.
+
+
+.. py:function:: utc_now()
+
+   The current UTC time, ISO 8601 to the second with a ``Z`` suffix.
+
+

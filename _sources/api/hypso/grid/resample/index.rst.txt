@@ -1,0 +1,133 @@
+hypso.grid.resample
+===================
+
+.. py:module:: hypso.grid.resample
+
+.. autoapi-nested-parse::
+
+   Resampling between pyresample geometries: one Resampler per source and
+   target pair (neighbour lookup done once, applied to every variable), an
+   Averager for coarser grids (mean of the source pixels in each cell), and
+   resample_product - a product's contents on any target, as a bare Dataset.
+
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   hypso.grid.resample.Averager
+   hypso.grid.resample.GridOperators
+   hypso.grid.resample.Resampler
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.grid.resample.default_radius
+   hypso.grid.resample.is_flag_variable
+   hypso.grid.resample.resample_product
+   hypso.grid.resample.target_resolution_metres
+
+
+Module Contents
+---------------
+
+.. py:class:: Averager(latitudes, longitudes, target)
+
+   Cell averages on a grid: each target cell gets the mean of the
+   source pixels whose centres fall in it (NaN ignored per band) - an
+   unweighted approximation of area-weighted averaging, close when source
+   pixels are much smaller than the cells. Only for targets coarser than
+   the source; finer ones leave empty cells inside the swath.
+
+
+   .. py:method:: bitwise_or(data)
+
+      Integer flags (rows, cols) -> per cell, every flag set in any of
+      its pixels (0 for empty cells).
+
+
+
+   .. py:method:: mean(data)
+
+      Float (rows, cols[, bands]) -> cell means in the input's float dtype.
+
+
+
+.. py:class:: GridOperators(tree, target, method, radius_of_influence = None)
+
+   How each kind of variable goes from a product onto `target` with
+   `method`, so resample_product and regrid treat variables alike:
+
+   - floats(): the cube and float variables - nearest, bilinear, or cell
+     average; azimuths (by name) through their sine and cosine unless
+     nearest, so 0/360 does not average to 180;
+   - integers(): nearest neighbour, except bit flags with "average", which
+     are OR-ed over the cell;
+   - covered(): target pixels that received data.
+
+
+   .. py:method:: parameters()
+
+      What was done, for provenance.
+
+
+
+.. py:class:: Resampler(source, target, radius_of_influence, bilinear)
+
+   Nearest-neighbour and (optionally) bilinear resampling from `source`
+   to `target`; radius_of_influence in metres.
+
+
+   .. py:method:: coverage(method)
+
+      True where the target has data from the source with `method`.
+
+
+
+   .. py:method:: nearest(data, fill_value=np.nan)
+
+      (rows, cols[, bands]); integer data keeps its dtype (fill 0).
+
+
+
+.. py:function:: default_radius(source_metres, target_metres = 0.0)
+
+   Radius of influence (m): 1.5 times the coarser of source and target
+   pixel size, so every target pixel inside the swath finds neighbours.
+
+
+.. py:function:: is_flag_variable(name, attrs)
+
+   Bit-flag variables (CF flag_masks, or AC tools' *flags* variables).
+
+
+.. py:function:: resample_product(tree, target, method = 'nearest', radius_of_influence = None)
+
+   A product's contents on any pyresample target, as a bare Dataset.
+
+   :param tree: A georeferenced product tree.
+   :type tree: xarray.DataTree
+   :param target:
+   :type target: pyresample.geometry.AreaDefinition or SwathDefinition
+   :param method: Per kind of variable as in :class:`GridOperators`; ``"average"`` only
+                  onto grids coarser than the product.
+   :type method: {"nearest", "bilinear", "average"}, default "nearest"
+   :param radius_of_influence: In m; default :func:`default_radius`.
+   :type radius_of_influence: float, optional
+
+   :returns: The cube ``(y, x, band)`` with the source band wavelengths, each
+             derived variable ``(y, x)``, each flag as boolean ``flag_<name>``,
+             and the target's latitude and longitude.
+   :rtype: xarray.Dataset
+
+
+.. py:function:: target_resolution_metres(target)
+
+   Pixel size (m) of an AreaDefinition; 0 for a swath target.
+
+

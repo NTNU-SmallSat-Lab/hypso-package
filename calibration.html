@@ -1,0 +1,928 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Calibration coefficients &#8212; hypso 26.10.0a7-20-g5e64121f</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=8e897651"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'calibration';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Coefficient history" href="coefficient_history.html" />
+    <link rel="prev" title="Products and files" href="products.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="26.10.0a7" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">hypso 26.10.0a7-20-g5e64121f</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Calibration coefficients</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="calibration-coefficients">
+<h1>Calibration coefficients<a class="headerlink" href="#calibration-coefficients" title="Link to this heading">#</a></h1>
+<p>L1A to L1B calibration applies radiometric, smile, destriping and spectral
+corrections, each from a coefficient file shipped in the sensor’s calibration
+package. The files are versioned, and you choose them with two arguments:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">coeff_type</span></code></dt><dd><p>The radiometric variant: <code class="docutils literal notranslate"><span class="pre">abs</span></code>, <code class="docutils literal notranslate"><span class="pre">moved</span></code> or <code class="docutils literal notranslate"><span class="pre">lab</span></code>. Default <code class="docutils literal notranslate"><span class="pre">abs</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">version</span></code></dt><dd><p>The coefficient release - <code class="docutils literal notranslate"><span class="pre">V3.1</span></code> (default), <code class="docutils literal notranslate"><span class="pre">V3.1v2spec</span></code> (for
+OC-SMART), <code class="docutils literal notranslate"><span class="pre">V2</span></code>, <code class="docutils literal notranslate"><span class="pre">V1</span></code> (and, for HYPSO-2, <code class="docutils literal notranslate"><span class="pre">V1v2spec</span></code>) - or a dictionary that sets
+the version of individual corrections. Production’s names <code class="docutils literal notranslate"><span class="pre">v31</span></code> and
+<code class="docutils literal notranslate"><span class="pre">v31v2spec</span></code> work too; <code class="docutils literal notranslate"><span class="pre">V3</span></code> maps to <code class="docutils literal notranslate"><span class="pre">V3.1</span></code> with a deprecation warning.</p>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">hypso</span>
+
+<span class="n">l1a</span> <span class="o">=</span> <span class="n">hypso</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"....L1A.nc"</span><span class="p">)</span>
+
+<span class="n">l1b</span> <span class="o">=</span> <span class="n">l1a</span><span class="o">.</span><span class="n">calibrate</span><span class="p">()</span>                                <span class="c1"># abs, V3.1</span>
+<span class="n">l1b</span> <span class="o">=</span> <span class="n">l1a</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="n">version</span><span class="o">=</span><span class="s2">"V3.1v2spec"</span><span class="p">)</span>            <span class="c1"># V3.1 with the pre-V3 band names, for OC-SMART</span>
+<span class="n">l1b</span> <span class="o">=</span> <span class="n">l1a</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="s2">"moved"</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"V2"</span><span class="p">)</span>           <span class="c1"># the pre-V3 "moved" set</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">hypso.processing.l1a_to_l1b(tree,</span> <span class="pre">...)</span></code> takes the same arguments for a
+product tree.</p>
+<section id="releases">
+<h2>Releases<a class="headerlink" href="#releases" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Release</p></th>
+<th class="head"><p>Radiometric variants</p></th>
+<th class="head"><p>Smile</p></th>
+<th class="head"><p>Spectral</p></th>
+<th class="head"><p>FWHM</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>V3.1 (default)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">abs</span></code>, <code class="docutils literal notranslate"><span class="pre">moved</span></code></p></td>
+<td><p>V3 (Sobel)</p></td>
+<td><p>V3</p></td>
+<td><p>V3.1 (in-orbit)</p></td>
+</tr>
+<tr class="row-odd"><td><p>V3.1v2spec</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">abs</span></code>, <code class="docutils literal notranslate"><span class="pre">moved</span></code></p></td>
+<td><p>V3 (Sobel)</p></td>
+<td><p><strong>V2</strong></p></td>
+<td><p>V3.1 (in-orbit)</p></td>
+</tr>
+<tr class="row-even"><td><p>V2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">abs</span></code>, <code class="docutils literal notranslate"><span class="pre">moved</span></code></p></td>
+<td><p>V2</p></td>
+<td><p>V2</p></td>
+<td><p>sensor profile</p></td>
+</tr>
+<tr class="row-odd"><td><p>V1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">lab</span></code></p></td>
+<td><p>V1 (lab)</p></td>
+<td><p>V1 (lab)</p></td>
+<td><p>sensor profile</p></td>
+</tr>
+<tr class="row-even"><td><p>V1v2spec</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">lab</span></code></p></td>
+<td><p>V1 (lab)</p></td>
+<td><p><strong>V2</strong></p></td>
+<td><p>sensor profile</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul class="simple">
+<li><p><strong>V3.1</strong> (2026-10-29, production’s default <code class="docutils literal notranslate"><span class="pre">v31</span></code>): <code class="docutils literal notranslate"><span class="pre">abs</span></code> is V3 <code class="docutils literal notranslate"><span class="pre">abs</span></code>
+rescaled, about 3.7% lower radiance for full-frame captures and 2.9% for
+wide ones (the wide matrix is used as is); <code class="docutils literal notranslate"><span class="pre">moved</span></code> is V3 <code class="docutils literal notranslate"><span class="pre">moved</span></code>. V3
+<code class="docutils literal notranslate"><span class="pre">abs</span></code> was V3 <code class="docutils literal notranslate"><span class="pre">moved</span></code> scaled to the absolute level of HYPSO-1 relative
+to PACE over Libya-4, about 11% lower.</p></li>
+<li><p><strong>V3.1v2spec</strong> is V3.1 with the V2 spectral calibration, for OC-SMART. The
+V3 spectral calibration moves band centres by +0.3 to +1.7 nm, which changes
+the integer wavelengths in band names (<code class="docutils literal notranslate"><span class="pre">Lt_&lt;nm&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">rhot_&lt;nm&gt;</span></code>), and
+OC-SMART’s HYPSO band table picks bands by those names. POLYMER needs band
+settings for the V3 names with V3.1.</p></li>
+<li><p><strong>V2</strong> is the set used before V3 (<code class="docutils literal notranslate"><span class="pre">moved</span></code>, and <code class="docutils literal notranslate"><span class="pre">abs</span></code>, which used to be
+called <code class="docutils literal notranslate"><span class="pre">adjusted</span></code>).</p></li>
+<li><p><strong>V1</strong> is the complete lab calibration (previously <code class="docutils literal notranslate"><span class="pre">original</span></code>): the lab
+gains, the lab smile as delivered by the calibration team (2026-10-28), and
+band centres from row 608 of that smile matrix. Smile correction resamples
+every row onto the frame’s centre row, which is detector row 608 for the AOC
+window (<code class="docutils literal notranslate"><span class="pre">aoi_y</span></code> 62, 1092 rows), so those are the corrected cube’s band
+wavelengths there; for windows centred elsewhere they are slightly off.
+Before 2026-11, V1 used the V2 smile and the old lab centre-row wavelengths.</p></li>
+<li><p><strong>V1v2spec</strong> is V1 with the V2 band names, for OC-SMART.</p></li>
+<li><p><strong>V3</strong> is superseded by V3.1: <code class="docutils literal notranslate"><span class="pre">version=&quot;V3&quot;</span></code> uses V3.1 with a deprecation
+warning (the <code class="docutils literal notranslate"><span class="pre">abs</span></code> gains differ by about 3%).</p></li>
+</ul>
+<p>The old names <code class="docutils literal notranslate"><span class="pre">adjusted</span></code> and <code class="docutils literal notranslate"><span class="pre">original</span></code> still work and mean <code class="docutils literal notranslate"><span class="pre">abs</span></code>/V2 and
+<code class="docutils literal notranslate"><span class="pre">lab</span></code>/V1, with a deprecation warning.</p>
+</section>
+<section id="fwhm-and-srfs">
+<h2>FWHM and SRFs<a class="headerlink" href="#fwhm-and-srfs" title="Link to this heading">#</a></h2>
+<p>Each band’s FWHM comes from a table of lines: the release’s <code class="docutils literal notranslate"><span class="pre">fwhm</span></code> version
+(V3.1: in-orbit FWHM at 8 lines from 430 to 764 nm) or, for releases without
+one, the sensor profile’s built-in table. It is interpolated linearly between
+the lines and constant outside them; before 2026-11 each band took the nearest
+line’s value. The table is kept in <code class="docutils literal notranslate"><span class="pre">metadata/corrections</span></code>
+(<code class="docutils literal notranslate"><span class="pre">fwhm_table_wavelength</span></code>, <code class="docutils literal notranslate"><span class="pre">fwhm_table_fwhm</span></code>), so TOA reflectance and the
+SRFs use the same FWHM. The SRFs are Gaussians over +/-4 sigma (+/-3 before),
+as in production hypso-package 11756523 and h2-onboard-calibration.</p>
+</section>
+<section id="hypso-1">
+<h2>HYPSO-1<a class="headerlink" href="#hypso-1" title="Link to this heading">#</a></h2>
+<p>HYPSO-1 uses the same scheme (<code class="docutils literal notranslate"><span class="pre">hypso1_calibration</span></code>’s
+<code class="docutils literal notranslate"><span class="pre">data/coefficients.yaml</span></code>) with its own releases and a different default:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Release</p></th>
+<th class="head"><p>Radiometric variants</p></th>
+<th class="head"><p>Smile</p></th>
+<th class="head"><p>Destriping</p></th>
+<th class="head"><p>Spectral</p></th>
+<th class="head"><p>FWHM</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>V3.1 (default)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">abs</span></code></p></td>
+<td><p>V3 (Sobel)</p></td>
+<td><p>V1</p></td>
+<td><p>V3</p></td>
+<td><p>V3.1 (in-orbit)</p></td>
+</tr>
+<tr class="row-odd"><td><p>V3.1v2spec</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">abs</span></code></p></td>
+<td><p>V3 (Sobel)</p></td>
+<td><p>V1</p></td>
+<td><p><strong>V2</strong></p></td>
+<td><p>V3.1 (in-orbit)</p></td>
+</tr>
+<tr class="row-even"><td><p>V2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">moved</span></code>, <code class="docutils literal notranslate"><span class="pre">abs</span></code></p></td>
+<td><p>V1</p></td>
+<td><p>V1</p></td>
+<td><p>V2</p></td>
+<td><p>sensor profile</p></td>
+</tr>
+<tr class="row-odd"><td><p>V1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">lab</span></code></p></td>
+<td><p>V1</p></td>
+<td><p>V1</p></td>
+<td><p>V1</p></td>
+<td><p>sensor profile</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul class="simple">
+<li><p>The default is <code class="docutils literal notranslate"><span class="pre">abs</span></code>/V3.1, as in production (<code class="docutils literal notranslate"><span class="pre">v31</span></code>); before 2026-11 it
+was <code class="docutils literal notranslate"><span class="pre">moved</span></code>/V2. V3.1’s gains are 0.972 times aria’s HYPSO-1 V3; its smile
+is aria’s full-frame V3 (Sobel) matrix, cropped for every capture type, and
+its spectral calibration aria’s V3.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">abs</span></code> is the set previously called <code class="docutils literal notranslate"><span class="pre">adjusted</span></code>, <code class="docutils literal notranslate"><span class="pre">lab</span></code> the one called
+<code class="docutils literal notranslate"><span class="pre">original</span></code>; the old names still work, with a deprecation warning. The
+coefficient files themselves are unchanged.</p></li>
+<li><p>Smile and destriping depend on the capture type (nominal, wide; custom and
+moon captures use the full-frame smile matrix and no destriping), and moon
+captures use the moon radiometric matrix whatever the variant.</p></li>
+</ul>
+</section>
+<section id="what-the-packages-contain">
+<h2>What the packages contain<a class="headerlink" href="#what-the-packages-contain" title="Link to this heading">#</a></h2>
+<p>Each calibration package (<code class="docutils literal notranslate"><span class="pre">hypso1_calibration</span></code>, <code class="docutils literal notranslate"><span class="pre">hypso2_calibration</span></code>)
+keeps its files in <code class="docutils literal notranslate"><span class="pre">data/</span></code>, one folder per correction, and lists which file
+each correction uses, by release, in <code class="docutils literal notranslate"><span class="pre">data/coefficients.yaml</span></code>:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Folder</p></th>
+<th class="head"><p>Contents</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">radiometric/</span></code></p></td>
+<td><p>Gains: V3.1 <code class="docutils literal notranslate"><span class="pre">abs</span></code> (full frame, and a pre-binned wide-capture matrix used
+as is), <code class="docutils literal notranslate"><span class="pre">moved</span></code> (V3.1 and V2), V2 <code class="docutils literal notranslate"><span class="pre">abs</span></code>, V1 <code class="docutils literal notranslate"><span class="pre">lab</span></code>; HYPSO-1 also a
+moon matrix, used for moon captures whatever the variant.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">smile/</span></code></p></td>
+<td><p>V3 (Sobel, full frame, cropped per capture) for V3.1; V2 and the lab
+smile (HYPSO-2), or the V1 nominal, wide and full-frame matrices (HYPSO-1).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">destriping/</span></code></p></td>
+<td><p>HYPSO-1 only: the V1 matrices for nominal and wide captures, used by every
+HYPSO-1 release including V3.1, as in production. There is no V3 or V3.1
+destriping, and HYPSO-2 has none in any release.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">spectral/</span></code></p></td>
+<td><p>Band centres: V3 (V3.1), V2 (V3.1v2spec, V2, V1v2spec), and for V1 the
+lab smile’s row 608 (HYPSO-2) or the lab centre row (HYPSO-1).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fwhm/</span></code></p></td>
+<td><p>The V3.1 in-orbit FWHM tables; older releases use the sensor profile’s
+built-in table.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">optional/</span></code></p></td>
+<td><p>HYPSO-2’s keystone/distortion model (<code class="docutils literal notranslate"><span class="pre">h2_distortion_model_v1.npz</span></code>), outside
+the releases and off by default: <code class="docutils literal notranslate"><span class="pre">calibrate(keystone=True)</span></code> applies it,
+with a warning, until it is reviewed.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reference/</span></code></p></td>
+<td><p>Files kept for reference that no release selects and calibration never
+reads (below).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The catalog’s <code class="docutils literal notranslate"><span class="pre">reference_files</span></code> section describes each reference file; in
+short:</p>
+<ul class="simple">
+<li><p>HYPSO-2: the lab smile matrix as production shipped it, with its rows
+reversed (a known error; smile V1 is the corrected lab delivery); the old
+V1 lab centre-row wavelengths; lab-era full-frame spectral calibration
+matrices (plain and smoothed); the lab spectral polynomial (the same values
+as the calibration team’s delivery; V1 takes its band wavelengths from the
+lab smile instead); engineering-model and pre-launch flight-model spectral
+coefficients; a moon radiometric matrix (HYPSO-2 moon captures use the
+release’s gains, as in production); pre-binned 2025 nominal and wide gains;
+a band-centre table.</p></li>
+<li><p>HYPSO-1: pre-binned V1 gains for nominal and wide captures (the releases
+crop the full-frame gains instead); a band-centre table.</p></li>
+</ul>
+<p>A test (<code class="docutils literal notranslate"><span class="pre">tests/test_coefficients.py</span></code>) checks that every file in <code class="docutils literal notranslate"><span class="pre">data/</span></code>
+is either selected by the catalog or listed as a reference file, and that
+every path the catalog names exists. File names, contents and checksums are
+unchanged by the folder layout, so products’ provenance (file name and
+SHA-256) stays comparable across versions.</p>
+</section>
+<section id="mixing-versions">
+<h2>Mixing versions<a class="headerlink" href="#mixing-versions" title="Link to this heading">#</a></h2>
+<p>Pass <code class="docutils literal notranslate"><span class="pre">version</span></code> as a dictionary with any of <code class="docutils literal notranslate"><span class="pre">radiometric</span></code>, <code class="docutils literal notranslate"><span class="pre">smile</span></code>,
+<code class="docutils literal notranslate"><span class="pre">spectral</span></code>, <code class="docutils literal notranslate"><span class="pre">spectral_full_frame</span></code> and <code class="docutils literal notranslate"><span class="pre">fwhm</span></code>; corrections you leave out come from
+the V3.1 release:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># V3.1 radiometric (abs) with V2 smile</span>
+<span class="n">l1a_to_l1b</span><span class="p">(</span><span class="n">l1a</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="p">{</span><span class="s2">"radiometric"</span><span class="p">:</span> <span class="s2">"V3.1"</span><span class="p">,</span> <span class="s2">"smile"</span><span class="p">:</span> <span class="s2">"V2"</span><span class="p">})</span>
+</pre></div>
+</div>
+</section>
+<section id="what-gets-recorded">
+<h2>What gets recorded<a class="headerlink" href="#what-gets-recorded" title="Link to this heading">#</a></h2>
+<p>Each L1B (and every later level) records in <code class="docutils literal notranslate"><span class="pre">metadata/processing/l1b</span></code>:
+<code class="docutils literal notranslate"><span class="pre">coeff_type</span></code>, <code class="docutils literal notranslate"><span class="pre">coefficient_release</span></code> (<code class="docutils literal notranslate"><span class="pre">custom</span></code> when mixed), the version
+of each correction, the coefficient file names, and their SHA-256 checksums.</p>
+<p>When calibration runs, the package also logs a summary at INFO level through
+Python’s <code class="docutils literal notranslate"><span class="pre">logging</span></code> module:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Calibration summary: HYPSO-2, capture type wide, coeff_type abs, release V3.1
+  radiometric  applied V3.1/abs  h2_radiometric_calibration_matrix_wide_v31_abs.npz
+  keystone     off (opt-in: keystone=True)
+  smile        applied V3  smile_correction_matrix_HYPSO-2_full_sobel_v3.npz
+  destriping   skipped (no coefficients)
+  spectral     applied V3  spectral_array_calibrated_poly_full_v3.npz
+  fwhm         table V3.1  h2_srf_fwhm_v31.npz
+</pre></div>
+</div>
+<p>The package does not configure logging itself. To see INFO messages, configure
+it in your script, for example <code class="docutils literal notranslate"><span class="pre">logging.basicConfig(level=logging.INFO)</span></code>.</p>
+</section>
+<section id="adding-coefficients">
+<h2>Adding coefficients<a class="headerlink" href="#adding-coefficients" title="Link to this heading">#</a></h2>
+<p>The HYPSO-2 catalog is <code class="docutils literal notranslate"><span class="pre">hypso2_calibration/data/coefficients.yaml</span></code>. Adding a
+coefficient file or a release is an edit to that file, plus the new file in
+the same directory. Then update the checksum manifest and tag a release (see
+<a class="reference internal" href="versioning.html"><span class="doc">Versioning</span></a>):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">hypso</span><span class="o">.</span><span class="n">calibration</span><span class="o">.</span><span class="n">manifest</span> <span class="n">update</span> <span class="n">hypso2_calibration</span>
+</pre></div>
+</div>
+</section>
+<section id="keystone-optional-unreviewed">
+<h2>Keystone (optional, unreviewed)<a class="headerlink" href="#keystone-optional-unreviewed" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">calibrate(keystone=True)</span></code> also corrects keystone (spatial misregistration
+across the spectrum) with HYPSO-2’s distortion model, after radiometric
+calibration and before smile. The model is shipped for review and marked not
+enabled, so applying it warns; it is off by default, and HYPSO-1 has no model.
+What it is and where it came from: <a class="reference internal" href="coefficient_history.html"><span class="doc">Coefficient history</span></a>.</p>
+<p>Where the coefficient files came from is recorded in <a class="reference internal" href="coefficient_history.html"><span class="doc">Coefficient history</span></a>.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="products.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Products and files</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="coefficient_history.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Coefficient history</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#releases">Releases</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fwhm-and-srfs">FWHM and SRFs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso-1">HYPSO-1</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-packages-contain">What the packages contain</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mixing-versions">Mixing versions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-gets-recorded">What gets recorded</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-coefficients">Adding coefficients</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#keystone-optional-unreviewed">Keystone (optional, unreviewed)</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/calibration.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Norwegian University of Science and Technology (NTNU).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

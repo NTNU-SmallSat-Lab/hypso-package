@@ -1,0 +1,65 @@
+hypso.processing.calibrate
+==========================
+
+.. py:module:: hypso.processing.calibrate
+
+.. autoapi-nested-parse::
+
+   L1A to L1B: radiometric, smile, destriping and spectral calibration.
+
+   Coefficient files come from the sensor's calibration package
+   (``hypso1_calibration``, ``hypso2_calibration``); see the calibration guide
+   for the variants and releases.
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.processing.calibrate.l1a_to_l1b
+
+
+Module Contents
+---------------
+
+.. py:function:: l1a_to_l1b(tree, coeff_type = None, version=None, coeff_files = None, radiometric = True, smile = True, destripe = True, spectral = True, keystone = False)
+
+   Calibrate an L1A tree to L1B (top-of-atmosphere radiance ``Lt``).
+
+   :param tree: L1A product tree.
+   :type tree: xarray.DataTree
+   :param coeff_type: Radiometric variant: ``"abs"`` (default), ``"moved"`` or ``"lab"``, or a
+                      set registered with ``hypso.calibration.register_calibration_coeffs``.
+                      None uses the file's ``radiometric_coefficients_version`` if present,
+                      else the default. Without ``version``, a variant the default release
+                      lacks takes the newest release that has it (HYPSO-1 ``"moved"``: V2).
+   :type coeff_type: str, optional
+   :param version: Coefficient release - ``"V3.1"`` (default), ``"V3.1v2spec"`` (V2 band
+                   names, for OC-SMART), ``"V2"``, ``"V1"``; ``"V3"`` means V3.1 - or
+                   ``{correction: release}`` to mix them, e.g. ``{"smile": "V2"}`` (the
+                   calibration package's ``data/coefficients.yaml``).
+   :type version: str or dict, optional
+   :param coeff_files: Explicit ``{kind: path}`` instead of ``coeff_type`` and ``version``.
+   :type coeff_files: dict, optional
+   :param radiometric: False skips that correction.
+   :type radiometric: bool, default True
+   :param smile: False skips that correction.
+   :type smile: bool, default True
+   :param destripe: False skips that correction.
+   :type destripe: bool, default True
+   :param spectral: False skips that correction.
+   :type spectral: bool, default True
+   :param keystone: Also correct keystone (spatial misregistration across the spectrum)
+                    with the sensor's optional distortion model, after radiometric
+                    calibration and before smile (:mod:`hypso.calibration.keystone`).
+                    Groundwork, unreviewed: HYPSO-2's model is shipped disabled, so this
+                    warns; sensors without a model raise ValueError.
+   :type keystone: bool, default False
+
+   :returns: L1B tree. The files used, their checksums and the package versions
+             are recorded in ``metadata/processing/l1b``, and a summary is logged.
+   :rtype: xarray.DataTree
+
+

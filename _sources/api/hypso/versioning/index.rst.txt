@@ -1,0 +1,58 @@
+hypso.versioning
+================
+
+.. py:module:: hypso.versioning
+
+.. autoapi-nested-parse::
+
+   Version and source identity of hypso and the hypsoN_calibration packages,
+   for product provenance (hypso.io.provenance).
+
+   All three packages share one version, derived from git tags (vYY.M.N) by
+   setuptools_scm at build time - see docs/versioning.rst. At runtime the
+   version a product records must describe the code that actually ran, which
+   the build-time version does not always do:
+
+   - An editable install (`pip install -e`) writes _version.py once, at install
+     time; later commits don't change it. So when a package's own directory is
+     inside a git work tree, git is asked directly.
+   - importlib.metadata reports whatever distribution of that name is installed,
+     which is not necessarily the copy being imported (e.g. a refactor checkout
+     on sys.path while production's hypso2_calibration 26.5.1 is installed in
+     the same env). Metadata is only trusted when its files include the
+     imported module.
+
+   Lookup order: git -> _version.py next to the module -> matching installed
+   metadata -> "0.0.0+unknown".
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.versioning.package_info
+   hypso.versioning.version_from_describe
+
+
+Module Contents
+---------------
+
+.. py:function:: package_info(package_name)
+
+   Version and source identity of an importable package ("hypso",
+   "hypso1_calibration", "hypso2_calibration"). Keys: name, version,
+   git_commit, git_dirty, git_describe, source ("git" | "version_file" |
+   "metadata" | "unknown"), path. Cached per process; git is only queried
+   when this is called, never at import time.
+
+
+.. py:function:: version_from_describe(describe, dirty, date = None)
+
+   PEP 440 version from `git describe --tags --long` output, matching
+   setuptools_scm's default scheme: on a tag -> the tag's version; past a
+   tag -> next micro .dev<distance>+g<sha>; dirty -> local part gets
+   .d<YYYYMMDD> (date) or .dirty.
+
+

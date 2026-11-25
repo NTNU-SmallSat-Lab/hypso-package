@@ -1,0 +1,86 @@
+hypso.sensors
+=============
+
+.. py:module:: hypso.sensors
+
+.. autoapi-nested-parse::
+
+   Sensor-profile registry.
+
+   One SensorProfile per sensor, in a registry keyed by the file's sat_id
+   attribute. Adding a sensor means adding one profile module (see hypso1.py
+   and hypso2.py) and registering it here.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/hypso/sensors/hypso1/index
+   /api/hypso/sensors/hypso2/index
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   hypso.sensors.SensorProfile
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.sensors.get_sensor_profile
+   hypso.sensors.register_sensor
+   hypso.sensors.registered_sensors
+
+
+Package Contents
+----------------
+
+.. py:class:: SensorProfile
+
+   Everything the processing needs to know about one sensor (HYPSO-1,
+   HYPSO-2): detector geometry, capture modes, band/FWHM lookup and
+   calibration package.
+
+   calibration_files is the pluggable replacement for the old
+   Hypso1/Hypso2._set_calibration_coeff_files override: given
+   (capture_type, coeff_type), it must return a dict with keys
+   "radiometric", "smile", "destriping", "spectral" - each an absolute path
+   to a calibration coefficient file. Today this is always
+   get_hypsoN_calibration_files from the matching hypsoN_calibration sibling
+   package, wrapped in a small adapter (see hypso1.py/hypso2.py in this
+   package) so its (capture_type, coeff_type=...) signature matches this
+   Callable's shape exactly.
+
+
+.. py:function:: get_sensor_profile(sat_id)
+
+   Look up a registered SensorProfile by sat_id (as read from a
+   capture's NetCDF attrs, e.g. "HYPSO-2") or by its short key
+   (e.g. "hypso2"). Raises KeyError with the list of known sensors if
+   sat_id isn't registered - this is the error a future sensor's
+   capture file would hit before its profile module is written and
+   imported.
+
+
+.. py:function:: register_sensor(profile)
+
+   Register a SensorProfile under both its sat_id (e.g. "HYPSO-2", the
+   key files are actually looked up by - see hypso.Hypso's factory) and its
+   short key (e.g. "hypso2"), so callers can look it up either way.
+
+
+.. py:function:: registered_sensors()
+
+   Every distinct registered profile (deduplicated - each is registered
+   under two keys, see register_sensor).
+
+

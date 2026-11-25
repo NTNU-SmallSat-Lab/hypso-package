@@ -1,0 +1,772 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>hypso.grid.areas &#8212; hypso 26.10.0a7-20-g5e64121f</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=8e897651"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/hypso/grid/areas';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="26.10.0a7" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">hypso 26.10.0a7-20-g5e64121f</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../../api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">hypso.grid.areas</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for hypso.grid.areas</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""pyresample geometry for hypso products: the swath a product was imaged</span>
+<span class="sd">in, the grid a regridded product is on, and new grids to regrid onto.</span>
+
+<span class="sd">Grids from grid_area() have their extent snapped to whole multiples of the</span>
+<span class="sd">pixel size, so two captures regridded to the same CRS and resolution share</span>
+<span class="sd">pixel boundaries and can be compared pixel by pixel.</span>
+<span class="sd">"""</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyproj</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyresample.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">AreaDefinition</span><span class="p">,</span> <span class="n">SwathDefinition</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.product</span><span class="w"> </span><span class="kn">import</span> <span class="n">GRID_DIMS</span><span class="p">,</span> <span class="n">GRID_MAPPING</span><span class="p">,</span> <span class="n">spatial_dims</span>
+
+<span class="c1"># Metres per degree of latitude (WGS84 mean), to compare a geographic grid's</span>
+<span class="c1"># pixel size with ground distances.</span>
+<span class="n">METRES_PER_DEGREE</span> <span class="o">=</span> <span class="mf">111_320.0</span>
+
+
+<div class="viewcode-block" id="geolocation">
+<a class="viewcode-back" href="../../../api/hypso/grid/areas/index.html#hypso.grid.areas.geolocation">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">geolocation</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">,</span> <span class="n">direct</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""(latitude, longitude) arrays of a product; ValueError if it has none."""</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">dataset</span>
+    <span class="n">suffix</span> <span class="o">=</span> <span class="s2">"_direct"</span> <span class="k">if</span> <span class="n">direct</span> <span class="k">else</span> <span class="s2">""</span>
+    <span class="k">if</span> <span class="sa">f</span><span class="s2">"latitude</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
+        <span class="n">kind</span> <span class="o">=</span> <span class="s2">"direct "</span> <span class="k">if</span> <span class="n">direct</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'processing_level'</span><span class="p">)</span><span class="si">}</span><span class="s2"> product has no </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">geolocation "</span>
+                         <span class="sa">f</span><span class="s2">"(georeference it first)"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ds</span><span class="p">[</span><span class="sa">f</span><span class="s2">"latitude</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="sa">f</span><span class="s2">"longitude</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span></div>
+
+
+
+<div class="viewcode-block" id="swath_definition">
+<a class="viewcode-back" href="../../../api/hypso/grid/index.html#hypso.grid.areas.swath_definition">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">swath_definition</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">,</span> <span class="n">direct</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SwathDefinition</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""SwathDefinition of a product's per-pixel geolocation (direct or not)."""</span>
+    <span class="n">latitudes</span><span class="p">,</span> <span class="n">longitudes</span> <span class="o">=</span> <span class="n">geolocation</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">direct</span><span class="p">)</span>
+    <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"sensor"</span><span class="p">:</span> <span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sat_id"</span><span class="p">),</span> <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"swath"</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">SwathDefinition</span><span class="p">(</span><span class="n">lons</span><span class="o">=</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">longitudes</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s2">"y"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">),</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">),</span>
+                           <span class="n">lats</span><span class="o">=</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">latitudes</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s2">"y"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">),</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="source_definition">
+<a class="viewcode-back" href="../../../api/hypso/grid/index.html#hypso.grid.areas.source_definition">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">source_definition</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""What to resample from: a gridded product's AreaDefinition, else its</span>
+<span class="sd">    swath (as numpy arrays, which pyresample's kd-tree needs)."""</span>
+    <span class="k">if</span> <span class="n">spatial_dims</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span> <span class="o">==</span> <span class="n">GRID_DIMS</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">area_definition</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
+    <span class="n">latitudes</span><span class="p">,</span> <span class="n">longitudes</span> <span class="o">=</span> <span class="n">geolocation</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">SwathDefinition</span><span class="p">(</span><span class="n">lons</span><span class="o">=</span><span class="n">longitudes</span><span class="p">,</span> <span class="n">lats</span><span class="o">=</span><span class="n">latitudes</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="resolution">
+<a class="viewcode-back" href="../../../api/hypso/grid/index.html#hypso.grid.areas.resolution">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolution</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Ground resolution (m): a gridded product's pixel size (converted from</span>
+<span class="sd">    degrees for a geographic grid), else the larger of the mean along- and</span>
+<span class="sd">    across-track GSD."""</span>
+    <span class="k">if</span> <span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"grid"</span><span class="p">):</span>
+        <span class="n">crs</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_cf</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">GRID_MAPPING</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">))</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"grid_resolution"</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">size</span> <span class="o">*</span> <span class="n">METRES_PER_DEGREE</span> <span class="k">if</span> <span class="n">crs</span><span class="o">.</span><span class="n">is_geographic</span> <span class="k">else</span> <span class="n">size</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_gsd</span><span class="p">,</span> <span class="n">compute_resolution</span>
+    <span class="n">latitudes</span><span class="p">,</span> <span class="n">longitudes</span> <span class="o">=</span> <span class="n">geolocation</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
+    <span class="n">along</span><span class="p">,</span> <span class="n">across</span> <span class="o">=</span> <span class="n">compute_gsd</span><span class="p">(</span><span class="n">frame_count</span><span class="o">=</span><span class="n">latitudes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">image_height</span><span class="o">=</span><span class="n">latitudes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                <span class="n">latitudes</span><span class="o">=</span><span class="n">latitudes</span><span class="p">,</span> <span class="n">longitudes</span><span class="o">=</span><span class="n">longitudes</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">compute_resolution</span><span class="p">(</span><span class="n">along_track_gsd</span><span class="o">=</span><span class="n">along</span><span class="p">,</span> <span class="n">across_track_gsd</span><span class="o">=</span><span class="n">across</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="utm_crs">
+<a class="viewcode-back" href="../../../api/hypso/grid/index.html#hypso.grid.areas.utm_crs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">utm_crs</span><span class="p">(</span><span class="n">latitudes</span><span class="p">,</span> <span class="n">longitudes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">CRS</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The WGS84 UTM CRS of the zone containing the scene centre.</span>
+
+<span class="sd">    EPSG 326xx (north) or 327xx (south); standard 6-degree zones, without the</span>
+<span class="sd">    Norway and Svalbard exceptions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    latitudes, longitudes : array_like</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pyproj.CRS</span>
+<span class="sd">    """</span>
+    <span class="n">lat</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">latitudes</span><span class="p">))</span>
+    <span class="n">lon</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">longitudes</span><span class="p">))</span>
+    <span class="n">zone</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">int</span><span class="p">((</span><span class="n">lon</span> <span class="o">+</span> <span class="mi">180</span><span class="p">)</span> <span class="o">//</span> <span class="mi">6</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">((</span><span class="mi">32600</span> <span class="k">if</span> <span class="n">lat</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">32700</span><span class="p">)</span> <span class="o">+</span> <span class="n">zone</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="grid_area">
+<a class="viewcode-back" href="../../../api/hypso/grid/index.html#hypso.grid.areas.grid_area">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">grid_area</span><span class="p">(</span><span class="n">crs</span><span class="p">,</span> <span class="n">resolution</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">latitudes</span><span class="p">,</span> <span class="n">longitudes</span><span class="p">,</span> <span class="n">area_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"hypso_grid"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AreaDefinition</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A grid covering the given coordinates, snapped to the pixel size.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    crs : str, int or pyproj.CRS</span>
+<span class="sd">        Anything pyproj accepts, e.g. ``"EPSG:32633"``.</span>
+<span class="sd">    resolution : float</span>
+<span class="sd">        Square pixel size in the CRS's units.</span>
+<span class="sd">    latitudes, longitudes : array_like</span>
+<span class="sd">        Coordinates to cover (NaN ignored).</span>
+<span class="sd">    area_id : str, default "hypso_grid"</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pyresample.geometry.AreaDefinition</span>
+<span class="sd">        Extent snapped to whole multiples of ``resolution``, so grids of two</span>
+<span class="sd">        captures in the same CRS and resolution share pixel boundaries.</span>
+<span class="sd">    """</span>
+    <span class="n">crs</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_user_input</span><span class="p">(</span><span class="n">crs</span><span class="p">)</span>
+    <span class="n">transformer</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">Transformer</span><span class="o">.</span><span class="n">from_crs</span><span class="p">(</span><span class="s2">"EPSG:4326"</span><span class="p">,</span> <span class="n">crs</span><span class="p">,</span> <span class="n">always_xy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">transformer</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">longitudes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">latitudes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+    <span class="n">finite</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">finite</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"no coordinates can be projected to </span><span class="si">{</span><span class="n">crs</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">finite</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">finite</span><span class="p">]</span>
+    <span class="n">extent</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">/</span> <span class="n">resolution</span><span class="p">)</span> <span class="o">*</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">/</span> <span class="n">resolution</span><span class="p">)</span> <span class="o">*</span> <span class="n">resolution</span><span class="p">,</span>
+              <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">/</span> <span class="n">resolution</span><span class="p">)</span> <span class="o">*</span> <span class="n">resolution</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">/</span> <span class="n">resolution</span><span class="p">)</span> <span class="o">*</span> <span class="n">resolution</span><span class="p">)</span>
+    <span class="n">width</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">((</span><span class="n">extent</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">extent</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">resolution</span><span class="p">)),</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">height</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">((</span><span class="n">extent</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">extent</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">resolution</span><span class="p">)),</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">AreaDefinition</span><span class="p">(</span><span class="n">area_id</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">crs</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">resolution</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2"> pixels"</span><span class="p">,</span> <span class="n">area_id</span><span class="p">,</span> <span class="n">crs</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">extent</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="area_definition">
+<a class="viewcode-back" href="../../../api/hypso/grid/index.html#hypso.grid.areas.area_definition">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">area_definition</span><span class="p">(</span><span class="n">tree</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AreaDefinition</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""AreaDefinition of a gridded product, from its x/y coordinates</span>
+<span class="sd">    (pixel centres) and `crs` grid-mapping variable."""</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">dataset</span>
+    <span class="k">if</span> <span class="n">spatial_dims</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span> <span class="o">!=</span> <span class="n">GRID_DIMS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"not a gridded product (regrid it first)"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">area_from_grid</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">GRID_MAPPING</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">),</span> <span class="n">ds</span><span class="p">[</span><span class="s2">"x"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">ds</span><span class="p">[</span><span class="s2">"y"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                          <span class="nb">float</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"grid_resolution_x"</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"grid_resolution_y"</span><span class="p">]),</span>
+                          <span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"grid"</span><span class="p">,</span> <span class="s2">"hypso_grid"</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="area_from_grid">
+<a class="viewcode-back" href="../../../api/hypso/grid/areas/index.html#hypso.grid.areas.area_from_grid">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">area_from_grid</span><span class="p">(</span><span class="n">crs_attrs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">size_x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">size_y</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"hypso_grid"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AreaDefinition</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""AreaDefinition from a CF grid-mapping variable's attributes, the x/y</span>
+<span class="sd">    pixel-centre coordinates and the pixel size - what a gridded product</span>
+<span class="sd">    file holds (also used by the Satpy readers)."""</span>
+    <span class="n">crs</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_cf</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">crs_attrs</span><span class="p">))</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">extent</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">-</span> <span class="n">size_x</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">-</span> <span class="n">size_y</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="n">size_x</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="n">size_y</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">AreaDefinition</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">crs</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">extent</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="grid_name">
+<a class="viewcode-back" href="../../../api/hypso/grid/index.html#hypso.grid.areas.grid_name">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">grid_name</span><span class="p">(</span><span class="n">crs</span><span class="p">,</span> <span class="n">size_x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">size_y</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""File-name token for a grid (io/naming.py GRID_TOKEN): utm33n_880m,</span>
+<span class="sd">    epsg4326_0p01deg, custom_30m; "AxB" for non-square pixels."""</span>
+    <span class="n">crs</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_user_input</span><span class="p">(</span><span class="n">crs</span><span class="p">)</span>
+    <span class="n">zone</span> <span class="o">=</span> <span class="n">crs</span><span class="o">.</span><span class="n">utm_zone</span>
+    <span class="n">epsg</span> <span class="o">=</span> <span class="n">crs</span><span class="o">.</span><span class="n">to_epsg</span><span class="p">()</span>
+    <span class="n">prefix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"utm</span><span class="si">{</span><span class="n">zone</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">zone</span> <span class="k">else</span> <span class="p">(</span><span class="sa">f</span><span class="s2">"epsg</span><span class="si">{</span><span class="n">epsg</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">epsg</span> <span class="k">else</span> <span class="s2">"custom"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">number</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">)</span><span class="si">:</span><span class="s2">g</span><span class="si">}</span><span class="s2">"</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"."</span><span class="p">,</span> <span class="s2">"p"</span><span class="p">)</span>
+
+    <span class="n">size</span> <span class="o">=</span> <span class="n">number</span><span class="p">(</span><span class="n">size_x</span><span class="p">)</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">size_x</span><span class="p">,</span> <span class="n">size_y</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">number</span><span class="p">(</span><span class="n">size_x</span><span class="p">)</span><span class="si">}</span><span class="s2">x</span><span class="si">{</span><span class="n">number</span><span class="p">(</span><span class="n">size_y</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">size</span><span class="si">}{</span><span class="s1">'deg'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">crs</span><span class="o">.</span><span class="n">is_geographic</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'m'</span><span class="si">}</span><span class="s2">"</span></div>
+
+
+
+<div class="viewcode-block" id="coordinate_attrs">
+<a class="viewcode-back" href="../../../api/hypso/grid/areas/index.html#hypso.grid.areas.coordinate_attrs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">coordinate_attrs</span><span class="p">(</span><span class="n">crs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""CF attributes for the x and y coordinate variables of a grid in `crs`."""</span>
+    <span class="n">axes</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_user_input</span><span class="p">(</span><span class="n">crs</span><span class="p">)</span><span class="o">.</span><span class="n">cs_to_cf</span><span class="p">()</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">axes</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"axis"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"X"</span> <span class="ow">or</span> <span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"standard_name"</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"projection_x_coordinate"</span><span class="p">,</span>
+                                                                                     <span class="s2">"longitude"</span><span class="p">))</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">axes</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"axis"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"Y"</span> <span class="ow">or</span> <span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"standard_name"</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"projection_y_coordinate"</span><span class="p">,</span>
+                                                                                     <span class="s2">"latitude"</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="nb">dict</span><span class="p">(</span><span class="n">y</span><span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Norwegian University of Science and Technology (NTNU).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

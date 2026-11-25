@@ -1,0 +1,681 @@
+hypso.api
+=========
+
+.. py:module:: hypso.api
+
+.. autoapi-nested-parse::
+
+   The public API: one immutable :class:`Product` per capture and level.
+
+   .. rubric:: Examples
+
+   >>> import hypso
+   >>> l1d = (hypso.open("HYPSO2_HSI.20250304T103805.aeronetvenice.L1A.nc")
+   ...            .calibrate()
+   ...            .georeference(latitudes=lats, longitudes=lons)
+   ...            .toa_reflectance())
+   >>> l1d.write()
+
+   Every processing method returns a new Product and leaves the one it was
+   called on unchanged. Underneath are the tree functions in
+   :mod:`hypso.processing` and the product tree of :mod:`hypso.io.product`
+   (:attr:`Product.tree`), which stay available for direct use.
+
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   hypso.api.Product
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.api.open
+
+
+Module Contents
+---------------
+
+.. py:class:: Product(tree)
+
+   One capture at one processing level.
+
+   Create one with :func:`hypso.open` or from a product tree. A Product is
+   immutable: processing methods return a new Product.
+
+   :param tree: A product tree as read by :func:`hypso.io.product.read_product`.
+   :type tree: xarray.DataTree
+
+   :raises ValueError: If the tree has no valid ``processing_level`` (L1A-L1D, L2A, L2B).
+
+
+   .. py:method:: area_definition()
+
+      A gridded product's grid as a :class:`pyresample.geometry.AreaDefinition`.
+
+      :raises ValueError: If the product is in sensor geometry.
+
+
+
+   .. py:method:: calibrate(coeff_type = None, version=None, **kwargs)
+
+      Calibrate L1A to L1B: top-of-atmosphere radiance ``Lt``.
+
+      :param coeff_type: Radiometric variant: ``"abs"`` (default), ``"moved"`` or ``"lab"``.
+      :type coeff_type: str, optional
+      :param version: Coefficient release: ``"V3.1"`` (default), ``"V3.1v2spec"`` (for
+                      OC-SMART), ``"V2"``, ``"V1"``; or ``{correction: release}`` to mix
+                      them, e.g. ``{"smile": "V2"}``. See docs/calibration.rst.
+      :type version: str or dict, optional
+      :param \*\*kwargs: Passed to :func:`hypso.processing.l1a_to_l1b`: ``coeff_files``
+                         (explicit files), ``radiometric``, ``smile``, ``destripe``,
+                         ``spectral`` (False to skip a correction), and ``keystone``
+                         (True to apply the sensor's keystone model; unreviewed groundwork).
+
+      :returns: L1B; the coefficients used and their checksums are recorded in
+                :attr:`provenance`.
+      :rtype: Product
+
+
+
+   .. py:method:: correct_atmosphere(method = 'machi', masked = False, mask_flags=None, work_dir=None, config=None, **options)
+
+      Atmospheric correction to L2A.
+
+      :param method: MACHI or dark pixel subtraction (in this process), or an
+                     external tool.
+      :type method: {"machi", "dps", "polymer", "acolite", "ocsmart"}, default "machi"
+      :param masked: Give the method NaN where ``pixel_flags`` are set.
+      :type masked: bool, default False
+      :param mask_flags: Only these flags, with ``masked=True``.
+      :type mask_flags: list of str, optional
+      :param work_dir: External tools: where their input and raw output go (kept);
+                       default a temporary directory.
+      :type work_dir: str or path, optional
+      :param config: External tools: the AC tool configuration
+                     (:mod:`hypso.ac.config`); default the ``HYPSO_AC_CONFIG``
+                     environment variable.
+      :type config: str, path or dict, optional
+      :param \*\*options: Method-specific options, e.g. ``est_min_R=0.05`` for MACHI,
+                          ``settings={...}`` overriding the configuration for Polymer or
+                          ACOLITE, ``output="l2r"`` for ACOLITE.
+
+      :returns: L2A: the method's reflectance on this product's bands, its 2D
+                products and flags in :attr:`variables`.
+      :rtype: Product
+
+      .. seealso:: :obj:`hypso.processing.correct_atmosphere`
+
+
+
+   .. py:method:: derive(group, algorithm = None)
+
+      An L2B product from one of the package's algorithms (from L2A).
+
+      :param group: ``"BGC"`` (chlorophyll-a, suspended matter) or ``"IOP"``
+                    (absorption, backscattering, Kd).
+      :type group: str
+      :param algorithm: BGC: ``"oci"`` (default; NASA's chlor_a, CI and OC4 blend),
+                        ``"oc4"``, ``"ci"``, ``"ndci"`` (turbid/eutrophic waters),
+                        ``"nechad2010"`` (suspended matter); IOP: ``"qaa"`` (default).
+                        See :mod:`hypso.processing.l2b_algorithms`.
+      :type algorithm: str, optional
+
+      :returns: Level L2B, e.g. ``...L2B.BGC.oci.nc``.
+      :rtype: Product
+
+      .. rubric:: Examples
+
+      >>> chl = l2a.derive("BGC")                 # from an L2A.RRS product
+      >>> chl.variables["chlor_a"]
+      >>> tsm = l2a.derive("BGC", "nechad2010")
+
+
+
+   .. py:method:: filename(label = None, ac = None)
+
+      The product's file name (:mod:`hypso.io.naming`).
+
+      :param label: Free-text label for experiments, the last name field.
+      :type label: str, optional
+      :param ac: Override the atmospheric correction field (L2A) or source (L2B).
+      :type ac: str, optional
+
+      :returns: e.g. ``"HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.nc"``; L2A
+                names carry the quantity (from the product variable) and the
+                method, e.g. ``"...L2A.RHOS.machi.nc"``; L2B names the group
+                and source, e.g. ``"...L2B.BGC.oc4.nc"``.
+      :rtype: str
+
+
+
+   .. py:method:: footprint(mask=None, step = 10, block = 8)
+
+      The ground footprint as a shapely polygon in WGS84 longitude/latitude.
+
+      See :func:`hypso.maps.footprint` (``mask="data"`` for the pixels
+      with data only).
+
+
+
+   .. py:method:: georeference(latitudes=None, longitudes=None, direct = True)
+
+      Georeference L1B to L1C: latitude, longitude and sun and sensor angles.
+
+      :param latitudes: Indirect (GCP-corrected) pixel coordinates, as arrays or paths to
+                        raw float32 files. Omit both to use direct georeferencing.
+      :type latitudes: array_like or path, optional
+      :param longitudes: Indirect (GCP-corrected) pixel coordinates, as arrays or paths to
+                         raw float32 files. Omit both to use direct georeferencing.
+      :type longitudes: array_like or path, optional
+      :param direct: Also compute direct georeferencing from the ADCS telemetry
+                     (``*_direct`` variables).
+      :type direct: bool, default True
+
+      :rtype: Product
+
+
+
+   .. py:method:: intermediates()
+
+      The AC tool's other per-band outputs as an L2A.AUX product.
+
+      OC-SMART's Lt, Lr, Lrc, Lwp, tg_sol and tg_sen (one 2D variable per
+      quantity and band, ``Lt_434``), with the L2A's geometry and flags.
+      :meth:`write` writes them as ``...L2A.AUX.<method>.nc`` next to the
+      L2A; the L2A file does not hold them.
+
+      :returns: None when the method returned none (in-process methods, Polymer,
+                ACOLITE).
+      :rtype: Product or None
+
+
+
+   .. py:method:: open(path, wavelength_range=None, wavelengths=None, indices=None)
+      :classmethod:
+
+
+      Read a product file of any level and any supported layout.
+
+      :param path: A current-format, older grouped or ground-station L1A file.
+      :type path: str or pathlib.Path
+      :param wavelength_range: Read only some bands (as :meth:`select_bands`); only those are
+                               read from the file. Not for L1A.
+      :type wavelength_range: optional
+      :param wavelengths: Read only some bands (as :meth:`select_bands`); only those are
+                          read from the file. Not for L1A.
+      :type wavelengths: optional
+      :param indices: Read only some bands (as :meth:`select_bands`); only those are
+                      read from the file. Not for L1A.
+      :type indices: optional
+
+      :rtype: Product
+
+
+
+   .. py:method:: pixel(latitude, longitude, direct = False)
+
+      The pixel nearest to a location.
+
+      :param latitude: Location in degrees.
+      :type latitude: float
+      :param longitude: Location in degrees.
+      :type longitude: float
+      :param direct: Use the direct (ADCS-only) georeferencing instead.
+      :type direct: bool, default False
+
+      :returns: ``(line, sample)``, or ``(y, x)`` for a gridded product.
+      :rtype: tuple of int
+
+
+
+   .. py:method:: regrid(target='utm', resolution = None, method = 'nearest', radius_of_influence = None, max_gb = 4.0)
+
+      The product on a map grid, at the same level.
+
+      :param target: ``"utm"`` (the WGS84 UTM zone of the scene centre), any CRS
+                     pyproj accepts (e.g. ``"EPSG:3035"``), a pyresample
+                     AreaDefinition, or a gridded Product to share its grid.
+      :type target: str, int, pyproj.CRS, AreaDefinition or Product, default "utm"
+      :param resolution: Pixel size in the CRS's units. Default: this product's
+                         :attr:`resolution`, so nothing is oversampled. Not with an
+                         AreaDefinition or Product target.
+      :type resolution: float, optional
+      :param method: ``"nearest"`` keeps one measured spectrum per pixel;
+                     ``"bilinear"`` blends neighbouring spectra; ``"average"`` takes
+                     cell means, for grids at least as coarse as the product.
+      :type method: {"nearest", "bilinear", "average"}, default "nearest"
+      :param radius_of_influence: Search radius in m; default 1.5 times the coarser pixel size.
+      :type radius_of_influence: float, optional
+      :param max_gb: Refuse grids whose cube would be larger.
+      :type max_gb: float, default 4.0
+
+      :returns: Dimensions ``(y, x)`` with CF projection coordinates and a
+                ``crs`` grid mapping; ``pixel_flags`` gains ``outside_swath``.
+      :rtype: Product
+
+      .. seealso::
+
+         :obj:`hypso.grid.regrid`
+             The tree function, with the per-variable rules.
+
+
+
+   .. py:method:: resample(target, method = 'nearest', radius_of_influence = None)
+
+      Resample the product onto any target, as a bare Dataset.
+
+      :param target: A grid, or a swath such as another sensor's (for matchups).
+      :type target: pyresample.geometry.AreaDefinition or SwathDefinition
+      :param method: For the cube and float variables; ``"average"`` only onto grids
+                     coarser than the product. Flags are combined as in
+                     :class:`hypso.grid.GridOperators`.
+      :type method: {"nearest", "bilinear", "average"}, default "nearest"
+      :param radius_of_influence: Search radius in m; default 1.5 times the coarser pixel size.
+      :type radius_of_influence: float, optional
+
+      :returns: The cube, derived variables, each flag as ``flag_<name>`` and
+                the target's latitude and longitude.
+      :rtype: xarray.Dataset
+
+      .. seealso::
+
+         :obj:`regrid`
+             The product on a map grid, as a Product.
+
+
+
+   .. py:method:: select_bands(wavelength_range=None, wavelengths=None, indices=None)
+
+      A new Product with only some of the bands (from L1B on).
+
+      :param wavelength_range: ``(min, max)`` in nm: the bands whose centre lies within it.
+      :type wavelength_range: tuple of float, optional
+      :param wavelengths: Wavelengths in nm: the nearest band to each.
+      :type wavelengths: array_like, optional
+      :param indices: Band indices in the sensor's full band set (``band_index``).
+      :type indices: array_like of int, optional
+
+      :returns: Each band keeps its full-set index, so later steps (TOA
+                reflectance, SRFs) give the same values as on all bands.
+      :rtype: Product
+
+      :raises ValueError: On L1A: calibration needs every band.
+
+      .. rubric:: Examples
+
+      >>> vis = l1b.select_bands(wavelength_range=(450, 700))
+
+
+
+   .. py:method:: spectrum(latitude = None, longitude = None, line = None, sample = None)
+
+      The cube's spectrum at one pixel.
+
+      :param latitude: Location in degrees; the nearest pixel is used.
+      :type latitude: float, optional
+      :param longitude: Location in degrees; the nearest pixel is used.
+      :type longitude: float, optional
+      :param line: Pixel indices, instead of a location.
+      :type line: int, optional
+      :param sample: Pixel indices, instead of a location.
+      :type sample: int, optional
+
+      :returns: Values over ``bands``, with wavelength coordinates.
+      :rtype: xarray.DataArray
+
+      .. seealso::
+
+         :obj:`window`
+             Statistics of a window of pixels around a location.
+
+
+
+   .. py:method:: swath_definition(direct = False)
+
+      The product's geolocation as a :class:`pyresample.geometry.SwathDefinition`.
+
+      :param direct: Use the direct georeferencing instead.
+      :type direct: bool, default False
+
+
+
+   .. py:method:: to(level, calibrate = None, georeference = None, toa_reflectance = None, correct_atmosphere = None)
+
+      Run the processing steps from this level up to ``level``.
+
+      :param level: Target level.
+      :type level: {"L1B", "L1C", "L1D", "L2A"}
+      :param calibrate: Options for each step, passed to the method of that name. For
+                        L2A, ``correct_atmosphere={"method": ...}`` picks the method
+                        (default MACHI).
+      :type calibrate: dict, optional
+      :param georeference: Options for each step, passed to the method of that name. For
+                           L2A, ``correct_atmosphere={"method": ...}`` picks the method
+                           (default MACHI).
+      :type georeference: dict, optional
+      :param toa_reflectance: Options for each step, passed to the method of that name. For
+                              L2A, ``correct_atmosphere={"method": ...}`` picks the method
+                              (default MACHI).
+      :type toa_reflectance: dict, optional
+      :param correct_atmosphere: Options for each step, passed to the method of that name. For
+                                 L2A, ``correct_atmosphere={"method": ...}`` picks the method
+                                 (default MACHI).
+      :type correct_atmosphere: dict, optional
+
+      :rtype: Product
+
+      .. rubric:: Examples
+
+      >>> l1d = l1a.to("L1D", calibrate={"version": "V2"},
+      ...              georeference={"latitudes": lats, "longitudes": lons})
+      >>> l2a = l1d.to("L2A")                                        # MACHI
+      >>> l2a = l1d.to("L2A", correct_atmosphere={"method": "dps"})
+
+
+
+   .. py:method:: to_satpy(direct = False)
+
+      The product as a Satpy Scene, one dataset per band.
+
+      :param direct: Use the direct georeferencing for the swath.
+      :type direct: bool, default False
+
+
+
+   .. py:method:: toa_reflectance(use_direct_georef = False, ssi_source = 'tsis', use_unbinned = True)
+
+      Convert L1C radiance to L1D top-of-atmosphere reflectance ``rhot``.
+
+      :param use_direct_georef: Use the direct georeferencing's solar zenith angle.
+      :type use_direct_georef: bool, default False
+      :param ssi_source: Solar irradiance spectrum: TSIS-1 HSRS or Thuillier (2002).
+      :type ssi_source: {"tsis", "thuillier"}, default "tsis"
+      :param use_unbinned: Build the spectral response functions from the unbinned bands.
+      :type use_unbinned: bool, default True
+
+      :returns: L1D, with the spectral response functions in ``metadata/srf``.
+      :rtype: Product
+
+
+
+   .. py:method:: tool_products()
+
+      The AC tool's own geophysical products as L2B products.
+
+      Polymer's ``chla``, ACOLITE's ``chl_*``/``SPM_*``, OC-SMART's
+      ``chlor_a_*``/``tsm_*``, ... grouped by
+      :data:`hypso.io.naming.L2B_GROUPS`, each with the tool's flags. An
+      L2A file does not keep them: :meth:`write` writes them as L2B files
+      (``...L2B.BGC.polymer.nc``) next to it.
+
+      :returns: ``{group: Product}``, e.g. ``{"BGC": ..., "IOP": ...}``; empty
+                for in-process methods (MACHI, DPS).
+      :rtype: dict
+
+
+
+   .. py:method:: window(latitude, longitude, size = 3, exclude_flags=None, cv_band_range=(405.0, 570.0))
+
+      A window of pixels around a location and its statistics, for matchups.
+
+      :param latitude: Location in degrees; the window is centred on the nearest pixel.
+      :type latitude: float
+      :param longitude: Location in degrees; the window is centred on the nearest pixel.
+      :type longitude: float
+      :param size: Window width in pixels (odd). Clipped at the image edges.
+      :type size: int, default 3
+      :param exclude_flags: ``pixel_flags`` names (e.g. ``["land", "cloud"]``) whose pixels
+                            are left out.
+      :type exclude_flags: list of str, optional
+      :param cv_band_range: Wavelength range (nm) for ``pixel_valid`` and ``cv_median``.
+      :type cv_band_range: tuple of float, default (405, 570)
+
+      :returns: Per band: ``mean``, ``median``, ``std``, ``cv`` (std / median)
+                and ``valid_count``; ``pixels`` (the window) and ``excluded``.
+                Attributes: centre pixel and its distance to the location,
+                ``box_size``, ``pixel_valid`` and ``percent_valid`` (pixels with
+                any finite band in ``cv_band_range``), ``cv_median`` and the
+                window's mean angles. See :mod:`hypso.window`.
+      :rtype: xarray.Dataset
+
+
+
+   .. py:method:: with_masks(descriptions = None, **masks)
+
+      A new Product with masks added to ``pixel_flags``.
+
+      :param descriptions: ``{name: text}`` describing masks, kept in the file.
+      :type descriptions: dict, optional
+      :param \*\*masks: ``name=mask`` with the product's spatial shape, True where
+                        flagged. Names may contain letters, digits and ``_``.
+      :type \*\*masks: array_like of bool
+
+      :returns: Existing flags are kept; a mask with an existing name replaces it.
+      :rtype: Product
+
+      .. rubric:: Examples
+
+      >>> flagged = l1d.with_masks(land=land, cloud=cloud)
+
+
+
+   .. py:method:: with_variables(**variables)
+
+      A new Product with derived 2D variables added.
+
+      :param \*\*variables: ``name=values`` with the product's spatial shape; a DataArray's
+                            attributes (e.g. ``units``) are kept. Written with the product
+                            and read back by :func:`hypso.open`.
+      :type \*\*variables: array_like or xarray.DataArray
+
+      :rtype: Product
+
+      .. rubric:: Examples
+
+      >>> l2a.with_variables(chla=xr.DataArray(chla, attrs={"units": "mg m-3"}))
+
+
+
+   .. py:method:: write(path=None, out_dir=None, label = None, datacube = False, significant_bits=14, tool_products = True, intermediates = True)
+
+      Write the product in the current file format.
+
+      :param path: Output file. Default: :meth:`filename` in ``out_dir``.
+      :type path: str or path, optional
+      :param out_dir: Directory for the default name; the current directory if omitted.
+      :type out_dir: str or path, optional
+      :param label: Label for the default name.
+      :type label: str, optional
+      :param datacube: Write the cube as one 3D variable instead of one per band.
+      :type datacube: bool, default False
+      :param significant_bits: Keep this many significant mantissa bits of the float bands
+                               (L1B-L2A): about 40% smaller L1D bands at most 3.1e-5 relative
+                               error; None writes them lossless.
+      :type significant_bits: int or None, default 14
+      :param tool_products: L2A: also write the AC tool's own products (:meth:`tool_products`)
+                            as L2B files in the same directory. The L2A file never holds them;
+                            False drops them (with a warning).
+      :type tool_products: bool, default True
+      :param intermediates: L2A: also write the AC tool's other per-band outputs
+                            (:meth:`intermediates`, e.g. OC-SMART's Lt, Lr, Lrc, tg_sol) as
+                            the ``...L2A.AUX.<method>.nc`` file in the same directory. False
+                            drops them (with a warning).
+      :type intermediates: bool, default True
+
+      :returns: The written file (for L2A, the L2A file).
+      :rtype: pathlib.Path
+
+
+
+   .. py:method:: write_footprint(path, mask=None, step = 10, block = 8)
+
+      Write the footprint, with the capture's metadata, as an ESRI
+      Shapefile (``*.shp``, EPSG:4326) or GeoJSON.
+
+      See :func:`hypso.maps.write_footprints`, which also writes several
+      products to one file.
+
+
+
+   .. py:property:: atmospheric_correction
+
+      Atmospheric correction method of an L2A product, e.g. ``"polymer"``; None below L2A.
+
+
+   .. py:property:: cube
+      :type: xarray.DataArray
+
+
+      ``dn``, ``Lt``, ``rhot`` or the L2A variable.
+
+      Dimensions ``(lines, samples, bands)``, or ``(y, x, bands)`` when
+      gridded, with ``wavelength``, ``radiation_wavelength`` and ``fwhm``
+      band coordinates. L2B products have none (ValueError); their
+      products are :attr:`variables`.
+
+      :type: The product cube
+
+
+   .. py:property:: flags
+      :type: dict
+
+
+      ``{name: boolean DataArray}``.
+
+      Empty if the product has no flags.
+
+      :type: Masks decoded from ``pixel_flags``
+
+
+   .. py:property:: geometry
+      :type: xarray.Dataset
+
+
+      Latitude, longitude and sun and sensor angles, as a Dataset.
+
+      Empty before georeferencing (L1A, L1B). Includes the ``*_direct``
+      variants when direct georeferencing was computed.
+
+
+   .. py:property:: grid
+
+      Name of the map grid (e.g. ``"utm33n_876m"``), or None in sensor geometry.
+
+      See :meth:`regrid`.
+
+
+   .. py:property:: level
+      :type: str
+
+
+      ``"L1A"``, ``"L1B"``, ``"L1C"``, ``"L1D"``, ``"L2A"`` or ``"L2B"``.
+
+      :type: Processing level
+
+
+   .. py:property:: provenance
+      :type: list
+
+
+      one dict per processing step, oldest first.
+
+      From ``metadata/processing``: step name, date, software version and
+      git commit, input file and the step's parameters.
+
+      :type: How the product was made
+
+
+   .. py:property:: resolution
+      :type: float
+
+
+      the larger of the mean along- and across-track ground sampling distance, in m.
+
+      For a gridded product, the grid's pixel size in its CRS's units (m,
+      or degrees for a geographic grid).
+
+      :type: Pixel size
+
+
+   .. py:property:: sat_id
+      :type: str
+
+
+      Satellite, e.g. ``"HYPSO-2"``.
+
+
+   .. py:property:: shape
+      :type: tuple
+
+
+      ``(lines, samples)``, or ``(y, x)`` when gridded.
+
+      :type: Spatial shape
+
+
+   .. py:property:: target
+      :type: str
+
+
+      Capture target name, e.g. ``"aeronetvenice"``.
+
+
+   .. py:property:: tree
+      :type: xarray.DataTree
+
+
+      The underlying product tree, as an :class:`xarray.DataTree`.
+
+      A shallow copy: adding, replacing or removing variables and attributes
+      does not change this Product, but the arrays are shared (copying the
+      cube on every access would double memory), so do not modify array
+      values in place - assign a new array instead.
+
+
+   .. py:property:: variables
+      :type: xarray.Dataset
+
+
+      Derived 2D products, as a Dataset.
+
+      Those added with :meth:`with_variables` and those an atmospheric
+      correction tool returns (e.g. ``chla``, ``polymer_flags``); for an
+      L2B product, its products (e.g. ``chlor_a``).
+
+
+   .. py:property:: wavelengths
+      :type: numpy.ndarray
+
+
+      Band centre wavelengths in nm, as calibrated (``radiation_wavelength``).
+
+
+.. py:function:: open(path, wavelength_range=None, wavelengths=None, indices=None)
+
+   Read a HYPSO product file.
+
+   :param path: A product file of any level (L1A-L2A), in the current format, the
+                older grouped format, or a ground-station L1A.
+   :type path: str or pathlib.Path
+   :param wavelength_range: Read only some bands (see :meth:`Product.select_bands`).
+   :type wavelength_range: optional
+   :param wavelengths: Read only some bands (see :meth:`Product.select_bands`).
+   :type wavelengths: optional
+   :param indices: Read only some bands (see :meth:`Product.select_bands`).
+   :type indices: optional
+
+   :rtype: Product
+
+   .. rubric:: Examples
+
+   >>> import hypso
+   >>> l1d = hypso.open("HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.nc")
+
+

@@ -1,0 +1,76 @@
+hypso.processing.l2b_algorithms
+===============================
+
+.. py:module:: hypso.processing.l2b_algorithms
+
+.. autoapi-nested-parse::
+
+   The package's own L2B algorithms, on remote-sensing reflectance.
+
+   Each algorithm takes the L2A cube (``Rrs`` in sr-1; NDCI also ``rhos``) on
+   the product's bands and returns 2D products. Rrs at an algorithm's
+   wavelength is interpolated linearly between the two nearest bands (HYPSO's
+   bands are ~3.5 nm apart). Coefficients are those tabulated in ACOLITE
+   (``data/Shared/algorithms``), which follow the cited papers and NASA's
+   ATBDs:
+
+   - ``oc4``: OC4 band ratio, Sentinel-3 OLCI coefficients (O'Reilly and
+     Werdell 2019): log10(chl) = sum a_i X**i,
+     X = log10(max(Rrs443, Rrs490, Rrs510) / Rrs560).
+   - ``ci``: colour index (Hu et al. 2012; coefficients of Hu et al. 2019):
+     CI = Rrs555 - (Rrs443 + (555 - 443) / (670 - 443) (Rrs670 - Rrs443)),
+     chl = 10**(a0 + a1 CI).
+   - ``oci`` (default for BGC): NASA's chlor_a - CI below 0.25 mg m-3, OC4
+     above 0.35, linear blend in between.
+   - ``ndci``: red-edge index (Mishra and Mishra 2012),
+     NDCI = (R705 - R670) / (R705 + R670), chl = 14.039 + 86.115 NDCI +
+     194.325 NDCI**2; calibrated for turbid and eutrophic waters only, no
+     validity mask is applied.
+   - ``nechad2010``: rhow = pi Rrs665,
+     SPM = A rhow / (1 - rhow / C), A = 355.85 g m-3, C = 0.1728 (Nechad et
+     al. 2010); NaN where rhow >= 0.5 C (ACOLITE's default limit).
+
+   - ``qaa`` (IOP group): Lee's Quasi-Analytical Algorithm, as
+     implemented in ACOLITE (``acolite/parameters/qaa/qaa_compute.py``, with its
+     2025-04-29 fix, and ``data/Shared/algorithms/QAA/qaa_settings.txt``
+     "standard" coefficients): QAA v6 (reference 665 nm), with QAA v5
+     (reference 560 nm) where Rrs665 < 0.0015 sr-1, at 443, 490, 560 and 665 nm.
+     Total absorption ``a_<nm>`` and particulate backscattering ``bbp_<nm>``
+     (m-1), and ``Kd_<nm>`` from a and bbp with Lee et al. 2005's
+     model for a 30 degree sun (m-1). No split of absorption into phytoplankton
+     and CDOM/detritus (QAA steps 7-10) yet.
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.processing.l2b_algorithms.band_at
+   hypso.processing.l2b_algorithms.default_algorithm
+   hypso.processing.l2b_algorithms.qaa
+
+
+Module Contents
+---------------
+
+.. py:function:: band_at(cube, wavelengths, target, max_gap = 10.0)
+
+   The cube at ``target`` nm, linearly interpolated between the nearest
+   bands below and above it.
+
+   :raises ValueError: If ``target`` is outside the bands, or no band is within ``max_gap`` nm.
+
+
+.. py:function:: default_algorithm(group)
+
+   The default algorithm of an L2B group.
+
+
+.. py:function:: qaa(rrs, wavelengths, coef=QAA_STANDARD)
+
+   Lee's QAA (v6, v5 where Rrs665 < 0.0015) at :data:`QAA_WAVES`:
+   ``{wave: (a, bbp, Kd)}``, each an array of the spatial shape.
+
+

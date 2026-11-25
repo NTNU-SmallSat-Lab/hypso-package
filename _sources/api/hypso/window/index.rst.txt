@@ -1,0 +1,58 @@
+hypso.window
+============
+
+.. py:module:: hypso.window
+
+.. autoapi-nested-parse::
+
+   Pixel windows: a product's pixels in a size x size box around a site and
+   their per-band statistics (Product.window).
+
+   This is the product side of a matchup only. Ground truth, time matching,
+   other sensors, QC thresholds and the matchup protocol itself belong to the
+   processing pipeline (hypso-processing-pipeline), which calls this.
+
+   The statistics are those of the pipeline's extraction.py for HYPSO: find
+   the nearest pixel, take the box clipped at the image edges, NaN-aware
+   mean/median/std per band, CV = std / median, cv_median over a band range
+   (default 405-570 nm, the pipeline's convention), a pixel counted valid
+   when any band in that range is finite. No outlier rejection: per the usual
+   matchup protocol (Bailey & Werdell 2006) heterogeneity shows in the CV
+   instead. Differences: flagged pixels can be excluded (`exclude_flags`,
+   pixel_flags names), and the mean angles are the window's, not the whole
+   scene's. The nearest pixel is found geodesically (Product.pixel), not by
+   Euclidean distance in degrees as the pipeline does.
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.window.window_statistics
+
+
+Module Contents
+---------------
+
+.. py:function:: window_statistics(tree, center, latitude, longitude, size = 3, exclude_flags=None, cv_band_range=CV_BAND_RANGE)
+
+   Window statistics around a given pixel.
+
+   :param tree: Product tree.
+   :type tree: xarray.DataTree
+   :param center: ``(line, sample)`` of the centre pixel (``(y, x)`` when gridded).
+   :type center: tuple of int
+   :param latitude: The site, for the reported centre distance.
+   :type latitude: float
+   :param longitude: The site, for the reported centre distance.
+   :type longitude: float
+   :param size: As in :meth:`hypso.Product.window`.
+   :param exclude_flags: As in :meth:`hypso.Product.window`.
+   :param cv_band_range: As in :meth:`hypso.Product.window`.
+
+   :returns: See :meth:`hypso.Product.window`.
+   :rtype: xarray.Dataset
+
+

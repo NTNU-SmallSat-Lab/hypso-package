@@ -1,0 +1,79 @@
+hypso.rgb.product
+=================
+
+.. py:module:: hypso.rgb.product
+
+.. autoapi-nested-parse::
+
+   RGB camera products: the camera image as a CF NetCDF file.
+
+   The camera is not a hypso.Product: that models a spectral cube with
+   wavelengths, calibration levels and SRFs, none of which a three-channel,
+   uncalibrated camera has. A camera product is an xarray Dataset with the same
+   conventions:
+
+   - ``R``, ``G``, ``B`` on ``(y, x)``: demosaiced counts in the camera's own
+     frame (not resampled), stored as uint8 (the camera's 8 bits; the bilinear
+     demosaic is rounded);
+   - ``latitude``, ``longitude`` per pixel and ``in_hsi_swath`` when registered
+     (:func:`hypso.rgb.register_camera`); unregistered products have none;
+   - attributes: instrument ``RGB``, satellite, target, acquisition time,
+     ``processing_level`` ``L1A`` (uncalibrated counts), the registration, CF/ACDD.
+
+   File names follow hypso.io.naming with the ``RGB`` instrument token:
+   ``HYPSO2_RGB.<time>.<target>.L1A.nc``. Satpy reads them with the
+   ``hypso_rgb_l1a`` reader (``true_color`` composite).
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.rgb.product.camera_filename
+   hypso.rgb.product.camera_product
+   hypso.rgb.product.open_camera
+   hypso.rgb.product.write_camera
+
+
+Module Contents
+---------------
+
+.. py:function:: camera_filename(ds, label = None)
+
+   The product's file name, e.g. ``HYPSO2_RGB.20250404T022723.ariake.L1A.nc``
+   (with the grid token for a :func:`hypso.rgb.regrid_camera` result).
+
+
+.. py:function:: camera_product(camera, registration=None, hsi=None, sat_id = 'HYPSO-2', target = None)
+
+   A camera product from a camera image, georeferenced if registered.
+
+   :param camera: ``(y, x, channel)`` image from :func:`hypso.rgb.read_camera_image`.
+   :type camera: xarray.DataArray
+   :param registration: From :func:`hypso.rgb.register_camera`; when ``ok``, latitude and
+                        longitude are added. A failed registration is recorded, without
+                        geolocation.
+   :type registration: hypso.rgb.CameraRegistration, optional
+   :param hsi: The capture's HSI product: target, satellite and ``in_hsi_swath``.
+   :type hsi: hypso.Product, optional
+   :param sat_id: Used when no ``hsi`` is given (HYPSO-2 carries the camera).
+   :type sat_id: str, default "HYPSO-2"
+   :param target: Capture target; default from ``hsi``, else from the image file name.
+   :type target: str, optional
+
+   :rtype: xarray.Dataset
+
+
+.. py:function:: open_camera(path)
+
+   Read a camera product written by :func:`write_camera`.
+
+
+.. py:function:: write_camera(ds, path=None, out_dir=None, label = None)
+
+   Write a camera product (default name from :func:`camera_filename` in
+   ``out_dir``). Channels uint8, geolocation float32, zlib level 4.
+
+

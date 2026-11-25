@@ -1,0 +1,242 @@
+hypso.maps
+==========
+
+.. py:module:: hypso.maps
+
+.. autoapi-nested-parse::
+
+   Footprints, shapefiles, RGB images and maps of HYPSO products.
+
+   - :func:`footprint`: a product's ground footprint as a shapely polygon in
+     WGS84 longitude/latitude: the outline of the whole swath, or of the pixels
+     in a mask (e.g. those with data).
+   - :func:`footprint_attributes`: the capture's metadata for a footprint
+     (capture, satellite, time, level, georeferencing, calibration, AC method).
+   - :func:`write_footprints`: one or several footprints as an ESRI Shapefile
+     (.shp/.shx/.dbf/.prj/.cpg, EPSG:4326) or GeoJSON, one feature per product.
+   - :func:`rgb_image` and :func:`save_rgb`: an RGB rendering (bands nearest 640,
+     550 and 460 nm; percentile stretch, per channel for L1, one gain for L2A;
+     display gamma) in sensor geometry, as an array or a PNG (in the HYPSO
+     servers' orientation by default); from any product with a cube (L1B-L1D
+     radiance or rhot, L2A Rrs or rhos).
+   - :func:`plot_map`: a product variable (a band of the cube, a 2D variable such
+     as ``chlor_a``) or an RGB rendering on a map grid (:meth:`hypso.Product.regrid`),
+     with the footprint outline, coastlines, graticule, scale bar, north arrow
+     and colour bar.
+   - :func:`plot_overview`: the footprints of several captures on one map.
+
+   Optional dependencies: shapely (footprints), pyshp (shapefiles), matplotlib
+   (figures), cartopy and its Natural Earth data (coastlines); pillow writes the
+   PNGs.
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.maps.footprint
+   hypso.maps.footprint_attributes
+   hypso.maps.georeferencing
+   hypso.maps.plot_map
+   hypso.maps.plot_overview
+   hypso.maps.rgb_image
+   hypso.maps.save_rgb
+   hypso.maps.write_footprints
+
+
+Module Contents
+---------------
+
+.. py:function:: footprint(product, mask=None, step = 10, block = 8)
+
+   The product's ground footprint, in WGS84 longitude/latitude.
+
+   :param product: Any georeferenced product (L1C and later), in sensor geometry.
+   :type product: hypso.Product or path
+   :param mask: Outline only these pixels (lines x samples) instead of the whole
+                swath; ``"data"`` for pixels with data (any finite band of the cube,
+                else any finite 2D variable). Pixels are taken in blocks of
+                ``block`` x ``block``: a block is in when any of its pixels is.
+   :type mask: array_like of bool or "data", optional
+   :param step: Swath outline: a vertex every ``step`` pixels along the edges (and at
+                the corners).
+   :type step: int, default 10
+   :param block: Block size for ``mask``.
+   :type block: int, default 8
+
+   :returns: Longitudes in -180..180, or 0..360 for a footprint across the
+             antimeridian.
+   :rtype: shapely.geometry.Polygon or MultiPolygon
+
+
+.. py:function:: footprint_attributes(product, source=None)
+
+   The capture's metadata for a footprint feature (:data:`FOOTPRINT_FIELDS`).
+
+   :param product:
+   :type product: hypso.Product
+   :param source: The file the product was read from (its name is recorded).
+   :type source: str or path, optional
+
+
+.. py:function:: georeferencing(product)
+
+   How the product's latitude/longitude were made: "indirect" (ground
+   processing's GCP-corrected coordinates), "direct" (from attitude and
+   position), or "unknown" (no record, e.g. a product from older software).
+
+
+.. py:function:: plot_map(source, variable = None, wavelength = None, ax=None, resolution = None, cmap = None, log = None, vmin = None, vmax = None, percentiles=(2, 98), stretch=None, per_channel = None, gamma = None, outline = True, water = True, coastlines = True, graticule = True, scale_bar = True, north_arrow = True, title = None, colorbar = True)
+
+   Plot a product variable, a band, or an RGB rendering on a map.
+
+   The product is regridded (:meth:`hypso.Product.regrid`, nearest
+   neighbour, default the UTM zone of the scene at the product's own
+   resolution) after reducing it to what is plotted.
+
+   :param source: A product in sensor geometry or already gridded.
+   :type source: hypso.Product or path
+   :param variable: A 2D variable (e.g. ``"chlor_a_oci"``) or the cube's name (``"Rrs"``,
+                    ``"rhos"``, ``"rhot"``) with ``wavelength``; default an RGB rendering
+                    of the cube (bands nearest 640, 550 and 460 nm).
+   :type variable: str, optional
+   :param wavelength: For a band of the cube (nearest).
+   :type wavelength: float, optional
+   :param ax:
+   :type ax: matplotlib.axes.Axes, optional
+   :param resolution: Grid pixel size in m; default the product's.
+   :type resolution: float, optional
+   :param cmap: Default "viridis" ("turbo" is avoided: not perceptually uniform).
+   :type cmap: str, optional
+   :param log: Logarithmic colour scale; default on for concentrations and IOPs
+               (``chl*``, ``tsm*``, ``a_*``, ``bbp_*``, ``kd*``...).
+   :type log: bool, optional
+   :param vmin: Colour range; default the ``percentiles`` of the data.
+   :type vmin: float, optional
+   :param vmax: Colour range; default the ``percentiles`` of the data.
+   :type vmax: float, optional
+   :param percentiles:
+   :type percentiles: tuple of float, default (2, 98)
+   :param stretch: RGB rendering, as in :func:`rgb_image`.
+   :param per_channel: RGB rendering, as in :func:`rgb_image`.
+   :param gamma: RGB rendering, as in :func:`rgb_image`.
+   :param outline: Draw the swath footprint (needs shapely).
+   :type outline: bool, default True
+   :param water: Shade the sea and lakes (Natural Earth) light blue under the data;
+                 land is light grey.
+   :type water: bool, default True
+   :param coastlines: Map elements (:func:`hypso.rgb.decorate_map`).
+   :param graticule: Map elements (:func:`hypso.rgb.decorate_map`).
+   :param scale_bar: Map elements (:func:`hypso.rgb.decorate_map`).
+   :param north_arrow: Map elements (:func:`hypso.rgb.decorate_map`).
+   :param title: Default: target, time, product and variable.
+   :type title: str, optional
+   :param colorbar:
+   :type colorbar: bool, default True
+
+   :rtype: matplotlib.axes.Axes
+
+
+.. py:function:: plot_overview(sources, ax=None, labels=None, margin = 0.1, coastlines = True, graticule = True, scale_bar = True, north_arrow = True, title = None, crs=None, water = True, fill = False, color_by = 'auto')
+
+   Plot the footprints of several products on one map.
+
+   :param sources: Polygons in WGS84 longitude/latitude (e.g. from :func:`footprint`)
+                   are drawn as they are.
+   :type sources: list of hypso.Product, paths or shapely polygons
+   :param ax:
+   :type ax: matplotlib.axes.Axes, optional
+   :param labels: Legend labels; default each product's acquisition time (UTC),
+                  after its target when the products have several targets.
+   :type labels: list of str, optional
+   :param margin: Space around the footprints, as a fraction of their extent.
+   :type margin: float, default 0.1
+   :param coastlines: Map elements (:func:`hypso.rgb.decorate_map`).
+   :param graticule: Map elements (:func:`hypso.rgb.decorate_map`).
+   :param scale_bar: Map elements (:func:`hypso.rgb.decorate_map`).
+   :param north_arrow: Map elements (:func:`hypso.rgb.decorate_map`).
+   :param title:
+   :type title: str, optional
+   :param crs: Map projection; default the UTM zone of the footprints' centre.
+   :type crs: optional
+   :param water: Shade the sea and lakes light blue; land is light grey.
+   :type water: bool, default True
+   :param fill: Tint the inside of each footprint in its colour (outlines only by
+                default).
+   :type fill: bool, default False
+   :param color_by: One colour and legend entry per footprint ("capture"), or per
+                    satellite with the number of captures in the legend ("satellite",
+                    thinner lines, for many footprints); "auto" is "capture" up to 8
+                    footprints and "satellite" beyond. ``labels`` applies to "capture".
+   :type color_by: {"auto", "capture", "satellite"}, default "auto"
+
+   :rtype: matplotlib.axes.Axes
+
+
+.. py:function:: rgb_image(product, stretch=None, wavelengths=RGB_WAVELENGTHS, per_channel = None, gamma = None)
+
+   An RGB rendering of a product's cube, in sensor geometry.
+
+   :param product: A product with a cube (L1B-L1D, L2A); a path is opened with only the
+                   three bands.
+   :type product: hypso.Product or path
+   :param stretch: Percentiles over the pixels with data that map to 0 and 1 (with one
+                   gain for all channels, only the upper one is used: 0 maps to 0).
+                   Default (2, 98) for L1, (0, 99.5) for L2A.
+   :type stretch: tuple of float, optional
+   :param wavelengths: The bands (nearest) for red, green and blue.
+   :type wavelengths: tuple of float, default (640, 550, 460)
+   :param per_channel: Stretch each channel on its own (default for L1 products: one gain
+                       for all channels renders TOA land pink) or use one gain for all
+                       channels from 0 (default for L2A surface reflectance, whose colours
+                       a per-channel stretch distorts).
+   :type per_channel: bool, optional
+   :param gamma: Display gamma (``image ** (1 / gamma)``): default 2.2 for L1, 1
+                 (linear) for L2A.
+   :type gamma: float, optional
+
+   :returns: (lines, samples, 3) in 0-1, NaN where the product has no data (e.g.
+             masked pixels of an L2A).
+   :rtype: numpy.ndarray
+
+
+.. py:function:: save_rgb(product, path, stretch=None, wavelengths=RGB_WAVELENGTHS, per_channel = None, gamma = None, orientation = 'server', bin_samples = 1)
+
+   Write :func:`rgb_image` as a PNG (transparent where there is no data).
+
+   :param product: As in :func:`rgb_image`.
+   :param stretch: As in :func:`rgb_image`.
+   :param wavelengths: As in :func:`rgb_image`.
+   :param per_channel: As in :func:`rgb_image`.
+   :param gamma: As in :func:`rgb_image`.
+   :param path:
+   :type path: str or path
+   :param orientation: "server": as the HYPSO servers' quicklooks (lines across, samples
+                       up); "product": the arrays as stored (lines down, samples across).
+   :type orientation: {"server", "product"}, default "server"
+   :param bin_samples: Average this many neighbouring samples (the servers' ``-bin3``
+                       images use 3, for pixels closer to square on the ground).
+   :type bin_samples: int, default 1
+
+
+.. py:function:: write_footprints(sources, path, mask=None, step = 10, block = 8)
+
+   Write footprints to an ESRI Shapefile or GeoJSON, one feature per product.
+
+   :param sources: Products in sensor geometry; paths are opened (all their bands are
+                   read, so prefer the smallest file of a capture, e.g. the L2B.BGC or
+                   the L1D opened with a few bands).
+   :type sources: hypso.Product, path, or a list of them
+   :param path: ``*.shp`` (writes .shp, .shx, .dbf, .prj and .cpg; needs pyshp) or
+                ``*.geojson``/``*.json``.
+   :type path: str or path
+   :param mask: As in :func:`footprint`; ``mask`` must be ``None`` or ``"data"`` here.
+   :param step: As in :func:`footprint`; ``mask`` must be ``None`` or ``"data"`` here.
+   :param block: As in :func:`footprint`; ``mask`` must be ``None`` or ``"data"`` here.
+
+   :returns: The .shp or GeoJSON file.
+   :rtype: pathlib.Path
+
+

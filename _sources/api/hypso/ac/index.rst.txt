@@ -1,0 +1,170 @@
+hypso.ac
+========
+
+.. py:module:: hypso.ac
+
+.. autoapi-nested-parse::
+
+   Atmospheric correction support: the external tools' subprocess drivers
+   (ac/adapters), their output readers, Polymer's SRF hook and the tool
+   configuration. The atmospheric-correction step itself is
+   hypso.processing.correct_atmosphere / hypso.Product.correct_atmosphere.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/hypso/ac/adapters/index
+   /api/hypso/ac/config/index
+   /api/hypso/ac/machi/index
+
+
+Exceptions
+----------
+
+.. autoapisummary::
+
+   hypso.ac.ACRunError
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.ac.ac_polymer_srf_getter
+   hypso.ac.ac_polymer_srf_getter_from_l1
+   hypso.ac.load_acolite_l2r_nc
+   hypso.ac.load_acolite_l2w_nc
+   hypso.ac.load_ocsmart_h5
+   hypso.ac.load_polymer_l2_v1_nc
+   hypso.ac.load_polymer_l2_v2_nc
+   hypso.ac.run_subprocess_driver
+
+
+Package Contents
+----------------
+
+.. py:exception:: ACRunError(tool, returncode, stdout, stderr, error_type = None, message = None)
+
+   Bases: :py:obj:`RuntimeError`
+
+
+   A subprocess-isolated AC tool run failed. Carries the subprocess's raw
+   stdout/stderr and, if its driver script produced a structured result.json
+   before failing, that error's type/message/traceback from the tool's own
+   process - so a caller sees *why* (e.g. "eoread not on this interpreter's
+   path") instead of just "subprocess exited 1".
+
+   Initialize self.  See help(type(self)) for accurate signature.
+
+
+.. py:function:: ac_polymer_srf_getter(srf_nc_path)
+
+   Polymer ``srf_getter`` reading HYPSO's spectral response functions
+   from a standalone SRF NetCDF file. See also
+   :func:`ac_polymer_srf_getter_from_l1`, which reads them from the L1
+   product's ``metadata/srf``.
+
+
+.. py:function:: ac_polymer_srf_getter_from_l1(l1_nc_path)
+
+   Polymer srf_getter reading the per-band SRFs (Band_<i> with their own
+   wav_Band_<i> coordinate) from the L1 file's own metadata/srf group.
+
+   Returns only the Band_* variables, ordered by band index: Polymer's
+   get_SRF(rename_method='bands') asserts the dataset has exactly one
+   variable per band, so the group's F0/effective_fwhm variables must
+   not be passed on.
+
+   Files written before the group held SRFs fall back to the single
+   <sensor>_srf.nc next to the L1 file (ac_polymer_srf_getter's source).
+
+
+.. py:function:: load_acolite_l2r_nc(nc_file_path)
+
+   Read an ACOLITE L2R file (surface reflectance ``rhos``).
+
+   :param nc_file_path:
+   :type nc_file_path: pathlib.Path
+
+   :returns: ``{variable name: xarray.DataArray}``, with ``rhos`` as one
+             ``(y, x, band)`` cube on its band wavelengths.
+   :rtype: dict
+
+
+.. py:function:: load_acolite_l2w_nc(nc_file_path)
+
+   Read an ACOLITE L2W file (``Rrs`` and water products).
+
+   :param nc_file_path:
+   :type nc_file_path: pathlib.Path
+
+   :returns: ``{variable name: xarray.DataArray}``, with ``Rrs`` as one
+             ``(y, x, band)`` cube on its band wavelengths.
+   :rtype: dict
+
+
+.. py:function:: load_ocsmart_h5(h5_file_path)
+
+   Read an OC-SMART L2 HDF5 file: everything it holds.
+
+   :returns: ``{variable name: xarray.DataArray}``: the 2D root variables
+             (``L2_flags``, ``chlor_a(oci)``, geometry, ...) as ``(y, x)``, and
+             each per-band group (``Rrs``, ``Lt``, ``Lr``, ``Lrc``, ``Lwp``,
+             ``tg_sol``, ``tg_sen``, whatever ``l2_prod`` asked for) as a float32
+             ``(y, x, band)`` cube on its band wavelengths (``band``: nm, from the
+             ``<name>_<nm>nm`` dataset names).
+   :rtype: dict
+
+
+.. py:function:: load_polymer_l2_v1_nc(nc_file_path)
+
+   Read a Polymer v1 output file.
+
+   :returns: ``{variable name: xarray.DataArray}``.
+   :rtype: dict
+
+
+.. py:function:: load_polymer_l2_v2_nc(nc_file_path)
+
+   Read a Polymer v2 output file's 2D and 3D variables.
+
+   For the reflectance prefer :func:`read_polymer_reflectance`, which also
+   handles the per-band ``rho_w_<nm>`` variables the v2 build writes.
+
+   :returns: ``{variable name: xarray.DataArray}`` (other variables as read).
+   :rtype: dict
+
+
+.. py:function:: run_subprocess_driver(python_path, driver_module, config, tool_name, extra_env = None)
+
+   Run `driver_module` (a hypso.ac.adapters._*_driver module with a
+   `python -m`-invocable __main__ block) in a fresh subprocess under
+   `python_path`, passing it `config` as JSON and reading back its JSON
+   result. Config/result files live in a per-call TemporaryDirectory (not a
+   shared/fixed path) so concurrent runs never collide - the exact class of
+   bug hypso-processing-pipeline had to work around by hand for OC-SMART's
+   staging directory.
+
+   `python_path` defaults to sys.executable at the call site (the same
+   interpreter this process is running under) when the caller doesn't need a
+   genuinely separate environment - that interpreter must have `hypso`
+   importable for any driver whose tool resolves a hook by dotted string name
+   back into this package (e.g. Polymer's srf_getter).
+
+   `extra_env`, if given, is merged into the subprocess's environment (on top
+   of this process's own os.environ) - the mechanism for passing secrets
+   (e.g. ACOLITE's EARTHDATA credentials) to a driver WITHOUT writing them
+   into config.json, which lives on disk (even briefly, even in a private
+   TemporaryDirectory) for the run's duration.
+
+   Raises ACRunError on any failure (non-zero exit, missing/unparseable
+   result.json, or a result.json reporting status != "ok"); returns the
+   parsed result dict on success.
+
+

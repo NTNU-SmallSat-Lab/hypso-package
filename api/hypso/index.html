@@ -1,0 +1,1672 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>hypso &#8212; hypso 26.10.0a7-20-g5e64121f</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=8e897651"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/hypso/index';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="hypso.ac" href="ac/index.html" />
+    <link rel="prev" title="Documentation" href="../../documentation.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="26.10.0a7" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">hypso 26.10.0a7-20-g5e64121f</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#">
+    hypso
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    hypso
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="ac/index.html">hypso.ac</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="ac/adapters/index.html">hypso.ac.adapters</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="ac/adapters/base/index.html">hypso.ac.adapters.base</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="ac/config/index.html">hypso.ac.config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ac/machi/index.html">hypso.ac.machi</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">hypso.api</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="grid/index.html">hypso.grid</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="grid/areas/index.html">hypso.grid.areas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grid/regridding/index.html">hypso.grid.regridding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grid/resample/index.html">hypso.grid.resample</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="io/index.html">hypso.io</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="io/cf/index.html">hypso.io.cf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/naming/index.html">hypso.io.naming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/product/index.html">hypso.io.product</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/provenance/index.html">hypso.io.provenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io/schema/index.html">hypso.io.schema</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="maps/index.html">hypso.maps</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="processing/index.html">hypso.processing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="processing/atmospheric/index.html">hypso.processing.atmospheric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processing/bands/index.html">hypso.processing.bands</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processing/calibrate/index.html">hypso.processing.calibrate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processing/capture/index.html">hypso.processing.capture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processing/georeference/index.html">hypso.processing.georeference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processing/l2b/index.html">hypso.processing.l2b</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processing/l2b_algorithms/index.html">hypso.processing.l2b_algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processing/toa/index.html">hypso.processing.toa</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="rgb/index.html">hypso.rgb</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="rgb/camera/index.html">hypso.rgb.camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rgb/exposure/index.html">hypso.rgb.exposure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rgb/hsi2rgb/index.html">hypso.rgb.hsi2rgb</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rgb/maps/index.html">hypso.rgb.maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rgb/product/index.html">hypso.rgb.product</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rgb/registration/index.html">hypso.rgb.registration</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sensors/index.html">hypso.sensors</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="sensors/hypso1/index.html">hypso.sensors.hypso1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sensors/hypso2/index.html">hypso.sensors.hypso2</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="srf/index.html">hypso.srf</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="srf/response/index.html">hypso.srf.response</a></li>
+<li class="toctree-l2"><a class="reference internal" href="srf/solar/index.html">hypso.srf.solar</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="versioning/index.html">hypso.versioning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="window/index.html">hypso.window</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">hypso</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-hypso">
+<span id="hypso"></span><h1>hypso<a class="headerlink" href="#module-hypso" title="Link to this heading">#</a></h1>
+<p>A python package form NTNU HYPSO Hyperspectral Image Processing</p>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">#</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ac/index.html">hypso.ac</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">hypso.api</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grid/index.html">hypso.grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="io/index.html">hypso.io</a></li>
+<li class="toctree-l1"><a class="reference internal" href="maps/index.html">hypso.maps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="processing/index.html">hypso.processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rgb/index.html">hypso.rgb</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sensors/index.html">hypso.sensors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="srf/index.html">hypso.srf</a></li>
+<li class="toctree-l1"><a class="reference internal" href="versioning/index.html">hypso.versioning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="window/index.html">hypso.window</a></li>
+</ul>
+</div>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.Product" title="hypso.Product"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Product</span></code></a></p></td>
+<td><p>One capture at one processing level.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.get_hypso1_wavelengths" title="hypso.get_hypso1_wavelengths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_hypso1_wavelengths</span></code></a>([aoi_x, column_count, bin_factor])</p></td>
+<td><p>Nominal HYPSO-1 band-centre wavelengths (nm) for an AOI and binning.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.get_hypso2_wavelengths" title="hypso.get_hypso2_wavelengths"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_hypso2_wavelengths</span></code></a>([aoi_x, column_count, bin_factor])</p></td>
+<td><p>Nominal HYPSO-2 band-centre wavelengths (nm) for an AOI and binning.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.open" title="hypso.open"><code class="xref py py-obj docutils literal notranslate"><span class="pre">open</span></code></a>(path[, wavelength_range, wavelengths, indices])</p></td>
+<td><p>Read a HYPSO product file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.read_product" title="hypso.read_product"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_product</span></code></a>(path[, wavelength_range, wavelengths, ...])</p></td>
+<td><p>Read any supported HYPSO product file into the in-memory model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.write_product" title="hypso.write_product"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_product</span></code></a>(tree, path[, datacube, significant_bits])</p></td>
+<td><p>Write a product tree in the current file format.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="package-contents">
+<h2>Package Contents<a class="headerlink" href="#package-contents" title="Link to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hypso.Product">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hypso.</span></span><span class="sig-name descname"><span class="pre">Product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product" title="Link to this definition">#</a></dt>
+<dd><p>One capture at one processing level.</p>
+<p>Create one with <a class="reference internal" href="#hypso.open" title="hypso.open"><code class="xref py py-func docutils literal notranslate"><span class="pre">hypso.open()</span></code></a> or from a product tree. A Product is
+immutable: processing methods return a new Product.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tree</strong> (<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataTree.html#xarray.DataTree" title="(in xarray v2026.9.0)"><em>xarray.DataTree</em></a>) – A product tree as read by <a class="reference internal" href="io/product/index.html#hypso.io.product.read_product" title="hypso.io.product.read_product"><code class="xref py py-func docutils literal notranslate"><span class="pre">hypso.io.product.read_product()</span></code></a>.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If the tree has no valid <code class="docutils literal notranslate"><span class="pre">processing_level</span></code> (L1A-L1D, L2A, L2B).</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.area_definition">
+<span class="sig-name descname"><span class="pre">area_definition</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.area_definition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.area_definition" title="Link to this definition">#</a></dt>
+<dd><p>A gridded product’s grid as a <a class="reference external" href="https://pyresample.readthedocs.io/en/stable/api/pyresample.geometry.html#pyresample.geometry.AreaDefinition" title="(in pyresample v1.35.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyresample.geometry.AreaDefinition</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If the product is in sensor geometry.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.calibrate">
+<span class="sig-name descname"><span class="pre">calibrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coeff_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.calibrate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.calibrate" title="Link to this definition">#</a></dt>
+<dd><p>Calibrate L1A to L1B: top-of-atmosphere radiance <code class="docutils literal notranslate"><span class="pre">Lt</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coeff_type</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Radiometric variant: <code class="docutils literal notranslate"><span class="pre">&quot;abs&quot;</span></code> (default), <code class="docutils literal notranslate"><span class="pre">&quot;moved&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;lab&quot;</span></code>.</p></li>
+<li><p><strong>version</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a><em>, </em><em>optional</em>) – Coefficient release: <code class="docutils literal notranslate"><span class="pre">&quot;V3.1&quot;</span></code> (default), <code class="docutils literal notranslate"><span class="pre">&quot;V3.1v2spec&quot;</span></code> (for
+OC-SMART), <code class="docutils literal notranslate"><span class="pre">&quot;V2&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;V1&quot;</span></code>; or <code class="docutils literal notranslate"><span class="pre">{correction:</span> <span class="pre">release}</span></code> to mix
+them, e.g. <code class="docutils literal notranslate"><span class="pre">{&quot;smile&quot;:</span> <span class="pre">&quot;V2&quot;}</span></code>. See docs/calibration.rst.</p></li>
+<li><p><strong>**kwargs</strong> – Passed to <a class="reference internal" href="processing/index.html#hypso.processing.l1a_to_l1b" title="hypso.processing.l1a_to_l1b"><code class="xref py py-func docutils literal notranslate"><span class="pre">hypso.processing.l1a_to_l1b()</span></code></a>: <code class="docutils literal notranslate"><span class="pre">coeff_files</span></code>
+(explicit files), <code class="docutils literal notranslate"><span class="pre">radiometric</span></code>, <code class="docutils literal notranslate"><span class="pre">smile</span></code>, <code class="docutils literal notranslate"><span class="pre">destripe</span></code>,
+<code class="docutils literal notranslate"><span class="pre">spectral</span></code> (False to skip a correction), and <code class="docutils literal notranslate"><span class="pre">keystone</span></code>
+(True to apply the sensor’s keystone model; unreviewed groundwork).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>L1B; the coefficients used and their checksums are recorded in
+<a class="reference internal" href="#hypso.Product.provenance" title="hypso.Product.provenance"><code class="xref py py-attr docutils literal notranslate"><span class="pre">provenance</span></code></a>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hypso.Product" title="hypso.Product">Product</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.correct_atmosphere">
+<span class="sig-name descname"><span class="pre">correct_atmosphere</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'machi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masked</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_flags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">work_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.correct_atmosphere"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.correct_atmosphere" title="Link to this definition">#</a></dt>
+<dd><p>Atmospheric correction to L2A.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> (<em>{&quot;machi&quot;</em><em>, </em><em>&quot;dps&quot;</em><em>, </em><em>&quot;polymer&quot;</em><em>, </em><em>&quot;acolite&quot;</em><em>, </em><em>&quot;ocsmart&quot;}</em><em>, </em><em>default &quot;machi&quot;</em>) – MACHI or dark pixel subtraction (in this process), or an
+external tool.</p></li>
+<li><p><strong>masked</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default False</em>) – Give the method NaN where <code class="docutils literal notranslate"><span class="pre">pixel_flags</span></code> are set.</p></li>
+<li><p><strong>mask_flags</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><em>list</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Only these flags, with <code class="docutils literal notranslate"><span class="pre">masked=True</span></code>.</p></li>
+<li><p><strong>work_dir</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><em>path</em><em>, </em><em>optional</em>) – External tools: where their input and raw output go (kept);
+default a temporary directory.</p></li>
+<li><p><strong>config</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>path</em><em> or </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a><em>, </em><em>optional</em>) – External tools: the AC tool configuration
+(<a class="reference internal" href="ac/config/index.html#module-hypso.ac.config" title="hypso.ac.config"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.ac.config</span></code></a>); default the <code class="docutils literal notranslate"><span class="pre">HYPSO_AC_CONFIG</span></code>
+environment variable.</p></li>
+<li><p><strong>**options</strong> – Method-specific options, e.g. <code class="docutils literal notranslate"><span class="pre">est_min_R=0.05</span></code> for MACHI,
+<code class="docutils literal notranslate"><span class="pre">settings={...}</span></code> overriding the configuration for Polymer or
+ACOLITE, <code class="docutils literal notranslate"><span class="pre">output=&quot;l2r&quot;</span></code> for ACOLITE.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>L2A: the method’s reflectance on this product’s bands, its 2D
+products and flags in <a class="reference internal" href="#hypso.Product.variables" title="hypso.Product.variables"><code class="xref py py-attr docutils literal notranslate"><span class="pre">variables</span></code></a>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hypso.Product" title="hypso.Product">Product</a></p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="processing/index.html#hypso.processing.correct_atmosphere" title="hypso.processing.correct_atmosphere"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hypso.processing.correct_atmosphere</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.derive">
+<span class="sig-name descname"><span class="pre">derive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.derive"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.derive" title="Link to this definition">#</a></dt>
+<dd><p>An L2B product from one of the package’s algorithms (from L2A).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>group</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – <code class="docutils literal notranslate"><span class="pre">&quot;BGC&quot;</span></code> (chlorophyll-a, suspended matter) or <code class="docutils literal notranslate"><span class="pre">&quot;IOP&quot;</span></code>
+(absorption, backscattering, Kd).</p></li>
+<li><p><strong>algorithm</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – BGC: <code class="docutils literal notranslate"><span class="pre">&quot;oci&quot;</span></code> (default; NASA’s chlor_a, CI and OC4 blend),
+<code class="docutils literal notranslate"><span class="pre">&quot;oc4&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;ci&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;ndci&quot;</span></code> (turbid/eutrophic waters),
+<code class="docutils literal notranslate"><span class="pre">&quot;nechad2010&quot;</span></code> (suspended matter); IOP: <code class="docutils literal notranslate"><span class="pre">&quot;qaa&quot;</span></code> (default).
+See <a class="reference internal" href="processing/l2b_algorithms/index.html#module-hypso.processing.l2b_algorithms" title="hypso.processing.l2b_algorithms"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.processing.l2b_algorithms</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Level L2B, e.g. <code class="docutils literal notranslate"><span class="pre">...L2B.BGC.oci.nc</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hypso.Product" title="hypso.Product">Product</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">chl</span> <span class="o">=</span> <span class="n">l2a</span><span class="o">.</span><span class="n">derive</span><span class="p">(</span><span class="s2">"BGC"</span><span class="p">)</span>                 <span class="c1"># from an L2A.RRS product</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chl</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s2">"chlor_a"</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tsm</span> <span class="o">=</span> <span class="n">l2a</span><span class="o">.</span><span class="n">derive</span><span class="p">(</span><span class="s2">"BGC"</span><span class="p">,</span> <span class="s2">"nechad2010"</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.filename">
+<span class="sig-name descname"><span class="pre">filename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.filename"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.filename" title="Link to this definition">#</a></dt>
+<dd><p>The product’s file name (<a class="reference internal" href="io/naming/index.html#module-hypso.io.naming" title="hypso.io.naming"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.io.naming</span></code></a>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>label</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Free-text label for experiments, the last name field.</p></li>
+<li><p><strong>ac</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Override the atmospheric correction field (L2A) or source (L2B).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>e.g. <code class="docutils literal notranslate"><span class="pre">&quot;HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.nc&quot;</span></code>; L2A
+names carry the quantity (from the product variable) and the
+method, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;...L2A.RHOS.machi.nc&quot;</span></code>; L2B names the group
+and source, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;...L2B.BGC.oc4.nc&quot;</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.footprint">
+<span class="sig-name descname"><span class="pre">footprint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.footprint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.footprint" title="Link to this definition">#</a></dt>
+<dd><p>The ground footprint as a shapely polygon in WGS84 longitude/latitude.</p>
+<p>See <a class="reference internal" href="maps/index.html#hypso.maps.footprint" title="hypso.maps.footprint"><code class="xref py py-func docutils literal notranslate"><span class="pre">hypso.maps.footprint()</span></code></a> (<code class="docutils literal notranslate"><span class="pre">mask=&quot;data&quot;</span></code> for the pixels
+with data only).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>)</p></li>
+<li><p><strong>block</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.georeference">
+<span class="sig-name descname"><span class="pre">georeference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">latitudes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">longitudes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.georeference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.georeference" title="Link to this definition">#</a></dt>
+<dd><p>Georeference L1B to L1C: latitude, longitude and sun and sensor angles.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>latitudes</strong> (<em>array_like</em><em> or </em><em>path</em><em>, </em><em>optional</em>) – Indirect (GCP-corrected) pixel coordinates, as arrays or paths to
+raw float32 files. Omit both to use direct georeferencing.</p></li>
+<li><p><strong>longitudes</strong> (<em>array_like</em><em> or </em><em>path</em><em>, </em><em>optional</em>) – Indirect (GCP-corrected) pixel coordinates, as arrays or paths to
+raw float32 files. Omit both to use direct georeferencing.</p></li>
+<li><p><strong>direct</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default True</em>) – Also compute direct georeferencing from the ADCS telemetry
+(<code class="docutils literal notranslate"><span class="pre">*_direct</span></code> variables).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#hypso.Product" title="hypso.Product">Product</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.intermediates">
+<span class="sig-name descname"><span class="pre">intermediates</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.intermediates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.intermediates" title="Link to this definition">#</a></dt>
+<dd><p>The AC tool’s other per-band outputs as an L2A.AUX product.</p>
+<p>OC-SMART’s Lt, Lr, Lrc, Lwp, tg_sol and tg_sen (one 2D variable per
+quantity and band, <code class="docutils literal notranslate"><span class="pre">Lt_434</span></code>), with the L2A’s geometry and flags.
+<a class="reference internal" href="#hypso.Product.write" title="hypso.Product.write"><code class="xref py py-meth docutils literal notranslate"><span class="pre">write()</span></code></a> writes them as <code class="docutils literal notranslate"><span class="pre">...L2A.AUX.&lt;method&gt;.nc</span></code> next to the
+L2A; the L2A file does not hold them.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None when the method returned none (in-process methods, Polymer,
+ACOLITE).</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#hypso.Product" title="hypso.Product">Product</a> or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.open">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelength_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelengths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.open"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.open" title="Link to this definition">#</a></dt>
+<dd><p>Read a product file of any level and any supported layout.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>) – A current-format, older grouped or ground-station L1A file.</p></li>
+<li><p><strong>wavelength_range</strong> (<em>optional</em>) – Read only some bands (as <a class="reference internal" href="#hypso.Product.select_bands" title="hypso.Product.select_bands"><code class="xref py py-meth docutils literal notranslate"><span class="pre">select_bands()</span></code></a>); only those are
+read from the file. Not for L1A.</p></li>
+<li><p><strong>wavelengths</strong> (<em>optional</em>) – Read only some bands (as <a class="reference internal" href="#hypso.Product.select_bands" title="hypso.Product.select_bands"><code class="xref py py-meth docutils literal notranslate"><span class="pre">select_bands()</span></code></a>); only those are
+read from the file. Not for L1A.</p></li>
+<li><p><strong>indices</strong> (<em>optional</em>) – Read only some bands (as <a class="reference internal" href="#hypso.Product.select_bands" title="hypso.Product.select_bands"><code class="xref py py-meth docutils literal notranslate"><span class="pre">select_bands()</span></code></a>); only those are
+read from the file. Not for L1A.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#hypso.Product" title="hypso.Product">Product</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.pixel">
+<span class="sig-name descname"><span class="pre">pixel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">latitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">longitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.pixel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.pixel" title="Link to this definition">#</a></dt>
+<dd><p>The pixel nearest to a location.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>latitude</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – Location in degrees.</p></li>
+<li><p><strong>longitude</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – Location in degrees.</p></li>
+<li><p><strong>direct</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default False</em>) – Use the direct (ADCS-only) georeferencing instead.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">(line,</span> <span class="pre">sample)</span></code>, or <code class="docutils literal notranslate"><span class="pre">(y,</span> <span class="pre">x)</span></code> for a gridded product.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a> of <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.regrid">
+<span class="sig-name descname"><span class="pre">regrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'utm'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nearest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius_of_influence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_gb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.regrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.regrid" title="Link to this definition">#</a></dt>
+<dd><p>The product on a map grid, at the same level.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>pyproj.CRS</em><em>, </em><em>AreaDefinition</em><em> or </em><a class="reference internal" href="#hypso.Product" title="hypso.Product"><em>Product</em></a><em>, </em><em>default &quot;utm&quot;</em>) – <code class="docutils literal notranslate"><span class="pre">&quot;utm&quot;</span></code> (the WGS84 UTM zone of the scene centre), any CRS
+pyproj accepts (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;EPSG:3035&quot;</span></code>), a pyresample
+AreaDefinition, or a gridded Product to share its grid.</p></li>
+<li><p><strong>resolution</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>, </em><em>optional</em>) – Pixel size in the CRS’s units. Default: this product’s
+<a class="reference internal" href="#hypso.Product.resolution" title="hypso.Product.resolution"><code class="xref py py-attr docutils literal notranslate"><span class="pre">resolution</span></code></a>, so nothing is oversampled. Not with an
+AreaDefinition or Product target.</p></li>
+<li><p><strong>method</strong> (<em>{&quot;nearest&quot;</em><em>, </em><em>&quot;bilinear&quot;</em><em>, </em><em>&quot;average&quot;}</em><em>, </em><em>default &quot;nearest&quot;</em>) – <code class="docutils literal notranslate"><span class="pre">&quot;nearest&quot;</span></code> keeps one measured spectrum per pixel;
+<code class="docutils literal notranslate"><span class="pre">&quot;bilinear&quot;</span></code> blends neighbouring spectra; <code class="docutils literal notranslate"><span class="pre">&quot;average&quot;</span></code> takes
+cell means, for grids at least as coarse as the product.</p></li>
+<li><p><strong>radius_of_influence</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>, </em><em>optional</em>) – Search radius in m; default 1.5 times the coarser pixel size.</p></li>
+<li><p><strong>max_gb</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>, </em><em>default 4.0</em>) – Refuse grids whose cube would be larger.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dimensions <code class="docutils literal notranslate"><span class="pre">(y,</span> <span class="pre">x)</span></code> with CF projection coordinates and a
+<code class="docutils literal notranslate"><span class="pre">crs</span></code> grid mapping; <code class="docutils literal notranslate"><span class="pre">pixel_flags</span></code> gains <code class="docutils literal notranslate"><span class="pre">outside_swath</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hypso.Product" title="hypso.Product">Product</a></p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="grid/index.html#hypso.grid.regrid" title="hypso.grid.regrid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hypso.grid.regrid</span></code></a></dt><dd><p>The tree function, with the per-variable rules.</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.resample">
+<span class="sig-name descname"><span class="pre">resample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nearest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius_of_influence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.resample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.resample" title="Link to this definition">#</a></dt>
+<dd><p>Resample the product onto any target, as a bare Dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target</strong> (<a class="reference external" href="https://pyresample.readthedocs.io/en/stable/api/pyresample.geometry.html#pyresample.geometry.AreaDefinition" title="(in pyresample v1.35.0)"><em>pyresample.geometry.AreaDefinition</em></a><em> or </em><em>SwathDefinition</em>) – A grid, or a swath such as another sensor’s (for matchups).</p></li>
+<li><p><strong>method</strong> (<em>{&quot;nearest&quot;</em><em>, </em><em>&quot;bilinear&quot;</em><em>, </em><em>&quot;average&quot;}</em><em>, </em><em>default &quot;nearest&quot;</em>) – For the cube and float variables; <code class="docutils literal notranslate"><span class="pre">&quot;average&quot;</span></code> only onto grids
+coarser than the product. Flags are combined as in
+<a class="reference internal" href="grid/index.html#hypso.grid.GridOperators" title="hypso.grid.GridOperators"><code class="xref py py-class docutils literal notranslate"><span class="pre">hypso.grid.GridOperators</span></code></a>.</p></li>
+<li><p><strong>radius_of_influence</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>, </em><em>optional</em>) – Search radius in m; default 1.5 times the coarser pixel size.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The cube, derived variables, each flag as <code class="docutils literal notranslate"><span class="pre">flag_&lt;name&gt;</span></code> and
+the target’s latitude and longitude.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2026.9.0)">xarray.Dataset</a></p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#hypso.Product.regrid" title="hypso.Product.regrid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">regrid</span></code></a></dt><dd><p>The product on a map grid, as a Product.</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.select_bands">
+<span class="sig-name descname"><span class="pre">select_bands</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wavelength_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelengths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.select_bands"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.select_bands" title="Link to this definition">#</a></dt>
+<dd><p>A new Product with only some of the bands (from L1B on).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wavelength_range</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><em>tuple</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>, </em><em>optional</em>) – <code class="docutils literal notranslate"><span class="pre">(min,</span> <span class="pre">max)</span></code> in nm: the bands whose centre lies within it.</p></li>
+<li><p><strong>wavelengths</strong> (<em>array_like</em><em>, </em><em>optional</em>) – Wavelengths in nm: the nearest band to each.</p></li>
+<li><p><strong>indices</strong> (<em>array_like</em><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>optional</em>) – Band indices in the sensor’s full band set (<code class="docutils literal notranslate"><span class="pre">band_index</span></code>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Each band keeps its full-set index, so later steps (TOA
+reflectance, SRFs) give the same values as on all bands.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hypso.Product" title="hypso.Product">Product</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – On L1A: calibration needs every band.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vis</span> <span class="o">=</span> <span class="n">l1b</span><span class="o">.</span><span class="n">select_bands</span><span class="p">(</span><span class="n">wavelength_range</span><span class="o">=</span><span class="p">(</span><span class="mi">450</span><span class="p">,</span> <span class="mi">700</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.spectrum">
+<span class="sig-name descname"><span class="pre">spectrum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">latitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">longitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.spectrum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.spectrum" title="Link to this definition">#</a></dt>
+<dd><p>The cube’s spectrum at one pixel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>latitude</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>, </em><em>optional</em>) – Location in degrees; the nearest pixel is used.</p></li>
+<li><p><strong>longitude</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>, </em><em>optional</em>) – Location in degrees; the nearest pixel is used.</p></li>
+<li><p><strong>line</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>optional</em>) – Pixel indices, instead of a location.</p></li>
+<li><p><strong>sample</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>optional</em>) – Pixel indices, instead of a location.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Values over <code class="docutils literal notranslate"><span class="pre">bands</span></code>, with wavelength coordinates.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html#xarray.DataArray" title="(in xarray v2026.9.0)">xarray.DataArray</a></p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="window/index.html#module-hypso.window" title="hypso.window"><code class="xref py py-obj docutils literal notranslate"><span class="pre">window</span></code></a></dt><dd><p>Statistics of a window of pixels around a location.</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.swath_definition">
+<span class="sig-name descname"><span class="pre">swath_definition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">direct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.swath_definition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.swath_definition" title="Link to this definition">#</a></dt>
+<dd><p>The product’s geolocation as a <a class="reference external" href="https://pyresample.readthedocs.io/en/stable/api/pyresample.geometry.html#pyresample.geometry.SwathDefinition" title="(in pyresample v1.35.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyresample.geometry.SwathDefinition</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>direct</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default False</em>) – Use the direct georeferencing instead.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.to">
+<span class="sig-name descname"><span class="pre">to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibrate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">georeference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">toa_reflectance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correct_atmosphere</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.to" title="Link to this definition">#</a></dt>
+<dd><p>Run the processing steps from this level up to <code class="docutils literal notranslate"><span class="pre">level</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level</strong> (<em>{&quot;L1B&quot;</em><em>, </em><em>&quot;L1C&quot;</em><em>, </em><em>&quot;L1D&quot;</em><em>, </em><em>&quot;L2A&quot;}</em>) – Target level.</p></li>
+<li><p><strong>calibrate</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a><em>, </em><em>optional</em>) – Options for each step, passed to the method of that name. For
+L2A, <code class="docutils literal notranslate"><span class="pre">correct_atmosphere={&quot;method&quot;:</span> <span class="pre">...}</span></code> picks the method
+(default MACHI).</p></li>
+<li><p><strong>georeference</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a><em>, </em><em>optional</em>) – Options for each step, passed to the method of that name. For
+L2A, <code class="docutils literal notranslate"><span class="pre">correct_atmosphere={&quot;method&quot;:</span> <span class="pre">...}</span></code> picks the method
+(default MACHI).</p></li>
+<li><p><strong>toa_reflectance</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a><em>, </em><em>optional</em>) – Options for each step, passed to the method of that name. For
+L2A, <code class="docutils literal notranslate"><span class="pre">correct_atmosphere={&quot;method&quot;:</span> <span class="pre">...}</span></code> picks the method
+(default MACHI).</p></li>
+<li><p><strong>correct_atmosphere</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a><em>, </em><em>optional</em>) – Options for each step, passed to the method of that name. For
+L2A, <code class="docutils literal notranslate"><span class="pre">correct_atmosphere={&quot;method&quot;:</span> <span class="pre">...}</span></code> picks the method
+(default MACHI).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#hypso.Product" title="hypso.Product">Product</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">l1d</span> <span class="o">=</span> <span class="n">l1a</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">"L1D"</span><span class="p">,</span> <span class="n">calibrate</span><span class="o">=</span><span class="p">{</span><span class="s2">"version"</span><span class="p">:</span> <span class="s2">"V2"</span><span class="p">},</span>
+<span class="gp">... </span>             <span class="n">georeference</span><span class="o">=</span><span class="p">{</span><span class="s2">"latitudes"</span><span class="p">:</span> <span class="n">lats</span><span class="p">,</span> <span class="s2">"longitudes"</span><span class="p">:</span> <span class="n">lons</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l2a</span> <span class="o">=</span> <span class="n">l1d</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">"L2A"</span><span class="p">)</span>                                        <span class="c1"># MACHI</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l2a</span> <span class="o">=</span> <span class="n">l1d</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">"L2A"</span><span class="p">,</span> <span class="n">correct_atmosphere</span><span class="o">=</span><span class="p">{</span><span class="s2">"method"</span><span class="p">:</span> <span class="s2">"dps"</span><span class="p">})</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.to_satpy">
+<span class="sig-name descname"><span class="pre">to_satpy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">direct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.to_satpy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.to_satpy" title="Link to this definition">#</a></dt>
+<dd><p>The product as a Satpy Scene, one dataset per band.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>direct</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default False</em>) – Use the direct georeferencing for the swath.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.toa_reflectance">
+<span class="sig-name descname"><span class="pre">toa_reflectance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_direct_georef</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ssi_source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tsis'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_unbinned</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.toa_reflectance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.toa_reflectance" title="Link to this definition">#</a></dt>
+<dd><p>Convert L1C radiance to L1D top-of-atmosphere reflectance <code class="docutils literal notranslate"><span class="pre">rhot</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>use_direct_georef</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default False</em>) – Use the direct georeferencing’s solar zenith angle.</p></li>
+<li><p><strong>ssi_source</strong> (<em>{&quot;tsis&quot;</em><em>, </em><em>&quot;thuillier&quot;}</em><em>, </em><em>default &quot;tsis&quot;</em>) – Solar irradiance spectrum: TSIS-1 HSRS or Thuillier (2002).</p></li>
+<li><p><strong>use_unbinned</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default True</em>) – Build the spectral response functions from the unbinned bands.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>L1D, with the spectral response functions in <code class="docutils literal notranslate"><span class="pre">metadata/srf</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hypso.Product" title="hypso.Product">Product</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.tool_products">
+<span class="sig-name descname"><span class="pre">tool_products</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.tool_products"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.tool_products" title="Link to this definition">#</a></dt>
+<dd><p>The AC tool’s own geophysical products as L2B products.</p>
+<p>Polymer’s <code class="docutils literal notranslate"><span class="pre">chla</span></code>, ACOLITE’s <code class="docutils literal notranslate"><span class="pre">chl_*</span></code>/<code class="docutils literal notranslate"><span class="pre">SPM_*</span></code>, OC-SMART’s
+<code class="docutils literal notranslate"><span class="pre">chlor_a_*</span></code>/<code class="docutils literal notranslate"><span class="pre">tsm_*</span></code>, … grouped by
+<code class="xref py py-data docutils literal notranslate"><span class="pre">hypso.io.naming.L2B_GROUPS</span></code>, each with the tool’s flags. An
+L2A file does not keep them: <a class="reference internal" href="#hypso.Product.write" title="hypso.Product.write"><code class="xref py py-meth docutils literal notranslate"><span class="pre">write()</span></code></a> writes them as L2B files
+(<code class="docutils literal notranslate"><span class="pre">...L2B.BGC.polymer.nc</span></code>) next to it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">{group:</span> <span class="pre">Product}</span></code>, e.g. <code class="docutils literal notranslate"><span class="pre">{&quot;BGC&quot;:</span> <span class="pre">...,</span> <span class="pre">&quot;IOP&quot;:</span> <span class="pre">...}</span></code>; empty
+for in-process methods (MACHI, DPS).</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.window">
+<span class="sig-name descname"><span class="pre">window</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">latitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">longitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_flags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv_band_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(405.0,</span> <span class="pre">570.0)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.window"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.window" title="Link to this definition">#</a></dt>
+<dd><p>A window of pixels around a location and its statistics, for matchups.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>latitude</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – Location in degrees; the window is centred on the nearest pixel.</p></li>
+<li><p><strong>longitude</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – Location in degrees; the window is centred on the nearest pixel.</p></li>
+<li><p><strong>size</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>default 3</em>) – Window width in pixels (odd). Clipped at the image edges.</p></li>
+<li><p><strong>exclude_flags</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><em>list</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – <code class="docutils literal notranslate"><span class="pre">pixel_flags</span></code> names (e.g. <code class="docutils literal notranslate"><span class="pre">[&quot;land&quot;,</span> <span class="pre">&quot;cloud&quot;]</span></code>) whose pixels
+are left out.</p></li>
+<li><p><strong>cv_band_range</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><em>tuple</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>, </em><em>default</em><em> (</em><em>405</em><em>, </em><em>570</em><em>)</em>) – Wavelength range (nm) for <code class="docutils literal notranslate"><span class="pre">pixel_valid</span></code> and <code class="docutils literal notranslate"><span class="pre">cv_median</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Per band: <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">median</span></code>, <code class="docutils literal notranslate"><span class="pre">std</span></code>, <code class="docutils literal notranslate"><span class="pre">cv</span></code> (std / median)
+and <code class="docutils literal notranslate"><span class="pre">valid_count</span></code>; <code class="docutils literal notranslate"><span class="pre">pixels</span></code> (the window) and <code class="docutils literal notranslate"><span class="pre">excluded</span></code>.
+Attributes: centre pixel and its distance to the location,
+<code class="docutils literal notranslate"><span class="pre">box_size</span></code>, <code class="docutils literal notranslate"><span class="pre">pixel_valid</span></code> and <code class="docutils literal notranslate"><span class="pre">percent_valid</span></code> (pixels with
+any finite band in <code class="docutils literal notranslate"><span class="pre">cv_band_range</span></code>), <code class="docutils literal notranslate"><span class="pre">cv_median</span></code> and the
+window’s mean angles. See <a class="reference internal" href="window/index.html#module-hypso.window" title="hypso.window"><code class="xref py py-mod docutils literal notranslate"><span class="pre">hypso.window</span></code></a>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2026.9.0)">xarray.Dataset</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.with_masks">
+<span class="sig-name descname"><span class="pre">with_masks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">descriptions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">masks</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.with_masks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.with_masks" title="Link to this definition">#</a></dt>
+<dd><p>A new Product with masks added to <code class="docutils literal notranslate"><span class="pre">pixel_flags</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>descriptions</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a><em>, </em><em>optional</em>) – <code class="docutils literal notranslate"><span class="pre">{name:</span> <span class="pre">text}</span></code> describing masks, kept in the file.</p></li>
+<li><p><strong>**masks</strong> (<em>array_like</em><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – <code class="docutils literal notranslate"><span class="pre">name=mask</span></code> with the product’s spatial shape, True where
+flagged. Names may contain letters, digits and <code class="docutils literal notranslate"><span class="pre">_</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Existing flags are kept; a mask with an existing name replaces it.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#hypso.Product" title="hypso.Product">Product</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">flagged</span> <span class="o">=</span> <span class="n">l1d</span><span class="o">.</span><span class="n">with_masks</span><span class="p">(</span><span class="n">land</span><span class="o">=</span><span class="n">land</span><span class="p">,</span> <span class="n">cloud</span><span class="o">=</span><span class="n">cloud</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.with_variables">
+<span class="sig-name descname"><span class="pre">with_variables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.with_variables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.with_variables" title="Link to this definition">#</a></dt>
+<dd><p>A new Product with derived 2D variables added.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>**variables</strong> (<em>array_like</em><em> or </em><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html#xarray.DataArray" title="(in xarray v2026.9.0)"><em>xarray.DataArray</em></a>) – <code class="docutils literal notranslate"><span class="pre">name=values</span></code> with the product’s spatial shape; a DataArray’s
+attributes (e.g. <code class="docutils literal notranslate"><span class="pre">units</span></code>) are kept. Written with the product
+and read back by <a class="reference internal" href="#hypso.open" title="hypso.open"><code class="xref py py-func docutils literal notranslate"><span class="pre">hypso.open()</span></code></a>.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#hypso.Product" title="hypso.Product">Product</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">l2a</span><span class="o">.</span><span class="n">with_variables</span><span class="p">(</span><span class="n">chla</span><span class="o">=</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">chla</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s2">"units"</span><span class="p">:</span> <span class="s2">"mg m-3"</span><span class="p">}))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.write">
+<span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datacube</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">significant_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">14</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tool_products</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intermediates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.write"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.write" title="Link to this definition">#</a></dt>
+<dd><p>Write the product in the current file format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><em>path</em><em>, </em><em>optional</em>) – Output file. Default: <a class="reference internal" href="#hypso.Product.filename" title="hypso.Product.filename"><code class="xref py py-meth docutils literal notranslate"><span class="pre">filename()</span></code></a> in <code class="docutils literal notranslate"><span class="pre">out_dir</span></code>.</p></li>
+<li><p><strong>out_dir</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><em>path</em><em>, </em><em>optional</em>) – Directory for the default name; the current directory if omitted.</p></li>
+<li><p><strong>label</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Label for the default name.</p></li>
+<li><p><strong>datacube</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default False</em>) – Write the cube as one 3D variable instead of one per band.</p></li>
+<li><p><strong>significant_bits</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em> or </em><em>None</em><em>, </em><em>default 14</em>) – Keep this many significant mantissa bits of the float bands
+(L1B-L2A): about 40% smaller L1D bands at most 3.1e-5 relative
+error; None writes them lossless.</p></li>
+<li><p><strong>tool_products</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default True</em>) – L2A: also write the AC tool’s own products (<a class="reference internal" href="#hypso.Product.tool_products" title="hypso.Product.tool_products"><code class="xref py py-meth docutils literal notranslate"><span class="pre">tool_products()</span></code></a>)
+as L2B files in the same directory. The L2A file never holds them;
+False drops them (with a warning).</p></li>
+<li><p><strong>intermediates</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default True</em>) – L2A: also write the AC tool’s other per-band outputs
+(<a class="reference internal" href="#hypso.Product.intermediates" title="hypso.Product.intermediates"><code class="xref py py-meth docutils literal notranslate"><span class="pre">intermediates()</span></code></a>, e.g. OC-SMART’s Lt, Lr, Lrc, tg_sol) as
+the <code class="docutils literal notranslate"><span class="pre">...L2A.AUX.&lt;method&gt;.nc</span></code> file in the same directory. False
+drops them (with a warning).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The written file (for L2A, the L2A file).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)">pathlib.Path</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hypso.Product.write_footprint">
+<span class="sig-name descname"><span class="pre">write_footprint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#Product.write_footprint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.Product.write_footprint" title="Link to this definition">#</a></dt>
+<dd><p>Write the footprint, with the capture’s metadata, as an ESRI
+Shapefile (<code class="docutils literal notranslate"><span class="pre">*.shp</span></code>, EPSG:4326) or GeoJSON.</p>
+<p>See <a class="reference internal" href="maps/index.html#hypso.maps.write_footprints" title="hypso.maps.write_footprints"><code class="xref py py-func docutils literal notranslate"><span class="pre">hypso.maps.write_footprints()</span></code></a>, which also writes several
+products to one file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>)</p></li>
+<li><p><strong>block</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.Product.atmospheric_correction">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">atmospheric_correction</span></span><a class="headerlink" href="#hypso.Product.atmospheric_correction" title="Link to this definition">#</a></dt>
+<dd><p>Atmospheric correction method of an L2A product, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;polymer&quot;</span></code>; None below L2A.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.Product.cube">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cube</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html#xarray.DataArray" title="(in xarray v2026.9.0)"><span class="pre">xarray.DataArray</span></a></em><a class="headerlink" href="#hypso.Product.cube" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">dn</span></code>, <code class="docutils literal notranslate"><span class="pre">Lt</span></code>, <code class="docutils literal notranslate"><span class="pre">rhot</span></code> or the L2A variable.</p>
+<p>Dimensions <code class="docutils literal notranslate"><span class="pre">(lines,</span> <span class="pre">samples,</span> <span class="pre">bands)</span></code>, or <code class="docutils literal notranslate"><span class="pre">(y,</span> <span class="pre">x,</span> <span class="pre">bands)</span></code> when
+gridded, with <code class="docutils literal notranslate"><span class="pre">wavelength</span></code>, <code class="docutils literal notranslate"><span class="pre">radiation_wavelength</span></code> and <code class="docutils literal notranslate"><span class="pre">fwhm</span></code>
+band coordinates. L2B products have none (ValueError); their
+products are <a class="reference internal" href="#hypso.Product.variables" title="hypso.Product.variables"><code class="xref py py-attr docutils literal notranslate"><span class="pre">variables</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The product cube</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html#xarray.DataArray" title="(in xarray v2026.9.0)">xarray.DataArray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.Product.flags">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">flags</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><span class="pre">dict</span></a></em><a class="headerlink" href="#hypso.Product.flags" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">{name:</span> <span class="pre">boolean</span> <span class="pre">DataArray}</span></code>.</p>
+<p>Empty if the product has no flags.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Masks decoded from <code class="docutils literal notranslate"><span class="pre">pixel_flags</span></code></p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.Product.geometry">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">geometry</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2026.9.0)"><span class="pre">xarray.Dataset</span></a></em><a class="headerlink" href="#hypso.Product.geometry" title="Link to this definition">#</a></dt>
+<dd><p>Latitude, longitude and sun and sensor angles, as a Dataset.</p>
+<p>Empty before georeferencing (L1A, L1B). Includes the <code class="docutils literal notranslate"><span class="pre">*_direct</span></code>
+variants when direct georeferencing was computed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2026.9.0)">xarray.Dataset</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.Product.grid">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">grid</span></span><a class="headerlink" href="#hypso.Product.grid" title="Link to this definition">#</a></dt>
+<dd><p>Name of the map grid (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;utm33n_876m&quot;</span></code>), or None in sensor geometry.</p>
+<p>See <a class="reference internal" href="#hypso.Product.regrid" title="hypso.Product.regrid"><code class="xref py py-meth docutils literal notranslate"><span class="pre">regrid()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.Product.level">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">level</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></em><a class="headerlink" href="#hypso.Product.level" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">&quot;L1A&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;L1B&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;L1C&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;L1D&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;L2A&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;L2B&quot;</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Processing level</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.Product.provenance">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">provenance</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a></em><a class="headerlink" href="#hypso.Product.provenance" title="Link to this definition">#</a></dt>
+<dd><p>one dict per processing step, oldest first.</p>
+<p>From <code class="docutils literal notranslate"><span class="pre">metadata/processing</span></code>: step name, date, software version and
+git commit, input file and the step’s parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>How the product was made</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)">list</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.Product.resolution">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">resolution</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></em><a class="headerlink" href="#hypso.Product.resolution" title="Link to this definition">#</a></dt>
+<dd><p>the larger of the mean along- and across-track ground sampling distance, in m.</p>
+<p>For a gridded product, the grid’s pixel size in its CRS’s units (m,
+or degrees for a geographic grid).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Pixel size</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.Product.sat_id">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sat_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></em><a class="headerlink" href="#hypso.Product.sat_id" title="Link to this definition">#</a></dt>
+<dd><p>Satellite, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;HYPSO-2&quot;</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.Product.shape">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><span class="pre">tuple</span></a></em><a class="headerlink" href="#hypso.Product.shape" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(lines,</span> <span class="pre">samples)</span></code>, or <code class="docutils literal notranslate"><span class="pre">(y,</span> <span class="pre">x)</span></code> when gridded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Spatial shape</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.Product.target">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">target</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></em><a class="headerlink" href="#hypso.Product.target" title="Link to this definition">#</a></dt>
+<dd><p>Capture target name, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;aeronetvenice&quot;</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.Product.tree">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tree</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataTree.html#xarray.DataTree" title="(in xarray v2026.9.0)"><span class="pre">xarray.DataTree</span></a></em><a class="headerlink" href="#hypso.Product.tree" title="Link to this definition">#</a></dt>
+<dd><p>The underlying product tree, as an <a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataTree.html#xarray.DataTree" title="(in xarray v2026.9.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">xarray.DataTree</span></code></a>.</p>
+<p>A shallow copy: adding, replacing or removing variables and attributes
+does not change this Product, but the arrays are shared (copying the
+cube on every access would double memory), so do not modify array
+values in place - assign a new array instead.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataTree.html#xarray.DataTree" title="(in xarray v2026.9.0)">xarray.DataTree</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.Product.variables">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">variables</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2026.9.0)"><span class="pre">xarray.Dataset</span></a></em><a class="headerlink" href="#hypso.Product.variables" title="Link to this definition">#</a></dt>
+<dd><p>Derived 2D products, as a Dataset.</p>
+<p>Those added with <a class="reference internal" href="#hypso.Product.with_variables" title="hypso.Product.with_variables"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_variables()</span></code></a> and those an atmospheric
+correction tool returns (e.g. <code class="docutils literal notranslate"><span class="pre">chla</span></code>, <code class="docutils literal notranslate"><span class="pre">polymer_flags</span></code>); for an
+L2B product, its products (e.g. <code class="docutils literal notranslate"><span class="pre">chlor_a</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2026.9.0)">xarray.Dataset</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hypso.Product.wavelengths">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">wavelengths</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">numpy.ndarray</span></a></em><a class="headerlink" href="#hypso.Product.wavelengths" title="Link to this definition">#</a></dt>
+<dd><p>Band centre wavelengths in nm, as calibrated (<code class="docutils literal notranslate"><span class="pre">radiation_wavelength</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.get_hypso1_wavelengths">
+<span class="sig-prename descclassname"><span class="pre">hypso.</span></span><span class="sig-name descname"><span class="pre">get_hypso1_wavelengths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">aoi_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">428</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1080</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bin_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">9</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/sensors/hypso1.html#get_hypso1_wavelengths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.get_hypso1_wavelengths" title="Link to this definition">#</a></dt>
+<dd><p>Nominal HYPSO-1 band-centre wavelengths (nm) for an AOI and binning.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.get_hypso2_wavelengths">
+<span class="sig-prename descclassname"><span class="pre">hypso.</span></span><span class="sig-name descname"><span class="pre">get_hypso2_wavelengths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">aoi_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">428</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1080</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bin_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">9</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/sensors/hypso2.html#get_hypso2_wavelengths"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.get_hypso2_wavelengths" title="Link to this definition">#</a></dt>
+<dd><p>Nominal HYPSO-2 band-centre wavelengths (nm) for an AOI and binning.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.open">
+<span class="sig-prename descclassname"><span class="pre">hypso.</span></span><span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelength_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelengths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/api.html#open"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.open" title="Link to this definition">#</a></dt>
+<dd><p>Read a HYPSO product file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>) – A product file of any level (L1A-L2A), in the current format, the
+older grouped format, or a ground-station L1A.</p></li>
+<li><p><strong>wavelength_range</strong> (<em>optional</em>) – Read only some bands (see <a class="reference internal" href="#hypso.Product.select_bands" title="hypso.Product.select_bands"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Product.select_bands()</span></code></a>).</p></li>
+<li><p><strong>wavelengths</strong> (<em>optional</em>) – Read only some bands (see <a class="reference internal" href="#hypso.Product.select_bands" title="hypso.Product.select_bands"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Product.select_bands()</span></code></a>).</p></li>
+<li><p><strong>indices</strong> (<em>optional</em>) – Read only some bands (see <a class="reference internal" href="#hypso.Product.select_bands" title="hypso.Product.select_bands"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Product.select_bands()</span></code></a>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#hypso.Product" title="hypso.Product">Product</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">hypso</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l1d</span> <span class="o">=</span> <span class="n">hypso</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.nc"</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.read_product">
+<span class="sig-prename descclassname"><span class="pre">hypso.</span></span><span class="sig-name descname"><span class="pre">read_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelength_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelengths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/io/product.html#read_product"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.read_product" title="Link to this definition">#</a></dt>
+<dd><p>Read any supported HYPSO product file into the in-memory model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>)</p></li>
+<li><p><strong>wavelength_range</strong> (<em>optional</em>) – Read only some bands, selected as in
+<a class="reference internal" href="processing/bands/index.html#hypso.processing.bands.select_bands" title="hypso.processing.bands.select_bands"><code class="xref py py-func docutils literal notranslate"><span class="pre">hypso.processing.bands.select_bands()</span></code></a> (at most one of them).
+Only the selected band variables are read from the file; a file
+holding the cube as one variable is read whole and then subset.</p></li>
+<li><p><strong>wavelengths</strong> (<em>optional</em>) – Read only some bands, selected as in
+<a class="reference internal" href="processing/bands/index.html#hypso.processing.bands.select_bands" title="hypso.processing.bands.select_bands"><code class="xref py py-func docutils literal notranslate"><span class="pre">hypso.processing.bands.select_bands()</span></code></a> (at most one of them).
+Only the selected band variables are read from the file; a file
+holding the cube as one variable is read whole and then subset.</p></li>
+<li><p><strong>indices</strong> (<em>optional</em>) – Read only some bands, selected as in
+<a class="reference internal" href="processing/bands/index.html#hypso.processing.bands.select_bands" title="hypso.processing.bands.select_bands"><code class="xref py py-func docutils literal notranslate"><span class="pre">hypso.processing.bands.select_bands()</span></code></a> (at most one of them).
+Only the selected band variables are read from the file; a file
+holding the cube as one variable is read whole and then subset.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>See the module description. <code class="docutils literal notranslate"><span class="pre">tree.encoding[&quot;source&quot;]</span></code> holds the
+path (not written back).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataTree.html#xarray.DataTree" title="(in xarray v2026.9.0)">xarray.DataTree</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If no product cube or processing level is found.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.write_product">
+<span class="sig-prename descclassname"><span class="pre">hypso.</span></span><span class="sig-name descname"><span class="pre">write_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datacube</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">significant_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">SIGNIFICANT_BITS</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/hypso/io/product.html#write_product"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.write_product" title="Link to this definition">#</a></dt>
+<dd><p>Write a product tree in the current file format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tree</strong> (<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataTree.html#xarray.DataTree" title="(in xarray v2026.9.0)"><em>xarray.DataTree</em></a>) – In-memory model (see the module description).</p></li>
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)"><em>pathlib.Path</em></a>)</p></li>
+<li><p><strong>datacube</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default False</em>) – Write the cube as one 3D variable instead of one variable per band.</p></li>
+<li><p><strong>significant_bits</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em> or </em><em>None</em><em>, </em><em>default 14</em>) – Keep this many significant mantissa bits of the float band variables
+(L1B-L2A; netCDF BitRound, max relative error <code class="docutils literal notranslate"><span class="pre">2**-(bits</span> <span class="pre">+</span> <span class="pre">1)</span></code>;
+values stay float32, NaN is kept, readers need nothing special). None
+writes them lossless. L1A counts, geometry, derived variables and
+metadata are always lossless. Recorded in the <code class="docutils literal notranslate"><span class="pre">band_quantization</span></code>
+global attribute.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../../documentation.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Documentation</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="ac/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">hypso.ac</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#package-contents">Package Contents</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product"><code class="docutils literal notranslate"><span class="pre">Product</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.area_definition"><code class="docutils literal notranslate"><span class="pre">Product.area_definition()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.calibrate"><code class="docutils literal notranslate"><span class="pre">Product.calibrate()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.correct_atmosphere"><code class="docutils literal notranslate"><span class="pre">Product.correct_atmosphere()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.derive"><code class="docutils literal notranslate"><span class="pre">Product.derive()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.filename"><code class="docutils literal notranslate"><span class="pre">Product.filename()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.footprint"><code class="docutils literal notranslate"><span class="pre">Product.footprint()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.georeference"><code class="docutils literal notranslate"><span class="pre">Product.georeference()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.intermediates"><code class="docutils literal notranslate"><span class="pre">Product.intermediates()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.open"><code class="docutils literal notranslate"><span class="pre">Product.open()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.pixel"><code class="docutils literal notranslate"><span class="pre">Product.pixel()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.regrid"><code class="docutils literal notranslate"><span class="pre">Product.regrid()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.resample"><code class="docutils literal notranslate"><span class="pre">Product.resample()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.select_bands"><code class="docutils literal notranslate"><span class="pre">Product.select_bands()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.spectrum"><code class="docutils literal notranslate"><span class="pre">Product.spectrum()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.swath_definition"><code class="docutils literal notranslate"><span class="pre">Product.swath_definition()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.to"><code class="docutils literal notranslate"><span class="pre">Product.to()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.to_satpy"><code class="docutils literal notranslate"><span class="pre">Product.to_satpy()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.toa_reflectance"><code class="docutils literal notranslate"><span class="pre">Product.toa_reflectance()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.tool_products"><code class="docutils literal notranslate"><span class="pre">Product.tool_products()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.window"><code class="docutils literal notranslate"><span class="pre">Product.window()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.with_masks"><code class="docutils literal notranslate"><span class="pre">Product.with_masks()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.with_variables"><code class="docutils literal notranslate"><span class="pre">Product.with_variables()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.write"><code class="docutils literal notranslate"><span class="pre">Product.write()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.write_footprint"><code class="docutils literal notranslate"><span class="pre">Product.write_footprint()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.atmospheric_correction"><code class="docutils literal notranslate"><span class="pre">Product.atmospheric_correction</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.cube"><code class="docutils literal notranslate"><span class="pre">Product.cube</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.flags"><code class="docutils literal notranslate"><span class="pre">Product.flags</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.geometry"><code class="docutils literal notranslate"><span class="pre">Product.geometry</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.grid"><code class="docutils literal notranslate"><span class="pre">Product.grid</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.level"><code class="docutils literal notranslate"><span class="pre">Product.level</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.provenance"><code class="docutils literal notranslate"><span class="pre">Product.provenance</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.resolution"><code class="docutils literal notranslate"><span class="pre">Product.resolution</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.sat_id"><code class="docutils literal notranslate"><span class="pre">Product.sat_id</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.shape"><code class="docutils literal notranslate"><span class="pre">Product.shape</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.target"><code class="docutils literal notranslate"><span class="pre">Product.target</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.tree"><code class="docutils literal notranslate"><span class="pre">Product.tree</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.variables"><code class="docutils literal notranslate"><span class="pre">Product.variables</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.Product.wavelengths"><code class="docutils literal notranslate"><span class="pre">Product.wavelengths</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.get_hypso1_wavelengths"><code class="docutils literal notranslate"><span class="pre">get_hypso1_wavelengths()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.get_hypso2_wavelengths"><code class="docutils literal notranslate"><span class="pre">get_hypso2_wavelengths()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.open"><code class="docutils literal notranslate"><span class="pre">open()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.read_product"><code class="docutils literal notranslate"><span class="pre">read_product()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.write_product"><code class="docutils literal notranslate"><span class="pre">write_product()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/api/hypso/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Norwegian University of Science and Technology (NTNU).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

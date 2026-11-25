@@ -1,0 +1,950 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Architecture &#8212; hypso 26.10.0a7-20-g5e64121f</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=8e897651"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'architecture';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Versioning" href="versioning.html" />
+    <link rel="prev" title="Footprints and maps" href="maps.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="26.10.0a7" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">hypso 26.10.0a7-20-g5e64121f</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#">
+    Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Architecture</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="architecture">
+<h1>Architecture<a class="headerlink" href="#architecture" title="Link to this heading">#</a></h1>
+<p>This page explains how the package is organised and why. Exact signatures are
+in the API reference generated from the docstrings. Usage is covered in
+<a class="reference internal" href="calibration.html"><span class="doc">Calibration coefficients</span></a>, <a class="reference internal" href="atmospheric_correction.html"><span class="doc">Atmospheric correction</span></a> and <a class="reference internal" href="versioning.html"><span class="doc">Versioning</span></a>.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>A product is one capture at one processing level, from L1A (raw counts) to
+L2A (atmospherically corrected). In memory it is an <code class="docutils literal notranslate"><span class="pre">xarray.DataTree</span></code>; on
+disk it is one NetCDF file. Processing steps are functions that take one
+product and return the next level’s product.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>hypso.Product  (hypso/api.py)                      what users call
+     |
+hypso.processing                                   one function per step
+  l1a_to_l1b   calibrate.py      radiometric, smile, destriping, spectral
+  l1b_to_l1c   georeference.py   coordinates and viewing/solar angles
+  l1c_to_l1d   toa.py            TOA reflectance, metadata/srf
+  correct_atmosphere  atmospheric.py   MACHI (default), DPS, Polymer, ACOLITE, OC-SMART
+  select_bands bands.py          band subsets (from L1B on)
+hypso.grid                                         regrid / resample onto map grids
+hypso.window                                       pixel windows for matchups
+     |
+hypso.io                                           the file format
+  product.py      read_product / write_product (every level, every layout)
+  naming.py       file names
+  provenance.py   metadata/processing and history
+  cf.py, schema.py  CF attributes, per-level titles and units
+     |
+building blocks
+  hypso.calibration (incl. the optional keystone correction), hypso.geometry,
+  hypso.srf, hypso.masks (flags, sea/land/cloud labels),
+  hypso.ac (MACHI, tool drivers, output readers, configuration),
+  hypso.rgb (HSI2RGB rendering, RGB camera images), hypso.sensors,
+  hypso1_calibration / hypso2_calibration (coefficient files and catalogs)
+</pre></div>
+</div>
+<p>Earlier versions centred on one large capture object (<code class="docutils literal notranslate"><span class="pre">HypsoCapture</span></code>) that
+held about a hundred attributes, ran every step in place, and was copied
+between per-level classes. It has been removed. Its responsibilities are now
+split as shown above, and its state is the product tree.</p>
+</section>
+<section id="the-product-tree">
+<h2>The product tree<a class="headerlink" href="#the-product-tree" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">hypso.io.product</span></code> defines the in-memory model that every processing
+function takes and returns:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>/                          root Dataset
+    &lt;prefix&gt;               product cube (lines, samples, bands), or
+                           (y, x, bands) when regridded: dn (L1A), Lt (L1B/L1C),
+                           rhot (L1D), the method's variable at L2A
+                           (rhos or Rrs; rho_w in older POLYMER files)
+    wavelength             band coordinate: nominal centre, 0.1 nm
+    radiation_wavelength   band coordinate: calibrated centre
+    fwhm                   band coordinate
+    band_index             band coordinate: index in the full band set
+                           (after select_bands, and on products read from files)
+    x, y, crs              regridded products: projection coordinates, grid mapping
+    latitude, longitude, crs_wgs84, &lt;angles&gt;, &lt;angles&gt;_direct
+                           from L1C on
+    pixel_flags            optional: masks as CF flags
+    &lt;other&gt;                optional: derived (lines, samples) products
+    attrs                  global attributes; processing_level is required
+/metadata/&lt;group&gt;          capture_config, timing, adcs, corrections,
+                           gcp, srf, processing (and machi after MACHI)
+</pre></div>
+</div>
+<p>The product is one 3D array in memory, which makes band arithmetic and
+<code class="docutils literal notranslate"><span class="pre">.sel()</span></code> straightforward. It is split into one variable per band only when
+written (below).</p>
+<p>A processing function never changes its input tree. It copies the tree,
+replaces what its step changes, and adds a <code class="docutils literal notranslate"><span class="pre">metadata/processing/&lt;step&gt;</span></code>
+node. <code class="docutils literal notranslate"><span class="pre">tree.encoding[&quot;source&quot;]</span></code> records the file a tree was read from; it
+is not written, and steps use it as their recorded input file.</p>
+</section>
+<section id="hypso-product">
+<h2><code class="docutils literal notranslate"><span class="pre">hypso.Product</span></code><a class="headerlink" href="#hypso-product" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">hypso.open(path)</span></code> reads any product file and returns a <code class="docutils literal notranslate"><span class="pre">Product</span></code>: an
+immutable wrapper around one tree.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">hypso</span>
+
+<span class="n">l1d</span> <span class="o">=</span> <span class="p">(</span><span class="n">hypso</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"…L1A.nc"</span><span class="p">)</span>
+          <span class="o">.</span><span class="n">calibrate</span><span class="p">()</span>                                    <span class="c1"># abs / V3.1</span>
+          <span class="o">.</span><span class="n">georeference</span><span class="p">(</span><span class="n">latitudes</span><span class="o">=</span><span class="n">lat_file</span><span class="p">,</span> <span class="n">longitudes</span><span class="o">=</span><span class="n">lon_file</span><span class="p">)</span>
+          <span class="o">.</span><span class="n">toa_reflectance</span><span class="p">())</span>
+<span class="n">l2a</span> <span class="o">=</span> <span class="n">l1d</span><span class="o">.</span><span class="n">correct_atmosphere</span><span class="p">()</span>                    <span class="c1"># MACHI; or "polymer", config=...</span>
+<span class="n">l2a</span><span class="o">.</span><span class="n">write</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Every method returns a new <code class="docutils literal notranslate"><span class="pre">Product</span></code>; setting an attribute raises. That
+makes it safe to branch from one product (two AC methods from the same L1D)
+and lets pipelines treat each stage as file in, function, file out. Calling a
+step on the wrong level raises an error that says which level it needs and
+suggests <code class="docutils literal notranslate"><span class="pre">.to(level)</span></code>, which runs only the missing steps.</p>
+<p>Besides the processing steps (and <code class="docutils literal notranslate"><span class="pre">.to(level)</span></code>, up to L2A), <code class="docutils literal notranslate"><span class="pre">Product</span></code>
+offers <code class="docutils literal notranslate"><span class="pre">.cube</span></code>, <code class="docutils literal notranslate"><span class="pre">.wavelengths</span></code>, <code class="docutils literal notranslate"><span class="pre">.geometry</span></code>, <code class="docutils literal notranslate"><span class="pre">.flags</span></code>, <code class="docutils literal notranslate"><span class="pre">.variables</span></code>,
+<code class="docutils literal notranslate"><span class="pre">.provenance</span></code>, <code class="docutils literal notranslate"><span class="pre">.spectrum()</span></code>, <code class="docutils literal notranslate"><span class="pre">.window()</span></code>, <code class="docutils literal notranslate"><span class="pre">.pixel()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">.select_bands()</span></code>, <code class="docutils literal notranslate"><span class="pre">.resolution</span></code>, <code class="docutils literal notranslate"><span class="pre">.swath_definition()</span></code>, <code class="docutils literal notranslate"><span class="pre">.resample()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">.regrid()</span></code>, <code class="docutils literal notranslate"><span class="pre">.area_definition()</span></code>, <code class="docutils literal notranslate"><span class="pre">.grid</span></code>, <code class="docutils literal notranslate"><span class="pre">.to_satpy()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">.with_masks()</span></code>, <code class="docutils literal notranslate"><span class="pre">.with_variables()</span></code>, <code class="docutils literal notranslate"><span class="pre">.filename()</span></code> and <code class="docutils literal notranslate"><span class="pre">.write()</span></code>.
+<code class="docutils literal notranslate"><span class="pre">.tree</span></code> returns a shallow copy of the underlying tree for anything else
+(arrays are shared: replace them, never modify them in place).</p>
+<p>The processing functions in <code class="docutils literal notranslate"><span class="pre">hypso.processing</span></code> stay public for callers that
+prefer working on trees directly.</p>
+</section>
+<section id="processing-steps">
+<h2>Processing steps<a class="headerlink" href="#processing-steps" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Levels</p></th>
+<th class="head"><p>Records in <code class="docutils literal notranslate"><span class="pre">metadata/processing</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l1a_to_l1b</span></code></p></td>
+<td><p>L1A -&gt; L1B</p></td>
+<td><p>coefficient release, per-correction
+versions, files and SHA-256, corrections
+applied (keystone only on request),
+capture type</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l1b_to_l1c</span></code></p></td>
+<td><p>L1B -&gt; L1C</p></td>
+<td><p>indirect or direct georeferencing,
+coordinate files</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">l1c_to_l1d</span></code></p></td>
+<td><p>L1C -&gt; L1D</p></td>
+<td><p>solar irradiance source, SRF grid,
+Earth-Sun distance</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">correct_atmosphere</span></code></p></td>
+<td><p>L1C or L1D -&gt; L2A</p></td>
+<td><p>tool, version, installation commit,
+effective and user settings</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">select_bands</span></code></p></td>
+<td><p>same level</p></td>
+<td><p>selection, bands kept</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hypso.grid.regrid</span></code></p></td>
+<td><p>same level</p></td>
+<td><p>grid, CRS, method, coverage</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The science code these steps call (<code class="docutils literal notranslate"><span class="pre">hypso.calibration</span></code>, <code class="docutils literal notranslate"><span class="pre">hypso.geometry</span></code>,
+<code class="docutils literal notranslate"><span class="pre">hypso.srf</span></code>) is unchanged from the capture-object version. Each step
+was checked to give identical output to the old path before that path was
+removed, and the whole chain reproduces a golden baseline recorded from the
+original package (<code class="docutils literal notranslate"><span class="pre">tests/test_regression_real_capture.py</span></code>).</p>
+<p><code class="docutils literal notranslate"><span class="pre">hypso.processing.capture_params(tree)</span></code> derives what the steps need from
+<code class="docutils literal notranslate"><span class="pre">metadata/capture_config</span></code> (crop window, bin factor, background, exposure,
+image size, capture type, acquisition time), the same way the old loader did.</p>
+</section>
+<section id="file-format">
+<h2>File format<a class="headerlink" href="#file-format" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">write_product</span></code> is the only writer and <code class="docutils literal notranslate"><span class="pre">read_product</span></code> the only reader; the
+format itself is described for users in <a class="reference internal" href="products.html"><span class="doc">Products and files</span></a>. Design choices
+behind it: product and geometry variables sit at the root group because CF’s
+<code class="docutils literal notranslate"><span class="pre">coordinates</span></code> and <code class="docutils literal notranslate"><span class="pre">grid_mapping</span></code> references resolve only upwards through
+parent groups, never sideways between siblings (with the old <code class="docutils literal notranslate"><span class="pre">products</span></code> and
+<code class="docutils literal notranslate"><span class="pre">geometry</span></code> sibling groups a band’s <code class="docutils literal notranslate"><span class="pre">coordinates</span></code> could never resolve), and
+because SNAP’s NetCDF-CF reader dates from NetCDF 3 without groups. One 2D
+variable per band is the layout SNAP’s spectrum view expects. All CF
+attributes come from <code class="docutils literal notranslate"><span class="pre">hypso.io.cf</span></code>, so a file read in any supported layout
+is written back in the current one. Float bands keep 14 significant mantissa
+bits by default (netCDF BitRound, at most 3.1e-5 relative error, far below the
+sensor noise; about 40% smaller L1D files); BitRound rather than
+GranularBitRound because the latter turns NaN into -0.0 in netCDF-C 4.9.3.</p>
+</section>
+<section id="sensors-and-calibration">
+<h2>Sensors and calibration<a class="headerlink" href="#sensors-and-calibration" title="Link to this heading">#</a></h2>
+<dl>
+<dt>Sensor profiles (<code class="docutils literal notranslate"><span class="pre">hypso.sensors</span></code>)</dt><dd><p>Instrument data (FWHM lookup table, imaging modes, how to find calibration
+files) is in a <code class="docutils literal notranslate"><span class="pre">SensorProfile</span></code>, registered at import time in
+<code class="docutils literal notranslate"><span class="pre">hypso/sensors/hypso1.py</span></code> and <code class="docutils literal notranslate"><span class="pre">hypso2.py</span></code>. Imaging modes (nominal, wide,
+moon, …) and how each is recognised are YAML (<code class="docutils literal notranslate"><span class="pre">hypso1_modes.yaml</span></code>,
+<code class="docutils literal notranslate"><span class="pre">hypso2_modes.yaml</span></code>). Adding a sensor means adding one profile module and
+calling <code class="docutils literal notranslate"><span class="pre">register_sensor</span></code>.</p>
+</dd>
+<dt>Coefficient catalogs</dt><dd><p>Each calibration package lists its coefficient files, versions and releases
+in <code class="docutils literal notranslate"><span class="pre">data/coefficients.yaml</span></code> (V3.1, V3.1v2spec, V2, V1 for both satellites), read by
+<code class="docutils literal notranslate"><span class="pre">_catalog.py</span></code>, identical in both packages. <code class="docutils literal notranslate"><span class="pre">coeff_type</span></code> picks the
+radiometric variant, and <code class="docutils literal notranslate"><span class="pre">version</span></code> picks the release or sets versions per
+correction. A file entry can name a different file for one capture type
+(V3 <code class="docutils literal notranslate"><span class="pre">abs</span></code> uses a pre-binned wide matrix for wide captures), and
+<code class="docutils literal notranslate"><span class="pre">crop:</span> <span class="pre">as_is</span></code> marks a file that must not be cropped and binned. Models
+outside the releases (HYPSO-2’s keystone model, shipped disabled for
+review) are under <code class="docutils literal notranslate"><span class="pre">optional</span></code>. See <a class="reference internal" href="calibration.html"><span class="doc">Calibration coefficients</span></a>.</p>
+</dd>
+<dt>Your own coefficient files</dt><dd><p>Without editing the calibration packages, either register a named set once
+per process:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hypso.calibration</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_calibration_coeffs</span>
+
+<span class="n">register_calibration_coeffs</span><span class="p">(</span><span class="n">sat_id</span><span class="o">=</span><span class="s2">"HYPSO-1"</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"my_lab_calibration"</span><span class="p">,</span>
+                            <span class="n">files</span><span class="o">=</span><span class="p">{</span><span class="s2">"radiometric"</span><span class="p">:</span> <span class="s2">"/path/to/radiometric.npz"</span><span class="p">,</span>
+                                   <span class="s2">"spectral"</span><span class="p">:</span> <span class="s2">"/path/to/spectral.npz"</span><span class="p">})</span>
+<span class="n">l1b</span> <span class="o">=</span> <span class="n">l1a</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="n">coeff_type</span><span class="o">=</span><span class="s2">"my_lab_calibration"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>or pass the files for one run with <code class="docutils literal notranslate"><span class="pre">l1a.calibrate(coeff_files={...})</span></code>.
+Corrections without a file are skipped. Explicit files win over a registered
+name, and a registered name wins over the sensor’s built-in sets.</p>
+</dd>
+</dl>
+<p>Each calibration run logs a summary through Python’s <code class="docutils literal notranslate"><span class="pre">logging</span></code> module, and
+records the same details in the product.</p>
+</section>
+<section id="spectral-response-and-toa-reflectance">
+<h2>Spectral response and TOA reflectance<a class="headerlink" href="#spectral-response-and-toa-reflectance" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">hypso.srf</span></code> holds the spectral response of the bands. <code class="docutils literal notranslate"><span class="pre">gaussian_srfs</span></code> builds
+one Gaussian SRF per unbinned band on the solar spectrum’s wavelength grid
+(TSIS-1 HSRS, or Thuillier 2002, from <code class="docutils literal notranslate"><span class="pre">srf/solar.py</span></code>); <code class="docutils literal notranslate"><span class="pre">bin_srfs</span></code> bins them
+like the image; <code class="docutils literal notranslate"><span class="pre">band_irradiance</span></code> gives each band’s solar irradiance F0
+and <code class="docutils literal notranslate"><span class="pre">effective_fwhm</span></code> its width. <code class="docutils literal notranslate"><span class="pre">compute_spectral_response</span></code>
+returns all of it as one <code class="docutils literal notranslate"><span class="pre">SpectralResponse</span></code>, and <code class="docutils literal notranslate"><span class="pre">srf_dataset</span></code> turns that
+into a product’s <code class="docutils literal notranslate"><span class="pre">metadata/srf</span></code> group: <code class="docutils literal notranslate"><span class="pre">F0</span></code>, effective FWHM,
+<code class="docutils literal notranslate"><span class="pre">earth_sun_distance_au</span></code>, and one <code class="docutils literal notranslate"><span class="pre">Band_&lt;i&gt;</span></code> variable per band (<code class="docutils literal notranslate"><span class="pre">i</span></code> its
+<code class="docutils literal notranslate"><span class="pre">band_index</span></code>) on its own <code class="docutils literal notranslate"><span class="pre">wav_Band_&lt;i&gt;</span></code> grid. Polymer reads its SRFs from this group (its
+<code class="docutils literal notranslate"><span class="pre">srf_getter</span></code> is <code class="docutils literal notranslate"><span class="pre">hypso.ac.ac_polymer_srf_getter_from_l1</span></code>), and readers that
+convert radiance themselves can take F0 and the Earth-Sun distance from it.</p>
+<p><code class="docutils literal notranslate"><span class="pre">hypso.processing.toa</span></code> is the L1C -&gt; L1D step: <code class="docutils literal notranslate"><span class="pre">toa_reflectance</span></code> computes
+<code class="docutils literal notranslate"><span class="pre">pi</span> <span class="pre">L</span> <span class="pre">d^2</span> <span class="pre">/</span> <span class="pre">(F0</span> <span class="pre">cos(sza))</span></code>, with the Earth-Sun distance <code class="docutils literal notranslate"><span class="pre">d</span></code> from
+<code class="docutils literal notranslate"><span class="pre">hypso.srf.earth_sun_distance</span></code>; <code class="docutils literal notranslate"><span class="pre">spectral_response(tree)</span></code> and
+<code class="docutils literal notranslate"><span class="pre">srf_node(tree)</span></code> build the above for a product (atmospheric correction uses
+<code class="docutils literal notranslate"><span class="pre">srf_node</span></code> to give Polymer SRFs for an L1C input).</p>
+</section>
+<section id="atmospheric-correction">
+<h2>Atmospheric correction<a class="headerlink" href="#atmospheric-correction" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">hypso.processing.correct_atmosphere</span></code> runs MACHI (the default; vendored in
+<code class="docutils literal notranslate"><span class="pre">hypso.ac.machi</span></code>) and DPS in-process, and Polymer, ACOLITE and OC-SMART as
+separate processes:</p>
+<ul class="simple">
+<li><p>Polymer and ACOLITE run through <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span>
+<span class="pre">hypso.ac.adapters._polymer_driver</span></code> / <code class="docutils literal notranslate"><span class="pre">_acolite_driver</span></code> started by
+<code class="docutils literal notranslate"><span class="pre">run_subprocess_driver</span></code>. Polymer’s v1 and v2 builds ship incompatible
+versions of the same top-level packages, and Python caches whichever it
+imports first for the rest of the process, so each run gets a fresh process.
+This also contains crashes in the tools’ native code. Settings go in a JSON
+file; credentials only through environment variables.</p></li>
+<li><p>OC-SMART has no Python API. It runs as <code class="docutils literal notranslate"><span class="pre">OCSMART.py</span></code> in its installation
+directory and reads its paths from a shared <code class="docutils literal notranslate"><span class="pre">OCSMART_Input.txt</span></code> there,
+which is written and restored under a file lock shared with
+hypso-processing-pipeline.</p></li>
+</ul>
+<p>Where the tools are installed comes only from configuration
+(<code class="docutils literal notranslate"><span class="pre">hypso.ac.config</span></code>, a YAML file). Their outputs are read by
+<code class="docutils literal notranslate"><span class="pre">hypso/ac/*_output.py</span></code> and their bands mapped onto the input product’s
+bands. See <a class="reference internal" href="atmospheric_correction.html"><span class="doc">Atmospheric correction</span></a>.</p>
+</section>
+<section id="satpy">
+<h2>Satpy<a class="headerlink" href="#satpy" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Product.to_satpy()</span></code> builds a <code class="docutils literal notranslate"><span class="pre">satpy.Scene</span></code> from a product. Separately,
+<code class="docutils literal notranslate"><span class="pre">hypso_l1c</span></code>, <code class="docutils literal notranslate"><span class="pre">hypso_l1d</span></code> and <code class="docutils literal notranslate"><span class="pre">hypso_l2a</span></code> are registered Satpy reader plugins, so files
+open through Satpy’s own interface without this package’s API:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">satpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">Scene</span>
+
+<span class="n">scene</span> <span class="o">=</span> <span class="n">Scene</span><span class="p">(</span><span class="n">reader</span><span class="o">=</span><span class="s2">"hypso_l1c"</span><span class="p">,</span> <span class="n">filenames</span><span class="o">=</span><span class="p">[</span><span class="s2">"HYPSO2_HSI.….L1C.nc"</span><span class="p">])</span>
+<span class="n">scene</span><span class="o">.</span><span class="n">load</span><span class="p">([</span><span class="s2">"Lt_550"</span><span class="p">,</span> <span class="s2">"latitude"</span><span class="p">,</span> <span class="s2">"longitude"</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>The readers share <code class="docutils literal notranslate"><span class="pre">HypsoL1FileHandler</span></code> (<code class="docutils literal notranslate"><span class="pre">hypso/satpy/hypso_handler.py</span></code>).
+Bands are discovered per file with <code class="docutils literal notranslate"><span class="pre">hypso.io.product.list_band_variables</span></code>,
+because the band set depends on binning and calibration (and, for L2A, on
+the quantity: <code class="docutils literal notranslate"><span class="pre">Rrs_&lt;nm&gt;</span></code> or <code class="docutils literal notranslate"><span class="pre">rhos_&lt;nm&gt;</span></code>; <code class="docutils literal notranslate"><span class="pre">rho_w_&lt;nm&gt;</span></code> in older POLYMER files). Regridded files
+are read on their map grid (<code class="docutils literal notranslate"><span class="pre">get_area_def</span></code>), others as swaths. The readers match
+current and older file names. They are registered through a <code class="docutils literal notranslate"><span class="pre">satpy.readers</span></code>
+entry point, so the package must be installed (an editable install is
+enough).</p>
+</section>
+<section id="resampling-and-regridding">
+<h2>Resampling and regridding<a class="headerlink" href="#resampling-and-regridding" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">hypso.grid</span></code> holds everything spatial beyond the product’s own
+geolocation: swath and grid definitions, <code class="docutils literal notranslate"><span class="pre">resample_product</span></code> and
+<code class="docutils literal notranslate"><span class="pre">regrid</span></code>. <code class="docutils literal notranslate"><span class="pre">Product.resample(target)</span></code> returns a bare Dataset on any
+pyresample target, including another sensor’s swath; <code class="docutils literal notranslate"><span class="pre">Product.regrid()</span></code>
+returns a product of the same level on a map grid. See <a class="reference internal" href="grid.html"><span class="doc">Map grids</span></a>.</p>
+</section>
+<section id="extending-the-package">
+<h2>Extending the package<a class="headerlink" href="#extending-the-package" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>A new sensor</dt><dd><p>A profile module in <code class="docutils literal notranslate"><span class="pre">hypso/sensors</span></code> plus its modes YAML; a calibration
+package with its files.</p>
+</dd>
+<dt>New calibration coefficients</dt><dd><p>Files in the calibration package’s <code class="docutils literal notranslate"><span class="pre">data/</span></code> and entries in its catalog;
+then update the checksum manifest and tag a release (<a class="reference internal" href="versioning.html"><span class="doc">Versioning</span></a>).</p>
+</dd>
+<dt>A new atmospheric-correction method</dt><dd><p>A function in <code class="docutils literal notranslate"><span class="pre">processing/atmospheric.py</span></code> that runs the method, maps its
+bands onto the input and returns <code class="docutils literal notranslate"><span class="pre">_l2a_tree(...)</span></code>, plus its entry in
+<code class="docutils literal notranslate"><span class="pre">_METHODS</span></code> and <code class="docutils literal notranslate"><span class="pre">_INPUT_LEVELS</span></code>: <code class="docutils literal notranslate"><span class="pre">_&lt;method&gt;(tree,</span> <span class="pre">masked,</span> <span class="pre">mask_flags,</span>
+<span class="pre">**options)</span></code> for an in-process method, with <code class="docutils literal notranslate"><span class="pre">work_dir</span></code> and <code class="docutils literal notranslate"><span class="pre">config</span></code>
+added (and an entry in <code class="docutils literal notranslate"><span class="pre">_EXTERNAL</span></code>) for an external tool, which runs in a
+subprocess.</p>
+</dd>
+<dt>A new product level</dt><dd><p>A <code class="docutils literal notranslate"><span class="pre">LevelSchema</span></code> in <code class="docutils literal notranslate"><span class="pre">io/schema.py</span></code> (title, product prefix and units,
+whether it has geometry), a processing function that returns a tree with
+that <code class="docutils literal notranslate"><span class="pre">processing_level</span></code>, and a <code class="docutils literal notranslate"><span class="pre">Product</span></code> method calling it.</p>
+</dd>
+</dl>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="maps.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Footprints and maps</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="versioning.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Versioning</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-product-tree">The product tree</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso-product"><code class="docutils literal notranslate"><span class="pre">hypso.Product</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#processing-steps">Processing steps</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#file-format">File format</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sensors-and-calibration">Sensors and calibration</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#spectral-response-and-toa-reflectance">Spectral response and TOA reflectance</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#atmospheric-correction">Atmospheric correction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#satpy">Satpy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#resampling-and-regridding">Resampling and regridding</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#extending-the-package">Extending the package</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/architecture.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Norwegian University of Science and Technology (NTNU).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,1558 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>hypso.api &#8212; hypso 26.10.0a7-20-g5e64121f</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=8e897651"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/hypso/api';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="26.10.0a7" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">hypso 26.10.0a7-20-g5e64121f</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../products.html">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">hypso.api</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for hypso.api</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""The public API: one immutable :class:`Product` per capture and level.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import hypso</span>
+<span class="sd">&gt;&gt;&gt; l1d = (hypso.open("HYPSO2_HSI.20250304T103805.aeronetvenice.L1A.nc")</span>
+<span class="sd">...            .calibrate()</span>
+<span class="sd">...            .georeference(latitudes=lats, longitudes=lons)</span>
+<span class="sd">...            .toa_reflectance())</span>
+<span class="sd">&gt;&gt;&gt; l1d.write()</span>
+
+<span class="sd">Every processing method returns a new Product and leaves the one it was</span>
+<span class="sd">called on unchanged. Underneath are the tree functions in</span>
+<span class="sd">:mod:`hypso.processing` and the product tree of :mod:`hypso.io.product`</span>
+<span class="sd">(:attr:`Product.tree`), which stay available for direct use.</span>
+<span class="sd">"""</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.naming</span><span class="w"> </span><span class="kn">import</span> <span class="n">product_name</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.product</span><span class="w"> </span><span class="kn">import</span> <span class="n">PRODUCT_DIMS</span><span class="p">,</span> <span class="n">product_name</span> <span class="k">as</span> <span class="n">cube_name</span><span class="p">,</span> <span class="n">read_product</span><span class="p">,</span> <span class="n">write_product</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hypso.masks.flags</span><span class="w"> </span><span class="kn">import</span> <span class="n">FLAGS_NAME</span><span class="p">,</span> <span class="n">decode_flags</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">LEVELS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"L1A"</span><span class="p">,</span> <span class="s2">"L1B"</span><span class="p">,</span> <span class="s2">"L1C"</span><span class="p">,</span> <span class="s2">"L1D"</span><span class="p">)</span>
+
+<span class="n">_GEOMETRY</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"latitude"</span><span class="p">,</span> <span class="s2">"longitude"</span><span class="p">,</span> <span class="s2">"sensor_zenith"</span><span class="p">,</span> <span class="s2">"sensor_azimuth"</span><span class="p">,</span> <span class="s2">"solar_zenith"</span><span class="p">,</span> <span class="s2">"solar_azimuth"</span><span class="p">,</span>
+             <span class="s2">"relative_azimuth"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Product">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Product</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""One capture at one processing level.</span>
+
+<span class="sd">    Create one with :func:`hypso.open` or from a product tree. A Product is</span>
+<span class="sd">    immutable: processing methods return a new Product.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tree : xarray.DataTree</span>
+<span class="sd">        A product tree as read by :func:`hypso.io.product.read_product`.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the tree has no valid ``processing_level`` (L1A-L1D, L2A, L2B).</span>
+<span class="sd">    """</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"_tree"</span><span class="p">,)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tree</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">):</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"processing_level"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">LEVELS</span> <span class="o">+</span> <span class="p">(</span><span class="s2">"L2A"</span><span class="p">,</span> <span class="s2">"L2B"</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"not a HYPSO product tree (processing_level=</span><span class="si">{</span><span class="n">level</span><span class="si">!r}</span><span class="s2">)"</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_tree"</span><span class="p">,</span> <span class="n">tree</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">"Product is immutable; processing methods return a new Product"</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Product.open">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.open">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">open</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">wavelength_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wavelengths</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Product"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Read a product file of any level and any supported layout.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        path : str or pathlib.Path</span>
+<span class="sd">            A current-format, older grouped or ground-station L1A file.</span>
+<span class="sd">        wavelength_range, wavelengths, indices : optional</span>
+<span class="sd">            Read only some bands (as :meth:`select_bands`); only those are</span>
+<span class="sd">            read from the file. Not for L1A.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Product</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">read_product</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">wavelength_range</span><span class="o">=</span><span class="n">wavelength_range</span><span class="p">,</span> <span class="n">wavelengths</span><span class="o">=</span><span class="n">wavelengths</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="n">indices</span><span class="p">))</span></div>
+
+
+    <span class="c1"># -- contents -----------------------------------------------------------</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Product.tree">
+<a class="viewcode-back" href="../../api/hypso/api/index.html#hypso.api.Product.tree">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">tree</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataTree</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The underlying product tree, as an :class:`xarray.DataTree`.</span>
+
+<span class="sd">        A shallow copy: adding, replacing or removing variables and attributes</span>
+<span class="sd">        does not change this Product, but the arrays are shared (copying the</span>
+<span class="sd">        cube on every access would double memory), so do not modify array</span>
+<span class="sd">        values in place - assign a new array instead.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Product.level">
+<a class="viewcode-back" href="../../api/hypso/api/index.html#hypso.api.Product.level">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">level</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Processing level: ``"L1A"``, ``"L1B"``, ``"L1C"``, ``"L1D"``, ``"L2A"`` or ``"L2B"``."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"processing_level"</span><span class="p">]</span></div>
+
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Product.sat_id">
+<a class="viewcode-back" href="../../api/hypso/api/index.html#hypso.api.Product.sat_id">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sat_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Satellite, e.g. ``"HYPSO-2"``."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sat_id"</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Product.target">
+<a class="viewcode-back" href="../../api/hypso/api/index.html#hypso.api.Product.target">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">target</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Capture target name, e.g. ``"aeronetvenice"``."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"location_description"</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Product.cube">
+<a class="viewcode-back" href="../../api/hypso/api/index.html#hypso.api.Product.cube">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cube</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The product cube: ``dn``, ``Lt``, ``rhot`` or the L2A variable.</span>
+
+<span class="sd">        Dimensions ``(lines, samples, bands)``, or ``(y, x, bands)`` when</span>
+<span class="sd">        gridded, with ``wavelength``, ``radiation_wavelength`` and ``fwhm``</span>
+<span class="sd">        band coordinates. L2B products have none (ValueError); their</span>
+<span class="sd">        products are :attr:`variables`.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">cube_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="p">)]</span></div>
+
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Product.shape">
+<a class="viewcode-back" href="../../api/hypso/api/index.html#hypso.api.Product.shape">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Spatial shape: ``(lines, samples)``, or ``(y, x)`` when gridded."""</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">dataset</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spatial_dims</span><span class="p">())</span></div>
+
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Product.wavelengths">
+<a class="viewcode-back" href="../../api/hypso/api/index.html#hypso.api.Product.wavelengths">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wavelengths</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Band centre wavelengths in nm, as calibrated (``radiation_wavelength``)."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="p">[</span><span class="s2">"radiation_wavelength"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span></div>
+
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Product.geometry">
+<a class="viewcode-back" href="../../api/hypso/api/index.html#hypso.api.Product.geometry">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">geometry</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Latitude, longitude and sun and sensor angles, as a Dataset.</span>
+
+<span class="sd">        Empty before georeferencing (L1A, L1B). Includes the ``*_direct``</span>
+<span class="sd">        variants when direct georeferencing was computed.</span>
+<span class="sd">        """</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">dataset</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">ds</span><span class="o">.</span><span class="n">data_vars</span>
+                 <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">_GEOMETRY</span> <span class="ow">or</span> <span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"_direct"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">n</span><span class="p">[:</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="s2">"_direct"</span><span class="p">)]</span> <span class="ow">in</span> <span class="n">_GEOMETRY</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">ds</span><span class="p">[</span><span class="n">names</span><span class="p">]</span></div>
+
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Product.flags">
+<a class="viewcode-back" href="../../api/hypso/api/index.html#hypso.api.Product.flags">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">flags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Masks decoded from ``pixel_flags``: ``{name: boolean DataArray}``.</span>
+
+<span class="sd">        Empty if the product has no flags.</span>
+<span class="sd">        """</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">dataset</span>
+        <span class="k">return</span> <span class="n">decode_flags</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">FLAGS_NAME</span><span class="p">])</span> <span class="k">if</span> <span class="n">FLAGS_NAME</span> <span class="ow">in</span> <span class="n">ds</span> <span class="k">else</span> <span class="p">{}</span></div>
+
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Product.variables">
+<a class="viewcode-back" href="../../api/hypso/api/index.html#hypso.api.Product.variables">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Derived 2D products, as a Dataset.</span>
+
+<span class="sd">        Those added with :meth:`with_variables` and those an atmospheric</span>
+<span class="sd">        correction tool returns (e.g. ``chla``, ``polymer_flags``); for an</span>
+<span class="sd">        L2B product, its products (e.g. ``chlor_a``).</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.product</span><span class="w"> </span><span class="kn">import</span> <span class="n">_extra_variables</span><span class="p">,</span> <span class="n">has_cube</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">dataset</span>
+        <span class="k">return</span> <span class="n">ds</span><span class="p">[</span><span class="n">_extra_variables</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="p">[</span><span class="n">cube_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="p">)]</span> <span class="k">if</span> <span class="n">has_cube</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="p">)</span> <span class="k">else</span> <span class="p">[])]</span></div>
+
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Product.grid">
+<a class="viewcode-back" href="../../api/hypso/api/index.html#hypso.api.Product.grid">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">grid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Name of the map grid (e.g. ``"utm33n_876m"``), or None in sensor geometry.</span>
+
+<span class="sd">        See :meth:`regrid`.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"grid"</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_spatial_dims</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.product</span><span class="w"> </span><span class="kn">import</span> <span class="n">spatial_dims</span>
+        <span class="k">return</span> <span class="n">spatial_dims</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Product.provenance">
+<a class="viewcode-back" href="../../api/hypso/api/index.html#hypso.api.Product.provenance">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">provenance</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""How the product was made: one dict per processing step, oldest first.</span>
+
+<span class="sd">        From ``metadata/processing``: step name, date, software version and</span>
+<span class="sd">        git commit, input file and the step's parameters.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="s2">"metadata"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">children</span> <span class="ow">or</span> <span class="s2">"processing"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="p">[</span><span class="s2">"metadata"</span><span class="p">]</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">"step"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="nb">dict</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">attrs</span><span class="p">)}</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="p">[</span><span class="s2">"metadata/processing"</span><span class="p">]</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">steps</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"date_utc"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.product</span><span class="w"> </span><span class="kn">import</span> <span class="n">has_cube</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_cube</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="p">):</span>
+            <span class="n">kind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"l2b_group"</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"l2a_quantity"</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">"&lt;hypso.Product </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sat_id</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">: "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">data_vars</span><span class="p">)</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spatial_dims</span><span class="p">(),</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span><span class="si">}</span><span class="s2">&gt;"</span><span class="p">)</span>
+        <span class="n">cube</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cube</span>
+        <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">"&lt;hypso.Product </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sat_id</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">cube</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">dict</span><span class="p">(</span><span class="n">cube</span><span class="o">.</span><span class="n">sizes</span><span class="p">)</span><span class="si">}</span><span class="s2">&gt;"</span><span class="p">)</span>
+
+    <span class="c1"># -- pixels, spectra, geolocation --------------------------------------</span>
+
+<div class="viewcode-block" id="Product.pixel">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.pixel">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">pixel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">latitude</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">longitude</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">direct</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The pixel nearest to a location.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        latitude, longitude : float</span>
+<span class="sd">            Location in degrees.</span>
+<span class="sd">        direct : bool, default False</span>
+<span class="sd">            Use the direct (ADCS-only) georeferencing instead.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple of int</span>
+<span class="sd">            ``(line, sample)``, or ``(y, x)`` for a gridded product.</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.geometry.nearest</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_nearest_pixel</span>
+        <span class="n">geometry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="s2">"_direct"</span> <span class="k">if</span> <span class="n">direct</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="k">if</span> <span class="sa">f</span><span class="s2">"latitude</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">geometry</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="si">}</span><span class="s2"> product has no </span><span class="si">{</span><span class="s1">'direct '</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">direct</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">''</span><span class="si">}</span><span class="s2">geolocation"</span><span class="p">)</span>
+        <span class="n">line</span><span class="p">,</span> <span class="n">sample</span> <span class="o">=</span> <span class="n">get_nearest_pixel</span><span class="p">(</span><span class="n">target_latitude</span><span class="o">=</span><span class="n">latitude</span><span class="p">,</span> <span class="n">target_longitude</span><span class="o">=</span><span class="n">longitude</span><span class="p">,</span>
+                                         <span class="n">latitudes</span><span class="o">=</span><span class="n">geometry</span><span class="p">[</span><span class="sa">f</span><span class="s2">"latitude</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                                         <span class="n">longitudes</span><span class="o">=</span><span class="n">geometry</span><span class="p">[</span><span class="sa">f</span><span class="s2">"longitude</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Product.spectrum">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.spectrum">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">spectrum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">latitude</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">longitude</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">line</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">sample</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The cube's spectrum at one pixel.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        latitude, longitude : float, optional</span>
+<span class="sd">            Location in degrees; the nearest pixel is used.</span>
+<span class="sd">        line, sample : int, optional</span>
+<span class="sd">            Pixel indices, instead of a location.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        xarray.DataArray</span>
+<span class="sd">            Values over ``bands``, with wavelength coordinates.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        window : Statistics of a window of pixels around a location.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">latitude</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">longitude</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">line</span><span class="p">,</span> <span class="n">sample</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel</span><span class="p">(</span><span class="n">latitude</span><span class="p">,</span> <span class="n">longitude</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">line</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">sample</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"give latitude and longitude, or line and sample"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spatial_dims</span><span class="p">(),</span> <span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">sample</span><span class="p">))))</span></div>
+
+
+<div class="viewcode-block" id="Product.window">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.window">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">window</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">latitude</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">longitude</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">exclude_flags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">cv_band_range</span><span class="o">=</span><span class="p">(</span><span class="mf">405.0</span><span class="p">,</span> <span class="mf">570.0</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""A window of pixels around a location and its statistics, for matchups.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        latitude, longitude : float</span>
+<span class="sd">            Location in degrees; the window is centred on the nearest pixel.</span>
+<span class="sd">        size : int, default 3</span>
+<span class="sd">            Window width in pixels (odd). Clipped at the image edges.</span>
+<span class="sd">        exclude_flags : list of str, optional</span>
+<span class="sd">            ``pixel_flags`` names (e.g. ``["land", "cloud"]``) whose pixels</span>
+<span class="sd">            are left out.</span>
+<span class="sd">        cv_band_range : tuple of float, default (405, 570)</span>
+<span class="sd">            Wavelength range (nm) for ``pixel_valid`` and ``cv_median``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        xarray.Dataset</span>
+<span class="sd">            Per band: ``mean``, ``median``, ``std``, ``cv`` (std / median)</span>
+<span class="sd">            and ``valid_count``; ``pixels`` (the window) and ``excluded``.</span>
+<span class="sd">            Attributes: centre pixel and its distance to the location,</span>
+<span class="sd">            ``box_size``, ``pixel_valid`` and ``percent_valid`` (pixels with</span>
+<span class="sd">            any finite band in ``cv_band_range``), ``cv_median`` and the</span>
+<span class="sd">            window's mean angles. See :mod:`hypso.window`.</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.window</span><span class="w"> </span><span class="kn">import</span> <span class="n">window_statistics</span>
+        <span class="k">return</span> <span class="n">window_statistics</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel</span><span class="p">(</span><span class="n">latitude</span><span class="p">,</span> <span class="n">longitude</span><span class="p">),</span> <span class="n">latitude</span><span class="p">,</span> <span class="n">longitude</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
+                                 <span class="n">exclude_flags</span><span class="o">=</span><span class="n">exclude_flags</span><span class="p">,</span> <span class="n">cv_band_range</span><span class="o">=</span><span class="n">cv_band_range</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Product.resolution">
+<a class="viewcode-back" href="../../api/hypso/api/index.html#hypso.api.Product.resolution">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resolution</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Pixel size: the larger of the mean along- and across-track ground sampling distance, in m.</span>
+
+<span class="sd">        For a gridded product, the grid's pixel size in its CRS's units (m,</span>
+<span class="sd">        or degrees for a geographic grid).</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"grid_resolution"</span><span class="p">])</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.grid</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolution</span>
+        <span class="k">return</span> <span class="n">resolution</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Product.swath_definition">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.swath_definition">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">swath_definition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">direct</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""The product's geolocation as a :class:`pyresample.geometry.SwathDefinition`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        direct : bool, default False</span>
+<span class="sd">            Use the direct georeferencing instead.</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.grid</span><span class="w"> </span><span class="kn">import</span> <span class="n">swath_definition</span>
+        <span class="k">return</span> <span class="n">swath_definition</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="p">,</span> <span class="n">direct</span><span class="o">=</span><span class="n">direct</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Product.footprint">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.footprint">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">footprint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""The ground footprint as a shapely polygon in WGS84 longitude/latitude.</span>
+
+<span class="sd">        See :func:`hypso.maps.footprint` (``mask="data"`` for the pixels</span>
+<span class="sd">        with data only).</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.maps</span><span class="w"> </span><span class="kn">import</span> <span class="n">footprint</span>
+        <span class="k">return</span> <span class="n">footprint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="n">block</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Product.write_footprint">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.write_footprint">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_footprint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Write the footprint, with the capture's metadata, as an ESRI</span>
+<span class="sd">        Shapefile (``*.shp``, EPSG:4326) or GeoJSON.</span>
+
+<span class="sd">        See :func:`hypso.maps.write_footprints`, which also writes several</span>
+<span class="sd">        products to one file.</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.maps</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_footprints</span>
+        <span class="k">return</span> <span class="n">write_footprints</span><span class="p">([</span><span class="bp">self</span><span class="p">],</span> <span class="n">path</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="n">block</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Product.area_definition">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.area_definition">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">area_definition</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""A gridded product's grid as a :class:`pyresample.geometry.AreaDefinition`.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the product is in sensor geometry.</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.grid</span><span class="w"> </span><span class="kn">import</span> <span class="n">area_definition</span>
+        <span class="k">return</span> <span class="n">area_definition</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Product.resample">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.resample">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"nearest"</span><span class="p">,</span> <span class="n">radius_of_influence</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Resample the product onto any target, as a bare Dataset.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        target : pyresample.geometry.AreaDefinition or SwathDefinition</span>
+<span class="sd">            A grid, or a swath such as another sensor's (for matchups).</span>
+<span class="sd">        method : {"nearest", "bilinear", "average"}, default "nearest"</span>
+<span class="sd">            For the cube and float variables; ``"average"`` only onto grids</span>
+<span class="sd">            coarser than the product. Flags are combined as in</span>
+<span class="sd">            :class:`hypso.grid.GridOperators`.</span>
+<span class="sd">        radius_of_influence : float, optional</span>
+<span class="sd">            Search radius in m; default 1.5 times the coarser pixel size.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        xarray.Dataset</span>
+<span class="sd">            The cube, derived variables, each flag as ``flag_&lt;name&gt;`` and</span>
+<span class="sd">            the target's latitude and longitude.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        regrid : The product on a map grid, as a Product.</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.grid</span><span class="w"> </span><span class="kn">import</span> <span class="n">resample_product</span>
+        <span class="k">return</span> <span class="n">resample_product</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">radius_of_influence</span><span class="o">=</span><span class="n">radius_of_influence</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Product.regrid">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.regrid">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">regrid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"utm"</span><span class="p">,</span> <span class="n">resolution</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"nearest"</span><span class="p">,</span>
+               <span class="n">radius_of_influence</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_gb</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">4.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Product"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The product on a map grid, at the same level.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        target : str, int, pyproj.CRS, AreaDefinition or Product, default "utm"</span>
+<span class="sd">            ``"utm"`` (the WGS84 UTM zone of the scene centre), any CRS</span>
+<span class="sd">            pyproj accepts (e.g. ``"EPSG:3035"``), a pyresample</span>
+<span class="sd">            AreaDefinition, or a gridded Product to share its grid.</span>
+<span class="sd">        resolution : float, optional</span>
+<span class="sd">            Pixel size in the CRS's units. Default: this product's</span>
+<span class="sd">            :attr:`resolution`, so nothing is oversampled. Not with an</span>
+<span class="sd">            AreaDefinition or Product target.</span>
+<span class="sd">        method : {"nearest", "bilinear", "average"}, default "nearest"</span>
+<span class="sd">            ``"nearest"`` keeps one measured spectrum per pixel;</span>
+<span class="sd">            ``"bilinear"`` blends neighbouring spectra; ``"average"`` takes</span>
+<span class="sd">            cell means, for grids at least as coarse as the product.</span>
+<span class="sd">        radius_of_influence : float, optional</span>
+<span class="sd">            Search radius in m; default 1.5 times the coarser pixel size.</span>
+<span class="sd">        max_gb : float, default 4.0</span>
+<span class="sd">            Refuse grids whose cube would be larger.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Product</span>
+<span class="sd">            Dimensions ``(y, x)`` with CF projection coordinates and a</span>
+<span class="sd">            ``crs`` grid mapping; ``pixel_flags`` gains ``outside_swath``.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        hypso.grid.regrid : The tree function, with the per-variable rules.</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.grid</span><span class="w"> </span><span class="kn">import</span> <span class="n">regrid</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">Product</span><span class="p">):</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">area_definition</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">Product</span><span class="p">(</span><span class="n">regrid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
+                              <span class="n">radius_of_influence</span><span class="o">=</span><span class="n">radius_of_influence</span><span class="p">,</span> <span class="n">max_gb</span><span class="o">=</span><span class="n">max_gb</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Product.to_satpy">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.to_satpy">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_satpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">direct</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""The product as a Satpy Scene, one dataset per band.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        direct : bool, default False</span>
+<span class="sd">            Use the direct georeferencing for the swath.</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.satpy.satpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">product_scene</span>
+        <span class="k">return</span> <span class="n">product_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_direct_georef</span><span class="o">=</span><span class="n">direct</span><span class="p">)</span></div>
+
+
+    <span class="c1"># -- adding masks and derived products (each returns a new Product) -----</span>
+
+<div class="viewcode-block" id="Product.with_masks">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.with_masks">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_masks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">descriptions</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">masks</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Product"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""A new Product with masks added to ``pixel_flags``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        descriptions : dict, optional</span>
+<span class="sd">            ``{name: text}`` describing masks, kept in the file.</span>
+<span class="sd">        **masks : array_like of bool</span>
+<span class="sd">            ``name=mask`` with the product's spatial shape, True where</span>
+<span class="sd">            flagged. Names may contain letters, digits and ``_``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Product</span>
+<span class="sd">            Existing flags are kept; a mask with an existing name replaces it.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; flagged = l1d.with_masks(land=land, cloud=cloud)</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.masks.flags</span><span class="w"> </span><span class="kn">import</span> <span class="n">encode_flags</span>
+        <span class="n">merged</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">flag</span><span class="o">.</span><span class="n">values</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">flag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">merged</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">name</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">masks</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+        <span class="n">old_descriptions</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">FLAGS_NAME</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">dataset</span> <span class="ow">and</span> <span class="s2">"comment"</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">FLAGS_NAME</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">FLAGS_NAME</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"comment"</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"; "</span><span class="p">):</span>
+                <span class="n">name</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">text</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">": "</span><span class="p">)</span>
+                <span class="n">old_descriptions</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">text</span>
+        <span class="n">tree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">to_dataset</span><span class="p">(</span><span class="n">inherit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">root</span><span class="p">[</span><span class="n">FLAGS_NAME</span><span class="p">]</span> <span class="o">=</span> <span class="n">encode_flags</span><span class="p">(</span><span class="n">merged</span><span class="p">,</span> <span class="p">{</span><span class="o">**</span><span class="n">old_descriptions</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="n">descriptions</span> <span class="ow">or</span> <span class="p">{})},</span>
+                                        <span class="n">dims</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_spatial_dims</span><span class="p">())</span>
+        <span class="n">tree</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">root</span>
+        <span class="k">return</span> <span class="n">Product</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Product.with_variables">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.with_variables">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">variables</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Product"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""A new Product with derived 2D variables added.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        **variables : array_like or xarray.DataArray</span>
+<span class="sd">            ``name=values`` with the product's spatial shape; a DataArray's</span>
+<span class="sd">            attributes (e.g. ``units``) are kept. Written with the product</span>
+<span class="sd">            and read back by :func:`hypso.open`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Product</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; l2a.with_variables(chla=xr.DataArray(chla, attrs={"units": "mg m-3"}))</span>
+<span class="sd">        """</span>
+        <span class="n">dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spatial_dims</span><span class="p">()</span>
+        <span class="n">tree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">to_dataset</span><span class="p">(</span><span class="n">inherit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">reserved</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">reserved</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> is already a product, geometry or flag variable"</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">value</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">)</span> <span class="k">else</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="n">dims</span><span class="o">=</span><span class="n">dims</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> has shape </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, expected </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">root</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">))</span>
+        <span class="n">tree</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">root</span>
+        <span class="k">return</span> <span class="n">Product</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Product.select_bands">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.select_bands">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">select_bands</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wavelength_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wavelengths</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Product"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""A new Product with only some of the bands (from L1B on).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        wavelength_range : tuple of float, optional</span>
+<span class="sd">            ``(min, max)`` in nm: the bands whose centre lies within it.</span>
+<span class="sd">        wavelengths : array_like, optional</span>
+<span class="sd">            Wavelengths in nm: the nearest band to each.</span>
+<span class="sd">        indices : array_like of int, optional</span>
+<span class="sd">            Band indices in the sensor's full band set (``band_index``).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Product</span>
+<span class="sd">            Each band keeps its full-set index, so later steps (TOA</span>
+<span class="sd">            reflectance, SRFs) give the same values as on all bands.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            On L1A: calibration needs every band.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; vis = l1b.select_bands(wavelength_range=(450, 700))</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.processing.bands</span><span class="w"> </span><span class="kn">import</span> <span class="n">select_bands</span>
+        <span class="k">return</span> <span class="n">Product</span><span class="p">(</span><span class="n">select_bands</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="p">,</span> <span class="n">wavelength_range</span><span class="o">=</span><span class="n">wavelength_range</span><span class="p">,</span> <span class="n">wavelengths</span><span class="o">=</span><span class="n">wavelengths</span><span class="p">,</span>
+                                    <span class="n">indices</span><span class="o">=</span><span class="n">indices</span><span class="p">))</span></div>
+
+
+    <span class="c1"># -- processing (each returns a new Product) ----------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_require</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">!=</span> <span class="n">level</span><span class="p">:</span>
+            <span class="n">hint</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">' or .to("</span><span class="si">{</span><span class="n">_NEXT</span><span class="p">[</span><span class="n">level</span><span class="p">]</span><span class="si">}</span><span class="s1">")'</span> <span class="k">if</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">_NEXT</span> <span class="k">else</span> <span class="s2">""</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">() needs an </span><span class="si">{</span><span class="n">level</span><span class="si">}</span><span class="s2"> product, this one is </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="si">}{</span><span class="n">hint</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Product.calibrate">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.calibrate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calibrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coeff_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Product"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Calibrate L1A to L1B: top-of-atmosphere radiance ``Lt``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        coeff_type : str, optional</span>
+<span class="sd">            Radiometric variant: ``"abs"`` (default), ``"moved"`` or ``"lab"``.</span>
+<span class="sd">        version : str or dict, optional</span>
+<span class="sd">            Coefficient release: ``"V3.1"`` (default), ``"V3.1v2spec"`` (for</span>
+<span class="sd">            OC-SMART), ``"V2"``, ``"V1"``; or ``{correction: release}`` to mix</span>
+<span class="sd">            them, e.g. ``{"smile": "V2"}``. See docs/calibration.rst.</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Passed to :func:`hypso.processing.l1a_to_l1b`: ``coeff_files``</span>
+<span class="sd">            (explicit files), ``radiometric``, ``smile``, ``destripe``,</span>
+<span class="sd">            ``spectral`` (False to skip a correction), and ``keystone``</span>
+<span class="sd">            (True to apply the sensor's keystone model; unreviewed groundwork).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Product</span>
+<span class="sd">            L1B; the coefficients used and their checksums are recorded in</span>
+<span class="sd">            :attr:`provenance`.</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.processing</span><span class="w"> </span><span class="kn">import</span> <span class="n">l1a_to_l1b</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require</span><span class="p">(</span><span class="s2">"L1A"</span><span class="p">,</span> <span class="s2">"calibrate"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Product</span><span class="p">(</span><span class="n">l1a_to_l1b</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="p">,</span> <span class="n">coeff_type</span><span class="o">=</span><span class="n">coeff_type</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Product.georeference">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.georeference">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">georeference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">latitudes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">longitudes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">direct</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Product"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Georeference L1B to L1C: latitude, longitude and sun and sensor angles.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        latitudes, longitudes : array_like or path, optional</span>
+<span class="sd">            Indirect (GCP-corrected) pixel coordinates, as arrays or paths to</span>
+<span class="sd">            raw float32 files. Omit both to use direct georeferencing.</span>
+<span class="sd">        direct : bool, default True</span>
+<span class="sd">            Also compute direct georeferencing from the ADCS telemetry</span>
+<span class="sd">            (``*_direct`` variables).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Product</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.processing</span><span class="w"> </span><span class="kn">import</span> <span class="n">l1b_to_l1c</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require</span><span class="p">(</span><span class="s2">"L1B"</span><span class="p">,</span> <span class="s2">"georeference"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Product</span><span class="p">(</span><span class="n">l1b_to_l1c</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="p">,</span> <span class="n">latitudes</span><span class="o">=</span><span class="n">latitudes</span><span class="p">,</span> <span class="n">longitudes</span><span class="o">=</span><span class="n">longitudes</span><span class="p">,</span> <span class="n">direct</span><span class="o">=</span><span class="n">direct</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Product.toa_reflectance">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.toa_reflectance">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">toa_reflectance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_direct_georef</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">ssi_source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"tsis"</span><span class="p">,</span>
+                        <span class="n">use_unbinned</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Product"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Convert L1C radiance to L1D top-of-atmosphere reflectance ``rhot``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        use_direct_georef : bool, default False</span>
+<span class="sd">            Use the direct georeferencing's solar zenith angle.</span>
+<span class="sd">        ssi_source : {"tsis", "thuillier"}, default "tsis"</span>
+<span class="sd">            Solar irradiance spectrum: TSIS-1 HSRS or Thuillier (2002).</span>
+<span class="sd">        use_unbinned : bool, default True</span>
+<span class="sd">            Build the spectral response functions from the unbinned bands.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Product</span>
+<span class="sd">            L1D, with the spectral response functions in ``metadata/srf``.</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.processing</span><span class="w"> </span><span class="kn">import</span> <span class="n">l1c_to_l1d</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_require</span><span class="p">(</span><span class="s2">"L1C"</span><span class="p">,</span> <span class="s2">"toa_reflectance"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Product</span><span class="p">(</span><span class="n">l1c_to_l1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="p">,</span> <span class="n">use_direct_georef</span><span class="o">=</span><span class="n">use_direct_georef</span><span class="p">,</span> <span class="n">ssi_source</span><span class="o">=</span><span class="n">ssi_source</span><span class="p">,</span>
+                                  <span class="n">use_unbinned</span><span class="o">=</span><span class="n">use_unbinned</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Product.correct_atmosphere">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.correct_atmosphere">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">correct_atmosphere</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"machi"</span><span class="p">,</span> <span class="n">masked</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">mask_flags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">work_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                           <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Product"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Atmospheric correction to L2A.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        method : {"machi", "dps", "polymer", "acolite", "ocsmart"}, default "machi"</span>
+<span class="sd">            MACHI or dark pixel subtraction (in this process), or an</span>
+<span class="sd">            external tool.</span>
+<span class="sd">        masked : bool, default False</span>
+<span class="sd">            Give the method NaN where ``pixel_flags`` are set.</span>
+<span class="sd">        mask_flags : list of str, optional</span>
+<span class="sd">            Only these flags, with ``masked=True``.</span>
+<span class="sd">        work_dir : str or path, optional</span>
+<span class="sd">            External tools: where their input and raw output go (kept);</span>
+<span class="sd">            default a temporary directory.</span>
+<span class="sd">        config : str, path or dict, optional</span>
+<span class="sd">            External tools: the AC tool configuration</span>
+<span class="sd">            (:mod:`hypso.ac.config`); default the ``HYPSO_AC_CONFIG``</span>
+<span class="sd">            environment variable.</span>
+<span class="sd">        **options</span>
+<span class="sd">            Method-specific options, e.g. ``est_min_R=0.05`` for MACHI,</span>
+<span class="sd">            ``settings={...}`` overriding the configuration for Polymer or</span>
+<span class="sd">            ACOLITE, ``output="l2r"`` for ACOLITE.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Product</span>
+<span class="sd">            L2A: the method's reflectance on this product's bands, its 2D</span>
+<span class="sd">            products and flags in :attr:`variables`.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        hypso.processing.correct_atmosphere</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.processing</span><span class="w"> </span><span class="kn">import</span> <span class="n">correct_atmosphere</span>
+        <span class="k">return</span> <span class="n">Product</span><span class="p">(</span><span class="n">correct_atmosphere</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="n">masked</span><span class="p">,</span> <span class="n">mask_flags</span><span class="o">=</span><span class="n">mask_flags</span><span class="p">,</span>
+                                          <span class="n">work_dir</span><span class="o">=</span><span class="n">work_dir</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">))</span></div>
+
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Product.atmospheric_correction">
+<a class="viewcode-back" href="../../api/hypso/api/index.html#hypso.api.Product.atmospheric_correction">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">atmospheric_correction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Atmospheric correction method of an L2A product, e.g. ``"polymer"``; None below L2A."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"atmospheric_correction"</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Product.to">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.to">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">calibrate</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">georeference</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+           <span class="n">toa_reflectance</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">correct_atmosphere</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Product"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Run the processing steps from this level up to ``level``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        level : {"L1B", "L1C", "L1D", "L2A"}</span>
+<span class="sd">            Target level.</span>
+<span class="sd">        calibrate, georeference, toa_reflectance, correct_atmosphere : dict, optional</span>
+<span class="sd">            Options for each step, passed to the method of that name. For</span>
+<span class="sd">            L2A, ``correct_atmosphere={"method": ...}`` picks the method</span>
+<span class="sd">            (default MACHI).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Product</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; l1d = l1a.to("L1D", calibrate={"version": "V2"},</span>
+<span class="sd">        ...              georeference={"latitudes": lats, "longitudes": lons})</span>
+<span class="sd">        &gt;&gt;&gt; l2a = l1d.to("L2A")                                        # MACHI</span>
+<span class="sd">        &gt;&gt;&gt; l2a = l1d.to("L2A", correct_atmosphere={"method": "dps"})</span>
+<span class="sd">        """</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="n">level</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">LEVELS</span> <span class="o">+</span> <span class="p">(</span><span class="s2">"L2A"</span><span class="p">,)</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">order</span> <span class="ow">or</span> <span class="n">order</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">level</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">order</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"cannot go from </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">level</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"calibrate"</span><span class="p">:</span> <span class="n">calibrate</span> <span class="ow">or</span> <span class="p">{},</span> <span class="s2">"georeference"</span><span class="p">:</span> <span class="n">georeference</span> <span class="ow">or</span> <span class="p">{},</span>
+                   <span class="s2">"toa_reflectance"</span><span class="p">:</span> <span class="n">toa_reflectance</span> <span class="ow">or</span> <span class="p">{},</span> <span class="s2">"correct_atmosphere"</span><span class="p">:</span> <span class="n">correct_atmosphere</span> <span class="ow">or</span> <span class="p">{}}</span>
+        <span class="n">product</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="k">while</span> <span class="n">product</span><span class="o">.</span><span class="n">level</span> <span class="o">!=</span> <span class="n">level</span><span class="p">:</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="n">_STEPS</span><span class="p">[</span><span class="n">product</span><span class="o">.</span><span class="n">level</span><span class="p">]</span>
+            <span class="n">product</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">step</span><span class="p">)(</span><span class="o">**</span><span class="n">options</span><span class="p">[</span><span class="n">step</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">product</span></div>
+
+
+    <span class="c1"># -- output -------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="Product.filename">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.filename">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ac</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The product's file name (:mod:`hypso.io.naming`).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        label : str, optional</span>
+<span class="sd">            Free-text label for experiments, the last name field.</span>
+<span class="sd">        ac : str, optional</span>
+<span class="sd">            Override the atmospheric correction field (L2A) or source (L2B).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            e.g. ``"HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.nc"``; L2A</span>
+<span class="sd">            names carry the quantity (from the product variable) and the</span>
+<span class="sd">            method, e.g. ``"...L2A.RHOS.machi.nc"``; L2B names the group</span>
+<span class="sd">            and source, e.g. ``"...L2B.BGC.oc4.nc"``.</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.naming</span><span class="w"> </span><span class="kn">import</span> <span class="n">name_method</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.processing.capture</span><span class="w"> </span><span class="kn">import</span> <span class="n">acquisition_time</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">acquisition_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">attrs</span><span class="p">))</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.product</span><span class="w"> </span><span class="kn">import</span> <span class="n">has_cube</span>
+        <span class="n">quantity</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">==</span> <span class="s2">"L2A"</span><span class="p">:</span>
+            <span class="n">ac</span> <span class="o">=</span> <span class="n">name_method</span><span class="p">(</span><span class="n">ac</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">atmospheric_correction</span><span class="p">)</span>
+            <span class="n">quantity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cube</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">has_cube</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"l2a_quantity"</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">==</span> <span class="s2">"L2B"</span><span class="p">:</span>
+            <span class="n">ac</span> <span class="o">=</span> <span class="n">ac</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"l2b_source"</span><span class="p">]</span>
+            <span class="n">quantity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"l2b_group"</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">product_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sat_id</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">,</span> <span class="n">ac</span><span class="o">=</span><span class="n">ac</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span>
+                            <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">quantity</span><span class="o">=</span><span class="n">quantity</span><span class="p">)</span><span class="o">.</span><span class="n">filename</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Product.write">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.write">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">out_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">datacube</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+              <span class="n">significant_bits</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">tool_products</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">intermediates</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Write the product in the current file format.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        path : str or path, optional</span>
+<span class="sd">            Output file. Default: :meth:`filename` in ``out_dir``.</span>
+<span class="sd">        out_dir : str or path, optional</span>
+<span class="sd">            Directory for the default name; the current directory if omitted.</span>
+<span class="sd">        label : str, optional</span>
+<span class="sd">            Label for the default name.</span>
+<span class="sd">        datacube : bool, default False</span>
+<span class="sd">            Write the cube as one 3D variable instead of one per band.</span>
+<span class="sd">        significant_bits : int or None, default 14</span>
+<span class="sd">            Keep this many significant mantissa bits of the float bands</span>
+<span class="sd">            (L1B-L2A): about 40% smaller L1D bands at most 3.1e-5 relative</span>
+<span class="sd">            error; None writes them lossless.</span>
+<span class="sd">        tool_products : bool, default True</span>
+<span class="sd">            L2A: also write the AC tool's own products (:meth:`tool_products`)</span>
+<span class="sd">            as L2B files in the same directory. The L2A file never holds them;</span>
+<span class="sd">            False drops them (with a warning).</span>
+<span class="sd">        intermediates : bool, default True</span>
+<span class="sd">            L2A: also write the AC tool's other per-band outputs</span>
+<span class="sd">            (:meth:`intermediates`, e.g. OC-SMART's Lt, Lr, Lrc, tg_sol) as</span>
+<span class="sd">            the ``...L2A.AUX.&lt;method&gt;.nc`` file in the same directory. False</span>
+<span class="sd">            drops them (with a warning).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pathlib.Path</span>
+<span class="sd">            The written file (for L2A, the L2A file).</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_dir</span> <span class="ow">or</span> <span class="s2">"."</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">tree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.io.product</span><span class="w"> </span><span class="kn">import</span> <span class="n">has_cube</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">==</span> <span class="s2">"L2A"</span> <span class="ow">and</span> <span class="n">has_cube</span><span class="p">(</span><span class="n">tree</span><span class="p">):</span>          <span class="c1"># not the L2A.AUX product itself</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.processing.l2b</span><span class="w"> </span><span class="kn">import</span> <span class="n">split_tool_products</span>
+            <span class="n">tree</span><span class="p">,</span> <span class="n">products</span> <span class="o">=</span> <span class="n">split_tool_products</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">tool_products</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">product</span> <span class="ow">in</span> <span class="n">products</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                    <span class="n">out</span> <span class="o">=</span> <span class="n">Product</span><span class="p">(</span><span class="n">product</span><span class="p">)</span>
+                    <span class="n">l2b_path</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">out_dir</span><span class="o">=</span><span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">significant_bits</span><span class="o">=</span><span class="n">significant_bits</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"AC tool products written to </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">l2b_path</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">products</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"AC tool products </span><span class="si">%s</span><span class="s2"> not written (tool_products=False)"</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">products</span><span class="p">))</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.processing.l2b</span><span class="w"> </span><span class="kn">import</span> <span class="n">split_intermediates</span>
+            <span class="n">tree</span><span class="p">,</span> <span class="n">aux</span> <span class="o">=</span> <span class="n">split_intermediates</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">aux</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">intermediates</span><span class="p">:</span>
+                <span class="n">aux_path</span> <span class="o">=</span> <span class="n">Product</span><span class="p">(</span><span class="n">aux</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">out_dir</span><span class="o">=</span><span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">significant_bits</span><span class="o">=</span><span class="n">significant_bits</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"AC tool intermediates (</span><span class="si">%d</span><span class="s2"> variables) written to </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">aux</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">data_vars</span><span class="p">),</span>
+                            <span class="n">aux_path</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">aux</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"AC tool intermediates not written (intermediates=False)"</span><span class="p">)</span>
+        <span class="n">write_product</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">datacube</span><span class="o">=</span><span class="n">datacube</span><span class="p">,</span> <span class="n">significant_bits</span><span class="o">=</span><span class="n">significant_bits</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">path</span></div>
+
+
+<div class="viewcode-block" id="Product.derive">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.derive">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">derive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">algorithm</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Product"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""An L2B product from one of the package's algorithms (from L2A).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        group : str</span>
+<span class="sd">            ``"BGC"`` (chlorophyll-a, suspended matter) or ``"IOP"``</span>
+<span class="sd">            (absorption, backscattering, Kd).</span>
+<span class="sd">        algorithm : str, optional</span>
+<span class="sd">            BGC: ``"oci"`` (default; NASA's chlor_a, CI and OC4 blend),</span>
+<span class="sd">            ``"oc4"``, ``"ci"``, ``"ndci"`` (turbid/eutrophic waters),</span>
+<span class="sd">            ``"nechad2010"`` (suspended matter); IOP: ``"qaa"`` (default).</span>
+<span class="sd">            See :mod:`hypso.processing.l2b_algorithms`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Product</span>
+<span class="sd">            Level L2B, e.g. ``...L2B.BGC.oci.nc``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; chl = l2a.derive("BGC")                 # from an L2A.RRS product</span>
+<span class="sd">        &gt;&gt;&gt; chl.variables["chlor_a"]</span>
+<span class="sd">        &gt;&gt;&gt; tsm = l2a.derive("BGC", "nechad2010")</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.processing.l2b</span><span class="w"> </span><span class="kn">import</span> <span class="n">derive</span>
+        <span class="k">return</span> <span class="n">Product</span><span class="p">(</span><span class="n">derive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">algorithm</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Product.tool_products">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.tool_products">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">tool_products</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The AC tool's own geophysical products as L2B products.</span>
+
+<span class="sd">        Polymer's ``chla``, ACOLITE's ``chl_*``/``SPM_*``, OC-SMART's</span>
+<span class="sd">        ``chlor_a_*``/``tsm_*``, ... grouped by</span>
+<span class="sd">        :data:`hypso.io.naming.L2B_GROUPS`, each with the tool's flags. An</span>
+<span class="sd">        L2A file does not keep them: :meth:`write` writes them as L2B files</span>
+<span class="sd">        (``...L2B.BGC.polymer.nc``) next to it.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            ``{group: Product}``, e.g. ``{"BGC": ..., "IOP": ...}``; empty</span>
+<span class="sd">            for in-process methods (MACHI, DPS).</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.processing.l2b</span><span class="w"> </span><span class="kn">import</span> <span class="n">split_tool_products</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">!=</span> <span class="s2">"L2A"</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"tool products come from an L2A, got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">group</span><span class="p">:</span> <span class="n">Product</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span> <span class="k">for</span> <span class="n">group</span><span class="p">,</span> <span class="n">tree</span> <span class="ow">in</span> <span class="n">split_tool_products</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span></div>
+
+
+<div class="viewcode-block" id="Product.intermediates">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.Product.intermediates">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">intermediates</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Product"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The AC tool's other per-band outputs as an L2A.AUX product.</span>
+
+<span class="sd">        OC-SMART's Lt, Lr, Lrc, Lwp, tg_sol and tg_sen (one 2D variable per</span>
+<span class="sd">        quantity and band, ``Lt_434``), with the L2A's geometry and flags.</span>
+<span class="sd">        :meth:`write` writes them as ``...L2A.AUX.&lt;method&gt;.nc`` next to the</span>
+<span class="sd">        L2A; the L2A file does not hold them.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Product or None</span>
+<span class="sd">            None when the method returned none (in-process methods, Polymer,</span>
+<span class="sd">            ACOLITE).</span>
+<span class="sd">        """</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.processing.l2b</span><span class="w"> </span><span class="kn">import</span> <span class="n">split_intermediates</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">!=</span> <span class="s2">"L2A"</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"intermediates come from an L2A, got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">aux</span> <span class="o">=</span> <span class="n">split_intermediates</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">aux</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">Product</span><span class="p">(</span><span class="n">aux</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="n">_STEPS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"L1A"</span><span class="p">:</span> <span class="s2">"calibrate"</span><span class="p">,</span> <span class="s2">"L1B"</span><span class="p">:</span> <span class="s2">"georeference"</span><span class="p">,</span> <span class="s2">"L1C"</span><span class="p">:</span> <span class="s2">"toa_reflectance"</span><span class="p">,</span> <span class="s2">"L1D"</span><span class="p">:</span> <span class="s2">"correct_atmosphere"</span><span class="p">}</span>
+<span class="n">_NEXT</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"L1A"</span><span class="p">:</span> <span class="s2">"L1B"</span><span class="p">,</span> <span class="s2">"L1B"</span><span class="p">:</span> <span class="s2">"L1C"</span><span class="p">,</span> <span class="s2">"L1C"</span><span class="p">:</span> <span class="s2">"L1D"</span><span class="p">,</span> <span class="s2">"L1D"</span><span class="p">:</span> <span class="s2">"L2A"</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="open">
+<a class="viewcode-back" href="../../api/hypso/index.html#hypso.api.open">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">wavelength_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wavelengths</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Product</span><span class="p">:</span>  <span class="c1"># noqa: A001</span>
+<span class="w">    </span><span class="sd">"""Read a HYPSO product file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path : str or pathlib.Path</span>
+<span class="sd">        A product file of any level (L1A-L2A), in the current format, the</span>
+<span class="sd">        older grouped format, or a ground-station L1A.</span>
+<span class="sd">    wavelength_range, wavelengths, indices : optional</span>
+<span class="sd">        Read only some bands (see :meth:`Product.select_bands`).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Product</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import hypso</span>
+<span class="sd">    &gt;&gt;&gt; l1d = hypso.open("HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.nc")</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">Product</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">wavelength_range</span><span class="o">=</span><span class="n">wavelength_range</span><span class="p">,</span> <span class="n">wavelengths</span><span class="o">=</span><span class="n">wavelengths</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="n">indices</span><span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Norwegian University of Science and Technology (NTNU).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

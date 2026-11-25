@@ -1,0 +1,176 @@
+hypso.io
+========
+
+.. py:module:: hypso.io
+
+.. autoapi-nested-parse::
+
+   Product file I/O: one reader and one writer for every level
+   (io/product.py), file names (io/naming.py), provenance (io/provenance.py),
+   and the CF attribute builders and per-level schema they use.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/hypso/io/cf/index
+   /api/hypso/io/naming/index
+   /api/hypso/io/product/index
+   /api/hypso/io/provenance/index
+   /api/hypso/io/schema/index
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   hypso.io.LevelSchema
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   hypso.io.convert_product
+   hypso.io.get_schema
+   hypso.io.list_band_variables
+   hypso.io.parse_product_name
+   hypso.io.product_name
+   hypso.io.read_product
+   hypso.io.write_product
+
+
+Package Contents
+----------------
+
+.. py:class:: LevelSchema
+
+   What differs between product levels: product variable name, units,
+   CF standard name, title and whether the level has geometry.
+
+
+.. py:function:: convert_product(src, out_dir=None)
+
+   Convert a product file of any supported layout to the current format.
+
+   :param src:
+   :type src: str or pathlib.Path
+   :param out_dir: Default: next to ``src``.
+   :type out_dir: str or pathlib.Path, optional
+
+   :returns: The new file, named by :mod:`hypso.io.naming`. A ``convert`` step is
+             recorded; the source file is left untouched.
+   :rtype: pathlib.Path
+
+
+.. py:function:: get_schema(level)
+
+   The :class:`LevelSchema` of a level ("L1A" ... "L1D", "L2A"/"L2", "L2B").
+
+
+.. py:function:: list_band_variables(path)
+
+   Per-band metadata of a product file, without reading pixel data.
+
+   :returns: ``{"name", "band", "wavelength", "radiation_wavelength", "fwhm",
+             "units", "long_name"}`` sorted by band index, or one entry with band
+             None for a single-cube (datacube) file. Used by the Satpy readers.
+   :rtype: list of dict
+
+
+.. py:function:: parse_product_name(path)
+
+   Parse a current-style or legacy product file name.
+
+   :param path: A file name or path; only the name is used.
+   :type path: str or pathlib.Path
+
+   :rtype: ProductName
+
+   :raises ValueError: If the name is not a HYPSO product name.
+
+
+.. py:function:: product_name(sat_id, time, target, level, ac = None, label = None, grid = None, instrument = 'HSI', quantity = None)
+
+   Compose a product name.
+
+   :param sat_id: e.g. ``"HYPSO-2"``.
+   :type sat_id: str
+   :param time: Capture start; converted to UTC if timezone-aware.
+   :type time: datetime.datetime
+   :param target: Capture target, e.g. ``"aeronetvenice"``.
+   :type target: str
+   :param level: ``"L1A"`` ... ``"L1D"``, ``"L2A"``.
+   :type level: str
+   :param ac: Atmospheric correction method (L2A) or source (L2B: algorithm or
+              tool); required there, not allowed otherwise.
+   :type ac: str, optional
+   :param label: Free-text label for experiments (letters, digits, ``_``, ``-``).
+   :type label: str, optional
+   :param grid: Grid name of a regridded product (:func:`hypso.grid.grid_name`).
+   :type grid: str, optional
+   :param instrument: Instrument token (:data:`INSTRUMENTS`).
+   :type instrument: str, default "HSI"
+   :param quantity: L2A quantity token (:data:`QUANTITIES`, e.g. ``"RRS"``, or the
+                    product variable ``"Rrs"``) or L2B group (:data:`L2B_GROUPS`, e.g.
+                    ``"BGC"``); required for L2A and L2B.
+   :type quantity: str, optional
+
+   :returns: ``product_name(...).filename()`` gives the file name.
+   :rtype: ProductName
+
+
+.. py:function:: read_product(path, wavelength_range=None, wavelengths=None, indices=None)
+
+   Read any supported HYPSO product file into the in-memory model.
+
+   :param path:
+   :type path: str or pathlib.Path
+   :param wavelength_range: Read only some bands, selected as in
+                            :func:`hypso.processing.bands.select_bands` (at most one of them).
+                            Only the selected band variables are read from the file; a file
+                            holding the cube as one variable is read whole and then subset.
+   :type wavelength_range: optional
+   :param wavelengths: Read only some bands, selected as in
+                       :func:`hypso.processing.bands.select_bands` (at most one of them).
+                       Only the selected band variables are read from the file; a file
+                       holding the cube as one variable is read whole and then subset.
+   :type wavelengths: optional
+   :param indices: Read only some bands, selected as in
+                   :func:`hypso.processing.bands.select_bands` (at most one of them).
+                   Only the selected band variables are read from the file; a file
+                   holding the cube as one variable is read whole and then subset.
+   :type indices: optional
+
+   :returns: See the module description. ``tree.encoding["source"]`` holds the
+             path (not written back).
+   :rtype: xarray.DataTree
+
+   :raises ValueError: If no product cube or processing level is found.
+
+
+.. py:function:: write_product(tree, path, datacube = False, significant_bits=SIGNIFICANT_BITS)
+
+   Write a product tree in the current file format.
+
+   :param tree: In-memory model (see the module description).
+   :type tree: xarray.DataTree
+   :param path:
+   :type path: str or pathlib.Path
+   :param datacube: Write the cube as one 3D variable instead of one variable per band.
+   :type datacube: bool, default False
+   :param significant_bits: Keep this many significant mantissa bits of the float band variables
+                            (L1B-L2A; netCDF BitRound, max relative error ``2**-(bits + 1)``;
+                            values stay float32, NaN is kept, readers need nothing special). None
+                            writes them lossless. L1A counts, geometry, derived variables and
+                            metadata are always lossless. Recorded in the ``band_quantization``
+                            global attribute.
+   :type significant_bits: int or None, default 14
+
+

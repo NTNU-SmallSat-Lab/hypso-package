@@ -1,0 +1,954 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Products and files &#8212; hypso 26.10.0a7-20-g5e64121f</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=8e897651"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'products';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Calibration coefficients" href="calibration.html" />
+    <link rel="prev" title="Quick start" href="quickstart.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="26.10.0a7" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">hypso 26.10.0a7-20-g5e64121f</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="quickstart.html">
+    Quick start
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Products and files
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="calibration.html">
+    Calibration coefficients
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="coefficient_history.html">
+    Coefficient history
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="atmospheric_correction.html">
+    Atmospheric correction
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="grid.html">
+    Map grids
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="windows.html">
+    Pixel windows
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="camera.html">
+    RGB camera
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="maps.html">
+    Footprints and maps
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="architecture.html">
+    Architecture
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="versioning.html">
+    Versioning
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation.html">
+    Documentation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api/hypso/index.html">
+    hypso
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NTNU-SmallSat-Lab/hypso-package" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Products and files</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="products-and-files">
+<h1>Products and files<a class="headerlink" href="#products-and-files" title="Link to this heading">#</a></h1>
+<section id="levels">
+<h2>Levels<a class="headerlink" href="#levels" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Level</p></th>
+<th class="head"><p>Cube</p></th>
+<th class="head"><p>Contents</p></th>
+<th class="head"><p>Units (as written)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>L1A</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dn</span></code></p></td>
+<td><p>raw counts, as downlinked</p></td>
+<td><p>1 (counts)</p></td>
+</tr>
+<tr class="row-odd"><td><p>L1B</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Lt</span></code></p></td>
+<td><p>top-of-atmosphere radiance</p></td>
+<td><p>W m-2 um-1 sr-1</p></td>
+</tr>
+<tr class="row-even"><td><p>L1C</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Lt</span></code></p></td>
+<td><p>L1B with latitude, longitude and angles</p></td>
+<td><p>W m-2 um-1 sr-1</p></td>
+</tr>
+<tr class="row-odd"><td><p>L1D</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">rhot</span></code></p></td>
+<td><p>top-of-atmosphere reflectance</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>L2A</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">rhos</span></code> or
+<code class="docutils literal notranslate"><span class="pre">Rrs</span></code></p></td>
+<td><p>atmospherically corrected: surface reflectance
+<code class="docutils literal notranslate"><span class="pre">rhos</span></code> (MACHI, the default; DPS; ACOLITE L2R)
+or remote-sensing reflectance <code class="docutils literal notranslate"><span class="pre">Rrs</span></code></p></td>
+<td><p>1 (<code class="docutils literal notranslate"><span class="pre">rhos</span></code>),
+sr-1 (<code class="docutils literal notranslate"><span class="pre">Rrs</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>L2B</p></td>
+<td><p>none</p></td>
+<td><p>geophysical products derived from an L2A, one
+group per file (<code class="docutils literal notranslate"><span class="pre">BGC</span></code>: chlorophyll, TSM;
+<code class="docutils literal notranslate"><span class="pre">IOP</span></code>: IOPs, Kd): 2D
+variables only (<code class="docutils literal notranslate"><span class="pre">product.variables</span></code>)</p></td>
+<td><p>per variable</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">hypso.open</span></code> reads any level; <code class="docutils literal notranslate"><span class="pre">product.level</span></code> says which it is. The L2A methods
+are described in <a class="reference internal" href="atmospheric_correction.html"><span class="doc">Atmospheric correction</span></a>.</p>
+</section>
+<section id="file-names">
+<h2>File names<a class="headerlink" href="#file-names" title="Link to this heading">#</a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{SAT}_{INSTRUMENT}.{YYYYMMDDTHHMMSS}.{target}.{LEVEL}[.{QUANTITY}.{method}][.{grid}][.{label}].nc
+
+HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.nc
+HYPSO2_HSI.20250304T103805.aeronetvenice.L2A.RHOS.machi.nc
+HYPSO2_HSI.20250304T103805.aeronetvenice.L2A.RRS.polymer.nc
+HYPSO2_HSI.20250304T103805.aeronetvenice.L2B.BGC.oc4.nc
+HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.utm33n_876m.nc      (regridded)
+HYPSO2_HSI.20250304T103805.aeronetvenice.L1D.test.nc             (label)
+</pre></div>
+</div>
+<p>The first field is the satellite and the instrument, as in NASA’s
+<code class="docutils literal notranslate"><span class="pre">{MISSION}_{INSTRUMENT}</span></code> names (<code class="docutils literal notranslate"><span class="pre">PACE_OCI</span></code>): <code class="docutils literal notranslate"><span class="pre">HYPSO2_HSI</span></code> is the
+Hyperspectral Imager (HSI) on HYPSO-2. The instrument field is there for
+other instruments on board (an RGB camera, future optical instruments): each
+gets its own token in <code class="docutils literal notranslate"><span class="pre">hypso.io.naming.INSTRUMENTS</span></code> and its own Satpy
+readers, which match only that token. Then comes the capture time (UTC), so a
+listing groups by satellite and sorts by time. <code class="docutils literal notranslate"><span class="pre">.</span></code> only separates fields. L2A always names
+its quantity, <code class="docutils literal notranslate"><span class="pre">RRS</span></code> (remote-sensing reflectance <code class="docutils literal notranslate"><span class="pre">Rrs</span></code>, sr-1) or <code class="docutils literal notranslate"><span class="pre">RHOS</span></code>
+(surface reflectance <code class="docutils literal notranslate"><span class="pre">rhos</span></code>), and the atmospheric correction method that
+produced it (ACOLITE’s L2W and L2R are both <code class="docutils literal notranslate"><span class="pre">acolite</span></code>; the quantity tells
+them apart). A third token, <code class="docutils literal notranslate"><span class="pre">AUX</span></code>, names the file of the AC tool’s other
+per-band outputs next to an L2A (<a class="reference internal" href="#ac-tool-intermediates-l2a-aux">AC tool intermediates (L2A.AUX)</a>). The
+quantity is also the <code class="docutils literal notranslate"><span class="pre">l2a_quantity</span></code> global attribute. L2A
+names from before the quantity field (<code class="docutils literal notranslate"><span class="pre">L2A.&lt;method&gt;</span></code>) are still read; older
+POLYMER files hold <code class="docutils literal notranslate"><span class="pre">rho_w</span></code> (= pi Rrs) and are named <code class="docutils literal notranslate"><span class="pre">RHOW</span></code> when converted.
+L2B names its product group (<code class="docutils literal notranslate"><span class="pre">hypso.io.naming.L2B_GROUPS</span></code>, as PACE OCI’s
+suites: <code class="docutils literal notranslate"><span class="pre">BGC</span></code> chlorophyll-a and suspended matter, <code class="docutils literal notranslate"><span class="pre">IOP</span></code> absorption,
+scattering, backscattering and Kd) and its source, the algorithm or the AC
+tool whose own product it is. L2B files written before 2026-11-06 had one
+group per product (<code class="docutils literal notranslate"><span class="pre">CHL</span></code>, <code class="docutils literal notranslate"><span class="pre">TSM</span></code>, <code class="docutils literal notranslate"><span class="pre">KD</span></code>, <code class="docutils literal notranslate"><span class="pre">IOP</span></code>, <code class="docutils literal notranslate"><span class="pre">AOT</span></code>); they are
+still read. A regridded product names its grid (<a class="reference internal" href="grid.html"><span class="doc">Map grids</span></a>),
+at any level: a single capture on a map stays L1D, L2A or L2B (L3 is kept for
+future multi-capture composites);
+the optional label is for experiments. The calibration set and masking are
+not part of the name: they are recorded in the file. Older names
+(<code class="docutils literal notranslate"><span class="pre">{target}_{YYYY-MM-DDTHH-MM-SSZ}-{label}-{level}.nc</span></code>) are still read.
+<code class="docutils literal notranslate"><span class="pre">hypso.io.naming</span></code> builds and parses names.</p>
+</section>
+<section id="what-is-in-a-file">
+<h2>What is in a file<a class="headerlink" href="#what-is-in-a-file" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>Root group</dt><dd><p>One 2D variable per band, named <code class="docutils literal notranslate"><span class="pre">{cube}_{wavelength}</span></code> (<code class="docutils literal notranslate"><span class="pre">Lt_378</span></code>,
+<code class="docutils literal notranslate"><span class="pre">rhot_413</span></code>, …), each with <code class="docutils literal notranslate"><span class="pre">wavelength</span></code>, <code class="docutils literal notranslate"><span class="pre">radiation_wavelength</span></code>
+(what ESA SNAP reads as the band’s wavelength), <code class="docutils literal notranslate"><span class="pre">fwhm</span></code> and <code class="docutils literal notranslate"><span class="pre">band</span></code> (its
+index). Then <code class="docutils literal notranslate"><span class="pre">latitude</span></code>, <code class="docutils literal notranslate"><span class="pre">longitude</span></code> and the sun and sensor angles from
+L1C on, <code class="docutils literal notranslate"><span class="pre">pixel_flags</span></code> if the product has masks, and any derived 2D
+products (an AC tool’s chlorophyll, for example).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">metadata/</span></code></dt><dd><p>Capture configuration, timing, attitude (ADCS), calibration coefficients
+used, ground control points, spectral response functions (L1D and L2A,
+<code class="docutils literal notranslate"><span class="pre">metadata/srf</span></code>) and the processing record (<code class="docutils literal notranslate"><span class="pre">metadata/processing</span></code>).</p>
+</dd>
+<dt>Global attributes</dt><dd><p>CF-1.10 and ACDD-1.3: <code class="docutils literal notranslate"><span class="pre">title</span></code>, <code class="docutils literal notranslate"><span class="pre">processing_level</span></code>,
+<code class="docutils literal notranslate"><span class="pre">product_format_version</span></code> (<code class="docutils literal notranslate"><span class="pre">2.0</span></code>; files without it are format 1),
+<code class="docutils literal notranslate"><span class="pre">date_created</span></code>, geographic bounds, and <code class="docutils literal notranslate"><span class="pre">history</span></code> with one line per
+processing step.</p>
+</dd>
+</dl>
+<p>Data are compressed (zlib level 4) and stored unmasked; L1A counts stay
+<code class="docutils literal notranslate"><span class="pre">uint16</span></code>. The float bands of L1B-L2A keep 14 significant mantissa bits by
+default (netCDF BitRound: at most 3.1e-5 relative error, far below the sensor
+noise, about 40% smaller files; values stay float32 and NaN is kept; the
+<code class="docutils literal notranslate"><span class="pre">band_quantization</span></code> attribute says so); <code class="docutils literal notranslate"><span class="pre">write(significant_bits=None)</span></code>
+writes them lossless. <code class="docutils literal notranslate"><span class="pre">product.write(datacube=True)</span></code> writes the cube as one 3D
+variable instead of one variable per band.</p>
+</section>
+<section id="band-subsets">
+<h2>Band subsets<a class="headerlink" href="#band-subsets" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">select_bands</span></code> keeps some bands and drops the rest, from L1B on (calibration
+needs every band, because the smile correction resamples each spectrum across
+bands):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">vis</span> <span class="o">=</span> <span class="n">l1b</span><span class="o">.</span><span class="n">select_bands</span><span class="p">(</span><span class="n">wavelength_range</span><span class="o">=</span><span class="p">(</span><span class="mi">450</span><span class="p">,</span> <span class="mi">700</span><span class="p">))</span>   <span class="c1"># bands centred in 450-700 nm</span>
+<span class="n">rgb</span> <span class="o">=</span> <span class="n">l1d</span><span class="o">.</span><span class="n">select_bands</span><span class="p">(</span><span class="n">wavelengths</span><span class="o">=</span><span class="p">[</span><span class="mi">640</span><span class="p">,</span> <span class="mi">550</span><span class="p">,</span> <span class="mi">460</span><span class="p">])</span>   <span class="c1"># the nearest band to each</span>
+<span class="n">few</span> <span class="o">=</span> <span class="n">l1d</span><span class="o">.</span><span class="n">select_bands</span><span class="p">(</span><span class="n">indices</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">60</span><span class="p">])</span>          <span class="c1"># by index in the full band set</span>
+</pre></div>
+</div>
+<p>Each kept band keeps its index in the sensor’s full band set (the
+<code class="docutils literal notranslate"><span class="pre">band_index</span></code> coordinate; <code class="docutils literal notranslate"><span class="pre">band</span></code> attribute in files), so processing a subset
+gives the same values as processing all bands and selecting afterwards: TOA
+reflectance and <code class="docutils literal notranslate"><span class="pre">metadata/srf</span></code> look F0 and the SRFs up by it. The selection is
+recorded in the processing record. <code class="docutils literal notranslate"><span class="pre">metadata/corrections</span></code> stays complete; in a
+subset its full-band variables use the dimension <code class="docutils literal notranslate"><span class="pre">bands_full</span></code>. Atmospheric
+correction on subsets works for the in-process methods; the external tools have
+not been tried on them.</p>
+</section>
+<section id="masks">
+<h2>Masks<a class="headerlink" href="#masks" title="Link to this heading">#</a></h2>
+<p>Products are written unmasked. Land, cloud and custom masks are bits of one
+<code class="docutils literal notranslate"><span class="pre">pixel_flags</span></code> variable with CF <code class="docutils literal notranslate"><span class="pre">flag_masks</span></code> and <code class="docutils literal notranslate"><span class="pre">flag_meanings</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">flagged</span> <span class="o">=</span> <span class="n">l1d</span><span class="o">.</span><span class="n">with_masks</span><span class="p">(</span><span class="n">land</span><span class="o">=</span><span class="n">land</span><span class="p">,</span> <span class="n">cloud</span><span class="o">=</span><span class="n">cloud</span><span class="p">,</span>
+                         <span class="n">descriptions</span><span class="o">=</span><span class="p">{</span><span class="s2">"cloud"</span><span class="p">:</span> <span class="s2">"my cloud mask v2"</span><span class="p">})</span>
+<span class="n">flagged</span><span class="o">.</span><span class="n">flags</span><span class="p">[</span><span class="s2">"cloud"</span><span class="p">]</span>                     <span class="c1"># boolean DataArray</span>
+<span class="n">l2a</span> <span class="o">=</span> <span class="n">flagged</span><span class="o">.</span><span class="n">correct_atmosphere</span><span class="p">(</span><span class="s2">"dps"</span><span class="p">,</span> <span class="n">masked</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>   <span class="c1"># NaN input where flagged</span>
+</pre></div>
+</div>
+</section>
+<section id="processing-record">
+<h2>Processing record<a class="headerlink" href="#processing-record" title="Link to this heading">#</a></h2>
+<p>Every step adds a <code class="docutils literal notranslate"><span class="pre">metadata/processing/&lt;step&gt;</span></code> group: software version and
+git commit, input file, parameters, and for calibration the coefficient
+files with their checksums, for atmospheric correction the tool version and
+its full settings (credentials removed). The groups are kept when a product
+is read and written again, so a file records its whole lineage.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">l2a</span><span class="o">.</span><span class="n">provenance</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">step</span><span class="p">[</span><span class="s2">"step"</span><span class="p">],</span> <span class="n">step</span><span class="p">[</span><span class="s2">"date_utc"</span><span class="p">],</span> <span class="n">step</span><span class="p">[</span><span class="s2">"software_version"</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="older-files">
+<h2>Older files<a class="headerlink" href="#older-files" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">hypso.open</span></code> also reads files written before format 2 (<code class="docutils literal notranslate"><span class="pre">/products</span></code> and
+<code class="docutils literal notranslate"><span class="pre">/geometry</span></code> groups) and ground-station L1A files. Writing them again
+converts them; <code class="docutils literal notranslate"><span class="pre">hypso.io.product.convert_product(path)</span></code> does that and gives
+the file its current name.</p>
+</section>
+<section id="esa-snap">
+<h2>ESA SNAP<a class="headerlink" href="#esa-snap" title="Link to this heading">#</a></h2>
+<p>Files open in SNAP with File &gt; Open Product. Bands appear under their names
+with their wavelengths, so the spectrum view works; masks in <code class="docutils literal notranslate"><span class="pre">pixel_flags</span></code>
+show in the Mask Manager; products from L1C on are geocoded through
+<code class="docutils literal notranslate"><span class="pre">latitude</span></code> and <code class="docutils literal notranslate"><span class="pre">longitude</span></code>, and regridded products as map-projected
+rasters.</p>
+</section>
+<section id="reading-l2-files-without-the-package">
+<h2>Reading L2 files without the package<a class="headerlink" href="#reading-l2-files-without-the-package" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">demo/hypso_l2_reader.py</span></code> is a standalone script (numpy and xarray only,
+no <code class="docutils literal notranslate"><span class="pre">hypso</span></code> import) for users of the L2 files. It opens one method’s
+L2A.RRS (or RHOS), L2B.BGC and L2B.IOP files of a capture directory as one
+<code class="docutils literal notranslate"><span class="pre">xarray.Dataset</span></code>, with the geometry and flags once and each per-band
+quantity stacked into a spectral variable (<code class="docutils literal notranslate"><span class="pre">Rrs</span></code> on <code class="docutils literal notranslate"><span class="pre">wavelength</span></code>,
+<code class="docutils literal notranslate"><span class="pre">aph</span></code> … <code class="docutils literal notranslate"><span class="pre">bp</span></code> on <code class="docutils literal notranslate"><span class="pre">wavelength_iop</span></code>, <code class="docutils literal notranslate"><span class="pre">aod</span></code> on <code class="docutils literal notranslate"><span class="pre">wavelength_aod</span></code>):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hypso_l2_reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">open_l2</span><span class="p">,</span> <span class="n">flag_mask</span>
+<span class="n">ds</span> <span class="o">=</span> <span class="n">open_l2</span><span class="p">(</span><span class="s2">"aeronetvenice_2025-03-04T10-38-05Z"</span><span class="p">)</span>      <span class="c1"># method= if there are several</span>
+<span class="n">ds</span><span class="p">[</span><span class="s2">"chlor_a_oci"</span><span class="p">]</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="o">~</span><span class="n">flag_mask</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="s2">"land"</span><span class="p">,</span> <span class="s2">"cloud"</span><span class="p">))</span>
+<span class="n">ds</span><span class="p">[</span><span class="s2">"Rrs"</span><span class="p">]</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">lines</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">samples</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>                   <span class="c1"># one spectrum</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">aux=True</span></code> adds the L2A.AUX file, <code class="docutils literal notranslate"><span class="pre">lazy=True</span></code> reads with dask.
+<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">hypso_l2_reader.py</span> <span class="pre">DIR</span></code> lists the contents and <code class="docutils literal notranslate"><span class="pre">--merge</span> <span class="pre">out.nc</span></code>
+writes them to one netCDF file.</p>
+</section>
+<section id="l2b-products">
+<h2>L2B products<a class="headerlink" href="#l2b-products" title="Link to this heading">#</a></h2>
+<p>An L2B product holds geophysical products derived from one L2A product, one
+group per file. It has no band cube: every product is a 2D variable with its
+own units, and per-wavelength quantities are separate variables (<code class="docutils literal notranslate"><span class="pre">aph_443</span></code>,
+<code class="docutils literal notranslate"><span class="pre">bbp_443</span></code>), as in NASA’s OC_IOP files. It keeps the L2A’s geometry,
+<code class="docutils literal notranslate"><span class="pre">pixel_flags</span></code>, grid and metadata, so <code class="docutils literal notranslate"><span class="pre">regrid</span></code>, <code class="docutils literal notranslate"><span class="pre">window</span></code> (statistics per
+variable over a <code class="docutils literal notranslate"><span class="pre">products</span></code> dimension), <code class="docutils literal notranslate"><span class="pre">to_satpy</span></code> and the <code class="docutils literal notranslate"><span class="pre">hypso_l2b</span></code>
+Satpy reader work as for the other levels; <code class="docutils literal notranslate"><span class="pre">product.cube</span></code> and band methods
+do not apply. <code class="docutils literal notranslate"><span class="pre">hypso.processing.make_l2b</span></code> builds one from an L2A and the
+derived variables. The AC tools’ own products
+(Polymer’s <code class="docutils literal notranslate"><span class="pre">chla</span></code>, ACOLITE’s <code class="docutils literal notranslate"><span class="pre">chl_*</span></code>, OC-SMART’s <code class="docutils literal notranslate"><span class="pre">chlor_a_*</span></code>, …) are
+L2B products: <code class="docutils literal notranslate"><span class="pre">l2a.tool_products()</span></code>, written by <code class="docutils literal notranslate"><span class="pre">l2a.write()</span></code> as
+<code class="docutils literal notranslate"><span class="pre">L2B.&lt;GROUP&gt;.&lt;tool&gt;</span></code> files (<a class="reference internal" href="atmospheric_correction.html"><span class="doc">Atmospheric correction</span></a>). The package’s
+own algorithms run on an L2A, mostly on <code class="docutils literal notranslate"><span class="pre">Rrs</span></code> (an <code class="docutils literal notranslate"><span class="pre">L2A.RRS</span></code> product):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">chl</span> <span class="o">=</span> <span class="n">l2a</span><span class="o">.</span><span class="n">derive</span><span class="p">(</span><span class="s2">"BGC"</span><span class="p">)</span>                 <span class="c1"># ...L2B.BGC.oci.nc: chlor_a, chl_oc4, chl_ci</span>
+<span class="n">tsm</span> <span class="o">=</span> <span class="n">l2a</span><span class="o">.</span><span class="n">derive</span><span class="p">(</span><span class="s2">"BGC"</span><span class="p">,</span> <span class="s2">"nechad2010"</span><span class="p">)</span>   <span class="c1"># ...L2B.BGC.nechad2010.nc: spm_nechad2010_665</span>
+<span class="n">ndci</span> <span class="o">=</span> <span class="n">l2a</span><span class="o">.</span><span class="n">derive</span><span class="p">(</span><span class="s2">"BGC"</span><span class="p">,</span> <span class="s2">"ndci"</span><span class="p">)</span>        <span class="c1"># red-edge, turbid/eutrophic waters; also from rhos</span>
+<span class="n">iop</span> <span class="o">=</span> <span class="n">l2a</span><span class="o">.</span><span class="n">derive</span><span class="p">(</span><span class="s2">"IOP"</span><span class="p">)</span>                 <span class="c1"># ...L2B.IOP.qaa.nc: a_, bbp_, Kd_&lt;nm&gt; at 443 ... 665 nm</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Group</p></th>
+<th class="head"><p>Algorithm</p></th>
+<th class="head"><p>Products and reference</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>BGC</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">oci</span></code>
+(default)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">chlor_a</span></code>: NASA’s blend of the colour index (Hu et al. 2012,
+coefficients 2019) below 0.25 mg m-3 and OC4 above 0.35;
+also <code class="docutils literal notranslate"><span class="pre">chl_oc4</span></code>, <code class="docutils literal notranslate"><span class="pre">chl_ci</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>BGC</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">oc4</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">chl_oc4</span></code>: OC4 band ratio, OLCI coefficients (O’Reilly and
+Werdell 2019)</p></td>
+</tr>
+<tr class="row-even"><td><p>BGC</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ci</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">chl_ci</span></code>: colour index only</p></td>
+</tr>
+<tr class="row-odd"><td><p>BGC</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ndci</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">chl_ndci</span></code>, <code class="docutils literal notranslate"><span class="pre">ndci</span></code>: Mishra and Mishra 2012 (turbid and
+eutrophic waters only; no validity mask)</p></td>
+</tr>
+<tr class="row-even"><td><p>BGC</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">nechad2010</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">spm_nechad2010_665</span></code> (g m-3): Nechad et al. 2010 at 665 nm,
+NaN where rhow &gt;= 0.5 C</p></td>
+</tr>
+<tr class="row-odd"><td><p>IOP</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">qaa</span></code>
+(default)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">a_&lt;nm&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">bbp_&lt;nm&gt;</span></code> (m-1) at 443, 490, 560, 665 nm: Lee’s QAA
+v6, v5 where Rrs665 &lt; 0.0015, as implemented in ACOLITE;
+<code class="docutils literal notranslate"><span class="pre">Kd_&lt;nm&gt;</span></code> (m-1) from a and bbp, Lee et al. 2005 (30 degree sun)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Rrs at each algorithm’s wavelength is interpolated between the two nearest
+bands. Coefficients follow the tables in ACOLITE (<code class="docutils literal notranslate"><span class="pre">data/Shared/algorithms</span></code>)
+and the cited papers. QAA does not yet split absorption into phytoplankton
+and CDOM/detritus. Negative Rrs (e.g. in the red over clear water) gives
+negative TSM, absorption and Kd; there is no validity flag for it yet.</p>
+</section>
+<section id="ac-tool-intermediates-l2a-aux">
+<h2>AC tool intermediates (L2A.AUX)<a class="headerlink" href="#ac-tool-intermediates-l2a-aux" title="Link to this heading">#</a></h2>
+<p>Some AC tools write more per-band quantities than the reflectance: OC-SMART
+writes <code class="docutils literal notranslate"><span class="pre">Lt</span></code>, <code class="docutils literal notranslate"><span class="pre">Lr</span></code>, <code class="docutils literal notranslate"><span class="pre">Lrc</span></code>, <code class="docutils literal notranslate"><span class="pre">Lwp</span></code> (its whitecap radiance, not
+water-leaving radiance), <code class="docutils literal notranslate"><span class="pre">tg_sol</span></code> and <code class="docutils literal notranslate"><span class="pre">tg_sen</span></code> (its <code class="docutils literal notranslate"><span class="pre">l2_prod</span></code>) for every
+band it returns. They are kept, but not in the L2A:
+<code class="docutils literal notranslate"><span class="pre">l2a.intermediates()</span></code> is an L2A product with <code class="docutils literal notranslate"><span class="pre">l2a_quantity</span></code> <code class="docutils literal notranslate"><span class="pre">AUX</span></code> and no
+cube, one 2D variable per quantity and band (<code class="docutils literal notranslate"><span class="pre">Lt_434</span></code>, <code class="docutils literal notranslate"><span class="pre">tg_sol_434</span></code>,
+attributes <code class="docutils literal notranslate"><span class="pre">wavelength</span></code> and <code class="docutils literal notranslate"><span class="pre">source_variable</span></code>), with the L2A’s geometry
+and flags, and <code class="docutils literal notranslate"><span class="pre">l2a.write()</span></code> writes it next to the L2A:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>HYPSO2_HSI.20250528T101551.mjosa.L2A.RRS.ocsmart.nc     Rrs, aod_&lt;nm&gt;
+HYPSO2_HSI.20250528T101551.mjosa.L2B.BGC.ocsmart.nc     chlor_a_oci, chlor_a_yoc, tsm_yoc
+HYPSO2_HSI.20250528T101551.mjosa.L2B.IOP.ocsmart.nc     aph_, adg_, bbp_, apg_, bp_&lt;nm&gt; (m-1)
+HYPSO2_HSI.20250528T101551.mjosa.L2A.AUX.ocsmart.nc     Lt_434 ... tg_sen_718 (6 x 83)
+</pre></div>
+</div>
+<p>OC-SMART’s per-band geophysical products are not in AUX: the IOPs go to
+L2B.IOP and the aerosol optical depth stays in the L2A, named as NASA’s
+OC IOP products (its user guide, 3.6.1): <code class="docutils literal notranslate"><span class="pre">aph</span></code> phytoplankton absorption,
+<code class="docutils literal notranslate"><span class="pre">adg</span></code> detritus + CDOM absorption, <code class="docutils literal notranslate"><span class="pre">bbp</span></code> particulate backscattering,
+<code class="docutils literal notranslate"><span class="pre">apg</span></code> (its <code class="docutils literal notranslate"><span class="pre">at</span></code>) particulate + CDOM absorption without water, <code class="docutils literal notranslate"><span class="pre">bp</span></code> (its
+<code class="docutils literal notranslate"><span class="pre">bt</span></code>) particulate scattering, <code class="docutils literal notranslate"><span class="pre">aod</span></code> (its <code class="docutils literal notranslate"><span class="pre">AOD</span></code>) aerosol optical depth;
+<code class="docutils literal notranslate"><span class="pre">source_variable</span></code> keeps OC-SMART’s name. The default <code class="docutils literal notranslate"><span class="pre">l2_prod</span></code>
+(<code class="docutils literal notranslate"><span class="pre">hypso.processing.atmospheric.OCSMART_L2_PROD</span></code>) requests all of them and
+<code class="docutils literal notranslate"><span class="pre">tsm</span></code>; set <code class="docutils literal notranslate"><span class="pre">l2_prod</span></code> in the AC tool configuration for fewer (keep <code class="docutils literal notranslate"><span class="pre">rrs</span></code>).</p>
+<p>For HYPSO, OC-SMART’s input is <code class="docutils literal notranslate"><span class="pre">rhot</span> <span class="pre">cos(solar</span> <span class="pre">zenith)</span> <span class="pre">/</span> <span class="pre">pi</span></code>, the radiance
+divided by the solar irradiance F0, so its <code class="docutils literal notranslate"><span class="pre">Lt</span></code>, <code class="docutils literal notranslate"><span class="pre">Lr</span></code> and <code class="docutils literal notranslate"><span class="pre">Lrc</span></code> are in
+sr-1 (<code class="docutils literal notranslate"><span class="pre">Lt</span></code> equals that input); <code class="docutils literal notranslate"><span class="pre">tg_*</span></code> are transmittances. Together the
+three files hold every variable of the tool’s output (geometry as the
+product’s own). <code class="docutils literal notranslate"><span class="pre">write(intermediates=False)</span></code> skips the AUX file, and
+<code class="docutils literal notranslate"><span class="pre">regrid</span></code> drops the intermediates (write the L2A first). The <code class="docutils literal notranslate"><span class="pre">hypso_l2a</span></code>
+Satpy reader reads an AUX file’s variables like an L2B file’s. Polymer and
+ACOLITE return no intermediates (ACOLITE L2R’s <code class="docutils literal notranslate"><span class="pre">rhot</span></code> is its copy of the
+input).</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="quickstart.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Quick start</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="calibration.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Calibration coefficients</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#levels">Levels</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#file-names">File names</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-in-a-file">What is in a file</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#band-subsets">Band subsets</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#masks">Masks</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#processing-record">Processing record</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#older-files">Older files</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#esa-snap">ESA SNAP</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-l2-files-without-the-package">Reading L2 files without the package</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#l2b-products">L2B products</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ac-tool-intermediates-l2a-aux">AC tool intermediates (L2A.AUX)</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/products.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright Norwegian University of Science and Technology (NTNU).
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
