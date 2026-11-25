@@ -406,6 +406,20 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-11-25 (×108): merge of origin/main for the pull request**. main had two commits the refactor lacked
+  (2026-05-20): "Bump version to 26.5.1" (static versions in the pyproject.toml files; MANIFEST.in excludes
+  for the two old smile files at data/ root) and "Rename npz_file_smile for spectral calibration" (HYPSO-2's
+  default "moved" smile -> h2_spectral_calibration_matrix_smoothed.npz). Resolved to the refactor's side: versions
+  come from git tags (setuptools_scm), the smile files moved to data/smile and data/reference, and **V2 keeps
+  smile_correction_matrix_HYPSO-2_full_v2.npz** (user decision 2026-11-25: "it should stay as-is"; the smoothed
+  matrix stays in reference/). The default release V3.1 uses its own V3 smile, so default output is unaffected.
+
+- **2026-11-25 (×107): overviews coloured by satellite; region groups**. `plot_overview(color_by=...)`: "capture"
+  (one colour and legend entry each), "satellite" (HYPSO-1 orange, HYPSO-2 blue, counts in the legend, thinner
+  lines) or "auto" (capture up to 8 footprints). make_maps `--group NAME=PREFIX[,PREFIX...]` (e.g.
+  `norway=trondheim,frohavet,...`); a group spanning more than 30 degrees gets its shapefile but no map (one UTM
+  map of several continents). test_maps: 9 passed.
+
 - **2026-11-09 (×106): footprints, shapefiles, RGB images and maps** (TODO 4u). New `hypso.maps`:
   `footprint()` (swath outline from the product's own lat/lon, a vertex every 10 pixels; `mask=` or `"data"` for
   the outline of selected pixels, by 8 x 8 blocks; 0-360 longitudes across the antimeridian),

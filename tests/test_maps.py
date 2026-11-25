@@ -144,6 +144,12 @@ def test_overview(l1d, mpl):
     moved = shapely.affinity.translate(polygon, xoff=0.3)
     ax = maps.plot_overview([l1d, moved], labels=["a", "b"], coastlines=False, title="two")
     assert [t.get_text() for t in ax.get_legend().get_texts()] == ["a", "b"]
+    # many footprints: one colour and legend entry per satellite
+    ax = maps.plot_overview([l1d] * 3 + [moved] * 7, coastlines=False, water=False)
+    texts = [t.get_text() for t in ax.get_legend().get_texts()]
+    assert texts == ["HYPSO-2 (3 captures)", "other (7 captures)"]
+    with pytest.raises(ValueError, match="color_by"):
+        maps.plot_overview([l1d], color_by="target")
 
 
 MACHI_FILE = Path("/home/camerop/HYPSO_DATA_REFACTOR/erie_2025-08-14T16-34-20Z/"

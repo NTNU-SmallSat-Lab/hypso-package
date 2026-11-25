@@ -577,12 +577,13 @@ def plot_map(source, variable: str = None, wavelength: float = None, ax=None, re
 
 
 LAND_COLOR, WATER_COLOR = "#e3e3e3", "#c6dbef"
+_SATELLITE_COLOURS = {"HYPSO-1": "#d8552b", "HYPSO-2": "#2a78b5"}
 _OVERVIEW_COLOURS = ("#2a78b5", "#d8552b", "#3a9a5b", "#8a5cc2", "#c79a14", "#1d9fa6", "#c2477f", "#6b6b6b")
 
 
 def plot_overview(sources, ax=None, labels=None, margin: float = 0.1, coastlines: bool = True,
                   graticule: bool = True, scale_bar: bool = True, north_arrow: bool = True, title: str = None,
-                  crs=None, water: bool = True, fill: bool = False):
+                  crs=None, water: bool = True, fill: bool = False, color_by: str = "auto"):
     """Plot the footprints of several products on one map.
 
     Parameters
@@ -606,6 +607,11 @@ def plot_overview(sources, ax=None, labels=None, margin: float = 0.1, coastlines
     fill : bool, default False
         Tint the inside of each footprint in its colour (outlines only by
         default).
+    color_by : {"auto", "capture", "satellite"}, default "auto"
+        One colour and legend entry per footprint ("capture"), or per
+        satellite with the number of captures in the legend ("satellite",
+        thinner lines, for many footprints); "auto" is "capture" up to 8
+        footprints and "satellite" beyond. ``labels`` applies to "capture".
 
     Returns
     -------
@@ -617,7 +623,7 @@ def plot_overview(sources, ax=None, labels=None, margin: float = 0.1, coastlines
     for k, source in enumerate(sources):
         if hasattr(source, "geom_type"):
             polygons.append(source)
-            records.append({"target": "", "start_utc": "", "name": f"footprint {k + 1}"})
+            records.append({"target": "", "start_utc": "", "satellite": "", "name": f"footprint {k + 1}"})
             continue
         product = _product(source)
         polygons.append(footprint(product))
@@ -626,9 +632,28 @@ def plot_overview(sources, ax=None, labels=None, margin: float = 0.1, coastlines
     names = [r.get("name") or (f"{r['target']}  " if several_targets else "")
              + r["start_utc"][:16].replace("T", " ") + " UTC" for r in records]
     labels = labels or names
-    if len(polygons) > len(_OVERVIEW_COLOURS):
-        warnings.warn(f"{len(polygons)} footprints and {len(_OVERVIEW_COLOURS)} colours: colours repeat",
-                      UserWarning, stacklevel=2)
+    if color_by == "auto":
+        color_by = "capture" if len(polygons) <= len(_OVERVIEW_COLOURS) else "satellite"
+    if color_by == "satellite":
+        satellites = sorted({r.get("satellite") or "other" for r in records})
+        counts = {sat: sum((r.get("satellite") or "other") == sat for r in records) for sat in satellites}
+        colours = [_SATELLITE_COLOURS.get(r.get("satellite") or "other",
+                                          _OVERVIEW_COLOURS[satellites.index(r.get("satellite") or "other")
+                                                            % len(_OVERVIEW_COLOURS)]) for r in records]
+        first = {}
+        for k, r in enumerate(records):
+            first.setdefault(r.get("satellite") or "other", k)
+        labels = [f"{sat} ({counts[sat]} captures)" if first[sat] == k else None
+                  for k, sat in enumerate(r.get("satellite") or "other" for r in records)]
+        width = 1.0
+    elif color_by == "capture":
+        if len(polygons) > len(_OVERVIEW_COLOURS):
+            warnings.warn(f"{len(polygons)} footprints and {len(_OVERVIEW_COLOURS)} colours: colours repeat",
+                          UserWarning, stacklevel=2)
+        colours = [_OVERVIEW_COLOURS[k % len(_OVERVIEW_COLOURS)] for k in range(len(polygons))]
+        width = 1.8
+    else:
+        raise ValueError(f"color_by must be 'auto', 'capture' or 'satellite', not {color_by!r}")
     bounds = np.array([p.bounds for p in polygons])
     centre_lon = (bounds[:, 0].min() + bounds[:, 2].max()) / 2
     centre_lat = (bounds[:, 1].min() + bounds[:, 3].max()) / 2
@@ -638,15 +663,15 @@ def plot_overview(sources, ax=None, labels=None, margin: float = 0.1, coastlines
         _, ax = plt.subplots(figsize=(8, 8))
     ax.set_facecolor(LAND_COLOR if water else "white")
     xs, ys = [], []
-    for k, (polygon, label) in enumerate(zip(polygons, labels)):
-        colour = _OVERVIEW_COLOURS[k % len(_OVERVIEW_COLOURS)]
+    for polygon, label, colour in zip(polygons, labels, colours):
         for i, part in enumerate(getattr(polygon, "geoms", [polygon])):
             if part.geom_type != "Polygon":
                 continue
             px, py = to_map.transform(*np.asarray(part.exterior.coords).T)
             if fill:
                 ax.fill(px, py, facecolor=colour, alpha=0.12, edgecolor="none")
-            ax.plot(px, py, color=colour, lw=1.8, label=label if i == 0 else None, zorder=3)
+            ax.plot(px, py, color=colour, lw=width, alpha=0.9 if color_by == "satellite" else 1.0,
+                    label=label if i == 0 else None, zorder=3)
             xs.extend(px)
             ys.extend(py)
     xs, ys = np.asarray(xs), np.asarray(ys)

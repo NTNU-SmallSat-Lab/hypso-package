@@ -19,8 +19,8 @@ and with ``--overview DIR``, per target and for all captures together::
 
     DIR/<target>_footprints.shp, DIR/<target>_overview.png
     DIR/all_footprints.shp,      DIR/all_overview.png
-    DIR/<name>_footprints.shp,   DIR/<name>_overview.png   for each --group NAME=PREFIX
-                                                         (targets starting with PREFIX)
+    DIR/<name>_footprints.shp,   DIR/<name>_overview.png   for each --group NAME=PREFIX[,PREFIX...]
+                                                         (targets starting with any PREFIX)
 
 Example::
 
@@ -133,8 +133,9 @@ def main(argv=None):
     parser.add_argument("captures", nargs="+", help="capture folders (from process_capture.py)")
     parser.add_argument("--overview", metavar="DIR", default=None,
                         help="also write footprint shapefiles and overview maps per target and for all")
-    parser.add_argument("--group", action="append", default=[], metavar="NAME=PREFIX",
-                        help="with --overview: also one overview of all targets starting with PREFIX (repeatable)")
+    parser.add_argument("--group", action="append", default=[], metavar="NAME=PREFIX[,PREFIX...]",
+                        help="with --overview: also one overview of all targets starting with any of the "
+                             "PREFIXes, e.g. norway=trondheim,frohavet (repeatable)")
     parser.add_argument("--wavelength", type=float, default=560.0, help="band of the L2A maps (nm, default 560)")
     parser.add_argument("--dpi", type=int, default=150)
     parser.add_argument("--skip-existing", action="store_true", help="keep outputs that already exist")
@@ -158,15 +159,25 @@ def main(argv=None):
         if len(groups) > 1:
             groups["all"] = [p for products in by_target.values() for p in products]
         for spec in args.group:
-            name, _, prefix = spec.partition("=")
-            members = [p for target, products in by_target.items() if target.startswith(prefix or name)
+            name, _, prefixes = spec.partition("=")
+            prefixes = tuple(x.strip() for x in (prefixes or name).split(",") if x.strip())
+            members = [p for target, products in by_target.items() if target.startswith(prefixes)
                        for p in products]
             if members:
                 groups[name] = members
             else:
-                logger.warning("--group %s: no captures with a target starting with %r", name, prefix or name)
+                logger.warning("--group %s: no captures with a target starting with %s", name, ", ".join(prefixes))
         for name, products in groups.items():
-            maps.write_footprints(products, out / f"{name}_footprints.shp")
+            shp = maps.write_footprints(products, out / f"{name}_footprints.shp")
+            logger.info("  wrote %s (%d footprints)", shp.name, len(products))
+            lon = [float(p.geometry["longitude"].mean()) for p in products]
+            lat = [float(p.geometry["latitude"].mean()) for p in products]
+            if max(lon) - min(lon) > 30 or max(lat) - min(lat) > 30:
+                # one UTM map of several continents is useless: shapefile only
+                logger.info("  %s spans %.0f x %.0f degrees: no overview map", name,
+                            max(lon) - min(lon), max(lat) - min(lat))
+                (out / f"{name}_overview.png").unlink(missing_ok=True)
+                continue
             fig, ax = plt.subplots(figsize=(8, 8))
             maps.plot_overview(products, ax=ax, title=f"{name}: {len(products)} HYPSO captures")
             save(fig, out / f"{name}_overview.png", args.dpi)
