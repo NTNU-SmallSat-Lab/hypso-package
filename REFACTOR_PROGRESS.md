@@ -323,6 +323,19 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    - Ask the user before building: which variables and stretch on the maps, one map per capture or batch
      overviews, which footprint (whole swath or valid pixels), and the attribute list. First use: the 6 HYPSO-1
      and 10 HYPSO-2 captures processed 2026-11-08 into `~/HYPSO_DATA_REFACTOR`.
+4v. **BUG: `demo/make_maps.py --overview` runs out of memory on large batches** (user, 2026-11-26: "record the
+   footprint issue as a bug fix needed"). `run_capture` returns each capture's L1D Product (3 RGB bands plus the
+   full geometry and metadata, tens of MB each) and `main` keeps every one in `by_target` until the end, only to
+   draw the overviews and write the footprint shapefiles. On 2026-11-25 the run over 140 capture folders in
+   `~/HYPSO_DATA_REFACTOR` was killed (exit 137, out of memory) at about folder 70 (oslofjord_2025-08-20); the
+   per-capture outputs it made are fine, but the region overviews and shapefiles (norway, oslofjord, korea, all)
+   were never written. Fix: keep only what the overviews need, the footprint polygon and its attributes
+   (`maps.footprint()` + `maps.footprint_attributes()`, a few kB per capture), and free the product after each
+   capture; let `maps.write_footprints()` and `maps.plot_overview()` take precomputed (polygon, attributes)
+   pairs as well as products/paths (`plot_overview` already takes bare polygons, but then loses the satellite and
+   time needed for `color_by="satellite"` and the legend). Test: a batch of many synthetic captures whose peak
+   memory does not grow with their number. Then rerun the region overviews for ~/HYPSO_DATA_REFACTOR (the
+   one-off norway_overview.png made on 2026-11-09 covers only the 5 HYPSO-1 captures).
 4s. ~~**Angle valid ranges**~~ - done (×104). `sensor_azimuth` (and the other azimuths) carry `valid_min=-180, valid_max=180`, but
    the values are 0-360 (Erie 2025-07-05: sensor azimuth 284-285 deg), so CF readers that apply the range
    (netCDF4 auto-mask, xarray with masking, Panoply, SNAP) show every pixel as missing. Production has the same
