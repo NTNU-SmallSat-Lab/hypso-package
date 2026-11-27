@@ -419,6 +419,16 @@ TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
 
+- **2026-11-27 (×111): AC version, commit and uncommitted changes in the file's global attributes**
+  (user: "when ac is processing I want to add AC version and git commit if available to file provenance").
+  The tool runs already recorded version and commit in `metadata/processing/l2a_<method>`; now also:
+  `ac_git_dirty` (tracked files changed in the tool's checkout: production POLYMER and hypso-package have had
+  unversioned local fixes), POLYMER's eoread checkout (`ac_eoread_git_commit/_dirty`, it holds the HYPSO
+  reader), MACHI and DPS with the hypso package's version, commit and dirty flag (DPS recorded the literal
+  "hypso-package" and no commit), and `ac_tool`/`ac_version`/`ac_git_commit`/`ac_git_dirty` (+ components) as
+  global attributes of the L2A, which its L2B and L2A.AUX files inherit (`provenance.ac_global_attrs`).
+  docs/atmospheric_correction.rst table. tests/test_ac_provenance.py.
+
 - **2026-11-27 (×110): release `v26.11.0`**. The refactor (PR #100, merged 2026-11-26) plus ×109 on `main`,
   tagged `v26.11.0`: the release condition in item 5 was "once the pipeline uses the refactor", and
   hypso-calval (the matchup pipeline on this package) reproduced hypso-processing-pipeline's V3.1 AERONET-OC
