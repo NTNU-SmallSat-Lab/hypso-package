@@ -25,7 +25,7 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
 - **Docs**: `pip install -r docs/requirements.txt; sphinx-build -W --keep-going -b html docs docs/_build/html`;
   CI (`.github/workflows/docs.yaml`) builds on every push and publishes `main` to gh-pages.
 
-## TODO (one list, reviewed 2026-10-27; details in the referenced entries)
+## TODO (one list, reviewed 2026-10-27, done items struck 2026-11-27; details in the referenced entries)
 
 1. ~~**Docstrings for the rest of the code**~~ - done (×82). Check the published site after the first push to
    `main` (only `main` publishes).
@@ -43,7 +43,7 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
 4b. ~~**NetCDF file sizes**~~ - done (×71): bands BitRound 14 bits by default, L1D 218 -> about 135 MB.
 4c. ~~**Band subsets**~~ - done (×79).
 4d. ~~**Compute in float32**~~ - done (×75).
-4e. **RGB camera co-registration** (done ×84/×85; ×72; approach agreed with the user 2026-10-27). The camera image has no
+4e. ~~**RGB camera co-registration**~~ - done (×84/×85; ×72; approach agreed with the user 2026-10-27). The camera image has no
    georeferencing, and the ground processing does not register it. Plan: regrid the HSI L1D (an RGB rendering,
    3 bands) onto a UTM grid at about 100-200 m (a true map plane, which removes the pushbroom geometry); SIFT
    keypoints (scikit-image, already a dependency; ORB if accurate enough) on that map and the downsampled
@@ -155,7 +155,7 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
      GLO-30): 2 km relief at 20 deg off-nadir moves a pixel ~700 m. Earth curvature itself is already in
      the ellipsoid intersection; the camera homography (a flat plane) ignores it, ~20-90 m over a footprint.
    - Long-term: refit the mounting and timing over time to catch drift or onboard-software changes.
-4i. **L2B: geophysical products (IOPs, chlorophyll, ...) in their own files** (user, 2026-10-28). Today
+4i. ~~**L2B: geophysical products (IOPs, chlorophyll, ...) in their own files**~~ - done (×87-×90, ×100, ×102; still open: a validity flag for negative input Rrs, QAA's aph/adg split, GIOP) (user, 2026-10-28). Today
    the AC tools' 2D outputs ride inside the L2A file as extra variables (Polymer `chla`, `logfb`, `SPM`;
    ACOLITE `chl_re_mishra`, `SPM_Nechad2010_664`, `ndci`; OC-SMART `chlor_a_oci`, `chlor_a_yoc`, `tsm_yoc`),
    and nothing is derived by the package itself. Wanted: separate files, like NASA's L2 OC / OC_IOP suites.
@@ -195,7 +195,7 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    - Satpy composites (`etc/composites/hypso1.yaml`, `hypso2.yaml`, `hypso2_rgb.yaml`) import
      `satpy.composites.GenericCompositor`, deprecated (moved to `satpy.composites.core`, old path removed
      in Satpy 1.0). Switch when the minimum Satpy version allows, or keep a fallback.
-4m. **Target calibration releases** (done ×92-×94; user, 2026-10-29): "ultimately there should be lab (v1), v2, and v3.1
+4m. ~~**Target calibration releases**~~ - done (×92-×94; user, 2026-10-29): "ultimately there should be lab (v1), v2, and v3.1
    coefficients in the refactored hypso package", both satellites. So:
    - **V1 = the complete lab set** (resolves 4k's question: V1 itself, not a separate `lab` release): lab
      radiometric (already identical), the corrected lab smile (replacing the row-reversed file), lab spectral
@@ -208,7 +208,7 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
      `release: V3` in their provenance; `release="V3"` maps to V3.1 with a deprecation warning that says
      the abs gains are ~3% lower (user decision 2026-10-29), like the old `adjusted`/`original` names. Note it in coefficient_history.rst.
    Order: 4l (V3.1, new default), V1 as the complete lab set, then remove V3.
-4k. **Original lab coefficients as an alternative** (done ×94 as V1; user, 2026-10-28: "Add the original lab coeffs back as
+4k. ~~**Original lab coefficients as an alternative**~~ - done (×94 as V1; user, 2026-10-28: "Add the original lab coeffs back as
    an alternative"). Current state: the lab set is still shipped and selectable for both satellites as
    release V1, `coeff_type="lab"` (the old name `original` still works, with a deprecation warning); HYPSO-2 V1
    = lab radiometric + V2 smile + V1 spectral, HYPSO-1 V1 = lab + V1 smile/destriping/spectral. V2 and V3 have
@@ -224,7 +224,7 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    replace the flipped smile with the lab smile as smile V1, add a `lab` release (lab radiometric, lab smile,
    lab spectral: polynomial or smile row 608 as in `polymer_v1` 2b560445), keep V1 unchanged. Also: the V2
    smile matrix has 1172 rows but is cropped as a 1216-row matrix (~25-30 rows off, < 0.17 nm; 4j).
-4l. **Bring over the V3.1 calibration and SRF modelling** (done ×92; user, 2026-10-29; V3.1 is production's default from
+4l. ~~**Bring over the V3.1 calibration and SRF modelling**~~ - done (×92; user, 2026-10-29; V3.1 is production's default from
    2026-10-29). Source: `~/hypso2_calibration_versions/v3.1/` (files as delivered + README) and
    `~/AC/hypso-package-polymer_v3`, branch `polymer_v3`, commits c390ca27 (V3.1), 11756523 (SRF modelling,
    from aria 368d16d9), af82d75c (`abs31` renamed `v31v2spec`); calibration packages 26.10.1. Read only;
@@ -267,7 +267,7 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    the corrected cube's band wavelengths are the smile's centre row of that window; take V1's spectral
    calibration from the lab smile at the capture's centre row instead of a fixed file (a catalog option such
    as `spectral: {from_smile_centre_row: true}`). Differs from production polymer_v1, which ships row 608.
-4p. **OC-SMART with the refactor** (×95; user, 2026-11-04). Done: fork CameronLP/OC-SMART cloned to
+4p. ~~**OC-SMART with the refactor**~~ - done (×95-×100; the ac_tools.yaml entry exists and 200+ captures ran through it in Nov 2026; still open: V1v2spec untested, the fork's latlon2linepixl typo left as asked) (user, 2026-11-04). Done: fork CameronLP/OC-SMART cloned to
    `../OC-SMART-github`, branch `hypso-refactor` (3677966, pushed): sensors HYPSO1_HSI (placeholder, skipped
    with a warning; no auxdata) and HYPSO2_HSI (the existing HYPSO auxdata, renamed), and the HYPSO reader reads
    the refactor's flat layout. The three LFS auxdata files were copied from the patched v2.6.3 copy (sha256 =
