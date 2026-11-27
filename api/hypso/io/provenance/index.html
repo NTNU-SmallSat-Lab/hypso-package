@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>hypso.io.provenance &#8212; hypso 26.10.0a7-24-g52b69064</title>
+    <title>hypso.io.provenance &#8212; hypso 26.11.0-2-g635d291f</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=791413e8"></script>
+    <script src="../../../../_static/documentation_options.js?v=e94e92b8"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/hypso/io/provenance/index';</script>
@@ -49,7 +49,7 @@
     <link rel="prev" title="hypso.io.product" href="../product/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="26.10.0a7" />
+  <meta name="docsearch:version" content="26.11.0" />
   </head>
   
   
@@ -111,7 +111,7 @@
   
   
   
-    <p class="title logo__title">hypso 26.10.0a7-24-g52b69064</p>
+    <p class="title logo__title">hypso 26.11.0-2-g635d291f</p>
   
 </a></div>
     
@@ -613,22 +613,25 @@ set). Credential-like keys are removed and listed in
 <tr class="row-odd"><td><p><a class="reference internal" href="#hypso.io.provenance.ac_attrs" title="hypso.io.provenance.ac_attrs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ac_attrs</span></code></a>(tool[, version, git_commit, install_path, ...])</p></td>
 <td><p>Provenance attributes for an atmospheric correction tool run.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#hypso.io.provenance.add_step" title="hypso.io.provenance.add_step"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_step</span></code></a>(tree, step, *[, input_file, parameters, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.io.provenance.ac_global_attrs" title="hypso.io.provenance.ac_global_attrs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ac_global_attrs</span></code></a>(ac)</p></td>
+<td><p>The AC provenance attributes that go into a file's global attributes (<code class="xref py py-data docutils literal notranslate"><span class="pre">AC_GLOBAL_ATTRS</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.io.provenance.add_step" title="hypso.io.provenance.add_step"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_step</span></code></a>(tree, step, *[, input_file, parameters, ...])</p></td>
 <td><p>Record a processing step on a product tree, in place.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.io.provenance.attr_value" title="hypso.io.provenance.attr_value"><code class="xref py py-obj docutils literal notranslate"><span class="pre">attr_value</span></code></a>(value)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.io.provenance.attr_value" title="hypso.io.provenance.attr_value"><code class="xref py py-obj docutils literal notranslate"><span class="pre">attr_value</span></code></a>(value)</p></td>
 <td><p>A NetCDF-storable attribute value: bools as &quot;true&quot;/&quot;false&quot;, None as</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#hypso.io.provenance.calibration_attrs" title="hypso.io.provenance.calibration_attrs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calibration_attrs</span></code></a>(package, files)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.io.provenance.calibration_attrs" title="hypso.io.provenance.calibration_attrs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calibration_attrs</span></code></a>(package, files)</p></td>
 <td><p>Provenance attributes for the calibration files used.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.io.provenance.redact" title="hypso.io.provenance.redact"><code class="xref py py-obj docutils literal notranslate"><span class="pre">redact</span></code></a>(settings)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.io.provenance.redact" title="hypso.io.provenance.redact"><code class="xref py py-obj docutils literal notranslate"><span class="pre">redact</span></code></a>(settings)</p></td>
 <td><p>Remove credential-like keys (user names, passwords, tokens, secrets, API keys) from settings.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#hypso.io.provenance.software_attrs" title="hypso.io.provenance.software_attrs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">software_attrs</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.io.provenance.software_attrs" title="hypso.io.provenance.software_attrs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">software_attrs</span></code></a>()</p></td>
 <td><p>hypso-package's name, version and git commit, for a provenance step.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.io.provenance.utc_now" title="hypso.io.provenance.utc_now"><code class="xref py py-obj docutils literal notranslate"><span class="pre">utc_now</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.io.provenance.utc_now" title="hypso.io.provenance.utc_now"><code class="xref py py-obj docutils literal notranslate"><span class="pre">utc_now</span></code></a>()</p></td>
 <td><p>The current UTC time, ISO 8601 to the second with a <code class="docutils literal notranslate"><span class="pre">Z</span></code> suffix.</p></td>
 </tr>
 </tbody>
@@ -639,19 +642,38 @@ set). Credential-like keys are removed and listed in
 <h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">#</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="hypso.io.provenance.ac_attrs">
-<span class="sig-prename descclassname"><span class="pre">hypso.io.provenance.</span></span><span class="sig-name descname"><span class="pre">ac_attrs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">git_commit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">install_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings_effective</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings_user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/hypso/io/provenance.html#ac_attrs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.io.provenance.ac_attrs" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">hypso.io.provenance.</span></span><span class="sig-name descname"><span class="pre">ac_attrs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">git_commit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">install_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings_effective</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings_user</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">git_dirty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">components</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/hypso/io/provenance.html#ac_attrs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.io.provenance.ac_attrs" title="Link to this definition">#</a></dt>
 <dd><p>Provenance attributes for an atmospheric correction tool run.</p>
-<p>Settings are stored as JSON with credential-like keys removed
-(<a class="reference internal" href="#hypso.io.provenance.redact" title="hypso.io.provenance.redact"><code class="xref py py-func docutils literal notranslate"><span class="pre">redact()</span></code></a>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>tool</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>)</p></li>
-<li><p><strong>version</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>)</p></li>
-<li><p><strong>git_commit</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>)</p></li>
-<li><p><strong>settings_effective</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a>)</p></li>
-<li><p><strong>settings_user</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a>)</p></li>
+<li><p><strong>tool</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The tool and how it was installed; the commit is “” when the tool is not a git checkout.</p></li>
+<li><p><strong>version</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The tool and how it was installed; the commit is “” when the tool is not a git checkout.</p></li>
+<li><p><strong>git_commit</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The tool and how it was installed; the commit is “” when the tool is not a git checkout.</p></li>
+<li><p><strong>install_path</strong> – The tool and how it was installed; the commit is “” when the tool is not a git checkout.</p></li>
+<li><p><strong>git_dirty</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em> or </em><em>None</em>) – Uncommitted changes in the tool’s checkout (<code class="docutils literal notranslate"><span class="pre">ac_git_dirty</span></code> “true”/”false”; “unknown” when a
+commit is known but its state is not; “” without a commit).</p></li>
+<li><p><strong>components</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a><em>, </em><em>optional</em>) – Other parts of the tool with their own checkout, <code class="docutils literal notranslate"><span class="pre">{name:</span> <span class="pre">(commit,</span> <span class="pre">dirty)}</span></code>, recorded as
+<code class="docutils literal notranslate"><span class="pre">ac_&lt;name&gt;_git_commit</span></code> / <code class="docutils literal notranslate"><span class="pre">ac_&lt;name&gt;_git_dirty</span></code> (e.g. POLYMER’s <code class="docutils literal notranslate"><span class="pre">eoread</span></code>, which holds the
+HYPSO reader).</p></li>
+<li><p><strong>settings_effective</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a>) – Stored as JSON with credential-like keys removed (<a class="reference internal" href="#hypso.io.provenance.redact" title="hypso.io.provenance.redact"><code class="xref py py-func docutils literal notranslate"><span class="pre">redact()</span></code></a>).</p></li>
+<li><p><strong>settings_user</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a>) – Stored as JSON with credential-like keys removed (<a class="reference internal" href="#hypso.io.provenance.redact" title="hypso.io.provenance.redact"><code class="xref py py-func docutils literal notranslate"><span class="pre">redact()</span></code></a>).</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.io.provenance.ac_global_attrs">
+<span class="sig-prename descclassname"><span class="pre">hypso.io.provenance.</span></span><span class="sig-name descname"><span class="pre">ac_global_attrs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ac</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/hypso/io/provenance.html#ac_global_attrs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.io.provenance.ac_global_attrs" title="Link to this definition">#</a></dt>
+<dd><p>The AC provenance attributes that go into a file’s global attributes (<code class="xref py py-data docutils literal notranslate"><span class="pre">AC_GLOBAL_ATTRS</span></code>
+and the extra components’ version, commit and dirty flags); not settings or paths.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ac</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a></p>
@@ -803,6 +825,7 @@ entries (a correction not applied) are skipped.</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.io.provenance.ac_attrs"><code class="docutils literal notranslate"><span class="pre">ac_attrs()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.io.provenance.ac_global_attrs"><code class="docutils literal notranslate"><span class="pre">ac_global_attrs()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.io.provenance.add_step"><code class="docutils literal notranslate"><span class="pre">add_step()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.io.provenance.attr_value"><code class="docutils literal notranslate"><span class="pre">attr_value()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.io.provenance.calibration_attrs"><code class="docutils literal notranslate"><span class="pre">calibration_attrs()</span></code></a></li>

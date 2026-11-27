@@ -29,7 +29,21 @@ Method          Input        Product                         Runs
 The L2A product keeps the input's geometry, ``pixel_flags`` and metadata. Its
 cube is on the input's bands; bands the method does not return are NaN. The
 method, its version, the installation's git commit and the settings used are
-recorded in ``metadata/processing/l2a_<method>``.
+recorded in ``metadata/processing/l2a_<method>``. The version and commit are
+also global attributes of the L2A file and of the L2B and L2A.AUX files made
+from it, so ``ncdump -h``, Panoply or SNAP show them:
+
+=====================  ==========================================================
+``ac_tool``            ``machi``, ``dps``, ``polymer``, ``acolite_l2w``, ``ocsmart``
+``ac_version``         the tool's version (OC-SMART ``v2.6.3`` or ``git:<branch>``,
+                       ACOLITE's ``config.txt`` version, POLYMER's configured
+                       version; MACHI and DPS: ``hypso <version>``)
+``ac_git_commit``      commit of the tool's git checkout, empty for a release
+                       install; MACHI and DPS: the hypso package's commit
+``ac_git_dirty``       ``true`` when the checkout had uncommitted changes to
+                       tracked files, ``false``, ``unknown``, or empty without a commit
+``ac_eoread_git_*``    POLYMER only: the eoread checkout, which holds the HYPSO reader
+=====================  ==========================================================
 
 Every method produces one of two quantities, named in the file name
 (:doc:`products`): ``Rrs`` (``L2A.RRS.<method>``), remote-sensing reflectance

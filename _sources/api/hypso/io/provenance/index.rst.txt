@@ -34,6 +34,7 @@ Functions
 .. autoapisummary::
 
    hypso.io.provenance.ac_attrs
+   hypso.io.provenance.ac_global_attrs
    hypso.io.provenance.add_step
    hypso.io.provenance.attr_value
    hypso.io.provenance.calibration_attrs
@@ -45,12 +46,29 @@ Functions
 Module Contents
 ---------------
 
-.. py:function:: ac_attrs(tool, version = None, git_commit = None, install_path=None, settings_effective = None, settings_user = None)
+.. py:function:: ac_attrs(tool, version = None, git_commit = None, install_path=None, settings_effective = None, settings_user = None, git_dirty=None, components = None)
 
    Provenance attributes for an atmospheric correction tool run.
 
-   Settings are stored as JSON with credential-like keys removed
-   (:func:`redact`).
+   :param tool: The tool and how it was installed; the commit is "" when the tool is not a git checkout.
+   :param version: The tool and how it was installed; the commit is "" when the tool is not a git checkout.
+   :param git_commit: The tool and how it was installed; the commit is "" when the tool is not a git checkout.
+   :param install_path: The tool and how it was installed; the commit is "" when the tool is not a git checkout.
+   :param git_dirty: Uncommitted changes in the tool's checkout (``ac_git_dirty`` "true"/"false"; "unknown" when a
+                     commit is known but its state is not; "" without a commit).
+   :type git_dirty: bool or None
+   :param components: Other parts of the tool with their own checkout, ``{name: (commit, dirty)}``, recorded as
+                      ``ac_<name>_git_commit`` / ``ac_<name>_git_dirty`` (e.g. POLYMER's ``eoread``, which holds the
+                      HYPSO reader).
+   :type components: dict, optional
+   :param settings_effective: Stored as JSON with credential-like keys removed (:func:`redact`).
+   :param settings_user: Stored as JSON with credential-like keys removed (:func:`redact`).
+
+
+.. py:function:: ac_global_attrs(ac)
+
+   The AC provenance attributes that go into a file's global attributes (:data:`AC_GLOBAL_ATTRS`
+   and the extra components' version, commit and dirty flags); not settings or paths.
 
 
 .. py:function:: add_step(tree, step, *, input_file=None, parameters = None, calibration = None, ac = None)

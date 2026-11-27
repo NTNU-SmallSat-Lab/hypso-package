@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Atmospheric correction &#8212; hypso 26.10.0a7-24-g52b69064</title>
+    <title>Atmospheric correction &#8212; hypso 26.11.0-2-g635d291f</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=791413e8"></script>
+    <script src="_static/documentation_options.js?v=e94e92b8"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'atmospheric_correction';</script>
@@ -49,7 +49,7 @@
     <link rel="prev" title="Coefficient history" href="coefficient_history.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="26.10.0a7" />
+  <meta name="docsearch:version" content="26.11.0" />
   </head>
   
   
@@ -111,7 +111,7 @@
   
   
   
-    <p class="title logo__title">hypso 26.10.0a7-24-g52b69064</p>
+    <p class="title logo__title">hypso 26.11.0-2-g635d291f</p>
   
 </a></div>
     
@@ -572,7 +572,33 @@ default) or <code class="docutils literal notranslate"><span class="pre">rhos</s
 <p>The L2A product keeps the input’s geometry, <code class="docutils literal notranslate"><span class="pre">pixel_flags</span></code> and metadata. Its
 cube is on the input’s bands; bands the method does not return are NaN. The
 method, its version, the installation’s git commit and the settings used are
-recorded in <code class="docutils literal notranslate"><span class="pre">metadata/processing/l2a_&lt;method&gt;</span></code>.</p>
+recorded in <code class="docutils literal notranslate"><span class="pre">metadata/processing/l2a_&lt;method&gt;</span></code>. The version and commit are
+also global attributes of the L2A file and of the L2B and L2A.AUX files made
+from it, so <code class="docutils literal notranslate"><span class="pre">ncdump</span> <span class="pre">-h</span></code>, Panoply or SNAP show them:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ac_tool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">machi</span></code>, <code class="docutils literal notranslate"><span class="pre">dps</span></code>, <code class="docutils literal notranslate"><span class="pre">polymer</span></code>, <code class="docutils literal notranslate"><span class="pre">acolite_l2w</span></code>, <code class="docutils literal notranslate"><span class="pre">ocsmart</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ac_version</span></code></p></td>
+<td><p>the tool’s version (OC-SMART <code class="docutils literal notranslate"><span class="pre">v2.6.3</span></code> or <code class="docutils literal notranslate"><span class="pre">git:&lt;branch&gt;</span></code>,
+ACOLITE’s <code class="docutils literal notranslate"><span class="pre">config.txt</span></code> version, POLYMER’s configured
+version; MACHI and DPS: <code class="docutils literal notranslate"><span class="pre">hypso</span> <span class="pre">&lt;version&gt;</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ac_git_commit</span></code></p></td>
+<td><p>commit of the tool’s git checkout, empty for a release
+install; MACHI and DPS: the hypso package’s commit</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ac_git_dirty</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code> when the checkout had uncommitted changes to
+tracked files, <code class="docutils literal notranslate"><span class="pre">false</span></code>, <code class="docutils literal notranslate"><span class="pre">unknown</span></code>, or empty without a commit</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ac_eoread_git_*</span></code></p></td>
+<td><p>POLYMER only: the eoread checkout, which holds the HYPSO reader</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <p>Every method produces one of two quantities, named in the file name
 (<a class="reference internal" href="products.html"><span class="doc">Products and files</span></a>): <code class="docutils literal notranslate"><span class="pre">Rrs</span></code> (<code class="docutils literal notranslate"><span class="pre">L2A.RRS.&lt;method&gt;</span></code>), remote-sensing reflectance
 in sr-1 (CF standard name
