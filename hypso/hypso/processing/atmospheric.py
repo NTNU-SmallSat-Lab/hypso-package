@@ -82,6 +82,9 @@ def _l2a_tree(tree: xr.DataTree, method: str, variable: str, cube: np.ndarray, p
     out.attrs["processing_level"] = "L2A"
     out.attrs["atmospheric_correction"] = method
     out.attrs["l2a_quantity"] = quantity_token(variable)
+    # the AC tool's version and commit in the global attributes too (also in metadata/processing)
+    from hypso.io.provenance import ac_global_attrs
+    out.attrs.update(ac_global_attrs(ac))
 
     result = tree.copy()
     result.dataset = out
@@ -120,9 +123,10 @@ def _dps(tree, masked, mask_flags, statistic="min", percentile=None):
                   "statistic": statistic, "dark_spectrum": [float(v) for v in dark_spectrum]}
     if percentile is not None:
         parameters["percentile"] = percentile
+    version, commit, dirty = _hypso_identity()
     return _l2a_tree(tree, "dps", "rhos", corrected, parameters,
-                     ac_attrs("dps", version="hypso-package", settings_effective={"statistic": statistic,
-                                                                                  "percentile": percentile}))
+                     ac_attrs("dps", version=f"hypso {version}", git_commit=commit, git_dirty=dirty,
+                              settings_effective={"statistic": statistic, "percentile": percentile}))
 
 
 def _machi(tree, masked, mask_flags, est_min_R=0.05, tol=0.01, approach_rate=1.0, fit_exclude_flags=None,
@@ -175,8 +179,10 @@ def _machi(tree, masked, mask_flags, est_min_R=0.05, tol=0.01, approach_rate=1.0
                   "bands_without_signal": [int(b) for b in np.setdiff1d(np.arange(bands), used)],
                   "iterations": len(objective) - 1,
                   "objective_final": float(objective[-1])}
+    version, commit, dirty = _hypso_identity()
     result = _l2a_tree(tree, "machi", "rhos", corrected, parameters,
-                       ac_attrs("machi", version=MACHI_VERSION, settings_effective=settings))
+                       ac_attrs("machi", version=f"{MACHI_VERSION}, hypso {version}", git_commit=commit,
+                                git_dirty=dirty, settings_effective=settings))
     wavelengths = tree.dataset["radiation_wavelength"].values
     result["metadata/machi"] = xr.DataTree(xr.Dataset(
         {"T": ("bands", np.asarray(T, dtype="f8"), {"long_name": "Atmospheric transmission fitted by MACHI",
@@ -249,13 +255,33 @@ def _tool_variables(path, keep, renames: dict = None, overrides: dict = None, sh
     return out
 
 
-def _git_commit(path) -> str:
+def _git_identity(path) -> tuple:
+    """(commit, dirty) of the git checkout holding ``path``: ("", None) when it is not one (e.g. a release
+    install); dirty is True when tracked files have uncommitted changes, None when git cannot tell."""
+    if not path:
+        return "", None
     try:
         out = subprocess.run(["git", "-C", str(path), "rev-parse", "HEAD"], capture_output=True, text=True,
                              timeout=10)
+        if out.returncode != 0 or not out.stdout.strip():
+            return "", None
+        status = subprocess.run(["git", "-C", str(path), "status", "--porcelain", "--untracked-files=no"],
+                                capture_output=True, text=True, timeout=30)
     except (OSError, subprocess.SubprocessError):
-        return ""
-    return out.stdout.strip() if out.returncode == 0 else ""
+        return "", None
+    dirty = bool(status.stdout.strip()) if status.returncode == 0 else None
+    return out.stdout.strip(), dirty
+
+
+def _git_commit(path) -> str:
+    return _git_identity(path)[0]
+
+
+def _hypso_identity() -> tuple:
+    """(version, commit, dirty) of the hypso package itself, for the methods that run inside it (MACHI, DPS)."""
+    from hypso.versioning import package_info
+    info = package_info("hypso")
+    return info["version"], info["git_commit"] or "", info["git_dirty"]
 
 
 def _stage_input(tree: xr.DataTree, masked: bool, mask_flags, work_dir: Path, add_srfs: bool = True,
@@ -360,7 +386,11 @@ def _polymer(tree, masked, mask_flags, work_dir, config=None, **options):
     # (sr-1) like the other water products (user decision 2026-10-28).
     cube = cube / np.pi
     parameters["converted"] = "Rrs = rho_w / pi"
-    ac = ac_attrs("polymer", version=version, git_commit=_git_commit(cfg.get("polymer_path") or cfg.get("base_path")),
+    commit, dirty = _git_identity(cfg.get("polymer_path") or cfg.get("base_path"))
+    components = {}
+    if cfg.get("eoread_path"):              # eoread holds POLYMER's HYPSO reader
+        components["eoread"] = _git_identity(cfg.get("eoread_path"))
+    ac = ac_attrs("polymer", version=version, git_commit=commit, git_dirty=dirty, components=components,
                   install_path=cfg.get("base_path"), settings_effective=settings,
                   settings_user={**(options.get("settings") or {}), **{k: v for k, v in options.items() if k != "settings"}})
     return _l2a_tree(tree, "polymer", "Rrs", cube, parameters, ac, variables)
@@ -435,7 +465,8 @@ def _acolite(tree, masked, mask_flags, work_dir, config=None, output="l2w", reus
                   "input_level": tree.attrs["processing_level"], "output": output, "output_file": existing[0].name,
                   "bands_returned": n_bands, "reused_output": bool(reuse_output and existing)}
     settings_file = cfg.get("settings_file")
-    ac = ac_attrs("acolite", version=_acolite_version(cfg.get("path")), git_commit=_git_commit(cfg.get("path")),
+    commit, dirty = _git_identity(cfg.get("path"))
+    ac = ac_attrs("acolite", version=_acolite_version(cfg.get("path")), git_commit=commit, git_dirty=dirty,
                   install_path=cfg.get("path"),
                   settings_effective=effective if effective is not None else
                   {"sensor": sensor, "settings_file": Path(settings_file).name if settings_file else "", **settings,
@@ -596,7 +627,8 @@ def _ocsmart(tree, masked, mask_flags, work_dir, config=None, **options):
     parameters = {"masked": masked, "mask_flags": list(mask_flags) if mask_flags else "all" if masked else "",
                   "input_level": "L1D", "bands_returned": n_bands, "output_file": output_file.name}
     settings = {"l2_prod": l2_prod, "solz_limit": solz_limit, "senz_limit": senz_limit}
-    ac = ac_attrs("ocsmart", version=_ocsmart_version(install_dir), git_commit=_git_commit(install_dir),
+    commit, dirty = _git_identity(install_dir)
+    ac = ac_attrs("ocsmart", version=_ocsmart_version(install_dir), git_commit=commit, git_dirty=dirty,
                   install_path=install_dir,
                   settings_effective=settings, settings_user=options)
     return _l2a_tree(tree, "ocsmart", "Rrs", cube, parameters, ac, variables, intermediates=intermediates)

@@ -110,15 +110,49 @@ def calibration_attrs(package: str, files: dict) -> dict:
     return attrs
 
 
+#: AC provenance attributes copied to the L2A file's (and its L2B/AUX files') global attributes, besides
+#: metadata/processing: ac_tool, ac_version, ac_git_commit, ac_git_dirty and any other ac_*_git_commit /
+#: ac_*_git_dirty / ac_*_version component (e.g. POLYMER's eoread reader).
+AC_GLOBAL_ATTRS = ("ac_tool", "ac_version", "ac_git_commit", "ac_git_dirty")
+
+
+def ac_global_attrs(ac: dict) -> dict:
+    """The AC provenance attributes that go into a file's global attributes (:data:`AC_GLOBAL_ATTRS`
+    and the extra components' version, commit and dirty flags); not settings or paths."""
+    if not ac:
+        return {}
+    return {k: v for k, v in ac.items()
+            if k in AC_GLOBAL_ATTRS or (k.startswith("ac_") and k.endswith(("_git_commit", "_git_dirty", "_version")))}
+
+
 def ac_attrs(tool: str, version: str = None, git_commit: str = None, install_path=None,
-             settings_effective: dict = None, settings_user: dict = None) -> dict:
+             settings_effective: dict = None, settings_user: dict = None, git_dirty=None,
+             components: dict = None) -> dict:
     """Provenance attributes for an atmospheric correction tool run.
 
-    Settings are stored as JSON with credential-like keys removed
-    (:func:`redact`).
+    Parameters
+    ----------
+    tool, version, git_commit, install_path
+        The tool and how it was installed; the commit is "" when the tool is not a git checkout.
+    git_dirty : bool or None
+        Uncommitted changes in the tool's checkout (``ac_git_dirty`` "true"/"false"; "unknown" when a
+        commit is known but its state is not; "" without a commit).
+    components : dict, optional
+        Other parts of the tool with their own checkout, ``{name: (commit, dirty)}``, recorded as
+        ``ac_<name>_git_commit`` / ``ac_<name>_git_dirty`` (e.g. POLYMER's ``eoread``, which holds the
+        HYPSO reader).
+    settings_effective, settings_user
+        Stored as JSON with credential-like keys removed (:func:`redact`).
     """
+    def dirty_value(commit, dirty):
+        if not commit:
+            return ""
+        return "unknown" if dirty is None else attr_value(bool(dirty))
     attrs = {"ac_tool": tool, "ac_version": version or "unknown", "ac_git_commit": git_commit or "",
-             "ac_install_path": str(install_path or "")}
+             "ac_git_dirty": dirty_value(git_commit, git_dirty), "ac_install_path": str(install_path or "")}
+    for name, (commit, dirty) in (components or {}).items():
+        attrs[f"ac_{name}_git_commit"] = commit or ""
+        attrs[f"ac_{name}_git_dirty"] = dirty_value(commit, dirty)
     redacted = set()
     for name, settings in (("settings_effective", settings_effective), ("settings_user", settings_user)):
         if settings is None:
