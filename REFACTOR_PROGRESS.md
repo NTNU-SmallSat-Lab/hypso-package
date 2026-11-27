@@ -364,9 +364,9 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    model replace the V2 smile matrix (agrees within ~2 nm). Figure on the reference capture: shift -1.4..+1.7
    samples, image change median 0.35% (99th pct 15% at sharp edges). When reviewed: `enabled: true`, consider
    it in a release.
-5. **Releases** (×46, ×48, ×52): tags `v26.10.0a1`-`a7` are on origin (a5 = ×84, a6 = ×90, a7 = ×94, 2026-11-04).
-   Tag the next alpha when wanted, especially after output-changing work; the final `vYY.M.0` on the merge
-   to `main` once the pipeline uses the refactor (item 6d).
+5. **Releases** (×46, ×48, ×52, ×110): alpha tags `v26.10.0a1`-`a7` (a5 = ×84, a6 = ×90, a7 = ×94,
+   2026-11-04); **`v26.11.0` released 2026-11-27 on `main`** (×110), the first release of the refactored
+   package. Next: `v26.11.1`/`v26.12.0` after output-changing work.
 6. **Outside this repository, for the user**: eoread fork commit `3609d25` (F0 and d^2) on the flat-layout
    reader, and ACOLITE's/OC-SMART's readers on new files (×37); **eoread's HYPSO reader must read the renamed
    `metadata/srf/F0` / `F0_wavelengths`** (were `esun`/`esun_wavelengths` until ×74): it reads them by name and
@@ -418,6 +418,12 @@ windows (×60), demo (×61), docs site (×62), instrument field in names (×63),
 TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
+
+- **2026-11-27 (×110): release `v26.11.0`**. The refactor (PR #100, merged 2026-11-26) plus ×109 on `main`,
+  tagged `v26.11.0`: the release condition in item 5 was "once the pipeline uses the refactor", and
+  hypso-calval (the matchup pipeline on this package) reproduced hypso-processing-pipeline's V3.1 AERONET-OC
+  tables with it (70 captures; OC-SMART, DPS and PACE OCI identical in every matchup and band with the old
+  window method; ~/HYPSO_DATA_CALVAL/aoc_v31/comparison_vs_old_v31.md). Full suite: 341 passed, 2 skipped.
 
 - **2026-11-27 (×109): safe NetCDF writes; make_maps overviews from footprint records (TODO 4v); test data
   found after the dataset move**.
