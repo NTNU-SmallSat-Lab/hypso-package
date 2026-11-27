@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 import hypso
-from conftest import COEFF_TYPE, COEFF_VERSION, L1A_PATH, LATS_PATH, LONS_PATH, requires_real_capture
+from conftest import COEFF_TYPE, COEFF_VERSION, L1A_PATH, LATS_PATH, LONS_PATH, requires_real_capture, find_data
 
 pytestmark = requires_real_capture
 
@@ -58,7 +58,7 @@ def test_write_names_and_round_trips(l1d, tmp_path):
 # Production outputs for the reference capture (HYPSO_DATA_AOC_REPROCESS_AULUS2):
 # the fake AC runners below return these real tool outputs, and the L2A
 # products are compared against the production L2A files made from them.
-REPROCESS_DIR = Path("/home/camerop/HYPSO_DATA_AOC_REPROCESS_AULUS2/aeronetvenice_2025-03-04T10-38-05Z")
+REPROCESS_DIR = find_data("HYPSO_DATA_AOC_REPROCESS_AULUS2/aeronetvenice_2025-03-04T10-38-05Z")
 POLYMER_OUTPUT = REPROCESS_DIR / "polymer" / "aeronetvenice_2025-03-04T10-38-05Z-moved_unmasked-l1c.polymer.nc"
 ACOLITE_OUTPUTS = {s: REPROCESS_DIR / "acolite" / f"HYPSO2_2025_03_04_10_38_05_{s}.nc" for s in ("L2R", "L2W")}
 OCSMART_OUTPUT = REPROCESS_DIR / "HYPSO_HSI_aeronetvenice_2025-03-04T10-38-05Z-l1d_L2_OCSMART.h5"
@@ -619,7 +619,7 @@ def test_hsi2rgb_on_l1d(l1d):
     assert green <= red
 
 
-RGB_CAPTURE = Path("/home/camerop/HYPSO_DATA_AOC/ariake_2025-04-04T02-27-25Z")
+RGB_CAPTURE = find_data("HYPSO_DATA_AOC/ariake_2025-04-04T02-27-25Z")
 
 
 @pytest.mark.skipif(not RGB_CAPTURE.is_dir(), reason=f"{RGB_CAPTURE} not present")

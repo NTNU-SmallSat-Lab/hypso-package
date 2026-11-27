@@ -519,7 +519,52 @@ def write_product(tree: xr.DataTree, path, datacube: bool = False,
         ds = node.to_dataset(inherit=False)
         nodes[node.path] = ds
         encoding[node.path] = {name: _encoding(var) for name, var in ds.variables.items()}
-    xr.DataTree.from_dict(nodes).to_netcdf(path, engine="netcdf4", encoding=encoding)
+    write_netcdf_safely(xr.DataTree.from_dict(nodes), path, encoding)
+
+
+def _sha256(path) -> str:
+    import hashlib
+    digest = hashlib.sha256()
+    with open(path, "rb") as f:
+        for block in iter(lambda: f.read(1 << 22), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def write_netcdf_safely(tree: xr.DataTree, path, encoding=None, retries: int = 1) -> Path:
+    """Write a DataTree to NetCDF so that ``path`` is either the complete file or untouched.
+
+    The file is written on local disk first (``$HYPSO_WRITE_TMPDIR``, default the system temporary
+    directory), copied next to the destination as ``<name>.part``, checked (SHA-256 of the copy against
+    the local file) and renamed into place. An HDF or I/O error retries the whole write ``retries``
+    times. Writing NetCDF/HDF5 directly to a network file system failed now and then ("NetCDF: HDF
+    error" in about 1 of 100 writes to the NFS home, 2026-11); a plain sequential copy is far less
+    exposed, and a failed attempt never leaves a partial file under the real name.
+    """
+    import os
+    import shutil
+    import tempfile
+    path = Path(path)
+    tmp_dir = os.environ.get("HYPSO_WRITE_TMPDIR") or tempfile.gettempdir()
+    last_error = None
+    for attempt in range(retries + 1):
+        fd, local = tempfile.mkstemp(prefix=f".{path.stem}.", suffix=".nc", dir=tmp_dir)
+        os.close(fd)
+        part = path.with_name(path.name + ".part")
+        try:
+            tree.to_netcdf(local, engine="netcdf4", encoding=encoding)
+            shutil.copyfile(local, part)
+            if _sha256(local) != _sha256(part):
+                raise OSError(f"copy of {path.name} to {path.parent} does not match the written file")
+            os.replace(part, path)
+            return path
+        except (RuntimeError, OSError) as error:        # netCDF4 raises RuntimeError("NetCDF: HDF error")
+            last_error = error
+            logger.warning("writing %s failed (attempt %d of %d): %s", path.name, attempt + 1, retries + 1, error)
+            part.unlink(missing_ok=True)
+        finally:
+            Path(local).unlink(missing_ok=True)
+    raise last_error
 
 
 def convert_product(src, out_dir=None) -> Path:

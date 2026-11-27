@@ -3,11 +3,13 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+
+from conftest import find_data
 import xarray as xr
 
 import hypso
 
-CAPTURE = Path("/home/camerop/HYPSO_DATA_AOC/ariake_2025-04-04T02-27-25Z")
+CAPTURE = find_data("HYPSO_DATA_AOC/ariake_2025-04-04T02-27-25Z")
 pytestmark = pytest.mark.skipif(not CAPTURE.is_dir(), reason=f"{CAPTURE} not present")
 
 

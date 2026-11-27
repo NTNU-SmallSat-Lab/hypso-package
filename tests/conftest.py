@@ -5,7 +5,7 @@ Two kinds of tests live under tests/:
 - Unit tests (test_sensors.py, test_io_schema_cf.py, test_ac_adapters.py,
   test_public_api.py) - no real data needed, run anywhere the package imports.
 - Real-data tests (test_regression_real_capture.py, test_cf_format.py) - need
-  the reference capture under /home/camerop/HYPSO_DATA_AOC/ and are skipped
+  the reference capture (HYPSO_DATA_AOC, found by find_data) and are skipped
   automatically when it isn't present (so the suite still runs in a fresh
   clone), per the approved plan.
 
@@ -25,7 +25,21 @@ sys.path.insert(0, str(REPO_ROOT / "hypso"))
 sys.path.insert(0, str(REPO_ROOT / "hypso1_calibration"))
 sys.path.insert(0, str(REPO_ROOT / "hypso2_calibration"))
 
-CAPTURE_DIR = Path("/home/camerop/HYPSO_DATA_AOC/aeronetvenice_2025-03-04T10-38-05Z")
+def find_data(relative: str) -> Path:
+    """A test dataset folder, e.g. ``HYPSO_DATA_AOC/aeronetvenice_...``, looked up under
+    ``$HYPSO_TEST_DATA_ROOTS`` (os.pathsep-separated), then ~, ~/Datasets/STALE and ~/Datasets/REQUESTS
+    (the user's datasets were reorganised into those on 2026-11-26). Returns the first that exists, else
+    the path under ~ (so tests that need it skip with a readable reason)."""
+    import os
+    roots = [Path(r).expanduser() for r in os.environ.get("HYPSO_TEST_DATA_ROOTS", "").split(os.pathsep) if r]
+    roots += [Path.home(), Path.home() / "Datasets" / "STALE", Path.home() / "Datasets" / "REQUESTS"]
+    for root in roots:
+        if (root / relative).exists():
+            return root / relative
+    return Path.home() / relative
+
+
+CAPTURE_DIR = find_data("HYPSO_DATA_AOC/aeronetvenice_2025-03-04T10-38-05Z")
 L1A_PATH = CAPTURE_DIR / "aeronetvenice_2025-03-04T10-38-05Z-l1a.nc"
 LATS_PATH = CAPTURE_DIR / "processing-temp" / "latitudes_indirectgeoref.dat"
 LONS_PATH = CAPTURE_DIR / "processing-temp" / "longitudes_indirectgeoref.dat"

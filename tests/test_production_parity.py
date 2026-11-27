@@ -9,16 +9,16 @@ import numpy as np
 import pytest
 
 import hypso
-from conftest import legacy_srf_modelling
+from conftest import legacy_srf_modelling, find_data
 
 CAPTURES = {
     # HYPSO-2, Kemigawa (Japan): reprocessed after the Earth-Sun distance fix,
     # so production matches through L1D.
-    "kemigawa": (Path("/home/camerop/HYPSO_DATA_AOC_REPROCESS_AULUS2/kemigawa_2025-12-28T01-25-19Z"),
+    "kemigawa": (find_data("HYPSO_DATA_AOC_REPROCESS_AULUS2/kemigawa_2025-12-28T01-25-19Z"),
                  "kemigawa_2025-12-28T01-25-19Z", {"coeff_type": "moved", "version": "V2"}),
     # HYPSO-1 (Korean cal/val): produced 2026-09-14, before the Earth-Sun
     # distance fix (2026-10-23), so its L1D differs by (d_old / d_new)^2.
-    "hypso1": (Path("/home/camerop/HYPSO_DATA_KOREANCALVAL/koreanCalValJL_2026-08-27T02-58-25Z_HYPSO_1"),
+    "hypso1": (find_data("HYPSO_DATA_KOREANCALVAL/koreanCalValJL_2026-08-27T02-58-25Z_HYPSO_1"),
                "koreanCalValJL_2026-08-27T02-58-25Z", {"coeff_type": "moved"}),
 }
 

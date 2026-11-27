@@ -164,3 +164,25 @@ def test_machi_band_subset_on_read():
     import hypso
     rgb = hypso.open(MACHI_FILE, wavelengths=list(maps.RGB_WAVELENGTHS))
     assert rgb.cube.sizes["bands"] == 3 and rgb.tree["metadata/machi"].dataset.sizes["bands"] == 3
+
+
+def test_footprint_records_for_batches(l1d, mpl, tmp_path):
+    """TODO 4v: overviews and shapefiles from (polygon, attributes) pairs, no products kept."""
+    shapefile = pytest.importorskip("shapefile")
+    record = maps.footprint_record(l1d)
+    polygon, attrs = record
+    assert polygon.equals(maps.footprint(l1d)) and attrs["area_km2"] > 0 and attrs["satellite"] == "HYPSO-2"
+    moved = (shapely.affinity.translate(polygon, xoff=0.5), {**attrs, "satellite": "HYPSO-1"})
+    batch = [record] * 6 + [moved] * 4
+    path = maps.write_footprints(batch, tmp_path / "batch.shp")
+    with shapefile.Reader(str(path)) as reader:
+        assert len(reader) == 10 and reader.record(0).as_dict()["area_km2"] == attrs["area_km2"]
+    ax = maps.plot_overview(batch, coastlines=False, water=False)               # 10 > 8: one colour per satellite
+    assert sorted(t.get_text() for t in ax.get_legend().get_texts()) == ["HYPSO-1 (4 captures)", "HYPSO-2 (6 captures)"]
+    assert maps.write_footprints(record, tmp_path / "one.geojson").is_file()     # a single pair
+
+
+def test_make_maps_keeps_only_records():
+    source = (Path(__file__).resolve().parents[1] / "demo" / "make_maps.py").read_text()
+    assert "record = maps.footprint_record(l1d_rgb" in source and "return record" in source
+    assert "return l1d_rgb" not in source

@@ -124,7 +124,11 @@ def run_capture(folder: Path, wavelength: float, dpi: int, skip_existing: bool):
                     maps.plot_map(bgc, variable, ax=ax)
                     save(fig, path, dpi)
     logger.info("   %s done in %.0f s", capture, time.time() - t0)
-    return l1d_rgb
+    # only the footprint and its attributes are kept for the overviews (TODO 4v: keeping every
+    # capture's product ran out of memory at about 70 captures)
+    record = maps.footprint_record(l1d_rgb, source=files["L1D"])
+    del l1d_rgb
+    return record
 
 
 def main(argv=None):
@@ -145,13 +149,13 @@ def main(argv=None):
     by_target, failed = defaultdict(list), []
     for folder in map(Path, args.captures):
         try:
-            product = run_capture(folder.expanduser(), args.wavelength, args.dpi, args.skip_existing)
+            record = run_capture(folder.expanduser(), args.wavelength, args.dpi, args.skip_existing)
         except Exception:
             logger.exception("%s failed", folder.name)
             failed.append(folder.name)
             continue
-        if product is not None:
-            by_target[product.target].append(product)
+        if record is not None:
+            by_target[record[1]["target"]].append(record)
 
     if args.overview and by_target:
         out = Path(args.overview).expanduser()
@@ -170,8 +174,8 @@ def main(argv=None):
         for name, products in groups.items():
             shp = maps.write_footprints(products, out / f"{name}_footprints.shp")
             logger.info("  wrote %s (%d footprints)", shp.name, len(products))
-            lon = [float(p.geometry["longitude"].mean()) for p in products]
-            lat = [float(p.geometry["latitude"].mean()) for p in products]
+            lon = [r["centre_lon"] for _, r in products]
+            lat = [r["centre_lat"] for _, r in products]
             if max(lon) - min(lon) > 30 or max(lat) - min(lat) > 30:
                 # one UTM map of several continents is useless: shapefile only
                 logger.info("  %s spans %.0f x %.0f degrees: no overview map", name,

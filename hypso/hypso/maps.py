@@ -225,15 +225,33 @@ def _area_km2(geometry) -> float:
     return abs(geod.geometry_area_perimeter(geometry)[0]) / 1e6
 
 
+def footprint_record(product, mask=None, step: int = 10, block: int = 8, source=None) -> tuple:
+    """``(footprint polygon, footprint_attributes with area_km2)`` of a product.
+
+    A few kB, for keeping many captures' footprints (overviews, shapefiles of a batch) without keeping
+    the products: :func:`write_footprints` and :func:`plot_overview` take these pairs.
+    """
+    product = _product(product)
+    geometry = footprint(product, mask=mask, step=step, block=block)
+    record = footprint_attributes(product, source=source)
+    record["area_km2"] = round(_area_km2(geometry), 1)
+    return geometry, record
+
+
+def _is_record(item) -> bool:
+    return isinstance(item, tuple) and len(item) == 2 and hasattr(item[0], "geom_type") and isinstance(item[1], dict)
+
+
 def write_footprints(sources, path, mask=None, step: int = 10, block: int = 8) -> Path:
     """Write footprints to an ESRI Shapefile or GeoJSON, one feature per product.
 
     Parameters
     ----------
-    sources : hypso.Product, path, or a list of them
+    sources : hypso.Product, path, (polygon, attributes) pair, or a list of them
         Products in sensor geometry; paths are opened (all their bands are
         read, so prefer the smallest file of a capture, e.g. the L2B.BGC or
-        the L1D opened with a few bands).
+        the L1D opened with a few bands); pairs from :func:`footprint_record`
+        are written as they are (for large batches: no product kept open).
     path : str or path
         ``*.shp`` (writes .shp, .shx, .dbf, .prj and .cpg; needs pyshp) or
         ``*.geojson``/``*.json``.
@@ -247,17 +265,17 @@ def write_footprints(sources, path, mask=None, step: int = 10, block: int = 8) -
     """
     from shapely.geometry import mapping
     from shapely.geometry.polygon import orient
-    if not isinstance(sources, (list, tuple)):
+    if not isinstance(sources, (list, tuple)) or _is_record(sources):
         sources = [sources]
     if mask not in (None, "data"):
         raise ValueError("write_footprints takes mask=None or 'data'; for an array use footprint()")
     features = []
     for source in sources:
-        product = _product(source)
-        geometry = footprint(product, mask=mask, step=step, block=block)
-        record = footprint_attributes(product, source=None if hasattr(source, "tree") else source)
-        record["area_km2"] = round(_area_km2(geometry), 1)
-        features.append((geometry, record))
+        if _is_record(source):
+            features.append(source)
+            continue
+        features.append(footprint_record(source, mask=mask, step=step, block=block,
+                                         source=None if hasattr(source, "tree") else source))
 
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -588,9 +606,10 @@ def plot_overview(sources, ax=None, labels=None, margin: float = 0.1, coastlines
 
     Parameters
     ----------
-    sources : list of hypso.Product, paths or shapely polygons
-        Polygons in WGS84 longitude/latitude (e.g. from :func:`footprint`)
-        are drawn as they are.
+    sources : list of hypso.Product, paths, (polygon, attributes) pairs or shapely polygons
+        Pairs from :func:`footprint_record` keep the satellite and time for
+        the legend and ``color_by="satellite"`` without keeping products;
+        bare polygons in WGS84 longitude/latitude are drawn as they are.
     ax : matplotlib.axes.Axes, optional
     labels : list of str, optional
         Legend labels; default each product's acquisition time (UTC),
@@ -621,6 +640,10 @@ def plot_overview(sources, ax=None, labels=None, margin: float = 0.1, coastlines
     from hypso.grid.areas import utm_crs
     polygons, records = [], []
     for k, source in enumerate(sources):
+        if _is_record(source):                         # from footprint_record: no product needed
+            polygons.append(source[0])
+            records.append(source[1])
+            continue
         if hasattr(source, "geom_type"):
             polygons.append(source)
             records.append({"target": "", "start_utc": "", "satellite": "", "name": f"footprint {k + 1}"})

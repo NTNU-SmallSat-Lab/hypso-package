@@ -323,7 +323,7 @@ unlike `/home/camerop/AC/hypso-package` (production), which is **read-only**.
    - Ask the user before building: which variables and stretch on the maps, one map per capture or batch
      overviews, which footprint (whole swath or valid pixels), and the attribute list. First use: the 6 HYPSO-1
      and 10 HYPSO-2 captures processed 2026-11-08 into `~/HYPSO_DATA_REFACTOR`.
-4v. **BUG: `demo/make_maps.py --overview` runs out of memory on large batches** (user, 2026-11-26: "record the
+4v. ~~**BUG: `demo/make_maps.py --overview` runs out of memory on large batches**~~ - fixed (×109) (user, 2026-11-26: "record the
    footprint issue as a bug fix needed"). `run_capture` returns each capture's L1D Product (3 RGB bands plus the
    full geometry and metadata, tens of MB each) and `main` keeps every one in `by_target` until the end, only to
    draw the overviews and write the footprint shapefiles. On 2026-11-25 the run over 140 capture folders in
@@ -418,6 +418,22 @@ windows (×60), demo (×61), docs site (×62), instrument field in names (×63),
 TOA/SRF consolidation, per-tool AC config, masks as flags, provenance, naming.
 
 ## Status log (most recent at top)
+
+- **2026-11-27 (×109): safe NetCDF writes; make_maps overviews from footprint records (TODO 4v); test data
+  found after the dataset move**.
+  - `write_product` writes through `io.product.write_netcdf_safely`: the file is written on local disk
+    (`$HYPSO_WRITE_TMPDIR`, default the system temp dir), copied next to the destination as `<name>.part`,
+    checked (SHA-256 of the copy against the local file) and renamed into place; an HDF or I/O error retries
+    once. In hypso-calval's 70-capture V3.1 run (2026-11-26, aulus5) about 1 in 100 direct writes to the NFS
+    home failed with "NetCDF: HDF error" (6 steps; the same error on aulus2 on 2026-11-09); a failed write now
+    never leaves a partial file under the real name. tests/test_safe_write.py (retry after an HDF error, a
+    corrupted copy caught, a persistent failure leaving the old file untouched).
+  - TODO 4v: `maps.footprint_record(product)` gives (polygon, attributes with area_km2), a few kB;
+    `write_footprints()` and `plot_overview()` take such pairs (the overview keeps satellite and time for the
+    legend and color_by="satellite"); `demo/make_maps.py` keeps only these per capture instead of each L1D.
+  - Tests: `conftest.find_data()` looks datasets up under `$HYPSO_TEST_DATA_ROOTS`, ~, ~/Datasets/STALE and
+    ~/Datasets/REQUESTS. Since the user's datasets moved on 2026-11-26 (HYPSO_DATA_AOC to ~/Datasets/STALE,
+    HYPSO_DATA_KOREANCALVAL to ~/Datasets/REQUESTS) every real-data test had been skipping silently.
 
 - **2026-11-25 (×108): merge of origin/main for the pull request**. main had two commits the refactor lacked
   (2026-05-20): "Bump version to 26.5.1" (static versions in the pyproject.toml files; MANIFEST.in excludes
