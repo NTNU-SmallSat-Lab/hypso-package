@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>hypso.io.product &#8212; hypso 26.10.0a7-20-g5e64121f</title>
+    <title>hypso.io.product &#8212; hypso 26.10.0a7-24-g52b69064</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../../_static/documentation_options.js?v=8e897651"></script>
+    <script src="../../../../_static/documentation_options.js?v=791413e8"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/hypso/io/product/index';</script>
@@ -111,7 +111,7 @@
   
   
   
-    <p class="title logo__title">hypso 26.10.0a7-20-g5e64121f</p>
+    <p class="title logo__title">hypso 26.10.0a7-24-g52b69064</p>
   
 </a></div>
     
@@ -645,7 +645,10 @@ ground-station L1A files (one <code class="docutils literal notranslate"><span c
 <tr class="row-odd"><td><p><a class="reference internal" href="#hypso.io.product.spatial_dims" title="hypso.io.product.spatial_dims"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spatial_dims</span></code></a>(ds)</p></td>
 <td><p>(y, x) for a gridded product, else (lines, samples).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#hypso.io.product.write_product" title="hypso.io.product.write_product"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_product</span></code></a>(tree, path[, datacube, significant_bits])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.io.product.write_netcdf_safely" title="hypso.io.product.write_netcdf_safely"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_netcdf_safely</span></code></a>(tree, path[, encoding, retries])</p></td>
+<td><p>Write a DataTree to NetCDF so that <code class="docutils literal notranslate"><span class="pre">path</span></code> is either the complete file or untouched.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.io.product.write_product" title="hypso.io.product.write_product"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_product</span></code></a>(tree, path[, datacube, significant_bits])</p></td>
 <td><p>Write a product tree in the current file format.</p></td>
 </tr>
 </tbody>
@@ -799,6 +802,29 @@ path (not written back).</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="hypso.io.product.write_netcdf_safely">
+<span class="sig-prename descclassname"><span class="pre">hypso.io.product.</span></span><span class="sig-name descname"><span class="pre">write_netcdf_safely</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/hypso/io/product.html#write_netcdf_safely"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.io.product.write_netcdf_safely" title="Link to this definition">#</a></dt>
+<dd><p>Write a DataTree to NetCDF so that <code class="docutils literal notranslate"><span class="pre">path</span></code> is either the complete file or untouched.</p>
+<p>The file is written on local disk first (<code class="docutils literal notranslate"><span class="pre">$HYPSO_WRITE_TMPDIR</span></code>, default the system temporary
+directory), copied next to the destination as <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;.part</span></code>, checked (SHA-256 of the copy against
+the local file) and renamed into place. An HDF or I/O error retries the whole write <code class="docutils literal notranslate"><span class="pre">retries</span></code>
+times. Writing NetCDF/HDF5 directly to a network file system failed now and then (“NetCDF: HDF
+error” in about 1 of 100 writes to the NFS home, 2026-11); a plain sequential copy is far less
+exposed, and a failed attempt never leaves a partial file under the real name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tree</strong> (<a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.DataTree.html#xarray.DataTree" title="(in xarray v2026.9.0)"><em>xarray.DataTree</em></a>)</p></li>
+<li><p><strong>retries</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.15)">pathlib.Path</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="hypso.io.product.write_product">
 <span class="sig-prename descclassname"><span class="pre">hypso.io.product.</span></span><span class="sig-name descname"><span class="pre">write_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datacube</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">significant_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">SIGNIFICANT_BITS</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/hypso/io/product.html#write_product"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.io.product.write_product" title="Link to this definition">#</a></dt>
 <dd><p>Write a product tree in the current file format.</p>
@@ -883,6 +909,7 @@ global attribute.</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.io.product.read_product"><code class="docutils literal notranslate"><span class="pre">read_product()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.io.product.source_layout"><code class="docutils literal notranslate"><span class="pre">source_layout()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.io.product.spatial_dims"><code class="docutils literal notranslate"><span class="pre">spatial_dims()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.io.product.write_netcdf_safely"><code class="docutils literal notranslate"><span class="pre">write_netcdf_safely()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.io.product.write_product"><code class="docutils literal notranslate"><span class="pre">write_product()</span></code></a></li>
 </ul>
 </li>

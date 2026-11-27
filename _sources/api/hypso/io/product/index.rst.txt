@@ -53,6 +53,7 @@ Functions
    hypso.io.product.read_product
    hypso.io.product.source_layout
    hypso.io.product.spatial_dims
+   hypso.io.product.write_netcdf_safely
    hypso.io.product.write_product
 
 
@@ -143,6 +144,18 @@ Module Contents
 .. py:function:: spatial_dims(ds)
 
    (y, x) for a gridded product, else (lines, samples).
+
+
+.. py:function:: write_netcdf_safely(tree, path, encoding=None, retries = 1)
+
+   Write a DataTree to NetCDF so that ``path`` is either the complete file or untouched.
+
+   The file is written on local disk first (``$HYPSO_WRITE_TMPDIR``, default the system temporary
+   directory), copied next to the destination as ``<name>.part``, checked (SHA-256 of the copy against
+   the local file) and renamed into place. An HDF or I/O error retries the whole write ``retries``
+   times. Writing NetCDF/HDF5 directly to a network file system failed now and then ("NetCDF: HDF
+   error" in about 1 of 100 writes to the NFS home, 2026-11); a plain sequential copy is far less
+   exposed, and a failed attempt never leaves a partial file under the real name.
 
 
 .. py:function:: write_product(tree, path, datacube = False, significant_bits=SIGNIFICANT_BITS)

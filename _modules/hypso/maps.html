@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>hypso.maps &#8212; hypso 26.10.0a7-20-g5e64121f</title>
+    <title>hypso.maps &#8212; hypso 26.10.0a7-24-g52b69064</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=8e897651"></script>
+    <script src="../../_static/documentation_options.js?v=791413e8"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/hypso/maps';</script>
@@ -108,7 +108,7 @@
   
   
   
-    <p class="title logo__title">hypso 26.10.0a7-20-g5e64121f</p>
+    <p class="title logo__title">hypso 26.10.0a7-24-g52b69064</p>
   
 </a></div>
     
@@ -743,6 +743,26 @@
     <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">geod</span><span class="o">.</span><span class="n">geometry_area_perimeter</span><span class="p">(</span><span class="n">geometry</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mf">1e6</span>
 
 
+<div class="viewcode-block" id="footprint_record">
+<a class="viewcode-back" href="../../api/hypso/maps/index.html#hypso.maps.footprint_record">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">footprint_record</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""``(footprint polygon, footprint_attributes with area_km2)`` of a product.</span>
+
+<span class="sd">    A few kB, for keeping many captures' footprints (overviews, shapefiles of a batch) without keeping</span>
+<span class="sd">    the products: :func:`write_footprints` and :func:`plot_overview` take these pairs.</span>
+<span class="sd">    """</span>
+    <span class="n">product</span> <span class="o">=</span> <span class="n">_product</span><span class="p">(</span><span class="n">product</span><span class="p">)</span>
+    <span class="n">geometry</span> <span class="o">=</span> <span class="n">footprint</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="n">block</span><span class="p">)</span>
+    <span class="n">record</span> <span class="o">=</span> <span class="n">footprint_attributes</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">)</span>
+    <span class="n">record</span><span class="p">[</span><span class="s2">"area_km2"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">_area_km2</span><span class="p">(</span><span class="n">geometry</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">record</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_record</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">"geom_type"</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)</span>
+
+
 <div class="viewcode-block" id="write_footprints">
 <a class="viewcode-back" href="../../api/hypso/maps/index.html#hypso.maps.write_footprints">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">write_footprints</span><span class="p">(</span><span class="n">sources</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
@@ -750,10 +770,11 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    sources : hypso.Product, path, or a list of them</span>
+<span class="sd">    sources : hypso.Product, path, (polygon, attributes) pair, or a list of them</span>
 <span class="sd">        Products in sensor geometry; paths are opened (all their bands are</span>
 <span class="sd">        read, so prefer the smallest file of a capture, e.g. the L2B.BGC or</span>
-<span class="sd">        the L1D opened with a few bands).</span>
+<span class="sd">        the L1D opened with a few bands); pairs from :func:`footprint_record`</span>
+<span class="sd">        are written as they are (for large batches: no product kept open).</span>
 <span class="sd">    path : str or path</span>
 <span class="sd">        ``*.shp`` (writes .shp, .shx, .dbf, .prj and .cpg; needs pyshp) or</span>
 <span class="sd">        ``*.geojson``/``*.json``.</span>
@@ -767,17 +788,17 @@
 <span class="sd">    """</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">shapely.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">mapping</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">shapely.geometry.polygon</span><span class="w"> </span><span class="kn">import</span> <span class="n">orient</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sources</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sources</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">or</span> <span class="n">_is_record</span><span class="p">(</span><span class="n">sources</span><span class="p">):</span>
         <span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="n">sources</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">mask</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"data"</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"write_footprints takes mask=None or 'data'; for an array use footprint()"</span><span class="p">)</span>
     <span class="n">features</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
-        <span class="n">product</span> <span class="o">=</span> <span class="n">_product</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
-        <span class="n">geometry</span> <span class="o">=</span> <span class="n">footprint</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="n">block</span><span class="p">)</span>
-        <span class="n">record</span> <span class="o">=</span> <span class="n">footprint_attributes</span><span class="p">(</span><span class="n">product</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="s2">"tree"</span><span class="p">)</span> <span class="k">else</span> <span class="n">source</span><span class="p">)</span>
-        <span class="n">record</span><span class="p">[</span><span class="s2">"area_km2"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">_area_km2</span><span class="p">(</span><span class="n">geometry</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">features</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">geometry</span><span class="p">,</span> <span class="n">record</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">_is_record</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
+            <span class="n">features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">footprint_record</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="n">block</span><span class="p">,</span>
+                                         <span class="n">source</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="s2">"tree"</span><span class="p">)</span> <span class="k">else</span> <span class="n">source</span><span class="p">))</span>
 
     <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
     <span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1120,9 +1141,10 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    sources : list of hypso.Product, paths or shapely polygons</span>
-<span class="sd">        Polygons in WGS84 longitude/latitude (e.g. from :func:`footprint`)</span>
-<span class="sd">        are drawn as they are.</span>
+<span class="sd">    sources : list of hypso.Product, paths, (polygon, attributes) pairs or shapely polygons</span>
+<span class="sd">        Pairs from :func:`footprint_record` keep the satellite and time for</span>
+<span class="sd">        the legend and ``color_by="satellite"`` without keeping products;</span>
+<span class="sd">        bare polygons in WGS84 longitude/latitude are drawn as they are.</span>
 <span class="sd">    ax : matplotlib.axes.Axes, optional</span>
 <span class="sd">    labels : list of str, optional</span>
 <span class="sd">        Legend labels; default each product's acquisition time (UTC),</span>
@@ -1153,6 +1175,10 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">hypso.grid.areas</span><span class="w"> </span><span class="kn">import</span> <span class="n">utm_crs</span>
     <span class="n">polygons</span><span class="p">,</span> <span class="n">records</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">source</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sources</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">_is_record</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>                         <span class="c1"># from footprint_record: no product needed</span>
+            <span class="n">polygons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">continue</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="s2">"geom_type"</span><span class="p">):</span>
             <span class="n">polygons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
             <span class="n">records</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"target"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">"start_utc"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">"satellite"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"footprint </span><span class="si">{</span><span class="n">k</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">})</span>

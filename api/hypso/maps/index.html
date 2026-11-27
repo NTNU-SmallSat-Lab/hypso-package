@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>hypso.maps &#8212; hypso 26.10.0a7-20-g5e64121f</title>
+    <title>hypso.maps &#8212; hypso 26.10.0a7-24-g52b69064</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=8e897651"></script>
+    <script src="../../../_static/documentation_options.js?v=791413e8"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/hypso/maps/index';</script>
@@ -111,7 +111,7 @@
   
   
   
-    <p class="title logo__title">hypso 26.10.0a7-20-g5e64121f</p>
+    <p class="title logo__title">hypso 26.10.0a7-24-g52b69064</p>
   
 </a></div>
     
@@ -614,22 +614,25 @@ PNGs.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#hypso.maps.footprint_attributes" title="hypso.maps.footprint_attributes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">footprint_attributes</span></code></a>(product[, source])</p></td>
 <td><p>The capture's metadata for a footprint feature (<code class="xref py py-data docutils literal notranslate"><span class="pre">FOOTPRINT_FIELDS</span></code>).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.maps.georeferencing" title="hypso.maps.georeferencing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">georeferencing</span></code></a>(product)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.maps.footprint_record" title="hypso.maps.footprint_record"><code class="xref py py-obj docutils literal notranslate"><span class="pre">footprint_record</span></code></a>(product[, mask, step, block, source])</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(footprint</span> <span class="pre">polygon,</span> <span class="pre">footprint_attributes</span> <span class="pre">with</span> <span class="pre">area_km2)</span></code> of a product.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.maps.georeferencing" title="hypso.maps.georeferencing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">georeferencing</span></code></a>(product)</p></td>
 <td><p>How the product's latitude/longitude were made: &quot;indirect&quot; (ground</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#hypso.maps.plot_map" title="hypso.maps.plot_map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_map</span></code></a>(source[, variable, wavelength, ax, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.maps.plot_map" title="hypso.maps.plot_map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_map</span></code></a>(source[, variable, wavelength, ax, ...])</p></td>
 <td><p>Plot a product variable, a band, or an RGB rendering on a map.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.maps.plot_overview" title="hypso.maps.plot_overview"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_overview</span></code></a>(sources[, ax, labels, margin, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.maps.plot_overview" title="hypso.maps.plot_overview"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_overview</span></code></a>(sources[, ax, labels, margin, ...])</p></td>
 <td><p>Plot the footprints of several products on one map.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#hypso.maps.rgb_image" title="hypso.maps.rgb_image"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rgb_image</span></code></a>(product[, stretch, wavelengths, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.maps.rgb_image" title="hypso.maps.rgb_image"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rgb_image</span></code></a>(product[, stretch, wavelengths, ...])</p></td>
 <td><p>An RGB rendering of a product's cube, in sensor geometry.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.maps.save_rgb" title="hypso.maps.save_rgb"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_rgb</span></code></a>(product, path[, stretch, wavelengths, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#hypso.maps.save_rgb" title="hypso.maps.save_rgb"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_rgb</span></code></a>(product, path[, stretch, wavelengths, ...])</p></td>
 <td><p>Write <a class="reference internal" href="#hypso.maps.rgb_image" title="hypso.maps.rgb_image"><code class="xref py py-func docutils literal notranslate"><span class="pre">rgb_image()</span></code></a> as a PNG (transparent where there is no data).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#hypso.maps.write_footprints" title="hypso.maps.write_footprints"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_footprints</span></code></a>(sources, path[, mask, step, block])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hypso.maps.write_footprints" title="hypso.maps.write_footprints"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_footprints</span></code></a>(sources, path[, mask, step, block])</p></td>
 <td><p>Write footprints to an ESRI Shapefile or GeoJSON, one feature per product.</p></td>
 </tr>
 </tbody>
@@ -678,6 +681,25 @@ antimeridian.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="hypso.maps.footprint_record">
+<span class="sig-prename descclassname"><span class="pre">hypso.maps.</span></span><span class="sig-name descname"><span class="pre">footprint_record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">product</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/hypso/maps.html#footprint_record"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hypso.maps.footprint_record" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">(footprint</span> <span class="pre">polygon,</span> <span class="pre">footprint_attributes</span> <span class="pre">with</span> <span class="pre">area_km2)</span></code> of a product.</p>
+<p>A few kB, for keeping many captures’ footprints (overviews, shapefiles of a batch) without keeping
+the products: <a class="reference internal" href="#hypso.maps.write_footprints" title="hypso.maps.write_footprints"><code class="xref py py-func docutils literal notranslate"><span class="pre">write_footprints()</span></code></a> and <a class="reference internal" href="#hypso.maps.plot_overview" title="hypso.maps.plot_overview"><code class="xref py py-func docutils literal notranslate"><span class="pre">plot_overview()</span></code></a> take these pairs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>step</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>)</p></li>
+<li><p><strong>block</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -745,8 +767,9 @@ land is light grey.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sources</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><em>list</em></a><em> of </em><a class="reference internal" href="../index.html#hypso.Product" title="hypso.Product"><em>hypso.Product</em></a><em>, </em><em>paths</em><em> or </em><em>shapely polygons</em>) – Polygons in WGS84 longitude/latitude (e.g. from <a class="reference internal" href="#hypso.maps.footprint" title="hypso.maps.footprint"><code class="xref py py-func docutils literal notranslate"><span class="pre">footprint()</span></code></a>)
-are drawn as they are.</p></li>
+<li><p><strong>sources</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><em>list</em></a><em> of </em><a class="reference internal" href="../index.html#hypso.Product" title="hypso.Product"><em>hypso.Product</em></a><em>, </em><em>paths</em><em>, </em><em>(</em><em>polygon</em><em>, </em><em>attributes</em><em>) </em><em>pairs</em><em> or </em><em>shapely polygons</em>) – Pairs from <a class="reference internal" href="#hypso.maps.footprint_record" title="hypso.maps.footprint_record"><code class="xref py py-func docutils literal notranslate"><span class="pre">footprint_record()</span></code></a> keep the satellite and time for
+the legend and <code class="docutils literal notranslate"><span class="pre">color_by=&quot;satellite&quot;</span></code> without keeping products;
+bare polygons in WGS84 longitude/latitude are drawn as they are.</p></li>
 <li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>)</p></li>
 <li><p><strong>labels</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><em>list</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Legend labels; default each product’s acquisition time (UTC),
 after its target when the products have several targets.</p></li>
@@ -835,9 +858,10 @@ images use 3, for pixels closer to square on the ground).</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sources</strong> (<a class="reference internal" href="../index.html#hypso.Product" title="hypso.Product"><em>hypso.Product</em></a><em>, </em><em>path</em><em>, or </em><em>a list</em><em> of </em><em>them</em>) – Products in sensor geometry; paths are opened (all their bands are
+<li><p><strong>sources</strong> (<a class="reference internal" href="../index.html#hypso.Product" title="hypso.Product"><em>hypso.Product</em></a><em>, </em><em>path</em><em>, </em><em>(</em><em>polygon</em><em>, </em><em>attributes</em><em>) </em><em>pair</em><em>, or </em><em>a list</em><em> of </em><em>them</em>) – Products in sensor geometry; paths are opened (all their bands are
 read, so prefer the smallest file of a capture, e.g. the L2B.BGC or
-the L1D opened with a few bands).</p></li>
+the L1D opened with a few bands); pairs from <a class="reference internal" href="#hypso.maps.footprint_record" title="hypso.maps.footprint_record"><code class="xref py py-func docutils literal notranslate"><span class="pre">footprint_record()</span></code></a>
+are written as they are (for large batches: no product kept open).</p></li>
 <li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><em>path</em>) – <code class="docutils literal notranslate"><span class="pre">*.shp</span></code> (writes .shp, .shx, .dbf, .prj and .cpg; needs pyshp) or
 <code class="docutils literal notranslate"><span class="pre">*.geojson</span></code>/<code class="docutils literal notranslate"><span class="pre">*.json</span></code>.</p></li>
 <li><p><strong>mask</strong> – As in <a class="reference internal" href="#hypso.maps.footprint" title="hypso.maps.footprint"><code class="xref py py-func docutils literal notranslate"><span class="pre">footprint()</span></code></a>; <code class="docutils literal notranslate"><span class="pre">mask</span></code> must be <code class="docutils literal notranslate"><span class="pre">None</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;data&quot;</span></code> here.</p></li>
@@ -908,6 +932,7 @@ the L1D opened with a few bands).</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.maps.footprint"><code class="docutils literal notranslate"><span class="pre">footprint()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.maps.footprint_attributes"><code class="docutils literal notranslate"><span class="pre">footprint_attributes()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.maps.footprint_record"><code class="docutils literal notranslate"><span class="pre">footprint_record()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.maps.georeferencing"><code class="docutils literal notranslate"><span class="pre">georeferencing()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.maps.plot_map"><code class="docutils literal notranslate"><span class="pre">plot_map()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hypso.maps.plot_overview"><code class="docutils literal notranslate"><span class="pre">plot_overview()</span></code></a></li>

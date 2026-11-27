@@ -38,6 +38,7 @@ Functions
 
    hypso.maps.footprint
    hypso.maps.footprint_attributes
+   hypso.maps.footprint_record
    hypso.maps.georeferencing
    hypso.maps.plot_map
    hypso.maps.plot_overview
@@ -79,6 +80,14 @@ Module Contents
    :type product: hypso.Product
    :param source: The file the product was read from (its name is recorded).
    :type source: str or path, optional
+
+
+.. py:function:: footprint_record(product, mask=None, step = 10, block = 8, source=None)
+
+   ``(footprint polygon, footprint_attributes with area_km2)`` of a product.
+
+   A few kB, for keeping many captures' footprints (overviews, shapefiles of a batch) without keeping
+   the products: :func:`write_footprints` and :func:`plot_overview` take these pairs.
 
 
 .. py:function:: georeferencing(product)
@@ -143,9 +152,10 @@ Module Contents
 
    Plot the footprints of several products on one map.
 
-   :param sources: Polygons in WGS84 longitude/latitude (e.g. from :func:`footprint`)
-                   are drawn as they are.
-   :type sources: list of hypso.Product, paths or shapely polygons
+   :param sources: Pairs from :func:`footprint_record` keep the satellite and time for
+                   the legend and ``color_by="satellite"`` without keeping products;
+                   bare polygons in WGS84 longitude/latitude are drawn as they are.
+   :type sources: list of hypso.Product, paths, (polygon, attributes) pairs or shapely polygons
    :param ax:
    :type ax: matplotlib.axes.Axes, optional
    :param labels: Legend labels; default each product's acquisition time (UTC),
@@ -227,8 +237,9 @@ Module Contents
 
    :param sources: Products in sensor geometry; paths are opened (all their bands are
                    read, so prefer the smallest file of a capture, e.g. the L2B.BGC or
-                   the L1D opened with a few bands).
-   :type sources: hypso.Product, path, or a list of them
+                   the L1D opened with a few bands); pairs from :func:`footprint_record`
+                   are written as they are (for large batches: no product kept open).
+   :type sources: hypso.Product, path, (polygon, attributes) pair, or a list of them
    :param path: ``*.shp`` (writes .shp, .shx, .dbf, .prj and .cpg; needs pyshp) or
                 ``*.geojson``/``*.json``.
    :type path: str or path
